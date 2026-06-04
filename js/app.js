@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-001
+// Build: 20260604-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260604-001';         // build stamp — update each session
+const BUILD       = '20260604-002';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -843,7 +843,7 @@ function renderSettings() {
 function saveAutoBackupBuilder(val) {
   localStorage.setItem(AUTO_SETTINGS.backupBuilder.key, val || '');
   const name = (activeAIs.find(a => a.id === val) || {}).name;
-  toast(val ? `⚡ Backup Builder set to ${name}` : '⚡ Backup Builder: none (Auto will pause and ask)', 3000);
+  toast(val ? `⚡ Failover Builder set to ${name}` : '⚡ Failover Builder: none (Auto will pause and ask)', 3000);
 }
 function saveAutoNeverDisableBuilder(checked) {
   localStorage.setItem(AUTO_SETTINGS.neverDisableBuilder.key, checked ? 'true' : 'false');
@@ -887,7 +887,7 @@ function saveAutoRerollAttempts(val) {
 async function resetAutoSettings() {
   const ok = await wfConfirm(
     'Reset Auto settings',
-    'Reset all Auto Mode settings to their defaults? This restores Backup Builder (none), Never disable Builder (off), Failure-streak limit (2), Slow threshold (3× / 2 rounds), and Reround attempts (2).',
+    'Reset all Auto Mode settings to their defaults? This restores Failover Builder (none), Never disable Builder (off), Failure-streak limit (2), Slow threshold (3× / 2 rounds), and Reround attempts (2).',
     { okText: 'Reset to defaults', cancelText: 'Cancel' }
   );
   if (!ok) return;
@@ -2910,11 +2910,12 @@ function _autoMaybeChainNextRound(ctx) {
       const _base = ctx.errorReason
         ? `Builder failed ${window._autoFailureStreak} rounds in a row (last reason: ${ctx.errorReason}).`
         : `Builder failed ${window._autoFailureStreak} rounds in a row.`;
-      // v3.56.18 — Backup-Builder offer. If the user configured a Backup Builder
-      // (Settings) and it's still eligible (in the hive, not the current
+      // v3.56.18 — Failover Builder offer. If the user configured a Failover
+      // Builder (Settings) and it's still eligible (in the hive, not the current
       // Builder), pause and OFFER to promote it — "pause and ask first" per
-      // design, not a silent swap. With no backup set, fall back to the generic
-      // failure-streak halt modal (prior behavior).
+      // design, not a silent swap. With no failover set, fall back to the generic
+      // failure-streak halt modal (prior behavior). Internal var names keep the
+      // legacy "backup" prefix; user-facing copy renamed v3.63.129.
       const _bk   = (typeof getAutoBackupBuilder === 'function') ? getAutoBackupBuilder() : '';
       const _bkAI = (_bk && Array.isArray(activeAIs))
         ? activeAIs.find(a => a.id === _bk && a.id !== builder)
@@ -2922,7 +2923,7 @@ function _autoMaybeChainNextRound(ctx) {
       if (_bkAI) {
         window._autoBackupCandidate = _bkAI.id;
         _autoHalt('failure-streak-backup',
-          `${_base} Promote your backup Builder (${_bkAI.name}) and resume, or switch to Manual.`);
+          `${_base} Promote your Failover Builder (${_bkAI.name}) and resume, or switch to Manual.`);
       } else {
         window._autoBackupCandidate = null;
         _autoHalt('failure-streak', _base);
@@ -3103,7 +3104,7 @@ function _autoHalt(reasonCode, reasonText) {
     if (reasonCode === 'failure-streak-backup' && window._autoBackupCandidate) {
       const _n = (Array.isArray(activeAIs)
         ? activeAIs.find(a => a.id === window._autoBackupCandidate)
-        : null)?.name || 'backup Builder';
+        : null)?.name || 'Failover Builder';
       promoteBtn.textContent = `🔁 Promote ${_n} & resume`;
       promoteBtn.style.display = '';
     } else {
@@ -3193,7 +3194,7 @@ function autoHaltPromoteBackup() {
   const r = (typeof round === 'number') ? round : 1;
   window._autoCeilingTarget = r + AUTO_MAX_ROUNDS_DEFAULT;
   if (typeof consoleLog === 'function') {
-    consoleLog(`👤 You promoted the backup Builder — Auto resumed, ceiling extended to round ${window._autoCeilingTarget}`, 'info');
+    consoleLog(`👤 You promoted the Failover Builder — Auto resumed, ceiling extended to round ${window._autoCeilingTarget}`, 'info');
   }
   updateAutoToggleUI();
   _autoFireChainedRound('backup-promoted');

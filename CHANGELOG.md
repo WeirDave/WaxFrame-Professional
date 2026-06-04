@@ -2,6 +2,57 @@
 
 ---
 
+## v3.63.129
+
+**Vocabulary rename: "Backup" → "Checkpoint" across every user-facing surface; "Backup Builder" → "Failover Builder"**
+
+Build: `20260604-002`<br>
+Released: `2026-06-04`
+
+Phase A of the Checkpoint + selective-export arc. Pure copy/UX layer change — internal code names (`backupSession`, `backupSessionScrubbed`, `importSession`, `LS_SESSION`, `IDB_SESSION`, `setAutoBackupBuilder`, `getAutoBackupBuilder`, `_waxframe_backup`, `_waxframe_backup_scrubbed`, AUTO_SETTINGS.backupBuilder.key, autoHaltPromoteBackup, _autoBackupCandidate, firstRunDoBackup, backupVerifyExtractedText) stay exactly as they are. Refactoring identifiers would gratuitously churn every prior commit/changelog reference for zero user benefit. Existing `-WaxFrame-Backup-*.json` files in the wild still restore correctly — the format-guard reads `_waxframe_backup: true` from inside the JSON, not the filename.
+
+Why now: the old "Backup / Restore" framing positioned the feature as recovery-from-disaster rather than as a deliberate save-point. "Checkpoint" reframes it as something you save on purpose before a hive composition change, before applying decisions, or as a known-good waypoint to jump back to. The word was already creeping into the code unsystematically (the first-run nudge at index.html:1927 already said "checkpoint backup") — this release consolidates language the product was already groping toward.
+
+User-facing surfaces renamed:
+
+- **Nav menu** (index.html ~2843–2845):
+    - 💾 Backup Session → **💾 Save Checkpoint**
+    - 🧼 Backup Session (Scrubbed) → **🧼 Save Checkpoint (Scrubbed)**
+    - 📂 Import Backup → **📂 Restore from Checkpoint**
+- **DeepDive viewer "Save Backup" button** (index.html ~1854) → **💾 Save Checkpoint**
+- **Settings → Auto Mode** (index.html ~912): Backup Builder → **Failover Builder** (label + reset-defaults help text)
+- **About-menu modal info-labels** (index.html ~2259–2264): renamed + descriptions reworded
+- **First-run offer modal** (index.html ~2010): "Save a checkpoint backup" → **"Save a checkpoint"** (drop the now-redundant word)
+- **Auto Halt modal** (index.html ~1708): "Promote your configured backup Builder" tooltip + "🔁 Promote backup & resume" button → **"Promote your configured Failover Builder"** / **"🔁 Promote failover & resume"**
+- **OCR verify panel** (index.html ~2902, ~2926): "Back up as .txt" button → **"Save as .txt"**, explainer text reworded to match (this isn't actually a session backup — it's just saving the extracted OCR text — and using "Back up" here became confusing once "Backup" was being repurposed as "Checkpoint")
+- **wfConfirm dialogs in js/storage.js**:
+    - "Sensitive backup" → **"Save Checkpoint"** (modal title + body + okText)
+    - "Export scrubbed backup" → **"Save scrubbed Checkpoint"**
+    - "Restore from backup" → **"Restore from Checkpoint"**
+- **Toasts in js/storage.js**:
+    - "⚠️ Nothing to back up" → **"⚠️ Nothing to checkpoint"** (both regular + scrubbed paths)
+    - "💾 Session backed up…" → **"💾 Checkpoint saved…"**
+    - "🧼 Scrubbed backup downloaded…" → **"🧼 Scrubbed checkpoint saved…"**
+    - "⚠️ Not a valid WaxFrame backup file" → **"⚠️ Not a valid WaxFrame checkpoint file"**
+    - Diagnostic-bundle rejection text now says "use a Checkpoint file" instead of "use a Backup file"
+- **Filename stems** (js/storage.js ~1046, ~1188):
+    - `{base}-WaxFrame-Backup-{stamp}` → **`{base}-WaxFrame-Checkpoint-{stamp}`**
+    - `{base}-WaxFrame-Backup-Scrubbed-{stamp}` → **`{base}-WaxFrame-Checkpoint-Scrubbed-{stamp}`**
+- **Failover Builder in app.js**: toast strings (~846), Reset Auto settings confirm body (~890), failure-streak halt offer text (~2925), fallback display name (~3106), consoleLog after promote (~3196) — all reworded from "backup Builder" to "Failover Builder"
+- **Settings → Storage section help text** (index.html ~1051): "use Backup, below this section in a future release" → "save a checkpoint of anything worth keeping first (Menu → 💾 Save Checkpoint)"
+- **Settings → Reset suppressed prompts help text** (index.html ~1043): "Sensitive Backup warning" → "Save Checkpoint warning"; "Restore-from-backup warning" → "Restore from Checkpoint warning"; "Checkpoint Backup Nudge" → "Checkpoint Nudge"
+
+Helper-page references updated:
+
+- **waxframe-user-manual.html** — every reference to "Backup Session", "Backup Builder", "Restore from backup", "Sensitive backup", "Scrubbed Backup", "Checkpoint Backup Nudge" reworded around the new vocabulary. Quick rule-of-thumb line at ~1994 now reads: *Save Checkpoint* for your own offline copy · *Save Checkpoint (Scrubbed)* for sharing · *Diagnostic Bundle* for support.
+- **help.html ~338** — "Settings → Backup" reference now says "save a checkpoint first (Menu → 💾 Save Checkpoint)" (the Settings → Backup path never actually existed; the original copy referenced a planned future surface that was never built).
+
+Phase B (next release) will add the selective-export modal — checkboxes for Project / Session / Hive / Keys / Builder / License at checkpoint-save time — and retire the explicit "Save Checkpoint (Scrubbed)" menu item along with the `_waxframe_backup_scrubbed` import branch. Scoped separately so the rename pass can ship clean and the selective-export work doesn't get bundled with copy review.
+
+Standard ceremony: APP_VERSION → v3.63.129 Pro; build stamp 20260604-002; ?v=3.63.129 cache-bust on every helper page; package.json bump; JSON-LD softwareVersion bump; CHANGELOG prepended; sitemap.xml lastmod stays 2026-06-04 (same day as v3.63.128); backlog → v198 (v195 dropped per 3-version margin).
+
+---
+
 ## v3.63.128
 
 **Finish the v3.63.108 helper-page body-copy linking sweep — 17 remaining playbook descriptions get "Apply it directly in WaxFrame from the … template ↗"**
