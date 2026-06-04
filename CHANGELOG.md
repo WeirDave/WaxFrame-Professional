@@ -2,6 +2,58 @@
 
 ---
 
+## v3.63.130
+
+**Selective EXPORT modal — pick which sections (Project / Session / Hive / Keys / Builder / License) go in each checkpoint. Retires the separate Save Checkpoint (Scrubbed) flow.**
+
+Build: `20260604-003`<br>
+Released: `2026-06-04`
+
+Phase B of the Checkpoint arc. The 💾 Save Checkpoint menu item now opens a modal with six checkboxes — one per logical section of the local state. The user picks what goes in the file. Omitted sections write `null` in the envelope; on restore, those `null`s preserve the receiver's local state instead of wiping it. The retired Save Checkpoint (Scrubbed) flow's outcome is reachable from this same modal: untick API keys + License (with Hive ticked) → same share-safe shape, no separate menu item required.
+
+**The new modal** — `#saveCheckpointModal` in [index.html](index.html), backed by `backupSession()` / `confirmSaveCheckpoint()` / `_writeCheckpoint(scope)` / `updateCheckpointScopeChildren()` in [js/storage.js](js/storage.js). Six rows:
+
+- ☑ **Project** — goal, reference material, length settings (default ON)
+- ☑ **Session in progress** — round history, working document, console transcript, notes (default ON)
+- ☐ **Hive composition** — which AIs are active, custom-AI configs, per-AI model selections (default OFF; parent to Keys + Builder below)
+- ☐ **API keys** — the API keys for each AI in your hive (default OFF; disabled when Hive is unticked)
+- ☐ **Builder selection** — which AI is currently set as Builder (default OFF; disabled when Hive is unticked)
+- ☑ **License** — WaxFrame Pro license key (default ON for self-portability; untick when sharing with a different user)
+
+Defaults reflect the portable-project use case the feature was built for — Project + Session travel; Hive/Keys/Builder stay local (different machines have different hives); License rides along (same user, different machine). To produce the legacy "scrubbed" shape, tick Hive + Builder and leave Keys + License unticked. Hive is the parent of Keys + Builder: when Hive flips off, the children auto-uncheck and disable (keys-or-builder-without-hive is a nonsense state).
+
+**Backup format bumped v4 → v5.** v5 envelopes carry a new `_waxframe_backup_scope: {project, session, hive, keys, builder, license}` field so the importer can distinguish "intentionally omitted" from "all-or-nothing legacy null". v4 (and earlier) checkpoints continue to import via the legacy overwrite path with no behavior change — existing files in the wild restore exactly as before.
+
+**Selective restore in importSession.** v5 path consults the scope per-section:
+
+- `scope.hive=true` + `scope.keys=false` → merge local `hive.keys` back into the imported hive (same shape as the retired `_waxframe_backup_scrubbed` branch, now generalized to any partial scope)
+- `scope.hive=true` + `scope.builder=false` → merge local `hive.builder` back in
+- `scope.hive=false` → leave local hive completely untouched
+- `scope.project=false` → leave local project untouched
+- `scope.session=false` → leave local IDB session untouched (no wipe, no restore)
+- `scope.license=false` → leave local license untouched (the file's `null` license is intentional omission, not "remove local license")
+
+Restore toast lists exactly what got restored vs kept local, so the user can confirm scope was honored: e.g. *"Restored: project, session (4 rounds), license · Kept local: hive. Reloading…"*.
+
+**Retired in this release:**
+
+- 🧼 Save Checkpoint (Scrubbed) menu item ([index.html](index.html) — was on the nav menu next to Save Checkpoint)
+- `backupSessionScrubbed()` function in [js/storage.js](js/storage.js) (~65 lines)
+- `scrubBackup()` helper in [js/storage.js](js/storage.js) (~50 lines)
+- `_waxframe_backup_scrubbed` import branch in `importSession()` (~25 lines of the merge-and-preserve logic, now generalized into the v5 scope branch)
+- The Scrubbed-checkpoint section in [waxframe-user-manual.html](waxframe-user-manual.html), replaced with a new "Save Checkpoint scope" block that documents the checkbox UI with four recipes (self-backup / portable-self / coworker-handoff / public-share-safe)
+
+**Kept**: `_redactSecretsDeep` / `_redactHiveKeys` / `_redactSessionContent` helpers still live in [js/storage.js](js/storage.js) — they power the diagnostic-bundle redaction on [help.html](help.html) and were never coupled to the scrubbed-checkpoint flow. The "Sensitive backup" wfConfirm before save is also gone — the new modal IS the action surface, not a yes/no gate, so the existing `waxframe_suppress_sensitive_backup_confirm` localStorage flag is now dead (harmless; won't be queried again).
+
+**Backwards compatibility:**
+- Existing `-WaxFrame-Backup-*.json` files restore correctly (format guard reads `_waxframe_backup: true` from inside, not the filename).
+- Existing v4 checkpoints from v3.63.x earlier than 130 restore via the unchanged legacy overwrite path.
+- Hypothetical legacy scrubbed checkpoints (carrying `_waxframe_backup_scrubbed: true` on a v4 envelope) now import via the v4 default path — local license gets wiped, keys get overwritten with the redacted blanks. Single-keystroke recovery if it happens. With zero known users, the wild exposure is zero.
+
+Standard ceremony: APP_VERSION → v3.63.130 Pro; build stamp 20260604-003; ?v=3.63.130 cache-bust on every helper page; package.json bump; JSON-LD softwareVersion bump; CHANGELOG prepended; sitemap.xml lastmod stays 2026-06-04 (same day as v3.63.129); backlog → v199 (v196 dropped per 3-version margin).
+
+---
+
 ## v3.63.129
 
 **Vocabulary rename: "Backup" → "Checkpoint" across every user-facing surface; "Backup Builder" → "Failover Builder"**

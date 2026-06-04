@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260604-002
+     Build: 20260604-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-002">
+  <meta name="waxframe-build" content="20260604-003">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.129">
+  <link rel="stylesheet" href="style.css?v=3.63.130">
 </head>
 <body class="helper-body">
 
@@ -1983,15 +1983,29 @@
     <div class="wh-block">
       <div class="wh-block-title">The diagnostic bundle</div>
       <p>The Help page has a single button that exports a JSON snapshot of your session — your active hive configuration, your project setup, your current document round, browser environment, and recent error history. Before the file is written to your downloads folder, three things are stripped automatically: <strong>every API key</strong>, <strong>your license key</strong>, and (optionally, with a checkbox) <strong>your document text and AI responses</strong>. Document and reference text are kept by default because they are usually what support needs to reproduce a content-related bug; uncheck the box if your document is sensitive.</p>
-      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be restored. For a restorable share-safe file, use the Scrubbed Checkpoint option below instead. For a private restorable copy of your full session, use the regular Save Checkpoint — it keeps your keys and is restorable, but should only be stored somewhere you trust.</p>
+      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be restored. For a restorable share-safe file, save a checkpoint with API keys and license unticked (see <a href="#settings" class="link-accent">Save Checkpoint scope</a> below). For a private restorable copy of your full session, save a checkpoint with everything ticked — it keeps your keys and is restorable, but should only be stored somewhere you trust.</p>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Scrubbed checkpoint (share-safe, restorable)</div>
-      <p>From the <strong>☰</strong> menu, choose <strong>🧼 Save Checkpoint (Scrubbed)</strong>. Same shape as a regular checkpoint — project setup, hive lineup, working document, round history, AI responses, console transcript, ring-buffer captures — but every API key (yours and any custom-AI auth header at any nesting depth) and your license key are blanked out before the file is written. Filename gets a <code>-Checkpoint-Scrubbed-</code> stamp so it is unmistakable next to a regular checkpoint. Use this when you want to share a project with a collaborator, attach a working session to a support ticket, or archive a project without exposing secrets.</p>
-      <p>The scrubber uses the same redactor that powers the diagnostic bundle, so the two exports can never disagree on what counts as a secret.</p>
-      <p>When someone restores a scrubbed checkpoint, WaxFrame recognizes the file as scrubbed and protects the receiver's existing state: <strong>your license is preserved</strong> (the file's <code>null</code> license does not wipe yours), and <strong>your existing API keys are merged into the imported hive</strong> — the sender's choice of which AIs to use is honored, but you keep the keys you already have for those AIs. After the reload completes, a follow-up toast reminds you that scrubbing was detected, and that any AI in the imported hive without a local key still needs one before you can run a round.</p>
-      <p>Quick rule of thumb: <strong>Save Checkpoint</strong> for your own offline copy (sensitive — keep private), <strong>Save Checkpoint (Scrubbed)</strong> for sharing with anyone else, <strong>Diagnostic Bundle</strong> for sending to support only (export-only, cannot restore).</p>
+      <div class="wh-block-title">Save Checkpoint scope (share-safe via checkboxes)</div>
+      <p>The <strong>💾 Save Checkpoint</strong> modal in the <strong>☰</strong> menu lets you tick which sections go in the checkpoint file. Six sections, each independently chooseable:</p>
+      <ul>
+        <li><strong>Project</strong> — goal, reference material, length settings</li>
+        <li><strong>Session in progress</strong> — round history, working document, console transcript, notes</li>
+        <li><strong>Hive composition</strong> — which AIs are active, custom-AI configs, per-AI model selections (parent — gates the two below)</li>
+        <li><strong>API keys</strong> — the API keys for each AI in your hive (requires Hive)</li>
+        <li><strong>Builder selection</strong> — which AI is currently set as Builder (requires Hive)</li>
+        <li><strong>License</strong> — your WaxFrame Pro license key (default on for self-portability; untick when sharing)</li>
+      </ul>
+      <p>Recipes for common cases:</p>
+      <ul>
+        <li><strong>Self-backup before a risky round</strong> — tick everything. Saves your full state for restore on the same machine.</li>
+        <li><strong>Portable project across your own machines</strong> (work → home) — tick Project + Session + License. Leave Hive/Keys/Builder unticked so the home machine's hive isn't replaced by the work machine's hive (e.g. with an internal AI gateway unreachable at home).</li>
+        <li><strong>Hand a project to a coworker who has their own license</strong> — tick Project + Session + Hive + Builder. Untick Keys + License. The coworker gets your project and hive lineup, uses their own keys and license to continue.</li>
+        <li><strong>Public share-safe</strong> (forum, support ticket, archive without secrets) — tick Project + Session only. No hive, no keys, no license — nothing sensitive leaves the file.</li>
+      </ul>
+      <p>When the file is restored, WaxFrame honors the scope: unticked sections in the file leave the receiver's local state untouched. A toast on import lists exactly what was restored vs kept local. (Older format-v4 checkpoints from before v3.63.130 use the prior all-or-nothing semantic — they overwrite local state with whatever's in the file. Format v5 is selective; v4 and prior are not.)</p>
+      <p>Quick rule of thumb: <strong>Save Checkpoint with everything ticked</strong> for your own offline copy (sensitive — keep private), <strong>untick Keys + License</strong> when sharing with anyone else, <strong>Diagnostic Bundle</strong> for sending to support only (export-only, cannot restore).</p>
     </div>
 
     <div class="wh-block">
@@ -2088,13 +2102,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.129"></script>
-<script src="lib/docx.min.js?v=3.63.129"></script>
-<script src="js/docx-export.js?v=3.63.129"></script>
-<script src="js/nav-helper.js?v=3.63.129"></script>
-<script src="js/license-helper.js?v=3.63.129"></script>
-<script src="js/version.js?v=3.63.129"></script>
-<script src="js/docs-scrollspy.js?v=3.63.129"></script>
+<script src="js/theme.js?v=3.63.130"></script>
+<script src="lib/docx.min.js?v=3.63.130"></script>
+<script src="js/docx-export.js?v=3.63.130"></script>
+<script src="js/nav-helper.js?v=3.63.130"></script>
+<script src="js/license-helper.js?v=3.63.130"></script>
+<script src="js/version.js?v=3.63.130"></script>
+<script src="js/docs-scrollspy.js?v=3.63.130"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
