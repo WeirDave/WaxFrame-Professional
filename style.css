@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260603-003
+   Build: 20260603-004
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14277,4 +14277,43 @@ kbd {
     max-width: 100%;
     overflow-x: auto;
   }
+}
+
+/* ══════════════════════════════════════
+   AI API PRICING — dynamic table
+   Sortable column headers + Worker-status banner.
+   ══════════════════════════════════════ */
+
+.pricing-sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+.pricing-sortable:hover {
+  color: var(--accent);
+}
+.pricing-sortable .sort-arrow {
+  display: inline-block;
+  width: 0.9em;
+  margin-left: var(--space-4);
+  color: var(--text-dim);
+  font-size: 0.8em;
+  vertical-align: baseline;
+}
+.pricing-sortable.sort-asc .sort-arrow::after { content: '\25B2'; color: var(--accent); }
+.pricing-sortable.sort-desc .sort-arrow::after { content: '\25BC'; color: var(--accent); }
+
+.pricing-status-banner {
+  margin: 0 0 var(--space-10) 0;
+  padding: var(--space-8) var(--space-10);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--text-dim);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.pricing-status-banner.is-warning {
+  border-left-color: var(--accent);
+  color: var(--accent);
 }
