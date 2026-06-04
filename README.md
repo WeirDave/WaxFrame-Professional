@@ -9,7 +9,8 @@
 Multi-AI document refinement in your browser. No server, no account, no install.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v3.63.4-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
+[![Latest Release](https://img.shields.io/github/v/release/WeirDave/WaxFrame-Professional?label=Latest&color=orange)](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
+[![Release Check](https://github.com/WeirDave/WaxFrame-Professional/actions/workflows/release-check.yml/badge.svg?branch=main)](https://github.com/WeirDave/WaxFrame-Professional/actions/workflows/release-check.yml)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 [![Portable](https://img.shields.io/badge/Portable-Air--Gap_Friendly-success.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
 [![Privacy](https://img.shields.io/badge/Privacy-Local_First-brightgreen.svg)](#privacy--local-first-design)
