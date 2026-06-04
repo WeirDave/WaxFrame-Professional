@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.123
+
+**Three use-case SEO landing pages: AI cover letter editor, AI business proposal writer, AI résumé review**
+
+Build: `20260603-016`<br>
+Released: `2026-06-03`
+
+Three new dedicated landing pages built to catch high-intent search traffic and funnel into the Templates catalog + matching playbook:
+
+- `ai-cover-letter-editor.html` — targets "AI cover letter editor" search intent. Cross-links to `templates.html#tpl-cover-letter` and `document-playbooks.html#cover-letter`.
+- `ai-business-proposal.html` — targets "AI business proposal writer" search intent. Cross-links to `templates.html#tpl-business-proposal` and `document-playbooks.html#business-proposal`.
+- `ai-resume-review.html` — targets "AI résumé review" search intent. Cross-links to `templates.html#tpl-resume` and `document-playbooks.html#resume`.
+
+Each page uses the linear helper-page chassis (no doc-layout, `helper-body` class, hero `hp-section` at the top of `.page-main`, back-to-top link, full SEO meta + JSON-LD Article schema). The body argues why a multi-AI hive beats one AI for that specific document type, lays out the "have a draft / start from scratch" workflow, sets expectations about what the hive will and won't edit, walks through a typical 3-4 round session with expected per-round outcomes and API cost, then funnels to the Template + playbook + pricing pages.
+
+Cross-links added back from the existing template cards and playbooks: each of the three matching `tpl-card`s now renders a `Read the … guide →` button (new `.tpl-card-landing-link` style in `style.css`), and each matching playbook header description gets a "For the short version of this workflow…" link to the new page.
+
+`sitemap.xml` updated with the three new URLs (priority 0.7, lastmod 2026-06-03).
+
+Mobile-tested live in Chrome MCP at 390×844 before push:
+- All 3 pages: no horizontal page overflow (`bodyScrollW=390=winW`)
+- Chrome (page-header band) at `y 0-126`
+- Hero `hp-section` at `y 168` (immediately below chrome)
+- H1 visible at `y 319`
+- Back-to-top resolves to `#top`
+- 4 theme buttons render in the page-header-controls band
+
+Files: 3 new HTML + `templates.html` (renderTemplateCard cross-link map) + `document-playbooks.html` (3 description-line cross-links) + `sitemap.xml` + `style.css` (new `.tpl-card-landing-link` rule) + standard version-stamp + cache-bust sweep across 11 HTML / 14 JS / CSS / package.json / pricing-worker.
+
+---
+
 ## v3.63.122
 
 **ai-api-pricing.html: H1 hero moved outside doc-layout to match other helper pages**
