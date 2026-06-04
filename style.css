@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-010
+   Build: 20260604-011
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4962,6 +4962,31 @@ kbd {
 .bee-card.is-working { border-color: var(--blue); background: var(--blue-dim); }
 .bee-card.is-done    { border-color: var(--green); background: var(--green-dim); }
 .bee-card.is-error   { border-color: var(--red); background: var(--red-dim); }
+
+/* v3.63.138 — Proactive rate-limit warning chip. Renders a small yellow
+   pill in the bee card's top-right corner with the remaining-requests count
+   pulled from data-rate-warn (set by _maybeWarnMistralRateLimit). Does not
+   change the card's state colors — it sits on top so the in-flight 'sending'
+   or 'done' state remains readable while the chip is visible. Auto-clears
+   ~12s after it lands. */
+.bee-card.is-rate-warn { position: relative; }
+.bee-card.is-rate-warn::after {
+  content: attr(data-rate-warn);
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  color: #0a0c12;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  z-index: 2;
+}
 
 /* v3.52.10 — Four orphan .bee-card.is-* selectors removed from here.
    They had no declaration block, so the CSS parser consumed the next
@@ -14586,6 +14611,165 @@ kbd {
     max-width: 100%;
     overflow-x: auto;
   }
+  /* v3.63.138 — narrow layout tweaks for new templates-page chrome */
+  .tpl-search-bar {
+    flex-wrap: wrap;
+    padding: var(--space-10) var(--space-12);
+  }
+  .tpl-search-count {
+    width: 100%;
+    text-align: left;
+    margin-top: var(--space-4);
+  }
+  .tpl-details-row {
+    flex-direction: column;
+    gap: 1px;
+  }
+  .tpl-details-label {
+    width: auto;
+  }
+  .tpl-export-all-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ══════════════════════════════════════
+   TEMPLATES CATALOG — v3.63.138 additions
+   - Search/filter bar pinned above the grid
+   - Per-card "View full details" expander
+   - "Export all as .zip" action on My Templates
+   ══════════════════════════════════════ */
+.tpl-search-bar {
+  position: sticky;
+  top: var(--space-12);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  margin: 0 0 var(--space-16);
+  padding: var(--space-10) var(--space-14);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(6px);
+}
+.tpl-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: var(--space-8) var(--space-12);
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.12s;
+}
+.tpl-search-input::placeholder { color: var(--text-dim); }
+.tpl-search-input:focus { border-color: var(--accent); }
+.tpl-search-clear {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: var(--space-6) var(--space-10);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+.tpl-search-clear:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.tpl-search-count {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+/* Search hides individual cards; an entire section hides when every
+   card inside it is filtered out — keeps the page from showing empty
+   category headers under an active filter. */
+.tpl-card.is-hidden { display: none !important; }
+.hp-section.is-empty-by-filter { display: none !important; }
+
+/* Per-card View Details expander — same accordion pattern as the
+   scaffold expander, but inline label rows for the goal fields. */
+.tpl-details {
+  border-top: 1px dashed var(--border);
+  padding-top: var(--space-4);
+}
+.tpl-details-summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 500;
+  padding: var(--space-4) 0;
+  user-select: none;
+}
+.tpl-details-summary:hover { color: var(--accent); }
+.tpl-details[open] .tpl-details-summary { color: var(--accent); }
+.tpl-details-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+  padding: var(--space-12) var(--space-14);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.tpl-details-row {
+  display: flex;
+  gap: var(--space-12);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.tpl-details-label {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 10px;
+  font-weight: 600;
+  width: 105px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+.tpl-details-val { color: var(--text, #e6edf3); }
+
+/* My Templates header actions — "Export all as .zip" sits with the
+   existing section blurb so it reads as an attached affordance, not
+   a floating modal trigger. */
+.tpl-custom-actions {
+  display: flex;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  flex-wrap: wrap;
+}
+.tpl-export-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-14);
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.tpl-export-all-btn:hover {
+  background: rgba(247, 195, 64, 0.08);
+}
+.tpl-export-all-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 
 /* ══════════════════════════════════════
