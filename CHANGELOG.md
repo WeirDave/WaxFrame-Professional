@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.143
+
+**Mistral live model discovery + Perplexity self-discovery via web search**
+
+Build: `20260604-016`<br>
+Released: `2026-06-04`
+
+Closes the two `model-fallbacks` cases in David's v3.63.141 bundle. Both providers had been falling back to the curated `MODEL_FALLBACKS` lists — Mistral because of a codebase gap, Perplexity because of a failing endpoint.
+
+**Mistral live fetch** ([js/provider-models.js](js/provider-models.js), [js/api.js:400](js/api.js)) — Mistral has `/v1/models` with standard OpenAI-shaped Bearer auth, but was missing from `MODEL_FILTERS` and from `fetchModelsForProvider`'s switch entirely. `fetchModelsForProvider('mistral')` was hitting the early-return at line 386 (`if (!MODEL_FILTERS[provider]) return null`) and silently bypassing live discovery, so every classifier and recommender call fell through to `MODEL_FALLBACKS['mistral']`. The `*-latest` aliases in the fallback list were Mistral-side stable references that resolve correctly — that's why it "worked" — but only ever surfaced the three tiers we hardcoded. v3.63.143 adds Mistral to both maps; live discovery now reaches Mistral's actual current lineup.
+
+**Perplexity self-discovery via web search** ([js/api.js:425](js/api.js)) — Perplexity's `/v1/models` exists but: (1) it's a frontier-model gateway that we filter to `^sonar` only; (2) browser callers have been hitting `NetworkError` on the GET (CORS or transport), surfaced in David's v3.63.140 bundle as `model-fetch` failures even though `/chat/completions` to the same host works fine. The replacement uses Perplexity's CORE strength — live web search — and fires one chat-completion call asking Perplexity itself to look up its current Sonar lineup at `api-docs.perplexity.ai/models`. One ~$0.001 call, cached for the same 7-day TTL as every other model list, stays current automatically as Perplexity ships new variants.
+
+The prompt is tightly scoped:
+
+```
+Search api-docs.perplexity.ai/models for the current list of Perplexity API
+chat-completion model ids. Reply with ONLY the model ids, one per line.
+No markdown, no commentary, no numbering. Only ids that begin with "sonar".
+```
+
+Response parser strips leading bullets/numbering defensively and re-applies `MODEL_FILTERS.perplexity` (`^sonar` whitelist) as a safety net so non-sonar entries can't leak through even if the model goes off-format. Falls back to `MODEL_FALLBACKS['perplexity']` cleanly when self-discovery returns nothing usable.
+
+**Architectural note** — using a tool's own strength to solve its own discovery limitation is a pattern worth keeping in mind. Other providers without clean model-list endpoints might be candidates for similar self-discovery calls in the future. Cost is negligible (<$0.01 per provider per 7-day TTL), and the answer is more authoritative than any human-maintained list because it comes from a current live web search by the provider itself.
+
+**Applied to both `fetchModelsForProvider` and `fetchModelsForProviderLive`** ([js/api.js:530](js/api.js)) — per the existing comment block at line 526–529 ("Mirrors fetchModelsForProvider's provider-specific request shapes so any /v1/models endpoint quirk fix lives in BOTH functions or in a shared helper later").
+
+---
+
 ## v3.63.142
 
 **Provider link audit: fix 11 stale URLs across 7 files**
