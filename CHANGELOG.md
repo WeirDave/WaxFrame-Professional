@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.142
+
+**Provider link audit: fix 11 stale URLs across 7 files**
+
+Build: `20260604-015`<br>
+Released: `2026-06-04`
+
+David caught a broken Grok billing link on the AI API Pricing page and asked the right question — *had I actually checked any of the links I'd previously cited?* I hadn't. Full audit found stale URLs in 7 different files. v3.63.142 fixes everything verified-broken; URLs that returned 403 to bot fetches but match each provider's current documented shape are left alone.
+
+**Anthropic console host migration** ([js/api-links.js](js/api-links.js), [index.html](index.html), [api-details.html](api-details.html), [waxframe-user-manual.html](waxframe-user-manual.html), [what-are-tokens.html](what-are-tokens.html), [ai-api-pricing.html](ai-api-pricing.html), [tools/pricing-worker/data/pricing-seed.json](tools/pricing-worker/data/pricing-seed.json)) — Anthropic migrated the entire console from `console.anthropic.com` to `platform.claude.com`. 302 redirect confirmed for both `/settings/billing` and `/settings/keys`. Every occurrence swept across all 7 files.
+
+**Grok billing path doesn't exist** ([ai-api-pricing.html](ai-api-pricing.html), [api-details.html](api-details.html), [index.html](index.html), [tools/pricing-worker/data/pricing-seed.json](tools/pricing-worker/data/pricing-seed.json)) — `console.x.ai/billing` was a guess that didn't pan out. xAI's actual console paths are team-UUID-scoped (e.g. `console.x.ai/team/<uuid>/usage`), so a hardcoded billing URL can't work. Fixed by pointing at the console root `console.x.ai` and letting the user navigate to Billing inside. Verified against xAI's official docs at `docs.x.ai/console/billing`.
+
+**Mistral billing was mislabeled** ([ai-api-pricing.html](ai-api-pricing.html), [tools/pricing-worker/data/pricing-seed.json](tools/pricing-worker/data/pricing-seed.json)) — the pricing-seed `billingUrl` field pointed at `console.mistral.ai/api-keys`, which is Mistral's API-keys page, not billing. Mistral split billing to a separate admin subdomain. Fixed to `https://admin.mistral.ai/organization/billing` (verified Mistral docs). The `console.mistral.ai/api-keys` references in api-details.html are intentionally preserved — that page IS the API-keys page and the api-details "go here to get a key" context is correct.
+
+**URLs that look 403 but are fine** — Gemini, ChatGPT, Cohere, DeepSeek, Together AI, and Perplexity all returned 403 Forbidden to my bot fetches. That's normal auth-gating behavior, not a broken URL. Their URL shapes match each provider's current documented structure, so they're left alone. Audited each via WebSearch against the provider's own docs.
+
+**Lesson learned** — every external URL added to user-facing copy should be verified at write-time, not assumed-correct based on the provider's last-known structure. Provider consoles drift quietly: hosts get renamed (Anthropic), paths restructure (Grok billing), labels get mixed up (Mistral). The fix here was retroactive; the prevention is to actually click-check before shipping. Worth adding to the rules reference.
+
+---
+
 ## v3.63.141
 
 **Tier classifier architectural alignment with the existing recommender**
