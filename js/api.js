@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260604-016
+// Build: 20260604-017
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -449,10 +449,21 @@ async function fetchModelsForProvider(provider) {
       // Strip leading bullets / numbering the model may add despite instructions.
       // MODEL_FILTERS.perplexity re-applies as a safety net so non-sonar
       // entries can't leak through even if the response goes off-format.
+      // v3.63.144 — DO NOT pipe through normalizePerplexityModels here.
+      // That helper handles the /v1/models gateway response which carries
+      // a "perplexity/..." namespace prefix and includes documented-
+      // fallback expansion when only base sonar is returned. It RETURNS
+      // an object { models, modelsSource, rawLiveModels }, NOT an array —
+      // v3.63.143 was calling `.filter()` directly on that object and
+      // throwing TypeError, which was caught by the outer try-catch and
+      // returned undefined silently. Self-discovery returns clean current
+      // ids and Perplexity's own search is more authoritative than the
+      // documented fallback, so we just dedupe + re-apply the ^sonar
+      // safety-net filter and skip the helper entirely.
       const _raw = _text.split('\n')
         .map(s => s.trim().replace(/^[-*\d.)\s>`]+/, '').replace(/[`'",]/g, ''))
         .filter(s => /^sonar[a-z0-9\-]*$/i.test(s));
-      models = normalizePerplexityModels(_raw).filter(MODEL_FILTERS.perplexity);
+      models = [...new Set(_raw)].filter(MODEL_FILTERS.perplexity);
       if (!models.length) {
         console.warn('[fetchModelsForProvider:perplexity] self-discovery returned no usable ids; raw response:', _text.slice(0, 300));
         return null;
@@ -624,10 +635,21 @@ async function fetchModelsForProviderLive(provider) {
       // Strip leading bullets / numbering the model may add despite instructions.
       // MODEL_FILTERS.perplexity re-applies as a safety net so non-sonar
       // entries can't leak through even if the response goes off-format.
+      // v3.63.144 — DO NOT pipe through normalizePerplexityModels here.
+      // That helper handles the /v1/models gateway response which carries
+      // a "perplexity/..." namespace prefix and includes documented-
+      // fallback expansion when only base sonar is returned. It RETURNS
+      // an object { models, modelsSource, rawLiveModels }, NOT an array —
+      // v3.63.143 was calling `.filter()` directly on that object and
+      // throwing TypeError, which was caught by the outer try-catch and
+      // returned undefined silently. Self-discovery returns clean current
+      // ids and Perplexity's own search is more authoritative than the
+      // documented fallback, so we just dedupe + re-apply the ^sonar
+      // safety-net filter and skip the helper entirely.
       const _raw = _text.split('\n')
         .map(s => s.trim().replace(/^[-*\d.)\s>`]+/, '').replace(/[`'",]/g, ''))
         .filter(s => /^sonar[a-z0-9\-]*$/i.test(s));
-      models = normalizePerplexityModels(_raw).filter(MODEL_FILTERS.perplexity);
+      models = [...new Set(_raw)].filter(MODEL_FILTERS.perplexity);
       if (!models.length) {
         console.warn('[fetchModelsForProvider:perplexity] self-discovery returned no usable ids; raw response:', _text.slice(0, 300));
         return null;
