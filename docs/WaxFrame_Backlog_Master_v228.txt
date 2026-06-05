@@ -1,0 +1,72 @@
+WaxFrame Backlog Master v228
+2026-06-05
+
+State: v3.63.159 Pro shipped on main. Thirteenth Worker Bees release of the night's arc (first release on 2026-06-05 since the rollover). Two polish items:
+
+1. Bee mascot tooltips. Every WaxFrame bee asset gets a friendly name on hover via a centralized BEE_NAMES mapping in js/app.js + applyBeeTooltips() walker that runs on DOMContentLoaded and re-fires from renderAISetupGrid. Names: Wally Worker, Bob Builder, Bob Builder (hard at work, the Building variant), Art API, Paul Project, Ralph Reference, Scout Starter, Andy Approved, Henry History, Pete Prompt, Theo Token. Future bees get tooltips by adding one mapping entry — no per-template title attribute editing.
+
+2. Top count chip numbers in gold (var(--accent), was var(--text) white). David flagged the visual inconsistency with the gold .ai-setup-group-count "Custom AIs 4". All count surfaces on Set up your hive now use the same gold-number-on-quiet-label treatment.
+
+Queued for v3.63.160:
+- Change Builder modal on the work screen (worker page): update methodology to match Set up your hive page row layout (compact native model select + per-row Builder button instead of the current chip + shared model dropdown + Set as Builder commit pattern).
+- help.html: update its model picker references / examples to match the new compact methodology too. David: "we also have to make sure that that matches the help dot HTML file for pulling the models as well".
+
+These are a bigger structural change than the v3.63.159 polish; deserves its own focused release.
+
+v3.63.158 state still holds: sidebar Jump-to-AI scroll regression fix (scrollIntoView + scroll-margin-top + window.jumpToAISetupRow binding).
+
+PRIOR STATE (v3.63.158, retained for context until next release reshuffles the margin):
+Sidebar Jump-to-AI links scroll into view again. Replaced window.scrollTo (no-op because .fullscreen-layout has overflow:hidden) with row.scrollIntoView wrapped in requestAnimationFrame, plus scroll-margin-top:80px on .ai-setup-row.
+
+PRIOR STATE (v3.63.157, retained for context until next release reshuffles the margin):
+Polish pass. Builder button click no longer expands row. Light-tint active Builder. Custom count gold inline (no parens). Hive Profile note rewording + wider max-width + text-wrap:balance. In-app nav menu rename.
+
+PRIOR STATE (v3.63.156, retained for context until next release reshuffles the margin):
+Three bug fixes. Recommend Models for All keepExpanded:false. _buildCompactModelSelect renders .is-stale fallback. Card-click diagnostic with explicit window binding (which was THE fix).
+
+Open Bugs
+
+(none currently tracked outside the active task list)
+
+Open Features / Tasks — Worker Bees rework Phase 10+
+
+- v3.63.160 candidate: Change Builder modal methodology update (work screen) + help.html model picker methodology update
+- #10 Hive Profiles: "Save current as named profile" (named user profiles)
+- #12 Hive Profiles: dedicated docs page (hive-profiles.html)
+- #24 Worker Bees rework: drop sub-1366px responsive code — cleanup pass
+- #27 Worker Bees rework: 3-group ordering (defaults / customs / servers) — bigger restructure
+- #32 Builder consolidation: documentation sweep (User Manual numbering + Builder screen removal + Set up your hive rename across landing pages + README) — partially done; remaining: User Manual + README + landing pages
+- #35 Auto-classify tier picks always (not click-to-classify)
+- #36 Worker Bees rework: server provider group label
+- Per-row "Manual override" tag — needs delta tracking
+- Per-tier WHY text: classifier currently produces one overall WHY
+- Dead-CSS cleanup pass: legend-block from v3.63.154, builder-chip from v3.63.155
+- WaxFrame_Builder_v3.png pruning candidate (worker-bees-prototype.html still references it)
+- Restore-from-Checkpoint diff-and-pick UI — PARKED
+- Hive parallel fan-out RPS-awareness
+- Model recommender filter-awareness warning
+- Failover Builder behavior — single-round CONTENT_FILTERED handling
+- Builder-incapable family list expansion
+- Pause/resume at reviewer seam
+- File System Access API exploration
+- Provider Catalog foundation (parked)
+- CSS rule consolidation sweep
+- Repo housekeeping — docs/ folder
+- Triage CodeQL + Dependabot findings
+- Rules reference updates — "verify every external URL before shipping" + "always update const BUILD in addition to the // Build comment" + "release-check validator should compare const BUILD against // Build comment" + "inline-onclick callable functions need window.fn = fn binding" + "scroll-into-view targets need to be verified against actual scrollable container"
+
+Observations
+
+- 2026-06-05 — Bee tooltip approach: centralized mapping table is the right pattern for naming. Adding the names inline as title="" attributes would mean editing every img reference; a single 11-entry table covers the entire mascot roster and stays in sync as new bees join. The longest-key-wins match logic also future-proofs against asset filename variants (Building, Working, Sleeping, etc.).
+
+- 2026-06-05 — The gold-vs-white count debate completes the consistency arc that started in v3.63.154 when (4) parens were added. The journey: bubble badge → (4) parens muted → muted white → "(4) gold parens looked off vs the white top count" → gold inline no parens for Custom AIs → gold inline for top count too. Final state: all counts gold inline, no parens, consistent treatment everywhere on the screen.
+
+- 2026-06-05 — Worker Bees v3 rework arc thirteen releases deep. The polish iterations (color consistency, alignment, light-tint vs solid, click affordance) are tightening up a screen that was already functional. Each iteration smooths a specific friction point David identified by looking at the live version.
+
+- 2026-06-05 — release-check validator caught no drift across v3.63.135 through v3.63.159 (twenty-five ceremonies).
+
+- 2026-06-05 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01. The Worker Bees arc keeps removing friction. The bee tooltips are pure brand whimsy — they don't reduce friction per se but they add personality, which matters when people are deciding whether to try something. The named mascots make the brand feel intentional rather than generic.
