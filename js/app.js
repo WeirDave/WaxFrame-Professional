@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-020
+// Build: 20260604-021
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4587,22 +4587,26 @@ function buildAISetupRowHTML(ai) {
     //   • not current Builder → "🔨 Make this the Builder" button
     // Activating sets `builder` (via setBuilder) which unsets any prior
     // Builder — exactly-one-at-a-time enforcement comes free from the
-    // existing setBuilder function. The Builder Bee mascot graphic
-    // appears in both states so the brand asset stays visible.
+    // existing setBuilder function.
     // Suppressed for Jamba (per BUILDER_INCAPABLE_FAMILIES) and for any
     // AI without a saved key — can't Builder without a key.
+    // v3.63.148 — Per David's feedback, the per-row Builder Bee mascot
+    // was overkill (the brand asset belongs in the screen header, not
+    // duplicated inside every row). Mascot moved to the .hp-section-header
+    // opposite the Worker Bee. The in-row affordance keeps the functional
+    // button + hammer emoji + indicator text; the brand asset shows up
+    // exactly twice on the screen now (header mascot + small collapsed-
+    // row chip identifying the active Builder).
     const _builderIncapable = isBuilderIncapableModel(cfg?.model || ai.provider || '');
     const _isCurrentBuilder = (typeof builder !== 'undefined' && builder === ai.id);
     let builderAffordance = '';
     if (hasKey && !_builderIncapable) {
       builderAffordance = _isCurrentBuilder
         ? `<div class="ai-builder-affordance is-active" title="${escapeHtml(ai.name)} is currently your Builder — the AI that rewrites your document each round.">
-             <img src="images/WaxFrame_Builder_v3.png" alt="" class="ai-builder-bee-img">
              <span class="ai-builder-affordance-text"><strong>🔨 This is your Builder</strong></span>
              <span class="ai-builder-affordance-sub">Reads every reviewer's notes + the full document each round and rewrites. Pick a different AI's "Make this the Builder" to switch.</span>
            </div>`
         : `<button class="ai-builder-affordance is-pickable" type="button" onclick="setBuilder('${ai.id}'); event.stopPropagation(); renderAISetupGrid();" title="Make ${escapeHtml(ai.name)} the Builder for this hive.">
-             <img src="images/WaxFrame_Builder_v3.png" alt="" class="ai-builder-bee-img">
              <span class="ai-builder-affordance-text">🔨 Make this the Builder</span>
            </button>`;
     } else if (_builderIncapable) {
