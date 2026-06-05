@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260605-001">
+  <meta name="waxframe-build" content="20260605-002">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.159">
+  <link rel="stylesheet" href="style.css?v=3.63.160">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.159",
+    "softwareVersion": "3.63.160",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -194,9 +194,9 @@
           <img src="images/WaxFrame_Worker_Bee_v2.png" class="hp-section-bee" alt="">
           <div class="hp-section-title-block">
             <h2 class="hp-section-title">Set up your hive <button class="goal-info-btn" onclick="document.getElementById('infoBeesModal').classList.add('active')" title="About Worker Bees"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-            <p class="hp-section-sub">Each AI in your hive acts as a <strong>reviewer</strong> — and one of them also acts as your <strong>Builder</strong>, the AI that rewrites your document each round using everyone's notes.</p>
-            <p class="hp-section-sub"><strong>Set up at least two AIs to continue. Three or more is recommended</strong> — with three or more reviewers the hive can resolve disagreements on its own; with only two, you'll occasionally have to break a tie yourself.</p>
-            <p class="hp-section-sub">Click any AI card below to set it up, pick its model, and (when you're ready) make it your Builder. New here, or wondering what it costs to run? Tap the <strong>ⓘ</strong> next to the heading above — cost, keys, and the full setup guide all live there.</p>
+            <p class="hp-section-sub">Your hive is a team of AIs. Every AI <strong>reviews</strong> your document each round; one is the <strong>Builder</strong> — the AI that rewrites it.</p>
+            <p class="hp-section-sub">Minimum <strong>2 AIs</strong>. <strong>3+ recommended</strong> so the hive can break its own ties on conflicting suggestions.</p>
+            <p class="hp-section-sub">Click any AI below to add its key, pick its model, and (when ready) crown it Builder. New here? Tap the <strong>ⓘ</strong> above for cost, keys, and the full setup guide.</p>
           </div>
           <!-- v3.63.149 — Builder Bee anchored to the right side of the header,
                opposite the Worker Bee mascot, so the two brand mascots face each
@@ -1722,15 +1722,22 @@
 </div>
 
 <!-- CHANGE BUILDER MODAL -->
+<!-- v3.63.160 — Change Builder modal restructured to match the
+     Set up your hive page methodology. Each candidate AI now renders
+     as a row with: icon + name + Model dropdown + Builder button.
+     Click the gray "🔨 Builder" button on any row → that AI becomes
+     the Builder immediately and the modal closes. The Builder button
+     for the current Builder shows in the gold active state.
+     No more separate "Set as Builder" commit step; one click per row
+     IS the commit. Same plumbing the Set up your hive screen uses:
+     compact native model select + setBuilder(). -->
 <div class="finish-modal-overlay" id="changeBuilderModal" onclick="if(event.target===this)closeChangeBuilder()">
   <div class="finish-modal change-builder-modal">
-    <h2 class="finish-modal-title"><img src="images/WaxFrame_Builder_v3.png" class="modal-title-bee" alt="" onerror="this.style.display='none'"> Change Builder</h2>
-    <p class="finish-modal-msg" id="changeBuilderReason">The Builder rewrites the document each round. Choose an AI with a paid API key and enough token capacity. <strong>Cost note:</strong> the Builder reads project setup, reference material, the full working document, and every reviewer's suggestions every round — switching to a premium model here can raise per-round cost significantly. If you've enabled billing on Google AI Studio, Gemini-as-Builder bills per token.</p>
-    <div class="builder-pick-grid" id="changeBuilderGrid"></div>
-    <div class="cb-model-wrap" id="changeBuilderModelWrap"></div>
+    <h2 class="finish-modal-title"><img src="images/WaxFrame_Builder_v4.png" class="modal-title-bee" alt="" onerror="this.style.display='none'"> Change Builder</h2>
+    <p class="finish-modal-msg" id="changeBuilderReason">The Builder rewrites the document each round. Click <strong>🔨 Builder</strong> on whichever AI you want — model can be swapped from the dropdown next to its name. <strong>Cost note:</strong> the Builder reads project setup, reference material, the full document, and every reviewer's suggestions every round — switching to a premium model raises per-round cost.</p>
+    <div class="cb-row-list" id="changeBuilderGrid"></div>
     <div class="cb-actions">
-      <button class="cb-confirm-btn" id="changeBuilderConfirm" disabled onclick="confirmBuilderFromModal()">🔨 Set as Builder</button>
-      <button title="Cancel without changing the Builder" class="finish-modal-cancel" onclick="closeChangeBuilder()">← Cancel</button>
+      <button title="Cancel and close" class="finish-modal-cancel" onclick="closeChangeBuilder()">← Cancel</button>
     </div>
   </div>
 </div>
@@ -2877,23 +2884,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.159';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.160';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.159"></script>
-<script src="lib/jszip.min.js?v=3.63.159"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.159"></script>
-<script src="js/version.js?v=3.63.159"></script>
-<script src="js/storage.js?v=3.63.159"></script>
-<script src="js/theme.js?v=3.63.159"></script>
-<script src="js/audio.js?v=3.63.159"></script>
-<script src="js/scenes.js?v=3.63.159"></script>
-<script src="js/wf-debug.js?v=3.63.159"></script>
-<script src="js/provider-models.js?v=3.63.159"></script>
-<script src="js/api.js?v=3.63.159"></script>
-<script src="js/templates.js?v=3.63.159"></script>
-<script src="js/api-links.js?v=3.63.159"></script>
-<script src="js/app.js?v=3.63.159"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.160"></script>
+<script src="lib/jszip.min.js?v=3.63.160"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.160"></script>
+<script src="js/version.js?v=3.63.160"></script>
+<script src="js/storage.js?v=3.63.160"></script>
+<script src="js/theme.js?v=3.63.160"></script>
+<script src="js/audio.js?v=3.63.160"></script>
+<script src="js/scenes.js?v=3.63.160"></script>
+<script src="js/wf-debug.js?v=3.63.160"></script>
+<script src="js/provider-models.js?v=3.63.160"></script>
+<script src="js/api.js?v=3.63.160"></script>
+<script src="js/templates.js?v=3.63.160"></script>
+<script src="js/api-links.js?v=3.63.160"></script>
+<script src="js/app.js?v=3.63.160"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
