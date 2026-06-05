@@ -2,6 +2,78 @@
 
 ---
 
+## v3.63.154
+
+**Hive setup polish — card-click bug fix, column alignment, Builder chip & Model: label moves, bulk-select reseat, page rename**
+
+Build: `20260604-027`<br>
+Released: `2026-06-04`
+
+Pile of David-reported polish + one real bug fix in a single release.
+
+### Bug: 6-card "Use this" cards didn't change the model
+
+[js/app.js:4587](js/app.js) — the v3.63.153 whole-card click handler inlined `${JSON.stringify(pickModel)}` into the `onclick=` attribute, which emitted literal double-quotes inside a double-quoted HTML attribute:
+
+```
+onclick="swapAIModelFromHiveCard('chatgpt', "gpt-5.5"); ..."
+```
+
+The browser parsed the onclick value as `swapAIModelFromHiveCard('chatgpt', ` (truncated at the first `"`), and the rest decayed to stray attributes. Clicking any of the 6 cards silently did nothing. **Fix**: model id moves to a `data-pick-model` attribute (HTML-safe escaped via `escapeHtml`) and the inline handler reads `this.dataset.pickModel`. No more quote-in-quote bug. Affects all 6 cards (✨ Reviewer / 🔨 Builder / 💰 Cheap / ⚖️ Balanced / 🧠 Thinker / ⚡ Fast).
+
+### Collapsed-row column alignment
+
+David: *"with the prototype the active buttons are all lined up very neatly in a column and it looks great"*. The pill, model selector, and Builder chip were shifting around row-to-row based on name length. Fixed:
+
+- `.ai-setup-name-group` → fixed `width: 160px` (long names ellipsize via existing overflow rules)
+- `.ai-setup-status-pill` → fixed `width: 84px` (so absent-pill rows still hold the column)
+- `.ai-setup-compact-model` → fixed `width: 320px` (was flex-grow, dropdown column wandered)
+- `.ai-setup-builder-chip` → fixed `width: 90px`
+- Placeholder spans (`.ai-setup-status-pill-placeholder`, `.ai-setup-builder-chip-placeholder`) hold those same widths when inactive so downstream slots stay aligned
+
+Result: every row's chevron, icon, name, pill, "Model:" label, dropdown, Builder chip, ⚠ flag, and action sit at the same x-coordinate column-to-column.
+
+### Builder chip moved out of the name-group
+
+Per David's *"put the builder on the other side of the drop down for the model"* — the green→gold Builder Bee chip used to live inside `.ai-setup-name-group` (next to the AI name), which made it look like part of the AI's identity. It's now a separate slot AFTER the model dropdown, so the row reads as:
+
+```
+▶ [icon]  ChatGPT  [✓ Ready]  Model: [gpt-5.5 ▾]  [🐝 Builder]   ☐
+```
+
+The Builder chip identifies which AI is the active Builder; sitting after the model picker reads as "this row's role" rather than as part of the AI's name.
+
+### "Model:" label added
+
+Per David's *"the word model next to the drop down was much more pro level"* — small uppercase "MODEL:" label sits between the status pill and the dropdown. Matches the prototype's design.
+
+### Bulk-select toolbar moved into the Custom AIs section
+
+Per David: *"the selector which has X of Y custom AI selected with All None and then Remove — that should drop down as almost like the header of the custom AI section because it's only for the custom AI"*. In Internet mode the bulk-select toolbar (All / None / ✕ Remove) now renders just below the "Custom AIs (N)" group label, NOT at the very top of the grid. The scope is clearer: this control acts on customs, so it sits with the customs. Server mode (all visible bees are server-imported customs) still shows the toolbar at the top.
+
+### Custom AI count format → parens
+
+Per David: *"that's a number 4 which I don't even know why we have a count there I guess it's OK to have but we should put it in parentheses"*. `Custom AIs <badge>4</badge>` → `Custom AIs (4)`. The existing accent-gold styling on `.ai-setup-group-count` stays so it reads as a count, not a punctuation accident.
+
+### Page header rename
+
+Per David: *"do you think we should rename this page to set up your hive to keep it consistent because we keep calling it the hive"*. H2 title changes from **"Your Worker Bees"** → **"Set up your hive"**. The "Worker Bees" terminology stays everywhere else (each AI is still a Worker Bee, the info modal is still "About Worker Bees") because the entity name shouldn't change — only the page title.
+
+### Sidebar: legend dropped, Jump-to-AI moved up
+
+Per David: *"remove the legend and move the jump menu up"*. The Icon Legend block (✨🔨💰⚖️🧠⚡) was taking sidebar space and the emoji are decodable from context (the cards themselves carry icons + labels). Sidebar now leads with the Jump to AI nav (alphabetized within Default / Custom subheads, with the green ● indicator for AIs with saved keys per David's *"super badass"* note), followed by the Related links (API Key Guide, AI API Pricing).
+
+### Not changed (by request)
+
+- **Builder pill in sidebar Jump-to-AI list** — David considered then rejected: *"no that will be confusing because the logos are next to them and they're really small anyway"*. Sidebar list stays uncluttered.
+- **Test + Recommend Models buttons stay blue** — paired utility duo per the v3.32.12 design note. David caught me about to recolor them gold in v3.63.153; rule stands.
+
+### Defer
+
+Per-row "Manual override" badge (when current model ≠ Hive Profile's pick) still pending — needs delta tracking. The legend-block CSS (`.bees-sidebar-legend*`) is now dead but left in style.css; pruning candidate for the upcoming CSS dead-selector cleanup pass.
+
+---
+
 ## v3.63.153
 
 **Worker Bees v3 rework — Phase 3: sidebar chassis + collapsed-row redo + color cohesion + transparent Builder Bee**
