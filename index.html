@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260605-005">
+  <meta name="waxframe-build" content="20260605-006">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.163">
+  <link rel="stylesheet" href="style.css?v=3.63.164">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.163",
+    "softwareVersion": "3.63.164",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2679,7 +2679,28 @@
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="min-screen-logo">
     <h1 class="min-screen-title">A little more room, please</h1>
     <p class="min-screen-msg">Thanks for stopping by! WaxFrame's work screen shows several AI Worker Bees, your document, and the Builder's synthesis side by side — so it needs a window at least <strong>1366 × 768 px</strong> to lay everything out (<strong>1600+ wide is best</strong>).</p>
-    <p class="min-screen-sub">If you're on a desktop or laptop: resize this browser window or dock dev tools to the bottom and you'll be in. If you're on a tablet, please switch to your computer.</p>
+    <!-- v3.63.164 — Live viewport readout. The overlay was previously
+         showing only the required minimum, which left users guessing whether
+         their actual browser viewport (which is what gates them, not their
+         display resolution) was the problem. This block shows the live
+         viewport CSS-pixel dimensions next to the required minimum, with
+         a color-coded comparison. resize listener attached in the inline
+         script below; updates on resize, devicePixelRatio change, and
+         theme toggle. The viewport-vs-screen-resolution distinction is the
+         #1 source of "but my screen is 1920×1080 so why am I blocked"
+         confusion; surfacing the actual viewport disambiguates immediately. -->
+    <div class="min-screen-viewport" id="minScreenViewport" aria-live="polite">
+      <div class="min-screen-viewport-row">
+        <span class="min-screen-viewport-label">Your browser viewport:</span>
+        <span class="min-screen-viewport-value" id="minScreenViewportNow">— × —</span>
+      </div>
+      <div class="min-screen-viewport-row">
+        <span class="min-screen-viewport-label">Required minimum:</span>
+        <span class="min-screen-viewport-value">1366 × 768</span>
+      </div>
+      <div class="min-screen-viewport-hint" id="minScreenViewportHint"></div>
+    </div>
+    <p class="min-screen-sub">If you're on a desktop or laptop: resize this browser window or dock dev tools to the bottom and you'll be in. <strong>Important:</strong> if your screen resolution looks fine but you're still blocked, check your browser zoom level (Ctrl+0 to reset) and Windows DPI scaling (Settings → Display → Scale; 200% halves your effective viewport). If you're on a tablet, please switch to your computer.</p>
     <div class="min-screen-links">
       <a href="templates.html" class="min-screen-link">⭐ Browse the Template Catalog</a>
       <a href="ai-api-pricing.html" class="min-screen-link">💰 AI API Pricing Comparison</a>
@@ -2698,6 +2719,46 @@
     </p>
   </div>
 </div>
+<!-- v3.63.164 — Inline viewport readout updater. Runs IMMEDIATELY (not
+     deferred to app.js DOMContentLoaded) because users hitting the
+     min-screen-overlay are by definition users whose viewport is too
+     small to load the full app — app.js may never fire. Updates on
+     resize and on theme/zoom changes. Hint flips between "👍 You're
+     above the minimum" (green) and "✗ Below minimum by N px wide" /
+     "✗ Below minimum by M px tall" (red) so the user sees exactly
+     which dimension is the problem. -->
+<script>
+(function() {
+  var nowEl = document.getElementById('minScreenViewportNow');
+  var hintEl = document.getElementById('minScreenViewportHint');
+  if (!nowEl || !hintEl) return;
+  var MIN_W = 1366;
+  var MIN_H = 768;
+  function update() {
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    nowEl.textContent = w + ' × ' + h + ' px';
+    var okW = w >= MIN_W;
+    var okH = h >= MIN_H;
+    if (okW && okH) {
+      hintEl.textContent = '👍 You’re above the minimum — refresh to load WaxFrame.';
+      hintEl.className = 'min-screen-viewport-hint is-ok';
+    } else {
+      var parts = [];
+      if (!okW) parts.push((MIN_W - w) + ' px wider');
+      if (!okH) parts.push((MIN_H - h) + ' px taller');
+      hintEl.textContent = '✗ Needs ' + parts.join(' and ') + ' to fit the work screen.';
+      hintEl.className = 'min-screen-viewport-hint is-short';
+    }
+  }
+  update();
+  window.addEventListener('resize', update, { passive: true });
+  // Cover zoom and DPI changes that don't fire resize on every browser.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', update, { passive: true });
+  }
+})();
+</script>
 
 <!-- Mobile not supported overlay — but a funnel landing, not a wall.
      Mobile visitors landing on index.html from search results get a
@@ -2823,23 +2884,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.163';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.164';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.163"></script>
-<script src="lib/jszip.min.js?v=3.63.163"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.163"></script>
-<script src="js/version.js?v=3.63.163"></script>
-<script src="js/storage.js?v=3.63.163"></script>
-<script src="js/theme.js?v=3.63.163"></script>
-<script src="js/audio.js?v=3.63.163"></script>
-<script src="js/scenes.js?v=3.63.163"></script>
-<script src="js/wf-debug.js?v=3.63.163"></script>
-<script src="js/provider-models.js?v=3.63.163"></script>
-<script src="js/api.js?v=3.63.163"></script>
-<script src="js/templates.js?v=3.63.163"></script>
-<script src="js/api-links.js?v=3.63.163"></script>
-<script src="js/app.js?v=3.63.163"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.164"></script>
+<script src="lib/jszip.min.js?v=3.63.164"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.164"></script>
+<script src="js/version.js?v=3.63.164"></script>
+<script src="js/storage.js?v=3.63.164"></script>
+<script src="js/theme.js?v=3.63.164"></script>
+<script src="js/audio.js?v=3.63.164"></script>
+<script src="js/scenes.js?v=3.63.164"></script>
+<script src="js/wf-debug.js?v=3.63.164"></script>
+<script src="js/provider-models.js?v=3.63.164"></script>
+<script src="js/api.js?v=3.63.164"></script>
+<script src="js/templates.js?v=3.63.164"></script>
+<script src="js/api-links.js?v=3.63.164"></script>
+<script src="js/app.js?v=3.63.164"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
