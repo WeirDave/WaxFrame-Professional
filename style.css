@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-019
+   Build: 20260604-020
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14866,4 +14866,101 @@ kbd {
 .pricing-status-banner.is-warning {
   border-left-color: var(--accent);
   color: var(--accent);
+}
+
+/* ============================================================
+ * v3.63.147 — Worker Bees Builder selection affordance.
+ * The Builder screen has been retired; Builder selection now
+ * happens inline inside each AI's expanded row. Two visual
+ * states: is-active (current Builder, green) and is-pickable
+ * (becomes Builder on click). Builder Bee mascot is the brand
+ * asset and stays prominent in both states.
+ * ============================================================ */
+.ai-builder-affordance {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-10);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-13);
+  border: 1px dashed var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  width: 100%;
+  cursor: default;
+  flex-wrap: wrap;
+}
+.ai-builder-affordance.is-active {
+  background: rgba(67, 160, 71, 0.10);
+  border: 1px solid #43a047;
+  cursor: default;
+}
+.ai-builder-affordance.is-pickable {
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.12s, border-color 0.12s;
+}
+.ai-builder-affordance.is-pickable:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent, #f4b400);
+}
+.ai-builder-affordance.is-pickable:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: 2px;
+}
+.ai-builder-affordance.is-incapable {
+  background: rgba(244, 180, 0, 0.08);
+  border-color: var(--accent, #f4b400);
+  color: var(--text-dim);
+  font-style: italic;
+}
+.ai-builder-bee-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.ai-builder-affordance-text {
+  flex: 0 1 auto;
+}
+.ai-builder-affordance-sub {
+  flex: 1 1 100%;
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  padding-left: 36px;
+}
+
+/* Builder Bee chip on the collapsed row summary — instant
+ * "this is the active Builder" identification without expanding. */
+.ai-setup-builder-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 4px;
+  border-radius: 999px;
+  background: rgba(67, 160, 71, 0.12);
+  border: 1px solid rgba(67, 160, 71, 0.55);
+  color: #2e7d32;
+  font-size: var(--fs-11);
+  font-weight: 600;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.ai-setup-builder-chip-img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+@media (prefers-color-scheme: dark) {
+  .ai-setup-builder-chip {
+    color: #66bb6a;
+  }
+}
+
+/* v3.63.147 — Builder screen retired. Selection now lives in
+ * Worker Bees. The screen-builder DOM is kept for now so any
+ * legacy code paths don't crash, but it is never shown. */
+#screen-builder {
+  display: none !important;
 }

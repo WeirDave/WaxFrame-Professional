@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-019
+// Build: 20260604-020
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4581,6 +4581,34 @@ function buildAISetupRowHTML(ai) {
     // dual ✨ Reviewer / 🔨 Builder markers — users see both picks
     // directly in the dropdown and select via the same control they'd use
     // for any manual choice.
+    // v3.63.147 — Builder selection affordance. The Builder screen has
+    // been retired; selection now happens here. Two states per AI:
+    //   • current Builder → green "🔨 This is your Builder" indicator
+    //   • not current Builder → "🔨 Make this the Builder" button
+    // Activating sets `builder` (via setBuilder) which unsets any prior
+    // Builder — exactly-one-at-a-time enforcement comes free from the
+    // existing setBuilder function. The Builder Bee mascot graphic
+    // appears in both states so the brand asset stays visible.
+    // Suppressed for Jamba (per BUILDER_INCAPABLE_FAMILIES) and for any
+    // AI without a saved key — can't Builder without a key.
+    const _builderIncapable = isBuilderIncapableModel(cfg?.model || ai.provider || '');
+    const _isCurrentBuilder = (typeof builder !== 'undefined' && builder === ai.id);
+    let builderAffordance = '';
+    if (hasKey && !_builderIncapable) {
+      builderAffordance = _isCurrentBuilder
+        ? `<div class="ai-builder-affordance is-active" title="${escapeHtml(ai.name)} is currently your Builder — the AI that rewrites your document each round.">
+             <img src="images/WaxFrame_Builder_v3.png" alt="" class="ai-builder-bee-img">
+             <span class="ai-builder-affordance-text"><strong>🔨 This is your Builder</strong></span>
+             <span class="ai-builder-affordance-sub">Reads every reviewer's notes + the full document each round and rewrites. Pick a different AI's "Make this the Builder" to switch.</span>
+           </div>`
+        : `<button class="ai-builder-affordance is-pickable" type="button" onclick="setBuilder('${ai.id}'); event.stopPropagation(); renderAISetupGrid();" title="Make ${escapeHtml(ai.name)} the Builder for this hive.">
+             <img src="images/WaxFrame_Builder_v3.png" alt="" class="ai-builder-bee-img">
+             <span class="ai-builder-affordance-text">🔨 Make this the Builder</span>
+           </button>`;
+    } else if (_builderIncapable) {
+      builderAffordance = `<div class="ai-builder-affordance is-incapable" title="${escapeHtml(ai.name)} has a structural output cap that prevents it from finishing a Builder round. Stays usable as a Reviewer."><span>⚠️ Reviewer-only — output cap too low to Builder</span></div>`;
+    }
+
     expandedHTML = `
       <div class="ai-setup-expanded">
         ${getKeyLink}
@@ -4599,8 +4627,17 @@ function buildAISetupRowHTML(ai) {
           ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}'); event.stopPropagation();" title="Test this API key">Test</button>` : ''}
         </div>
         ${modelSelector}
+        ${builderAffordance}
       </div>`;
   }
+  // v3.63.147 — Collapsed-row Builder Bee chip. Appears next to the AI
+  // name when this AI is currently the active Builder. Instant visual
+  // identification of "which AI is doing the heavy lifting right now"
+  // without expanding the row. Renders even when collapsed because
+  // that's the whole point — see-at-a-glance.
+  const _collapsedBuilderChip = (typeof builder !== 'undefined' && builder === ai.id)
+    ? `<span class="ai-setup-builder-chip" title="${escapeHtml(ai.name)} is your current Builder"><img src="images/WaxFrame_Builder_v3.png" alt="" class="ai-setup-builder-chip-img"> Builder</span>`
+    : '';
 
   // v3.63.25 — Compute the card-edge state class. Reflects validation
   // result on every render: gray dashed default (no key OR not yet
@@ -4620,6 +4657,7 @@ function buildAISetupRowHTML(ai) {
         <span class="ai-setup-name" id="ainame-${ai.id}" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
         ${isCustom ? `<button class="ai-setup-rename-btn" onclick="event.stopPropagation(); startCustomAIRename('${ai.id}')" title="Rename ${escapeHtml(ai.name)}">✏️</button>` : ''}
         ${cfg?.model ? `<span class="ai-setup-model" title="${escapeHtml(cfg.model)}">— ${escapeHtml(cfg.model)}</span>` : ''}
+        ${_collapsedBuilderChip}
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
           ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${escapeHtml(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
           : ''}
@@ -8740,12 +8778,30 @@ function continueFromBees() {
     return;
   }
   activeAIs = keyed;
+  // v3.63.147 — Builder screen consolidation. Selection now happens
+  // inline on the Worker Bees screen via the per-row 🔨 "Make this the
+  // Builder" affordance. If the user didn't explicitly pick a Builder,
+  // auto-default to the first active AI alphabetically — same fallback
+  // renderBuilderPicker uses today. The Worker Bees screen surfaces
+  // which AI is currently the Builder via the Builder Bee chip on the
+  // active row's collapsed state, so the user can always see and change
+  // it without bouncing through a dedicated screen.
+  if (!builder || !activeAIs.find(a => a.id === builder)) {
+    builder = _aiListAlpha(activeAIs)[0].id;
+    consoleLog?.(`👤 No Builder explicitly selected — defaulted to ${activeAIs.find(a => a.id === builder)?.name || builder}. Pick a different one from the Worker Bees screen if you want.`, 'info');
+  }
   saveHive();
-  goToScreen('screen-builder');
+  goToScreen('screen-project');
 }
 
+// v3.63.147 — Legacy entry point. The Builder screen has been retired
+// and Worker Bees Continue routes directly to screen-project. This stub
+// remains in case any deep link or browser back-stack lands a user
+// here; route them to screen-project so they don't get stuck.
 function continueFromBuilder() {
-  if (!builder) { toast('⚠️ Choose a Builder AI before continuing'); return; }
+  if (!builder) {
+    if (activeAIs && activeAIs.length) builder = _aiListAlpha(activeAIs)[0].id;
+  }
   saveHive();
   goToScreen('screen-project');
 }
