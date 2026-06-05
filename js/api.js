@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260604-015
+// Build: 20260604-016
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -397,13 +397,17 @@ async function fetchModelsForProvider(provider) {
   try {
     let models = [];
 
-    if (provider === 'chatgpt' || provider === 'grok' || provider === 'deepseek' || provider === 'perplexity') {
+    if (provider === 'chatgpt' || provider === 'grok' || provider === 'deepseek' || provider === 'mistral') {
       // v3.56.48 — derive the base from the endpoint's origin instead of
-      // regex-stripping "/v1/...". Perplexity's endpoint is /chat/completions
-      // with NO /v1/ segment, so the old replace() left it intact and we
-      // fetched .../chat/completions/v1/models → 404 → silent MODEL_FALLBACKS.
-      // origin yields https://api.perplexity.ai for Perplexity and the
-      // identical base for openai/x.ai/deepseek, so only Perplexity changes.
+      // regex-stripping "/v1/...". origin yields the right base for every
+      // OpenAI-shaped /v1/models provider.
+      // v3.63.143 — Mistral added to this branch. It uses standard OpenAI-
+      // shaped /v1/models with Bearer auth but was missing from the switch
+      // entirely, so live discovery silently bypassed straight to MODEL_
+      // FALLBACKS. Perplexity moved out to its own branch below — its
+      // /v1/models is a frontier-model gateway that has been failing with
+      // NetworkError from browser callers; the replacement uses Perplexity's
+      // own web search via a chat-completion call.
       const baseUrl = new URL(cfg.endpoint).origin;
       const resp = await fetch(`${baseUrl}/v1/models`, {
         headers: cfg.headersFn(cfg._key)
@@ -411,18 +415,48 @@ async function fetchModelsForProvider(provider) {
       if (!resp.ok) return null;
       const data = await resp.json();
       const filter = MODEL_FILTERS[provider];
-      // v3.56.46 — order by real recency (created epoch), newest first,
-      // instead of alphabetically. recommendForDefault then takes the newest
-      // *viable* model as the asker. No `created` ⇒ insertion order preserved.
-      // v3.56.48 — Perplexity returns created:0 on every entry, so the sort is
-      // meaningless there; keep the API's own order (like Gemini, no usable date).
+      // v3.56.46 — order by real recency (created epoch), newest first.
       let entries = (data?.data || []);
-      if (provider !== 'perplexity') {
-        entries = entries.sort((a, b) => (b.created || 0) - (a.created || 0));
+      entries = entries.sort((a, b) => (b.created || 0) - (a.created || 0));
+      models = entries.map(m => m.id).filter(filter);
+
+    } else if (provider === 'perplexity') {
+      // v3.63.143 — Perplexity self-discovery via chat completion.
+      // Perplexity's /v1/models exists but: (1) it's a gateway reselling
+      // frontier models + embeds (we filtered to ^sonar only); (2) browser
+      // callers have been hitting NetworkError on the GET (CORS/transport),
+      // surfaced in David's v3.63.140 bundle as `model-fetch` failures even
+      // though /chat/completions to the same host works fine. Instead we
+      // use Perplexity's CORE strength — live web search — and ask
+      // Perplexity itself for its current Sonar lineup. One chat-completion
+      // call (~$0.001), cached for the same 7-day TTL as every other model
+      // list. Stays current automatically as Perplexity ships new variants.
+      const _resp = await fetch(cfg.endpoint, {
+        method: 'POST',
+        headers: cfg.headersFn(cfg._key),
+        body: JSON.stringify({
+          model: 'sonar',
+          messages: [{
+            role: 'user',
+            content: 'Search api-docs.perplexity.ai/models for the current list of Perplexity API chat-completion model ids. Reply with ONLY the model ids, one per line. No markdown, no commentary, no numbering. Only ids that begin with "sonar".\n\nExample of the EXACT format expected:\nsonar\nsonar-pro\nsonar-reasoning\nsonar-reasoning-pro\nsonar-deep-research'
+          }]
+        })
+      });
+      if (!_resp.ok) return null;
+      const _data = await _resp.json();
+      const _text = _data?.choices?.[0]?.message?.content || '';
+      // Parse defensively: one id per line, ^sonar only, alphanumeric + hyphen.
+      // Strip leading bullets / numbering the model may add despite instructions.
+      // MODEL_FILTERS.perplexity re-applies as a safety net so non-sonar
+      // entries can't leak through even if the response goes off-format.
+      const _raw = _text.split('\n')
+        .map(s => s.trim().replace(/^[-*\d.)\s>`]+/, '').replace(/[`'",]/g, ''))
+        .filter(s => /^sonar[a-z0-9\-]*$/i.test(s));
+      models = normalizePerplexityModels(_raw).filter(MODEL_FILTERS.perplexity);
+      if (!models.length) {
+        console.warn('[fetchModelsForProvider:perplexity] self-discovery returned no usable ids; raw response:', _text.slice(0, 300));
+        return null;
       }
-      models = entries.map(m => m.id);
-      if (provider === 'perplexity') models = normalizePerplexityModels(models);
-      else models = models.filter(filter);
 
     } else if (provider === 'claude') {
       // v3.32.13 — route through the same CF Worker proxy that handles
@@ -538,13 +572,17 @@ async function fetchModelsForProviderLive(provider) {
   try {
     let models = [];
 
-    if (provider === 'chatgpt' || provider === 'grok' || provider === 'deepseek' || provider === 'perplexity') {
+    if (provider === 'chatgpt' || provider === 'grok' || provider === 'deepseek' || provider === 'mistral') {
       // v3.56.48 — derive the base from the endpoint's origin instead of
-      // regex-stripping "/v1/...". Perplexity's endpoint is /chat/completions
-      // with NO /v1/ segment, so the old replace() left it intact and we
-      // fetched .../chat/completions/v1/models → 404 → silent MODEL_FALLBACKS.
-      // origin yields https://api.perplexity.ai for Perplexity and the
-      // identical base for openai/x.ai/deepseek, so only Perplexity changes.
+      // regex-stripping "/v1/...". origin yields the right base for every
+      // OpenAI-shaped /v1/models provider.
+      // v3.63.143 — Mistral added to this branch. It uses standard OpenAI-
+      // shaped /v1/models with Bearer auth but was missing from the switch
+      // entirely, so live discovery silently bypassed straight to MODEL_
+      // FALLBACKS. Perplexity moved out to its own branch below — its
+      // /v1/models is a frontier-model gateway that has been failing with
+      // NetworkError from browser callers; the replacement uses Perplexity's
+      // own web search via a chat-completion call.
       const baseUrl = new URL(cfg.endpoint).origin;
       const resp = await fetch(`${baseUrl}/v1/models`, {
         headers: cfg.headersFn(cfg._key)
@@ -552,18 +590,48 @@ async function fetchModelsForProviderLive(provider) {
       if (!resp.ok) return null;
       const data = await resp.json();
       const filter = MODEL_FILTERS[provider];
-      // v3.56.46 — order by real recency (created epoch), newest first,
-      // instead of alphabetically. recommendForDefault then takes the newest
-      // *viable* model as the asker. No `created` ⇒ insertion order preserved.
-      // v3.56.48 — Perplexity returns created:0 on every entry, so the sort is
-      // meaningless there; keep the API's own order (like Gemini, no usable date).
+      // v3.56.46 — order by real recency (created epoch), newest first.
       let entries = (data?.data || []);
-      if (provider !== 'perplexity') {
-        entries = entries.sort((a, b) => (b.created || 0) - (a.created || 0));
+      entries = entries.sort((a, b) => (b.created || 0) - (a.created || 0));
+      models = entries.map(m => m.id).filter(filter);
+
+    } else if (provider === 'perplexity') {
+      // v3.63.143 — Perplexity self-discovery via chat completion.
+      // Perplexity's /v1/models exists but: (1) it's a gateway reselling
+      // frontier models + embeds (we filtered to ^sonar only); (2) browser
+      // callers have been hitting NetworkError on the GET (CORS/transport),
+      // surfaced in David's v3.63.140 bundle as `model-fetch` failures even
+      // though /chat/completions to the same host works fine. Instead we
+      // use Perplexity's CORE strength — live web search — and ask
+      // Perplexity itself for its current Sonar lineup. One chat-completion
+      // call (~$0.001), cached for the same 7-day TTL as every other model
+      // list. Stays current automatically as Perplexity ships new variants.
+      const _resp = await fetch(cfg.endpoint, {
+        method: 'POST',
+        headers: cfg.headersFn(cfg._key),
+        body: JSON.stringify({
+          model: 'sonar',
+          messages: [{
+            role: 'user',
+            content: 'Search api-docs.perplexity.ai/models for the current list of Perplexity API chat-completion model ids. Reply with ONLY the model ids, one per line. No markdown, no commentary, no numbering. Only ids that begin with "sonar".\n\nExample of the EXACT format expected:\nsonar\nsonar-pro\nsonar-reasoning\nsonar-reasoning-pro\nsonar-deep-research'
+          }]
+        })
+      });
+      if (!_resp.ok) return null;
+      const _data = await _resp.json();
+      const _text = _data?.choices?.[0]?.message?.content || '';
+      // Parse defensively: one id per line, ^sonar only, alphanumeric + hyphen.
+      // Strip leading bullets / numbering the model may add despite instructions.
+      // MODEL_FILTERS.perplexity re-applies as a safety net so non-sonar
+      // entries can't leak through even if the response goes off-format.
+      const _raw = _text.split('\n')
+        .map(s => s.trim().replace(/^[-*\d.)\s>`]+/, '').replace(/[`'",]/g, ''))
+        .filter(s => /^sonar[a-z0-9\-]*$/i.test(s));
+      models = normalizePerplexityModels(_raw).filter(MODEL_FILTERS.perplexity);
+      if (!models.length) {
+        console.warn('[fetchModelsForProvider:perplexity] self-discovery returned no usable ids; raw response:', _text.slice(0, 300));
+        return null;
       }
-      models = entries.map(m => m.id);
-      if (provider === 'perplexity') models = normalizePerplexityModels(models);
-      else models = models.filter(filter);
 
     } else if (provider === 'claude') {
       // Route through the CF Worker proxy for the same CORS reason as
