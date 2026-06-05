@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-019">
+  <meta name="waxframe-build" content="20260604-020">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.146">
+  <link rel="stylesheet" href="style.css?v=3.63.147">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.146",
+    "softwareVersion": "3.63.147",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -180,7 +180,7 @@
         </div>
       </div>
 <div class="fs-header-right">
-        <div class="setup-step-badge">Setup — Step 1 of 5</div>
+        <div class="setup-step-badge">Setup — Step 1 of 4</div>
         <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
         <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
         <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️</button>
@@ -214,9 +214,9 @@
         <span class="launch-req-title">To continue you need:</span>
         <span class="launch-req-item" id="req-keys">✗ At least 2 AIs set up</span>
       </div>
-      <button title="Save your hive and continue to Setup 2 — Builder" class="btn btn-lg btn-cta" id="beesContinueBtn" onclick="continueFromBees()">
-        <img src="images/WaxFrame_Builder_v3.png" class="bee-btn-img">
-        Continue — Choose Builder →
+      <button title="Save your hive and continue to your Project setup" class="btn btn-lg btn-cta" id="beesContinueBtn" onclick="continueFromBees()">
+        <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
+        Continue — Your Project →
       </button>
     </div>
   </div>
@@ -301,7 +301,7 @@
     <div class="fs-header">
       <div class="fs-header-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" title="Back to Setup 2 — Builder" onclick="goToScreen('screen-builder')">← Back</button>
+        <button class="btn" title="Back to Setup 1 — Worker Bees" onclick="goToScreen('screen-bees')">← Back</button>
       </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
@@ -312,7 +312,7 @@
         </div>
       </div>
 <div class="fs-header-right">
-        <div class="setup-step-badge">Setup — Step 3 of 5</div>
+        <div class="setup-step-badge">Setup — Step 2 of 4</div>
         <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
         <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
         <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️</button>
@@ -450,7 +450,7 @@
         <span class="launch-req-item" id="req-audience">✗ Target audience</span>
         <span class="launch-req-item" id="req-outcome">✗ Desired outcome</span>
       </div>
-      <button title="Save your project and continue to Setup 4 — Reference Material (optional)" class="btn btn-lg btn-cta" id="projectContinueBtn" onclick="continueFromProject()">
+      <button title="Save your project and continue to Setup 3 — Reference Material (optional)" class="btn btn-lg btn-cta" id="projectContinueBtn" onclick="continueFromProject()">
         <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
         Continue — Reference Material →
       </button>
@@ -466,7 +466,7 @@
     <div class="fs-header">
       <div class="fs-header-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" title="Back to Setup 3 — Your Project" onclick="goToScreen('screen-project')">← Back</button>
+        <button class="btn" title="Back to Setup 2 — Your Project" onclick="goToScreen('screen-project')">← Back</button>
       </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
@@ -477,7 +477,7 @@
         </div>
       </div>
 <div class="fs-header-right">
-        <div class="setup-step-badge">Setup — Step 4 of 5</div>
+        <div class="setup-step-badge">Setup — Step 3 of 4</div>
         <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
         <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
         <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️</button>
@@ -548,7 +548,7 @@
         <span class="launch-req-title">Reference material is optional</span>
         <span class="launch-req-item ref-optional-hint">Skip this step if your project has no source material for The Hive to reference.</span>
       </div>
-      <button title="Continue to Setup 5 — Starting Document" class="btn btn-lg btn-cta btn-accent" id="refContinueBtn" onclick="goToScreen('screen-document')">
+      <button title="Continue to Setup 4 — Starting Document" class="btn btn-lg btn-cta btn-accent" id="refContinueBtn" onclick="goToScreen('screen-document')">
         <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
         Continue — Starting Document →
       </button>
@@ -565,7 +565,7 @@
     <div class="fs-header">
       <div class="fs-header-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" title="Back to Setup 4 — Reference Material" onclick="goToScreen('screen-reference')">← Back</button>
+        <button class="btn" title="Back to Setup 3 — Reference Material" onclick="goToScreen('screen-reference')">← Back</button>
       </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
@@ -576,7 +576,7 @@
         </div>
       </div>
 <div class="fs-header-right">
-        <div class="setup-step-badge">Setup — Step 5 of 5</div>
+        <div class="setup-step-badge">Setup — Step 4 of 4</div>
         <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
         <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
         <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️</button>
@@ -1251,7 +1251,7 @@
   </div>
   <div class="ref-add-row ref-add-row--drawer">
     <button title="Paste new reference material to add to this session" class="btn btn-accent" onclick="addReferenceDoc()">+ Paste Text Reference</button>
-    <span class="ref-add-drawer-note">To upload files, use Setup 4 — Reference Material from the menu.</span>
+    <span class="ref-add-drawer-note">To upload files, use Setup 3 — Reference Material from the menu.</span>
   </div>
 </div>
 
@@ -1869,7 +1869,7 @@
      in v3.21.16 and earlier. Native dialog couldn't carry an alert sound and
      looked jarring against the WaxFrame aesthetic. Opened by openDiscardConfirm()
      which also fires playAlertSound(). -->
-<!-- REFERENCE MATERIAL CONFIRMATION MODAL (v3.25.3) — replaces native confirm() dialogs for per-doc remove and clear-all actions on Setup 4 and the work-screen drawer -->
+<!-- REFERENCE MATERIAL CONFIRMATION MODAL (v3.25.3) — replaces native confirm() dialogs for per-doc remove and clear-all actions on Setup 3 and the work-screen drawer -->
 <div class="finish-modal-overlay" id="refConfirmModal" onclick="if(event.target===this)closeRefConfirmModal()">
   <div class="finish-modal round-error-modal">
     <h2 class="finish-modal-title round-error-title" id="refConfirmTitle">Remove this reference?</h2>
@@ -2851,23 +2851,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.146';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.147';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.146"></script>
-<script src="lib/jszip.min.js?v=3.63.146"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.146"></script>
-<script src="js/version.js?v=3.63.146"></script>
-<script src="js/storage.js?v=3.63.146"></script>
-<script src="js/theme.js?v=3.63.146"></script>
-<script src="js/audio.js?v=3.63.146"></script>
-<script src="js/scenes.js?v=3.63.146"></script>
-<script src="js/wf-debug.js?v=3.63.146"></script>
-<script src="js/provider-models.js?v=3.63.146"></script>
-<script src="js/api.js?v=3.63.146"></script>
-<script src="js/templates.js?v=3.63.146"></script>
-<script src="js/api-links.js?v=3.63.146"></script>
-<script src="js/app.js?v=3.63.146"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.147"></script>
+<script src="lib/jszip.min.js?v=3.63.147"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.147"></script>
+<script src="js/version.js?v=3.63.147"></script>
+<script src="js/storage.js?v=3.63.147"></script>
+<script src="js/theme.js?v=3.63.147"></script>
+<script src="js/audio.js?v=3.63.147"></script>
+<script src="js/scenes.js?v=3.63.147"></script>
+<script src="js/wf-debug.js?v=3.63.147"></script>
+<script src="js/provider-models.js?v=3.63.147"></script>
+<script src="js/api.js?v=3.63.147"></script>
+<script src="js/templates.js?v=3.63.147"></script>
+<script src="js/api-links.js?v=3.63.147"></script>
+<script src="js/app.js?v=3.63.147"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2920,11 +2920,14 @@ function wfMobileShareToast(msg) {
   <div class="nav-body">
     <div class="nav-section-label">Navigation</div>
     <button title="Return to the Home / Welcome screen" class="nav-item" onclick="closeNavMenu();confirmGoHome()">⌂ Home</button>
-    <button title="Open Setup 1 — Worker Bees" class="nav-item" onclick="closeNavMenu();goToScreen('screen-bees')">· Setup 1 — Worker Bees</button>
-    <button title="Open Setup 2 — Builder" class="nav-item" onclick="closeNavMenu();goToScreen('screen-builder')">· Setup 2 — Builder</button>
-    <button title="Open Setup 3 — Your Project" class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">· Setup 3 — Your Project</button>
-    <button title="Open Setup 4 — Reference Material" class="nav-item" onclick="closeNavMenu();goToScreen('screen-reference')">· Setup 4 — Reference Material</button>
-    <button title="Open Setup 5 — Starting Document" class="nav-item" onclick="closeNavMenu();goToScreen('screen-document')">· Setup 5 — Starting Document</button>
+    <button title="Open Setup 1 — Worker Bees (includes Builder selection)" class="nav-item" onclick="closeNavMenu();goToScreen('screen-bees')">· Setup 1 — Worker Bees</button>
+    <!-- v3.63.147 — "Setup 2 — Builder" nav item retired. Builder selection
+         now happens inline on the Worker Bees screen via the per-row 🔨
+         "Make this the Builder" affordance. -->
+
+    <button title="Open Setup 2 — Your Project" class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">· Setup 2 — Your Project</button>
+    <button title="Open Setup 3 — Reference Material" class="nav-item" onclick="closeNavMenu();goToScreen('screen-reference')">· Setup 3 — Reference Material</button>
+    <button title="Open Setup 4 — Starting Document" class="nav-item" onclick="closeNavMenu();goToScreen('screen-document')">· Setup 4 — Starting Document</button>
     <button title="Return to the Working Console (the main work screen)" class="nav-item" onclick="closeNavMenu();goToScreen('screen-work')">· Working Console</button>
     <button title="Open Settings — preferences and Auto-mode options" class="nav-item" onclick="closeNavMenu();openSettings()">⚙ Settings</button>
 
