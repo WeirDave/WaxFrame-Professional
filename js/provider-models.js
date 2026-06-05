@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — shared provider/model logic
-// Build: 20260604-015
+// Build: 20260604-016
 // ============================================================
 // provider-models.js — shared "brain" for provider model logic (v3.63.82)
 // ════════════════════════════════════════════════════════════════════════
@@ -78,6 +78,13 @@
     gemini:     function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id); },
     grok:       function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id); },
     deepseek:   function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id); },
+    // v3.63.143 — Mistral has /v1/models with standard Bearer auth and the
+    // OpenAI response shape, but was missing from the FILTERS map (and from
+    // fetchModelsForProvider's switch), so live discovery was silently
+    // bypassed. Promoting it here lets the recommender and the tier
+    // classifier reason over Mistral's actual current lineup instead of
+    // falling back to the curated MODEL_FALLBACKS list every time.
+    mistral:    function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id); },
     // Perplexity's /v1/models is a gateway reselling frontier models + embeds;
     // its unique value is the Sonar line, so whitelist ^sonar only.
     perplexity: function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id) && /^sonar/i.test(id); }

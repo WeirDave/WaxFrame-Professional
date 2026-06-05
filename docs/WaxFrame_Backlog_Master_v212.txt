@@ -1,0 +1,73 @@
+WaxFrame Backlog Master v212
+2026-06-04
+
+State: v3.63.143 Pro shipped on main. Closes the two remaining model-fallbacks paths in David's v3.63.141 bundle. (1) Mistral lives-fetches now — was missing from MODEL_FILTERS and from fetchModelsForProvider's switch, so the early-return at line 386 silently bypassed live discovery even though Mistral's /v1/models works fine with standard OpenAI-shaped Bearer auth. Added to both maps in provider-models.js and api.js. (2) Perplexity self-discovers via web search — Perplexity's /v1/models exists but is a frontier-model gateway that fails with NetworkError from browser callers (CORS/transport). Replaced with a chat-completion call that asks Perplexity itself to look up its current Sonar lineup at api-docs.perplexity.ai/models. Uses Perplexity's CORE strength (live web search) to solve its own discovery limitation. ~$0.001 per call, cached 7 days, stays current automatically. Applied to both fetchModelsForProvider and fetchModelsForProviderLive per the existing comment block requiring both functions stay in sync.
+
+David's idea on the Perplexity solve: "if we can't fix the perplexity without going to the web can't we just ask perplexity to go to the web and ask for its own fucking models?" — exactly the right pattern. Using a tool's own strength to solve its own discovery limitation. Worth keeping the pattern in mind for any future provider without a clean model-list endpoint.
+
+v3.63.142 state still holds: 11 stale provider URLs fixed across 7 files (Anthropic console migration, Grok billing path, Mistral billing mislabel). v3.63.141 state still holds: tier classifier architectural alignment. v3.63.140 state still holds: bundle keys redacted + classifier walks aiList + force-fetch + per-provider failure log. v3.63.139 state still holds: dynamic tier classifier + dev-toolbar simplification. Sitemap lastmod 2026-06-04. PLAYBOOK TEST MASTER v37 is the live test-tracking doc.
+
+PRIOR STATE (v3.63.142, retained for context until next release reshuffles the margin):
+Provider link audit fix release. 11 stale URLs across 7 files: Anthropic host migration (console.anthropic.com → platform.claude.com), Grok billing path didn't exist (fixed to console.x.ai root), Mistral billing mislabeled (fixed to admin.mistral.ai/organization/billing).
+
+PRIOR STATE (v3.63.141, retained for context until next release reshuffles the margin):
+Tier classifier rewritten to mirror recommendForDefault's structure. fetchModelsForProvider + MODEL_FALLBACKS fallback chain. Asking-model ladder. Dev-toolbar button always force-refreshes. Prompt capability anchor for BALANCED + THINKER. Bundle gains modelSource + askingModel diagnostic provenance.
+
+PRIOR STATE (v3.63.140, retained for context until next release reshuffles the margin):
+SECURITY: Bundle for Scout sanitizes LS_HIVE.keys. Classifier walks aiList not DEFAULT_AIS. Force-fetches live model list. Per-provider failure log included in bundle.
+
+Open Bugs
+
+(none currently tracked)
+
+Open Features
+
+- Hive Profiles step 2: Perplexity verification pass. Both architectural gaps closed as of v3.63.143; next bundle from David should show modelSource: live-fetch for Mistral and a new path for Perplexity (chat-completion-self-discovery — display as `model-fallbacks` will be replaced when live-fetch succeeds, or as a new modelSource label). Once classifications validate, ship step 2.
+
+- Hive Profiles step 3: storage + resolver + seeded starter profiles (Cheap / Balanced / Heavy thinkers / Speed-first) + custom user-named profiles.
+
+- Hive Profiles step 4: dropdown UI above the bee grid + hive-profiles.html docs page.
+
+- Restore-from-Checkpoint diff-and-pick UI — PARKED.
+
+- Hive parallel fan-out RPS-awareness (active throttle counterpart to v3.63.138's passive warning).
+
+- Model recommender filter-awareness warning.
+
+- Failover Builder behavior — single-round CONTENT_FILTERED handling.
+
+- Builder-incapable family list expansion — watch-list.
+
+- Pause/resume at reviewer seam.
+
+- File System Access API exploration.
+
+- Provider Catalog foundation (parked).
+
+- CSS dead-selector cleanup branch.
+
+- CSS rule consolidation sweep.
+
+- Repo housekeeping — `docs/` folder.
+
+- Triage CodeQL + Dependabot findings.
+
+- Rules reference update: add "verify every external URL before shipping" guideline. v3.63.142's audit caught 11 stale URLs that shipped silently because nobody clicked them.
+
+Observations
+
+- SHIPPED — v3.63.143 Mistral live fetch + Perplexity self-discovery. Closes both model-fallbacks paths in David's v3.63.141 bundle. The Perplexity self-discovery pattern (ask the tool to use its own strength to discover itself) is novel and worth keeping in mind for any future provider without clean model-list endpoints. Cost is negligible (~$0.001 per provider per 7-day TTL) and the answer is more authoritative than any human-maintained list.
+
+- 2026-06-04 — Scout was partially wrong about Perplexity in the v3.63.142 conversation: I told David Perplexity has NO /v1/models endpoint, when actually it has one but it's a frontier-model gateway and has been failing with NetworkError from browser callers. David caught the framing inaccuracy. The fix architecture is the same (self-discovery via web search) but the framing should have been "the endpoint exists but is unreliable for browser callers" not "the endpoint doesn't exist". Lesson: when explaining why something falls back to a curated list, read the actual code path and verify the comment vs the implementation match.
+
+- SHIPPED — v3.63.142 provider link audit. 11 stale URLs across 7 files.
+
+- SHIPPED — v3.63.141 classifier architectural alignment.
+
+- 2026-06-04 — release-check validator caught no drift across v3.63.135 through v3.63.143 (nine green ceremonies). ROI continues to compound.
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01, reaffirmed 2026-06-04. Engineering merit answers stand independent of conversion data.
