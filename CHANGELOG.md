@@ -2,6 +2,57 @@
 
 ---
 
+## v3.63.151
+
+**Worker Bees v3 rework — Phase 1: 6-card grid (Role + Tier picks) in each AI's expanded row**
+
+Build: `20260604-024`<br>
+Released: `2026-06-04`
+
+The first architectural piece of the Worker Bees rework arc lands. Each AI's expanded row now surfaces **six one-click picks** in addition to the full model dropdown that was already there:
+
+- **Role picks**: ✨ Reviewer + 🔨 Builder
+- **Tier picks**: 💰 Cheap + ⚖️ Balanced + 🧠 Thinker + ⚡ Fast
+
+Closes / advances [task #22] (6 cards, not 4). Design source of truth: `worker-bees-prototype.html` v2.2.
+
+**Why six cards and not four**: David's earlier Cohere discovery proved that the Role picks (Reviewer / Builder) can fall into NONE of the four Tier slots — the Builder pick might be a model that isn't classified as Cheap/Balanced/Thinker/Fast at all, and surfacing it as a 7th picker option behind a separate Hive Profile dropdown would hide it. Treating Role picks as first-class cards alongside the Tier cards keeps every recommended pick one click away on the same panel.
+
+**Data plumbing — already in place from earlier releases**:
+
+- `getReviewerRecommendation(aiId)` / `getBuilderRecommendation(aiId)` — Reviewer + Builder picks populated by `recommendForDefault` (v3.32+).
+- `getCachedTiers(provider)` — Tier picks populated by `classifyTiersForProvider` (v3.63.141+). Cache shape: `{ tiers: { cheap, balanced, thinker, fast }, why }` in `localStorage["waxframe_tiers_<provider>"]`.
+
+The grid is presentation-only on top of those existing caches. Nothing else moved.
+
+**Card behavior**:
+
+1. **"Use this" button** — routes through the existing `saveModelForAI` → `renderAISetupGrid` plumbing, so model persistence + endpoint rebuild + recheck-flag-clear all stay in one place.
+2. **Active state** — the card whose model matches the currently-saved model for that AI gets a green border + "✓ In use" label + disabled button. No accidental no-op clicks.
+3. **None state** — slots where the classifier flagged NONE (DeepSeek Thinker, Jamba Builder, etc.) render "— none available —" inert, opacity-faded, no button. Mirrors the prototype's `is-none` state.
+4. **Empty state** — if no role or tier cache exists for the AI yet, the 6-card grid simply doesn't render. The existing "Recommend Models" button inside `buildModelSelector` is the user's path to populating it. No duplicate empty-state UI.
+
+**"Why each pick" expander** — collapsed by default. Once expanded, shows per-role rationale (Reviewer + Builder picks come with `.why` text from the recommender) plus the overall tier classifier `why` block. Per-tier whys are TODO — the current parser produces a single overall `why` for the tier classification call, not per-slot whys. Could be split in a follow-up if useful.
+
+**What this release does NOT include** (deferred to Phase 2+):
+
+- Sidebar icon legend + Jump-to-AI nav (#23, #25) — requires a layout chassis change to `screen-bees` HTML
+- 3-group ordering (defaults / customs / servers) + alphabetization (#27)
+- Hive Profile dropdown (#9-12)
+- Toolbar alignment for "Recommend All AIs" (#26)
+- Drop sub-1366px responsive code (#24)
+- Auto-classify always (#35)
+- Server provider group label (#36)
+- Builder education modal + standalone page (#34)
+
+Those will land as separate releases so each phase ships against the validator and David's eye independently.
+
+**Mascot status**: unchanged from v3.63.149. Worker Bee on left of header, Builder Bee on right.
+
+**Layout note**: at 1366px+ widths the card grid forces exactly 4 columns (so the Tier row reads `💰 ⚖️ 🧠 ⚡` left-to-right and the Role row reads as two wide cards). Below 1366px the grid uses `repeat(auto-fit, minmax(160px, 1fr))` and wraps naturally — sub-1366 styling stays in place for this release until the v3.63.152 drop-sub-1366 cleanup pass.
+
+---
+
 ## v3.63.150
 
 **Worker Bees collapsed-row cleanup — Builder chip moved next to AI name, gap tightened, pencil reseated**

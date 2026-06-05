@@ -1,0 +1,72 @@
+WaxFrame Backlog Master v220
+2026-06-04
+
+State: v3.63.151 Pro shipped on main. Worker Bees v3 rework Phase 1 lands: the 6-card grid (Role picks ✨ Reviewer + 🔨 Builder; Tier picks 💰 Cheap + ⚖️ Balanced + 🧠 Thinker + ⚡ Fast) now renders inside each AI's expanded row, between the existing model dropdown and the Builder affordance. Data plumbing was already in place (getReviewerRecommendation / getBuilderRecommendation from v3.32+; getCachedTiers from v3.63.141+) — this release is presentation only. Closes / advances task #22. Design source of truth: worker-bees-prototype.html v2.2.
+
+David's evening session: at 9:56pm he posted a screenshot of the prototype with "this is the layout of the cards did you forget? skip the crons its 4 min to 10 anyway." Confirmed the prototype as the canonical design and killed the previously-scheduled overnight cron (9f59a4f0 for the doc sweep). Working live for Phase 1.
+
+Six cards instead of four: David's earlier Cohere discovery (the Builder pick can fall into NONE of the tier slots) drove the architectural decision to treat Role picks as first-class cards alongside Tier cards. Hiding Role picks behind a separate selector would lose them when they don't match a tier. Live now: every AI row has 6 one-click swaps visible at once.
+
+Card behavior:
+- "Use this" → routes through saveModelForAI + renderAISetupGrid; same plumbing as the dropdown's onchange.
+- Active state (model already selected) → green border + "✓ In use" + disabled button. No accidental no-op clicks.
+- None state (classifier returned NONE) → "— none available —" inert, opacity-faded. DeepSeek thinker, Jamba builder.
+- Empty state (no cache yet) → grid simply doesn't render; existing "Recommend Models" button in buildModelSelector remains the path to populate.
+
+v3.63.150 state still holds: collapsed-row cleanup (Builder chip between name and model, gap tightened, pencil reseated). v3.63.149 state still holds: Builder Bee asset swap (v4.png natively left-facing). v3.63.148 state still holds: Builder Bee in screen header opposite Worker Bee. v3.63.147 state still holds: Worker Bees v3 core (Builder screen retired, setup flow 5→4).
+
+PRIOR STATE (v3.63.150, retained for context until next release reshuffles the margin):
+Collapsed-row cleanup. Builder chip moved from after model to between name and model. .ai-setup-name-group inline-flex with gap:4px. Pencil button padding-x and margin-left zeroed.
+
+PRIOR STATE (v3.63.149, retained for context until next release reshuffles the margin):
+Builder Bee asset swap. WaxFrame_Builder_v4.png replaces v3.png in the header. CSS transform: scaleX(-1) placeholder removed.
+
+PRIOR STATE (v3.63.148, retained for context until next release reshuffles the margin):
+Builder Bee mascot moved from inside each AI row to the Worker Bees screen header opposite the Worker Bee.
+
+Open Bugs
+
+(none currently tracked outside the active task list)
+
+Open Features / Tasks — Phase 2+ of the Worker Bees rework
+
+- #9-12 Hive Profiles: storage + resolver + seeded profiles + UI dropdown + docs page — NEXT major piece (Hive Profile dropdown above the bee grid)
+- #20 Worker Bees row rework — Phase 1 landed; Phase 2+ ongoing
+- #23 Worker Bees rework: icon legend + light-mode contrast pass — requires sidebar chassis change
+- #24 Worker Bees rework: drop sub-1366px responsive code — cleanup pass once design is settled
+- #25 Worker Bees rework: jump-to-AI scroll-with-offset — pairs with #23 sidebar
+- #26 Worker Bees rework: toolbar alignment — Recommend All AIs button — pairs with #9-12 toolbar
+- #27 Worker Bees rework: 3-group ordering (defaults / customs / servers) + alphabetize within group
+- #32 Builder consolidation: documentation sweep (User Manual, README, landing pages, info modals)
+- #34 Worker Bees rework: Builder education in 3 surfaces — inline sub-line done; modal + standalone page remaining
+- #35 Auto-classify tier picks always (not click-to-classify)
+- #36 Worker Bees rework: server provider group label
+- Per-tier WHY text: classifier currently produces one overall WHY; could split per-tier in a follow-up
+- WaxFrame_Builder_v3.png pruning candidate once worker-bees-prototype.html is updated or retired
+- Restore-from-Checkpoint diff-and-pick UI — PARKED
+- Hive parallel fan-out RPS-awareness
+- Model recommender filter-awareness warning
+- Failover Builder behavior — single-round CONTENT_FILTERED handling
+- Builder-incapable family list expansion
+- Pause/resume at reviewer seam
+- File System Access API exploration
+- Provider Catalog foundation (parked)
+- CSS dead-selector cleanup branch
+- CSS rule consolidation sweep
+- Repo housekeeping — docs/ folder
+- Triage CodeQL + Dependabot findings
+- Rules reference update — "verify every external URL before shipping" + "always update const BUILD in addition to the // Build comment" + "release-check validator should compare const BUILD against // Build comment"
+
+Observations
+
+- 2026-06-04 — Phase 1 of the Worker Bees v3 rework cleanly landed because the heavy work was done in advance: the audit (#28) catalogued every must-preserve item, the prototype (worker-bees-prototype.html v2.2) settled the visual design, and the data plumbing (recommender + tier classifier) was already deployed. v3.63.151 is presentation-only — code is small, risk is low, the validator caught every stamp consistency check. Doing the homework before cutting code paid off.
+
+- 2026-06-04 — David rejected the v3.63.147 first attempt at the Builder mascot placement (in-row 28px stamped onto every AI) and re-prompted with the correct design (header opposite Worker Bee). Same pattern earlier: David viewed v3.63.148 live and immediately spotted three small visual issues that all turned out to come from the same parent-flex gap. Tight feedback loops + willingness to re-do are why the arc is producing clean releases.
+
+- 2026-06-04 — release-check validator caught no drift across v3.63.135 through v3.63.151 (seventeen ceremonies). The CHANGELOG.md + backlog v218–v220 + GitHub Releases are all in lockstep.
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01. v3.63.146 (cost callouts) + v3.63.147 (setup-flow simplification) + v3.63.148-149 (brand mascot placement) + v3.63.150 (row visual polish) + v3.63.151 (6-card grid) form a sustained simplification-and-clarity arc. Phase 1's "6 one-click picks instead of hunt-in-the-dropdown" is the biggest conversion-friction reduction in this arc — most users don't read provider docs to know what to pick.
