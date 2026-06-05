@@ -2,6 +2,73 @@
 
 ---
 
+## v3.63.155
+
+**Per-row Builder button + collapsed-row Manage link + two real bug fixes (card click + bulk-profile expand-all)**
+
+Build: `20260604-028`<br>
+Released: `2026-06-04`
+
+### Bug A: 6-card click STILL didn't change the model
+
+v3.63.154 tried to fix the v3.63.153 quote-in-quote bug with a `data-pick-model` attribute + `this.dataset.pickModel` indirection. That should have worked, but David reported it still didn't actually change the model in v3.63.154. **Fix**: dropped the `data-` indirection entirely. Model id is now escaped for use inside a single-quoted JS string (`_safeJsStr` covers backslashes and single quotes), then inlined directly into the onclick. Renders as:
+
+```
+onclick="swapAIModelFromHiveCard('chatgpt', 'gpt-5.5'); event.stopPropagation();"
+```
+
+Unambiguously valid HTML and JS regardless of browser. No more indirection.
+
+### Bug B: Picking a Hive Profile expanded every row
+
+`applyHiveProfile` calls `saveModelForAI` in a loop for each AI. `saveModelForAI` calls `renderAIRow` which has `keepExpanded = true` by default, which adds the AI to `_expandedAIIds`. So bulk profile apply = bulk row expand (David's report: *"if I use the dropdown at the top of the page to select a profile all the cards open up even if they were already collapsed before"*).
+
+**Fix**: `saveModelForAI` gained an `opts` parameter (`{ keepExpanded?, silent? }`). `applyHiveProfile` passes `{ keepExpanded: false, silent: true }` so bulk apply doesn't blow open collapsed rows and doesn't spam N per-AI toasts (the bulk summary toast at the end is plenty).
+
+Three David asks rolled into one ship. The expanded panel is now substantially leaner, and Builder selection moves to a one-click affordance visible on every row.
+
+### Per-row Builder button (every keyed row gets one)
+
+Per David: *"let's put the builder button on everybody's card and just gray it out and if we click on it then it stays gold lit up solid"*. Replaces both the v3.63.147 collapsed Builder Bee chip AND the expanded-panel "Make this the Builder" line (both gone). Four states:
+
+- **`is-active`** — solid gold pill, this AI is the Builder, not clickable
+- **`is-pickable`** — gray-outlined pill, click to make this AI the Builder
+- **`is-incapable`** — yellow-dashed pill reading "⚠ Reviewer-only" (Jamba family; the BUILDER_INCAPABLE gate stays per v3.63.132)
+- **placeholder** — invisible width-holder for no-key rows so the column stays aligned
+
+Clicking a gray button calls `setBuilder(ai.id)` and re-renders, which gold-lights this row's button and gray-outlines all other rows' buttons. Exactly-one-at-a-time selection comes free from the existing `setBuilder` plumbing.
+
+### Manage account link in the collapsed row
+
+Per David: *"we don't need [the green banner] anymore because we already have a ready pill so that can go away and we can put the manage account in the right hand side in the space next to the builder button"*. The green "Manage account? Open ChatGPT account ↗ · ✓ API key works — ready to use" banner that lived at the top of the expanded panel is gone. The Manage link moves to the collapsed row, next to the Builder button. Two states:
+
+- **`Manage ↗`** — when a key is saved (open the provider console to rotate / check billing)
+- **`Get key ↗`** (gold) — when no key is saved (open the provider console to grab one)
+- **placeholder** — for server-imported customs with no console URL
+
+The ✓ Ready / ✗ Invalid status pill from v3.63.153 carries the validation signal that used to live inside the banner. Inline error message dropped from the expanded panel — the red Invalid pill in the collapsed row tells the same story.
+
+### Expanded panel simplified
+
+After this release the expanded panel contains:
+
+1. Full-width API key input + eye / clear / test buttons (key entry)
+2. `.ai-recommend-row` — Recommend Models button + status line
+3. 6-card grid (Reviewer + Builder + 4 tiers)
+4. "Why each pick" expander
+
+That's it. The getKeyLink banner and Builder affordance — both meaningful chunks of vertical space — are gone. The expanded panel is now strictly about (a) entering / managing the key in detail, (b) running the recommender, and (c) seeing the 6 cards. All Builder identity / selection signal lives in the collapsed row.
+
+### Dead-CSS additions
+
+`.ai-setup-builder-chip` + `.ai-setup-builder-chip-placeholder` (Builder Bee chip CSS) join the dead-CSS list. `.ai-builder-affordance` block is explicitly hidden via `display: none !important` to handle any stale cached state. All three are flagged as CSS-cleanup pruning candidates in `docs/WaxFrame_Backlog_Master_v224.txt`.
+
+### Layout note
+
+Adding two new fixed-width slots (Builder button at 110px, Manage link at 80px) plus the existing slot widths means the collapsed row is now using roughly `16 + 24 + 160 + 84 + 50 + 320 + 110 + 80 + 16 + flex + 30 ≈ 890px` of fixed content before the spacer. At sub-1100px widths the row may compress; the sidebar already stacks below 1100px which actually gives the main column more horizontal room (full screen width minus padding), so this is fine in practice. Below 900px-ish the row may wrap — not a release blocker since `#screen-bees` is desktop-targeted.
+
+---
+
 ## v3.63.154
 
 **Hive setup polish — card-click bug fix, column alignment, Builder chip & Model: label moves, bulk-select reseat, page rename**
