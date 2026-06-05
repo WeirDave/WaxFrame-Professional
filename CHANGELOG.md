@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.166
+
+**Work-screen density pass for 1366×768 — Notes button unclipped, right column compacted, footer pills tightened**
+
+Build: `20260605-008`<br>
+Released: `2026-06-05`
+
+David's report: at 1366×768 (which v3.63.164's overlay enforces as the minimum, and which IS the most common laptop resolution by share) the work screen looked cramped — Notes button label clipped to "tes", `Round 1 — Draft` badge dominated the top-bar center, and the right column's brand + clocks ate vertical space that Live Console needed. *"This entire page design and this experience is lackluster at best for this resolution which you had told me was the 'standard laptop' size."*
+
+Fix: a `@media (max-width: 1500px)` density pass that tightens typography, padding, and label visibility without restructuring layout.
+
+### Top-bar buttons (Notes / Reference / Finish)
+
+Labels wrapped in `.work-topbar-btn-label` spans (`index.html`). Below 1500px those spans `display: none` and the buttons collapse to **icon-only** with their existing tooltips carrying the full label on hover. Padding shrinks too. **Notes is no longer clipped at 1366px**.
+
+### Round badge
+
+Shrinks from 17px font + heavy padding to 13px + tighter padding + tighter letter-spacing. The round number stays the only signal — the badge no longer hogs the centre.
+
+### Right column
+
+- **Tagline dropped** below 1500px (`.work-right-logo-tag { display: none; }`). The brand name is already named above; the tagline at this scale reads as decoration.
+- **Brand logo shrunk** from 56px to 40px square.
+- **Brand text shrunk** from `--fs-15` to `--fs-12`.
+- **Version stamp** shrunk to 7px.
+- **Clocks** — digits shrink from 16px to 14px; labels from 9px to 8px. Round and Project still side-by-side; just denser.
+
+Total reclaimed vertical: roughly 30-50px that flows down to **Live Console**, which gets the extra rows it needs to be useful.
+
+### Live Console legend
+
+Smaller font (10.5px) + tighter padding so the colored squares stay legible without taking a full line of vertical at this width.
+
+### Footer pills
+
+`Length guard: armed`, `Slow alerts: on`, `Licensed`, `About` all shrink to `--fs-11` + 3px vertical / 8px horizontal padding. Status text similarly compacted.
+
+### Bottom CTAs
+
+`Send to Builder` and `Smoke the Hive` shrink padding only (text stays — they're the primary actions on the screen and need to read at a glance).
+
+### Hive panel intentionally untouched
+
+David noted it's already been shrunk in earlier releases. Confirmed — no further reduction needed there.
+
+---
+
 ## v3.63.165
 
 **Conflicts panel lock-button icon inversion + diagnostic instrumentation for the one-way bug + explicit window bindings**

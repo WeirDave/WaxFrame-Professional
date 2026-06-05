@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-007
+   Build: 20260605-008
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2696,7 +2696,88 @@ body.helper-body .page-main {
   .smoker-hero-img { width: 210px; height: 210px; margin-top: var(--space-20); }
   .smoker-overlay-label { font-size: var(--fs-16); }
   .smoker-subtitle { font-size: var(--fs-11); max-width: 280px; }
+}
 
+/* ============================================================
+ * v3.63.166 — Density pass for cramped 1366×768 (and below ~1500px).
+ *
+ * David's report: at 1366×768 the Notes button label is truncated
+ * to "tes", the "Round 1 — Draft" badge dominates the centre, and
+ * the right column (brand + clocks + Live Console) wastes vertical
+ * space on a tagline and oversized typography.
+ *
+ * Strategy: tighten everything proportionally below 1500px so the
+ * work screen earns its "standard laptop" claim. No layout rewrite,
+ * just denser typography, padding, and label-hiding for buttons
+ * that already have descriptive tooltips.
+ * ============================================================ */
+@media (max-width: 1500px) {
+
+  /* Top-bar buttons collapse to icon-only. Tooltips already carry
+     the full label so hover gives the action name on demand. */
+  .work-topbar-right .work-topbar-btn-label { display: none; }
+  .work-topbar-right .btn {
+    padding: var(--space-4) var(--space-8);
+    font-size: var(--fs-13);
+  }
+
+  /* Round badge shrinks but stays legible. Pure decorative scale —
+     the round number is the only signal, no need for huge digits. */
+  .work-round-badge {
+    font-size: 13px;
+    padding: 3px var(--space-14);
+    letter-spacing: 0.10em;
+  }
+
+  /* Right column: drop the tagline (the brand is already named
+     above it; the tagline reads as decoration at this scale). */
+  .work-right-logo-tag { display: none; }
+  .work-right-logo-img { width: 40px; height: 40px; }
+  .work-right-logo-name { font-size: var(--fs-12); }
+  .work-right-logo-version { font-size: 7px /* out-of-scale */; margin-top: 1px; }
+  .work-right-logo {
+    padding: var(--space-4) var(--space-6);
+    gap: var(--space-6);
+    margin: 2px var(--space-4);
+  }
+
+  /* Clocks compact further. Round + Project still side-by-side
+     but with smaller digits / smaller labels / tighter padding,
+     yielding ~30-40px of reclaimed vertical for Live Console. */
+  .dcw-digits { font-size: 14px; }
+  .dcw-digits-project { font-size: 14px; }
+  .dcw-label-top { font-size: 8px; }
+  .dcw-label-bot { font-size: 8px; }
+
+  /* Console legend wraps tighter; the colored squares stay legible
+     but the typography matches the new density. */
+  .console-legend { font-size: 10.5px; gap: 6px; padding: 4px 8px; }
+  .console-legend .legend-item { padding: 0; }
+
+  /* Footer compaction. Length-guard pill, slow-alerts pill, license
+     pill, About button — all tighter. */
+  .length-guard-indicator {
+    font-size: var(--fs-11);
+    padding: 3px var(--space-8);
+  }
+  .footer-right .btn,
+  .footer-right .footer-pill {
+    font-size: var(--fs-11);
+    padding: 3px var(--space-8);
+  }
+  .footer-status { font-size: var(--fs-12); }
+
+  /* Smoke the Hive + Send to Builder shrink padding (they keep
+     their text because they're the primary CTAs on the screen). */
+  .footer-btn,
+  .footer-btn-smoke {
+    font-size: var(--fs-13);
+    padding: var(--space-6) var(--space-14);
+  }
+}
+/* end v3.63.166 density pass */
+
+@media (max-width: 1600px) {
   /* Builder station */
   .builder-scene-wrap { width: 380px; }
   .builder-stage { padding: var(--space-16) var(--space-18) var(--space-12); gap: var(--space-6); }
