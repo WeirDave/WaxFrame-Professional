@@ -2,6 +2,62 @@
 
 ---
 
+## v3.63.153
+
+**Worker Bees v3 rework — Phase 3: sidebar chassis + collapsed-row redo + color cohesion + transparent Builder Bee**
+
+Build: `20260604-026`<br>
+Released: `2026-06-04`
+
+Biggest single Worker Bees release of the night. Three structural shifts in one ship so the screen finally matches the prototype (`worker-bees-prototype.html` v2.2) 1:1. Closes / advances [tasks #23, #25] and the user-facing redesign goals from #20.
+
+David's three observations that drove this:
+1. *"there's just a lot of green on the dark side"* — selection states were green, status states were green, everything was green and nothing pulled the eye.
+2. *"hover is like what we do for buttons and nothing happens when you click the cards"* — card hover affordance lied about the click target.
+3. *"I liked it initially but your cards were a lot smaller than because you had the whole side rail over there which you don't currently have"* — cards spread too wide without the sidebar to constrain the main column.
+
+**Structural changes**:
+
+1. **Sidebar chassis** ([index.html:209](index.html), [js/app.js:5066](js/app.js), [style.css:15169](style.css)) — new `.bees-layout` 2-column flex inside `hp-section-body`. Left column (`.bees-sidebar`, 240px) carries three blocks rendered by `renderHiveSidebar()`:
+   - **Icon Legend** — fixed reference for ✨ Reviewer / 🔨 Builder / 💰⚖️🧠⚡ tier emoji.
+   - **Jump to AI** — dynamic list of every visible AI, alphabetized within "Default providers" + "Custom AIs" subheads, with a green ● next to AIs with saved keys. Click jumps you to that row, expands it, and smooth-scrolls with an 80px offset so the row top lands below the screen header.
+   - **Related** — links to API Key Guide + AI API Pricing.
+   - Sidebar is hidden in Server mode (no tier classification = no legend to read).
+   - Below 1100px the layout stacks (sidebar above main column).
+
+2. **Collapsed-row redo** ([js/app.js:4730](js/app.js)) — model dropdown moved OUT of the expanded panel and INTO the row header per David's prototype-matching request ("the model dropdown next to it, that was cool because collapsed you could change the model on your own"). New collapsed-row order: chevron → icon → name + pencil + Builder chip → "✓ Ready" status pill → compact model `<select>` → ⚠ deprecation flag → spacer → action.
+   - **Native `<select>`** with emoji badges baked into option text (✨🔨💰⚖️🧠⚡) — simpler than the custom dropdown, still see-at-a-glance.
+   - **`onchange`** routes through `saveModelForAI` + `renderAISetupGrid` so the 6-card grid below reflects new active state immediately.
+   - **`onclick` stop-propagates** so opening the dropdown doesn't also toggle the row collapse.
+   - **Saved-but-not-in-list** models (provider quarantined / removed) render as the first option marked `(saved — not in current list)` so nothing is hidden.
+
+3. **Status pill** ([js/app.js:4732](js/app.js)) — replaces the "validated key" signal that was previously ONLY visible via the row's left card edge color. Three states:
+   - Validated good → green **✓ Ready** pill
+   - Validated bad → red **✗ Invalid** pill
+   - Not yet validated → no pill (the card edge color still carries the signal at a distance)
+
+4. **Expanded panel restructure** — `buildModelSelector` no longer called from the expanded panel (the dropdown lives in the collapsed row now). Replaced with a tight `.ai-recommend-row` containing the Recommend Models button + a status line ("Last recommended ✨ X · 🔨 Y" or "Click to populate the 6-card grid below"). The API key input now spans the full row width (`flex: 1 1 100%`) so ChatGPT's `sk-proj-…` keys fit without clipping. The 6-card grid + Builder affordance + "Why each pick" expander all stay.
+
+**Color cohesion** ([style.css:15369](style.css)):
+
+The active-pick state moved from green to **gold (`var(--accent)`)** across:
+- `.ai-hive-card.is-active` (6-card grid)
+- `.ai-hive-card-pill` (the "✓ In use" badge replacing the old inner button)
+- `.ai-builder-affordance.is-active` ("🔨 This is your Builder")
+- `.ai-setup-builder-chip` (Builder Bee chip on collapsed row)
+
+Green is now **semaphore-only**: status / health / validation (✓ Ready pill, ✓ key valid card edge). Gold is selection / brand accent. Test + Recommend Models buttons stay blue as a coordinated utility pair (per the v3.32.12 design note).
+
+**Whole-card click** ([js/app.js:4626](js/app.js)) — the 6 tier/role cards lost their inner "Use this" button. The entire card is now the click target with `role="button"` + `tabindex="0"` + keyboard handler (Enter/Space). Hover state on default cards = gold border + subtle tint. Active cards show a small gold "✓ In use" pill and aren't clickable. None cards stay inert. Mirrors the prototype's whole-card interaction model and resolves David's "hover is like what we do for buttons and nothing happens when you click" complaint.
+
+**Transparent Builder Bee** ([images/WaxFrame_Builder_v4.png](images/WaxFrame_Builder_v4.png)) — David fixed the v4 asset to be transparent (was 793 KB, now 923 KB). Same filename so no markup changes needed.
+
+**Internet mode only** for the sidebar and Hive Profile bar. Server mode still uses the single-column flat layout because server-imported AIs don't have role / tier classification (so the icon legend is meaningless there and the related links are irrelevant).
+
+**Layout note**: at widths ≥ 1100px the sidebar is sticky 240px and the main column gets ~700-800px. The 6-card grid forces 4 columns above 1366px which keeps the row consistent with the prototype.
+
+---
+
 ## v3.63.152
 
 **Worker Bees v3 rework — Phase 2: Hive Profile dropdown above the bee grid**
