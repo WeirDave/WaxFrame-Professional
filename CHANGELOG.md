@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.149
+
+**Builder Bee asset swap — properly-mirrored v4.png replaces the CSS-flipped v3.png placeholder**
+
+Build: `20260604-022`<br>
+Released: `2026-06-04`
+
+Pure asset swap follow-up to v3.63.148. David prepared a properly-mirrored Builder Bee PNG (`WaxFrame_Builder_v4.png`) that's natively left-facing, so the placeholder `transform: scaleX(-1)` CSS flip from v3.63.148 is no longer needed.
+
+**Changes**:
+
+1. **Asset swap** ([index.html:209](index.html)) — `<img src>` changed from `images/WaxFrame_Builder_v3.png` → `images/WaxFrame_Builder_v4.png`.
+
+2. **Placeholder flip removed** ([style.css:12097](style.css)) — `.hp-section-bee-builder` no longer applies `transform: scaleX(-1)`. The rule now only carries `margin-left: auto` (positioning) since the asset itself faces the correct direction.
+
+3. **Asset committed** — `images/WaxFrame_Builder_v4.png` added to the repo (793 KB).
+
+That's it. The Worker Bees screen header now shows two natively-correct mascots facing each other — no transform hacks. The original `WaxFrame_Builder_v3.png` stays in the repo for now (referenced by `worker-bees-prototype.html` and any cached/external links); future cleanup pass can prune if nothing references it.
+
+---
+
 ## v3.63.148
 
 **Builder Bee mascot moved to the Worker Bees screen header — opposite the Worker Bee**
