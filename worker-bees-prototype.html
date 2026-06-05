@@ -293,6 +293,47 @@
     .wb-empty-state-btn:hover:not(:disabled) { filter: brightness(1.08); }
     .wb-empty-state-btn:disabled { opacity: 0.7; cursor: progress; }
 
+    /* ── Sidebar legend block (prototype-specific styling) ── */
+    .wb-legend-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: var(--space-10) var(--space-12);
+      margin-bottom: var(--space-12);
+    }
+    .wb-legend-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-8);
+      padding: var(--space-4) 0;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .wb-legend-icon {
+      width: 22px;
+      flex-shrink: 0;
+      font-size: 16px;
+      text-align: center;
+      line-height: 1;
+    }
+    .wb-legend-sep-line {
+      border-top: 1px dashed var(--border);
+      margin: var(--space-6) 0;
+    }
+
+    /* ── Grid section labels (Role picks / Tier picks) ── */
+    .wb-grid-section {
+      margin-bottom: var(--space-10);
+    }
+    .wb-grid-section-label {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      font-weight: 700;
+      margin-bottom: var(--space-6);
+    }
+
     /* ── Tier card grid ── */
     .wb-tier-grid {
       display: grid;
@@ -457,7 +498,7 @@
 <div class="page-main">
 
   <div class="wb-banner">
-    <strong>📐 Prototype v2 — not live data, not deployed.</strong> Layout & interactions only. Tier picks below are mock data from David's last v3.63.144 Scout bundle. All buttons / dropdowns / countdowns are visual demos that change the page state but don't hit any APIs.
+    <strong>📐 Prototype v2.2 — not live data, not deployed.</strong> Layout & interactions only. Tier + role picks below are mock data from David's last v3.63.144 Scout bundle. All buttons / dropdowns / countdowns are visual demos that change the page state but don't hit any APIs.
   </div>
 
   <!-- ──── PROTOTYPE-ONLY VIEW MODE TOGGLE ──── -->
@@ -468,22 +509,63 @@
     <span style="margin-left:auto">↑ Validate the layout works for both ends of the user spectrum</span>
   </div>
 
-  <!-- ──── TOOLBAR ──── -->
-  <div class="wb-toolbar">
-    <span class="wb-toolbar-label">Hive Profile:</span>
-    <select class="wb-profile-select" id="profileSelect" onchange="applyProfile(this.value)">
-      <option value="custom">Custom — keep my manual picks</option>
-      <option value="cheap">💰 Cheap — cost-first</option>
-      <option value="balanced">⚖️ Balanced — capability per dollar</option>
-      <option value="thinker">🧠 Heavy thinkers — deepest reasoning</option>
-      <option value="fast">⚡ Speed-first — lowest latency</option>
-    </select>
-    <button class="wb-recommend-all" id="recommendAllBtn" onclick="recommendAll()">🤖 Recommend All AIs</button>
-    <span class="wb-profile-note" id="profileNote">Currently using your manual picks. Switch profile above to auto-set tier-matched models.</span>
-  </div>
+  <!-- ────────────────────────────────────────────────────────────
+       TWO-COLUMN LAYOUT — same .doc-layout chassis used by the
+       User Manual, Document Playbooks, API Key Guide, Templates
+       Catalog, etc. Left sidebar holds the icon legend (always
+       visible while you scroll) plus a Jump-to-AI nav. Main
+       column holds the toolbar + bee rows.
+       ──────────────────────────────────────────────────────── -->
+  <div class="doc-layout">
 
-  <!-- ──── BEE ROWS ──── -->
-  <div id="beeGrid"></div>
+    <aside class="doc-sidebar">
+      <div class="doc-sidebar-inner">
+
+        <div class="doc-sidebar-category">Icon Legend</div>
+        <div class="wb-legend-block">
+          <div class="wb-legend-row"><span class="wb-legend-icon">✨</span><span>Reviewer pick</span></div>
+          <div class="wb-legend-row"><span class="wb-legend-icon">🔨</span><span>Builder pick</span></div>
+          <div class="wb-legend-sep-line"></div>
+          <div class="wb-legend-row"><span class="wb-legend-icon">💰</span><span>Cheap tier</span></div>
+          <div class="wb-legend-row"><span class="wb-legend-icon">⚖️</span><span>Balanced tier</span></div>
+          <div class="wb-legend-row"><span class="wb-legend-icon">🧠</span><span>Thinker tier</span></div>
+          <div class="wb-legend-row"><span class="wb-legend-icon">⚡</span><span>Fast tier</span></div>
+          <div class="wb-legend-sep-line"></div>
+          <div class="wb-legend-row"><span class="wb-legend-icon" style="color:var(--green,#50c878)">✓</span><span>Verified by Perplexity</span></div>
+          <div class="wb-legend-row"><span class="wb-legend-icon" style="color:var(--accent)">↻</span><span>Revised by verifier</span></div>
+          <div class="wb-legend-row"><span class="wb-legend-icon" style="color:var(--text-dim)">?</span><span>Couldn't confirm</span></div>
+        </div>
+
+        <div class="doc-sidebar-category">Jump to AI</div>
+        <div id="sidebarBeeNav"></div>
+
+        <div class="doc-sidebar-category">Related</div>
+        <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">🔑 API Key Guide ↗</a>
+        <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">💰 AI API Pricing ↗</a>
+      </div>
+    </aside>
+
+    <div class="doc-main">
+
+      <!-- ──── TOOLBAR ──── -->
+      <div class="wb-toolbar">
+        <span class="wb-toolbar-label">Hive Profile:</span>
+        <select class="wb-profile-select" id="profileSelect" onchange="applyProfile(this.value)">
+          <option value="custom">Custom — keep my manual picks</option>
+          <option value="cheap">💰 Cheap — cost-first</option>
+          <option value="balanced">⚖️ Balanced — capability per dollar</option>
+          <option value="thinker">🧠 Heavy thinkers — deepest reasoning</option>
+          <option value="fast">⚡ Speed-first — lowest latency</option>
+        </select>
+        <button class="wb-recommend-all" id="recommendAllBtn" onclick="recommendAll()">🤖 Recommend All AIs</button>
+        <span class="wb-profile-note" id="profileNote">Currently using your manual picks. Switch profile above to auto-set tier-matched models.</span>
+      </div>
+
+      <!-- ──── BEE ROWS ──── -->
+      <div id="beeGrid"></div>
+
+    </div>
+  </div>
 
   <div style="margin-top: var(--space-20); padding: var(--space-14); background: var(--surface2); border: 1px dashed var(--border); border-radius: var(--radius-md); font-size: 12.5px; color: var(--text-dim); line-height: 1.6;">
     <strong style="color: var(--text);">Try these interactions:</strong>
@@ -668,6 +750,11 @@ const BEES = [
   }
 ];
 
+const ROLE_META = {
+  reviewer: { label: 'Reviewer', icon: '✨' },
+  builder:  { label: 'Builder',  icon: '🔨' }
+};
+
 const TIER_META = {
   cheap:    { label: 'Cheap',    icon: '💰' },
   balanced: { label: 'Balanced', icon: '⚖️' },
@@ -725,6 +812,43 @@ function renderTierCard(bee, tier) {
       <button class="wb-tier-action" onclick="swapToTier('${bee.id}', '${tier}')">${isActive ? 'In use' : 'Use this'}</button>
     </div>
   `;
+}
+
+// v2.2 — Role cards (Reviewer / Builder). Live alongside the tier cards
+// because David's Cohere discovery proved the role picks can fall into
+// NONE of the four tier slots. Same one-click swap shape so the user can
+// activate any of the 6 picks from the expanded view without hunting in
+// the dropdown.
+function renderRoleCard(bee, role) {
+  const meta = ROLE_META[role];
+  const pickModel = role === 'reviewer' ? bee.reviewerPick : bee.builderPick;
+  if (!pickModel) {
+    return `
+      <div class="wb-tier-card is-none" title="No ${meta.label} pick available for ${escapeHtml(bee.name)}.">
+        <div class="wb-tier-label">${meta.icon} ${meta.label}</div>
+        <div class="wb-tier-model">— none available —</div>
+      </div>
+    `;
+  }
+  const isActive = pickModel === bee.currentModel;
+  return `
+    <div class="wb-tier-card${isActive ? ' is-active' : ''}">
+      <div class="wb-tier-label">${meta.icon} ${meta.label}</div>
+      <div class="wb-tier-model">${escapeHtml(pickModel)}</div>
+      <button class="wb-tier-action" onclick="swapToRole('${bee.id}', '${role}')">${isActive ? 'In use' : 'Use this'}</button>
+    </div>
+  `;
+}
+
+function swapToRole(beeId, role) {
+  const bee = BEES.find(b => b.id === beeId);
+  if (!bee) return;
+  const model = role === 'reviewer' ? bee.reviewerPick : bee.builderPick;
+  if (!model) return;
+  bee.currentModel = model;
+  renderAll();
+  const row = document.querySelector(`.wb-row[data-bee-id="${beeId}"]`);
+  if (row) row.classList.add('is-expanded');
 }
 
 function renderWhyBody(bee) {
@@ -806,9 +930,21 @@ function renderRow(bee) {
               <button class="wb-row-recommend" id="recommend-${bee.id}" onclick="event.stopPropagation(); recommendOne('${bee.id}')">🤖 Recommend Models</button>
               <span>Refreshed 12 min ago · live-fetch from provider</span>
             </div>
-            <div class="wb-tier-grid">
-              ${Object.keys(TIER_META).map(tier => renderTierCard(bee, tier)).join('')}
+
+            <div class="wb-grid-section">
+              <div class="wb-grid-section-label">Role picks</div>
+              <div class="wb-tier-grid">
+                ${Object.keys(ROLE_META).map(role => renderRoleCard(bee, role)).join('')}
+              </div>
             </div>
+
+            <div class="wb-grid-section">
+              <div class="wb-grid-section-label">Tier picks</div>
+              <div class="wb-tier-grid">
+                ${Object.keys(TIER_META).map(tier => renderTierCard(bee, tier)).join('')}
+              </div>
+            </div>
+
             <button class="wb-why-toggle" onclick="event.stopPropagation(); toggleWhy('${bee.id}')">
               <span id="why-arrow-${bee.id}">▸</span> Why each pick
             </button>
@@ -821,9 +957,31 @@ function renderRow(bee) {
   `;
 }
 
+function renderSidebarBeeNav(visible) {
+  const nav = document.getElementById('sidebarBeeNav');
+  if (!nav) return;
+  nav.innerHTML = visible.map(bee => `
+    <a href="javascript:void(0)" class="doc-sidebar-link" onclick="jumpToBee('${bee.id}')">
+      ${bee.icon}&nbsp;&nbsp;${escapeHtml(bee.name)}
+    </a>
+  `).join('');
+}
+
+function jumpToBee(beeId) {
+  const row = document.getElementById('row-' + beeId);
+  if (!row) return;
+  // Expand AND scroll into view
+  document.querySelectorAll('.wb-row').forEach(r => {
+    if (r.dataset.beeId === beeId) r.classList.add('is-expanded');
+    else r.classList.remove('is-expanded');
+  });
+  row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function renderAll() {
   const visible = viewMode === 2 ? BEES.slice(0, 2) : BEES;
   document.getElementById('beeGrid').innerHTML = visible.map(renderRow).join('');
+  renderSidebarBeeNav(visible);
 }
 
 function toggleRow(beeId) {
