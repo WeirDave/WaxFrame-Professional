@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-024
+   Build: 20260604-025
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -15161,4 +15161,72 @@ kbd {
  * legacy code paths don't crash, but it is never shown. */
 #screen-builder {
   display: none !important;
+}
+
+/* ============================================================
+ * v3.63.152 — Hive Profile toolbar (Worker Bees rework Phase 2).
+ *
+ * Sits between the .bee-controls-row-setup (API Key Guide, Add
+ * Custom AI, Test All Keys, Recommend Models for All, Get API
+ * keys) and the .hive-count-chip. Only rendered in Internet
+ * mode — Server mode AIs don't have tier classification.
+ *
+ * Mirrors the prototype's .wb-toolbar visual treatment with the
+ * project's existing color tokens. The note line right-aligns
+ * with margin-left:auto so on wide screens the dropdown stays
+ * left and the status reads to the right; on narrow screens
+ * flex-wrap kicks in and the note drops below.
+ * ============================================================ */
+.hive-profile-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-10) var(--space-14);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  margin: 0 0 var(--space-10);
+  flex-wrap: wrap;
+}
+.hive-profile-bar:empty {
+  display: none;
+}
+.hive-profile-bar-label {
+  font-size: var(--fs-12);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.hive-profile-bar-select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: var(--space-6) var(--space-10);
+  font-size: var(--fs-13);
+  font-family: inherit;
+  min-width: 240px;
+  cursor: pointer;
+}
+.hive-profile-bar-select:focus {
+  border-color: var(--accent, #f4b400);
+  outline: none;
+}
+.hive-profile-bar-note {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  margin-left: auto;
+  max-width: 420px;
+  text-align: right;
+  line-height: 1.45;
+}
+@media (max-width: 1100px) {
+  .hive-profile-bar-note {
+    margin-left: 0;
+    text-align: left;
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
 }

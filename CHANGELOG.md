@@ -2,6 +2,48 @@
 
 ---
 
+## v3.63.152
+
+**Worker Bees v3 rework — Phase 2: Hive Profile dropdown above the bee grid**
+
+Build: `20260604-025`<br>
+Released: `2026-06-04`
+
+Companion to v3.63.151's 6-card grid. That release made tier picks one-click PER AI; this one makes them one-click ACROSS ALL AIs. Advances [tasks #9, #11] (Hive Profiles storage + UI dropdown).
+
+**What changed**:
+
+1. **New toolbar component** ([index.html:215](index.html), [js/app.js:5078](js/app.js)) — a `.hive-profile-bar` element renders between the existing controls row (API Key Guide / Add Custom AI / Test All Keys / Recommend Models for All / Get API keys) and the hive count chip. Internet mode only — Server mode AIs don't have tier classification, so the bar is suppressed there.
+
+2. **Five profile options** (mirrors prototype):
+   - 🛠 **Custom — keep my manual picks** (default)
+   - 💰 **Cheap — cost-first**
+   - ⚖️ **Balanced — capability per dollar**
+   - 🧠 **Heavy thinkers — deepest reasoning**
+   - ⚡ **Speed-first — lowest latency**
+
+3. **Apply behavior**: choosing a tier profile walks `aiList`, looks up each AI's cached tier picks via `getCachedTiers(provider)`, and calls `saveModelForAI(ai.id, tierModel)` for every AI that has a non-NONE pick for that tier. AIs without a tier cache (haven't run classify yet) or without a key are skipped. A toast summarizes the result: "💰 Applied Cheap to 7 of 10 AIs (3 have no cheap pick cached)" etc.
+
+4. **State persistence** — active profile saved to `localStorage["waxframe_hive_profile"]`. Survives screen toggles and reloads. New helpers: `getActiveHiveProfile()` / `setActiveHiveProfile(id)`.
+
+5. **Live status note** — right-aligned text shows how many AIs are currently using the active profile's pick versus how many were manually overridden:
+   - Custom → "Currently using your manual picks. Switch profile above to auto-set tier-matched models."
+   - Tier (all match) → "All 7 AIs with a balanced pick are using it. Override individual rows from the expanded view."
+   - Tier (some override) → "5 of 7 AIs are using their balanced pick. The rest were manually overridden."
+   - Tier (none cached) → "No balanced picks cached yet for any AI. Click 'Recommend Models for All' above to populate."
+
+6. **Plumbing reuse** — built entirely on existing primitives (`getCachedTiers`, `saveModelForAI`, `renderAISetupGrid`, `toast`). No new storage shapes; no changes to the classifier or recommender.
+
+**What this release does NOT include** (deferred):
+- Per-row "Manual override" tag on rows where the user changed away from the active profile's pick. Needs delta tracking to render correctly across re-renders. Pending.
+- A dedicated `hive-profiles.html` docs page ([#12]).
+- "Save current as named profile" / custom user-defined profiles ([#10]'s full scope).
+- "Apply" button — the dropdown auto-applies on change. If users want a separate confirm step we can split it later.
+
+**Layout note**: at widths ≥ 1100px the dropdown sits left and the status note right-aligns. Below 1100px the note drops to its own line for readability. No sub-1366 cleanup yet — that's #24.
+
+---
+
 ## v3.63.151
 
 **Worker Bees v3 rework — Phase 1: 6-card grid (Role + Tier picks) in each AI's expanded row**
