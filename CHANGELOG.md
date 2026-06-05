@@ -2,6 +2,74 @@
 
 ---
 
+## v3.63.163
+
+**Builder/Worker meld pass 4: code cleanup — DOM removal + dead-CSS pruning + legacy stub removal + prototype retirement**
+
+Build: `20260605-005`<br>
+Released: `2026-06-05`
+
+Final release in the Builder/Worker meld arc. Code cleanup that's been on the backlog since v3.63.147's Builder screen retirement.
+
+### `#screen-builder` DOM removed from index.html
+
+The standalone Builder screen has been hidden via `display: none !important;` since v3.63.147 (5+ months of dead DOM with comments saying "kept for now as safety net"). Removed entirely in this release. About 65 lines of HTML deleted, including the `builderScreenModelWrap`, `builderPickGrid`, `req-builder`, `builderContinueBtn`, and the `<h2>Choose Your Builder</h2>` H2.
+
+The JavaScript that referenced those elements (`renderBuilderPicker`, `updateBuilderRequirements`, `renderBuilderScreenModel`) all do safe null-checks against `document.getElementById(...)` so they no-op cleanly with the DOM gone.
+
+### `continueFromBuilder` removed from js/app.js
+
+Was a v3.63.147 legacy routing stub for users who hit the Builder screen via a deep link or back-button. With the DOM deleted, no caller can reach it. Removed.
+
+### `goToScreen('screen-builder')` handler removed
+
+The `if (id === 'screen-builder') { renderBuilderPicker(); ... }` branch inside `goToScreen` is also dead. Removed.
+
+### `worker-bees-prototype.html` retired
+
+The v2.2 prototype that drove the Worker Bees rework arc (v3.63.147–v3.63.158) is deleted. The live app now meets/exceeds the prototype's design. Backlog notes preserve the prototype's role as historical context.
+
+### `docs/worker-bees-audit.md` archived
+
+The pre-rework audit document is deleted. The audit served its purpose — it catalogued 40+ MUST-PRESERVE requirements before the rework started, and every one of them is still in place. The backlog observations carry forward the lessons.
+
+### `images/WaxFrame_Builder_v3.png` pruned
+
+The original right-facing Builder Bee asset is deleted. It was replaced by `v4.png` (transparent + left-facing) in v3.63.149. The two remaining references (`index.html` round-error modal + `js/app.js` ✨ Scenes data) are updated to `v4.png`.
+
+### Dead-CSS pruning
+
+Three blocks of CSS retired in this release (all classes are no longer emitted by any code path):
+
+- `.ai-builder-affordance` and all variants (`.is-active`, `.is-pickable`, `.is-pickable:hover`, `.is-pickable:focus-visible`, `.is-incapable`, `-text`, `-sub`) — Builder affordance retired in v3.63.155
+- `.ai-builder-affordance { display: none !important; }` hide-stub — no longer needed
+- `.ai-builder-affordance.is-active` v3.63.157 gold-override — also dead
+- `.ai-setup-builder-chip`, `.ai-setup-builder-chip-img`, `@media (prefers-color-scheme: dark) .ai-setup-builder-chip`, v3.63.157 gold override — chip retired in v3.63.155
+- `.bees-sidebar-legend`, `.bees-sidebar-legend-row`, `.bees-sidebar-legend-icon`, `.bees-sidebar-legend-sep` — Icon Legend block removed in v3.63.154
+- `#screen-builder { display: none !important; }` — DOM is gone, no need to hide it
+
+About 100 lines of dead CSS pruned across the file. Comments left at each removal site noting what was retired and why, for future reference.
+
+---
+
+## Builder/Worker meld arc complete
+
+This release closes the four-pass consolidation of the Worker Bees + Builder pages:
+
+- **v3.63.160** — intro paragraph rewrite, Change Builder modal restructure, sidebar/Hive Profile light-mode fix
+- **v3.63.161** — User Manual rewrite (5 setups → 4, Builder step retired, page rename, all inline references)
+- **v3.63.162** — README + info modal + api-details sweep
+- **v3.63.163** — code cleanup (DOM removal, dead CSS, legacy stub, prototype retirement)
+
+Task #32 (Builder consolidation: documentation sweep) is now complete. The screen formerly known as "Setup 2 — Builder" is gone from every user-facing surface (in-app UI, in-app menus, modals, sidebar, User Manual, README, info modals, landing pages) AND from the codebase (HTML, CSS, JS).
+
+What remains for future releases:
+
+- **Screenshot regeneration** for README + User Manual (still depict the v3.63.146 5-screen flow; prose now describes the current 4-screen flow regardless)
+- **Other rework sub-tasks** still in the backlog: #10 named profiles, #12 hive-profiles.html docs, #24 drop sub-1366 responsive code, #27 3-group ordering, #35 auto-classify, #36 server provider group label, per-row Manual override tag, per-tier WHY text
+
+---
+
 ## v3.63.162
 
 **Builder/Worker meld pass 3: README + info modal + api-details sweep**
