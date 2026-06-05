@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.145
+
+**Retry-once for transient model-fetch failures + setup-screen logo-jump fix**
+
+Build: `20260604-018`<br>
+Released: `2026-06-04`
+
+Two contained wins bundled into one ship.
+
+**Retry-once in `fetchModelsForProvider` + `fetchModelsForProviderLive`** ([js/api.js](js/api.js)) — when the inner fetch throws (network error, TCP reset, TLS abort, dropped packet), the function now sleeps 750ms and retries once before falling through to the existing fallback chain. Confirmed by David's 2026-06-04 Mistral diagnostic: same browser, same key, same code path produced a CORS-shaped failure (`"CORS request did not succeed. Status code: (null)."`) during a Classify Tiers run, but a manual retry 12 minutes later succeeded with 68 models returned. The endpoint was reliable; the original failure was a one-off transient blip. Browsers report TCP/TLS-layer failures as null-status "CORS" errors that are indistinguishable from real CORS rejections at the JS layer — so a single retry-with-delay clears the vast majority of these without masking real endpoint problems (which fail both attempts consistently).
+
+Second-attempt failures get captured in `window._lastTierClassificationErrors[provider]` with stage `live-fetch-failed-after-retry` so Bundle for Scout shows the failure trail. Previously silent — Scout bundles showed only `modelSource: "model-fallbacks"` with no diagnostic for why the live fetch dropped through.
+
+Internal-only retry control: an `opts._isRetry` flag passed on the recursive call suppresses further retries, so the worst case is two attempts. Caller-facing signature unchanged.
+
+**Setup-screen header logo no longer drifts** ([style.css:5014](style.css)) — David flagged: WaxFrame logo wasn't centered on the 5 setup screens (Worker Bees, Builder, Project, Reference Material, Starting Document) AND shifted horizontally between steps. Root cause: `.fs-header` was a flex container with `.fs-header-left` (small: hamburger + back button) and `.fs-header-right` (wider: step badge + 4 theme buttons) flanking `.fs-header-brand`. The brand had `flex:1; justify-content:center` which centered content INSIDE its asymmetric available region — but the region was offset because left and right sibling widths differed. Plus the step badge ("Setup — Step N of 5") rendered with proportional digits that subtly changed the right column's width step-to-step.
+
+Fix: `.fs-header` is now a 3-column grid (`1fr | auto | 1fr`). The brand is anchored to the center column regardless of what flanks it. `font-variant-numeric: tabular-nums` added to `.setup-step-badge` as defense-in-depth so digit-width drift can't shift the layout either. Together they make the logo position immune to right-column content changes.
+
+---
+
 ## v3.63.144
 
 **Fix Perplexity self-discovery TypeError that was silently swallowing Perplexity AND Mistral classifications**
