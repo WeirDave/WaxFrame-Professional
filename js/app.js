@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-023
+// Build: 20260604-024
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4509,6 +4509,196 @@ function renderAISetupGrid() {
   renderHiveCountChip();
 }
 
+// ────────────────────────────────────────────────────────────────────
+// v3.63.151 — Hive Roles + Tiers 6-card grid.
+//
+// Per the long-running Worker Bees rework arc (audit at
+// docs/worker-bees-audit.md; design at worker-bees-prototype.html v2.2),
+// the expanded row now surfaces SIX one-click picks instead of just a
+// dropdown:
+//
+//   Role picks:  ✨ Reviewer  +  🔨 Builder
+//   Tier picks:  💰 Cheap  +  ⚖️ Balanced  +  🧠 Thinker  +  ⚡ Fast
+//
+// Data plumbing already exists from earlier releases:
+//   • getReviewerRecommendation(aiId) / getBuilderRecommendation(aiId)
+//     — populated by recommendForDefault (v3.32+).
+//   • getCachedTiers(provider) — populated by classifyTiersForProvider
+//     (v3.63.141+). Shape: { tiers: { cheap, balanced, thinker, fast }, why }.
+//
+// The grid is presentation-only — clicking "Use this" on any card calls
+// saveModelForAI then renderAISetupGrid, mirroring how the dropdown's
+// onchange handler routes. Cards with no model (e.g. DeepSeek thinker,
+// Jamba builder) render "— none available —" inert. The active model
+// gets an is-active green border with "✓ In use" instead of "Use this".
+//
+// The 6-card grid does NOT replace anything — it lives alongside the
+// existing model-picker dropdown (which still surfaces the full live
+// model list with ✨🔨 badges for free-form selection) and the existing
+// Builder affordance (which controls WHICH AI is the Builder for the
+// whole hive, independent of WHICH MODEL within that AI to use).
+// Together those three controls answer three different questions:
+//   • Dropdown → "which model do I want from the full live list?"
+//   • 6 cards  → "what's the recommended pick for each role/tier?"
+//   • 🔨 affordance → "which AI in the hive is the Builder?"
+// ────────────────────────────────────────────────────────────────────
+const _HIVE_ROLE_META = {
+  reviewer: { label: 'Reviewer', icon: '✨' },
+  builder:  { label: 'Builder',  icon: '🔨' }
+};
+const _HIVE_TIER_META = {
+  cheap:    { label: 'Cheap',    icon: '💰' },
+  balanced: { label: 'Balanced', icon: '⚖️' },
+  thinker:  { label: 'Thinker',  icon: '🧠' },
+  fast:     { label: 'Fast',     icon: '⚡' }
+};
+
+// Render a single role card (Reviewer or Builder).
+function _renderHiveRoleCard(ai, role, currentModel) {
+  const meta = _HIVE_ROLE_META[role];
+  const rec = role === 'reviewer' ? getReviewerRecommendation(ai.id) : getBuilderRecommendation(ai.id);
+  const pickModel = rec?.model || null;
+  if (!pickModel) {
+    // No cached pick. Builder may also be `none: true` if the AI flagged
+    // NONE during classification (Jamba on the Builder side, etc.).
+    const noneNote = (role === 'builder' && rec?.none) ? '— no Builder-capable model —' : '— not yet recommended —';
+    return `
+      <div class="ai-hive-card is-none" title="No ${escapeHtml(meta.label)} pick cached for ${escapeHtml(ai.name)} yet. Use Recommend Models above to populate.">
+        <div class="ai-hive-card-label">${meta.icon} ${escapeHtml(meta.label)}</div>
+        <div class="ai-hive-card-model">${noneNote}</div>
+      </div>`;
+  }
+  const isActive = pickModel === currentModel;
+  return `
+    <div class="ai-hive-card${isActive ? ' is-active' : ''}" title="${escapeHtml(meta.label)} pick for ${escapeHtml(ai.name)}: ${escapeHtml(pickModel)}">
+      <div class="ai-hive-card-label">${meta.icon} ${escapeHtml(meta.label)}</div>
+      <div class="ai-hive-card-model">${escapeHtml(pickModel)}</div>
+      <button class="ai-hive-card-action${isActive ? ' is-active' : ''}" type="button"
+        onclick="swapAIModelFromHiveCard('${ai.id}', ${JSON.stringify(pickModel)}); event.stopPropagation();"
+        ${isActive ? 'disabled aria-disabled="true"' : ''}>
+        ${isActive ? '✓ In use' : 'Use this'}
+      </button>
+    </div>`;
+}
+
+// Render a single tier card (Cheap / Balanced / Thinker / Fast).
+function _renderHiveTierCard(ai, tier, tiersObj, currentModel) {
+  const meta = _HIVE_TIER_META[tier];
+  const pickModel = tiersObj?.[tier] || null;
+  if (!pickModel) {
+    return `
+      <div class="ai-hive-card is-none" title="No ${escapeHtml(meta.label)} pick available — the classifier flagged NONE for this slot on ${escapeHtml(ai.name)}.">
+        <div class="ai-hive-card-label">${meta.icon} ${escapeHtml(meta.label)}</div>
+        <div class="ai-hive-card-model">— none available —</div>
+      </div>`;
+  }
+  const isActive = pickModel === currentModel;
+  return `
+    <div class="ai-hive-card${isActive ? ' is-active' : ''}" title="${escapeHtml(meta.label)} tier pick for ${escapeHtml(ai.name)}: ${escapeHtml(pickModel)}">
+      <div class="ai-hive-card-label">${meta.icon} ${escapeHtml(meta.label)}</div>
+      <div class="ai-hive-card-model">${escapeHtml(pickModel)}</div>
+      <button class="ai-hive-card-action${isActive ? ' is-active' : ''}" type="button"
+        onclick="swapAIModelFromHiveCard('${ai.id}', ${JSON.stringify(pickModel)}); event.stopPropagation();"
+        ${isActive ? 'disabled aria-disabled="true"' : ''}>
+        ${isActive ? '✓ In use' : 'Use this'}
+      </button>
+    </div>`;
+}
+
+// Top-level renderer — both grids + Why expander. Returns '' when there
+// is NOTHING to show (no role recs cached AND no tier cache); callers
+// can skip the whole block. Empty-state messaging lives in the existing
+// "Recommend Models" affordance inside buildModelSelector — no need to
+// duplicate a separate empty state here.
+function _renderHiveRolesAndTiers(ai, currentModel) {
+  const cfg = API_CONFIGS[ai.provider];
+  const hasKey = !!(cfg && cfg._key);
+  if (!hasKey) return '';
+
+  const reviewerRec = getReviewerRecommendation(ai.id);
+  const builderRec  = getBuilderRecommendation(ai.id);
+  const tiersBlob   = getCachedTiers(ai.provider);
+  const tiersObj    = tiersBlob?.tiers || null;
+  const tiersWhy    = tiersBlob?.why || '';
+  const hasAnyRole  = !!(reviewerRec?.model || builderRec?.model);
+  const hasAnyTier  = !!tiersObj;
+  if (!hasAnyRole && !hasAnyTier) return '';
+
+  // Role cards section — always render both Reviewer + Builder slots so the
+  // layout doesn't jump when one of them has no cache yet. Empty slots
+  // render the "— not yet recommended —" inert state.
+  const roleCards = ['reviewer', 'builder']
+    .map(r => _renderHiveRoleCard(ai, r, currentModel))
+    .join('');
+
+  // Tier cards — only render the tier section if we have a cache. If not,
+  // the role-only state is fine on its own.
+  const tierSection = tiersObj ? `
+    <div class="ai-hive-grid-section">
+      <div class="ai-hive-grid-section-label">Tier picks</div>
+      <div class="ai-hive-card-grid">
+        ${['cheap', 'balanced', 'thinker', 'fast'].map(t => _renderHiveTierCard(ai, t, tiersObj, currentModel)).join('')}
+      </div>
+    </div>` : '';
+
+  // "Why each pick" expander. We have per-role WHY (from reviewer/builderRec)
+  // and an overall tiers WHY (single block; the parser doesn't separate per-
+  // tier explanations yet). Render each as a row so the user gets a unified
+  // rationale view.
+  const whyRows = [];
+  if (reviewerRec?.model && reviewerRec?.why) {
+    whyRows.push(`<div class="ai-hive-why-row"><div class="ai-hive-why-tier">✨ Reviewer</div><div class="ai-hive-why-text"><code>${escapeHtml(reviewerRec.model)}</code><br>${escapeHtml(reviewerRec.why)}</div></div>`);
+  }
+  if (builderRec?.model && builderRec?.why) {
+    whyRows.push(`<div class="ai-hive-why-row"><div class="ai-hive-why-tier">🔨 Builder</div><div class="ai-hive-why-text"><code>${escapeHtml(builderRec.model)}</code><br>${escapeHtml(builderRec.why)}</div></div>`);
+  } else if (builderRec?.none && builderRec?.why) {
+    whyRows.push(`<div class="ai-hive-why-row"><div class="ai-hive-why-tier">🔨 Builder</div><div class="ai-hive-why-text"><em>— none available —</em><br>${escapeHtml(builderRec.why)}</div></div>`);
+  }
+  if (tiersWhy) {
+    whyRows.push(`<div class="ai-hive-why-row"><div class="ai-hive-why-tier">💰⚖️🧠⚡ Tiers</div><div class="ai-hive-why-text">${escapeHtml(tiersWhy)}</div></div>`);
+  }
+  const whyExpander = whyRows.length ? `
+    <button class="ai-hive-why-toggle" type="button" onclick="event.stopPropagation(); toggleHiveWhy('${ai.id}');">
+      <span id="ai-hive-why-arrow-${ai.id}">▸</span> Why each pick
+    </button>
+    <div class="ai-hive-why-body" id="ai-hive-why-body-${ai.id}">
+      ${whyRows.join('')}
+    </div>` : '';
+
+  return `
+    <div class="ai-hive-grid-block">
+      <div class="ai-hive-grid-section">
+        <div class="ai-hive-grid-section-label">Role picks</div>
+        <div class="ai-hive-card-grid">
+          ${roleCards}
+        </div>
+      </div>
+      ${tierSection}
+      ${whyExpander}
+    </div>`;
+}
+
+// Click handler for the "Use this" button on any of the 6 cards.
+// Routes through the existing saveModelForAI plumbing so the model
+// persistence + endpoint-rebuild + recheck-flag-clear logic stays in one
+// place. Falls back to renderAISetupGrid to refresh the is-active state
+// across all 6 cards plus the dropdown's current-value display.
+function swapAIModelFromHiveCard(aiId, model) {
+  if (!aiId || !model) return;
+  if (typeof saveModelForAI === 'function') saveModelForAI(aiId, model);
+  if (typeof renderAISetupGrid === 'function') renderAISetupGrid();
+}
+
+// Why-expander toggle. Symmetric with the prototype's toggleWhy:
+// arrow flips ▸ ↔ ▾, body gains/loses .is-open.
+function toggleHiveWhy(aiId) {
+  const body = document.getElementById('ai-hive-why-body-' + aiId);
+  const arrow = document.getElementById('ai-hive-why-arrow-' + aiId);
+  if (!body) return;
+  const open = body.classList.toggle('is-open');
+  if (arrow) arrow.textContent = open ? '▾' : '▸';
+}
+
 // v3.31.0 — Single-row template. Two visual states:
 //   collapsed (default): icon + name + (custom-only) checkbox
 //   expanded:           the above + key field, model selector, etc.
@@ -4631,6 +4821,7 @@ function buildAISetupRowHTML(ai) {
           ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}'); event.stopPropagation();" title="Test this API key">Test</button>` : ''}
         </div>
         ${modelSelector}
+        ${_renderHiveRolesAndTiers(ai, cfg?.model || '')}
         ${builderAffordance}
       </div>`;
   }
