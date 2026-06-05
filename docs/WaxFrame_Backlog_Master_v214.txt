@@ -1,0 +1,79 @@
+WaxFrame Backlog Master v214
+2026-06-04
+
+State: v3.63.145 Pro shipped on main. Retry-once on transient model-fetch failures in fetchModelsForProvider + fetchModelsForProviderLive (sleep 750ms, retry, capture second failure into _lastTierClassificationErrors so the bundle shows the diagnostic trail). Bundle for Scout previously showed only modelSource: model-fallbacks with no trace of WHY the live fetch dropped through; now shows stage: live-fetch-failed-after-retry with the actual error message. Confirmed by David's 2026-06-04 Mistral diagnostic — the endpoint IS reliable, the original failure was a transient TCP/TLS blip masquerading as CORS.
+
+Same release: setup-screen header logo no longer drifts. .fs-header switched from flex (with asymmetric flanking siblings) to 3-column grid (1fr | auto | 1fr) so the brand block is anchored to the center column regardless of left/right column widths. .setup-step-badge gains font-variant-numeric: tabular-nums as defense-in-depth so digit-width drift across "Setup — Step 1/2/3/4/5 of 5" can't shift the layout either. David flagged this 2026-06-04 — visible cumulative annoyance every time he flipped between setup steps.
+
+Worker Bees rework prototype iteration paused at v2.2 (worker-bees-prototype.html on main). Next move per David: full functional audit of existing Worker Bees + Builder screens, then v3 prototype as a true superset (every existing function preserved). Audit is task #28.
+
+Cost-transparency landing section (task #21): David is having ChatGPT crunch his Grok invoice numbers; will bring the data back. Scout pauses on that one until the numbers land.
+
+v3.63.144 state still holds: Perplexity self-discovery TypeError fix + const BUILD drift fix. v3.63.143 state still holds: Mistral live fetch + Perplexity self-discovery via web search. v3.63.142 state still holds: 11 stale provider URLs fixed across 7 files. Sitemap lastmod 2026-06-04. PLAYBOOK TEST MASTER v37 is the live test-tracking doc.
+
+PRIOR STATE (v3.63.144, retained for context until next release reshuffles the margin):
+Fixed v3.63.143's Perplexity self-discovery TypeError (normalizePerplexityModels returns an object, not an array — .filter() on it threw). Also corrected a const BUILD drift in app.js that wasn't getting updated by the PowerShell stamp sweep.
+
+PRIOR STATE (v3.63.143, retained for context until next release reshuffles the margin):
+Mistral live fetch via /v1/models + Perplexity self-discovery via chat-completion web search. Closed the two model-fallbacks paths.
+
+PRIOR STATE (v3.63.142, retained for context until next release reshuffles the margin):
+Provider link audit fix release. 11 stale URLs across 7 files.
+
+Open Bugs
+
+(none currently tracked outside the active task list)
+
+Open Features / Tasks
+
+(See active task list — too many to list individually here. Highlights:)
+
+- #20 Worker Bees row rework — progressive disclosure with tier picks (BLOCKED on #28 audit)
+- #21 Cost-transparency landing section (BLOCKED on ChatGPT cost numbers from David)
+- #22 Worker Bees expanded view: 6 cards not 4 (Reviewer + Builder + 4 tiers)
+- #23 Icon legend + light-mode contrast pass
+- #24 Drop sub-1366px responsive code (no phone support)
+- #25 Jump-to-AI scroll-with-offset (sticky toolbar)
+- #26 Toolbar alignment — Recommend All AIs button
+- #27 3-group ordering (defaults / customs / servers) + alphabetize within
+- #28 Worker Bees full functional audit (REQUIRED before v3 prototype)
+- #29 Logo jump on setup screens (SHIPPED in v3.63.145)
+- Hive Profiles step 2: Perplexity verification pass (still in queue)
+- Hive Profiles step 3: storage + resolver + seeded profiles
+- Hive Profiles step 4: dropdown UI + hive-profiles.html docs
+- Restore-from-Checkpoint diff-and-pick UI — PARKED
+- Hive parallel fan-out RPS-awareness (active throttle counterpart)
+- Model recommender filter-awareness warning
+- Failover Builder behavior — single-round CONTENT_FILTERED handling
+- Builder-incapable family list expansion
+- Pause/resume at reviewer seam
+- File System Access API exploration
+- Provider Catalog foundation (parked)
+- CSS dead-selector cleanup branch
+- CSS rule consolidation sweep
+- Repo housekeeping — docs/ folder
+- Triage CodeQL + Dependabot findings
+- Builder page consolidation (David raised 2026-06-04 — can we eliminate the Builder page entirely if all functionality lives on Worker Bees? Determine during audit #28.)
+- Rules reference update — "verify every external URL before shipping" + "always update const BUILD in addition to the // Build comment when bumping stamps" + (new) "release-check validator should compare const BUILD against // Build comment for consistency"
+
+Observations
+
+- 2026-06-04 — David explicitly asked Scout to pause prototype iteration and start the Worker Bees + Builder functional audit. The prototype surfaced more design questions than it answered, and continuing to iterate cosmetic issues was busywork compared to doing the structural audit. Right call. Audit produces a complete requirements list for v3 in docs/worker-bees-audit.md.
+
+- 2026-06-04 — Worker Bees prototype at v2.2 includes sidecar legend (left), 6-card grid in expanded rows (Role picks: Reviewer + Builder; Tier picks: Cheap + Balanced + Thinker + Fast), jump-to-AI sidebar nav, empty-state countdown matching wfBtnElapsed pattern, verifier-badge placeholders for the Step 2 Perplexity verification pass. Still missing from the prototype (caught by David during review): provider logos (using emoji icons instead of images/icon-*.png), real two-card chassis, light-mode contrast, default/custom/server grouping, scroll-with-offset for jump-to-AI, full functional carry-forward (Add Custom AI, Test key, Remove custom, Server import). All captured as tasks 22-29.
+
+- 2026-06-04 — David flagged the setup-screen logo bug after noticing the WaxFrame logo on the prototype WAS centered (the helper-page chassis does it right) while the live setup screens don't. Root cause was the flex-asymmetric-siblings problem. Fix shipped in v3.63.145 as a 3-column grid.
+
+- SHIPPED — v3.63.144 Perplexity self-discovery TypeError fix.
+
+- SHIPPED — v3.63.143 Mistral live fetch + Perplexity self-discovery via web search. David's framing on the self-discovery pattern: "if we can't fix the perplexity without going to the web can't we just ask perplexity to go to the web and ask for its own fucking models?" — that's the canonical version of the architectural choice.
+
+- SHIPPED — v3.63.142 provider link audit. 11 stale URLs across 7 files.
+
+- 2026-06-04 — release-check validator caught the v3.63.145 prototype's stale cache-bust (?v=3.63.144 still in worker-bees-prototype.html) before commit. Saved a re-release. The validator pays for itself; David noted earlier that 11 ceremonies have been green since v3.63.135.
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01, reaffirmed 2026-06-04. Engineering merit answers stand independent of conversion data.
