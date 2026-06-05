@@ -600,9 +600,15 @@
 //  Possible values: 'verified', 'revised', 'unknown'. Real
 //  implementation gets this from a separate verification cache.
 // ────────────────────────────────────────────────────────────
+// v2.3 — Each bee now declares its `type`:
+//   'default' — one of the built-in 6 (ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity)
+//   'custom'  — user-added cloud provider (DeepSeek, Cohere, Together AI, Jamba, etc.)
+//   'server'  — self-hosted endpoint (Ollama, LM Studio, Open WebUI, Alfredo)
+// Page renders these in three labeled sections in that order, alphabetized
+// within each section. Sidebar Jump-to-AI nav mirrors the same grouping.
 const BEES = [
   {
-    id: 'chatgpt', name: 'ChatGPT', icon: '🤖',
+    id: 'chatgpt', name: 'ChatGPT', icon: '🤖', type: 'default',
     currentModel: 'gpt-5.5',
     status: { state: 'active', label: '✓ Active' },
     allModels: ['gpt-4.1', 'gpt-4.1-mini', 'gpt-5', 'gpt-5-mini', 'gpt-5.4', 'gpt-5.4-nano', 'gpt-5.5', 'o1', 'o3', 'o3-mini'],
@@ -853,26 +859,51 @@ function swapToRole(beeId, role) {
 
 function renderWhyBody(bee) {
   if (!bee.tiersCache) return '';
+  // v2.2 fix: include Role picks (Reviewer + Builder) in the Why list, not
+  // just the tier picks. David caught this — when he opened "Why each pick"
+  // on a row he saw only 4 tier explanations, no role ones, which means
+  // the reviewer/builder rationale was hidden.
+  const roleRows = Object.keys(ROLE_META).map(role => {
+    const meta = ROLE_META[role];
+    const model = role === 'reviewer' ? bee.reviewerPick : bee.builderPick;
+    const why = role === 'reviewer' ? bee.reviewerWhy : bee.builderWhy;
+    if (!model) {
+      return `
+        <div class="wb-why-row">
+          <div class="wb-why-tier">${meta.icon} ${meta.label}</div>
+          <div class="wb-why-text"><em>— none available —</em>${why ? '<br>' + escapeHtml(why) : ''}</div>
+        </div>
+      `;
+    }
+    return `
+      <div class="wb-why-row">
+        <div class="wb-why-tier">${meta.icon} ${meta.label}</div>
+        <div class="wb-why-text"><code>${escapeHtml(model)}</code>${why ? '<br>' + escapeHtml(why) : ''}</div>
+      </div>
+    `;
+  }).join('');
+  const tierRows = Object.keys(TIER_META).map(tier => {
+    const meta = TIER_META[tier];
+    const pick = bee.tiersCache[tier];
+    if (!pick.model) {
+      return `
+        <div class="wb-why-row">
+          <div class="wb-why-tier">${meta.icon} ${meta.label}</div>
+          <div class="wb-why-text"><em>— none available —</em><br>${escapeHtml(pick.why)}</div>
+        </div>
+      `;
+    }
+    return `
+      <div class="wb-why-row">
+        <div class="wb-why-tier">${meta.icon} ${meta.label}</div>
+        <div class="wb-why-text"><code>${escapeHtml(pick.model)}</code><br>${escapeHtml(pick.why)}</div>
+      </div>
+    `;
+  }).join('');
   return `
     <div class="wb-why-body" id="why-${bee.id}">
-      ${Object.keys(TIER_META).map(tier => {
-        const meta = TIER_META[tier];
-        const pick = bee.tiersCache[tier];
-        if (!pick.model) {
-          return `
-            <div class="wb-why-row">
-              <div class="wb-why-tier">${meta.icon} ${meta.label}</div>
-              <div class="wb-why-text"><em>— none available —</em><br>${escapeHtml(pick.why)}</div>
-            </div>
-          `;
-        }
-        return `
-          <div class="wb-why-row">
-            <div class="wb-why-tier">${meta.icon} ${meta.label}</div>
-            <div class="wb-why-text"><code>${escapeHtml(pick.model)}</code><br>${escapeHtml(pick.why)}</div>
-          </div>
-        `;
-      }).join('')}
+      ${roleRows}
+      ${tierRows}
     </div>
   `;
 }
