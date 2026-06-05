@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-005
+   Build: 20260605-006
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11379,6 +11379,51 @@ kbd {
   color: var(--text-dim);
   line-height: 1.6;
   margin: 0;
+}
+/* v3.63.164 — Live viewport readout inside the min-screen-overlay.
+   Surfaces the actual CSS-pixel viewport so users see the failure mode
+   directly (viewport, not screen resolution). Hint color flips: green
+   "above minimum" when both dimensions pass, red "needs N px wider/taller"
+   otherwise. */
+.min-screen-viewport {
+  margin: 12px 0 16px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: var(--fs-base);
+}
+.min-screen-viewport-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 2px 0;
+}
+.min-screen-viewport-label {
+  color: rgba(255, 255, 255, 0.78);
+}
+.min-screen-viewport-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--accent, #f4b400);
+  white-space: nowrap;
+}
+.min-screen-viewport-hint {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.14);
+  font-weight: 600;
+  text-align: center;
+}
+.min-screen-viewport-hint.is-ok {
+  color: #6fbf73;
+}
+.min-screen-viewport-hint.is-short {
+  color: #ff8a80;
+}
+[data-theme="light"] .min-screen-viewport {
+  background: rgba(0, 0, 0, 0.55);
 }
 
 /* ── Light mode overrides for new classes ── */

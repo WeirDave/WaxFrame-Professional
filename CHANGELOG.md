@@ -2,6 +2,59 @@
 
 ---
 
+## v3.63.164
+
+**Live viewport readout in min-screen-overlay + DPI scaling guidance**
+
+Build: `20260605-006`<br>
+Released: `2026-06-05`
+
+David surfaced a real user incident: a user's display was 1920×1080 and adequate, but their browser viewport was restricted (DPI scaling, sidebar panel, zoom, something) and they got bounced out. They had to switch browsers to fix it. A "what is my screen resolution" link would have sent them down the wrong path — their display was fine; their viewport wasn't.
+
+**Fix**: Live viewport readout INSIDE the overlay so users see the actual failure mode directly.
+
+### What renders
+
+A new `.min-screen-viewport` block sits between the description and the resize-help line:
+
+```
+Your browser viewport: 1240 × 680 px
+Required minimum:      1366 × 768
+
+✗ Needs 126 px wider and 88 px taller to fit the work screen.
+```
+
+The hint flips between two states with color coding:
+
+- **Above the minimum** (both dimensions pass): green ✓ *"You're above the minimum — refresh to load WaxFrame."*
+- **Below either threshold**: red ✗ *"Needs N px wider and M px taller to fit the work screen."* — picks whichever dimension(s) are short
+
+Updates live on `resize` and on `visualViewport.resize` (the latter catches zoom + DPI changes that don't fire a plain `resize` on every browser).
+
+### Inline script (not deferred)
+
+The updater script is inline in `index.html` BELOW the overlay markup, not in `app.js`. Reason: users hitting this overlay are by definition users whose viewport is too small for the full app to load. `app.js` may never fire. The inline IIFE runs immediately and attaches listeners that survive any subsequent JS load failure.
+
+### DPI scaling guidance
+
+The resize-help paragraph now flags Windows DPI scaling explicitly: *"Important: if your screen resolution looks fine but you're still blocked, check your browser zoom level (Ctrl+0 to reset) and Windows DPI scaling (Settings → Display → Scale; 200% halves your effective viewport)."*
+
+This is the failure mode the user from David's report hit — 200% scaling on Windows-recommended default. The viewport readout disambiguates the diagnosis immediately; the prose explains how to fix it.
+
+### Why not link to whatismyscreenresolution.com
+
+David's original instinct was an external link. The diagnostic value of the inline readout is strictly higher: it shows the actual viewport (not screen resolution), updates live as the user resizes, doesn't leave the page, and has no link-rot risk. If a user STILL needs an external hand-hold for "why is my viewport smaller than my screen?", `whatismyviewport.com` (not screen-resolution.com) is the correct destination because it shows both side-by-side — but the inline readout makes the external link unnecessary in practice.
+
+### Queued in backlog (pending confirmation / triage)
+
+Three items captured but not addressed this release:
+
+1. **Lock button initial-state inversion** (UX) — show unlocked icon at rest as the action affordance; locked icon after click. Currently the resting state shows "🔒 Lock this line" which reads as "I am locked" rather than "click to lock".
+2. **Lock button one-way** (bug) — clicking locks but doesn't unlock. Multiple lock buttons in the codebase (bulk applied-changes lock, per-row applied-change lock, decision lock, Notes-template inserts); needs David's confirmation of which one. Top suspect: per-row applied-change lock in the Conflicts panel.
+3. **Notes button cut off at smaller viewport / 200% DPI scaling** (bug) — work toolbar's Notes button clipped when effective viewport lands in a band that passes the `min-screen-overlay` gate but breaks toolbar layout. Same root cause as v3.63.164's viewport-display fix: DPI scaling halves CSS-pixel viewport. Investigate which toolbar breakpoint clips Notes first as width shrinks.
+
+---
+
 ## v3.63.163
 
 **Builder/Worker meld pass 4: code cleanup — DOM removal + dead-CSS pruning + legacy stub removal + prototype retirement**
