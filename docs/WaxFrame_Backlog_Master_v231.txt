@@ -1,0 +1,66 @@
+WaxFrame Backlog Master v231
+2026-06-05
+
+State: v3.63.162 Pro shipped on main. Third of four planned releases (v3.63.160-163) for the Builder/Worker meld. README + info modal + api-details sweep:
+
+- README.md "1. Build your hive" + "2. Choose your Builder" sections consolidated into a single "1. Set up your hive" section; Builder content (synthesizer role, cost note, provider recommendations) merged in. Subsequent step numbering 3-8 decremented to 2-7. All screenshot alt text updated to new numbering. Body reference "from the Worker Bees screen" → "from the Set up your hive screen".
+- index.html infoBuilderModal manual link redirected from #step2 to #step1 (which is "Set up your hive"). #step2 in the manual still exists as a redirect stub from v3.63.161.
+- api-details.html walkthrough sentence "The Worker Bees screen stays right where it is" → "The Set up your hive screen stays right where it is".
+- Landing pages (ai-cover-letter-editor, ai-resume-review, ai-business-proposal, document-playbooks, what-are-tokens, prompt-editor, templates) reviewed — no Worker Bees / Setup walkthrough references. Landing pages are feature pages, not setup walkthroughs.
+
+Screenshots still depict v3.63.146 layout (5-screen flow + standalone Builder screen). Regeneration flagged but not done — prose now describes the current layout regardless.
+
+Up next: v3.63.163 (code cleanup) — #screen-builder DOM removal, continueFromBuilder legacy stub removal, worker-bees-prototype.html retirement, dead-CSS pruning (.bees-sidebar-legend*, .ai-setup-builder-chip*, .ai-builder-affordance*), docs/worker-bees-audit.md archive.
+
+v3.63.161 state still holds: User Manual rewrite (5 setups → 4, Builder step retired, page rename, all inline references updated). v3.63.160 state still holds: intro paragraph rewrite, Change Builder modal restructure, sidebar+Hive Profile light-mode fix.
+
+PRIOR STATE (v3.63.161, retained for context until next release reshuffles the margin):
+User Manual rewrite. Sidebar links collapsed to 4 setups. Step table renumbered. Section titles renamed/renumbered. #step2 anchor preserved as redirect stub with Builder content. All inline prose references to old numbering updated. Status-bar bullet rewritten.
+
+PRIOR STATE (v3.63.160, retained for context until next release reshuffles the margin):
+Intro paragraph rewritten. Change Builder modal switched to row-based methodology. Sidebar block + Hive Profile bar light-mode fix using work-screen .work-panel-header pattern (rgba(0,0,0,0.55) + backdrop-filter + light text).
+
+PRIOR STATE (v3.63.159, retained for context until next release reshuffles the margin):
+Bee mascot tooltips via centralized BEE_NAMES mapping + applyBeeTooltips walker. Top count chip strong elements in var(--accent) gold.
+
+Open Bugs
+
+(none currently tracked outside the active task list)
+
+Open Features / Tasks
+
+- v3.63.163 (next): code cleanup (DOM removal, dead CSS, legacy stub, prototype retirement, audit doc archive)
+- Screenshot regeneration for README + landing pages (FLAGGED for future v3.63.16x)
+- #10 Hive Profiles: "Save current as named profile"
+- #12 Hive Profiles: dedicated docs page (hive-profiles.html)
+- #24 Worker Bees rework: drop sub-1366px responsive code
+- #27 Worker Bees rework: 3-group ordering (defaults / customs / servers)
+- #35 Auto-classify tier picks always
+- #36 Worker Bees rework: server provider group label
+- Per-row "Manual override" tag — needs delta tracking
+- Per-tier WHY text: classifier currently produces one overall WHY
+- WaxFrame_Builder_v3.png pruning candidate (will be addressed in v3.63.163)
+- Restore-from-Checkpoint diff-and-pick UI — PARKED
+- Hive parallel fan-out RPS-awareness
+- Model recommender filter-awareness warning
+- Failover Builder behavior — single-round CONTENT_FILTERED handling
+- Builder-incapable family list expansion
+- Pause/resume at reviewer seam
+- File System Access API exploration
+- Provider Catalog foundation (parked)
+- CSS rule consolidation sweep
+- Repo housekeeping — docs/ folder
+- Triage CodeQL + Dependabot findings
+- Rules reference updates
+
+Observations
+
+- 2026-06-05 — Landing pages cleanly passed the grep (no Worker Bees / Setup references). The brand has been disciplined about keeping landing pages task-focused rather than walkthrough-focused, which paid off here — only the README, User Manual, and api-details needed updates.
+
+- 2026-06-05 — release-check validator caught no drift across v3.63.135 through v3.63.162 (twenty-eight ceremonies).
+
+- 2026-06-05 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: README is the first thing visitors see on the GitHub repo. The consolidated "Set up your hive" section reads as one coherent step instead of two confusing ones — better first impression.
