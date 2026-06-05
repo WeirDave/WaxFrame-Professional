@@ -2,6 +2,56 @@
 
 ---
 
+## v3.63.161
+
+**Builder/Worker meld pass 2: User Manual rewrite — 5 setups → 4, Builder step retired, "Set up your hive" rename**
+
+Build: `20260605-003`<br>
+Released: `2026-06-05`
+
+The User Manual (`waxframe-user-manual.html`) was still describing the old 5-screen setup flow (Setup 1 — Worker Bees through Setup 5 — Starting Document) with a standalone "Setup 2 — Choose Your Builder" screen that hasn't existed since v3.63.147. This release brings the manual fully in line with the live app.
+
+**Sidebar links** — collapsed to 4 setup entries:
+
+- ① Setup 1 — Set up your hive
+- ② Setup 2 — Define Your Project
+- ③ Setup 3 — Reference Material
+- ④ Setup 4 — Starting Document
+
+(The standalone "Setup 2 — Choose Your Builder" link is gone. Step IDs `#step3`, `#step4`, `#step5` are kept as anchors for backward compatibility with any external bookmarks; only the visible numbering changed.)
+
+**Step table** — collapsed Setup 1 + 2 into one row that explains the consolidated hive setup (key + model + Builder selection happen on the same screen). The remaining rows renumbered 2/3/4.
+
+**Section headers** — renamed in order:
+
+- "Step 1 — Set Up Your Worker Bees" → **"Setup 1 — Set up your hive"**
+- "Step 2 — Choose Your Builder" → **stub redirect block** preserving the `#step2` anchor with a short note explaining Builder selection now lives on Setup 1, plus the Builder's two roles (synthesizer + handyman via Notes drawer) and the cost note that previously lived in this standalone section
+- "Step 3 — Define Your Project" → **"Setup 2 — Define Your Project"**
+- "Step 4 — Reference Material" → **"Setup 3 — Reference Material"**
+- "Step 5 — Provide Your Starting Document" → **"Setup 4 — Provide Your Starting Document"**
+- "Step 6 — Launch WaxFrame" → **"Step 5 — Launch WaxFrame"** (decremented for the removed Builder step)
+- Steps 7-11 similarly decremented to 6-10
+
+**Inline prose** — bulk-fixed all references to old numbering:
+
+- "Setup 5 (Starting Document)" → "Setup 4 (Starting Document)"
+- "Setup 4 (Reference Material)" → "Setup 3 (Reference Material)"
+- "(Setup 3)" / "(Setup 4)" / "(Setup 5)" inline → renumbered
+- "the next screen (Setup 2)" status-bar reference → rewritten to point at the new per-row 🔨 Builder button
+- "Open the project on the Setup 3 screen" → "Setup 2 screen"
+- "Setup 4 if the total token count" → "Setup 3 if the total token count"
+- "Menu → Setup 2 — Builder" → "Menu → Setup 1 — Set up your hive"
+- "Setup 1 — Worker Bees" → "Setup 1 — Set up your hive" (Server-mode toggle + Smoke-the-Hive prerequisites blurbs)
+- "Setup 2 — Builder" prerequisites blurb rewritten to mention the per-row Builder button instead
+
+**Status bar update** — the "✗ Builder selected" status-bar bullet on Setup 1 used to say "until you have selected a Builder on the next screen (Setup 2)". Rewritten to point at the new flow: *"until you have crowned a Builder by clicking the 🔨 Builder button on any keyed AI's row above"*.
+
+**Screenshots not regenerated** — the `screenshot_setup1_dark.png` / `screenshot_setup1_light.png` assets in the user manual still show the v3.63.146 layout. Acceptable for this release — the prose now describes the current layout regardless. Regeneration is captured for a future v3.63.16x release.
+
+Up next: v3.63.162 (README + landing pages + info modals).
+
+---
+
 ## v3.63.160
 
 **Builder/Worker meld pass 1: intro paragraph rewrite + Change Builder modal restructure + Set up your hive sidebar + Hive Profile bar light-mode fix**
