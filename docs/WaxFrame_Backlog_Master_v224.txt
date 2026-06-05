@@ -1,0 +1,82 @@
+WaxFrame Backlog Master v224
+2026-06-04
+
+State: v3.63.155 Pro shipped on main. Ninth Worker Bees release of the evening. TWO real bug fixes + three David design asks rolled into one ship.
+
+Bug fixes:
+1. 6-card click STILL didn't change the model after v3.63.154's data-attribute fix. Root cause unclear but the data-attribute indirection wasn't working in David's browser. v3.63.155 fix: dropped data-attribute approach entirely; inline-escapes pickModel into a single-quoted JS string directly in onclick. _safeJsStr handles backslashes + single quotes. Result is unambiguously valid HTML+JS: onclick="swapAIModelFromHiveCard('chatgpt', 'gpt-5.5'); event.stopPropagation();" — should work regardless of browser quirks.
+2. Picking a Hive Profile expanded every row. applyHiveProfile -> saveModelForAI loop, and saveModelForAI -> renderAIRow with keepExpanded=true default. Each call added that row to _expandedAIIds. Fix: saveModelForAI gained opts param ({keepExpanded?, silent?}); applyHiveProfile passes {keepExpanded:false, silent:true} so bulk apply doesn't blow open rows AND doesn't fire N per-AI toasts (bulk summary toast at end is enough).
+
+Three design changes rolled in (David asked earlier):
+
+1. Per-row Builder button. Every keyed row gets a "🔨 Builder" pill with four states: is-active (solid gold, this AI is the Builder), is-pickable (gray-outlined, click to set), is-incapable (yellow-dashed "⚠ Reviewer-only" for Jamba), placeholder (invisible width-holder for no-key rows). Replaces both the v3.63.147 collapsed Builder Bee chip AND the v3.63.147 expanded-panel "Make this the Builder" / "This is your Builder" lines (both retired). David: "let's put the builder button on everybody's card and just gray it out and if we click on it then it stays gold lit up solid."
+
+2. Manage account link in the collapsed row. The green "Manage account? Open ChatGPT account ↗ · ✓ API key works — ready to use" banner at the top of the expanded panel is gone (David: "we don't need all that anymore because we already have a ready pill"). Manage link moves to the collapsed row, right side, next to the Builder button. Two states: "Manage ↗" (when a key is saved) and "Get key ↗" (gold, when no key). Placeholder for server-imported customs with no console URL. The ✓ Ready / ✗ Invalid status pill from v3.63.153 carries the validation signal that used to live inside the banner.
+
+3. "Make this the Builder" line in expanded panel dropped (David: "do away with the make this the builder line"). The expanded panel is now strictly about (a) key entry, (b) Recommend Models button + status, (c) 6-card grid, (d) Why each pick expander. Lean.
+
+Closes / advances #34 (Builder education — modal + standalone page still ahead).
+
+Builder selection plumbing unchanged: setBuilder(ai.id) called from the per-row button's onclick. Exactly-one-at-a-time enforcement comes free from the existing logic. BUILDER_INCAPABLE_FAMILIES gate (Jamba) still applies — those rows show "⚠ Reviewer-only" disabled.
+
+Dead-CSS additions for the cleanup pass: .ai-setup-builder-chip + .ai-setup-builder-chip-placeholder (chip retired); .ai-builder-affordance block now explicitly hidden via display:none. Three rules total are pruning candidates.
+
+Row width budget at this version (rough): 16 + 24 + 160 + 84 + 50 + 320 + 110 + 80 + 16 + flex + 30 ≈ 890px fixed before spacer. Fine above 1100px (sidebar stacked, main column gets full width). Below 900px-ish the row may wrap; not a blocker since screen-bees is desktop-targeted.
+
+v3.63.154 state still holds: column alignment via fixed widths, Builder chip moved out of name-group (replaced by button in v3.63.155), "Model:" label added, bulk-select toolbar inside Custom AIs (N) section header, parens count format, page renamed to "Set up your hive", sidebar legend dropped + Jump-to-AI moved to top, card-click bug fixed.
+
+PRIOR STATE (v3.63.154, retained for context until next release reshuffles the margin):
+Hive setup polish. Card-click bug fix (data-pick-model attribute). Column alignment. Builder chip move (replaced in v3.63.155 by per-row button). "Model:" label. Bulk-select in Custom AIs header. Page rename. Sidebar legend removed.
+
+PRIOR STATE (v3.63.153, retained for context until next release reshuffles the margin):
+Sidebar chassis (2-col .bees-layout). Collapsed-row redo (model dropdown moved INTO row header, status pill). Green→gold for is-active. Transparent v4 mascot.
+
+PRIOR STATE (v3.63.152, retained for context until next release reshuffles the margin):
+Hive Profile dropdown above bee grid. 5 options. Persisted to localStorage["waxframe_hive_profile"].
+
+Open Bugs
+
+(none currently tracked outside the active task list)
+
+Open Features / Tasks — Worker Bees rework Phase 6+
+
+- #10 Hive Profiles: "Save current as named profile" (named user profiles)
+- #12 Hive Profiles: dedicated docs page (hive-profiles.html)
+- #24 Worker Bees rework: drop sub-1366px responsive code — cleanup pass; design is settled
+- #27 Worker Bees rework: 3-group ordering (defaults / customs / servers) — bigger restructure
+- #32 Builder consolidation: documentation sweep (User Manual, README, landing pages, info modals)
+- #34 Worker Bees rework: Builder education in 3 surfaces — modal + standalone page remaining
+- #35 Auto-classify tier picks always (not click-to-classify)
+- #36 Worker Bees rework: server provider group label
+- Per-row "Manual override" tag — needs delta tracking
+- Per-tier WHY text: classifier currently produces one overall WHY
+- Dead-CSS cleanup pass: legend-block from v3.63.154, builder-chip from v3.63.155
+- WaxFrame_Builder_v3.png pruning candidate (worker-bees-prototype.html still references it)
+- Restore-from-Checkpoint diff-and-pick UI — PARKED
+- Hive parallel fan-out RPS-awareness
+- Model recommender filter-awareness warning
+- Failover Builder behavior — single-round CONTENT_FILTERED handling
+- Builder-incapable family list expansion
+- Pause/resume at reviewer seam
+- File System Access API exploration
+- Provider Catalog foundation (parked)
+- CSS rule consolidation sweep
+- Repo housekeeping — docs/ folder
+- Triage CodeQL + Dependabot findings
+- Rules reference update — "verify every external URL before shipping" + "always update const BUILD in addition to the // Build comment" + "release-check validator should compare const BUILD against // Build comment"
+
+Observations
+
+- 2026-06-04 — v3.63.155 closes a clean loop on Builder selection UX. Across the night the Builder selection moved through: separate screen (pre-v3.63.147) → expanded-panel affordance (v3.63.147) → collapsed-row chip + expanded-panel affordance (v3.63.150) → collapsed-row chip + expanded-panel affordance + per-row button (v3.63.155 fully consolidates). Each iteration was driven by David seeing the prior version live and saying "this isn't right yet." End state: one Builder button on every row, four clear states, zero affordance in the expanded panel.
+
+- 2026-06-04 — The Manage account link migration completes a similar consolidation: the green banner was the only thing in the expanded panel ABOVE the key entry, and removing it lets the expanded panel start with the actual key input (which is what users care about when they expand a row). The "Manage" / "Get key" link in the collapsed row stays one click away from anywhere — accessible without expanding.
+
+- 2026-06-04 — Worker Bees v3 rework arc nine releases deep: v3.63.147 → v3.63.155. The screen should now read very close to worker-bees-prototype.html v2.2, with two intentional differences: (a) no View mode 10/2 toggle (prototype-only test affordance), and (b) no Perplexity verification badges on tier cards (a future feature; classifier produces picks, verification is the unbuilt Step 2).
+
+- 2026-06-04 — release-check validator caught no drift across v3.63.135 through v3.63.155 (twenty-one ceremonies).
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01. The day's nine-release Worker Bees arc + the v3.63.146 cost callouts is the most sustained conversion-friction-reduction work the project has had. The setup flow is materially leaner; the per-row Builder button means a user with two keyed AIs can finish hive setup in 3 clicks (set one as Builder, click Continue → Your Project, done).

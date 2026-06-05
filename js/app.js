@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-027
+// Build: 20260604-028
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -320,7 +320,7 @@ if (typeof window !== 'undefined' && !window._wfModelSelectOutsideBound) {
   document.addEventListener('click', wfModelSelectCloseAll);
 }
 
-function saveModelForAI(aiId, modelId) {
+function saveModelForAI(aiId, modelId, opts) {
   const ai = aiList.find(a => a.id === aiId);
   if (!ai) return;
   const cfg = API_CONFIGS[ai.provider];
@@ -332,9 +332,14 @@ function saveModelForAI(aiId, modelId) {
   }
   saveSettings();
   // v3.63.13 — refresh the row so the new model surfaces in the card header
-  // (— gpt-5.5 etc.) immediately, not only after a full grid re-render. The
-  // expanded panel is preserved by _expandedAIIds, so the dropdown stays open.
-  renderAIRow(aiId);
+  // (— gpt-5.5 etc.) immediately, not only after a full grid re-render.
+  // v3.63.155 — `opts.keepExpanded === false` skips the auto-add to
+  // _expandedAIIds. Called by applyHiveProfile so a bulk profile apply
+  // doesn't blow open every row (David's report: "if I use the dropdown
+  // at the top of the page to select a profile all the cards open up").
+  // `opts.silent === true` suppresses the per-AI toast — also for bulk.
+  const _keepExpanded = (opts && opts.keepExpanded === false) ? false : true;
+  renderAIRow(aiId, _keepExpanded);
   // v3.32.12 — note re-render removed. As of v3.32.12, the role-recommendation
   // notes are invariant to which model the user has selected — both ✨ Reviewer
   // and 🔨 Builder lines render whenever the caches exist, full stop. Changing
@@ -343,7 +348,7 @@ function saveModelForAI(aiId, modelId) {
   // note is set once by buildModelSelector at row render time and only
   // refreshes when the entire row is re-rendered (e.g., after Recommend Models
   // populates new caches). Removed for cleanliness, no behavior loss.
-  toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
+  if (!opts || !opts.silent) toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
 }
 
 // v3.30.2 — Revert an AI's model selection back to whatever was captured as
@@ -4595,20 +4600,29 @@ function _renderHiveCardShell(opts) {
   }
   // Default state — whole card is the click target.
   //
-  // v3.63.154 — Bug fix. The previous inline `${JSON.stringify(pickModel)}`
-  // emitted a literal double-quote-wrapped string into an HTML attribute
-  // that was itself double-quoted, so the browser parsed `onclick=
-  // "swapAIModelFromHiveCard('chatgpt', "gpt-5.5"); ..."` as the onclick
-  // attribute ending at the first quote — `swapAIModelFromHiveCard('chatgpt', `
-  // — and the rest decayed to stray attributes. Clicking the card
-  // silently did nothing. Fix: pass the model id via a data attribute
-  // (HTML-safe escaped) and have the handler read `this.dataset.pickModel`.
+  // v3.63.154 — Tried fixing the v3.63.153 quote-in-quote bug with a
+  // `data-pick-model` attribute + `this.dataset.pickModel`. That should
+  // have worked in isolation but David reported the click still didn't
+  // change the model in v3.63.154.
+  //
+  // v3.63.155 — Simpler, bulletproof approach: escape pickModel for use
+  // inside a single-quoted JS string literal, then drop it directly into
+  // the onclick attribute. No indirection through dataset, no opportunity
+  // for HTML/JS quoting interaction. The result reads like
+  //   onclick="swapAIModelFromHiveCard('chatgpt', 'gpt-5.5'); ..."
+  // which is unambiguously valid HTML and JS regardless of browser. The
+  // _safeJsStr escape covers backslashes and single quotes — the two
+  // characters that would break out of a single-quoted JS string. Model
+  // ids in practice never have either, but defending against them costs
+  // nothing.
+  const _safeJsStr = (s) => String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const _pickJs = _safeJsStr(pickModel);
+  const _idJs   = _safeJsStr(aiId);
   return `
     <div class="ai-hive-card is-pickable" role="button" tabindex="0"
       title="${escapeHtml(titleText)} — click to use"
-      data-pick-model="${escapeHtml(pickModel)}"
-      onclick="swapAIModelFromHiveCard('${aiId}', this.dataset.pickModel); event.stopPropagation();"
-      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();swapAIModelFromHiveCard('${aiId}', this.dataset.pickModel);event.stopPropagation();}">
+      onclick="swapAIModelFromHiveCard('${_idJs}', '${_pickJs}'); event.stopPropagation();"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();swapAIModelFromHiveCard('${_idJs}', '${_pickJs}');event.stopPropagation();}">
       <div class="ai-hive-card-label">${labelHTML}</div>
       <div class="ai-hive-card-model">${modelHTML}</div>
     </div>`;
@@ -4898,53 +4912,21 @@ function buildAISetupRowHTML(ai) {
     // is set (validate-on-save returned 2xx). Symmetric with the
     // invalid case: same row position, same standalone-banner
     // fallback, green palette instead of red.
-    const invalidMsg = (hasKey && window._invalidKeys && window._invalidKeys[ai.id])
-      ? `<span class="ai-key-invalid-msg" role="alert">⚠️ API key looks invalid — please check the key</span>`
-      : '';
-    const validMsg = (hasKey && !invalidMsg && window._validKeys && window._validKeys[ai.id])
-      ? `<span class="ai-key-valid-msg">✓ API key works — ready to use</span>`
-      : '';
-    const stateClass = invalidMsg ? ' has-invalid' : (validMsg ? ' has-valid' : '');
-    const stateMsg = invalidMsg || validMsg;
-    const getKeyLink = consoleUrl
-      ? `<div class="ai-getkey-link-wrap${stateClass}"><span class="ai-getkey-prompt">${hasKey ? 'Manage account?' : "Don't have a key?"}</span> <a class="ai-getkey-link" href="${escapeHtml(safeUrl(consoleUrl))}" target="_blank" rel="noopener noreferrer">${hasKey ? `Open ${escapeHtml(ai.name)} account ↗` : `Get one from ${escapeHtml(ai.name)} ↗`}</a>${stateMsg}</div>`
-      : (stateMsg ? `<div class="ai-getkey-link-wrap ${invalidMsg ? 'is-invalid-only' : 'is-valid-only'}">${stateMsg}</div>` : '');
-    // v3.32.10 — Best/Fast/Budget category buttons removed. Their function
-    // (snap to a recommendation pick) is now redundant with the dropdown's
-    // dual ✨ Reviewer / 🔨 Builder markers — users see both picks
-    // directly in the dropdown and select via the same control they'd use
-    // for any manual choice.
-    // v3.63.147 — Builder selection affordance. The Builder screen has
-    // been retired; selection now happens here. Two states per AI:
-    //   • current Builder → green "🔨 This is your Builder" indicator
-    //   • not current Builder → "🔨 Make this the Builder" button
-    // Activating sets `builder` (via setBuilder) which unsets any prior
-    // Builder — exactly-one-at-a-time enforcement comes free from the
-    // existing setBuilder function.
-    // Suppressed for Jamba (per BUILDER_INCAPABLE_FAMILIES) and for any
-    // AI without a saved key — can't Builder without a key.
-    // v3.63.148 — Per David's feedback, the per-row Builder Bee mascot
-    // was overkill (the brand asset belongs in the screen header, not
-    // duplicated inside every row). Mascot moved to the .hp-section-header
-    // opposite the Worker Bee. The in-row affordance keeps the functional
-    // button + hammer emoji + indicator text; the brand asset shows up
-    // exactly twice on the screen now (header mascot + small collapsed-
-    // row chip identifying the active Builder).
-    const _builderIncapable = isBuilderIncapableModel(cfg?.model || ai.provider || '');
-    const _isCurrentBuilder = (typeof builder !== 'undefined' && builder === ai.id);
-    let builderAffordance = '';
-    if (hasKey && !_builderIncapable) {
-      builderAffordance = _isCurrentBuilder
-        ? `<div class="ai-builder-affordance is-active" title="${escapeHtml(ai.name)} is currently your Builder — the AI that rewrites your document each round.">
-             <span class="ai-builder-affordance-text"><strong>🔨 This is your Builder</strong></span>
-             <span class="ai-builder-affordance-sub">Reads every reviewer's notes + the full document each round and rewrites. Pick a different AI's "Make this the Builder" to switch.</span>
-           </div>`
-        : `<button class="ai-builder-affordance is-pickable" type="button" onclick="setBuilder('${ai.id}'); event.stopPropagation(); renderAISetupGrid();" title="Make ${escapeHtml(ai.name)} the Builder for this hive.">
-             <span class="ai-builder-affordance-text">🔨 Make this the Builder</span>
-           </button>`;
-    } else if (_builderIncapable) {
-      builderAffordance = `<div class="ai-builder-affordance is-incapable" title="${escapeHtml(ai.name)} has a structural output cap that prevents it from finishing a Builder round. Stays usable as a Reviewer."><span>⚠️ Reviewer-only — output cap too low to Builder</span></div>`;
-    }
+    // v3.63.155 — getKeyLink banner removed entirely (David: "We don't
+    // need all that anymore because we already have a ready pill").
+    // The "Manage account" link moved to the collapsed row (next to
+    // the new Builder button). Invalid-key inline error also dropped;
+    // the red ✗ Invalid status pill carries the same signal.
+    //
+    // builderAffordance also gone — Builder selection moved to a
+    // per-row Builder button on the collapsed row (David: "do away
+    // with the make this the builder line").
+    //
+    // Both replacements are computed below as part of the collapsed
+    // row markup. Variables kept as empty strings here so the
+    // expanded template literal doesn't need restructuring.
+    const getKeyLink = '';
+    const builderAffordance = '';
 
     expandedHTML = `
       <div class="ai-setup-expanded">
@@ -4968,18 +4950,11 @@ function buildAISetupRowHTML(ai) {
         ${builderAffordance}
       </div>`;
   }
-  // v3.63.147 — Collapsed-row Builder Bee chip. Appears next to the AI
-  // name when this AI is currently the active Builder. Instant visual
-  // identification of "which AI is doing the heavy lifting right now"
-  // without expanding the row. Renders even when collapsed because
-  // that's the whole point — see-at-a-glance.
-  // v3.63.150 — Per David's feedback: chip moves to sit BETWEEN the AI
-  // name and the model (Gemini — [Builder] — model). Asset swapped from
-  // v3.png to v4.png to match the new mirrored asset.
-  const _collapsedBuilderChip = (typeof builder !== 'undefined' && builder === ai.id)
-    ? `<span class="ai-setup-builder-chip" title="${escapeHtml(ai.name)} is your current Builder"><img src="images/WaxFrame_Builder_v4.png" alt="" class="ai-setup-builder-chip-img"> Builder</span>`
-    : '';
-
+  // v3.63.155 — Collapsed-row Builder chip retired. Replaced by the
+  // per-row Builder button computed earlier in this function (gray
+  // when not Builder, gold when active). The .ai-setup-builder-chip
+  // CSS rules in style.css are now dead and a pruning candidate.
+  //
   // v3.63.25 — Compute the card-edge state class. Reflects validation
   // result on every render: gray dashed default (no key OR not yet
   // validated), green left edge (validated good), red left edge
@@ -4990,28 +4965,70 @@ function buildAISetupRowHTML(ai) {
     (hasKey && window._invalidKeys && window._invalidKeys[ai.id]) ? 'key-invalid' :
     (hasKey && window._validKeys && window._validKeys[ai.id]) ? 'key-valid' :
     '';
-  // v3.63.154 — Column alignment per David's prototype-matching request:
-  //   chevron · icon · [name-group: name + pencil] · status-pill slot ·
-  //   "Model:" label · compact select · Builder-chip slot · ⚠ flag ·
-  //   spacer · action
+  // v3.63.155 — Builder selection now lives on every collapsed row as
+  // a per-row button (David: "let's put the builder button on
+  // everybody's card and just gray it out and if we click on it then
+  // it stays gold lit up solid"). Replaces the v3.63.147 collapsed
+  // Builder chip + the v3.63.147 expanded panel's "Make this the
+  // Builder" affordance — both gone. The Manage account link also
+  // moves to the collapsed row, next to the Builder button (replacing
+  // the green getKeyLink banner that's been removed from the expanded
+  // panel).
   //
-  // Slot widths are pinned via CSS min-width so columns align across
-  // rows regardless of name length. Empty pill / Builder slots render
-  // placeholders to hold the column.
+  // Builder button states:
+  //   • no key → placeholder slot (column reserved, button hidden)
+  //   • key + active Builder → solid gold "🔨 Builder" (not clickable)
+  //   • key + incapable (Jamba) → yellow "⚠ Reviewer-only" (not clickable)
+  //   • key + capable + not Builder → gray "🔨 Builder" (clickable)
   //
-  // Builder chip moved OUT of the name-group into its own slot AFTER
-  // the model dropdown ("put the builder on the other side of the
-  // drop down for the model"). Adding the "Model:" label per the
-  // prototype design ("the word model next to the drop down — much
-  // more pro level").
+  // Manage link states:
+  //   • no console URL (server-imported customs) → placeholder
+  //   • key + console URL → "Manage ↗"
+  //   • no key + console URL → "Get key ↗"
+  const _builderIncapableNow = isBuilderIncapableModel(cfg?.model || ai.provider || '');
+  const _isCurrentBuilderNow = (typeof builder !== 'undefined' && builder === ai.id);
+  const consoleUrlNow = ai.apiConsole || '';
+
+  let builderButtonHTML;
+  if (!hasKey) {
+    builderButtonHTML = `<span class="ai-setup-builder-btn-placeholder" aria-hidden="true"></span>`;
+  } else if (_isCurrentBuilderNow) {
+    builderButtonHTML = `<button class="ai-setup-builder-btn is-active" type="button"
+      onclick="event.stopPropagation();"
+      title="${escapeHtml(ai.name)} is the Builder — the AI that rewrites your document each round.">🔨 Builder</button>`;
+  } else if (_builderIncapableNow) {
+    builderButtonHTML = `<button class="ai-setup-builder-btn is-incapable" type="button"
+      disabled aria-disabled="true"
+      onclick="event.stopPropagation();"
+      title="${escapeHtml(ai.name)} has a structural output cap too low to finish a Builder round. Stays usable as a Reviewer.">⚠ Reviewer-only</button>`;
+  } else {
+    builderButtonHTML = `<button class="ai-setup-builder-btn is-pickable" type="button"
+      onclick="setBuilder('${ai.id}'); event.stopPropagation(); renderAISetupGrid();"
+      title="Click to make ${escapeHtml(ai.name)} the Builder.">🔨 Builder</button>`;
+  }
+
+  let manageLinkHTML;
+  if (!consoleUrlNow) {
+    manageLinkHTML = `<span class="ai-setup-manage-link-placeholder" aria-hidden="true"></span>`;
+  } else {
+    const label = hasKey ? 'Manage ↗' : 'Get key ↗';
+    const title = hasKey
+      ? `Manage your account at ${ai.name} (opens in a new tab)`
+      : `Get an API key from ${ai.name} (opens in a new tab)`;
+    manageLinkHTML = `<a class="ai-setup-manage-link${hasKey ? '' : ' is-getkey'}"
+      href="${escapeHtml(safeUrl(consoleUrlNow))}" target="_blank" rel="noopener noreferrer"
+      onclick="event.stopPropagation();"
+      title="${escapeHtml(title)}">${label}</a>`;
+  }
+
+  // Column alignment — slot widths pinned via CSS so the columns align
+  // across rows regardless of name / key / Builder state.
   const statusPillHTML = _buildRowStatusPill(ai, hasKey)
     || `<span class="ai-setup-status-pill-placeholder" aria-hidden="true"></span>`;
   const compactModel = hasKey ? _buildCompactModelSelect(ai, cfg?.model || '') : '';
   const modelLabelHTML = hasKey
     ? `<span class="ai-setup-model-label">Model:</span>`
     : '';
-  const builderChipHTML = _collapsedBuilderChip
-    || `<span class="ai-setup-builder-chip-placeholder" aria-hidden="true"></span>`;
   return `
     <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'} ${validateState}" id="airow-${ai.id}">
       <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
@@ -5024,7 +5041,8 @@ function buildAISetupRowHTML(ai) {
         ${statusPillHTML}
         ${modelLabelHTML}
         ${compactModel}
-        ${builderChipHTML}
+        ${builderButtonHTML}
+        ${manageLinkHTML}
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
           ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${escapeHtml(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
           : ''}
@@ -5304,7 +5322,10 @@ function applyHiveProfile(profileId) {
     const tierModel = tiersBlob?.tiers?.[opt.tier] || null;
     if (!tierModel) { skipped++; return; }
     if (cfg.model === tierModel) { applied++; return; }  // Already on it; count it.
-    if (typeof saveModelForAI === 'function') saveModelForAI(ai.id, tierModel);
+    // v3.63.155 — keepExpanded:false so bulk apply doesn't blow open
+    // every row; silent:true so we don't get N per-AI toasts (the
+    // bulk summary toast below covers it).
+    if (typeof saveModelForAI === 'function') saveModelForAI(ai.id, tierModel, { keepExpanded: false, silent: true });
     applied++;
   });
 

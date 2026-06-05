@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-027
+   Build: 20260604-028
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -15369,22 +15369,102 @@ kbd {
   font-weight: 700;
   flex-shrink: 0;
 }
-/* Builder chip placeholder — holds the column width when this row
-   isn't the active Builder so the ⚠ deprecation flag + spacer don't
-   reshuffle across rows. */
-.ai-setup-builder-chip-placeholder {
-  display: inline-flex;
-  min-width: 90px;
-  width: 90px;
-  visibility: hidden;
+/* v3.63.155 — Builder chip retired (replaced by per-row Builder
+   button). The .ai-setup-builder-chip + placeholder rules above are
+   now dead and a CSS-cleanup pruning candidate. */
+
+/* ============================================================
+ * v3.63.155 — Per-row Builder button + Manage account link.
+ *
+ * Builder button states:
+ *   .is-active   — solid gold; this AI is currently the Builder
+ *   .is-pickable — gray-outlined; click to make this the Builder
+ *   .is-incapable — yellow-dashed; "⚠ Reviewer-only" (Jamba etc)
+ *   placeholder  — invisible width-holder for no-key rows
+ *
+ * Manage link:
+ *   default      → "Manage ↗" (key saved)
+ *   .is-getkey   → "Get key ↗" (no key yet)
+ *   placeholder  → invisible width-holder for server-imported customs
+ * ============================================================ */
+.ai-setup-builder-btn,
+.ai-setup-builder-btn-placeholder {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
   flex-shrink: 0;
-}
-.ai-setup-builder-chip {
-  min-width: 90px;
-  width: 90px;
+  min-width: 110px;
+  width: 110px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.ai-setup-builder-btn-placeholder {
+  visibility: hidden;
+  background: transparent;
+  border: 1px solid transparent;
+}
+.ai-setup-builder-btn.is-pickable {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.ai-setup-builder-btn.is-pickable:hover {
+  border-color: var(--accent, #f4b400);
+  color: var(--accent, #f4b400);
+  background: rgba(244, 180, 0, 0.04);
+}
+.ai-setup-builder-btn.is-active {
+  background: var(--accent, #f4b400);
+  border: 1px solid var(--accent, #f4b400);
+  color: #0a0c12;
+  cursor: default;
+}
+.ai-setup-builder-btn.is-active:hover {
+  background: var(--accent, #f4b400);
+}
+.ai-setup-builder-btn.is-incapable {
+  background: transparent;
+  border: 1px dashed var(--accent, #f4b400);
+  color: var(--accent, #f4b400);
+  opacity: 0.7;
+  cursor: not-allowed;
+  font-style: italic;
+}
+
+.ai-setup-manage-link,
+.ai-setup-manage-link-placeholder {
+  font-size: var(--fs-12);
+  flex-shrink: 0;
+  min-width: 80px;
+  width: 80px;
+  text-align: right;
+  color: var(--text-dim);
+  text-decoration: none;
+  white-space: nowrap;
   box-sizing: border-box;
 }
+.ai-setup-manage-link-placeholder { visibility: hidden; }
+.ai-setup-manage-link:hover {
+  color: var(--accent, #f4b400);
+  text-decoration: underline;
+}
+.ai-setup-manage-link.is-getkey {
+  color: var(--accent, #f4b400);
+  font-weight: 600;
+}
+
+/* Expanded-panel Builder affordance retired in v3.63.155 — Builder
+ * selection moved to the collapsed-row button. Hide stragglers. */
+.ai-builder-affordance { display: none !important; }
+
 .ai-setup-status-pill.is-ready {
   background: rgba(67, 160, 71, 0.12);
   border: 1px solid #43a047;
