@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-001
+   Build: 20260605-002
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1014,6 +1014,64 @@ body.helper-body .page-main {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 2px var(--accent);
 }
+/* v3.63.160 — New row-based Change Builder modal layout. Replaces the
+   chip-grid (.builder-pick-grid) + shared-dropdown (.cb-model-wrap) +
+   commit-button (.cb-confirm-btn) pattern with one row per AI:
+     icon + name + Model: label + compact native select + Builder button.
+   Mirrors the Set up your hive page's collapsed-row structure but
+   without the chevron/expand affordance — modal stays compact, each
+   row is self-contained. Builder button click commits via _cbPickBuilder. */
+.cb-row-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-height: 55vh;
+  overflow-y: auto;
+  margin: var(--space-12) 0;
+  padding: 0 2px;
+}
+.cb-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  padding: var(--space-8) var(--space-12);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  flex-wrap: wrap;
+}
+.cb-row-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.cb-row-name {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--fs-13);
+  min-width: 110px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cb-row-model-label {
+  font-size: var(--fs-11);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.cb-row-model-empty {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  font-style: italic;
+  flex: 1 1 auto;
+}
+
 .cb-model-wrap { width: 100%; margin: var(--space-16) 0 var(--space-12); text-align: left; }
 .cb-model-wrap .model-select { width: 100%; }
 .cb-model-wrap .model-select-note { padding-left: 0; }
@@ -15245,11 +15303,35 @@ kbd {
   flex-direction: column;
   gap: var(--space-12);
 }
+/* v3.63.160 — Solid dark-navy treatment matches .work-panel-header
+   .honeycomb-header on the work screen (rgba(0,0,0,0.55) + 6px blur).
+   Was rgba(0,0,0,0.25) which read as muddy grey in light mode over
+   the amber honeycomb backdrop. David: "The side menu should not be
+   grey on light mode". Now reads as the same intentional branded
+   panel in both light and dark themes. */
 .bees-sidebar-block {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   padding: var(--space-10) var(--space-12);
+}
+.bees-sidebar-block .bees-sidebar-heading,
+.bees-sidebar-block .bees-sidebar-subhead,
+.bees-sidebar-block .bees-sidebar-jump,
+.bees-sidebar-block .bees-sidebar-related {
+  color: rgba(255, 255, 255, 0.92);
+}
+[data-theme="light"] .bees-sidebar-block .bees-sidebar-heading,
+[data-theme="light"] .bees-sidebar-block .bees-sidebar-subhead,
+[data-theme="light"] .bees-sidebar-block .bees-sidebar-jump,
+[data-theme="light"] .bees-sidebar-block .bees-sidebar-related {
+  color: rgba(255, 255, 255, 0.92);
+}
+[data-theme="light"] .bees-sidebar-block .bees-sidebar-jump:not(.has-key) .bees-sidebar-jump-name {
+  color: rgba(255, 255, 255, 0.55);
 }
 .bees-sidebar-heading {
   font-size: 10.5px;
@@ -15633,14 +15715,21 @@ kbd {
  * left and the status reads to the right; on narrow screens
  * flex-wrap kicks in and the note drops below.
  * ============================================================ */
+/* v3.63.160 — Solid dark-navy treatment matches the work-screen
+   .work-panel-header.honeycomb-header pattern + the .bees-sidebar-block
+   it sits alongside. Was rgba(0,0,0,0.25) which read as grey in light
+   mode (David: "and neither should the header hive profile"). */
 .hive-profile-bar {
   display: flex;
   align-items: center;
   gap: var(--space-12);
   padding: var(--space-10) var(--space-14);
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   margin: 0 0 var(--space-10);
   flex-wrap: wrap;
 }
@@ -15651,9 +15740,16 @@ kbd {
   font-size: var(--fs-12);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-dim);
+  /* v3.63.160 — Light text on the new dark-navy bar background, in
+     both themes. Was var(--text-dim) which read as muddy grey on the
+     light-mode amber backdrop now that the bar is solid dark. */
+  color: rgba(255, 255, 255, 0.85);
   font-weight: 700;
   flex-shrink: 0;
+}
+.hive-profile-bar-note {
+  /* override the default text-dim so the note stays legible on the dark bar */
+  color: rgba(255, 255, 255, 0.78);
 }
 .hive-profile-bar-select {
   background: var(--bg);

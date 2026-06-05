@@ -2,6 +2,50 @@
 
 ---
 
+## v3.63.160
+
+**Builder/Worker meld pass 1: intro paragraph rewrite + Change Builder modal restructure + Set up your hive sidebar + Hive Profile bar light-mode fix**
+
+Build: `20260605-002`<br>
+Released: `2026-06-05`
+
+### Intro paragraph rewrite
+
+Per David: *"this isn't very fluid please fix this as well and format in a better way too please"*. The previous three-paragraph block was wordy ("Each AI in your hive acts as a reviewer — and one of them also acts as your Builder, the AI that rewrites your document each round using everyone's notes" etc).
+
+Rewritten:
+
+> *Your hive is a team of AIs. Every AI **reviews** your document each round; one is the **Builder** — the AI that rewrites it.*
+> *Minimum **2 AIs**. **3+ recommended** so the hive can break its own ties on conflicting suggestions.*
+> *Click any AI below to add its key, pick its model, and (when ready) crown it Builder. New here? Tap the **ⓘ** above for cost, keys, and the full setup guide.*
+
+Tighter sentences, bolded minimums, direct CTA.
+
+### Change Builder modal restructure
+
+The work-screen Change Builder modal previously used a chip-grid + shared model dropdown + separate "Set as Builder" commit pattern. Replaced with a row-based methodology that mirrors the Set up your hive page:
+
+- Each candidate AI renders as one `.cb-row`: icon + name + "Model:" label + compact native model select + Builder button
+- Builder button states match the Set up your hive page: **is-active** (gold light-tint, current Builder, no-op click), **is-pickable** (gray-outlined, click commits via `_cbPickBuilder`), **is-incapable** (yellow-dashed "⚠ Reviewer-only" for Jamba)
+- Clicking the gray Builder button on any row commits immediately — no separate "Set as Builder" step. The modal closes on commit.
+- Models are persisted via the per-row dropdown's existing `onchange` → `saveModelForAI`, same as the inventory screen
+
+Legacy functions `selectBuilderCandidate` and `confirmBuilderFromModal` retained as no-op stubs for cached-page safety. The Builder Bee modal title image now uses `WaxFrame_Builder_v4.png` (was v3.png).
+
+### help.html review
+
+Per David: *"we also have to make sure that that matches the help dot HTML file for pulling the models as well"*. Reviewed `help.html` — no Worker Bees / Set up your hive / model picker references found. The "Dump Provider Models" section is a standalone diagnostic for comparing cached vs live model lists, with no methodology overlap to the Change Builder modal. No changes needed.
+
+### Sidebar block + Hive Profile bar — light-mode fix
+
+Per David's reports: *"The side menu should not be grey on light mode"* + *"neither should the header hive profile"* + *(screenshot of work-screen headers)* "These are the headers in light mode".
+
+Both panels previously used `background: rgba(0, 0, 0, 0.25)` which produced a muddy grey haze when layered over the amber honeycomb backdrop in light mode. Switched to the same solid dark-navy treatment the work-screen `.work-panel-header.honeycomb-header` uses: `rgba(0, 0, 0, 0.55)` + `backdrop-filter: blur(6px)` + `border: 1px solid rgba(255, 255, 255, 0.10)` + matching shadow. Text colors forced to light (white at varying opacities) in both themes so legibility holds on the now-dark bar.
+
+Result: sidebar and Hive Profile bar render as the same intentional branded dark-navy panel that THE HIVE, WORKING DOCUMENT, CONFLICTS, and LIVE CONSOLE use on the work screen. Consistent treatment everywhere.
+
+---
+
 ## v3.63.159
 
 **Bee mascot tooltips + top count chip numbers in gold**
