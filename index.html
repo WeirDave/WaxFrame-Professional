@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-029">
+  <meta name="waxframe-build" content="20260604-030">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.156">
+  <link rel="stylesheet" href="style.css?v=3.63.157">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.156",
+    "softwareVersion": "3.63.157",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -147,7 +147,7 @@
 
     <p class="welcome-menu-hint">New here? Open the <strong>Menu</strong> for the User Manual, API setup guide, and more. <button class="goal-info-btn welcome-info-inline" onclick="document.getElementById('infoMenuModal').classList.add('active')" title="What's in the Menu?"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></p>
 
-    <button title="Begin first-time setup — configure your Worker Bees" class="btn btn-lg btn-accent btn-cta" onclick="goToScreen('screen-bees')">
+    <button title="Begin first-time setup — set up your hive" class="btn btn-lg btn-accent btn-cta" onclick="goToScreen('screen-bees')">
       <img src="images/WaxFrame_Worker_Bee_v2.png" class="bee-btn-img">
       Let's get started →
     </button>
@@ -257,7 +257,7 @@
     <div class="fs-header">
       <div class="fs-header-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" title="Back to Setup 1 — Worker Bees" onclick="goToScreen('screen-bees')">← Back</button>
+        <button class="btn" title="Back to Setup 1 — Set up your hive" onclick="goToScreen('screen-bees')">← Back</button>
       </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
@@ -327,7 +327,7 @@
     <div class="fs-header">
       <div class="fs-header-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" title="Back to Setup 1 — Worker Bees" onclick="goToScreen('screen-bees')">← Back</button>
+        <button class="btn" title="Back to Setup 1 — Set up your hive" onclick="goToScreen('screen-bees')">← Back</button>
       </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
@@ -2877,23 +2877,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.156';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.157';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.156"></script>
-<script src="lib/jszip.min.js?v=3.63.156"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.156"></script>
-<script src="js/version.js?v=3.63.156"></script>
-<script src="js/storage.js?v=3.63.156"></script>
-<script src="js/theme.js?v=3.63.156"></script>
-<script src="js/audio.js?v=3.63.156"></script>
-<script src="js/scenes.js?v=3.63.156"></script>
-<script src="js/wf-debug.js?v=3.63.156"></script>
-<script src="js/provider-models.js?v=3.63.156"></script>
-<script src="js/api.js?v=3.63.156"></script>
-<script src="js/templates.js?v=3.63.156"></script>
-<script src="js/api-links.js?v=3.63.156"></script>
-<script src="js/app.js?v=3.63.156"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.157"></script>
+<script src="lib/jszip.min.js?v=3.63.157"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.157"></script>
+<script src="js/version.js?v=3.63.157"></script>
+<script src="js/storage.js?v=3.63.157"></script>
+<script src="js/theme.js?v=3.63.157"></script>
+<script src="js/audio.js?v=3.63.157"></script>
+<script src="js/scenes.js?v=3.63.157"></script>
+<script src="js/wf-debug.js?v=3.63.157"></script>
+<script src="js/provider-models.js?v=3.63.157"></script>
+<script src="js/api.js?v=3.63.157"></script>
+<script src="js/templates.js?v=3.63.157"></script>
+<script src="js/api-links.js?v=3.63.157"></script>
+<script src="js/app.js?v=3.63.157"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2946,7 +2946,7 @@ function wfMobileShareToast(msg) {
   <div class="nav-body">
     <div class="nav-section-label">Navigation</div>
     <button title="Return to the Home / Welcome screen" class="nav-item" onclick="closeNavMenu();confirmGoHome()">⌂ Home</button>
-    <button title="Open Setup 1 — Worker Bees (includes Builder selection)" class="nav-item" onclick="closeNavMenu();goToScreen('screen-bees')">· Setup 1 — Worker Bees</button>
+    <button title="Open Setup 1 — Set up your hive (Worker Bees, models, and Builder)" class="nav-item" onclick="closeNavMenu();goToScreen('screen-bees')">· Setup 1 — Set up your hive</button>
     <!-- v3.63.147 — "Setup 2 — Builder" nav item retired. Builder selection
          now happens inline on the Worker Bees screen via the per-row 🔨
          "Make this the Builder" affordance. -->
