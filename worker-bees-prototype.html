@@ -1,0 +1,649 @@
+<!-- ============================================================
+     WaxFrame — worker-bees-prototype.html
+     ───────────────────────────────────────────────────────────
+     UI prototype for the Worker Bees screen rework. NOT
+     deployed. Not linked from any menu. Reach via direct URL.
+     Hardcoded mock data (David's last bundle's tier picks +
+     active models). No live API calls. No real state changes.
+     The interactions (click row to expand, click tier to swap,
+     etc.) are visual demos only.
+
+     Purpose: David sees the design in his browser, clicks
+     around, gives feedback. When the design is approved this
+     file gets deleted and the real Worker Bees screen gets
+     rebuilt against the locked layout.
+
+     Layered design:
+       1. Row collapsed (default)  — looks like today's row
+       2. Click row → tier strip   — 4 tier cards with one-click swap
+       3. Click "Why" → reasoning  — classifier's per-tier justification
+     ============================================================ -->
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Worker Bees — Rework Prototype — WaxFrame</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
+  <link rel="stylesheet" href="style.css?v=3.63.144">
+
+  <style>
+    /* ────────────────────────────────────────────────────────────
+       Prototype-only styles. When the design's approved these
+       fold into style.css proper. Self-contained here so I'm
+       not bumping cache-busts on the live app for a preview.
+       ──────────────────────────────────────────────────────────── */
+    .wb-banner {
+      background: rgba(247, 195, 64, 0.12);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-md);
+      padding: var(--space-12) var(--space-16);
+      margin: 0 0 var(--space-20);
+      font-size: 13px;
+      color: var(--text);
+    }
+    .wb-banner strong { color: var(--accent); }
+
+    /* ── Toolbar above the bee grid ── */
+    .wb-toolbar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-12);
+      padding: var(--space-12) var(--space-16);
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-16);
+      flex-wrap: wrap;
+    }
+    .wb-toolbar-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .wb-profile-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: var(--space-8) var(--space-12);
+      font-size: 13px;
+      font-family: inherit;
+      min-width: 200px;
+    }
+    .wb-profile-select:focus { border-color: var(--accent); outline: none; }
+    .wb-profile-note {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-left: auto;
+    }
+    .wb-recommend-all {
+      background: var(--accent);
+      color: #0a0c12;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: var(--space-8) var(--space-14);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: filter 0.12s;
+    }
+    .wb-recommend-all:hover { filter: brightness(1.08); }
+
+    /* ── Row, collapsed (default) ── */
+    .wb-row {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-10);
+      overflow: hidden;
+      transition: border-color 0.12s;
+    }
+    .wb-row:hover { border-color: var(--accent); }
+    .wb-row.is-expanded { border-color: var(--accent); }
+
+    .wb-row-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-12);
+      padding: var(--space-12) var(--space-16);
+      cursor: pointer;
+      user-select: none;
+    }
+    .wb-row-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .wb-row-name {
+      font-weight: 600;
+      font-size: 14.5px;
+      color: var(--text);
+      min-width: 100px;
+    }
+    .wb-row-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--green-dim, rgba(80, 200, 120, 0.15));
+      border: 1px solid var(--green, #50c878);
+      color: var(--green, #50c878);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .wb-row-status.is-keyless {
+      background: rgba(150, 150, 150, 0.1);
+      border-color: var(--border);
+      color: var(--text-dim);
+    }
+    .wb-row-active {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: var(--space-8);
+    }
+    .wb-row-active-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .wb-row-model-select {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: var(--space-6) var(--space-10);
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      max-width: 320px;
+    }
+    .wb-row-profile-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--accent-dim, rgba(247, 195, 64, 0.12));
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+    .wb-row-chevron {
+      color: var(--text-dim);
+      font-size: 14px;
+      transition: transform 0.15s ease;
+    }
+    .wb-row.is-expanded .wb-row-chevron { transform: rotate(180deg); }
+
+    /* ── Expanded body ── */
+    .wb-row-body {
+      display: none;
+      padding: 0 var(--space-16) var(--space-16);
+      border-top: 1px dashed var(--border);
+      padding-top: var(--space-14);
+    }
+    .wb-row.is-expanded .wb-row-body { display: block; }
+
+    .wb-row-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-12);
+      margin-bottom: var(--space-12);
+      font-size: 12px;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+    }
+    .wb-row-recommend {
+      background: var(--bg);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 6px;
+      padding: var(--space-6) var(--space-12);
+      font-weight: 600;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+    .wb-row-recommend:hover { background: rgba(247, 195, 64, 0.08); }
+
+    /* ── Tier card grid ── */
+    .wb-tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--space-10);
+      margin-bottom: var(--space-12);
+    }
+    .wb-tier-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: var(--space-10) var(--space-12);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .wb-tier-card:hover { border-color: var(--accent); }
+    .wb-tier-card.is-active {
+      border-color: var(--green, #50c878);
+      background: rgba(80, 200, 120, 0.05);
+    }
+    .wb-tier-card.is-none {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .wb-tier-card.is-none:hover { border-color: var(--border); }
+    .wb-tier-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      font-weight: 700;
+    }
+    .wb-tier-card.is-active .wb-tier-label {
+      color: var(--green, #50c878);
+    }
+    .wb-tier-model {
+      font-family: 'Courier New', monospace;
+      font-size: 12.5px;
+      color: var(--text);
+      word-break: break-all;
+    }
+    .wb-tier-action {
+      margin-top: var(--space-4);
+      align-self: flex-start;
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .wb-tier-action:hover { background: rgba(247, 195, 64, 0.08); }
+    .wb-tier-card.is-active .wb-tier-action {
+      border-color: var(--green, #50c878);
+      color: var(--green, #50c878);
+      pointer-events: none;
+    }
+    .wb-tier-card.is-active .wb-tier-action::before { content: '✓ '; }
+
+    /* ── Why expander ── */
+    .wb-why-toggle {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 12px;
+      cursor: pointer;
+      padding: var(--space-4) 0;
+      user-select: none;
+    }
+    .wb-why-toggle:hover { color: var(--accent); }
+    .wb-why-body {
+      display: none;
+      margin-top: var(--space-8);
+      padding: var(--space-10) var(--space-12);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+    .wb-why-body.is-open { display: block; }
+    .wb-why-row {
+      display: flex;
+      gap: var(--space-8);
+      padding: var(--space-4) 0;
+    }
+    .wb-why-row + .wb-why-row {
+      border-top: 1px dashed var(--border);
+      padding-top: var(--space-8);
+      margin-top: var(--space-4);
+    }
+    .wb-why-tier {
+      flex-shrink: 0;
+      width: 90px;
+      font-weight: 600;
+      color: var(--text-dim);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .wb-why-text { color: var(--text); flex: 1; }
+    .wb-why-text em { color: var(--text-dim); font-style: italic; }
+
+    /* ── Narrow-window adjustments ── */
+    @media (max-width: 720px) {
+      .wb-row-header { flex-wrap: wrap; }
+      .wb-row-active { width: 100%; order: 99; }
+      .wb-row-active-label { display: none; }
+      .wb-tier-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+
+<body class="helper-body">
+
+<div class="page-header">
+  <div class="page-header-left"></div>
+  <div class="page-header-brand">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
+    <div class="page-header-brand-text">
+      <div class="page-header-name">WaxFrame</div>
+      <div class="page-header-tag">Worker Bees Rework — Prototype</div>
+    </div>
+  </div>
+  <div class="page-header-controls">
+    <button class="theme-opt" data-theme="light" onclick="document.documentElement.dataset.theme='light'" title="Light">☀️</button>
+    <button class="theme-opt" data-theme="auto" onclick="document.documentElement.dataset.theme='auto'" title="Auto">⚙️</button>
+    <button class="theme-opt" data-theme="dark" onclick="document.documentElement.dataset.theme='dark'" title="Dark">🌙</button>
+  </div>
+</div>
+
+<div class="page-main">
+
+  <div class="wb-banner">
+    <strong>📐 Prototype — not live data, not deployed.</strong> Layout & interactions only. Tier picks below are mock data taken from David's last v3.63.144 Scout bundle. "Recommend Models" buttons, tier swaps, and the Hive Profile dropdown are visual demos that change the page state but don't hit any APIs. Click row headers to expand. Click "Why each pick" inside an expanded row for the classifier's reasoning. Feedback welcome — when the design is locked, this file gets deleted and the real Worker Bees screen gets rebuilt against it.
+  </div>
+
+  <!-- ──── TOOLBAR ──── -->
+  <div class="wb-toolbar">
+    <span class="wb-toolbar-label">Hive Profile:</span>
+    <select class="wb-profile-select" id="profileSelect" onchange="applyProfile(this.value)">
+      <option value="custom">Custom — keep my manual picks (current)</option>
+      <option value="cheap">💰 Cheap — cost-first across the hive</option>
+      <option value="balanced">⚖️ Balanced — capability per dollar</option>
+      <option value="thinker">🧠 Heavy thinkers — deepest reasoning</option>
+      <option value="fast">⚡ Speed-first — lowest latency</option>
+    </select>
+    <button class="wb-recommend-all" onclick="alert('Demo: would re-classify every keyed provider and populate all tier picks.')">🤖 Recommend All AIs</button>
+    <span class="wb-profile-note" id="profileNote">Currently using your manual picks. Switch profile above to auto-set tier-matched models.</span>
+  </div>
+
+  <!-- ──── BEE ROWS ──── -->
+  <div id="beeGrid"></div>
+
+  <div style="margin-top: var(--space-24); padding: var(--space-16); background: var(--surface2); border: 1px dashed var(--border); border-radius: var(--radius-md); font-size: 13px; color: var(--text-dim); line-height: 1.6;">
+    <strong style="color: var(--text);">Design notes</strong> (will be deleted with this file once the real page ships):
+    <ul style="margin: var(--space-8) 0 0; padding-left: var(--space-20);">
+      <li>One row open at a time by default — click another row, the previous one collapses. Keeps the page tidy on laptop screens.</li>
+      <li>Collapsed row is roughly the size of today's Worker Bees row. No extra vertical density baseline.</li>
+      <li>Tier cards marked <code>is-active</code> when the AI's current model matches that tier's pick. Click any other card to swap (demo only here).</li>
+      <li>NONE-tier slots (e.g. DeepSeek's "no thinker") render disabled instead of hidden — users see the gap.</li>
+      <li>"Why each pick" is a second click inside the expanded row. Optional context for users who want to learn the classifier's reasoning. Stays hidden by default.</li>
+      <li>Hive Profile dropdown at the top orchestrates across all rows. When a profile is active and a row's tier-matched model is the current pick, the row shows a small profile tag (e.g. <code>🧠 Heavy thinkers pick</code>). Manual override on a single row is allowed and tagged.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+// ────────────────────────────────────────────────────────────
+//  Mock data from David's v3.63.144 bundle (2026-06-04 23:53 UTC).
+//  Real implementation reads these from localStorage tier cache
+//  via getCachedTiers(provider). currentModel comes from API_CONFIGS
+//  (the user's actual selection in their live hive).
+// ────────────────────────────────────────────────────────────
+const BEES = [
+  {
+    id: 'chatgpt', name: 'ChatGPT', icon: '🤖',
+    currentModel: 'gpt-5.5',
+    tiers: {
+      cheap:    { model: 'gpt-5.4-nano', why: 'Nano signals budget / low-latency tier in OpenAI\'s lineup.' },
+      balanced: { model: 'gpt-5-mini',   why: 'Strongest cost-quality workhorse in the current list.' },
+      thinker:  { model: 'o3',           why: 'Highest-reasoning model on the OpenAI endpoint.' },
+      fast:     { model: 'gpt-5.4-nano', why: 'Same as cheap — nano is positioned for lowest latency.' }
+    }
+  },
+  {
+    id: 'claude', name: 'Claude', icon: '🟠',
+    currentModel: 'claude-opus-4-8',
+    tiers: {
+      cheap:    { model: 'claude-haiku-4-5-20251001',  why: 'Haiku 4.5 is the only haiku tier (budget / fast).' },
+      balanced: { model: 'claude-sonnet-4-5-20250929', why: 'Sonnet 4.5 is the balanced workhorse.' },
+      thinker:  { model: 'claude-opus-4-8',            why: 'Opus 4.8 is the newest / deepest opus for reasoning.' },
+      fast:     { model: 'claude-haiku-4-5-20251001',  why: 'Haiku doubles as the fast tier.' }
+    }
+  },
+  {
+    id: 'gemini', name: 'Gemini', icon: '🟢',
+    currentModel: 'gemini-3.1-pro-preview',
+    tiers: {
+      cheap:    { model: 'gemini-2.5-flash-lite',                why: '2.5 Flash Lite handles cost and speed.' },
+      balanced: { model: 'gemini-2.5-flash',                     why: '2.5 Flash is the balanced workhorse.' },
+      thinker:  { model: 'deep-research-max-preview-04-2026',    why: 'Deep Research Max is the highest reasoning tier.' },
+      fast:     { model: 'gemini-2.5-flash-lite',                why: 'Flash Lite doubles as the fast tier.' }
+    }
+  },
+  {
+    id: 'grok', name: 'Grok', icon: '⚡',
+    currentModel: 'grok-4.3',
+    tiers: {
+      cheap:    { model: 'grok-build-0.1',               why: 'Only name signaling an early / experimental low-cost tier.' },
+      balanced: { model: 'grok-4.20-0309-non-reasoning', why: 'Capable non-reasoning workhorse.' },
+      thinker:  { model: 'grok-4.20-0309-reasoning',    why: 'Explicit reasoning variant.' },
+      fast:     { model: 'grok-build-0.1',               why: 'Reuses the build tier for fast.' }
+    }
+  },
+  {
+    id: 'perplexity', name: 'Perplexity', icon: '🔵',
+    currentModel: 'sonar-reasoning-pro',
+    tiers: {
+      cheap:    { model: 'sonar',                why: 'Lightest non-reasoning tier.' },
+      balanced: { model: 'sonar-pro',            why: 'Default workhorse.' },
+      thinker:  { model: 'sonar-deep-research',  why: 'Deepest reasoning / research model.' },
+      fast:     { model: 'sonar',                why: 'Same as cheap — lowest latency.' }
+    }
+  },
+  {
+    id: 'mistral', name: 'Mistral', icon: '🟡',
+    currentModel: 'mistral-large-latest',
+    tiers: {
+      cheap:    { model: 'ministral-8b-latest',   why: 'Smallest, cheapest, fastest.' },
+      balanced: { model: 'mistral-small-latest',  why: 'Balanced workhorse below the flagship.' },
+      thinker:  { model: 'mistral-large-latest',  why: 'Most capable in the Mistral lineup.' },
+      fast:     { model: 'ministral-8b-latest',   why: 'Ministral doubles as the fast tier.' }
+    }
+  },
+  {
+    id: 'deepseek', name: 'DeepSeek', icon: '🐋',
+    currentModel: 'deepseek-v4-pro',
+    tiers: {
+      cheap:    { model: 'deepseek-v4-flash', why: 'Flash is the low-cost, low-latency tier.' },
+      balanced: { model: 'deepseek-v4-pro',   why: 'Pro offers superior capability for balanced use.' },
+      thinker:  { model: null,                why: 'No model on this endpoint is explicitly named as a reasoning variant.' },
+      fast:     { model: 'deepseek-v4-flash', why: 'Flash doubles as the fast tier.' }
+    }
+  },
+  {
+    id: 'jamba', name: 'Jamba', icon: '🟣',
+    currentModel: 'jamba-mini-2-2026-01',
+    tiers: {
+      cheap:    { model: 'jamba-mini-2-2026-01',   why: 'Smaller and likely cheaper / faster.' },
+      balanced: { model: 'jamba-large-1.7-2025-07', why: 'Flagship for balanced work.' },
+      thinker:  { model: null,                      why: 'Neither model is named as a reasoning variant.' },
+      fast:     { model: 'jamba-mini-2-2026-01',    why: 'Mini doubles as the fast tier.' }
+    }
+  }
+];
+
+const TIER_META = {
+  cheap:    { label: 'Cheap',    icon: '💰' },
+  balanced: { label: 'Balanced', icon: '⚖️' },
+  thinker:  { label: 'Thinker',  icon: '🧠' },
+  fast:     { label: 'Fast',     icon: '⚡' }
+};
+
+const PROFILE_TIER = {
+  cheap:    'cheap',
+  balanced: 'balanced',
+  thinker:  'thinker',
+  fast:     'fast'
+};
+
+let activeProfile = 'custom';
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function renderTierCard(bee, tier) {
+  const meta = TIER_META[tier];
+  const pick = bee.tiers[tier];
+  if (!pick.model) {
+    return `
+      <div class="wb-tier-card is-none" title="No model in this AI's lineup matches the ${meta.label} tier definition.">
+        <div class="wb-tier-label">${meta.icon} ${meta.label}</div>
+        <div class="wb-tier-model">— none available —</div>
+      </div>
+    `;
+  }
+  const isActive = pick.model === bee.currentModel;
+  return `
+    <div class="wb-tier-card${isActive ? ' is-active' : ''}">
+      <div class="wb-tier-label">${meta.icon} ${meta.label}</div>
+      <div class="wb-tier-model">${escapeHtml(pick.model)}</div>
+      <button class="wb-tier-action" onclick="swapToTier('${bee.id}', '${tier}')">${isActive ? 'In use' : 'Use this'}</button>
+    </div>
+  `;
+}
+
+function renderWhyBody(bee) {
+  return `
+    <div class="wb-why-body" id="why-${bee.id}">
+      ${Object.keys(TIER_META).map(tier => {
+        const meta = TIER_META[tier];
+        const pick = bee.tiers[tier];
+        if (!pick.model) {
+          return `
+            <div class="wb-why-row">
+              <div class="wb-why-tier">${meta.icon} ${meta.label}</div>
+              <div class="wb-why-text"><em>— none available —</em><br>${escapeHtml(pick.why)}</div>
+            </div>
+          `;
+        }
+        return `
+          <div class="wb-why-row">
+            <div class="wb-why-tier">${meta.icon} ${meta.label}</div>
+            <div class="wb-why-text"><code>${escapeHtml(pick.model)}</code><br>${escapeHtml(pick.why)}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderRow(bee) {
+  // Profile tag — shown when the bee's current model matches the active profile's tier pick
+  let profileTag = '';
+  if (activeProfile !== 'custom') {
+    const tierKey = PROFILE_TIER[activeProfile];
+    const tierPick = bee.tiers[tierKey];
+    if (tierPick && tierPick.model === bee.currentModel) {
+      profileTag = `<span class="wb-row-profile-tag" title="This row matches the ${TIER_META[tierKey].label} profile pick.">${TIER_META[tierKey].icon} ${TIER_META[tierKey].label} pick</span>`;
+    } else if (tierPick && tierPick.model) {
+      profileTag = `<span class="wb-row-profile-tag" style="background: rgba(150,150,150,0.1); border-color: var(--border); color: var(--text-dim);" title="Manual override — using ${bee.currentModel} instead of the ${TIER_META[tierKey].label} profile's ${tierPick.model}.">🖐 Manual override</span>`;
+    }
+  }
+
+  return `
+    <div class="wb-row" data-bee-id="${bee.id}" id="row-${bee.id}">
+      <div class="wb-row-header" onclick="toggleRow('${bee.id}')">
+        <span class="wb-row-icon" style="font-size: 22px; display: inline-flex; align-items: center; justify-content: center;">${bee.icon}</span>
+        <span class="wb-row-name">${escapeHtml(bee.name)}</span>
+        <span class="wb-row-status">✓ Active</span>
+        <div class="wb-row-active">
+          <span class="wb-row-active-label">Model:</span>
+          <select class="wb-row-model-select" onclick="event.stopPropagation();" data-bee-id="${bee.id}">
+            <option>${escapeHtml(bee.currentModel)}</option>
+          </select>
+        </div>
+        ${profileTag}
+        <span class="wb-row-chevron">▾</span>
+      </div>
+      <div class="wb-row-body">
+        <div class="wb-row-meta">
+          <button class="wb-row-recommend" onclick="event.stopPropagation(); alert('Demo: would re-run ${bee.name} classifier (refresh all 4 tier picks).')">🤖 Recommend Models</button>
+          <span>Refreshed 12 minutes ago · live-fetch from provider</span>
+        </div>
+        <div class="wb-tier-grid">
+          ${Object.keys(TIER_META).map(tier => renderTierCard(bee, tier)).join('')}
+        </div>
+        <button class="wb-why-toggle" onclick="event.stopPropagation(); toggleWhy('${bee.id}')">
+          <span id="why-arrow-${bee.id}">▸</span> Why each pick
+        </button>
+        ${renderWhyBody(bee)}
+      </div>
+    </div>
+  `;
+}
+
+function renderAll() {
+  document.getElementById('beeGrid').innerHTML = BEES.map(renderRow).join('');
+}
+
+function toggleRow(beeId) {
+  document.querySelectorAll('.wb-row').forEach(row => {
+    if (row.dataset.beeId === beeId) {
+      row.classList.toggle('is-expanded');
+    } else {
+      row.classList.remove('is-expanded');
+    }
+  });
+  // Close any open Why bodies on the previously-open row
+  document.querySelectorAll('.wb-why-body.is-open').forEach(body => {
+    if (!body.closest('.wb-row.is-expanded')) body.classList.remove('is-open');
+  });
+}
+
+function toggleWhy(beeId) {
+  const body = document.getElementById('why-' + beeId);
+  const arrow = document.getElementById('why-arrow-' + beeId);
+  if (!body) return;
+  const open = body.classList.toggle('is-open');
+  if (arrow) arrow.textContent = open ? '▾' : '▸';
+}
+
+function swapToTier(beeId, tier) {
+  const bee = BEES.find(b => b.id === beeId);
+  if (!bee) return;
+  const pick = bee.tiers[tier];
+  if (!pick.model) return;
+  bee.currentModel = pick.model;
+  renderAll();
+  // Re-open the row that just changed so the user sees the result
+  const row = document.querySelector(`.wb-row[data-bee-id="${beeId}"]`);
+  if (row) row.classList.add('is-expanded');
+}
+
+function applyProfile(profile) {
+  activeProfile = profile;
+  if (profile !== 'custom') {
+    const tier = PROFILE_TIER[profile];
+    BEES.forEach(bee => {
+      const pick = bee.tiers[tier];
+      if (pick && pick.model) bee.currentModel = pick.model;
+    });
+    document.getElementById('profileNote').textContent =
+      `Profile applied to every AI with a ${TIER_META[tier].label} pick available. Manually override any row by clicking a different tier card.`;
+  } else {
+    document.getElementById('profileNote').textContent =
+      'Currently using your manual picks. Switch profile above to auto-set tier-matched models.';
+  }
+  renderAll();
+}
+
+renderAll();
+</script>
+
+</body>
+</html>
