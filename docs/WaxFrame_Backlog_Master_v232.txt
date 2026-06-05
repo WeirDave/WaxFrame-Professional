@@ -1,0 +1,77 @@
+WaxFrame Backlog Master v232
+2026-06-05
+
+State: v3.63.163 Pro shipped on main. FOURTH AND FINAL release of the Builder/Worker meld arc (v3.63.160-163). Code cleanup release:
+
+- #screen-builder DOM removed from index.html (~65 lines of dead HTML). Was hidden via display:none since v3.63.147. All JS references safely null-check so no crashes from the deletion.
+- continueFromBuilder function removed from app.js. Was a v3.63.147 legacy routing stub for browser back-button or deep-link users; no caller can reach it now.
+- goToScreen('screen-builder') handler removed.
+- worker-bees-prototype.html retired (the v2.2 prototype that drove the rework arc).
+- docs/worker-bees-audit.md archived (the 40+ MUST-PRESERVE requirements all landed; lessons carry forward in backlog observations).
+- images/WaxFrame_Builder_v3.png pruned. The two remaining references (index.html round-error modal, app.js Scenes data) updated to v4.png.
+- Dead-CSS pruning: ~100 lines removed across .ai-builder-affordance variants, .ai-setup-builder-chip variants, .bees-sidebar-legend block, #screen-builder hide-stub. Comments left at each removal site noting what was retired.
+
+Builder/Worker meld arc COMPLETE. Four releases:
+- v3.63.160 — intro rewrite, Change Builder modal restructure, sidebar/Hive Profile light-mode fix
+- v3.63.161 — User Manual rewrite (5 setups → 4, Builder step retired, page rename, inline references)
+- v3.63.162 — README + info modal + api-details sweep
+- v3.63.163 — code cleanup (this release)
+
+Task #32 (Builder consolidation: documentation sweep) is now COMPLETE. The screen formerly known as "Setup 2 — Builder" is gone from every user-facing surface AND from the codebase.
+
+What remains for future releases:
+- Screenshot regeneration for README + User Manual (still depict the v3.63.146 5-screen flow; prose now describes the current 4-screen flow regardless)
+- Other rework sub-tasks still in the backlog: #10 named profiles, #12 hive-profiles.html docs, #24 drop sub-1366 responsive code, #27 3-group ordering, #35 auto-classify, #36 server provider group label, per-row Manual override tag, per-tier WHY text
+
+v3.63.162 state still holds: README rewrite (Build your hive + Choose your Builder consolidated into "Set up your hive"), step numbering decremented, screenshot alt text updated, info modal manual link redirected, api-details walkthrough sentence updated.
+
+PRIOR STATE (v3.63.162, retained for context until next release reshuffles the margin):
+README + info modal + api-details sweep. "1. Build your hive" + "2. Choose your Builder" consolidated. Subsequent step numbering 3-8 decremented to 2-7. Screenshot alt text updated. infoBuilderModal manual link redirected.
+
+PRIOR STATE (v3.63.161, retained for context until next release reshuffles the margin):
+User Manual rewrite. Sidebar links collapsed to 4 setups. Step table renumbered. Section titles renamed/renumbered. #step2 anchor preserved as redirect stub with Builder content. All inline prose references to old numbering updated.
+
+PRIOR STATE (v3.63.160, retained for context until next release reshuffles the margin):
+Intro paragraph rewritten. Change Builder modal switched to row-based methodology. Sidebar block + Hive Profile bar light-mode fix using work-screen .work-panel-header pattern.
+
+Open Bugs
+
+(none currently tracked outside the active task list)
+
+Open Features / Tasks
+
+- Screenshot regeneration for README + User Manual (FLAGGED, not done)
+- #10 Hive Profiles: "Save current as named profile"
+- #12 Hive Profiles: dedicated docs page (hive-profiles.html)
+- #24 Worker Bees rework: drop sub-1366px responsive code
+- #27 Worker Bees rework: 3-group ordering (defaults / customs / servers)
+- #35 Auto-classify tier picks always
+- #36 Worker Bees rework: server provider group label
+- Per-row "Manual override" tag — needs delta tracking
+- Per-tier WHY text: classifier currently produces one overall WHY
+- Restore-from-Checkpoint diff-and-pick UI — PARKED
+- Hive parallel fan-out RPS-awareness
+- Model recommender filter-awareness warning
+- Failover Builder behavior — single-round CONTENT_FILTERED handling
+- Builder-incapable family list expansion
+- Pause/resume at reviewer seam
+- File System Access API exploration
+- Provider Catalog foundation (parked)
+- CSS rule consolidation sweep
+- Repo housekeeping — docs/ folder
+- Triage CodeQL + Dependabot findings
+- Rules reference updates
+
+Observations
+
+- 2026-06-05 — The Builder/Worker meld arc spans seventeen releases total: v3.63.147 (initial consolidation) → v3.63.163 (final cleanup). Each release addressed one specific friction point David identified by looking at the live app. Final state: a four-screen setup flow (welcome implicit + Set up your hive + Project + Reference + Starting Document), per-row Builder selection via the 🔨 Builder button, Change Builder modal that matches the same row-based methodology, fully renumbered documentation, and a clean codebase with no dead Builder-screen DOM, CSS, or JS.
+
+- 2026-06-05 — The audit document (docs/worker-bees-audit.md) served its purpose exactly. Cataloguing 40+ MUST-PRESERVE requirements BEFORE starting the rework let us check each one off as work progressed. Every requirement is still in place. Worth adopting the audit-before-rework pattern for future structural changes of this scope.
+
+- 2026-06-05 — release-check validator caught no drift across v3.63.135 through v3.63.163 (twenty-nine ceremonies). Zero stamp-related regressions over the full 28-release arc.
+
+- 2026-06-05 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01. The Builder/Worker meld arc materially reduces friction at the most-visited part of the app (the setup screen). One fewer click between "I picked my AIs" and "I'm refining a document". Per-row Builder selection means a user with two keyed AIs can finish setup in three clicks. Conversion impact remains to be measured.

@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-004
+   Build: 20260605-005
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14994,54 +14994,10 @@ kbd {
  * (becomes Builder on click). Builder Bee mascot is the brand
  * asset and stays prominent in both states.
  * ============================================================ */
-.ai-builder-affordance {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  padding: var(--space-8) var(--space-10);
-  border-radius: var(--radius-sm);
-  font-size: var(--fs-13);
-  border: 1px dashed var(--border2);
-  background: var(--surface);
-  color: var(--text);
-  text-align: left;
-  width: 100%;
-  cursor: default;
-  flex-wrap: wrap;
-}
-.ai-builder-affordance.is-active {
-  background: rgba(67, 160, 71, 0.10);
-  border: 1px solid #43a047;
-  cursor: default;
-}
-.ai-builder-affordance.is-pickable {
-  cursor: pointer;
-  font: inherit;
-  transition: background 0.12s, border-color 0.12s;
-}
-.ai-builder-affordance.is-pickable:hover {
-  background: var(--accent-dim);
-  border-color: var(--accent, #f4b400);
-}
-.ai-builder-affordance.is-pickable:focus-visible {
-  outline: 2px solid var(--accent, #f4b400);
-  outline-offset: 2px;
-}
-.ai-builder-affordance.is-incapable {
-  background: rgba(244, 180, 0, 0.08);
-  border-color: var(--accent, #f4b400);
-  color: var(--text-dim);
-  font-style: italic;
-}
-.ai-builder-affordance-text {
-  flex: 0 1 auto;
-}
-.ai-builder-affordance-sub {
-  flex: 1 1 100%;
-  font-size: var(--fs-12);
-  color: var(--text-dim);
-  padding-left: 36px;
-}
+/* v3.63.163 — .ai-builder-affordance retired. The expanded-panel
+   Builder selection affordance was replaced in v3.63.155 by the
+   per-row 🔨 Builder button (.ai-setup-builder-btn). Dead rules
+   pruned here. */
 
 /* ============================================================
  * v3.63.151 — Hive Roles + Tiers 6-card grid (Worker Bees rework Phase 1).
@@ -15214,39 +15170,14 @@ kbd {
   border-radius: 3px;
 }
 
-/* Builder Bee chip on the collapsed row summary — instant
- * "this is the active Builder" identification without expanding. */
-.ai-setup-builder-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px 2px 4px;
-  border-radius: 999px;
-  background: rgba(67, 160, 71, 0.12);
-  border: 1px solid rgba(67, 160, 71, 0.55);
-  color: #2e7d32;
-  font-size: var(--fs-11);
-  font-weight: 600;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.ai-setup-builder-chip-img {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-}
-@media (prefers-color-scheme: dark) {
-  .ai-setup-builder-chip {
-    color: #66bb6a;
-  }
-}
+/* v3.63.163 — .ai-setup-builder-chip + img + light/dark variants
+   retired. The collapsed-row Builder chip was replaced in v3.63.155
+   by the per-row 🔨 Builder button (.ai-setup-builder-btn). Dead
+   rules pruned here.
 
-/* v3.63.147 — Builder screen retired. Selection now lives in
- * Worker Bees. The screen-builder DOM is kept for now so any
- * legacy code paths don't crash, but it is never shown. */
-#screen-builder {
-  display: none !important;
-}
+   v3.63.163 — #screen-builder { display:none !important } rule also
+   retired. The DOM itself was deleted from index.html in this
+   release, so no need to hide it. */
 
 /* ============================================================
  * v3.63.153 — Worker Bees rework: sidebar + collapsed-row redo
@@ -15342,31 +15273,10 @@ kbd {
   margin-bottom: var(--space-8);
 }
 
-/* Icon legend rows */
-.bees-sidebar-legend {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.bees-sidebar-legend-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  font-size: var(--fs-12);
-  color: var(--text);
-  padding: 2px 0;
-}
-.bees-sidebar-legend-icon {
-  width: 22px;
-  flex-shrink: 0;
-  font-size: 14px;
-  text-align: center;
-  line-height: 1;
-}
-.bees-sidebar-legend-sep {
-  border-top: 1px dashed var(--border);
-  margin: 4px 0;
-}
+/* v3.63.163 — Icon legend block retired. The .bees-sidebar-legend*
+   rules supported the sidebar Icon Legend block that was removed in
+   v3.63.154 per David's "remove the legend and move the jump menu up"
+   feedback. Dead rules pruned here. */
 
 /* Jump-to-AI list */
 .bees-sidebar-jumplist {
@@ -15570,9 +15480,8 @@ kbd {
   font-weight: 600;
 }
 
-/* Expanded-panel Builder affordance retired in v3.63.155 — Builder
- * selection moved to the collapsed-row button. Hide stragglers. */
-.ai-builder-affordance { display: none !important; }
+/* v3.63.163 — .ai-builder-affordance hide-stub removed. The class is
+ * no longer emitted by any code path and there's nothing to hide. */
 
 .ai-setup-status-pill.is-ready {
   background: rgba(67, 160, 71, 0.12);
@@ -15683,23 +15592,10 @@ kbd {
 .ai-hive-card.is-none { cursor: default; }
 .ai-hive-card.is-none:hover { border-color: var(--border); background: var(--bg); }
 
-/* Builder affordance: active state (was green, now gold) */
-.ai-builder-affordance.is-active {
-  background: rgba(244, 180, 0, 0.08);
-  border: 1px solid var(--accent, #f4b400);
-}
-
-/* Collapsed-row Builder chip: was green, now gold */
-.ai-setup-builder-chip {
-  background: rgba(244, 180, 0, 0.12);
-  border-color: var(--accent, #f4b400);
-  color: var(--accent, #f4b400);
-}
-@media (prefers-color-scheme: dark) {
-  .ai-setup-builder-chip {
-    color: var(--accent, #f4b400);
-  }
-}
+/* v3.63.163 — .ai-builder-affordance.is-active + .ai-setup-builder-chip
+   gold overrides retired. Both classes are no longer emitted (Builder
+   affordance retired v3.63.155, chip retired v3.63.155 — both replaced
+   by the per-row 🔨 Builder button). */
 
 /* ============================================================
  * v3.63.152 — Hive Profile toolbar (Worker Bees rework Phase 2).
