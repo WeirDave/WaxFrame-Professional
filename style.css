@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-017
+   Build: 20260604-018
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2985,6 +2985,11 @@ body.helper-body .page-main {
   font-size: var(--fs-12);
   font-weight: 700;
   padding: var(--space-4) var(--space-12);
+  /* v3.63.145 — tabular-nums so the digit "1" doesn't render narrower than
+     "2"/"3"/"5" and shift the right column's width between steps. Defense-
+     in-depth with the .fs-header grid columns fix — together they make the
+     logo position immune to right-column content changes. */
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── BEE CONTROLS ROW ── */
@@ -5011,8 +5016,21 @@ kbd {
 }
 
 /* ── Full-screen header bar ── */
+/* v3.63.145 — 3-column grid (1fr | auto | 1fr) anchors .fs-header-brand to
+   the true page-center regardless of what's in .fs-header-left or
+   .fs-header-right. Before this, the header was flex with .fs-header-brand
+   carrying flex:1 + justify-content:center, which centered the brand WITHIN
+   its available flex region — but since left (hamburger + back) and right
+   (badge + 4 theme buttons) have different widths, the available region was
+   asymmetric and the brand drifted off-center. Also caught: the brand would
+   shift horizontally as the user flipped between setup steps because the
+   step badge ("Setup — Step N of 5") rendered with proportional digits
+   that subtly changed the right column's width per step. Grid columns +
+   tabular-nums on .setup-step-badge together kill both bugs.
+   David flagged 2026-06-04. */
 .fs-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: var(--space-16);
   padding: var(--space-14) var(--space-32);
@@ -5024,8 +5042,8 @@ kbd {
   display: flex;
   align-items: center;
   gap: var(--space-12);
-  flex: 1;
-  justify-content: center;
+  justify-self: center;
+  grid-column: 2;
 }
 .fs-logo {
   width: 80px;

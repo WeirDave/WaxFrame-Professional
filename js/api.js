@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260604-017
+// Build: 20260604-018
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -382,7 +382,10 @@ function quarantineModel(id, reason) {
 // Cache key prefix and TTL (7 days)
 const MODELS_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
-async function fetchModelsForProvider(provider) {
+async function fetchModelsForProvider(provider, opts) {
+  // v3.63.145 — opts._isRetry suppresses the auto-retry-once path in the
+  // outer catch block. See that catch for the full rationale.
+  opts = opts || {};
   if (!MODEL_FILTERS[provider]) return null; // no endpoint for this provider
 
   const cacheKey = `waxframe_models_${provider}`;
@@ -522,16 +525,46 @@ async function fetchModelsForProvider(provider) {
       return models;
     }
   } catch(e) {
+    // v3.63.145 — Retry once on transient transport failures. Browsers
+    // report TCP resets / TLS aborts / dropped packets as "Failed to fetch"
+    // / "NetworkError" / "CORS request did not succeed (null)" — all
+    // indistinguishable from genuine CORS rejections at the JS layer. A
+    // null-status response (no HTTP reply at all) is the fingerprint of a
+    // transient transport failure, and one retry with a short delay clears
+    // the vast majority of these without papering over real endpoint /
+    // CORS / auth problems (which fail BOTH attempts consistently).
+    // Confirmed by David's Mistral diagnostic on 2026-06-04: same browser,
+    // same key, same code path — Classify Tiers run failed (CORS-shaped
+    // error), manual retry 12 min later succeeded with 68 models returned.
+    // The endpoint was reliable; the original failure was a one-off blip.
+    if (!opts._isRetry) {
+      console.info(`[fetchModelsForProvider:${provider}] transient failure; retrying once in 750ms:`, e?.message || e);
+      await new Promise(r => setTimeout(r, 750));
+      return fetchModelsForProvider(provider, { _isRetry: true });
+    }
     // v3.29.2 — was silent; now logs so the user-visible "stale fallback
     // models" symptom is diagnosable. Network errors, auth failures, and
     // malformed JSON all land here and previously vanished.
-    console.warn(`[fetchModelsForProvider:${provider}] failed:`, e);
+    console.warn(`[fetchModelsForProvider:${provider}] failed after retry:`, e);
     if (typeof WF_DEBUG !== 'undefined' && WF_DEBUG.captureFailure) {
       WF_DEBUG.captureFailure({
         code: 'MODELS_FETCH_FAILED',
         provider,
         message: e?.message || String(e)
       });
+    }
+    // v3.63.145 — Surface the second-attempt failure into the tier
+    // classifier error log so a Bundle for Scout shows when fallback was
+    // used. Was silent before — bundles only had the bare modelSource:
+    // 'model-fallbacks' line with no "live fetch was attempted and failed"
+    // diagnostic trail.
+    if (typeof window !== 'undefined') {
+      window._lastTierClassificationErrors = window._lastTierClassificationErrors || {};
+      window._lastTierClassificationErrors[provider] = {
+        stage: 'live-fetch-failed-after-retry',
+        detail: e?.message || String(e),
+        ts: Date.now()
+      };
     }
   }
 
@@ -572,7 +605,10 @@ function getModelsForProvider(provider) {
 // /v1/models endpoint quirk fix lives in BOTH functions or in a shared
 // helper later. Kept as a near-duplicate for now because the diff is small
 // and the unification refactor is its own concern.
-async function fetchModelsForProviderLive(provider) {
+async function fetchModelsForProviderLive(provider, opts) {
+  // v3.63.145 — retry-once on transient transport failures (same pattern
+  // as fetchModelsForProvider above).
+  opts = opts || {};
   if (!MODEL_FILTERS[provider]) return null;
 
   const cfg = API_CONFIGS[provider];
@@ -693,13 +729,29 @@ async function fetchModelsForProviderLive(provider) {
       return models;
     }
   } catch(e) {
-    console.warn(`[fetchModelsForProviderLive:${provider}] failed:`, e);
+    // v3.63.145 — retry-once on transient transport failures. See the
+    // matching block in fetchModelsForProvider for the full rationale +
+    // the Mistral diagnostic that confirmed the pattern.
+    if (!opts._isRetry) {
+      console.info(`[fetchModelsForProviderLive:${provider}] transient failure; retrying once in 750ms:`, e?.message || e);
+      await new Promise(r => setTimeout(r, 750));
+      return fetchModelsForProviderLive(provider, { _isRetry: true });
+    }
+    console.warn(`[fetchModelsForProviderLive:${provider}] failed after retry:`, e);
     if (typeof WF_DEBUG !== 'undefined' && WF_DEBUG.captureFailure) {
       WF_DEBUG.captureFailure({
         code: 'MODELS_FETCH_FAILED',
         provider,
         message: e?.message || String(e)
       });
+    }
+    if (typeof window !== 'undefined') {
+      window._lastTierClassificationErrors = window._lastTierClassificationErrors || {};
+      window._lastTierClassificationErrors[provider] = {
+        stage: 'live-fetch-failed-after-retry',
+        detail: e?.message || String(e),
+        ts: Date.now()
+      };
     }
   }
 
