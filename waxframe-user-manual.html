@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260605-002">
+  <meta name="waxframe-build" content="20260605-003">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.160">
+  <link rel="stylesheet" href="style.css?v=3.63.161">
 </head>
 <body class="helper-body">
 
@@ -129,17 +129,16 @@
         <a href="#your-files" class="doc-sidebar-link">📁 What's in the Folder</a>
 
         <div class="doc-sidebar-category">Step-by-Step Guide</div>
-        <a href="#step1"  class="doc-sidebar-link">① Setup 1 — Worker Bees</a>
-        <a href="#step2"  class="doc-sidebar-link">② Setup 2 — Choose Your Builder</a>
-        <a href="#step3"  class="doc-sidebar-link">③ Setup 3 — Define Your Project</a>
-        <a href="#step4"  class="doc-sidebar-link">④ Setup 4 — Reference Material</a>
-        <a href="#step5"  class="doc-sidebar-link">⑤ Setup 5 — Starting Document</a>
-        <a href="#step6"  class="doc-sidebar-link">⑥ Step 6 — Launch WaxFrame</a>
-        <a href="#step7"  class="doc-sidebar-link">⑦ Step 7 — The Work Screen</a>
-        <a href="#step8"  class="doc-sidebar-link">⑧ Step 8 — Run Your First Round</a>
-        <a href="#step9"  class="doc-sidebar-link">⑨ Step 9 — Review &amp; Resolve</a>
-        <a href="#step10" class="doc-sidebar-link">⑩ Step 10 — Run More Rounds</a>
-        <a href="#step11" class="doc-sidebar-link">⑪ Step 11 — Export &amp; Finish</a>
+        <a href="#step1"  class="doc-sidebar-link">① Setup 1 — Set up your hive</a>
+        <a href="#step3"  class="doc-sidebar-link">② Setup 2 — Define Your Project</a>
+        <a href="#step4"  class="doc-sidebar-link">③ Setup 3 — Reference Material</a>
+        <a href="#step5"  class="doc-sidebar-link">④ Setup 4 — Starting Document</a>
+        <a href="#step6"  class="doc-sidebar-link">⑤ Step 5 — Launch WaxFrame</a>
+        <a href="#step7"  class="doc-sidebar-link">⑥ Step 6 — The Work Screen</a>
+        <a href="#step8"  class="doc-sidebar-link">⑦ Step 7 — Run Your First Round</a>
+        <a href="#step9"  class="doc-sidebar-link">⑧ Step 8 — Review &amp; Resolve</a>
+        <a href="#step10" class="doc-sidebar-link">⑨ Step 9 — Run More Rounds</a>
+        <a href="#step11" class="doc-sidebar-link">⑩ Step 10 — Export &amp; Finish</a>
 
         <div class="doc-sidebar-category">Configuration</div>
         <a href="#settings" class="doc-sidebar-link">⚙ Settings</a>
@@ -196,11 +195,10 @@
       <table class="wh-table">
         <thead><tr><th>Screen</th><th>What you do there</th></tr></thead>
         <tbody>
-          <tr><td><strong>Setup 1 — Worker Bees</strong></td><td>Connect your AI assistants by saving their API keys. This is a one-time setup — your configuration is saved automatically and is there every time you return.</td></tr>
-          <tr><td><strong>Setup 2 — Builder</strong></td><td>Choose which AI will act as the Builder — the AI that rewrites your document each round.</td></tr>
-          <tr><td><strong>Setup 3 — Your Project</strong></td><td>Name your project and fill in the structured goal fields that guide every AI.</td></tr>
-          <tr><td><strong>Setup 4 — Reference Material</strong></td><td>Optional. Paste or upload source material The Hive will reference on every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims.</td></tr>
-          <tr><td><strong>Setup 5 — Starting Document</strong></td><td>Upload a file, paste text, or choose to start from scratch and let the AIs write the first draft.</td></tr>
+          <tr><td><strong>Setup 1 — Set up your hive</strong></td><td>Connect your AI assistants by saving their API keys, pick each AI's model, and crown one of them Builder (the AI that rewrites your document each round). One-time setup — your configuration is saved automatically and is there every time you return.</td></tr>
+          <tr><td><strong>Setup 2 — Your Project</strong></td><td>Name your project and fill in the structured goal fields that guide every AI.</td></tr>
+          <tr><td><strong>Setup 3 — Reference Material</strong></td><td>Optional. Paste or upload source material The Hive will reference on every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims.</td></tr>
+          <tr><td><strong>Setup 4 — Starting Document</strong></td><td>Upload a file, paste text, or choose to start from scratch and let the AIs write the first draft.</td></tr>
           <tr><td><strong>Work</strong></td><td>Run rounds, read the updated document, resolve conflicts between AIs, refine further if needed, and export when you are done.</td></tr>
         </tbody>
       </table>
@@ -323,7 +321,7 @@
   <div class="wh-section" id="step1">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">①</div>
-      <div class="wh-section-title">Step 1 — Set Up Your Worker Bees</div>
+      <div class="wh-section-title">Setup 1 — Set up your hive</div>
     </div>
     <figure class="ss-shot">
       <img class="ss-dark" src="screenshots/screenshot_setup1_dark.png" alt="Setup Step 1 — Worker Bees" loading="lazy">
@@ -511,7 +509,7 @@
       <p>At the very bottom of the Setup screen, a status bar shows exactly what is still needed before you can continue. It reads: <em>To continue you need:</em> followed by two indicators:</p>
       <ul>
         <li><strong>✗ At least 2 AIs set up</strong> — shows a red ✗ until two or more AIs have saved keys (the indicator also includes a live count, e.g. <em>(1 so far)</em>). Turns green ✓ when the requirement is met.</li>
-        <li><strong>✗ Builder selected</strong> — shows a red ✗ until you have selected a Builder on the next screen (Setup 2). Turns green ✓ when selected.</li>
+        <li><strong>✗ Builder selected</strong> — shows a red ✗ until you have crowned a Builder by clicking the <strong>🔨 Builder</strong> button on any keyed AI's row above. Turns green ✓ once a Builder is set.</li>
       </ul>
       <p>The <strong>Continue — Choose Builder →</strong> button at the bottom right of the screen remains inactive until the keys indicator is green.</p>
       <div class="wf-tip">
@@ -523,53 +521,26 @@
   </div>
 
 
+  <!-- v3.63.161 — The standalone "Step 2 — Choose Your Builder" section was
+       retired when the separate Builder screen was folded into Setup 1
+       (v3.63.147). The Builder role discussion now lives inline inside
+       Setup 1 above. This stub preserves the #step2 anchor so any pages
+       or external bookmarks linking to #step2 still land on something
+       sensible — a redirect to Setup 1 — instead of a 404 hash. -->
   <div class="wh-section" id="step2">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">②</div>
-      <div class="wh-section-title">Step 2 — Choose Your Builder</div>
+      <div class="wh-section-icon">↦</div>
+      <div class="wh-section-title">Setup 2 was folded into Setup 1</div>
     </div>
-    <figure class="ss-shot">
-      <img class="ss-dark" src="screenshots/screenshot_setup2_dark.png" alt="Setup Step 2 — Builder" loading="lazy">
-      <img class="ss-light" src="screenshots/screenshot_setup2_light.png" alt="Setup Step 2 — Builder" loading="lazy">
-      <figcaption>Setup Step 2 — pick the Builder that synthesizes each round.</figcaption>
-    </figure>
-
-
     <div class="wh-block">
-      <div class="wh-block-title">What you are looking at</div>
-      <p>After continuing from the Worker Bees screen, you arrive at Setup 2: <strong>Builder</strong>. This is a full-width screen dedicated to choosing which AI will rewrite your document each round. While your Worker Bees (reviewers) each produce numbered suggestions, the Builder reads all of those suggestions and the full document and produces the updated version.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">What makes the Builder different from reviewers</div>
-      <p>Every Worker Bee reads the document and gives suggestions. The Builder does the actual writing. Because the Builder must process the entire document plus all reviewer suggestions every single round, it consumes significantly more tokens than any individual reviewer. This has two practical implications:</p>
+      <p>WaxFrame used to have a separate "Choose Your Builder" screen as Setup 2. Builder selection now happens directly on the <a href="#step1" class="link-accent">Setup 1 — Set up your hive</a> screen, via the <strong>🔨 Builder</strong> button on each AI row.</p>
+      <p>The Builder is the AI that rewrites your document each round. It plays two roles:</p>
       <ul>
-        <li>The Builder <strong>must</strong> have a paid API subscription with sufficient token capacity. Free-tier API accounts have low limits and will cause rounds to fail mid-way through.</li>
-        <li>Choosing a capable, reliable AI as your Builder matters more than your choice of reviewers. The Builder's output is what you see in the working document after each round.</li>
+        <li><strong>Synthesizer</strong> during a full round (when you click <strong>Smoke the Hive</strong>): reads every reviewer's suggestions + the full document, produces the new version incorporating consensus.</li>
+        <li><strong>Handyman</strong> between full rounds: open the Notes drawer (📝 Notes button in the top bar), write a directive (e.g. <em>"rewrite the first paragraph"</em>, <em>"stop using the word 'refine' so much"</em>), then click <strong>Send to Builder</strong> in the footer. The Builder performs just that task without running the reviewers — saves tokens and time.</li>
       </ul>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">The Builder's two roles</div>
-      <p>The Builder plays two distinct roles in WaxFrame. In a full round (when you click <strong>Smoke the Hive</strong>), it acts as the <strong>synthesizer</strong> — reading every reviewer's suggestions plus the full document and producing the new version that incorporates the consensus.</p>
-      <p>Between full rounds, the Builder also acts as your <strong>handyman</strong>. Open the Notes drawer (📝 Notes button in the top bar), write a directive — anything from <em>"rewrite the first paragraph"</em> to <em>"stop using the word 'refine' so much"</em> to <em>"the conclusion needs to be more decisive"</em> — then click <strong>Send to Builder</strong> in the footer. The Builder performs just that one task without running the reviewers, saving tokens and time. After the Builder finishes, you can click <strong>Smoke the Hive</strong> to see if the reviewers agree with the change.</p>
-      <p>This pairing is one of WaxFrame's most useful workflows: targeted edits via Notes + Send to Builder, then full reviewer feedback via Smoke the Hive when you want validation. Use it when you have a specific change in mind that you don't need the whole hive to debate first.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">The Builder picker — what you see</div>
-      <p>The screen body shows a grid of cards, one for each AI that has a saved API key in your hive. AIs without a saved key do not appear here — you must save a key for an AI in Step 1 before it can be selected as Builder.</p>
-      <p>Each card shows the AI's name and icon. Click a card to select that AI as your Builder. The selected card is highlighted and marked with a small <strong>Builder badge</strong> in the top-right corner — the Builder Bee mascot image — that indicates this AI is the current Builder. Only one AI can be the Builder at a time. You can change your Builder at any time, including from the Work screen during an active session, where the selected Builder is shown with a 👑 crown label in the Change Builder modal.</p>
-      <div class="wf-tip">
-        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-        <div class="wf-tip-body"><p>Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably. DeepSeek in particular offers excellent output at a significantly lower cost than the other providers, making it an efficient choice as Builder. If a round fails with a structure error, switch your Builder to ChatGPT or Gemini — they tend to be the most consistent at following strict output format requirements. For a full breakdown of token costs across providers, see <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ↗</a></p></div>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Continuing to the Project screen</div>
-      <p>Once the status bar at the bottom shows <strong>✓ Builder selected</strong> in green, the <strong>Continue — Your Project →</strong> button at the bottom right of the screen activates. Click it to move to the Project screen. Your Builder selection is saved automatically — it will be there every time you return to WaxFrame.</p>
-    <a href="#top" class="wh-back-top">↑ Back to top</a>
+      <p>The Builder reads the entire document plus all reviewer suggestions every round, so it consumes more tokens than any individual reviewer. Pick an AI with a paid API key and enough token capacity. Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably; DeepSeek offers excellent output at a lower cost. You can change your Builder anytime — from Setup 1 by clicking 🔨 Builder on a different AI's row, or from the Work screen via the <strong>Change Builder</strong> button.</p>
+      <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
 
@@ -577,7 +548,7 @@
   <div class="wh-section" id="step3">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">③</div>
-      <div class="wh-section-title">Step 3 — Define Your Project</div>
+      <div class="wh-section-title">Setup 2 — Define Your Project</div>
     </div>
     <figure class="ss-shot">
       <img class="ss-dark" src="screenshots/screenshot_setup3_dark.png" alt="Setup Step 3 — Your Project" loading="lazy">
@@ -588,7 +559,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">What you are looking at</div>
-      <p>Setup 3 — <strong>Your Project</strong> — is a single scrollable screen. At the top is your project name and version, followed by the Project Goal section with six structured fields. Work through the fields top to bottom.</p>
+      <p>Setup 2 — <strong>Your Project</strong> — is a single scrollable screen. At the top is your project name and version, followed by the Project Goal section with six structured fields. Work through the fields top to bottom.</p>
       <p>You can either fill in the goal fields manually, or click <strong>📋 Use Template</strong> in the section header to pre-fill them from a curated library of document types. <strong>If this is your first time running WaxFrame, click 📋 Use Template, pick Starting from scratch on the path picker, then choose ⭐ Quick Start</strong> — a small, low-stakes project where the hive writes and refines a real chocolate-chip-cookie recipe across a few rounds. Identical flow to any other project; the recipe is small enough to see convergence quickly and the topic is harmless enough that nothing rides on the outcome.</p>
     </div>
 
@@ -691,7 +662,7 @@
       <p><strong>Who actually responds to length directives.</strong> Reviewers focus on prose quality — clarity, structure, persuasion, accuracy — and do <em>not</em> address length. <strong>Only the Builder responds to length directives</strong>, including the ✂ Trim, 📈 Expand, and 📐 Match Notes templates. If the document consistently overshoots your target across multiple reviewer rounds, that is expected — the reviewers are doing their job and the Builder is the lever for size. The standard playbook: wait for a round where reviewers signal they are done with prose changes, then run a Builder-Only round with the ✂ Trim template injected to compress the output. Real-world reference: a 1499-word document compressed to 1083 words (a 27.6% reduction) in a single Builder-Only round with one Trim injection.</p>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-        <div class="wf-tip-body"><p>If you projects from before v3.33.0 (the mode picker addition), the migration assumes <strong>Hard cap</strong> mode if you had a length set, or <strong>No limit</strong> if you didn't. Open the project on the Setup 3 screen, look at the active pill, and switch modes if you want different behavior.</p></div>
+        <div class="wf-tip-body"><p>If you projects from before v3.33.0 (the mode picker addition), the migration assumes <strong>Hard cap</strong> mode if you had a length set, or <strong>No limit</strong> if you didn't. Open the project on the Setup 2 screen, look at the active pill, and switch modes if you want different behavior.</p></div>
       </div>
     </div>
 
@@ -765,7 +736,7 @@
   <div class="wh-section" id="step4">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">④</div>
-      <div class="wh-section-title">Step 4 — Reference Material</div>
+      <div class="wh-section-title">Setup 3 — Reference Material</div>
     </div>
     <figure class="ss-shot">
       <img class="ss-dark" src="screenshots/screenshot_setup4_dark.png" alt="Setup Step 4 — Reference Material" loading="lazy">
@@ -776,7 +747,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">What you are looking at</div>
-      <p>After continuing from the Your Project screen, you arrive at Setup 4: <strong>Reference Material</strong>. This is a full-width screen with a small ⓘ info button next to the heading. Reference material is <em>optional</em> — most projects do not need it. The Continue button is always active and you can skip the screen entirely if your project has no source material to cite against.</p>
+      <p>After continuing from the Your Project screen, you arrive at Setup 3: <strong>Reference Material</strong>. This is a full-width screen with a small ⓘ info button next to the heading. Reference material is <em>optional</em> — most projects do not need it. The Continue button is always active and you can skip the screen entirely if your project has no source material to cite against.</p>
       <p>This screen is where you provide source documentation that the hive should consult on every round but never edit. The hive sees this content alongside your starting document, but the prompt explicitly tells every reviewer and the Builder to treat it as read-only authoritative source — not as something to rewrite.</p>
     </div>
 
@@ -794,7 +765,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">When to skip it</div>
-      <p>Most short documents do not need reference material. A cookie recipe, a thank-you note, a personal blog post, or a quick email rarely has external source material to cite against. If you cannot name what the hive would be checking <em>against</em>, leave Setup 4 empty and continue.</p>
+      <p>Most short documents do not need reference material. A cookie recipe, a thank-you note, a personal blog post, or a quick email rarely has external source material to cite against. If you cannot name what the hive would be checking <em>against</em>, leave Setup 3 empty and continue.</p>
     </div>
 
     <div class="wh-block">
@@ -803,9 +774,9 @@
       <table class="wh-table">
         <thead><tr><th>Field</th><th>Role</th><th>How the hive treats it</th></tr></thead>
         <tbody>
-          <tr><td><strong>Project Goal</strong> (Setup 3)</td><td>Standing target — what you are trying to produce</td><td>Sent every round, never changes within a session</td></tr>
-          <tr><td><strong>Reference Material</strong> (Setup 4)</td><td>Standing source material — what the document must cite against</td><td>Sent every round, can be edited mid-session, never edited by the hive</td></tr>
-          <tr><td><strong>Starting Document</strong> (Setup 5)</td><td>The document under construction</td><td>Line-numbered, reviewed, rewritten by the Builder each round</td></tr>
+          <tr><td><strong>Project Goal</strong> (Setup 2)</td><td>Standing target — what you are trying to produce</td><td>Sent every round, never changes within a session</td></tr>
+          <tr><td><strong>Reference Material</strong> (Setup 3)</td><td>Standing source material — what the document must cite against</td><td>Sent every round, can be edited mid-session, never edited by the hive</td></tr>
+          <tr><td><strong>Starting Document</strong> (Setup 4)</td><td>The document under construction</td><td>Line-numbered, reviewed, rewritten by the Builder each round</td></tr>
           <tr><td><strong>Notes</strong> (Work screen)</td><td>Round-to-round directives for the Builder only</td><td>Sent on the next round only; cleared automatically after that round runs</td></tr>
         </tbody>
       </table>
@@ -820,7 +791,7 @@
         <li><strong>Upload File</strong> — clicking this panel (it has a stack-of-document-types icon) opens a file picker, or you can drag &amp; drop a file directly onto it (the panel is the drop target). The file is read once and its content is loaded into a new read-only reference with the original filename as the name. Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), and Markdown (.md). For Excel workbooks with multiple visible sheets, a sheet picker appears and each selected sheet becomes its own independent reference. For the canonical breakdown of what gets extracted from each format and what does not, see <a href="#file-ingestion" class="link-accent">File Ingestion ↓</a>.</li>
       </ul>
       <p>Each card has the same controls: a position number badge at the top-left (the hive reads cards in the order shown, top-down), a source-icon badge (showing which file type the content came from — DOCX, PDF, paste, etc.), a character / word / token counter, <strong>▲</strong> and <strong>▼</strong> arrow buttons to reorder, and a <strong>✕</strong> remove button. Paste cards have a fully editable textarea below the header row; upload cards are read-only — to replace an uploaded card's content, remove it and re-upload.</p>
-      <p>A soft warning banner appears at the top of Setup 4 if the total token count across all cards exceeds approximately 150,000. Most provider context windows in 2026 are 100k–1M tokens; the threshold is conservative and informational — it never blocks, just flags genuinely heavy use so you can split across rounds, remove low-priority documents, or switch to a long-context Builder before launching.</p>
+      <p>A soft warning banner appears at the top of Setup 3 if the total token count across all cards exceeds approximately 150,000. Most provider context windows in 2026 are 100k–1M tokens; the threshold is conservative and informational — it never blocks, just flags genuinely heavy use so you can split across rounds, remove low-priority documents, or switch to a long-context Builder before launching.</p>
     </div>
 
     <div class="wh-block">
@@ -846,7 +817,7 @@
       <p>The drawer has three actions: <strong>📋 Copy</strong> (copies the current text to your clipboard), <strong>✕ Clear</strong> (wipes the field with confirmation — does not affect past rounds), and <strong>💾 Save &amp; Close</strong> (commits the edit and closes the drawer).</p>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-        <div class="wf-tip-body"><p>If your reference material grows large mid-session and you notice rounds getting expensive, this is the moment to switch your Builder to a cheaper-per-token model. Go to <strong>Menu → Setup 2 — Builder</strong>, pick a low-cost option, and continue. The Builder change applies to the next round; past rounds keep their original Builder credit in the transcript.</p></div>
+        <div class="wf-tip-body"><p>If your reference material grows large mid-session and you notice rounds getting expensive, this is the moment to switch your Builder to a cheaper-per-token model. Go to <strong>Menu → Setup 1 — Set up your hive</strong>, pick a low-cost option, and continue. The Builder change applies to the next round; past rounds keep their original Builder credit in the transcript.</p></div>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -856,7 +827,7 @@
   <div class="wh-section" id="step5">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑤</div>
-      <div class="wh-section-title">Step 5 — Provide Your Starting Document</div>
+      <div class="wh-section-title">Setup 4 — Provide Your Starting Document</div>
     </div>
     <figure class="ss-shot">
       <img class="ss-dark" src="screenshots/screenshot_setup5_dark.png" alt="Setup Step 5 — Starting Document" loading="lazy">
@@ -867,7 +838,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">What you are looking at</div>
-      <p>After continuing from the Your Project screen, you arrive at Setup 5: <strong>Starting Document</strong>. This is a full-width screen with a small ⓘ info button next to the heading. This is where you tell WaxFrame what to work with. There are three ways to provide a starting point, selected using the three buttons at the top of the screen.</p>
+      <p>After continuing from the Your Project screen, you arrive at Setup 4: <strong>Starting Document</strong>. This is a full-width screen with a small ⓘ info button next to the heading. This is where you tell WaxFrame what to work with. There are three ways to provide a starting point, selected using the three buttons at the top of the screen.</p>
       <p><strong>Important:</strong> These three buttons — <strong>Upload File</strong>, <strong>Paste Text</strong>, and <strong>Start from Scratch</strong> — are <em>mode selectors</em>, not action buttons. Each carries a small distinct icon to its left (a stack of file-type cards for Upload, a clipboard for Paste, a blank-page-with-sparkles for Scratch). Clicking one selects that mode and changes what appears below the buttons. You then interact with the area below them to actually provide your content. A brief instruction line directly below the buttons updates to tell you exactly what to do next.</p>
     </div>
 
@@ -933,7 +904,7 @@
   <div class="wh-section" id="step6">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑥</div>
-      <div class="wh-section-title">Step 6 — Launch WaxFrame</div>
+      <div class="wh-section-title">Step 5 — Launch WaxFrame</div>
     </div>
 
     <div class="wh-block">
@@ -957,7 +928,7 @@
   <div class="wh-section" id="step7">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑦</div>
-      <div class="wh-section-title">Step 7 — The Work Screen</div>
+      <div class="wh-section-title">Step 6 — The Work Screen</div>
     </div>
     <figure class="ss-shot">
       <img class="ss-dark" src="screenshots/screenshot_work_dark.png" alt="The Work Screen" loading="lazy">
@@ -997,7 +968,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">📚 Reference</span>
-        <span class="goal-info-desc">Opens the Reference Material drawer where you can view, edit, add, or remove reference documents during an active session. Changes take effect on the next round; past rounds keep the reference snapshot that was active when they ran. (Setup 4 — Reference Material is the entry point for first-time setup; this is the live-edit equivalent on the Work screen.)</span>
+        <span class="goal-info-desc">Opens the Reference Material drawer where you can view, edit, add, or remove reference documents during an active session. Changes take effect on the next round; past rounds keep the reference snapshot that was active when they ran. (Setup 3 — Reference Material is the entry point for first-time setup; this is the live-edit equivalent on the Work screen.)</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">🏁 Finish</span>
@@ -1100,7 +1071,7 @@
       <p><strong>Footer — right zone (indicators and info, left to right)</strong></p>
       <div class="goal-info-row">
         <span class="info-label">📏 Length Guard pill</span>
-        <span class="goal-info-desc">Visible whenever a Length Constraint mode is active on the project (Hard cap / Target / Range — set on Setup 3). Reads <em>Length guard: armed</em> while watching the document, and switches to amber <em>Length guard: off</em> if you've disabled it for the session via the round-end gate's <strong>Continue anyway</strong> option. Click the pill to toggle (with a confirmation prompt that carries a <em>Don't show this again</em> option). Also mirrored as a toggle on the <a href="#settings" class="link-accent">Settings</a> screen.</span>
+        <span class="goal-info-desc">Visible whenever a Length Constraint mode is active on the project (Hard cap / Target / Range — set on Setup 2). Reads <em>Length guard: armed</em> while watching the document, and switches to amber <em>Length guard: off</em> if you've disabled it for the session via the round-end gate's <strong>Continue anyway</strong> option. Click the pill to toggle (with a confirmation prompt that carries a <em>Don't show this again</em> option). Also mirrored as a toggle on the <a href="#settings" class="link-accent">Settings</a> screen.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">🐢 Slow alerts pill</span>
@@ -1122,7 +1093,7 @@
   <div class="wh-section" id="step8">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑧</div>
-      <div class="wh-section-title">Step 8 — Run Your First Round</div>
+      <div class="wh-section-title">Step 7 — Run Your First Round</div>
     </div>
 
     <div class="wh-block">
@@ -1160,7 +1131,7 @@
   <div class="wh-section" id="step9">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑨</div>
-      <div class="wh-section-title">Step 9 — Review Results and Resolve Conflicts</div>
+      <div class="wh-section-title">Step 8 — Review Results and Resolve Conflicts</div>
     </div>
 
     <div class="wh-block">
@@ -1223,7 +1194,7 @@
   <div class="wh-section" id="step10">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑩</div>
-      <div class="wh-section-title">Step 10 — Run More Rounds</div>
+      <div class="wh-section-title">Step 9 — Run More Rounds</div>
     </div>
 
     <div class="wh-block">
@@ -1307,7 +1278,7 @@
   <div class="wh-section" id="step11">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑪</div>
-      <div class="wh-section-title">Step 11 — Export and Finish</div>
+      <div class="wh-section-title">Step 10 — Export and Finish</div>
     </div>
 
     <div class="wh-block">
@@ -1373,7 +1344,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The pattern</div>
-      <p>The goal fields on Setup 3 aren't optional decoration. Reviewers can only judge whether a document fits the goal if the goal is clearly stated, and the more specifically you state it, the faster the hive converges.</p>
+      <p>The goal fields on Setup 2 aren't optional decoration. Reviewers can only judge whether a document fits the goal if the goal is clearly stated, and the more specifically you state it, the faster the hive converges.</p>
     </div>
 
     <div class="wh-block">
@@ -1394,7 +1365,7 @@
       <p>Three patterns repeat across these runs.</p>
       <p><strong>1. Setup specificity drives convergence.</strong> The structured goal fields — audience, outcome, scope, tone — pay back as rounds you don't have to run. The minutes you spend on the Project screen save you minutes on the work screen, and usually more than break even.</p>
       <p><strong>2. Three or more AIs converges faster than two.</strong> When two reviewers disagree on a specific change, the run pauses and asks you to break the tie; with three or more reviewers, disagreements resolve automatically by majority and the run keeps moving. The cost is one more reviewer per round; the win is fewer interruptions and noticeably faster wall-clock — the Brightwater data above is the clearest example.</p>
-      <p><strong>3. Reference Material is high-leverage.</strong> When the hive needs a body of facts to draw from (an identity scaffold, a job description, a research brief, a source recipe), pasting that into Setup 4 — Reference Material delivers more value per character than expanding the goal fields. The hive pulls from it on every round; you only have to type it once. Demonstrated in the Recipe (Publix-style Southern potato salad) test: a 2,636-character reference recipe paired with an empty Starting Document and a fully-populated Project scaffold converged in <strong>4 rounds</strong>, well below the 5–20+ range estimated for traditional recipe refinement. When the source recipe instead sits in the Starting Document, the hive treats it as a draft to fight; when it's in Reference Material, the hive builds fresh from the scaffold. Same source content, very different convergence shape.</p>
+      <p><strong>3. Reference Material is high-leverage.</strong> When the hive needs a body of facts to draw from (an identity scaffold, a job description, a research brief, a source recipe), pasting that into Setup 3 — Reference Material delivers more value per character than expanding the goal fields. The hive pulls from it on every round; you only have to type it once. Demonstrated in the Recipe (Publix-style Southern potato salad) test: a 2,636-character reference recipe paired with an empty Starting Document and a fully-populated Project scaffold converged in <strong>4 rounds</strong>, well below the 5–20+ range estimated for traditional recipe refinement. When the source recipe instead sits in the Starting Document, the hive treats it as a draft to fight; when it's in Reference Material, the hive builds fresh from the scaffold. Same source content, very different convergence shape.</p>
       <p>If your hive is struggling to converge after Round 3 or 4, open the Project screen and read your goal fields aloud — would a reviewer know what success looks like from those words alone? If not, expand them. Then check whether you should be using Reference Material instead of cramming everything into Scope.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -1413,7 +1384,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Measured data point</div>
-      <p>A Thank-You note converged in <strong>2 rounds</strong> when started from scratch (Start from Scratch button on Setup 5, empty starting document) versus <strong>13 rounds</strong> when refining a rough draft pulled from a pre-existing template. Same final document type, same hive, same goal fields. The only variable was whether the run started with a 0-character document or a misaligned draft. The misaligned draft cost roughly 6× more rounds.</p>
+      <p>A Thank-You note converged in <strong>2 rounds</strong> when started from scratch (Start from Scratch button on Setup 4, empty starting document) versus <strong>13 rounds</strong> when refining a rough draft pulled from a pre-existing template. Same final document type, same hive, same goal fields. The only variable was whether the run started with a 0-character document or a misaligned draft. The misaligned draft cost roughly 6× more rounds.</p>
     </div>
 
     <div class="wh-block">
@@ -1437,7 +1408,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Diagnostic move when stuck</div>
-      <p>If you've run two or three rounds where reviewers keep flagging the same kinds of issues, and the Builder's output keeps drifting away from the goal in a consistent direction, try changing the Builder on the Worker Bees screen and re-run. The hive's convergence behavior often shifts immediately when the Builder is better matched.</p>
+      <p>If you've run two or three rounds where reviewers keep flagging the same kinds of issues, and the Builder's output keeps drifting away from the goal in a consistent direction, try changing the Builder on the Set up your hive screen and re-run. The hive's convergence behavior often shifts immediately when the Builder is better matched.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
@@ -1728,7 +1699,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Setting up an internal-only hive</div>
-      <p>If your organisation uses only internal AI models and you do not want the six default public AIs (ChatGPT, Claude, etc.) visible in your list, flip the <strong>🖥 Server Based AI</strong> toggle at the top of Setup 1 — Worker Bees. This hides the six defaults and any direct-API customs from view (their saved keys are preserved — they reappear if you switch back to Internet mode) and shows only AIs imported from a model server. You can then click <strong>Import from Model Server</strong> in the toolbar to fetch the models available from your gateway (Open WebUI, Ollama, LM Studio, an internal endpoint like Anduril's Alfredo, or any other OpenAI-compatible server) and add several at once. See <a href="#appendix-b" class="link-accent">Appendix B — Importing from a Model Server</a> for the full walkthrough.</p>
+      <p>If your organisation uses only internal AI models and you do not want the six default public AIs (ChatGPT, Claude, etc.) visible in your list, flip the <strong>🖥 Server Based AI</strong> toggle at the top of Setup 1 — Set up your hive. This hides the six defaults and any direct-API customs from view (their saved keys are preserved — they reappear if you switch back to Internet mode) and shows only AIs imported from a model server. You can then click <strong>Import from Model Server</strong> in the toolbar to fetch the models available from your gateway (Open WebUI, Ollama, LM Studio, an internal endpoint like Anduril's Alfredo, or any other OpenAI-compatible server) and add several at once. See <a href="#appendix-b" class="link-accent">Appendix B — Importing from a Model Server</a> for the full walkthrough.</p>
     </div>
 
     <div class="wh-block">
@@ -1748,7 +1719,7 @@
       <div class="wh-block-title">Mitigating cutoff and substrate variance</div>
       <p>When you need to run factually-anchored work on an internal AI server, three approaches help:</p>
       <ol class="wh-steps">
-        <li class="wh-step"><span class="wh-step-num">1</span><span><strong>Inject a shared baseline via Setup 4 (Reference Material).</strong> Reference Material is shown to every AI every round as authoritative context. Cutoffs stop mattering for facts that live in the reference document — every AI works from the same source of truth. Use this for any current-events, technical, or fact-heavy run on an internal server.</span></li>
+        <li class="wh-step"><span class="wh-step-num">1</span><span><strong>Inject a shared baseline via Setup 3 — Reference Material.</strong> Reference Material is shown to every AI every round as authoritative context. Cutoffs stop mattering for facts that live in the reference document — every AI works from the same source of truth. Use this for any current-events, technical, or fact-heavy run on an internal server.</span></li>
         <li class="wh-step"><span class="wh-step-num">2</span><span><strong>Keep the hive small.</strong> Three or four AIs from the same model family (the most recent three of one vendor on the server) tends to give better consistency than mixing six AIs across vendors and ages. The variance you fight is roughly proportional to the spread.</span></li>
         <li class="wh-step"><span class="wh-step-num">3</span><span><strong>Use a public-AI hive at home as a control before blaming WaxFrame.</strong> If a run won't converge on your work server and you're not sure why, run the same project setup at home on a public-AI hive (ChatGPT, Claude.ai, Gemini, all current). If it converges there but not at work, the substrate is the variable. If it fails to converge in both, the goal fields or starting document likely need work.</span></li>
       </ol>
@@ -1807,7 +1778,7 @@
       <div class="wh-section-title">File Ingestion — What Gets Extracted From Your Files</div>
     </div>
 
-    <p>Both <strong>Setup 4 (Reference Material)</strong> and <strong>Setup 5 (Starting Document)</strong> use the same importer, so everything described here applies equally to both surfaces. The importer aims for full-fidelity content capture — not just raw text. Because AIs only consume plain text, anything visual or structural must be flattened in some way or it is lost. This section is the canonical reference for exactly what makes the cut and what does not, format by format.</p>
+    <p>Both <strong>Setup 3 — Reference Material</strong> and <strong>Setup 4 (Starting Document)</strong> use the same importer, so everything described here applies equally to both surfaces. The importer aims for full-fidelity content capture — not just raw text. Because AIs only consume plain text, anything visual or structural must be flattened in some way or it is lost. This section is the canonical reference for exactly what makes the cut and what does not, format by format.</p>
 
     <div class="wh-block">
       <div class="wh-block-title">Accepted formats at a glance</div>
@@ -1848,8 +1819,8 @@
     <div class="wh-block">
       <div class="wh-block-title">Excel (.xlsx, .xlsm)</div>
       <p>Workbooks with two or more visible sheets show a <strong>sheet picker modal</strong> on import. Pick which sheets to ingest. The picker shows the cell count and an estimated token count for each sheet so you can make informed selections. Single-sheet workbooks ingest directly with no modal.</p>
-      <p><strong>Setup 4 (Reference Material):</strong> Each selected sheet becomes its own independent reference card with its own name, token chip, and reorder controls. Leverages the multi-document support added in v3.24.0.</p>
-      <p><strong>Setup 5 (Starting Document):</strong> Selected sheets are concatenated into a single document with <code>## Sheet:</code> H2 dividers between them. If you only want one sheet, uncheck the others in the picker.</p>
+      <p><strong>Setup 3 — Reference Material:</strong> Each selected sheet becomes its own independent reference card with its own name, token chip, and reorder controls. Leverages the multi-document support added in v3.24.0.</p>
+      <p><strong>Setup 4 (Starting Document):</strong> Selected sheets are concatenated into a single document with <code>## Sheet:</code> H2 dividers between them. If you only want one sheet, uncheck the others in the picker.</p>
       <p><strong>Per-sheet conversion:</strong> Cell values are extracted with formulas evaluated to their displayed values — a cell showing <code>$1,250.00</code> from a SUM formula appears as <code>$1,250.00</code> in the output, not the raw number or the formula text. Merged cells are flattened by repeating the top-left value across the merged span. Cell comments are captured in a per-sheet <code>**Cell notes:**</code> footer. Workbook-level defined names are surfaced as a glossary header. Sheets with more than 15 columns prepend a warning that markdown table comprehension by AIs may degrade past that width — there is no hard cap.</p>
       <p><strong>Not preserved:</strong> Cell colors and conditional formatting, chart visualizations and embedded images, pivot table source data (cached display values are shown for pivots), macros (not run), hidden sheets (skipped — count surfaced via warning).</p>
     </div>
@@ -1918,7 +1889,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The Smoke the Hive button is not active</div>
-      <p>WaxFrame requires at least two AIs with saved, working keys and a Builder selected before the Smoke the Hive button activates. If it is greyed out or inactive, open the Menu and navigate to Setup 1 — Worker Bees. Verify that at least two AI key fields show the 🔑 icon. Then navigate to Setup 2 — Builder and confirm a Builder is selected. Note: two AIs is the technical minimum, but <strong>three or more is the empirical recommendation</strong> for faster convergence and automatic resolution of reviewer disagreements — see Step 5 above.</p>
+      <p>WaxFrame requires at least two AIs with saved, working keys and a Builder selected before the Smoke the Hive button activates. If it is greyed out or inactive, open the Menu and navigate to Setup 1 — Set up your hive. Verify that at least two AI key fields show the 🔑 icon and that one row's <strong>🔨 Builder</strong> button is gold (the active Builder). Note: two AIs is the technical minimum, but <strong>three or more is the empirical recommendation</strong> for faster convergence and automatic resolution of reviewer disagreements — see Step 5 above.</p>
     </div>
 
     <div class="wh-block">
@@ -2107,13 +2078,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.160"></script>
-<script src="lib/docx.min.js?v=3.63.160"></script>
-<script src="js/docx-export.js?v=3.63.160"></script>
-<script src="js/nav-helper.js?v=3.63.160"></script>
-<script src="js/license-helper.js?v=3.63.160"></script>
-<script src="js/version.js?v=3.63.160"></script>
-<script src="js/docs-scrollspy.js?v=3.63.160"></script>
+<script src="js/theme.js?v=3.63.161"></script>
+<script src="lib/docx.min.js?v=3.63.161"></script>
+<script src="js/docx-export.js?v=3.63.161"></script>
+<script src="js/nav-helper.js?v=3.63.161"></script>
+<script src="js/license-helper.js?v=3.63.161"></script>
+<script src="js/version.js?v=3.63.161"></script>
+<script src="js/docs-scrollspy.js?v=3.63.161"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
