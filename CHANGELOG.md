@@ -2,6 +2,52 @@
 
 ---
 
+## v3.63.157
+
+**Polish: Builder button light-tint, click-no-longer-expands-row, custom count back to gold, Hive Profile note rewording, nav menu "Set up your hive", removed diagnostic log**
+
+Build: `20260604-030`<br>
+Released: `2026-06-04`
+
+### Card-click bug fixed (per v3.63.156)
+
+David confirmed: clicking tier/role cards now swaps the model. The fix that landed it was the explicit `window.swapAIModelFromHiveCard = ...` assignment from v3.63.156 — bare top-level `function foo()` declarations weren't being globally resolved for inline `onclick` attributes in David's runtime. Worth keeping that pattern for any new inline-callable function.
+
+v3.63.157 removes the diagnostic `console.log` (production noise) but keeps the explicit `window` binding. Also applies the same pattern to `setBuilder` as belt-and-suspenders insurance.
+
+### Builder button — click no longer expands the row
+
+David: *"if I click the builder button it opens up the card and highlights the builder button"*. The previous onclick was `setBuilder('...'); event.stopPropagation(); renderAISetupGrid();` — `stopPropagation` ran AFTER `setBuilder`, so any throw inside `setBuilder` would bypass the stop and let the click bubble to `.ai-setup-row-summary`'s `toggleAISetupRow`. **Fix**: reorder so `event.stopPropagation()` + `event.preventDefault()` + `return false` run first. Same defensive treatment on the is-active and is-incapable button states (those are inert clicks anyway, but no harm).
+
+### Builder button — light-tint active state
+
+David: *"instead of being filled in it should just be lightly filled in like the ready button so it should be gold like the ready button is green with light shading"*. The active state was a solid-gold background with dark text. **Fix**: switched to `rgba(244, 180, 0, 0.12)` background + gold border + gold text — exact mirror of the `.ai-setup-status-pill.is-ready` green palette, just hue-shifted to gold. Active Builder now reads as "this is the picked one" without dominating the row.
+
+### Custom AI count back to gold (parens dropped)
+
+Earlier today (v3.63.154) the count moved from a bubble badge to `(4)` parens; v3.63.157's first attempt then changed the color to muted white for consistency with the top count chip. David's clarification: *"I think that the numbers being in gold makes them stand out more than being in white and I don't think they need parentheses if they're like that"*. **Fix**: count goes back to gold (matches the gold numbers in the "0 of 4 custom AIs selected" bulk-select toolbar), parens dropped. Renders as `Custom AIs 4` with the 4 in gold.
+
+### Hive Profile "Custom" note rewording
+
+David: *"the note to the side says Currently using your manual picks switch profile above to auto set tier matched models which of course doesn't make any sense because you're not setting the profile above"*. The dropdown IS the profile picker — there's no profile "above" the dropdown. **Fix**: new wording is a status statement, not an imperative pointing at a non-existent control: *"Each AI is using a manually-picked model. Pick a tier from the dropdown to apply one across the whole hive."*
+
+### Hive Profile note wrap behavior
+
+David: *"the word wrap for the rest of the drop down notes is weird where it wraps in the sentence"*. The note had `max-width: 420px` which forced awkward mid-sentence breaks. **Fix**: widened to `560px` and added `text-wrap: balance` so the browser distributes lines more evenly when wrapping is needed.
+
+### In-app nav menu "Set up your hive"
+
+Folded into this release because David flagged it: *"Need to change to set up your hive on the menus and probably in the documentation"*.
+
+- Welcome screen CTA tooltip: `"configure your Worker Bees"` → `"set up your hive"`
+- Project + Reference Material back-button tooltips: `"Back to Setup 1 — Worker Bees"` → `"Back to Setup 1 — Set up your hive"`
+- Nav menu item label: `"· Setup 1 — Worker Bees"` → `"· Setup 1 — Set up your hive"`
+- Nav menu tooltip: `"Open Setup 1 — Worker Bees (includes Builder selection)"` → `"Open Setup 1 — Set up your hive (Worker Bees, models, and Builder)"`
+
+User Manual + README + landing pages still pending — that's the bigger documentation sweep (#32, still pending). This release covers the in-app surfaces.
+
+---
+
 ## v3.63.156
 
 **Three bug fixes — Recommend-All expand-all, Jamba/Together AI dropdown disappearance, card-click diagnostic**

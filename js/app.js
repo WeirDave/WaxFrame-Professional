@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-029
+// Build: 20260604-030
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4514,9 +4514,14 @@ function renderAISetupGrid() {
     }
     if (customs.length) {
       // v3.63.154 — Count renders as "(N)" parens instead of the prior
-      // bubble badge per David's feedback. Bulk-select toolbar moves IN
-      // to this section (only relevant to customs).
-      html += `<div class="ai-setup-group-label">Custom AIs <span class="ai-setup-group-count">(${customs.length})</span></div>`
+      // bubble badge per David's feedback.
+      // v3.63.157 — Parens dropped: number is gold (.ai-setup-group-count
+      // rule), so it stands out as a count without needing punctuation
+      // wrapping. Matches the "0 of 4 custom AIs selected" pattern below
+      // it. David: "I think that the numbers being in gold makes them
+      // stand out more than being in white and I don't think they need
+      // parentheses if they're like that".
+      html += `<div class="ai-setup-group-label">Custom AIs <span class="ai-setup-group-count">${customs.length}</span></div>`
             + bulkSelectHTML
             + customs.map(ai => buildAISetupRowHTML(ai)).join('');
       prefixedBulkSelectHTML = ''; // already injected above
@@ -4747,19 +4752,20 @@ function _renderHiveRolesAndTiers(ai, currentModel) {
 // place. Falls back to renderAISetupGrid to refresh the is-active state
 // across all 6 cards plus the dropdown's current-value display.
 //
-// v3.63.156 — Diagnostic console.log added because David has reported
-// the card click failing to swap the model across multiple releases
-// (v3.63.153/.154/.155) despite each fix attempt looking correct on
-// paper. The log proves whether the handler fires at all + shows the
-// exact aiId/model pair the click is dispatching, so the next debug
-// pass has signal to work from. Also explicitly assigned to window so
-// inline onclick attributes resolve it even under unusual script-scope
-// conditions (paranoia — top-level `function foo()` declarations are
-// globally bound in standard <script> tags, but assigning explicitly
-// removes any doubt).
+// v3.63.156 — Diagnostic console.log was added because David reported
+// the card click failing to swap the model across v3.63.153/.154/.155.
+// The explicit `window.swapAIModelFromHiveCard = ...` assignment below
+// turned out to be the load-bearing fix — bare `function foo()` global
+// binding wasn't resolving for inline onclick attributes in David's
+// runtime. Top-level function declarations SHOULD be globally bound in
+// standard <script> tags; the explicit assignment is what got it
+// working. Worth keeping as the canonical pattern for any new inline-
+// onclick-callable function added below.
+//
+// v3.63.157 — Diagnostic console.log removed (bug is fixed; production
+// build doesn't need the noise). Explicit window binding stays.
 function swapAIModelFromHiveCard(aiId, model) {
-  console.log('[wf:swap]', { aiId, model, hasSaveModelForAI: typeof saveModelForAI === 'function', hasRenderGrid: typeof renderAISetupGrid === 'function' });
-  if (!aiId || !model) { console.warn('[wf:swap] missing args, aborting'); return; }
+  if (!aiId || !model) return;
   if (typeof saveModelForAI === 'function') saveModelForAI(aiId, model);
   if (typeof renderAISetupGrid === 'function') renderAISetupGrid();
 }
@@ -5029,21 +5035,29 @@ function buildAISetupRowHTML(ai) {
   const _isCurrentBuilderNow = (typeof builder !== 'undefined' && builder === ai.id);
   const consoleUrlNow = ai.apiConsole || '';
 
+  // v3.63.157 — Builder button defensiveness. David reported clicking
+  // the pickable button also expanded the row. event.stopPropagation()
+  // was already on the onclick but ran AFTER setBuilder, so a thrown
+  // error inside setBuilder would bypass the stop and let the click
+  // bubble to .ai-setup-row-summary's toggleAISetupRow. Reorder so the
+  // stop runs FIRST. Add preventDefault + return false belt-and-
+  // suspenders. Same pattern for the is-active and is-incapable cases
+  // (defensive no-ops on clicks that should already be inert).
   let builderButtonHTML;
   if (!hasKey) {
     builderButtonHTML = `<span class="ai-setup-builder-btn-placeholder" aria-hidden="true"></span>`;
   } else if (_isCurrentBuilderNow) {
     builderButtonHTML = `<button class="ai-setup-builder-btn is-active" type="button"
-      onclick="event.stopPropagation();"
+      onclick="event.stopPropagation(); event.preventDefault(); return false;"
       title="${escapeHtml(ai.name)} is the Builder — the AI that rewrites your document each round.">🔨 Builder</button>`;
   } else if (_builderIncapableNow) {
     builderButtonHTML = `<button class="ai-setup-builder-btn is-incapable" type="button"
       disabled aria-disabled="true"
-      onclick="event.stopPropagation();"
+      onclick="event.stopPropagation(); event.preventDefault(); return false;"
       title="${escapeHtml(ai.name)} has a structural output cap too low to finish a Builder round. Stays usable as a Reviewer.">⚠ Reviewer-only</button>`;
   } else {
     builderButtonHTML = `<button class="ai-setup-builder-btn is-pickable" type="button"
-      onclick="setBuilder('${ai.id}'); event.stopPropagation(); renderAISetupGrid();"
+      onclick="event.stopPropagation(); event.preventDefault(); setBuilder('${ai.id}'); renderAISetupGrid(); return false;"
       title="Click to make ${escapeHtml(ai.name)} the Builder.">🔨 Builder</button>`;
   }
 
@@ -5497,11 +5511,17 @@ function renderHiveProfileBar() {
   ).join('');
 
   // Note text. Differs by active profile:
-  //   • Custom → "manual picks" message (mirrors prototype)
+  //   • Custom → describes the per-AI manual picks state
   //   • Tier   → how many AIs match vs. how many overrode
+  // v3.63.157 — Custom note reworded. The prior "Switch profile above"
+  // phrasing didn't make sense because the dropdown IS the control the
+  // user just interacted with — there's no profile "above" the
+  // dropdown, the dropdown IS the profile picker. New wording reads as
+  // a status statement about the current setup rather than an
+  // imperative pointing at a control that doesn't exist.
   let note = '';
   if (active === 'custom') {
-    note = 'Currently using your manual picks. Switch profile above to auto-set tier-matched models.';
+    note = 'Each AI is using a manually-picked model. Pick a tier from the dropdown to apply one across the whole hive.';
   } else {
     const tier = activeOpt.tier;
     let matched = 0, available = 0;
@@ -5515,7 +5535,7 @@ function renderHiveProfileBar() {
       if (cfg.model === tierModel) matched++;
     });
     if (available === 0) {
-      note = `No ${escapeHtml(tier)} picks cached yet for any AI. Click "Recommend Models for All" above to populate.`;
+      note = `No ${escapeHtml(tier)} picks cached yet for any AI. Click "Recommend Models for All" to populate.`;
     } else if (matched === available) {
       note = `All ${available} AIs with a ${escapeHtml(tier)} pick are using it. Override individual rows from the expanded view.`;
     } else {
@@ -5839,6 +5859,12 @@ function setBuilder(id) {
   renderBuilderPicker();
   const ai = aiList.find(a => a.id === id);
   toast(`🔨 ${ai?.name} is now the Builder`);
+}
+// v3.63.157 — Belt-and-suspenders global binding so inline onclick
+// attributes resolve setBuilder reliably (same pattern that fixed
+// swapAIModelFromHiveCard in v3.63.156).
+if (typeof window !== 'undefined') {
+  window.setBuilder = setBuilder;
 }
 
 async function testApiKey(id) {

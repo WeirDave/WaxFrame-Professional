@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-029
+   Build: 20260604-030
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13835,6 +13835,18 @@ kbd {
 .ai-setup-group-label:first-child {
   margin-top: var(--space-4);
 }
+/* v3.63.157 — Was color:var(--accent) (gold), but the top-of-screen
+   count chip "10 AIs in hive · 10 with keys" renders in white, and
+   David flagged the visual inconsistency ("the custom count is in
+   parentheses and in gold and the default count or the total count up
+   at the top is in white so pick one or the other"). Matching to the
+   section-label color so both counts are subtle and consistent. */
+/* v3.63.157 — Number in gold (var(--accent)) so it stands out as a
+   count. Tried white earlier in v3.63.157 for consistency with the top
+   count chip, but David's call: numbers in gold read as numbers, and
+   they don't need parens once they're visually distinct. Matches the
+   "0 of 4 custom AIs selected" bulk-select toolbar pattern. JS callsite
+   drops the (parens) wrapping. */
 .ai-setup-group-count {
   font-weight: 600;
   color: var(--accent);
@@ -15421,14 +15433,20 @@ kbd {
   color: var(--accent, #f4b400);
   background: rgba(244, 180, 0, 0.04);
 }
+/* v3.63.157 — Active Builder uses the light-tint treatment per David's
+   feedback ("instead of being filled in it should just be lightly
+   filled in like the ready button so it should be gold like the ready
+   button is green with light shading"). Mirrors .ai-setup-status-pill
+   .is-ready (rgba green 0.12 + green border + green text) but in the
+   gold accent palette. */
 .ai-setup-builder-btn.is-active {
-  background: var(--accent, #f4b400);
+  background: rgba(244, 180, 0, 0.12);
   border: 1px solid var(--accent, #f4b400);
-  color: #0a0c12;
+  color: var(--accent, #f4b400);
   cursor: default;
 }
 .ai-setup-builder-btn.is-active:hover {
-  background: var(--accent, #f4b400);
+  background: rgba(244, 180, 0, 0.12);
 }
 .ai-setup-builder-btn.is-incapable {
   background: transparent;
@@ -15647,9 +15665,15 @@ kbd {
   font-size: var(--fs-12);
   color: var(--text-dim);
   margin-left: auto;
-  max-width: 420px;
+  /* v3.63.157 — Was max-width:420px which forced awkward mid-sentence
+     wraps (David's report: "the word wrap for the rest of the drop
+     down notes is weird where it wraps in the sentence"). Wider cap
+     + text-wrap:balance distributes lines more evenly so neither
+     line ends mid-clause. */
+  max-width: 560px;
   text-align: right;
   line-height: 1.45;
+  text-wrap: balance;
 }
 @media (max-width: 1100px) {
   .hive-profile-bar-note {
