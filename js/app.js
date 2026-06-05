@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-025
+// Build: 20260604-026
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4461,6 +4461,8 @@ function renderAISetupGrid() {
   renderWorkerBeeToolbar();
   // v3.63.152 — Hive Profile toolbar (Internet mode only).
   if (typeof renderHiveProfileBar === 'function') renderHiveProfileBar();
+  // v3.63.153 — Sidebar (icon legend + Jump-to-AI + Related).
+  if (typeof renderHiveSidebar === 'function') renderHiveSidebar();
 
   // v3.30.4 — Persistent checkbox bulk-select toolbar. Always rendered
   // when any custom AI exists (regardless of mode). v3.31 keeps this on
@@ -4555,56 +4557,81 @@ const _HIVE_TIER_META = {
   fast:     { label: 'Fast',     icon: '⚡' }
 };
 
+// v3.63.153 — Whole-card click target. The previous implementation had
+// an inner "Use this" button which was the actual click target; the
+// card's hover state implied clickability but clicking the card body
+// did nothing (David's report: "hover is like what we do for buttons
+// and nothing happens when you click the cards"). The button is gone
+// now — the entire card IS the button. role="button" + tabindex + the
+// keyboard handler keep it accessible. Active cards drop the click
+// handler entirely and show a "✓ In use" pill in place of the inner
+// button. None cards stay inert as before.
+function _renderHiveCardShell(opts) {
+  const { titleText, labelHTML, modelHTML, pickModel, aiId, isActive, isNone } = opts;
+  if (isNone) {
+    return `
+      <div class="ai-hive-card is-none" title="${escapeHtml(titleText)}">
+        <div class="ai-hive-card-label">${labelHTML}</div>
+        <div class="ai-hive-card-model">${modelHTML}</div>
+      </div>`;
+  }
+  if (isActive) {
+    return `
+      <div class="ai-hive-card is-active" title="${escapeHtml(titleText)}">
+        <div class="ai-hive-card-label">${labelHTML}</div>
+        <div class="ai-hive-card-model">${modelHTML}</div>
+        <div class="ai-hive-card-pill">✓ In use</div>
+      </div>`;
+  }
+  // Default state — whole card is the click target.
+  return `
+    <div class="ai-hive-card is-pickable" role="button" tabindex="0"
+      title="${escapeHtml(titleText)} — click to use"
+      onclick="swapAIModelFromHiveCard('${aiId}', ${JSON.stringify(pickModel)}); event.stopPropagation();"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();swapAIModelFromHiveCard('${aiId}', ${JSON.stringify(pickModel)});event.stopPropagation();}">
+      <div class="ai-hive-card-label">${labelHTML}</div>
+      <div class="ai-hive-card-model">${modelHTML}</div>
+    </div>`;
+}
+
 // Render a single role card (Reviewer or Builder).
 function _renderHiveRoleCard(ai, role, currentModel) {
   const meta = _HIVE_ROLE_META[role];
   const rec = role === 'reviewer' ? getReviewerRecommendation(ai.id) : getBuilderRecommendation(ai.id);
   const pickModel = rec?.model || null;
+  const labelHTML = `${meta.icon} ${escapeHtml(meta.label)}`;
   if (!pickModel) {
-    // No cached pick. Builder may also be `none: true` if the AI flagged
-    // NONE during classification (Jamba on the Builder side, etc.).
     const noneNote = (role === 'builder' && rec?.none) ? '— no Builder-capable model —' : '— not yet recommended —';
-    return `
-      <div class="ai-hive-card is-none" title="No ${escapeHtml(meta.label)} pick cached for ${escapeHtml(ai.name)} yet. Use Recommend Models above to populate.">
-        <div class="ai-hive-card-label">${meta.icon} ${escapeHtml(meta.label)}</div>
-        <div class="ai-hive-card-model">${noneNote}</div>
-      </div>`;
+    return _renderHiveCardShell({
+      titleText: `No ${meta.label} pick cached for ${ai.name} yet. Use Recommend Models above to populate.`,
+      labelHTML, modelHTML: noneNote, isNone: true
+    });
   }
-  const isActive = pickModel === currentModel;
-  return `
-    <div class="ai-hive-card${isActive ? ' is-active' : ''}" title="${escapeHtml(meta.label)} pick for ${escapeHtml(ai.name)}: ${escapeHtml(pickModel)}">
-      <div class="ai-hive-card-label">${meta.icon} ${escapeHtml(meta.label)}</div>
-      <div class="ai-hive-card-model">${escapeHtml(pickModel)}</div>
-      <button class="ai-hive-card-action${isActive ? ' is-active' : ''}" type="button"
-        onclick="swapAIModelFromHiveCard('${ai.id}', ${JSON.stringify(pickModel)}); event.stopPropagation();"
-        ${isActive ? 'disabled aria-disabled="true"' : ''}>
-        ${isActive ? '✓ In use' : 'Use this'}
-      </button>
-    </div>`;
+  return _renderHiveCardShell({
+    titleText: `${meta.label} pick for ${ai.name}: ${pickModel}`,
+    labelHTML, modelHTML: escapeHtml(pickModel),
+    pickModel, aiId: ai.id,
+    isActive: pickModel === currentModel
+  });
 }
 
 // Render a single tier card (Cheap / Balanced / Thinker / Fast).
 function _renderHiveTierCard(ai, tier, tiersObj, currentModel) {
   const meta = _HIVE_TIER_META[tier];
   const pickModel = tiersObj?.[tier] || null;
+  const labelHTML = `${meta.icon} ${escapeHtml(meta.label)}`;
   if (!pickModel) {
-    return `
-      <div class="ai-hive-card is-none" title="No ${escapeHtml(meta.label)} pick available — the classifier flagged NONE for this slot on ${escapeHtml(ai.name)}.">
-        <div class="ai-hive-card-label">${meta.icon} ${escapeHtml(meta.label)}</div>
-        <div class="ai-hive-card-model">— none available —</div>
-      </div>`;
+    return _renderHiveCardShell({
+      titleText: `No ${meta.label} pick available — the classifier flagged NONE for this slot on ${ai.name}.`,
+      labelHTML, modelHTML: '— none available —', isNone: true
+    });
   }
-  const isActive = pickModel === currentModel;
-  return `
-    <div class="ai-hive-card${isActive ? ' is-active' : ''}" title="${escapeHtml(meta.label)} tier pick for ${escapeHtml(ai.name)}: ${escapeHtml(pickModel)}">
-      <div class="ai-hive-card-label">${meta.icon} ${escapeHtml(meta.label)}</div>
-      <div class="ai-hive-card-model">${escapeHtml(pickModel)}</div>
-      <button class="ai-hive-card-action${isActive ? ' is-active' : ''}" type="button"
-        onclick="swapAIModelFromHiveCard('${ai.id}', ${JSON.stringify(pickModel)}); event.stopPropagation();"
-        ${isActive ? 'disabled aria-disabled="true"' : ''}>
-        ${isActive ? '✓ In use' : 'Use this'}
-      </button>
-    </div>`;
+  return _renderHiveCardShell({
+    titleText: `${meta.label} tier pick for ${ai.name}: ${pickModel}`,
+    labelHTML, modelHTML: escapeHtml(pickModel),
+    pickModel, aiId: ai.id,
+    isActive: pickModel === currentModel
+  });
 }
 
 // Top-level renderer — both grids + Why expander. Returns '' when there
@@ -4701,6 +4728,85 @@ function toggleHiveWhy(aiId) {
   if (arrow) arrow.textContent = open ? '▾' : '▸';
 }
 
+// v3.63.153 — Compact native-select model picker for the collapsed
+// row header. Replaces the static "— model name" text that used to sit
+// inside the name-group. Mirrors the prototype's wb-row-model-select:
+// a native <select> with emoji badges baked into the option text
+// (✨ Reviewer, 🔨 Builder, 💰⚖️🧠⚡ tiers) so the dropdown stays
+// see-at-a-glance even without the custom dropdown's color tints.
+//
+// onchange routes through saveModelForAI + renderAISetupGrid so the
+// 6-card grid in the expanded panel reflects the new active state
+// immediately. onclick stop-propagates so opening the dropdown doesn't
+// also toggle the row collapse.
+//
+// Saved model not in live list (provider quarantined / removed) is
+// surfaced as the first option marked "(saved — not in current list)"
+// so the user sees what's stored without losing visibility.
+function _buildCompactModelSelect(ai, currentModel) {
+  const models = getModelsForProvider(ai.provider);
+  if (!models.length) return '';
+
+  const reviewerCache = (typeof getReviewerRecommendation === 'function') ? getReviewerRecommendation(ai.id) : null;
+  const builderCache  = (typeof getBuilderRecommendation  === 'function') ? getBuilderRecommendation(ai.id)  : null;
+  const tiersBlob     = (typeof getCachedTiers === 'function') ? getCachedTiers(ai.provider) : null;
+  const tiers         = tiersBlob?.tiers || null;
+  const reviewerModel = reviewerCache?.model || null;
+  const builderModel  = builderCache?.model  || null;
+
+  const _badges = (m) => {
+    const b = [];
+    if (m === reviewerModel)   b.push('✨');
+    if (m === builderModel)    b.push('🔨');
+    if (tiers?.cheap === m)    b.push('💰');
+    if (tiers?.balanced === m) b.push('⚖️');
+    if (tiers?.thinker === m)  b.push('🧠');
+    if (tiers?.fast === m)     b.push('⚡');
+    return b.join('');
+  };
+
+  const opts = models.map(m => {
+    const badges = _badges(m);
+    const display = badges ? `${m}  ${badges}` : m;
+    return `<option value="${escapeHtml(m)}"${m === currentModel ? ' selected' : ''}>${escapeHtml(display)}</option>`;
+  }).join('');
+
+  const savedNotInList = currentModel && !models.includes(currentModel);
+  const savedOpt = savedNotInList
+    ? `<option value="${escapeHtml(currentModel)}" selected>${escapeHtml(currentModel)} (saved — not in current list)</option>`
+    : '';
+  const placeholderOpt = !currentModel
+    ? `<option value="" selected disabled>(pick a model)</option>`
+    : '';
+
+  return `<select class="ai-setup-compact-model" id="compactmodel-${ai.id}"
+    onclick="event.stopPropagation();"
+    onchange="saveModelForAI('${ai.id}', this.value); renderAISetupGrid(); event.stopPropagation();"
+    title="${escapeHtml(currentModel || '(pick a model)')}">
+    ${placeholderOpt}${savedOpt}${opts}
+  </select>`;
+}
+
+// v3.63.153 — Validation status pill for the collapsed row. Mirrors
+// the prototype's wb-status pill. Three states with semaphore colors:
+//   • Validated good → green "✓ Ready"
+//   • Validated bad  → red "✗ Invalid"
+//   • Unknown / not yet validated → no pill
+// Green stays SEMANTIC here (status/health) because is-active picks
+// across the rest of the UI moved to gold in this release. So:
+//   green = working / healthy
+//   gold  = selected / active pick
+function _buildRowStatusPill(ai, hasKey) {
+  if (!hasKey) return '';
+  if (window._invalidKeys && window._invalidKeys[ai.id]) {
+    return `<span class="ai-setup-status-pill is-invalid" title="API key looks invalid — open the expanded view to retest or rotate.">✗ Invalid</span>`;
+  }
+  if (window._validKeys && window._validKeys[ai.id]) {
+    return `<span class="ai-setup-status-pill is-ready" title="API key validated — this AI is ready to use.">✓ Ready</span>`;
+  }
+  return '';
+}
+
 // v3.31.0 — Single-row template. Two visual states:
 //   collapsed (default): icon + name + (custom-only) checkbox
 //   expanded:           the above + key field, model selector, etc.
@@ -4733,7 +4839,22 @@ function buildAISetupRowHTML(ai) {
   let expandedHTML = '';
   if (isExpanded) {
     const showRecheck   = hasKey && _hiveMode !== 'server';
-    const modelSelector = hasKey ? buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck) : '';
+    // v3.63.153 — Model dropdown moved OUT of the expanded panel and into
+    // the collapsed row header (David's request: the model belongs visible
+    // at-a-glance and changeable without expanding). buildModelSelector is
+    // no longer called here. The standalone Recommend Models button + WHY
+    // notes that used to ride alongside the dropdown now render as their
+    // own block below, kept compact since the picks themselves are visible
+    // in the 6-card grid + "Why each pick" expander.
+    const reviewerRec = (typeof getReviewerRecommendation === 'function') ? getReviewerRecommendation(ai.id) : null;
+    const builderRec  = (typeof getBuilderRecommendation  === 'function') ? getBuilderRecommendation(ai.id)  : null;
+    const recommendBtn = (showRecheck) ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's own API to recommend its best Reviewer and Builder models for WaxFrame">Recommend Models</button>` : '';
+    const recommendNote = (reviewerRec?.model || builderRec?.model)
+      ? `<span class="ai-recommend-status">Last recommended ✨ ${escapeHtml(reviewerRec?.model || '—')} · 🔨 ${escapeHtml(builderRec?.model || '—')}</span>`
+      : (hasKey ? `<span class="ai-recommend-status is-empty">Click to populate the 6-card grid below.</span>` : '');
+    const recommendRow = (recommendBtn || recommendNote)
+      ? `<div class="ai-recommend-row">${recommendBtn}${recommendNote}</div>`
+      : '';
     const consoleUrl    = ai.apiConsole || '';
     // v3.35.4 — Bug C fix. Per-card link now ALWAYS renders when a
     // console URL is known, regardless of key state. Pre-v3.31.0
@@ -4822,7 +4943,7 @@ function buildAISetupRowHTML(ai) {
           ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}'); event.stopPropagation();" title="Remove saved API key">✕ Key</button>` : ''}
           ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}'); event.stopPropagation();" title="Test this API key">Test</button>` : ''}
         </div>
-        ${modelSelector}
+        ${recommendRow}
         ${_renderHiveRolesAndTiers(ai, cfg?.model || '')}
         ${builderAffordance}
       </div>`;
@@ -4849,24 +4970,28 @@ function buildAISetupRowHTML(ai) {
     (hasKey && window._invalidKeys && window._invalidKeys[ai.id]) ? 'key-invalid' :
     (hasKey && window._validKeys && window._validKeys[ai.id]) ? 'key-valid' :
     '';
+  // v3.63.153 — Collapsed row redesigned per David's prototype-matching
+  // request. Order now (left → right):
+  //   chevron · icon · [name-group: name + pencil + Builder chip] ·
+  //   "✓ Ready" pill · compact model dropdown · ⚠ deprecation flag ·
+  //   spacer · action
+  // The static "— model name" text inside the name-group is gone; the
+  // dropdown is the model UI now. The Ready pill carries the validation
+  // state that was previously only on the row's left card edge.
+  const statusPill   = _buildRowStatusPill(ai, hasKey);
+  const compactModel = hasKey ? _buildCompactModelSelect(ai, cfg?.model || '') : '';
   return `
     <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'} ${validateState}" id="airow-${ai.id}">
       <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
-        <!-- v3.63.150 — Name + pencil + Builder chip + model wrapped in a
-             tight inline-flex group so they sit close together (4px gap
-             internally) instead of being spread by the parent .ai-setup-
-             row-summary { gap: 10px }. Order is: name → pencil (custom
-             only) → Builder chip (active Builder only) → model. The
-             chip moved here from after the model per David's feedback
-             ("right next to the name of the AI: Gemini — [Builder] — model"). -->
         <span class="ai-setup-name-group">
           <span class="ai-setup-name" id="ainame-${ai.id}" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
           ${isCustom ? `<button class="ai-setup-rename-btn" onclick="event.stopPropagation(); startCustomAIRename('${ai.id}')" title="Rename ${escapeHtml(ai.name)}">✏️</button>` : ''}
           ${_collapsedBuilderChip}
-          ${cfg?.model ? `<span class="ai-setup-model" title="${escapeHtml(cfg.model)}">— ${escapeHtml(cfg.model)}</span>` : ''}
         </span>
+        ${statusPill}
+        ${compactModel}
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
           ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${escapeHtml(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
           : ''}
@@ -5161,6 +5286,117 @@ function applyHiveProfile(profileId) {
     }
   }
   return { applied, skipped, total };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// v3.63.153 — Worker Bees sidebar (Worker Bees rework Phase 3).
+//
+// Lives in #beesSidebar (left column of the new .bees-layout).
+// Three blocks, in this order:
+//
+//   1. Icon Legend — static reference card explaining what each emoji
+//      means: ✨ Reviewer pick / 🔨 Builder pick / 💰⚖️🧠⚡ tier picks.
+//      The 6-card grid + collapsed-row model dropdown both use these
+//      emoji throughout, so a fixed legend on the side keeps them
+//      decodable without hover-hunting.
+//   2. Jump to AI — dynamic list of every visible AI. Click to expand
+//      that row and scroll it into view. Mirrors the prototype's
+//      sidebarBeeNav. Rebuilds alongside the bee grid so the list
+//      stays in sync with the active mode (Internet / Server) and
+//      with whatever the user has added / removed.
+//   3. Related — static links to API Key Guide + AI API Pricing.
+//
+// Sidebar is suppressed in Server mode to give server-imported lists
+// the full width — server bees don't have role/tier classification so
+// the icon legend is empty for them, and the related-links targets
+// (API Key Guide / Pricing) are irrelevant for server endpoints.
+// ────────────────────────────────────────────────────────────────────
+function renderHiveSidebar() {
+  const sidebar = document.getElementById('beesSidebar');
+  if (!sidebar) return;
+  if (_hiveMode === 'server') { sidebar.innerHTML = ''; sidebar.classList.add('is-hidden'); return; }
+  sidebar.classList.remove('is-hidden');
+
+  // Jump-to-AI list — derived from the same filter as the bee grid.
+  const isDef = ai => !!DEFAULT_AIS.find(d => d.id === ai.id);
+  const visible = aiList.filter(ai => {
+    const isDefault = isDef(ai);
+    const cfg = API_CONFIGS[ai.provider];
+    const isServerImport = !!cfg?._modelsEndpoint;
+    return isDefault || !isServerImport;
+  });
+  const defaults = _aiListAlpha(visible.filter(isDef));
+  const customs  = _aiListAlpha(visible.filter(ai => !isDef(ai)));
+
+  const jumpLink = (ai) => {
+    const cfg = API_CONFIGS[ai.provider];
+    const hasKey = !!cfg?._key;
+    return `<a href="javascript:void(0)" class="bees-sidebar-jump${hasKey ? ' has-key' : ''}"
+      onclick="jumpToAISetupRow('${ai.id}')" title="Jump to ${escapeHtml(ai.name)}">
+      ${resolveAiIcon(ai, 'bees-sidebar-jump-icon', 16)}
+      <span class="bees-sidebar-jump-name">${escapeHtml(ai.name)}</span>
+      ${hasKey ? '<span class="bees-sidebar-jump-dot" title="Key saved">●</span>' : ''}
+    </a>`;
+  };
+
+  const jumpDefaultsHTML = defaults.length
+    ? `<div class="bees-sidebar-subhead">Default providers</div>${defaults.map(jumpLink).join('')}`
+    : '';
+  const jumpCustomsHTML = customs.length
+    ? `<div class="bees-sidebar-subhead">Custom AIs</div>${customs.map(jumpLink).join('')}`
+    : '';
+
+  sidebar.innerHTML = `
+    <div class="bees-sidebar-inner">
+
+      <div class="bees-sidebar-block">
+        <div class="bees-sidebar-heading">Icon Legend</div>
+        <div class="bees-sidebar-legend">
+          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">✨</span><span>Reviewer pick</span></div>
+          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">🔨</span><span>Builder pick</span></div>
+          <div class="bees-sidebar-legend-sep"></div>
+          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">💰</span><span>Cheap tier</span></div>
+          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">⚖️</span><span>Balanced tier</span></div>
+          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">🧠</span><span>Thinker tier</span></div>
+          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">⚡</span><span>Fast tier</span></div>
+        </div>
+      </div>
+
+      <div class="bees-sidebar-block">
+        <div class="bees-sidebar-heading">Jump to AI</div>
+        <div class="bees-sidebar-jumplist">
+          ${jumpDefaultsHTML}
+          ${jumpCustomsHTML}
+        </div>
+      </div>
+
+      <div class="bees-sidebar-block">
+        <div class="bees-sidebar-heading">Related</div>
+        <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="bees-sidebar-related">🔑 API Key Guide ↗</a>
+        <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="bees-sidebar-related">💰 AI API Pricing ↗</a>
+      </div>
+
+    </div>
+  `;
+}
+
+// Click handler for sidebar "Jump to AI" links. Expands the target row
+// and scrolls it into view. Mirrors the prototype's jumpToBee + the
+// existing pattern used by recheckModelForAI's success-scroll.
+function jumpToAISetupRow(aiId) {
+  if (!aiId) return;
+  if (typeof _expandedAIIds !== 'undefined' && _expandedAIIds && typeof _expandedAIIds.add === 'function') {
+    _expandedAIIds.add(aiId);
+  }
+  if (typeof renderAISetupGrid === 'function') renderAISetupGrid();
+  const row = document.getElementById('airow-' + aiId);
+  if (row) {
+    // scroll-with-offset so the row top lands ~80px below the header,
+    // not flush at the top where it gets visually clipped.
+    const rect = row.getBoundingClientRect();
+    const target = window.scrollY + rect.top - 80;
+    window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+  }
 }
 
 // Render the Hive Profile toolbar above the bee grid. Internet mode only.
