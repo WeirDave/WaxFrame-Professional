@@ -2,6 +2,59 @@
 
 ---
 
+## v3.63.165
+
+**Conflicts panel lock-button icon inversion + diagnostic instrumentation for the one-way bug + explicit window bindings**
+
+Build: `20260605-007`<br>
+Released: `2026-06-05`
+
+David confirmed the lock-button issues from the v3.63.164 backlog: the per-row Applied Change lock button in the Conflicts panel.
+
+### Icon convention swapped
+
+**Rule going forward**: prefix icon shows **CURRENT STATE**, label shows **ACTION on click**.
+
+Was (icon shows action, ambiguous "is this locked or about to lock?"):
+
+- Unlocked rest state: `🔒 Lock this line`
+- Locked state: `🔓 Unlock`
+
+Now (icon shows current state, label shows what click will do):
+
+- Unlocked rest state: `🔓 Lock this line` (currently unlocked → click to lock)
+- Locked state: `🔒 Unlock` (currently locked → click to unlock)
+
+Same pattern applied to the bulk **Lock All / Unlock All** button and the **Lock my selection / Unlock** decision button so the convention is consistent across the Conflicts panel. The `🔒 Locked` status-indicator tag on the card header is unchanged because it IS a state indicator, not an affordance.
+
+### Diagnostic instrumentation for the one-way bug
+
+David's report: clicking unlock doesn't actually unlock. The function has both LOCK and UNLOCK branches and the toggle gates on `change.locked`, so on paper it should work. To find the actual failure point I've added a `console.log('[wf:lock]', { ... })` at the top of `lockAppliedChange` that dumps:
+
+- `round`, `idx` — to confirm the click is routing correctly
+- `wasLocked` (coerced boolean) — what the function sees
+- `rawLocked` — the underlying value (could be `undefined`, `null`, `1/0`, etc.)
+- `lockedTextLen` — confirms there's text to operate on
+- `fromField` — confirms the source-AI parsing has data
+
+After the fix lands, click a 🔒 Unlock button → dev console (F12) → look for `[wf:lock]` log. Tell me what shows up. The interesting cases:
+
+- `wasLocked: true` and the unlock fires (toast confirms): bug was something else and is now fixed, log can be removed next release
+- `wasLocked: true` but no visible unlock: re-render isn't reflecting the data change; downstream bug in `renderConflicts`
+- `wasLocked: false` despite button reading "🔒 Unlock": render and data have diverged; race condition
+
+### Explicit window bindings (belt-and-suspenders)
+
+`lockAppliedChange`, `lockAllAppliedChanges`, and `unlockAllAppliedChanges` are now explicitly assigned to `window`. Same load-bearing pattern that fixed the 6-card click in v3.63.156 — bare top-level `function foo()` declarations SHOULD be globally bound for inline `onclick` resolution, but David's runtime has proven they don't always.
+
+If the one-way bug was caused by stale function reference resolution, the explicit window binding alone may fix it without any other change. The diagnostic log will confirm one way or the other.
+
+### Notes button DPI clipping still queued
+
+Item #4 from the v3.63.164 backlog (Notes button cut off at 200% DPI scaling) remains in the backlog for separate triage — needs an actual viewport target to reproduce. The viewport readout shipped in v3.63.164 should help diagnose: a user in that state can read the exact CSS-pixel viewport in the overlay and report it.
+
+---
+
 ## v3.63.164
 
 **Live viewport readout in min-screen-overlay + DPI scaling guidance**

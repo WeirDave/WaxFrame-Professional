@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260605-006
+// Build: 20260605-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -17289,10 +17289,15 @@ function buildAppliedChangesHTML(latest) {
   // button reads "Unlock All". No confirm dialog by design — David's
   // call: locking is fully reversible per-line, worst case the user
   // unlocks the ones they didn't want after reading the doc.
+  // v3.63.165 — Icon convention now matches the per-row buttons: icon
+  // shows CURRENT state, label shows ACTION on click. David's call:
+  // "show an unlocked button until you click it and then it should go
+  // to a locked button". Not-all-locked → 🔓 prefix (currently
+  // unlocked/mixed); all-locked → 🔒 prefix (currently locked).
   const allLocked = items.every(c => !!c.locked);
   const bulkBtn = allLocked
-    ? `<button class="applied-bulk-btn applied-bulk-btn-locked" onclick="unlockAllAppliedChanges(${latestRound})">🔓 Unlock All</button>`
-    : `<button class="applied-bulk-btn" onclick="lockAllAppliedChanges(${latestRound})">🔒 Lock All</button>`;
+    ? `<button class="applied-bulk-btn applied-bulk-btn-locked" onclick="unlockAllAppliedChanges(${latestRound})">🔒 Unlock All</button>`
+    : `<button class="applied-bulk-btn" onclick="lockAllAppliedChanges(${latestRound})">🔓 Lock All</button>`;
 
   let html = `<div class="conflicts-section-header applied-changes-header">
     <span class="applied-changes-header-text">✓ Builder Applied ${items.length} Change${items.length !== 1 ? 's' : ''} — Confirm or Keep Revising</span>
@@ -17311,9 +17316,15 @@ function buildAppliedChangesHTML(latest) {
       ? `<span class="applied-repeat-badge applied-repeat-strong">⚠ ${rep} of ${history.length} rounds</span>`
       : (rep >= 2 ? `<span class="applied-repeat-badge">↻ ${rep} of ${history.length} rounds</span>` : '');
     const lockedTag = c.locked ? `<span class="applied-locked-tag">🔒 Locked</span>` : '';
+    // v3.63.165 — Icon convention: prefix icon shows CURRENT state,
+    // label shows ACTION on click. Per David's feedback: "show an
+    // unlocked button until you click it and then it should go to a
+    // locked button". Not-locked rest state → 🔓 prefix; locked
+    // state → 🔒 prefix. The status-indicator tag above is unchanged
+    // ("🔒 Locked") because IT IS a state indicator, not an affordance.
     const lockBtn = c.locked
-      ? `<button class="applied-lock-btn applied-lock-btn-locked" onclick="lockAppliedChange(${latestRound}, ${i})">🔓 Unlock</button>`
-      : `<button class="applied-lock-btn" onclick="lockAppliedChange(${latestRound}, ${i})">🔒 Lock this line</button>`;
+      ? `<button class="applied-lock-btn applied-lock-btn-locked" onclick="lockAppliedChange(${latestRound}, ${i})">🔒 Unlock</button>`
+      : `<button class="applied-lock-btn" onclick="lockAppliedChange(${latestRound}, ${i})">🔓 Lock this line</button>`;
 
     // v3.39.6 — Card layout redesigned to read as a proper card and not
     // a wall of text. Left-edge accent bar anchors each card visually.
@@ -17927,7 +17938,9 @@ function renderConflicts() {
       const lockedBadge = isLocked
         ? `<span class="decision-locked-badge">🔒 LOCKED</span>`
         : '';
-      const lockBtnLabel = isLocked ? '🔓 Unlock' : '🔒 Lock my selection';
+      // v3.63.165 — Icon prefix shows CURRENT state, label shows ACTION
+      // on click (per David's UX convention). Was inverted previously.
+      const lockBtnLabel = isLocked ? '🔒 Unlock' : '🔓 Lock my selection';
       const lockBtnClass = isLocked ? 'decision-lock-btn decision-lock-btn-locked' : 'decision-lock-btn';
       const lockBtnTitle = isLocked
         ? 'Remove the lock so reviewers can suggest changes to this again'
@@ -18402,6 +18415,21 @@ function lockAppliedChange(roundNum, idx) {
     consoleLog(`⚠️ lockAppliedChange: applied change ${idx} not found in round ${roundNum}`, 'warn');
     return;
   }
+  // v3.63.165 — Diagnostic logging for David's "unlock doesn't work"
+  // report. The function HAS both LOCK and UNLOCK branches; the
+  // toggle is gated on `change.locked`. If this log shows truthy on
+  // a button that displays "🔒 Unlock" but the unlock doesn't actually
+  // happen, the bug is downstream (renderConflicts not reflecting the
+  // change). If it shows falsy when the button reads "🔒 Unlock", the
+  // problem is that the rendered state and the data state diverged
+  // (most likely cause: re-render skipped or stale reference).
+  console.log('[wf:lock]', {
+    round: roundNum, idx,
+    wasLocked: !!change.locked,
+    rawLocked: change.locked,
+    lockedTextLen: (change.new || '').trim().length,
+    fromField: change.from
+  });
   const lockedText = (change.new || '').trim();
   if (!lockedText) {
     consoleLog(`⚠️ lockAppliedChange: empty NEW text — refusing to ${change.locked ? 'unlock' : 'lock'}`, 'warn');
@@ -18468,6 +18496,16 @@ function lockAppliedChange(roundNum, idx) {
   saveSession();
   renderConflicts();
   toast(`🔒 Locked — Builder and reviewers will leave this line alone`);
+}
+// v3.63.165 — Explicit window bindings for inline-onclick callers.
+// Same pattern that fixed the card-click bug in v3.63.156: bare top-
+// level function declarations are SUPPOSED to land on window in
+// standard <script> tags, but David's runtime has proven they don't
+// always. Belt-and-suspenders pattern here for the lock toggle family.
+if (typeof window !== 'undefined') {
+  window.lockAppliedChange = lockAppliedChange;
+  window.lockAllAppliedChanges = lockAllAppliedChanges;
+  window.unlockAllAppliedChanges = unlockAllAppliedChanges;
 }
 
 
