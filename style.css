@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-031
+   Build: 20260605-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4608,8 +4608,12 @@ body.helper-body .page-main {
   align-items: center;
   gap: 6px;
 }
+/* v3.63.159 — Numbers in gold so they stand out as counts. Matches
+   .ai-setup-group-count + the bulk-select toolbar. David: "These
+   numbers '0 AIs in hive · 10 with keys' should be in gold as well".
+   Was var(--text) (white). All count surfaces now consistent. */
 .hive-count-chip-main strong {
-  color: var(--text);
+  color: var(--accent);
   font-weight: 700;
 }
 .hive-count-sep {
