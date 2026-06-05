@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-022
+   Build: 20260604-023
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -841,6 +841,21 @@ body.helper-body .page-main {
   border-radius: 4px;
   flex-shrink: 0;
 }
+/* v3.63.150 — Tight grouping wrapper. Replaces the previous parent-flex
+   layout where name / pencil / model / chip each got a 10px gap from
+   .ai-setup-row-summary, producing a "weirdly large gap" between the
+   AI name and the model em-dash (David's report). Wrapping these four
+   into a single inline-flex with gap:4px keeps them visually grouped
+   as one piece of identity info ("Gemini — [Builder] — gpt-5.5") while
+   the parent row layout still applies its 10px gap between this group
+   and other slot-level elements (chevron, icon, action button). */
+.ai-setup-name-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
 .ai-setup-name {
   /* v3.63.14 — was flex:1, but the row also has .ai-setup-summary-spacer with
      flex:1, so both grew equally and the model badge ended up centered between
@@ -866,8 +881,14 @@ body.helper-body .page-main {
   flex: 0 0 auto;
   background: transparent;
   border: none;
-  padding: 2px 4px;
-  margin-left: 2px;
+  /* v3.63.150 — Was padding:2px 4px + margin-left:2px when the pencil sat
+     directly in the parent flex row (gap:10px), so total left-space ≈ 16px
+     which David described as "sits away from the name and looks like a cigar".
+     Now lives inside .ai-setup-name-group (gap:4px) so the parent gap is gone;
+     drop horizontal padding to 0 and margin-left to 0 so the pencil sits flush
+     against the name with only the group's 4px to its left. */
+  padding: 2px 0;
+  margin-left: 0;
   cursor: pointer;
   font-size: var(--fs-12);
   line-height: 1;

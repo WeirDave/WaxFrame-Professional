@@ -1,0 +1,66 @@
+WaxFrame Backlog Master v219
+2026-06-04
+
+State: v3.63.150 Pro shipped on main. Worker Bees collapsed-row layout cleanup: (1) Builder chip moved from after the model name to between the AI name and the model — "Gemini — [Builder] — model" — so it reads as identity, not afterthought; (2) name + pencil + chip + model wrapped in a new .ai-setup-name-group inline-flex with gap:4px (down from the parent's 10px) to fix David's "weirdly large gap between the names and the hyphen"; (3) .ai-setup-rename-btn padding-x and margin-left zeroed so the pencil sits flush against the name instead of floating ~16px away like a cigar; (4) collapsed-row chip mascot asset bumped from v3.png to v4.png to match the header swap. Pure cosmetics; no functional logic touched.
+
+David's overnight ask: he asked whether I can schedule things at specific times. Yes — I can run autonomously via cron when his session resets at 10pm tonight. The pending overnight job is the Builder consolidation documentation sweep (task #32 — User Manual, README, landing pages, info modals still reference the eliminated Builder screen). Will schedule for 22:00 local (David is in Costa Mesa, CA → PDT = UTC-7 in June; 22:00 PDT = 05:00 UTC 2026-06-05). Cron will spawn a fresh session that finds documentation references to the retired Builder screen and updates them in-place.
+
+v3.63.149 state still holds: Builder Bee asset swap (v3.png → v4.png natively left-facing). v3.63.148 state still holds: Builder Bee moved to Worker Bees screen header opposite Worker Bee. v3.63.147 state still holds: Worker Bees v3 core rework (Builder screen retired, setup flow 5→4 screens). v3.63.146 state still holds: cost-transparency callouts at 4 placements.
+
+PRIOR STATE (v3.63.149, retained for context until next release reshuffles the margin):
+Builder Bee asset swap. WaxFrame_Builder_v4.png replaces v3.png in the header. CSS transform: scaleX(-1) placeholder removed.
+
+PRIOR STATE (v3.63.148, retained for context until next release reshuffles the margin):
+Builder Bee mascot moved from inside each AI row to the Worker Bees screen header opposite the Worker Bee.
+
+PRIOR STATE (v3.63.147, retained for context until next release reshuffles the margin):
+Worker Bees v3 rework core. Builder screen retired via #screen-builder { display: none !important; }. continueFromBees() auto-defaults Builder. Setup flow 5→4 screens.
+
+Open Bugs
+
+(none currently tracked outside the active task list)
+
+Open Features / Tasks
+
+- #9-12 Hive Profiles: storage + resolver + seeded profiles + UI dropdown + docs page
+- #20 Worker Bees row rework — core landed in v3.63.147; sub-tasks below
+- #22 Worker Bees expanded view: 6 cards, not 4 (add ✨ Reviewer + 🔨 Builder)
+- #23 Worker Bees rework: icon legend + light-mode contrast pass
+- #24 Worker Bees rework: drop sub-1366px responsive code
+- #25 Worker Bees rework: jump-to-AI scroll-with-offset
+- #26 Worker Bees rework: toolbar alignment — Recommend All AIs button
+- #27 Worker Bees rework: 3-group ordering (defaults / customs / servers) + alphabetize within group
+- #32 Builder consolidation: documentation sweep — STARTED + SCHEDULED for autonomous overnight run at 22:00 PDT 2026-06-04
+- #34 Worker Bees rework: Builder education in 3 surfaces — STARTED (inline sub-line); REMAINING: modal + standalone page
+- #35 Auto-classify tier picks always (not click-to-classify)
+- #36 Worker Bees rework: server provider group label
+- WaxFrame_Builder_v3.png pruning candidate once worker-bees-prototype.html is updated or retired
+- Restore-from-Checkpoint diff-and-pick UI — PARKED
+- Hive parallel fan-out RPS-awareness
+- Model recommender filter-awareness warning
+- Failover Builder behavior — single-round CONTENT_FILTERED handling
+- Builder-incapable family list expansion
+- Pause/resume at reviewer seam
+- File System Access API exploration
+- Provider Catalog foundation (parked)
+- CSS dead-selector cleanup branch
+- CSS rule consolidation sweep
+- Repo housekeeping — docs/ folder
+- Triage CodeQL + Dependabot findings
+- Rules reference update — "verify every external URL before shipping" + "always update const BUILD in addition to the // Build comment" + "release-check validator should compare const BUILD against // Build comment"
+
+Observations
+
+- 2026-06-04 — David viewed v3.63.148 live and immediately spotted three small visual issues (chip placement, name-to-dash gap, pencil-as-cigar). All three were in the same row component and all three turned out to come from the same root cause: the parent flex's 10px gap between every child was right for slot-level layout (chevron / icon / name-area / action button) but wrong for the inline identity line (name / pencil / chip / model). Wrapping the four identity items into a single group with smaller internal spacing was the structural fix. Lesson: when multiple cosmetic complaints cluster around adjacent elements, the fix is usually at the parent-layout level not on each individual element.
+
+- 2026-06-04 — David asked whether I can schedule things at specific times. Yes — overnight autonomous runs land cleanly when (a) the task is well-defined, (b) the scoped work doesn't need David's design judgment, (c) the cron prompt is self-contained, and (d) the release ceremony already enforces validation. The Builder consolidation doc sweep matches all four: scope is "search every user-facing doc for references to the eliminated Builder screen and update phrasing to reflect the new Worker-Bees-only flow", design is settled, and release-check.mjs will catch any stamp drift.
+
+- 2026-06-04 — Worker Bees v3 rework arc: v3.63.147 (core consolidation) → v3.63.148 (mascot placement) → v3.63.149 (mascot asset swap) → v3.63.150 (row cleanup). Four releases in a day; tight feedback loops continue.
+
+- 2026-06-04 — release-check validator caught no drift across v3.63.135 through v3.63.150 (sixteen ceremonies).
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01. v3.63.146 (cost callouts) + v3.63.147 (setup-flow simplification) + v3.63.148-149 (brand mascot placement) + v3.63.150 (row visual polish) form a sustained conversion-friction arc. The mascots are part of why people at David's work said "wow did you get these graphics together too" — placement quality matters.

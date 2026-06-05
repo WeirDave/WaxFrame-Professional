@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-022
+// Build: 20260604-023
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4639,8 +4639,11 @@ function buildAISetupRowHTML(ai) {
   // identification of "which AI is doing the heavy lifting right now"
   // without expanding the row. Renders even when collapsed because
   // that's the whole point — see-at-a-glance.
+  // v3.63.150 — Per David's feedback: chip moves to sit BETWEEN the AI
+  // name and the model (Gemini — [Builder] — model). Asset swapped from
+  // v3.png to v4.png to match the new mirrored asset.
   const _collapsedBuilderChip = (typeof builder !== 'undefined' && builder === ai.id)
-    ? `<span class="ai-setup-builder-chip" title="${escapeHtml(ai.name)} is your current Builder"><img src="images/WaxFrame_Builder_v3.png" alt="" class="ai-setup-builder-chip-img"> Builder</span>`
+    ? `<span class="ai-setup-builder-chip" title="${escapeHtml(ai.name)} is your current Builder"><img src="images/WaxFrame_Builder_v4.png" alt="" class="ai-setup-builder-chip-img"> Builder</span>`
     : '';
 
   // v3.63.25 — Compute the card-edge state class. Reflects validation
@@ -4658,10 +4661,19 @@ function buildAISetupRowHTML(ai) {
       <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
-        <span class="ai-setup-name" id="ainame-${ai.id}" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
-        ${isCustom ? `<button class="ai-setup-rename-btn" onclick="event.stopPropagation(); startCustomAIRename('${ai.id}')" title="Rename ${escapeHtml(ai.name)}">✏️</button>` : ''}
-        ${cfg?.model ? `<span class="ai-setup-model" title="${escapeHtml(cfg.model)}">— ${escapeHtml(cfg.model)}</span>` : ''}
-        ${_collapsedBuilderChip}
+        <!-- v3.63.150 — Name + pencil + Builder chip + model wrapped in a
+             tight inline-flex group so they sit close together (4px gap
+             internally) instead of being spread by the parent .ai-setup-
+             row-summary { gap: 10px }. Order is: name → pencil (custom
+             only) → Builder chip (active Builder only) → model. The
+             chip moved here from after the model per David's feedback
+             ("right next to the name of the AI: Gemini — [Builder] — model"). -->
+        <span class="ai-setup-name-group">
+          <span class="ai-setup-name" id="ainame-${ai.id}" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
+          ${isCustom ? `<button class="ai-setup-rename-btn" onclick="event.stopPropagation(); startCustomAIRename('${ai.id}')" title="Rename ${escapeHtml(ai.name)}">✏️</button>` : ''}
+          ${_collapsedBuilderChip}
+          ${cfg?.model ? `<span class="ai-setup-model" title="${escapeHtml(cfg.model)}">— ${escapeHtml(cfg.model)}</span>` : ''}
+        </span>
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
           ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${escapeHtml(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
           : ''}
