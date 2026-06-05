@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-026
+// Build: 20260604-027
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4465,9 +4465,13 @@ function renderAISetupGrid() {
   if (typeof renderHiveSidebar === 'function') renderHiveSidebar();
 
   // v3.30.4 — Persistent checkbox bulk-select toolbar. Always rendered
-  // when any custom AI exists (regardless of mode). v3.31 keeps this on
-  // the inventory screen as the only path to bulk-remove customs;
-  // active-group selection moves to a dedicated screen in v3.32.
+  // when any custom AI exists (regardless of mode).
+  // v3.63.154 — Moved out of the global pre-list slot and into the
+  // "Custom AIs" section header (Internet mode), because the controls
+  // (All / None / Remove) only act on customs and previously sat above
+  // the Defaults list which made the scope unclear. Server mode still
+  // shows it at the top of the flat list — no section header there to
+  // attach it to.
   const bulkSelectHTML = buildBulkSelectToolbarHTML();
 
   // Mode filter — Internet shows defaults + direct-API customs;
@@ -4491,6 +4495,7 @@ function renderAISetupGrid() {
   // shows only server-imported customs (all "custom"), so it stays one flat
   // alphabetical list with no labels.
   let listHTML;
+  let prefixedBulkSelectHTML = bulkSelectHTML; // Server mode: keep at top.
   if (_hiveMode === 'server') {
     listHTML = _aiListAlpha(visible).map(ai => buildAISetupRowHTML(ai)).join('');
   } else {
@@ -4503,12 +4508,17 @@ function renderAISetupGrid() {
             + defaults.map(ai => buildAISetupRowHTML(ai)).join('');
     }
     if (customs.length) {
-      html += `<div class="ai-setup-group-label">Custom AIs <span class="ai-setup-group-count">${customs.length}</span></div>`
+      // v3.63.154 — Count renders as "(N)" parens instead of the prior
+      // bubble badge per David's feedback. Bulk-select toolbar moves IN
+      // to this section (only relevant to customs).
+      html += `<div class="ai-setup-group-label">Custom AIs <span class="ai-setup-group-count">(${customs.length})</span></div>`
+            + bulkSelectHTML
             + customs.map(ai => buildAISetupRowHTML(ai)).join('');
+      prefixedBulkSelectHTML = ''; // already injected above
     }
     listHTML = html;
   }
-  grid.innerHTML = bulkSelectHTML + listHTML;
+  grid.innerHTML = prefixedBulkSelectHTML + listHTML;
   renderBuilderPicker();
   renderHiveCountChip();
 }
@@ -4584,11 +4594,21 @@ function _renderHiveCardShell(opts) {
       </div>`;
   }
   // Default state — whole card is the click target.
+  //
+  // v3.63.154 — Bug fix. The previous inline `${JSON.stringify(pickModel)}`
+  // emitted a literal double-quote-wrapped string into an HTML attribute
+  // that was itself double-quoted, so the browser parsed `onclick=
+  // "swapAIModelFromHiveCard('chatgpt', "gpt-5.5"); ..."` as the onclick
+  // attribute ending at the first quote — `swapAIModelFromHiveCard('chatgpt', `
+  // — and the rest decayed to stray attributes. Clicking the card
+  // silently did nothing. Fix: pass the model id via a data attribute
+  // (HTML-safe escaped) and have the handler read `this.dataset.pickModel`.
   return `
     <div class="ai-hive-card is-pickable" role="button" tabindex="0"
       title="${escapeHtml(titleText)} — click to use"
-      onclick="swapAIModelFromHiveCard('${aiId}', ${JSON.stringify(pickModel)}); event.stopPropagation();"
-      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();swapAIModelFromHiveCard('${aiId}', ${JSON.stringify(pickModel)});event.stopPropagation();}">
+      data-pick-model="${escapeHtml(pickModel)}"
+      onclick="swapAIModelFromHiveCard('${aiId}', this.dataset.pickModel); event.stopPropagation();"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();swapAIModelFromHiveCard('${aiId}', this.dataset.pickModel);event.stopPropagation();}">
       <div class="ai-hive-card-label">${labelHTML}</div>
       <div class="ai-hive-card-model">${modelHTML}</div>
     </div>`;
@@ -4970,16 +4990,28 @@ function buildAISetupRowHTML(ai) {
     (hasKey && window._invalidKeys && window._invalidKeys[ai.id]) ? 'key-invalid' :
     (hasKey && window._validKeys && window._validKeys[ai.id]) ? 'key-valid' :
     '';
-  // v3.63.153 — Collapsed row redesigned per David's prototype-matching
-  // request. Order now (left → right):
-  //   chevron · icon · [name-group: name + pencil + Builder chip] ·
-  //   "✓ Ready" pill · compact model dropdown · ⚠ deprecation flag ·
+  // v3.63.154 — Column alignment per David's prototype-matching request:
+  //   chevron · icon · [name-group: name + pencil] · status-pill slot ·
+  //   "Model:" label · compact select · Builder-chip slot · ⚠ flag ·
   //   spacer · action
-  // The static "— model name" text inside the name-group is gone; the
-  // dropdown is the model UI now. The Ready pill carries the validation
-  // state that was previously only on the row's left card edge.
-  const statusPill   = _buildRowStatusPill(ai, hasKey);
+  //
+  // Slot widths are pinned via CSS min-width so columns align across
+  // rows regardless of name length. Empty pill / Builder slots render
+  // placeholders to hold the column.
+  //
+  // Builder chip moved OUT of the name-group into its own slot AFTER
+  // the model dropdown ("put the builder on the other side of the
+  // drop down for the model"). Adding the "Model:" label per the
+  // prototype design ("the word model next to the drop down — much
+  // more pro level").
+  const statusPillHTML = _buildRowStatusPill(ai, hasKey)
+    || `<span class="ai-setup-status-pill-placeholder" aria-hidden="true"></span>`;
   const compactModel = hasKey ? _buildCompactModelSelect(ai, cfg?.model || '') : '';
+  const modelLabelHTML = hasKey
+    ? `<span class="ai-setup-model-label">Model:</span>`
+    : '';
+  const builderChipHTML = _collapsedBuilderChip
+    || `<span class="ai-setup-builder-chip-placeholder" aria-hidden="true"></span>`;
   return `
     <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'} ${validateState}" id="airow-${ai.id}">
       <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
@@ -4988,10 +5020,11 @@ function buildAISetupRowHTML(ai) {
         <span class="ai-setup-name-group">
           <span class="ai-setup-name" id="ainame-${ai.id}" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
           ${isCustom ? `<button class="ai-setup-rename-btn" onclick="event.stopPropagation(); startCustomAIRename('${ai.id}')" title="Rename ${escapeHtml(ai.name)}">✏️</button>` : ''}
-          ${_collapsedBuilderChip}
         </span>
-        ${statusPill}
+        ${statusPillHTML}
+        ${modelLabelHTML}
         ${compactModel}
+        ${builderChipHTML}
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
           ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${escapeHtml(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
           : ''}
@@ -5346,21 +5379,12 @@ function renderHiveSidebar() {
     ? `<div class="bees-sidebar-subhead">Custom AIs</div>${customs.map(jumpLink).join('')}`
     : '';
 
+  // v3.63.154 — Icon Legend block dropped per David's feedback ("remove
+  // the legend and move the jump menu up"). The emoji are decodable from
+  // context (cards show the same icons + labels), and the legend was
+  // taking sidebar space that's better given to the jump nav at top.
   sidebar.innerHTML = `
     <div class="bees-sidebar-inner">
-
-      <div class="bees-sidebar-block">
-        <div class="bees-sidebar-heading">Icon Legend</div>
-        <div class="bees-sidebar-legend">
-          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">✨</span><span>Reviewer pick</span></div>
-          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">🔨</span><span>Builder pick</span></div>
-          <div class="bees-sidebar-legend-sep"></div>
-          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">💰</span><span>Cheap tier</span></div>
-          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">⚖️</span><span>Balanced tier</span></div>
-          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">🧠</span><span>Thinker tier</span></div>
-          <div class="bees-sidebar-legend-row"><span class="bees-sidebar-legend-icon">⚡</span><span>Fast tier</span></div>
-        </div>
-      </div>
 
       <div class="bees-sidebar-block">
         <div class="bees-sidebar-heading">Jump to AI</div>
