@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-021
+   Build: 20260604-022
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12087,16 +12087,13 @@ kbd {
 /* v3.63.148 — Builder Bee variant of .hp-section-bee. Sits at the
    right edge of the section header (Worker Bee on the left, Builder
    Bee on the right) so the two brand mascots face each other across
-   the title block. The horizontal-flip transform is a PLACEHOLDER:
-   the source PNG faces right; we flip it visually so the Builder Bee
-   "looks toward" the Worker Bee. David is preparing a properly-
-   mirrored asset (Kai or Paint Shop Pro); once swapped in, remove
-   this transform rule. The margin-left:auto pushes the Builder Bee
-   to the far right of the flex row regardless of how much text the
+   the title block. v3.63.149: the asset is now WaxFrame_Builder_v4.png
+   which is natively left-facing, so the v3.63.148 transform: scaleX(-1)
+   placeholder has been removed. The margin-left:auto pushes the Builder
+   Bee to the far right of the flex row regardless of how much text the
    title block holds. */
 .hp-section-bee-builder {
   margin-left: auto;
-  transform: scaleX(-1);
 }
 /* Laptop tier — shrink mascot to recover vertical budget in the amber band.
    v3.34.3: at 1366×768 with a 7-AI hive (3 rows of builder cards), the
