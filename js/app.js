@@ -1,6 +1,60 @@
 // ============================================================
+// v3.63.159 — Bee mascot tooltips. Every WaxFrame bee asset gets a
+// friendly name on hover so the brand feels alive. David's naming
+// roster + matching mascot variants below. Walks the DOM on
+// DOMContentLoaded, sets img.title for any <img> whose src matches one
+// of the bee asset filenames. Re-fires after dynamic renders are
+// inexpensive (every img already has a title if it matches; the loop
+// skips those). MutationObserver is overkill — bee imgs in this app
+// are nearly all static markup, with the small dynamic crop already
+// covered by re-firing applyBeeTooltips() from renderAISetupGrid.
+// ============================================================
+const BEE_NAMES = {
+  'WaxFrame_Worker_Bee':         'Wally the Worker Bee',
+  'WaxFrame_Builder_Building':   'Bob the Builder Bee (hard at work)',
+  'WaxFrame_Builder_v':          'Bob the Builder Bee',
+  'WaxFrame_API_Bee':            'Art the API Bee',
+  'WaxFrame_Project_Bee':        'Paul the Project Bee',
+  'WaxFrame_Reference_Bee':      'Ralph the Reference Bee',
+  'WaxFrame_Starting_Bee':       'Scout the Starter Bee',
+  'WaxFrame_Approved_Bee':       'Andy the Approved Bee',
+  'WaxFrame_History_Bee':        'Henry the History Bee',
+  'WaxFrame_Prompt_Editor_Bee':  'Pete the Prompt Bee',
+  'WaxFrame_Token_Bee':          'Theo the Token Bee'
+};
+function applyBeeTooltips(root) {
+  try {
+    const scope = root || document;
+    const imgs = scope.querySelectorAll ? scope.querySelectorAll('img') : [];
+    imgs.forEach(img => {
+      if (img.title) return; // respect existing titles
+      const src = img.getAttribute('src') || '';
+      // Match the longest key first so "Builder_Building" wins over
+      // "Builder_v" on Bob's working-state asset.
+      let matched = null;
+      let matchedLen = 0;
+      for (const key in BEE_NAMES) {
+        if (src.indexOf(key) >= 0 && key.length > matchedLen) {
+          matched = BEE_NAMES[key];
+          matchedLen = key.length;
+        }
+      }
+      if (matched) img.title = matched;
+    });
+  } catch (e) { /* defensive — tooltips are decoration, never block */ }
+}
+if (typeof window !== 'undefined') {
+  window.applyBeeTooltips = applyBeeTooltips;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => applyBeeTooltips());
+  } else {
+    applyBeeTooltips();
+  }
+}
+
+// ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-031
+// Build: 20260605-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4531,6 +4585,10 @@ function renderAISetupGrid() {
   grid.innerHTML = prefixedBulkSelectHTML + listHTML;
   renderBuilderPicker();
   renderHiveCountChip();
+  // v3.63.159 — Re-fire bee tooltips so any dynamically-rendered
+  // mascot imgs (sidebar, expanded panels, etc.) get their friendly
+  // names too. Cheap loop; already-titled imgs are skipped.
+  if (typeof applyBeeTooltips === 'function') applyBeeTooltips(document);
 }
 
 // ────────────────────────────────────────────────────────────────────

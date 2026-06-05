@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.159
+
+**Bee mascot tooltips + top count chip numbers in gold**
+
+Build: `20260605-001`<br>
+Released: `2026-06-05`
+
+### Bee tooltips
+
+Per David: *"Maybe we can add tool tips over all of the B images so they kind of like have names you know worker bee builder bee bob the Builder Wally the worker lol Art the API Bee, Paul the project Bee, Ralph the Reference Bee, Scout the Starter Bee"*.
+
+Every WaxFrame bee mascot asset now hovers a friendly name:
+
+- **Wally the Worker Bee** — WaxFrame_Worker_Bee*.png
+- **Bob the Builder Bee** — WaxFrame_Builder_v*.png
+- **Bob the Builder Bee (hard at work)** — WaxFrame_Builder_Building*.png
+- **Art the API Bee** — WaxFrame_API_Bee*.png
+- **Paul the Project Bee** — WaxFrame_Project_Bee*.png
+- **Ralph the Reference Bee** — WaxFrame_Reference_Bee*.png
+- **Scout the Starter Bee** — WaxFrame_Starting_Bee*.png
+- **Andy the Approved Bee** — WaxFrame_Approved_Bee*.png
+- **Henry the History Bee** — WaxFrame_History_Bee*.png
+- **Pete the Prompt Bee** — WaxFrame_Prompt_Editor_Bee*.png
+- **Theo the Token Bee** — WaxFrame_Token_Bee*.png
+
+Implementation: single `BEE_NAMES` mapping table + `applyBeeTooltips()` function at the top of [app.js](js/app.js). Walks every `<img>` on `DOMContentLoaded` and sets `img.title` based on the src filename. Re-fires from `renderAISetupGrid` so any dynamically-injected mascots get tooltips too. Longest-key-wins match order so `Builder_Building` lands the working-state name instead of falling through to the standard Bob. Future bee assets get tooltips automatically by adding one entry to the table — no per-template title attribute editing required.
+
+### Top count chip numbers in gold
+
+Per David: *"These numbers '0 AIs in hive · 10 with keys' should be in gold as well"*. The bold numbers in `.hive-count-chip-main` were `var(--text)` (white). **Fix**: switched to `var(--accent)` (gold), matching the `.ai-setup-group-count` and the bulk-select toolbar's "0 of 4 custom AIs selected" pattern. All count surfaces on the Set up your hive screen now use the same gold-number-on-quiet-label treatment.
+
+---
+
 ## v3.63.158
 
 **Sidebar "Jump to AI" links now actually scroll to the row (regression fix)**
