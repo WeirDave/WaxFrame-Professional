@@ -1,0 +1,68 @@
+WaxFrame Backlog Master v216
+2026-06-04
+
+State: v3.63.147 Pro shipped on main. Worker Bees v3 rework core landed. The five-screen setup flow (welcome → bees → builder → project → reference → document) collapses to FOUR screens by folding Builder selection directly into the Worker Bees row UI. Builder Bee mascot graphic preserved as a brand asset and surfaces prominently in two places per AI row: large mascot inside the expanded row's Builder affordance, plus a small Builder Bee chip on the collapsed summary line when the AI is the active Builder. setBuilder() and the underlying business logic are unchanged — this is a UI-layer consolidation. The standalone Builder screen DOM is kept in place but hidden via #screen-builder { display: none !important; } so legacy code paths don't crash. continueFromBees() auto-defaults the Builder if not explicitly set and routes directly to screen-project. Closes task #37; advances #32 / #33 / #34.
+
+David's mascot constraint was a hard requirement: "I don't want to lose my worker bee or my builder bee! They're so awesome and when I showed people at work the website the first thing they said was wow did you get these graphics together too." The rework preserves both mascots — Worker Bee on the Worker Bees screen header, Builder Bee inline per-row. Brand asset visibility is non-negotiable.
+
+v3.63.146 state still holds: cost-transparency callouts at 4 high-traffic placements with measured $0.30/run number. v3.63.145 state still holds: retry-once + setup-screen logo-jump fix. v3.63.144 state still holds: Perplexity self-discovery TypeError fix. Worker Bees rework prototype at v2.2 is now superseded by the live implementation. Sitemap lastmod 2026-06-04.
+
+PRIOR STATE (v3.63.146, retained for context until next release reshuffles the margin):
+Cost-transparency callouts at 4 placements (Welcome hero, Worker Bees ⓘ modal "Real-world cost" row, API Key Guide step 2, AI API Pricing FAQ + methodology + JSON-LD). Hero: "$0.30 per full hive review · $5 typically covers ~15 reviews · most users top up once a quarter, not once a week." Numbers MEASURED from 2 recent DeepDive captures.
+
+PRIOR STATE (v3.63.145, retained for context until next release reshuffles the margin):
+Retry-once on transient model-fetch failures in fetchModelsForProvider + fetchModelsForProviderLive. Setup-screen .fs-header switched from flex to 3-column grid so logo stays centered.
+
+PRIOR STATE (v3.63.144, retained for context until next release reshuffles the margin):
+Fixed v3.63.143's Perplexity self-discovery TypeError. Corrected a const BUILD drift.
+
+Open Bugs
+
+(none currently tracked outside the active task list)
+
+Open Features / Tasks
+
+(See active task list — highlights:)
+
+- #9-12 Hive Profiles: storage + resolver + seeded profiles + UI dropdown + docs page
+- #20 Worker Bees row rework — core landed in v3.63.147; remaining sub-tasks below
+- #22 Worker Bees expanded view: 6 cards, not 4 (add ✨ Reviewer + 🔨 Builder)
+- #23 Worker Bees rework: icon legend + light-mode contrast pass
+- #24 Worker Bees rework: drop sub-1366px responsive code
+- #25 Worker Bees rework: jump-to-AI scroll-with-offset
+- #26 Worker Bees rework: toolbar alignment — Recommend All AIs button
+- #27 Worker Bees rework: 3-group ordering (defaults / customs / servers) + alphabetize within group
+- #32 Builder consolidation: documentation sweep (User Manual, README, landing pages, info modals) — STARTED in v3.63.147 (Continue label, Project Back button, nav menu); REMAINING: User Manual mentions of Builder screen, README mentions, landing-page tour
+- #33 Worker Bees rework: preserve Worker Bee + Builder Bee mascots prominently — IMPLEMENTED in v3.63.147 (Builder Bee at 28px in expanded row + 16px chip on collapsed row)
+- #34 Worker Bees rework: Builder education in 3 surfaces — STARTED (inline sub-line under the Builder affordance); REMAINING: modal + standalone page
+- #35 Auto-classify tier picks always (not click-to-classify)
+- #36 Worker Bees rework: server provider group label
+- Restore-from-Checkpoint diff-and-pick UI — PARKED
+- Hive parallel fan-out RPS-awareness (active throttle counterpart)
+- Model recommender filter-awareness warning
+- Failover Builder behavior — single-round CONTENT_FILTERED handling
+- Builder-incapable family list expansion
+- Pause/resume at reviewer seam
+- File System Access API exploration
+- Provider Catalog foundation (parked)
+- CSS dead-selector cleanup branch
+- CSS rule consolidation sweep
+- Repo housekeeping — docs/ folder
+- Triage CodeQL + Dependabot findings
+- Rules reference update — "verify every external URL before shipping" + "always update const BUILD in addition to the // Build comment when bumping stamps" + "release-check validator should compare const BUILD against // Build comment for consistency"
+
+Observations
+
+- 2026-06-04 — Worker Bees v3 rework core shipped. The functional audit (docs/worker-bees-audit.md) paid off: every MUST-PRESERVE item from the audit survived intact because the rework only touched the UI layer. setBuilder(), the toggleSessionBee interaction, builder persistence, the BUILDER_INCAPABLE_FAMILIES gate — all unchanged. The Builder screen DOM is preserved (hidden via CSS) as a safety net while documentation sweeps and legacy code-path searches catch up. Future cleanup pass can remove the screen DOM entirely once nothing references it.
+
+- 2026-06-04 — Builder consolidation strategy: Option A (eliminate Builder screen, fold into Worker Bees) was the right call. Three caveats from the audit were all addressed: (a) Builder selection persistence — preserved via existing setBuilder(); (b) toggleSessionBee disable-prevention — preserved via existing logic; (c) Builder education — inline sub-line covers the immediate "what does the Builder do" question; standalone page + modal remain on task #34.
+
+- 2026-06-04 — Cost-transparency callouts (v3.63.146) shipped: measured $0.30/run number at 4 high-traffic placements.
+
+- 2026-06-04 — release-check validator caught no drift across v3.63.135 through v3.63.147 (thirteen ceremonies). ROI continues to compound.
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01, reaffirmed 2026-06-04. v3.63.146 (cost callouts) + v3.63.147 (setup-flow simplification) are sequential conversion-friction releases. The five-to-four screen reduction removes one click between "I picked my AIs" and "let me actually start using this thing" — small in isolation, meaningful as part of a sustained simplification arc.

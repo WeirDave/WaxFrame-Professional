@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.147
+
+**Worker Bees v3 rework — core: Builder selection consolidated into Worker Bees, Builder screen retired**
+
+Build: `20260604-020`<br>
+Released: `2026-06-04`
+
+Closes [task #37] and advances tasks #32, #33, #34. The five-screen setup flow (welcome → bees → builder → project → reference → document) collapses to **four screens** by folding Builder selection directly into the Worker Bees row UI. Builder Bee mascot graphic is preserved and surfaces prominently in two places per AI row — the brand asset stays visible.
+
+**Why now**: the standalone Builder screen has been a friction point for new users (one extra click between "I picked my AIs" and "let me start working") and the audit (docs/worker-bees-audit.md) confirmed there was no functional capability on the Builder screen that couldn't move into the Worker Bees row. Removing the screen entirely is cleaner than dual maintenance.
+
+**Mascot preservation** (David's explicit hard constraint — "I don't want to lose my worker bee or my builder bee! They're so awesome and when I showed people at work the website the first thing they said was wow did you get these graphics together too"): the Builder Bee mascot now lives inside each AI's expanded row, large + prominent next to the role indicator. When an AI is the active Builder, the row also gets a small Builder Bee chip in the collapsed summary so the active-Builder identity is visible at a glance without expanding.
+
+**Changes**:
+
+1. **Builder affordance in expanded row** ([js/app.js:4584](js/app.js), [style.css:14870](style.css)) — between the model selector and the bottom of the expanded panel, every AI with a saved API key now shows either:
+   - **Current Builder** → green "🔨 This is your Builder" indicator with the full Builder Bee mascot (28px) and a sub-line explaining what the Builder does ("Reads every reviewer's notes + the full document each round and rewrites").
+   - **Not the Builder** → "🔨 Make this the Builder" button with the Builder Bee mascot. Clicking sets this AI as the Builder via the existing `setBuilder()` function — exactly-one-at-a-time enforcement comes free from the existing logic.
+   - **Builder-incapable** (Jamba family per `BUILDER_INCAPABLE_FAMILIES`) → italic "⚠️ Reviewer-only — output cap too low to Builder" indicator. The affordance is suppressed entirely for AIs without a saved key (can't Builder without a key).
+
+2. **Collapsed-row Builder chip** ([js/app.js:4631](js/app.js)) — small green pill with Builder Bee thumbnail + "Builder" label appears in the summary row after the model name when this AI is the active Builder. Instant identification of "which AI is doing the heavy lifting right now" without expanding any row.
+
+3. **Builder screen retired** ([style.css:14965](style.css)) — `#screen-builder` is hidden via `display: none !important;`. The DOM is kept in place so any legacy code paths don't crash, but the screen never renders. `continueFromBees()` now auto-defaults the Builder if not explicitly set (picks the alphabetically-first keyed AI) and routes directly to `screen-project`.
+
+4. **Setup flow renumbered** ([index.html] throughout) — all "Step N of 5" badges decremented to "Step N of 4". Nav menu's "Setup 2 — Builder" item removed; subsequent items renumbered. Project screen's Back button now returns to Worker Bees, not Builder. Worker Bees Continue label changed to "Continue — Your Project →".
+
+**What didn't change**: existing Builder selection logic (`setBuilder()`, the toggle-disable interaction with toggleSessionBee, builder persistence to localStorage), the Builder-incapable model gate, the existing Reviewer-only model flagging. The whole rework is **UI-layer** — the business logic underneath is unchanged.
+
+**Audit-backed**: docs/worker-bees-audit.md documents 40+ MUST-PRESERVE requirements from the existing Worker Bees + Builder screens. This release ships against that audit; no functionality regressed.
+
+---
+
 ## v3.63.146
 
 **Cost-transparency callouts — defuse the "API key sounds expensive" anxiety with measured numbers**
