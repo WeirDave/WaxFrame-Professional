@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260604-018
+     Build: 20260604-019
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-018">
+  <meta name="waxframe-build" content="20260604-019">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <link rel="canonical" href="https://waxframe.com/ai-api-pricing.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.145">
+  <link rel="stylesheet" href="style.css?v=3.63.146">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -34,7 +34,7 @@
         "name": "How much does a typical WaxFrame session cost?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "A single round through a 6-bee hive with a paid Builder typically costs between 5 and 30 cents, depending on document length and Builder choice. A full multi-round session is usually under a dollar with a cost-conscious Builder (DeepSeek, Gemini Flash). Using Gemini on its free tier or DeepSeek as Builder keeps even long sessions under a few dollars total."
+          "text": "About 30 cents per full hive review. $5 typically covers ~15 full reviews; $10 covers ~30; $20 covers ~60. Most users top up once a quarter, not once a week. That number is measured, not estimated — v3.63.146 analyzed two recent full 10-AI hive runs (Midea AC review and Manly Bikes TripAdvisor review, both captured 2026-06-04 via DeepDive JSON) using the actual deployed model lineup; per-run cost landed at $0.2997 and $0.2984 respectively."
         }
       },
       {
@@ -282,7 +282,9 @@
 
     <div class="wf-card">
       <h3 class="wf-card-title">How much does a typical WaxFrame session cost?</h3>
-      <p>A single round through a 6-bee hive with a paid Builder typically costs between 5 and 30 cents, depending on document length and Builder choice. A full multi-round session is usually under a dollar with a cost-conscious Builder (DeepSeek, Gemini Flash). Using Gemini on its free tier or DeepSeek as Builder keeps even long sessions under a few dollars total.</p>
+      <p><strong>About 30 cents per full hive review.</strong> $5 typically covers ~15 full reviews; $10 covers ~30; $20 covers ~60. Most users top up <strong>once a quarter, not once a week</strong>.</p>
+      <p>That number is measured, not estimated. v3.63.146 analyzed two recent full 10-AI hive runs (Midea AC review and Manly Bikes TripAdvisor review, both captured 2026-06-04 via DeepDive JSON) using the actual deployed model lineup: <code>gpt-5.5</code>, <code>claude-opus-4-8</code>, <code>gemini-3.1-pro-preview</code>, <code>grok-4.3</code>, <code>sonar-reasoning-pro</code>, <code>mistral-large-latest</code>, <code>deepseek-v4-pro</code>, <code>Qwen3-235B-A22B</code>, <code>command-a-plus-05-2026</code>, <code>jamba-mini-2-2026-01</code>. Per-run cost landed at $0.2997 (Midea) and $0.2984 (Manly Bikes) — both right around the 30¢ mark.</p>
+      <p>That number drops sharply if you swap any reasoning models for chat-tier alternatives or include Gemini on its free tier. It rises if you run heavier reasoning models throughout. The per-provider rate table above is the source of truth — these numbers move proportionally with provider rate changes.</p>
     </div>
 
     <div class="wf-card">
@@ -421,12 +423,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.145"></script>
-<script src="lib/docx.min.js?v=3.63.145"></script>
-<script src="js/docx-export.js?v=3.63.145"></script>
-<script src="js/nav-helper.js?v=3.63.145"></script>
-<script src="js/license-helper.js?v=3.63.145"></script>
-<script src="js/version.js?v=3.63.145"></script>
+<script src="js/theme.js?v=3.63.146"></script>
+<script src="lib/docx.min.js?v=3.63.146"></script>
+<script src="js/docx-export.js?v=3.63.146"></script>
+<script src="js/nav-helper.js?v=3.63.146"></script>
+<script src="js/license-helper.js?v=3.63.146"></script>
+<script src="js/version.js?v=3.63.146"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
