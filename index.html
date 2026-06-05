@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-025">
+  <meta name="waxframe-build" content="20260604-026">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.152">
+  <link rel="stylesheet" href="style.css?v=3.63.153">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.152",
+    "softwareVersion": "3.63.153",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -207,16 +207,29 @@
           <img src="images/WaxFrame_Builder_v4.png" class="hp-section-bee hp-section-bee-builder" alt="">
         </div>
         <div class="hp-section-body">
-          <div class="hive-mode-toggle-wrap" id="hiveModeToggleWrap"></div>
-          <div class="bee-controls-row-setup" id="beeControlsRow"></div>
-          <!-- v3.63.152 — Hive Profile toolbar. Rendered by
-               renderHiveProfileBar() in Internet mode only (Server mode
-               doesn't have tier classification). Dropdown lets the user
-               apply a profile (💰 Cheap / ⚖️ Balanced / 🧠 Thinker / ⚡ Fast)
-               that swaps every AI's model to its corresponding tier pick. -->
-          <div class="hive-profile-bar" id="hiveProfileBar"></div>
-          <div class="hive-count-chip" id="hiveCountChip"></div>
-          <div class="ai-setup-grid" id="aiSetupGrid"></div>
+          <!-- v3.63.153 — 2-column layout (sidebar + main). The sidebar
+               carries Icon Legend + Jump to AI nav + Related links so the
+               main column stays narrow enough that the 6 tier cards
+               read cleanly without the row getting visually stretched
+               across the full screen (David's observation: "your cards
+               were a lot smaller because you had the whole side rail
+               over there which you don't currently have"). -->
+          <div class="bees-layout">
+            <aside class="bees-sidebar" id="beesSidebar">
+              <!-- Populated by renderHiveSidebar() in app.js. Three blocks:
+                   Icon Legend (static), Jump to AI (dynamic, rebuilt
+                   alongside the bee grid), Related links (static). -->
+            </aside>
+            <div class="bees-main">
+              <div class="hive-mode-toggle-wrap" id="hiveModeToggleWrap"></div>
+              <div class="bee-controls-row-setup" id="beeControlsRow"></div>
+              <!-- v3.63.152 — Hive Profile toolbar. Rendered by
+                   renderHiveProfileBar() in Internet mode only. -->
+              <div class="hive-profile-bar" id="hiveProfileBar"></div>
+              <div class="hive-count-chip" id="hiveCountChip"></div>
+              <div class="ai-setup-grid" id="aiSetupGrid"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -2864,23 +2877,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.152';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.153';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.152"></script>
-<script src="lib/jszip.min.js?v=3.63.152"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.152"></script>
-<script src="js/version.js?v=3.63.152"></script>
-<script src="js/storage.js?v=3.63.152"></script>
-<script src="js/theme.js?v=3.63.152"></script>
-<script src="js/audio.js?v=3.63.152"></script>
-<script src="js/scenes.js?v=3.63.152"></script>
-<script src="js/wf-debug.js?v=3.63.152"></script>
-<script src="js/provider-models.js?v=3.63.152"></script>
-<script src="js/api.js?v=3.63.152"></script>
-<script src="js/templates.js?v=3.63.152"></script>
-<script src="js/api-links.js?v=3.63.152"></script>
-<script src="js/app.js?v=3.63.152"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.153"></script>
+<script src="lib/jszip.min.js?v=3.63.153"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.153"></script>
+<script src="js/version.js?v=3.63.153"></script>
+<script src="js/storage.js?v=3.63.153"></script>
+<script src="js/theme.js?v=3.63.153"></script>
+<script src="js/audio.js?v=3.63.153"></script>
+<script src="js/scenes.js?v=3.63.153"></script>
+<script src="js/wf-debug.js?v=3.63.153"></script>
+<script src="js/provider-models.js?v=3.63.153"></script>
+<script src="js/api.js?v=3.63.153"></script>
+<script src="js/templates.js?v=3.63.153"></script>
+<script src="js/api-links.js?v=3.63.153"></script>
+<script src="js/app.js?v=3.63.153"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

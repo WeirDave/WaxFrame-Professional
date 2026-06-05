@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-025
+   Build: 20260604-026
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -15161,6 +15161,298 @@ kbd {
  * legacy code paths don't crash, but it is never shown. */
 #screen-builder {
   display: none !important;
+}
+
+/* ============================================================
+ * v3.63.153 — Worker Bees rework: sidebar + collapsed-row redo
+ *             + color cohesion pass.
+ *
+ * Three structural shifts in one release:
+ *
+ *   1. SIDEBAR chassis (.bees-layout / .bees-sidebar / .bees-main)
+ *      gives the screen the same 2-column shape the prototype had,
+ *      so the main column is narrow enough that the 6-card grid
+ *      reads as a tight set instead of being stretched across the
+ *      full width.
+ *
+ *   2. COLLAPSED ROW redo — model dropdown moves into the row
+ *      header (native <select>), validation status shows up as a
+ *      "✓ Ready" green pill. Users can swap models without
+ *      expanding.
+ *
+ *   3. COLOR cohesion — green is now SEMAPHORE-ONLY (status / key
+ *      validation). Selection / active picks moved to GOLD across
+ *      the 6-card grid, the Builder affordance, and the Builder
+ *      chip on collapsed rows. Test + Recommend Models stay blue
+ *      as a coordinated utility pair (per v3.32.12).
+ * ============================================================ */
+
+/* ── Layout chassis ───────────────────────────────────────── */
+.bees-layout {
+  display: flex;
+  gap: var(--space-14);
+  align-items: flex-start;
+}
+.bees-sidebar {
+  flex: 0 0 240px;
+  position: sticky;
+  top: var(--space-10);
+  max-height: calc(100vh - var(--space-20));
+  overflow-y: auto;
+}
+.bees-sidebar.is-hidden { display: none; }
+.bees-main { flex: 1 1 auto; min-width: 0; }
+@media (max-width: 1100px) {
+  .bees-layout { flex-direction: column; }
+  .bees-sidebar {
+    flex: 1 1 auto;
+    position: static;
+    max-height: none;
+    width: 100%;
+  }
+}
+
+/* ── Sidebar blocks ───────────────────────────────────────── */
+.bees-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+.bees-sidebar-block {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-10) var(--space-12);
+}
+.bees-sidebar-heading {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  font-weight: 700;
+  margin-bottom: var(--space-8);
+}
+
+/* Icon legend rows */
+.bees-sidebar-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bees-sidebar-legend-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--fs-12);
+  color: var(--text);
+  padding: 2px 0;
+}
+.bees-sidebar-legend-icon {
+  width: 22px;
+  flex-shrink: 0;
+  font-size: 14px;
+  text-align: center;
+  line-height: 1;
+}
+.bees-sidebar-legend-sep {
+  border-top: 1px dashed var(--border);
+  margin: 4px 0;
+}
+
+/* Jump-to-AI list */
+.bees-sidebar-jumplist {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.bees-sidebar-subhead {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  font-weight: 600;
+  margin: var(--space-6) 0 2px;
+  opacity: 0.75;
+}
+.bees-sidebar-subhead:first-child { margin-top: 0; }
+.bees-sidebar-jump {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: var(--fs-12);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.bees-sidebar-jump:hover {
+  background: var(--accent-dim, rgba(244, 180, 0, 0.10));
+  color: var(--accent, #f4b400);
+}
+.bees-sidebar-jump-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+.bees-sidebar-jump-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bees-sidebar-jump-dot {
+  color: #43a047;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.bees-sidebar-jump:not(.has-key) .bees-sidebar-jump-name {
+  color: var(--text-dim);
+}
+
+/* Related links */
+.bees-sidebar-related {
+  display: block;
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: var(--fs-12);
+  transition: background 0.12s, color 0.12s;
+}
+.bees-sidebar-related + .bees-sidebar-related { margin-top: 2px; }
+.bees-sidebar-related:hover {
+  background: var(--accent-dim, rgba(244, 180, 0, 0.10));
+  color: var(--accent, #f4b400);
+}
+
+/* ── Collapsed-row status pill + compact model select ────── */
+.ai-setup-status-pill {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ai-setup-status-pill.is-ready {
+  background: rgba(67, 160, 71, 0.12);
+  border: 1px solid #43a047;
+  color: #43a047;
+}
+.ai-setup-status-pill.is-invalid {
+  background: rgba(229, 90, 90, 0.12);
+  border: 1px solid var(--red, #e55a5a);
+  color: var(--red, #e55a5a);
+}
+
+.ai-setup-compact-model {
+  flex: 1 1 auto;
+  min-width: 200px;
+  max-width: 420px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 4px 8px;
+  font-size: var(--fs-12);
+  font-family: var(--font-mono);
+  cursor: pointer;
+}
+.ai-setup-compact-model:hover { border-color: var(--accent, #f4b400); }
+.ai-setup-compact-model:focus {
+  border-color: var(--accent, #f4b400);
+  outline: none;
+}
+
+/* ── Expanded panel: recommend-row replaces the modelSelector ── */
+.ai-recommend-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  padding: var(--space-6) 0;
+  flex-wrap: wrap;
+}
+.ai-recommend-status {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ai-recommend-status.is-empty {
+  font-style: italic;
+}
+
+/* Full-width key input — ChatGPT keys are very long (sk-proj-…); the
+   input should consume the row so users see the whole key while
+   pasting. Eye/clear/test buttons stay to the right but smaller. */
+.ai-setup-key {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+/* ── Color cohesion: GREEN → GOLD for is-active selection ─── */
+
+/* 6-card grid: active card */
+.ai-hive-card.is-active {
+  border-color: var(--accent, #f4b400);
+  background: rgba(244, 180, 0, 0.07);
+}
+.ai-hive-card.is-active .ai-hive-card-label {
+  color: var(--accent, #f4b400);
+}
+.ai-hive-card-pill {
+  position: absolute;
+  top: var(--space-6);
+  right: var(--space-8);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--accent, #f4b400);
+  background: rgba(244, 180, 0, 0.14);
+  border: 1px solid var(--accent, #f4b400);
+  border-radius: 999px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+}
+
+/* Pickable card hover affordance (whole card is the button now) */
+.ai-hive-card.is-pickable {
+  cursor: pointer;
+}
+.ai-hive-card.is-pickable:hover {
+  border-color: var(--accent, #f4b400);
+  background: rgba(244, 180, 0, 0.04);
+}
+.ai-hive-card.is-pickable:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: 2px;
+}
+.ai-hive-card.is-none { cursor: default; }
+.ai-hive-card.is-none:hover { border-color: var(--border); background: var(--bg); }
+
+/* Builder affordance: active state (was green, now gold) */
+.ai-builder-affordance.is-active {
+  background: rgba(244, 180, 0, 0.08);
+  border: 1px solid var(--accent, #f4b400);
+}
+
+/* Collapsed-row Builder chip: was green, now gold */
+.ai-setup-builder-chip {
+  background: rgba(244, 180, 0, 0.12);
+  border-color: var(--accent, #f4b400);
+  color: var(--accent, #f4b400);
+}
+@media (prefers-color-scheme: dark) {
+  .ai-setup-builder-chip {
+    color: var(--accent, #f4b400);
+  }
 }
 
 /* ============================================================
