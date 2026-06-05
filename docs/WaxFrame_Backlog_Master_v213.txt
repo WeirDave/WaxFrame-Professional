@@ -1,0 +1,79 @@
+WaxFrame Backlog Master v213
+2026-06-04
+
+State: v3.63.144 Pro shipped on main. Surgical bugfix for v3.63.143's Perplexity self-discovery branch. The new code called `normalizePerplexityModels(_raw).filter(...)` but that helper returns an OBJECT, not an array. The .filter() threw TypeError; outer try-catch in fetchModelsForProvider caught it and returned undefined silently. Should have fallen back to MODEL_FALLBACKS in classifyTiersForProvider's chain, but in David's v3.63.143 bundle Perplexity AND Mistral were both missing from classifications WITHOUT error log entries — suggests an in-flight timing issue (Bundle clicked before slow classifier calls completed) compounded with the TypeError. v3.63.144 fixes the TypeError (skips normalizePerplexityModels entirely in self-discovery; just dedupe + safety-net filter). v3.63.145 will likely disable Bundle for Scout while classification is in-flight to remove ambiguity.
+
+Also corrected a build-stamp drift: v3.63.143's commit had `const BUILD = '20260604-015'` (stuck at v3.63.142's value) because the PowerShell sweep regex matched only the `// Build: NNN` comment pattern, not the const-assignment pattern. v3.63.144 const BUILD = '20260604-017'.
+
+v3.63.143 state still holds (with bug fix): Mistral live fetch via /v1/models, Perplexity self-discovery via chat-completion web search. v3.63.142 state still holds: 11 stale provider URLs fixed across 7 files. v3.63.141 state still holds: tier classifier architectural alignment. Sitemap lastmod 2026-06-04. PLAYBOOK TEST MASTER v37 is the live test-tracking doc.
+
+PRIOR STATE (v3.63.143, retained for context until next release reshuffles the margin):
+Mistral live fetch + Perplexity self-discovery via web search. Closes the two model-fallbacks paths. Mistral added to MODEL_FILTERS + fetchModelsForProvider's standard /v1/models branch. Perplexity uses chat-completion call asking Perplexity to look up its own current model list via web search.
+
+PRIOR STATE (v3.63.142, retained for context until next release reshuffles the margin):
+Provider link audit fix release. 11 stale URLs across 7 files: Anthropic console migration, Grok billing path, Mistral billing mislabel.
+
+PRIOR STATE (v3.63.141, retained for context until next release reshuffles the margin):
+Tier classifier architectural alignment with the recommender.
+
+Open Bugs
+
+- v3.63.144 may not fully solve "Mistral + Perplexity missing from classifications without error trace" if the root cause is an in-flight timing issue (Bundle clicked before slow classifier calls completed). Next test from David should confirm whether the TypeError fix is sufficient OR whether v3.63.145 needs to disable Bundle button during classification.
+
+Open Features
+
+- v3.63.145 candidate: disable 📦 Bundle for Scout button while classification is in-flight. Currently the button is always clickable. If David's classifications were still running when he clicked Bundle, the in-flight providers would not have written to cache yet. Disabling the button until classifyTiersForAllKeyed resolves would remove this ambiguity.
+
+- Hive Profiles step 2: Perplexity verification pass. After v3.63.144's classifications validate cleanly, ship step 2.
+
+- Hive Profiles step 3: storage + resolver + seeded starter profiles.
+
+- Hive Profiles step 4: dropdown UI + hive-profiles.html docs page.
+
+- Restore-from-Checkpoint diff-and-pick UI — PARKED.
+
+- Hive parallel fan-out RPS-awareness.
+
+- Model recommender filter-awareness warning.
+
+- Failover Builder behavior.
+
+- Builder-incapable family list expansion.
+
+- Pause/resume at reviewer seam.
+
+- File System Access API exploration.
+
+- Provider Catalog foundation (parked).
+
+- CSS dead-selector cleanup branch.
+
+- CSS rule consolidation sweep.
+
+- Repo housekeeping — docs/ folder.
+
+- Triage CodeQL + Dependabot findings.
+
+- Rules reference update: "verify every external URL before shipping" + "always update const BUILD in addition to the // Build comment when bumping stamps" (the latter caught by v3.63.144's audit of the v3.63.143 build-stamp drift).
+
+- Release-check validator update: explicitly check that const BUILD in js/app.js matches the // Build comment in js/version.js. v3.63.143 shipped with these out of sync but the validator passed because it apparently only checks one of them.
+
+Observations
+
+- 2026-06-04 — v3.63.143 shipped with two bugs that interacted to silently swallow Mistral and Perplexity from David's classification bundle. (1) The Perplexity self-discovery code called .filter() on an object — TypeError caught and silenced. (2) The const BUILD in app.js wasn't bumped to match the // Build comment because the PowerShell sweep regex pattern only matched the comment form. The first bug is the meaningful one (real silent failure); the second is hygiene (the validator green-lighted out-of-sync stamps which it shouldn't). Both fixed in v3.63.144.
+
+- 2026-06-04 — Open question still: why didn't classifyTiersForProvider's MODEL_FALLBACKS chain catch Perplexity after fetchModelsForProvider returned undefined from the TypeError throw? Hypothesis: in-flight timing — David clicked Bundle while Mistral/Perplexity were still running. The Gemini classifier call took 50 seconds (per timestamps in his bundle); Mistral and Perplexity may have been slower still. Bundle for Scout doesn't currently block on classifyTiersForAllKeyed completion.
+
+- SHIPPED — v3.63.143 Mistral live fetch + Perplexity self-discovery. Two model-fallbacks paths intended to be closed but blocked by the TypeError bug above.
+
+- SHIPPED — v3.63.142 provider link audit. 11 stale URLs across 7 files.
+
+- SHIPPED — v3.63.141 classifier architectural alignment.
+
+- 2026-06-04 — release-check validator green-lighted v3.63.135 through v3.63.144 (ten ceremonies). One drift caught during v3.63.144 audit: const BUILD vs // Build comment can desync; validator should be tightened.
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01, reaffirmed 2026-06-04. Engineering merit answers stand independent of conversion data.

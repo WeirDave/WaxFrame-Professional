@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.144
+
+**Fix Perplexity self-discovery TypeError that was silently swallowing Perplexity AND Mistral classifications**
+
+Build: `20260604-017`<br>
+Released: `2026-06-04`
+
+David's first v3.63.143 bundle came back with Mistral and Perplexity missing from `tierClassifications` entirely — not in errors either, just vanished. The cause was a TypeError in the v3.63.143 Perplexity self-discovery branch that propagated in a way that broke the diagnostic trail.
+
+**The bug** ([js/api.js:425](js/api.js)): the v3.63.143 self-discovery code called `normalizePerplexityModels(_raw).filter(MODEL_FILTERS.perplexity)` — but `normalizePerplexityModels` returns an **object** `{models, modelsSource, sourceDetail, rawLiveModels}`, not an array. Calling `.filter()` on an object throws `TypeError: ... .filter is not a function`. The throw was caught by `fetchModelsForProvider`'s outer try-catch which just logged to console and returned undefined silently — no entry in `tierClassificationErrors`, and the caller's MODEL_FALLBACKS fallback chain didn't kick in either (still investigating why, possibly an in-flight timing issue where Bundle for Scout was clicked before the slow Mistral/Perplexity classifier calls completed).
+
+**The fix**: skip `normalizePerplexityModels` entirely in the self-discovery path. That helper exists to handle the `/v1/models` gateway response shape (with `perplexity/...` namespace prefixes and base-sonar expansion logic). Self-discovery returns clean current ids directly, and Perplexity's own live web search is more authoritative than the documented-fallback expansion, so we just dedupe + re-apply the `^sonar` safety-net filter via `MODEL_FILTERS.perplexity`.
+
+Applied to both `fetchModelsForProvider` and `fetchModelsForProviderLive` per the existing in-sync requirement.
+
+**Build stamp**: this release also corrects a `const BUILD` value in app.js that wasn't getting updated by the build-stamp PowerShell sweep (the sweep matched the `// Build: NNN` comment pattern but not the const-assignment pattern). v3.63.143's commit had `const BUILD = '20260604-015'` even though the validator was happy because it reads the file-header comment. The const is now back in sync at `'20260604-017'`.
+
+**Note on what's still being investigated**: the bug above explains the TypeError, but does NOT fully explain why MODEL_FALLBACKS didn't catch Perplexity (or why Mistral was also missing — Mistral's fetch path doesn't go through Perplexity-specific code). Most likely culprit: David clicked 📦 Bundle for Scout while Mistral's and Perplexity's classifier API calls were still in-flight, so they hadn't written to cache yet when the bundle snapshotted. WF_DEBUG.classifyTiers does `await classifyTiersForAllKeyed(...)` before opening the viewer, so this shouldn't happen — but it's the only remaining hypothesis given an empty error log alongside missing classifications. v3.63.145 will likely add a button-disabled state on Bundle for Scout while classification is in-flight to remove ambiguity.
+
+---
+
 ## v3.63.143
 
 **Mistral live model discovery + Perplexity self-discovery via web search**
