@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-026">
+  <meta name="waxframe-build" content="20260604-027">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.153">
+  <link rel="stylesheet" href="style.css?v=3.63.154">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.153",
+    "softwareVersion": "3.63.154",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -193,7 +193,7 @@
         <div class="hp-section-header honeycomb-header">
           <img src="images/WaxFrame_Worker_Bee_v2.png" class="hp-section-bee" alt="">
           <div class="hp-section-title-block">
-            <h2 class="hp-section-title">Your Worker Bees <button class="goal-info-btn" onclick="document.getElementById('infoBeesModal').classList.add('active')" title="About Worker Bees"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
+            <h2 class="hp-section-title">Set up your hive <button class="goal-info-btn" onclick="document.getElementById('infoBeesModal').classList.add('active')" title="About Worker Bees"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
             <p class="hp-section-sub">Each AI in your hive acts as a <strong>reviewer</strong> — and one of them also acts as your <strong>Builder</strong>, the AI that rewrites your document each round using everyone's notes.</p>
             <p class="hp-section-sub"><strong>Set up at least two AIs to continue. Three or more is recommended</strong> — with three or more reviewers the hive can resolve disagreements on its own; with only two, you'll occasionally have to break a tie yourself.</p>
             <p class="hp-section-sub">Click any AI card below to set it up, pick its model, and (when you're ready) make it your Builder. New here, or wondering what it costs to run? Tap the <strong>ⓘ</strong> next to the heading above — cost, keys, and the full setup guide all live there.</p>
@@ -2877,23 +2877,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.153';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.154';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.153"></script>
-<script src="lib/jszip.min.js?v=3.63.153"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.153"></script>
-<script src="js/version.js?v=3.63.153"></script>
-<script src="js/storage.js?v=3.63.153"></script>
-<script src="js/theme.js?v=3.63.153"></script>
-<script src="js/audio.js?v=3.63.153"></script>
-<script src="js/scenes.js?v=3.63.153"></script>
-<script src="js/wf-debug.js?v=3.63.153"></script>
-<script src="js/provider-models.js?v=3.63.153"></script>
-<script src="js/api.js?v=3.63.153"></script>
-<script src="js/templates.js?v=3.63.153"></script>
-<script src="js/api-links.js?v=3.63.153"></script>
-<script src="js/app.js?v=3.63.153"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.154"></script>
+<script src="lib/jszip.min.js?v=3.63.154"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.154"></script>
+<script src="js/version.js?v=3.63.154"></script>
+<script src="js/storage.js?v=3.63.154"></script>
+<script src="js/theme.js?v=3.63.154"></script>
+<script src="js/audio.js?v=3.63.154"></script>
+<script src="js/scenes.js?v=3.63.154"></script>
+<script src="js/wf-debug.js?v=3.63.154"></script>
+<script src="js/provider-models.js?v=3.63.154"></script>
+<script src="js/api.js?v=3.63.154"></script>
+<script src="js/templates.js?v=3.63.154"></script>
+<script src="js/api-links.js?v=3.63.154"></script>
+<script src="js/app.js?v=3.63.154"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

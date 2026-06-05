@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-026
+   Build: 20260604-027
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -855,6 +855,12 @@ body.helper-body .page-main {
   gap: 4px;
   min-width: 0;
   flex: 0 1 auto;
+  /* v3.63.154 — Hold a consistent width across rows so the status pill,
+     "Model:" label, and dropdown columns all align vertically per the
+     prototype's "lined up neatly in a column" look. Long names ellipsize
+     via .ai-setup-name's existing overflow:hidden + text-overflow:ellipsis. */
+  width: 160px;
+  max-width: 160px;
 }
 .ai-setup-name {
   /* v3.63.14 — was flex:1, but the row also has .ai-setup-summary-spacer with
@@ -15332,7 +15338,8 @@ kbd {
 }
 
 /* ── Collapsed-row status pill + compact model select ────── */
-.ai-setup-status-pill {
+.ai-setup-status-pill,
+.ai-setup-status-pill-placeholder {
   font-size: 10.5px;
   padding: 2px 8px;
   border-radius: 999px;
@@ -15340,6 +15347,43 @@ kbd {
   letter-spacing: 0.04em;
   white-space: nowrap;
   flex-shrink: 0;
+  /* v3.63.154 — Fixed min-width so absent-pill rows still hold the
+     column and downstream slots ("Model:", dropdown, Builder chip)
+     stay aligned across rows. */
+  min-width: 84px;
+  width: 84px;
+  text-align: center;
+  box-sizing: border-box;
+}
+.ai-setup-status-pill-placeholder {
+  visibility: hidden;
+  border: 1px solid transparent;
+}
+/* "Model:" label between the status pill and the dropdown. Per David:
+   "the word model next to the drop down was much more pro level". */
+.ai-setup-model-label {
+  font-size: var(--fs-11);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+/* Builder chip placeholder — holds the column width when this row
+   isn't the active Builder so the ⚠ deprecation flag + spacer don't
+   reshuffle across rows. */
+.ai-setup-builder-chip-placeholder {
+  display: inline-flex;
+  min-width: 90px;
+  width: 90px;
+  visibility: hidden;
+  flex-shrink: 0;
+}
+.ai-setup-builder-chip {
+  min-width: 90px;
+  width: 90px;
+  justify-content: center;
+  box-sizing: border-box;
 }
 .ai-setup-status-pill.is-ready {
   background: rgba(67, 160, 71, 0.12);
@@ -15353,9 +15397,11 @@ kbd {
 }
 
 .ai-setup-compact-model {
-  flex: 1 1 auto;
-  min-width: 200px;
-  max-width: 420px;
+  /* v3.63.154 — Fixed width so the dropdown column aligns across rows.
+     Was flex:1 1 auto with min/max, which let each row's dropdown size
+     differently and the column wandered. */
+  flex: 0 0 320px;
+  width: 320px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);

@@ -1,0 +1,68 @@
+WaxFrame Backlog Master v223
+2026-06-04
+
+State: v3.63.154 Pro shipped on main. Eighth Worker Bees release of the evening. Pile of David polish + one real bug fix: (a) Fixed silent card-click bug where v3.63.153's inline JSON.stringify(pickModel) embedded literal " inside a "-quoted onclick attribute, truncating the handler at parse time — fix: move model id to data-pick-model attribute, handler reads this.dataset.pickModel. Affects all 6 cards (Role + Tier). (b) Collapsed-row column alignment via fixed widths on .ai-setup-name-group (160px), status pill (84px), compact model select (320px), Builder chip (90px), plus placeholder spans for absent states. Every row's slots now sit at the same x-coord across rows. (c) Builder chip moved out of .ai-setup-name-group to its own slot AFTER the model dropdown ("the other side of the dropdown for the model"). (d) "Model:" label added between status pill and dropdown ("the word model — much more pro level"). (e) Bulk-select toolbar (All/None/Remove) moved into the "Custom AIs (N)" group header (Internet mode); Server mode keeps it at top of flat list. (f) Custom AI count format: "Custom AIs <badge>4</badge>" → "Custom AIs (4)" parens. (g) Page H2 renamed "Your Worker Bees" → "Set up your hive" for terminology consistency with "the hive" used everywhere else. (h) Sidebar legend block dropped (emoji decodable from card context); Jump-to-AI moves to top.
+
+Closes / advances #26 (toolbar alignment).
+
+Not changed by explicit request: Builder pill in sidebar list (David considered then rejected — "the logos are next to them and they're really small anyway"). Test + Recommend Models stay BLUE (paired utility duo per v3.32.12 — David caught me about to recolor them in v3.63.153).
+
+Deferred: per-row "Manual override" tag still needs delta tracking. Legend-block CSS (.bees-sidebar-legend*) now dead-but-present in style.css; pruning candidate.
+
+v3.63.153 state still holds: Sidebar chassis (2-col .bees-layout), collapsed-row redo (model dropdown moved INTO row header, status pill), color cohesion (green→gold for is-active selection), transparent v4 Builder Bee asset.
+
+PRIOR STATE (v3.63.153, retained for context until next release reshuffles the margin):
+Worker Bees v3 rework Phase 3. Sidebar 2-col layout. Collapsed-row model dropdown. Green→gold for is-active. Transparent v4 mascot.
+
+PRIOR STATE (v3.63.152, retained for context until next release reshuffles the margin):
+Hive Profile dropdown above bee grid. 5 options. Persisted to localStorage["waxframe_hive_profile"]. Internet mode only.
+
+PRIOR STATE (v3.63.151, retained for context until next release reshuffles the margin):
+6-card grid (Role + Tier picks) in expanded row. Closes #22.
+
+Open Bugs
+
+(none currently tracked outside the active task list)
+
+Open Features / Tasks — Worker Bees rework Phase 5+
+
+- #10 Hive Profiles: "Save current as named profile" (named user profiles); SHOULD wait for delta-tracking UX
+- #12 Hive Profiles: dedicated docs page (hive-profiles.html)
+- #24 Worker Bees rework: drop sub-1366px responsive code — cleanup pass; design is settled
+- #27 Worker Bees rework: 3-group ordering (defaults / customs / servers) — current Internet/Server toggle is a bigger restructure
+- #32 Builder consolidation: documentation sweep (User Manual, README, landing pages, info modals)
+- #34 Worker Bees rework: Builder education in 3 surfaces — modal + standalone page remaining
+- #35 Auto-classify tier picks always (not click-to-classify)
+- #36 Worker Bees rework: server provider group label
+- Per-row "Manual override" tag — needs delta tracking
+- Per-tier WHY text: classifier currently produces one overall WHY; could split per-tier
+- Dead-CSS cleanup pass: legend-block rules from pre-v3.63.154 sidebar (.bees-sidebar-legend*)
+- WaxFrame_Builder_v3.png pruning candidate (worker-bees-prototype.html still references it)
+- Restore-from-Checkpoint diff-and-pick UI — PARKED
+- Hive parallel fan-out RPS-awareness
+- Model recommender filter-awareness warning
+- Failover Builder behavior — single-round CONTENT_FILTERED handling
+- Builder-incapable family list expansion
+- Pause/resume at reviewer seam
+- File System Access API exploration
+- Provider Catalog foundation (parked)
+- CSS rule consolidation sweep
+- Repo housekeeping — docs/ folder
+- Triage CodeQL + Dependabot findings
+- Rules reference update — "verify every external URL before shipping" + "always update const BUILD in addition to the // Build comment" + "release-check validator should compare const BUILD against // Build comment"
+
+Observations
+
+- 2026-06-04 — The card-click bug is a textbook attribute-encoding mistake that escaped review at ship time on v3.63.153 because the cards rendered visually correct (the broken onclick caused a silent failure, not a render error). Worth adding a release-check rule: any inline onclick with unescaped JSON.stringify should fail validation. Logging as a future improvement to the validator.
+
+- 2026-06-04 — David's polish requests were all design-coherence work, not function. The most valuable lesson from this session: when the user is patient enough to itemize a half-dozen alignment / labeling / placement nits, do them all in one release rather than splitting. Splitting these would have produced 6 micro-releases with overlapping CHANGELOGs and unclear diff boundaries.
+
+- 2026-06-04 — Worker Bees v3 rework arc complete-ish: v3.63.147 (core) → v3.63.148 (mascot placement) → v3.63.149 (mascot asset) → v3.63.150 (row cleanup) → v3.63.151 (6-card grid) → v3.63.152 (Hive Profile) → v3.63.153 (sidebar + colors) → v3.63.154 (alignment + bug + polish). Eight releases in one evening. Live screen should now read very close to worker-bees-prototype.html v2.2.
+
+- 2026-06-04 — release-check validator caught no drift across v3.63.135 through v3.63.154 (twenty ceremonies).
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01. The day's eight-release Worker Bees arc (v3.63.147–v3.63.154) is dominantly conversion-friction-reduction work. Combined with the cost-transparency callouts from v3.63.146, the setup flow is materially cleaner: 4 screens (down from 5), 6 one-click picks per AI, profile dropdown for bulk apply, sidebar nav for fast jumping, page title now reading "Set up your hive" instead of "Your Worker Bees" so the terminology matches the rest of the app. Conversion impact remains to be measured.
