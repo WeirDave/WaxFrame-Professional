@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-028
+// Build: 20260604-029
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4746,10 +4746,25 @@ function _renderHiveRolesAndTiers(ai, currentModel) {
 // persistence + endpoint-rebuild + recheck-flag-clear logic stays in one
 // place. Falls back to renderAISetupGrid to refresh the is-active state
 // across all 6 cards plus the dropdown's current-value display.
+//
+// v3.63.156 — Diagnostic console.log added because David has reported
+// the card click failing to swap the model across multiple releases
+// (v3.63.153/.154/.155) despite each fix attempt looking correct on
+// paper. The log proves whether the handler fires at all + shows the
+// exact aiId/model pair the click is dispatching, so the next debug
+// pass has signal to work from. Also explicitly assigned to window so
+// inline onclick attributes resolve it even under unusual script-scope
+// conditions (paranoia — top-level `function foo()` declarations are
+// globally bound in standard <script> tags, but assigning explicitly
+// removes any doubt).
 function swapAIModelFromHiveCard(aiId, model) {
-  if (!aiId || !model) return;
+  console.log('[wf:swap]', { aiId, model, hasSaveModelForAI: typeof saveModelForAI === 'function', hasRenderGrid: typeof renderAISetupGrid === 'function' });
+  if (!aiId || !model) { console.warn('[wf:swap] missing args, aborting'); return; }
   if (typeof saveModelForAI === 'function') saveModelForAI(aiId, model);
   if (typeof renderAISetupGrid === 'function') renderAISetupGrid();
+}
+if (typeof window !== 'undefined') {
+  window.swapAIModelFromHiveCard = swapAIModelFromHiveCard;
 }
 
 // Why-expander toggle. Symmetric with the prototype's toggleWhy:
@@ -4779,7 +4794,32 @@ function toggleHiveWhy(aiId) {
 // so the user sees what's stored without losing visibility.
 function _buildCompactModelSelect(ai, currentModel) {
   const models = getModelsForProvider(ai.provider);
-  if (!models.length) return '';
+  // v3.63.156 — When no live model list is cached (typical for Custom
+  // AIs that haven't been recommended yet, or for server-imported
+  // customs whose endpoint hasn't been polled this session), fall back
+  // to showing whatever model is saved. Previously we returned '' here,
+  // which made the dropdown disappear and the Builder button slid left
+  // into the empty MODEL slot — David's report: "How come Jamba and
+  // Together AI don't have model dropdowns?". Rendering the saved
+  // model as a single-option disabled select keeps the column aligned
+  // AND tells the user exactly what's currently in use. A fresh fetch
+  // happens when they expand the row and click Recommend Models.
+  if (!models.length) {
+    if (currentModel) {
+      return `<select class="ai-setup-compact-model is-stale" id="compactmodel-${ai.id}"
+        onclick="event.stopPropagation();"
+        title="${escapeHtml(currentModel)} (saved — expand and click Recommend Models to refresh the list)"
+        disabled>
+        <option value="${escapeHtml(currentModel)}" selected>${escapeHtml(currentModel)} (saved)</option>
+      </select>`;
+    }
+    return `<select class="ai-setup-compact-model is-stale" id="compactmodel-${ai.id}"
+      onclick="event.stopPropagation();"
+      title="No models loaded yet — expand this row and click Recommend Models."
+      disabled>
+      <option>(no models loaded — click Recommend Models)</option>
+    </select>`;
+  }
 
   const reviewerCache = (typeof getReviewerRecommendation === 'function') ? getReviewerRecommendation(ai.id) : null;
   const builderCache  = (typeof getBuilderRecommendation  === 'function') ? getBuilderRecommendation(ai.id)  : null;
@@ -5977,8 +6017,11 @@ async function recommendModelsForAll() {
   // typically 5-15s for 6 default AIs, even with 12 underlying API calls.
   let succeeded = 0;
   let failed = 0;
+  // v3.63.156 — keepExpanded:false so the bulk Recommend run doesn't blow
+  // open every row (David's report). Single-row Recommend Models button
+  // calls without the opts argument and keeps its row expanded as before.
   const results = await Promise.allSettled(
-    eligible.map(ai => recheckModelForAI(ai.id).finally(() => { done++; }))
+    eligible.map(ai => recheckModelForAI(ai.id, { keepExpanded: false }).finally(() => { done++; }))
   );
   _stopAllTick();
   results.forEach((r, idx) => {
@@ -7803,7 +7846,15 @@ async function recommendForDefault(provider) {
 // This is the migration path for users whose keys were saved before v3.26.0
 // shipped — saveKeyForAI never fired for them, so they're still on the
 // hardcoded MODEL_LABELS picks.
-async function recheckModelForAI(id) {
+async function recheckModelForAI(id, opts) {
+  // v3.63.156 — opts.keepExpanded === false suppresses the auto-add to
+  // _expandedAIIds inside the renderAIRow calls below. Used by
+  // recommendModelsForAll for bulk runs so picking "Recommend Models for
+  // All" doesn't blow open every row (David's report: "Recommend models
+  // for all blows the cards all out and expands them all"). Single-row
+  // user-initiated callers (the per-row Recommend Models button) keep
+  // the default keepExpanded=true so the row they clicked stays open.
+  const _keepExpanded = (opts && opts.keepExpanded === false) ? false : true;
   const ai = aiList.find(a => a.id === id);
   if (!ai) return;
   const cfg = API_CONFIGS[ai.provider];
@@ -7943,7 +7994,7 @@ async function recheckModelForAI(id) {
   // dropdown picks up the freshly-cached labels, even when the AI confirms
   // the existing model is still the best pick.
   if (result.model === previousModel) {
-    renderAIRow(id);
+    renderAIRow(id, _keepExpanded);
     flashGreen();
     toast(`✓ ${ai.name}: ${result.model} — already the recommended pick${result.why ? '. ' + result.why : ''}`, 6000);
     return;
@@ -7960,7 +8011,7 @@ async function recheckModelForAI(id) {
     cfg.endpoint = cfg.endpointFn(result.model);
   }
   saveSettings();
-  renderAIRow(id);
+  renderAIRow(id, _keepExpanded);
   flashGreen();
   toast(`✨ ${ai.name}: switched to ${result.model}${result.why ? ' — ' + result.why : ''}`, 6000);
 }

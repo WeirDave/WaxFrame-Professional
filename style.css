@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-028
+   Build: 20260604-029
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -15495,6 +15495,17 @@ kbd {
 .ai-setup-compact-model:focus {
   border-color: var(--accent, #f4b400);
   outline: none;
+}
+/* v3.63.156 — Stale state: rendered when no live model list is cached
+   for a provider (Custom AIs that haven't been recommended yet; server-
+   imported customs whose endpoint hasn't been polled). Dashed border +
+   dim text signals "this is the saved model — click Recommend Models
+   to refresh the list and pick from it". */
+.ai-setup-compact-model.is-stale {
+  border-style: dashed;
+  color: var(--text-dim);
+  cursor: help;
+  background: transparent;
 }
 
 /* ── Expanded panel: recommend-row replaces the modelSelector ── */

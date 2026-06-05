@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.156
+
+**Three bug fixes — Recommend-All expand-all, Jamba/Together AI dropdown disappearance, card-click diagnostic**
+
+Build: `20260604-029`<br>
+Released: `2026-06-04`
+
+### Bug A: "Recommend Models for All" expanded every row
+
+Same family as v3.63.155's Hive Profile expand-all bug. `recommendModelsForAll` calls `recheckModelForAI(ai.id)` for each eligible AI; `recheckModelForAI` calls `renderAIRow(id)` which defaults to `keepExpanded = true`. So the bulk run pushed every AI's id into `_expandedAIIds`.
+
+**Fix**: `recheckModelForAI` gained an `opts` parameter (`{ keepExpanded? }`). `recommendModelsForAll` passes `{ keepExpanded: false }`. Single-row recommend (the per-row "Recommend Models" button inside an expanded panel) still defaults to keeping its row open, so the row you clicked stays open.
+
+### Bug B: Jamba and Together AI had no model dropdown
+
+David's report: *"How come Jamba and Together AI don't have model dropdowns?"*. `_buildCompactModelSelect` returned `''` when `getModelsForProvider(ai.provider)` returned an empty array — which is the steady state for Custom AIs whose `Recommend Models` hasn't been run this session, and for server-imported customs whose endpoint hasn't been polled. With the dropdown gone, the Builder button to the right slid into the empty MODEL slot — exactly what David was seeing (Jamba row reading `MODEL: ⚠ Reviewer-only`, Together AI row reading `MODEL: 🔨 Builder`).
+
+**Fix**: when no live list exists but `cfg.model` does, render a single-option `<select>` showing the saved model with a `(saved)` suffix, marked `.is-stale` (dashed border + dim color + cursor:help). Hover tooltip tells the user to expand the row and click Recommend Models to refresh. Column stays aligned. When there's no saved model either (brand new AI, no key, no recommend run), render a placeholder option `(no models loaded — click Recommend Models)`.
+
+### Bug C diagnostic: 6-card click still not changing the model
+
+David has reported this across v3.63.153/.154/.155 despite each fix attempt looking correct on paper. **v3.63.156 adds**:
+
+1. A `console.log('[wf:swap]', { aiId, model, ... })` inside `swapAIModelFromHiveCard` so we can prove whether the click handler is firing AT ALL on next test.
+2. An explicit `window.swapAIModelFromHiveCard = swapAIModelFromHiveCard` assignment — top-level `function foo()` declarations in standard `<script>` tags are already globally bound, but this removes any doubt.
+
+If the log fires on click but the model still doesn't change, the bug is downstream of `swapAIModelFromHiveCard` (saveModelForAI / renderAISetupGrid). If the log doesn't fire, the inline onclick isn't being invoked — either a parsing issue with the rendered HTML or something intercepting at the pointer-events level.
+
+Next debug pass needs David's console output: F12 → Console → click any tier/role card.
+
+### Layout note
+
+Adding the stale-dropdown fallback means Jamba and Together AI now align with the rest of the rows — Builder button column stays in its proper position regardless of whether the dropdown is fresh or stale.
+
+---
+
 ## v3.63.155
 
 **Per-row Builder button + collapsed-row Manage link + two real bug fixes (card click + bulk-profile expand-all)**
