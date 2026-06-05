@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260604-014
+     Build: 20260604-015
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-014">
+  <meta name="waxframe-build" content="20260604-015">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <link rel="canonical" href="https://waxframe.com/ai-api-pricing.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.141">
+  <link rel="stylesheet" href="style.css?v=3.63.142">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -421,12 +421,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.141"></script>
-<script src="lib/docx.min.js?v=3.63.141"></script>
-<script src="js/docx-export.js?v=3.63.141"></script>
-<script src="js/nav-helper.js?v=3.63.141"></script>
-<script src="js/license-helper.js?v=3.63.141"></script>
-<script src="js/version.js?v=3.63.141"></script>
+<script src="js/theme.js?v=3.63.142"></script>
+<script src="lib/docx.min.js?v=3.63.142"></script>
+<script src="js/docx-export.js?v=3.63.142"></script>
+<script src="js/nav-helper.js?v=3.63.142"></script>
+<script src="js/license-helper.js?v=3.63.142"></script>
+<script src="js/version.js?v=3.63.142"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
@@ -456,13 +456,13 @@
     providers: [
       { id:'gemini-free', name:'Gemini (Google) — free tier', shortName:'Gemini Flash (free tier)', model:'gemini-2.5-flash', inputPerM:0.00, outputPerM:0.00, contextWindow:'1M', maxOutput:'8K', estPerRound:0.000, estNote:'free while AI Studio billing is disabled', billingUrl:'https://aistudio.google.com/apikey', tier1Rpm:'15', tier1Tpm:'—', freeTier:'1500 RPD', rateLimitNotes:'Free while billing disabled. Daily quota resets at midnight Pacific.', recommendationTag:'cheapest', recommendationNote:'Free while AI Studio billing is disabled. 1M-token context window, 1500 requests/day quota, synthesizes Builder output reliably. Catch: enable billing on AI Studio and routing can quietly flip to paid tier on the same model name.' },
       { id:'gemini-paid', name:'Gemini (Google) — paid', shortName:'Gemini Flash (paid)', model:'gemini-2.5-flash', inputPerM:0.075, outputPerM:0.30, contextWindow:'1M', maxOutput:'8K', estPerRound:0.001, billingUrl:'https://aistudio.google.com/apikey', tier1Rpm:'2K', tier1Tpm:'4M', freeTier:'n/a', rateLimitNotes:'Paid-tier limits are very generous; cost discipline matters more than RPM.', recommendationTag:null, recommendationNote:null },
-      { id:'grok', name:'Grok (xAI)', shortName:'Grok', model:'grok-4-fast-non-reasoning', inputPerM:0.20, outputPerM:0.50, contextWindow:'256K', maxOutput:'8K', estPerRound:0.002, billingUrl:'https://console.x.ai/billing', tier1Rpm:'~60', tier1Tpm:'varies', freeTier:'Limited', rateLimitNotes:'API availability and quotas vary; check console for current tier.', recommendationTag:null, recommendationNote:null },
+      { id:'grok', name:'Grok (xAI)', shortName:'Grok', model:'grok-4-fast-non-reasoning', inputPerM:0.20, outputPerM:0.50, contextWindow:'256K', maxOutput:'8K', estPerRound:0.002, billingUrl:'https://console.x.ai', tier1Rpm:'~60', tier1Tpm:'varies', freeTier:'Limited', rateLimitNotes:'API availability and quotas vary; check console for current tier.', recommendationTag:null, recommendationNote:null },
       { id:'deepseek', name:'DeepSeek', shortName:'DeepSeek', model:'deepseek-chat', inputPerM:0.27, outputPerM:1.10, contextWindow:'64K', maxOutput:'8K', estPerRound:0.004, billingUrl:'https://platform.deepseek.com/top_up', tier1Rpm:'~60', tier1Tpm:'varies', freeTier:'None', rateLimitNotes:'Cheapest paid option, but consistently the slowest responder in the hive (60–90s/round).', recommendationTag:'cheapest', recommendationNote:'Cheapest reliable paid Builder — roughly 10x cheaper per token than Claude or ChatGPT. Caveat: consistently the slowest responder in the hive, often 60–90 seconds per round. If you don’t mind the wait, it’s the best value.' },
       { id:'together', name:'Together AI', shortName:'Together AI', model:'Llama-3.3-70B-Instruct-Turbo', inputPerM:0.88, outputPerM:0.88, contextWindow:'128K', maxOutput:'4K', estPerRound:0.006, billingUrl:'https://api.together.ai/settings/billing', tier1Rpm:'~600', tier1Tpm:'varies', freeTier:'Trial credits', rateLimitNotes:'Open-weight model gateway; generous limits, not yet hive-tested in production.', recommendationTag:null, recommendationNote:null },
-      { id:'mistral', name:'Mistral', shortName:'Mistral', model:'mistral-large-latest', inputPerM:2.00, outputPerM:6.00, contextWindow:'128K', maxOutput:'8K', estPerRound:0.022, billingUrl:'https://console.mistral.ai/api-keys', tier1Rpm:'~30', tier1Tpm:'varies', freeTier:'Trial credits', rateLimitNotes:'Low RPS on paid Tier 1. A parallel 6-bee hive can trigger 429 even with token budget remaining. Contact Mistral support for tier raise.', recommendationTag:'balanced', recommendationNote:'Similar territory to ChatGPT — fast, reliable, with a distinct European model lineage that adds genuine diversity to the hive. Watch the low Tier 1 RPM on paid accounts.' },
+      { id:'mistral', name:'Mistral', shortName:'Mistral', model:'mistral-large-latest', inputPerM:2.00, outputPerM:6.00, contextWindow:'128K', maxOutput:'8K', estPerRound:0.022, billingUrl:'https://admin.mistral.ai/organization/billing', tier1Rpm:'~30', tier1Tpm:'varies', freeTier:'Trial credits', rateLimitNotes:'Low RPS on paid Tier 1. A parallel 6-bee hive can trigger 429 even with token budget remaining. Contact Mistral support for tier raise.', recommendationTag:'balanced', recommendationNote:'Similar territory to ChatGPT — fast, reliable, with a distinct European model lineage that adds genuine diversity to the hive. Watch the low Tier 1 RPM on paid accounts.' },
       { id:'chatgpt', name:'ChatGPT (OpenAI)', shortName:'ChatGPT', model:'gpt-4.1', inputPerM:2.00, outputPerM:8.00, contextWindow:'1M', maxOutput:'32K', estPerRound:0.026, billingUrl:'https://platform.openai.com/settings/organization/billing/overview', tier1Rpm:'500', tier1Tpm:'30K', freeTier:'None', rateLimitNotes:'Tiers scale with usage history; $5 credit unlocks most user needs.', recommendationTag:'balanced', recommendationNote:'Strong all-rounder — fast, reliable formatting compliance, consistent convergence behavior. A good default for long-form documents where Builder speed matters.' },
       { id:'cohere', name:'Cohere', shortName:'Cohere', model:'command-r-plus', inputPerM:2.50, outputPerM:10.00, contextWindow:'128K', maxOutput:'4K', estPerRound:0.033, billingUrl:'https://dashboard.cohere.com/billing', tier1Rpm:'~100', tier1Tpm:'varies', freeTier:'Trial credits', rateLimitNotes:'Generous trial credits; not yet hive-tested in production.', recommendationTag:null, recommendationNote:null },
-      { id:'claude', name:'Claude (Anthropic)', shortName:'Claude', model:'claude-sonnet-4-6', inputPerM:3.00, outputPerM:15.00, contextWindow:'200K', maxOutput:'8K', estPerRound:0.045, billingUrl:'https://console.anthropic.com/settings/billing', tier1Rpm:'50', tier1Tpm:'50K', freeTier:'None', rateLimitNotes:'Tiers progress automatically with paid spend over time.', recommendationTag:'highest-capability', recommendationNote:'Frequently the best at nuanced voice, precise instruction-following, and detailed reasoning on complex documents. For high-stakes documents (RFP responses, executive summaries, board memos), the premium pays off in fewer rounds to converge.' },
+      { id:'claude', name:'Claude (Anthropic)', shortName:'Claude', model:'claude-sonnet-4-6', inputPerM:3.00, outputPerM:15.00, contextWindow:'200K', maxOutput:'8K', estPerRound:0.045, billingUrl:'https://platform.claude.com/settings/billing', tier1Rpm:'50', tier1Tpm:'50K', freeTier:'None', rateLimitNotes:'Tiers progress automatically with paid spend over time.', recommendationTag:'highest-capability', recommendationNote:'Frequently the best at nuanced voice, precise instruction-following, and detailed reasoning on complex documents. For high-stakes documents (RFP responses, executive summaries, board memos), the premium pays off in fewer rounds to converge.' },
       { id:'perplexity', name:'Perplexity', shortName:'Perplexity', model:'sonar-pro', inputPerM:3.00, outputPerM:15.00, contextWindow:'200K', maxOutput:'8K', estPerRound:0.045, billingUrl:'https://console.perplexity.ai', tier1Rpm:'~50', tier1Tpm:'varies', freeTier:'None', rateLimitNotes:'$5/month recurring subscription tier (enable auto-pay at signup) covers most usage; $50/month otherwise.', recommendationTag:null, recommendationNote:null }
     ]
   };
