@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.148
+
+**Builder Bee mascot moved to the Worker Bees screen header — opposite the Worker Bee**
+
+Build: `20260604-021`<br>
+Released: `2026-06-04`
+
+Re-do of the mascot placement from v3.63.147. David's feedback: the Builder Bee shouldn't be stamped inside every AI row (cluttered, repetitive); it belongs as a brand asset at the top of the screen, opposite the Worker Bee, so the two mascots **face each other across the section header**.
+
+**What changed**:
+
+1. **Builder Bee mascot in screen header** ([index.html:202](index.html), [style.css:12098](style.css)) — added a second `.hp-section-bee` to the Worker Bees section header, with a `.hp-section-bee-builder` modifier class. The modifier applies `margin-left: auto` (pushes the mascot to the far right of the flex row) and a CSS `transform: scaleX(-1)` flip (placeholder so the existing right-facing asset visually faces inward toward the Worker Bee).
+
+2. **Placeholder flip is temporary** — David is preparing a properly-mirrored asset (via Kai or Paint Shop Pro). Once swapped in, the `transform: scaleX(-1)` rule can be removed. The HTML reference to `images/WaxFrame_Builder_v3.png` stays the same; only the CSS flip goes away.
+
+3. **In-row mascot removed** ([js/app.js:4584](js/app.js), [style.css:14897](style.css)) — the 28px Builder Bee mascot inside each AI row's Builder affordance is gone. The functional button and indicator text stay (so users can still pick a Builder from any row), but the brand asset duplication is eliminated. `.ai-builder-bee-img` rule removed from style.css.
+
+4. **Collapsed-row chip kept** — the small 16px Builder Bee chip that appears on the collapsed summary row of whichever AI is the active Builder stays. It serves a different purpose (identifying the active Builder at a glance without expanding the row) rather than as a brand-asset showcase. Two appearances on the screen total now: header mascot + active-Builder chip.
+
+5. **Intro copy updated** ([index.html:198](index.html)) — the Worker Bees intro paragraph now mentions the Builder role inline ("Each AI in your hive acts as a **reviewer** — and one of them also acts as your **Builder**, the AI that rewrites your document each round using everyone's notes.") and the call-to-action sub-line walks users through the picking flow.
+
+**Why the placeholder flip**: shipping with the asset flipped right-now via CSS is correct because (a) the mascots visually face each other immediately without waiting for the new asset, (b) when the properly-mirrored PNG arrives, the swap is one CSS rule removal, and (c) the JSON-LD / OpenGraph image references aren't affected (the flipped version only exists in the rendered DOM, not in any cached/shared image URL).
+
+Advances task #33 (mascot preservation) — moves it from "implemented in v3.63.147" to "implemented correctly in v3.63.148".
+
+---
+
 ## v3.63.147
 
 **Worker Bees v3 rework — core: Builder selection consolidated into Worker Bees, Builder screen retired**
