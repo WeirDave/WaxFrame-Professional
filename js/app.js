@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-024
+// Build: 20260604-025
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4459,6 +4459,8 @@ function renderAISetupGrid() {
   // the AI list render so a mode flip rebuilds everything.
   renderHiveModeToggle();
   renderWorkerBeeToolbar();
+  // v3.63.152 — Hive Profile toolbar (Internet mode only).
+  if (typeof renderHiveProfileBar === 'function') renderHiveProfileBar();
 
   // v3.30.4 — Persistent checkbox bulk-select toolbar. Always rendered
   // when any custom AI exists (regardless of mode). v3.31 keeps this on
@@ -5073,6 +5075,141 @@ function renderWorkerBeeToolbar() {
 // Recommend-a-Model now produces ONE Reviewer pick + ONE Builder pick per
 // AI, both surfaced directly in the model dropdown via ✨ and 🔨 markers.
 // The expanded panel no longer needs a separate quick-switch button row.
+
+// ────────────────────────────────────────────────────────────────────
+// v3.63.152 — Hive Profile toolbar (Worker Bees v3 rework Phase 2).
+//
+// Adds a profile dropdown above the bee grid. Picking a profile
+// (💰 Cheap / ⚖️ Balanced / 🧠 Thinker / ⚡ Fast) walks aiList and
+// swaps every AI's saved model to its corresponding tier pick (from
+// getCachedTiers). "Custom — keep my manual picks" disables the swap
+// and uses whatever each row currently has. The active profile is
+// persisted to localStorage so it survives screen toggles + reloads.
+//
+// Closes / advances #9, #10, #11. Companion to the 6-card grid that
+// landed in v3.63.151 — that release made tier picks one-click PER AI;
+// this one makes them one-click ACROSS ALL AIs.
+//
+// Internet mode only. Server mode doesn't have tier classification so
+// the bar isn't rendered there.
+//
+// What this release does NOT include (deferred):
+//   • Per-row "Manual override" tag when the user changes a single AI
+//     away from the active profile's pick — needs delta tracking.
+//   • A dedicated hive-profiles.html docs page (#12).
+//   • A "Save current as named profile" flow (#10's full scope).
+// ────────────────────────────────────────────────────────────────────
+const HIVE_PROFILE_OPTIONS = [
+  { id: 'custom',   label: 'Custom — keep my manual picks',           tier: null,       icon: '🛠' },
+  { id: 'cheap',    label: '💰 Cheap — cost-first',                    tier: 'cheap',    icon: '💰' },
+  { id: 'balanced', label: '⚖️ Balanced — capability per dollar',       tier: 'balanced', icon: '⚖️' },
+  { id: 'thinker',  label: '🧠 Heavy thinkers — deepest reasoning',     tier: 'thinker',  icon: '🧠' },
+  { id: 'fast',     label: '⚡ Speed-first — lowest latency',            tier: 'fast',     icon: '⚡' }
+];
+
+function getActiveHiveProfile() {
+  try {
+    const raw = localStorage.getItem('waxframe_hive_profile');
+    if (!raw) return 'custom';
+    return HIVE_PROFILE_OPTIONS.find(o => o.id === raw) ? raw : 'custom';
+  } catch (e) { return 'custom'; }
+}
+function setActiveHiveProfile(id) {
+  try { localStorage.setItem('waxframe_hive_profile', id); } catch (e) { /* defensive */ }
+}
+
+// Apply a profile to every keyed AI in the hive. For each AI:
+//   • Look up its cached tier picks via getCachedTiers(provider).
+//   • Read the chosen tier's model from that cache.
+//   • If a model exists, call saveModelForAI to persist it.
+// Skipped per-AI when: no tier cache yet (user hasn't run classify),
+// the chosen tier returned NONE for this AI, or the AI has no key.
+// Returns a summary { applied, skipped, total } for the toast.
+function applyHiveProfile(profileId) {
+  const opt = HIVE_PROFILE_OPTIONS.find(o => o.id === profileId);
+  if (!opt) return null;
+  setActiveHiveProfile(profileId);
+
+  if (!opt.tier) {
+    // "Custom" — no swap, just record the choice and re-render.
+    renderAISetupGrid();
+    if (typeof toast === 'function') toast('🛠 Hive profile: Custom — keeping your manual picks');
+    return { applied: 0, skipped: 0, total: 0 };
+  }
+
+  let applied = 0, skipped = 0, total = 0;
+  aiList.forEach(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    if (!cfg?._key) return;  // No key, no swap.
+    total++;
+    const tiersBlob = (typeof getCachedTiers === 'function') ? getCachedTiers(ai.provider) : null;
+    const tierModel = tiersBlob?.tiers?.[opt.tier] || null;
+    if (!tierModel) { skipped++; return; }
+    if (cfg.model === tierModel) { applied++; return; }  // Already on it; count it.
+    if (typeof saveModelForAI === 'function') saveModelForAI(ai.id, tierModel);
+    applied++;
+  });
+
+  renderAISetupGrid();
+  if (typeof toast === 'function') {
+    if (applied === 0) {
+      toast(`${opt.icon} ${opt.label.split(' — ')[0]} — no AIs have ${opt.tier} picks cached yet. Click "Recommend Models for All" first.`);
+    } else if (skipped > 0) {
+      toast(`${opt.icon} Applied ${opt.label.split(' — ')[0]} to ${applied} of ${total} AIs (${skipped} have no ${opt.tier} pick cached).`);
+    } else {
+      toast(`${opt.icon} Applied ${opt.label.split(' — ')[0]} to ${applied} ${applied === 1 ? 'AI' : 'AIs'}.`);
+    }
+  }
+  return { applied, skipped, total };
+}
+
+// Render the Hive Profile toolbar above the bee grid. Internet mode only.
+function renderHiveProfileBar() {
+  const bar = document.getElementById('hiveProfileBar');
+  if (!bar) return;
+  if (_hiveMode !== 'internet') { bar.innerHTML = ''; return; }
+
+  const active = getActiveHiveProfile();
+  const activeOpt = HIVE_PROFILE_OPTIONS.find(o => o.id === active) || HIVE_PROFILE_OPTIONS[0];
+  const options = HIVE_PROFILE_OPTIONS.map(o =>
+    `<option value="${o.id}"${o.id === active ? ' selected' : ''}>${escapeHtml(o.label)}</option>`
+  ).join('');
+
+  // Note text. Differs by active profile:
+  //   • Custom → "manual picks" message (mirrors prototype)
+  //   • Tier   → how many AIs match vs. how many overrode
+  let note = '';
+  if (active === 'custom') {
+    note = 'Currently using your manual picks. Switch profile above to auto-set tier-matched models.';
+  } else {
+    const tier = activeOpt.tier;
+    let matched = 0, available = 0;
+    aiList.forEach(ai => {
+      const cfg = API_CONFIGS[ai.provider];
+      if (!cfg?._key) return;
+      const tiersBlob = (typeof getCachedTiers === 'function') ? getCachedTiers(ai.provider) : null;
+      const tierModel = tiersBlob?.tiers?.[tier];
+      if (!tierModel) return;
+      available++;
+      if (cfg.model === tierModel) matched++;
+    });
+    if (available === 0) {
+      note = `No ${escapeHtml(tier)} picks cached yet for any AI. Click "Recommend Models for All" above to populate.`;
+    } else if (matched === available) {
+      note = `All ${available} AIs with a ${escapeHtml(tier)} pick are using it. Override individual rows from the expanded view.`;
+    } else {
+      note = `${matched} of ${available} AIs are using their ${escapeHtml(tier)} pick. The rest were manually overridden.`;
+    }
+  }
+
+  bar.innerHTML = `
+    <span class="hive-profile-bar-label">Hive Profile:</span>
+    <select class="hive-profile-bar-select" id="hiveProfileSelect" onchange="applyHiveProfile(this.value)">
+      ${options}
+    </select>
+    <span class="hive-profile-bar-note">${note}</span>
+  `;
+}
 
 
 
