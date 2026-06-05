@@ -293,16 +293,18 @@ Everything below MUST exist in the v3 Worker Bees rework, or have an explicit re
 
 ### 4.5 NEW for v3 (additions on top of existing functionality)
 - [ ] 4 tier cards per row (💰 Cheap, ⚖️ Balanced, 🧠 Thinker, ⚡ Fast) with one-click swap to active model
-- [ ] 2 role cards per row (✨ Reviewer, 🔨 Builder) — same one-click swap pattern
-- [ ] Empty-state "Classify tier picks now" button + countdown for rows with no tier cache
+- [ ] 2 role cards per row (✨ Reviewer, 🔨 Builder) — same one-click swap pattern; Builder card uses the Builder Bee mascot as its icon (task #33)
+- [ ] **Auto-classify on key save AND on screen load with empty cache** (task #35) — no click-to-classify empty state. Inline indicator during background classification.
 - [ ] Verifier badge per tier card (✓ verified / ↻ revised / ? unknown) for the Step 2 Perplexity verification pass
 - [ ] "Why each pick" expander with classifier reasoning per pick (all 6, not just the 4 tiers — bug we caught in the prototype)
 - [ ] Hive Profile dropdown at the top (Custom / Cheap / Balanced / Heavy thinkers / Speed-first)
 - [ ] Profile tag on each row when active profile matches the row's current model (or "🖐 Manual override" tag when it doesn't)
 - [ ] Recommend All AIs global button (parallel runner with countdown)
 - [ ] Sidecar with icon legend + Jump-to-AI nav + related-page links
-- [ ] If Option A consolidation: per-row 🔨 Builder toggle with single-select enforcement
-- [ ] If Option A consolidation: Builder-specific education surfaced contextually (info modal section, or inline on the 🔨-active row)
+- [ ] **Builder consolidation** (task #28's Option A — confirmed): per-row 🔨 Builder toggle with exactly-one-at-a-time enforcement; Builder-specific education in 3 surfaces (inline gold-tip on 🔨-active row + Worker Bees ⓘ modal section + standalone page linked from menu) — task #34
+- [ ] **Builder Bee chip on the collapsed row** when that row IS the active Builder (task #33) — instant visual identification of which AI is currently Builder
+- [ ] **Server provider group label** ("Server providers" or similar) in Server mode (task #36) — matches Internet mode's group labeling
+- [ ] **Documentation sweep** for the Builder consolidation (task #32) — User Manual, API Key Guide, help.html, document-playbooks, README, 3 landing pages, infoMenuModal, infoHowItWorksModal, Welcome screen pitch. Setup step counts change from "of 5" to "of 4."
 
 ### 4.6 Constraints
 - [ ] No phone-narrow layout (drop sub-1366px breakpoints, page minimum is 1366px wide)
@@ -316,12 +318,27 @@ Everything below MUST exist in the v3 Worker Bees rework, or have an explicit re
 
 ---
 
-## 5. Open Questions for David
+## 5. Resolved Questions (David's answers 2026-06-04)
 
-1. **Confirm Option A** for Builder consolidation? (My recommendation; gated on the three caveats in §3.4.)
-2. **Should server providers** get a labeled group header in Server mode (currently flat alphabetical with no label)?
-3. **For Option A**, where should Builder-specific education live? Info modal tab? Inline gold-tip on the 🔨-active row? Both?
-4. **For empty-state Classify** — auto-run on first row expand if no cache? Or always require the explicit click? My v2 prototype had click-required; less surprise, but one more click.
+| Question | David's answer |
+|---|---|
+| Confirm Option A for Builder consolidation? | **Yes — proceed.** Eliminate the Builder screen, fold Builder selection into Worker Bees. CRITICAL caveat: must update ALL documentation referencing the 5-step flow (User Manual, API Key Guide, help.html, document-playbooks, README, the 3 landing pages, infoMenuModal, infoHowItWorksModal, Welcome screen pitch). Setup step counts change from "of 5" to "of 4." Captured as task #32. |
+| Server provider group label? | **Yes — add one.** Match the "Default providers" / "Custom AIs" labeling pattern from Internet mode. Captured as task #36. |
+| Where Builder education lives? | **All three surfaces.** Tiered information architecture — quick (inline gold-tip on the 🔨-active row) + medium (info modal section) + deep (standalone page linked from the nav menu AND from the other two via "Learn more"). Captured as task #34. |
+| Empty-state classify — auto or click? | **Always auto.** Even David (building the app) wouldn't know which models map to which tier without the classifier output. Triggers: key save, screen load with empty cache, manual Recommend Models. Cost is ~$0.01 per cycle, negligible. Captured as task #35. |
+
+## 5b. CRITICAL CONSTRAINT (David flagged 2026-06-04)
+
+**Worker Bee + Builder Bee mascot graphics MUST stay prominent.** They're a major brand asset — David's colleagues' first reaction to the site was *"did you get these graphics together too?"* Eliminating the Builder screen removes the Builder Bee's prime real estate (currently the section header on the Builder screen), so we need replacement placement.
+
+**Proposed mascot integration in the v3 rework:**
+
+- **Worker Bee** (`images/WaxFrame_Worker_Bee_v2.png`) — stays in the main section header where it lives today
+- **Builder Bee** (`images/WaxFrame_Builder_v3.png`) — becomes the icon for the 🔨 Builder role-card in the new 6-card grid. Prominent display on every expanded row, every Worker Bee in the hive.
+- **When a row IS the active Builder** — collapsed row shows a small Builder Bee chip next to the AI name, so users instantly see which AI in their hive is currently the Builder
+- **Welcome screen + info modals** — continue to feature both mascots as today
+
+Captured as task #33. **Non-negotiable.**
 
 ---
 
