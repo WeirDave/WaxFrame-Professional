@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.146
+
+**Cost-transparency callouts — defuse the "API key sounds expensive" anxiety with measured numbers**
+
+Build: `20260604-019`<br>
+Released: `2026-06-04`
+
+Closes [task #21 / backlog item from 2026-06-04 conversation with Candy]. The cost number ($0.30/run, ~15 runs per $5) is now front and center in four high-traffic places, so prospective users see the answer to "how much will this actually cost me" before they get scared off by the abstract concept of an API key.
+
+The cost number is **measured, not estimated**. ChatGPT-side analysis of two recent DeepDive captures (Midea AC review run + Manly Bikes TripAdvisor review run, both 2026-06-04) against current per-token rates from each provider's billing page produced $0.2997 and $0.2984 respectively for full 10-AI hive runs. The "30 cents" headline rounds gently from those measured numbers.
+
+**Four placements, ordered by user-flow priority**:
+
+1. **Welcome screen hero callout** ([index.html:130](index.html), [style.css:606](style.css)) — accent-tinted card between the welcome-pitch and the menu hint. Hero line: *"~$0.30 per full hive review · $5 typically covers ~15 reviews."* New `.welcome-cost-callout` styling using the brand-accent border treatment so it reads as "this is the answer," not body copy. First impression sets the expectation BEFORE the user clicks into the key-entry flow.
+
+2. **Worker Bees ⓘ info modal** ([index.html:2363](index.html)) — new "💰 Real-world cost (measured)" row at the top of the modal body. Lands the same number at the moment of maximum load-bearing: the user is one click away from entering their first API key. Existing "What it costs" row stays as the detailed breakdown (Gemini free tier, paid provider start costs, etc.).
+
+3. **API Key Guide first-key walkthrough** ([api-details.html:256](api-details.html)) — concrete replacement for the vague "covers a lot of WaxFrame runs" phrasing. New: *"Measured across recent runs, $5 of credit typically covers about 15 full WaxFrame hive reviews on a 10-AI hive — most users top up once a quarter, not once a week."* User asking "how much should I put in" gets a specific answer.
+
+4. **AI API Pricing page FAQ + methodology paragraph** ([ai-api-pricing.html:284](ai-api-pricing.html)) — replaces the prior 5–30 cent range with the measured number plus the methodology (which two runs, which model lineup, which dollar amounts). Also updated the JSON-LD `FAQPage` answer so search engines surface the corrected number.
+
+**Why the "30 cents · $5 = 15 reviews · top up once a quarter" framing specifically**: anchors users in the unit they actually shop in (dollars per N documents), then closes the deal with the timing reassurance ("once a quarter") that the per-document framing alone doesn't address. The unspoken question every prospective user has is *"how often will I keep paying"* — answering it inline removes the friction.
+
+**Honest note on accuracy**: the measured number assumes the deployed 10-AI lineup with reasoning models throughout. Users running cheaper configurations (DeepSeek + Gemini free tier as Builder) will see costs significantly below 30¢/run. Users running heavier reasoning models throughout will see higher. The headline is calibrated to David's actual hive, which leans heavy/thinker-ish — so the published number is conservative for most realistic configurations.
+
+---
+
 ## v3.63.145
 
 **Retry-once for transient model-fetch failures + setup-screen logo-jump fix**

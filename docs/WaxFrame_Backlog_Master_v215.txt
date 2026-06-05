@@ -1,0 +1,72 @@
+WaxFrame Backlog Master v215
+2026-06-04
+
+State: v3.63.146 Pro shipped on main. Cost-transparency callouts in 4 high-traffic placements (Welcome screen hero, Worker Bees ⓘ modal "Real-world cost" row, API Key Guide step 2, AI API Pricing FAQ + methodology + JSON-LD). Hero message: "$0.30 per full hive review · $5 typically covers ~15 reviews · most users top up once a quarter, not once a week." Number is MEASURED (not estimated) — ChatGPT-side analysis of 2 recent DeepDive captures (Midea AC review + Manly Bikes TripAdvisor review, 2026-06-04) against current per-token rates from each provider's billing page produced $0.2997 and $0.2984 for full 10-AI hive runs. The "30 cents" headline rounds gently from those numbers. Closes task #21.
+
+David's instinct on placement was right — defusing the "API key sounds expensive" anxiety BEFORE the user clicks into the key-entry flow is the highest-leverage conversion play available. The Welcome screen hero callout is the first thing a new user sees; the Worker Bees ⓘ modal row lands the same number one click before key entry. Plus methodology calibration on the AI API Pricing page so search engines and curious users can validate.
+
+v3.63.145 state still holds: retry-once for transient model-fetch failures + setup-screen logo-jump fix. v3.63.144 state still holds: Perplexity self-discovery TypeError fix. v3.63.143 state still holds: Mistral live fetch + Perplexity self-discovery. v3.63.142 state still holds: 11 stale provider URLs fixed. Worker Bees rework prototype at v2.2 (paused per David, audit doc complete at docs/worker-bees-audit.md). Sitemap lastmod 2026-06-04. PLAYBOOK TEST MASTER v37 is the live test-tracking doc.
+
+PRIOR STATE (v3.63.145, retained for context until next release reshuffles the margin):
+Retry-once on transient model-fetch failures in fetchModelsForProvider + fetchModelsForProviderLive. Setup-screen .fs-header switched from flex (with asymmetric siblings) to 3-column grid so logo stays centered. .setup-step-badge gains font-variant-numeric: tabular-nums.
+
+PRIOR STATE (v3.63.144, retained for context until next release reshuffles the margin):
+Fixed v3.63.143's Perplexity self-discovery TypeError. Also corrected a const BUILD drift.
+
+PRIOR STATE (v3.63.143, retained for context until next release reshuffles the margin):
+Mistral live fetch via /v1/models + Perplexity self-discovery via chat-completion web search.
+
+Open Bugs
+
+(none currently tracked outside the active task list)
+
+Open Features / Tasks
+
+(See active task list — highlights:)
+
+- #20 Worker Bees row rework — progressive disclosure with tier picks (BLOCKED on #28 audit — now complete, ready to start v3 build when David greenlights)
+- #21 Cost-transparency landing section (SHIPPED in v3.63.146)
+- #22-27 Worker Bees rework sub-tasks (will fold into v3 build)
+- #28 Worker Bees full functional audit (COMPLETED — see docs/worker-bees-audit.md)
+- #29 Logo jump on setup screens (SHIPPED in v3.63.145)
+- #30 v3.63.145 retry-once + logo fix (SHIPPED)
+- #31 v3.63.146 cost-transparency callouts (SHIPPED)
+- Hive Profiles step 2: Perplexity verification pass (still in queue)
+- Hive Profiles step 3: storage + resolver + seeded profiles
+- Hive Profiles step 4: dropdown UI + hive-profiles.html docs
+- Restore-from-Checkpoint diff-and-pick UI — PARKED
+- Hive parallel fan-out RPS-awareness (active throttle counterpart)
+- Model recommender filter-awareness warning
+- Failover Builder behavior — single-round CONTENT_FILTERED handling
+- Builder-incapable family list expansion
+- Pause/resume at reviewer seam
+- File System Access API exploration
+- Provider Catalog foundation (parked)
+- CSS dead-selector cleanup branch
+- CSS rule consolidation sweep
+- Repo housekeeping — docs/ folder
+- Triage CodeQL + Dependabot findings
+- Builder page consolidation (audited in #28 — recommendation Option A "eliminate Builder screen" pending David's confirmation)
+- Rules reference update — "verify every external URL before shipping" + "always update const BUILD in addition to the // Build comment when bumping stamps" + "release-check validator should compare const BUILD against // Build comment for consistency"
+
+Observations
+
+- 2026-06-04 — Cost-transparency landing work converged on a concrete, measured number ($0.30/run) rather than the prior 5-30¢ range. David delegated the math to ChatGPT (gave him the Grok invoice PDF + the latest DeepDive JSONs); ChatGPT analyzed 2 recent full hive runs against current per-token rates from each provider's billing page. Both runs landed within a penny of $0.30 — validates the headline. Scout placed the callouts; David trusted Scout's placement judgment without line-by-line review.
+
+- 2026-06-04 — Worker Bees + Builder functional audit complete (docs/worker-bees-audit.md). 40+ MUST-PRESERVE requirements documented. Consolidation recommendation: Option A (eliminate Builder screen, fold Builder selection into Worker Bees) gated on three specific design pieces the v3 rework must absorb cleanly. Pending David's confirmation before v3 build starts.
+
+- 2026-06-04 — Worker Bees rework prototype paused at v2.2 (worker-bees-prototype.html on main). The prototype surfaced enough design questions (sidecar legend, 6-card grid, default/custom/server grouping, role+tier separation, scroll-with-offset, alphabetization, etc.) that more cosmetic iteration was busywork compared to doing the structural audit. The right move was the audit; that's complete now.
+
+- SHIPPED — v3.63.145 retry-once + setup-screen logo fix. Logo jitter visibly gone per David's confirmation.
+
+- SHIPPED — v3.63.144 Perplexity self-discovery TypeError fix.
+
+- SHIPPED — v3.63.143 Mistral live fetch + Perplexity self-discovery via web search.
+
+- 2026-06-04 — release-check validator caught no drift across v3.63.135 through v3.63.146 (twelve ceremonies). ROI continues to compound.
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128.
+
+- cleaner.html preserved in David's local working tree.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01, reaffirmed 2026-06-04. v3.63.146 is the first release explicitly targeting conversion friction (the cost-transparency callouts). Engineering merit answers stand independent of conversion data; this is the first release where the engineering-and-conversion answers align.
