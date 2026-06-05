@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260604-018
+     Build: 20260604-019
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-018">
+  <meta name="waxframe-build" content="20260604-019">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.145">
+  <link rel="stylesheet" href="style.css?v=3.63.146">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.145",
+    "softwareVersion": "3.63.146",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -130,6 +130,21 @@
     <div class="welcome-pitch">
       <p>WaxFrame puts multiple AI assistants to work on your document at the same time. One acts as the <strong>Builder</strong> — writing and refining. The rest act as <strong>Reviewers</strong> — giving specific, numbered suggestions. Round by round, your document gets better. Whether you're starting from scratch, refining an existing document, or generating the text for a presentation or any other format — the hive handles it. <button class="goal-info-btn welcome-info-inline" onclick="document.getElementById('infoHowItWorksModal').classList.add('active')" title="How the hive works"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></p>
     </div>
+
+    <!-- v3.63.146 — Cost-reality callout. Defuses "API key sounds expensive"
+         anxiety with a concrete, measured number BEFORE the user gets to
+         the key-entry screen. The ~$0.30 / ~15-per-$5 figures come from
+         actual DeepDive captures of full 10-AI hive runs (Midea + Manly
+         Bikes runs analyzed 2026-06-04). Cited methodology lives on the
+         AI API Pricing page. -->
+    <div class="welcome-cost-callout">
+      <span class="welcome-cost-icon" aria-hidden="true">💰</span>
+      <div class="welcome-cost-body">
+        <div class="welcome-cost-headline">~$0.30 per full hive review · $5 typically covers ~15 reviews</div>
+        <p class="welcome-cost-sub">Pay-as-you-go through each AI provider — no subscription, no minimum. Most users top up once a quarter, not once a week. <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="link-accent">See the full pricing breakdown ↗</a></p>
+      </div>
+    </div>
+
     <p class="welcome-menu-hint">New here? Open the <strong>Menu</strong> for the User Manual, API setup guide, and more. <button class="goal-info-btn welcome-info-inline" onclick="document.getElementById('infoMenuModal').classList.add('active')" title="What's in the Menu?"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></p>
 
     <button title="Begin first-time setup — configure your Worker Bees" class="btn btn-lg btn-accent btn-cta" onclick="goToScreen('screen-bees')">
@@ -2359,6 +2374,17 @@
     <h2 class="finish-modal-title">Your Worker Bees</h2>
     <div class="goal-info-body">
       <p>Your Worker Bees are the AI assistants that act as <strong>reviewers</strong> each round. They each read your document independently and submit a numbered list of specific suggestions for improvement. The Builder then reads all of those suggestions and rewrites the document.</p>
+
+      <!-- v3.63.146 — Measured-cost callout. Same number as the Welcome
+           screen callout, repeated here because the user lands inside this
+           modal right when they're about to enter their first API key —
+           it's the moment "how much will this actually cost me" is most
+           load-bearing in the flow. -->
+      <div class="goal-info-row" style="background: rgba(247, 195, 64, 0.08); border-radius: 8px; padding: var(--space-12) var(--space-14); margin: 0 0 var(--space-14);">
+        <span class="info-label">💰 Real-world cost <em style="font-weight: 400; opacity: 0.7;">(measured)</em></span>
+        <span class="goal-info-desc"><strong>About 30 cents per full hive review.</strong> $5 typically covers ~15 reviews; $10 covers ~30; $20 covers ~60. Numbers from real 10-AI hive runs analyzed via DeepDive capture. Most users top up <strong>once a quarter, not once a week</strong>. Per-provider rate breakdown on the <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="link-accent">AI API Pricing page ↗</a>.</span>
+      </div>
+
       <div class="goal-info-row">
         <span class="info-label">How many do you need?</span>
         <span class="goal-info-desc">At least two AIs with saved API keys. WaxFrame won't let you proceed until this requirement is met. The more reviewers you have, the more perspectives the Builder has to work with — but even two gives strong results.</span>
@@ -2825,23 +2851,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.145';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.146';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.145"></script>
-<script src="lib/jszip.min.js?v=3.63.145"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.145"></script>
-<script src="js/version.js?v=3.63.145"></script>
-<script src="js/storage.js?v=3.63.145"></script>
-<script src="js/theme.js?v=3.63.145"></script>
-<script src="js/audio.js?v=3.63.145"></script>
-<script src="js/scenes.js?v=3.63.145"></script>
-<script src="js/wf-debug.js?v=3.63.145"></script>
-<script src="js/provider-models.js?v=3.63.145"></script>
-<script src="js/api.js?v=3.63.145"></script>
-<script src="js/templates.js?v=3.63.145"></script>
-<script src="js/api-links.js?v=3.63.145"></script>
-<script src="js/app.js?v=3.63.145"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.146"></script>
+<script src="lib/jszip.min.js?v=3.63.146"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.146"></script>
+<script src="js/version.js?v=3.63.146"></script>
+<script src="js/storage.js?v=3.63.146"></script>
+<script src="js/theme.js?v=3.63.146"></script>
+<script src="js/audio.js?v=3.63.146"></script>
+<script src="js/scenes.js?v=3.63.146"></script>
+<script src="js/wf-debug.js?v=3.63.146"></script>
+<script src="js/provider-models.js?v=3.63.146"></script>
+<script src="js/api.js?v=3.63.146"></script>
+<script src="js/templates.js?v=3.63.146"></script>
+<script src="js/api-links.js?v=3.63.146"></script>
+<script src="js/app.js?v=3.63.146"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

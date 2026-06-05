@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-018
+   Build: 20260604-019
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -603,6 +603,45 @@ body.helper-body .page-main {
   max-width: 500px;
 }
 .welcome-pitch strong { color: var(--text); }
+
+/* v3.63.146 — Cost-reality callout on the welcome screen. Defuses "API
+   key sounds expensive" anxiety with a concrete measured number BEFORE
+   the user clicks into the key-entry flow. Sits between .welcome-pitch
+   and .welcome-menu-hint. Accent-tinted background ties it to WaxFrame's
+   brand color so the user reads it as "this is the answer," not body
+   copy. */
+.welcome-cost-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  background: rgba(247, 195, 64, 0.08);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-14) var(--space-18);
+  max-width: 560px;
+  margin: var(--space-4) 0 var(--space-8);
+}
+.welcome-cost-icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+.welcome-cost-body { flex: 1; }
+.welcome-cost-headline {
+  font-size: var(--fs-15);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: var(--space-4);
+}
+.welcome-cost-sub {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin: 0;
+}
+.welcome-cost-sub a { color: var(--accent); font-weight: 600; }
 
 /* Inline ⓘ button used on the welcome screen — sized down from the default
    36px helper-info-img to match the 15px paragraph context so it reads as a
