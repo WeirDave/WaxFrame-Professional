@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.150
+
+**Worker Bees collapsed-row cleanup — Builder chip moved next to AI name, gap tightened, pencil reseated**
+
+Build: `20260604-023`<br>
+Released: `2026-06-04`
+
+Three small visual fixes to the Worker Bees collapsed-row layout, all driven by David's report after seeing v3.63.148/149 live:
+
+1. **Builder chip moved between name and model** ([js/app.js:4658](js/app.js)) — was rendering AFTER the model name (`Gemini — model [Builder]`); now sits BETWEEN the AI name and the model (`Gemini — [Builder] — model`). The chip is a status indicator, not an afterthought; it belongs in the identity line not at the end.
+
+2. **"Weirdly large gap" between name and em-dash fixed** ([style.css:844](style.css), [js/app.js:4658](js/app.js)) — the `.ai-setup-row-summary` parent applied `gap: var(--space-10)` (10px) between every child, which made the name → pencil → model chain look spread out. Name + pencil + Builder chip + model are now wrapped in a new `.ai-setup-name-group` inline-flex container with `gap: 4px`. The parent's 10px gap still applies between this group and other slot-level elements (chevron, icon, action button), so the row still breathes — just not in the middle of the identity line.
+
+3. **Pencil icon "cigar" effect eliminated** ([style.css:865](style.css)) — `.ai-setup-rename-btn` was padding `2px 4px` + `margin-left: 2px` which compounded with the parent's 10px gap to land the pencil ~16px from the name (David: "sits away from the name and looks like a cigar"). Padding-right and margin-left both zeroed; the new name-group's 4px internal gap gives the only horizontal separation. Pencil now reads as part of the name, not as a floating object.
+
+4. **Builder chip asset bumped to v4.png** ([js/app.js:4644](js/app.js)) — matches the v3.63.149 header swap. The collapsed-row chip's mascot is now the natively-left-facing variant.
+
+Pure cosmetics; no functional logic touched. Affects every row on the Worker Bees screen (both default and custom AIs).
+
+---
+
 ## v3.63.149
 
 **Builder Bee asset swap — properly-mirrored v4.png replaces the CSS-flipped v3.png placeholder**
