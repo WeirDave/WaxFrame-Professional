@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-030
+// Build: 20260604-031
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -5482,20 +5482,34 @@ function renderHiveSidebar() {
 // Click handler for sidebar "Jump to AI" links. Expands the target row
 // and scrolls it into view. Mirrors the prototype's jumpToBee + the
 // existing pattern used by recheckModelForAI's success-scroll.
+//
+// v3.63.158 — Fixed silent scroll failure. Previous implementation used
+// window.scrollTo, but the actual scrollable container is .fs-body-
+// single (overflow-y: auto); .fullscreen-layout caps with overflow:
+// hidden so the window itself doesn't scroll. The scrollTo call was a
+// no-op — the row expanded but never moved into view (David's report:
+// "the links on the left in the menu used to take you to that
+// provider's card now it just seems to open up the card"). Fix:
+// scrollIntoView auto-finds the right scrollable ancestor; the 80px
+// header-clearance offset is now CSS scroll-margin-top on .ai-setup-
+// row instead of manually-computed scrollY math.
 function jumpToAISetupRow(aiId) {
   if (!aiId) return;
   if (typeof _expandedAIIds !== 'undefined' && _expandedAIIds && typeof _expandedAIIds.add === 'function') {
     _expandedAIIds.add(aiId);
   }
   if (typeof renderAISetupGrid === 'function') renderAISetupGrid();
-  const row = document.getElementById('airow-' + aiId);
-  if (row) {
-    // scroll-with-offset so the row top lands ~80px below the header,
-    // not flush at the top where it gets visually clipped.
-    const rect = row.getBoundingClientRect();
-    const target = window.scrollY + rect.top - 80;
-    window.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
-  }
+  // requestAnimationFrame so the freshly-rendered row exists in layout
+  // before we ask the browser to scroll to it. innerHTML replacement is
+  // synchronous but the painted layout may lag by a frame depending on
+  // how much DOM was just rebuilt.
+  requestAnimationFrame(() => {
+    const row = document.getElementById('airow-' + aiId);
+    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+if (typeof window !== 'undefined') {
+  window.jumpToAISetupRow = jumpToAISetupRow;
 }
 
 // Render the Hive Profile toolbar above the bee grid. Internet mode only.

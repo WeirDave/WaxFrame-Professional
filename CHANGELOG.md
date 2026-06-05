@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.158
+
+**Sidebar "Jump to AI" links now actually scroll to the row (regression fix)**
+
+Build: `20260604-031`<br>
+Released: `2026-06-04`
+
+David's report: *"the links on the left in the menu used to take you to that provider's card now it just seems to open up the card... Why that matters of course is that if you have small screen and you click on it then you can jump all the way down without having to scroll"*. The click was firing — it expanded the row — but the scroll never happened. On a small screen the user still has to manually scroll to find the row they just clicked.
+
+**Root cause**: `jumpToAISetupRow` called `window.scrollTo`, but the window itself doesn't scroll on this screen. `.fullscreen-layout` has `overflow: hidden` and `.fs-body-single` is the actual scrollable container (`overflow-y: auto`). The `window.scrollTo` was a no-op.
+
+**Fix**:
+
+1. Replaced manual `window.scrollTo(scrollY + rect.top - 80)` math with `row.scrollIntoView({ behavior: 'smooth', block: 'start' })`. `scrollIntoView` auto-walks up the DOM to find the right scrollable ancestor — `.fs-body-single` in this case — and scrolls IT.
+
+2. Wrapped the call in `requestAnimationFrame` so the freshly-rendered row is laid out before the scroll request. `innerHTML` replacement is synchronous but the painted layout can lag by a frame on large rebuilds.
+
+3. Added `scroll-margin-top: 80px` to `.ai-setup-row` so the row lands 80px below the scrollport top instead of flush against the sticky header (replaces the previous hand-computed offset math).
+
+4. Added `window.jumpToAISetupRow = jumpToAISetupRow` so inline `onclick` attributes resolve it reliably (same pattern from v3.63.156 / .157).
+
+Closes the regression. Sidebar nav now works as it always was intended to — expand AND scroll, in one click, no manual scrolling needed on smaller screens.
+
+---
+
 ## v3.63.157
 
 **Polish: Builder button light-tint, click-no-longer-expands-row, custom count back to gold, Hive Profile note rewording, nav menu "Set up your hive", removed diagnostic log**

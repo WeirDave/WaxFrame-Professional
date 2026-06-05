@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-030
+   Build: 20260604-031
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13108,6 +13108,11 @@ kbd {
   display: block;
   padding: 0;
   overflow: hidden;
+  /* v3.63.158 — Reserve 80px of clearance above the row when it's
+     scrolled into view (jumpToAISetupRow → scrollIntoView). Without
+     this the row lands flush at the top of the .fs-body-single scroll
+     port and gets visually clipped by the sticky page header above. */
+  scroll-margin-top: 80px;
 }
 .ai-setup-row.is-collapsed:hover {
   /* v3.63.26 — Drop the amber border-color override that paired with
