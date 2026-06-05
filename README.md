@@ -72,12 +72,12 @@ The result is something closer to editorial review than to autocomplete.
 
 A WaxFrame session has two AI roles and one document, processed in rounds. Every round is the same loop: reviewers read, Builder rewrites, you decide what to keep.
 
-### 1. Build your hive
+### 1. Set up your hive
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup1_light.png">
-    <img src="screenshots/screenshot_setup1_dark.png" width="820" alt="Setup 1 — Worker Bees">
+    <img src="screenshots/screenshot_setup1_dark.png" width="820" alt="Setup 1 — Set up your hive">
   </picture>
 </p>
 
@@ -85,27 +85,18 @@ Each AI with a saved API key becomes a reviewer. You need at least two distinct 
 
 AIs without a saved key remain visible in the hive and skip automatically each round. Toggle individual AIs on or off for a session from the **Edit Hive** button on the work screen without losing their saved keys.
 
-### 2. Choose your Builder
-
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup2_light.png">
-    <img src="screenshots/screenshot_setup2_dark.png" width="820" alt="Setup 2 — Builder">
-  </picture>
-</p>
-
-The Builder rewrites the entire document every round and uses significantly more tokens than any reviewer. It needs a paid API plan with real capacity — free-tier accounts run out mid-round. Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably; DeepSeek is the most cost-effective by a wide margin, though it is the slowest responder in the hive, so expect longer rounds.
+**Crown one of your AIs Builder** by clicking the **🔨 Builder** button on its row. The Builder rewrites the entire document every round and uses significantly more tokens than any reviewer — it needs a paid API plan with real capacity. Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably; DeepSeek is the most cost-effective by a wide margin, though it is the slowest responder in the hive, so expect longer rounds.
 
 > **Gemini paid-tier caveat.** Gemini is free *only* while your Google AI Studio account has billing disabled. If you've added a credit card to AI Studio, Gemini requests can route through paid-tier paths and charge per token — and the Builder role is the cost amplifier (it reads everything every round). For casual use, keep AI Studio billing off. If billing is on, consider keeping Gemini as a Reviewer and using DeepSeek as Builder (the cheapest Builder option, though slower per round).
 
 The Builder also acts as your handyman. Write a directive in the **Notes drawer** — *"rewrite the first paragraph,"* *"stop saying 'refine' so much,"* *"tighten paragraph three"* — and click **Send to Builder** to run just that one task without firing the full hive. Then **Smoke the Hive** when you want the reviewers to weigh in on the change. Pairing targeted Builder calls with full reviewer rounds is one of WaxFrame's most useful workflows.
 
-### 3. Define your project
+### 2. Define your project
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup3_light.png">
-    <img src="screenshots/screenshot_setup3_dark.png" width="820" alt="Setup 3 — Your Project">
+    <img src="screenshots/screenshot_setup3_dark.png" width="820" alt="Setup 2 — Your Project">
   </picture>
 </p>
 
@@ -122,12 +113,12 @@ The Project screen is the most important page in setup. Every reviewer and the B
 
 Built-in templates cover cover letters, résumés, RFP responses, executive summaries, blog posts, business proposals, recipes, reviews, and more.
 
-### 4. Add Reference Material (optional)
+### 3. Add Reference Material (optional)
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup4_light.png">
-    <img src="screenshots/screenshot_setup4_dark.png" width="820" alt="Setup 4 — Reference Material">
+    <img src="screenshots/screenshot_setup4_dark.png" width="820" alt="Setup 3 — Reference Material">
   </picture>
 </p>
 
@@ -135,12 +126,12 @@ Reference Material is source content the hive **consults but never edits** — d
 
 It's the lever behind the biggest convergence-speed gains we've measured. A blog post that took 16 rounds when refined as a Starting Document converged in 4 rounds when the source thesis went into Reference Material instead, with an empty Starting Document — the hive built fresh from the scaffold rather than fighting an existing draft.
 
-### 5. Provide your starting document
+### 4. Provide your starting document
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup5_light.png">
-    <img src="screenshots/screenshot_setup5_dark.png" width="820" alt="Setup 5 — Starting Document">
+    <img src="screenshots/screenshot_setup5_dark.png" width="820" alt="Setup 4 — Starting Document">
   </picture>
 </p>
 
@@ -150,7 +141,7 @@ Three modes:
 - **Paste Text** — drop content directly into the editor.
 - **Start from Scratch** — the hive generates a first draft using only your Project Goal.
 
-### 6. Smoke the hive
+### 5. Smoke the hive
 
 <p align="center">
   <img src="screenshots/screenshot_building_dark.png" width="820" alt="Work screen — the Builder synthesizing a round">
@@ -158,7 +149,7 @@ Three modes:
 
 Every reviewer reads the document simultaneously and returns structured suggestions. The Builder evaluates them, merges what makes sense, rewrites the document in full, and produces the next version. The Live Console streams what's happening — which AI is sending, responding, succeeding, or failing — with timestamps and response previews.
 
-### 7. Resolve conflicts
+### 6. Resolve conflicts
 
 <p align="center">
   <picture>
@@ -171,7 +162,7 @@ When reviewers disagree, WaxFrame surfaces a conflict card instead of silently a
 
 The conflicts panel always shows the current round only — it isn't a project-wide completion indicator. The document is "done" when the hive reaches convergence: a majority of reviewers stop proposing changes.
 
-### 8. Iterate until convergence
+### 7. Iterate until convergence
 
 <p align="center">
   <img src="screenshots/screenshot_convergence_dark.png" width="820" alt="Hive Approved — majority convergence reached">
@@ -228,7 +219,7 @@ WaxFrame ships with default configurations for these providers:
 | Mistral | `mistral-large-latest` |
 | Perplexity | `sonar-pro` |
 
-You can change any AI's model at any time from the Worker Bees screen.
+You can change any AI's model at any time from the Set up your hive screen.
 
 ### Server / Self-Hosted Endpoints
 

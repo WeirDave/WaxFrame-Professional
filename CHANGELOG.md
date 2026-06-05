@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.162
+
+**Builder/Worker meld pass 3: README + info modal + api-details sweep**
+
+Build: `20260605-004`<br>
+Released: `2026-06-05`
+
+Documentation sweep across the user-facing surfaces that haven't been touched yet. Pairs with v3.63.161's User Manual rewrite.
+
+### README.md
+
+- **"1. Build your hive" + "2. Choose your Builder"** consolidated into a single **"1. Set up your hive"** section. The Builder content (synthesizer role + cost note + provider recommendations) moves into the same section. The separate Setup 2 screenshot reference is gone; only `screenshot_setup1_*.png` remains (still depicts the v3.63.146 layout; flagged for regeneration).
+- **Subsequent step numbering** renumbered: "3. Define your project" → "2.", "4. Add Reference Material" → "3.", "5. Provide your starting document" → "4.", "6. Smoke the hive" → "5.", "7. Resolve conflicts" → "6.", "8. Iterate until convergence" → "7."
+- **Screenshot alt text** updated: `"Setup 1 — Worker Bees"` → `"Setup 1 — Set up your hive"`, `"Setup 3 — Your Project"` → `"Setup 2 — Your Project"`, `"Setup 4 — Reference Material"` → `"Setup 3 — Reference Material"`, `"Setup 5 — Starting Document"` → `"Setup 4 — Starting Document"`. The `"Setup 2 — Builder"` `<img>` block was removed entirely with the section consolidation.
+- **Body reference**: "from the Worker Bees screen" → "from the Set up your hive screen" (model-swap mention).
+
+### index.html
+
+- **infoBuilderModal** "Read the full guide in the user manual" link: `#step2` (Step 2: Choose Your Builder) → `#step1` (Setup 1: Set up your hive). The old user-manual `#step2` anchor still exists as a redirect stub (per v3.63.161) so existing cached pages don't 404, but new clicks now go straight to the right place.
+
+### api-details.html
+
+- "The Worker Bees screen stays right where it is" walkthrough sentence → "The Set up your hive screen stays right where it is".
+
+### Landing pages reviewed
+
+`ai-cover-letter-editor.html`, `ai-resume-review.html`, `ai-business-proposal.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html`, `templates.html` — grepped for any Worker Bees / Setup 2 / Choose Your Builder / model-picker walkthrough references. None found. Landing pages are feature pages, not setup walkthroughs — already terminology-clean.
+
+### Screenshots
+
+The README still references `screenshot_setup1_dark.png`, `screenshot_setup1_light.png`, `screenshot_setup3_dark.png` etc. The actual image files still depict the v3.63.146 layout (5-screen flow + standalone Builder screen). Regeneration is flagged but not done in this release — prose now describes the current layout regardless. Future v3.63.16x release will refresh the screenshots.
+
+Up next: **v3.63.163 (code cleanup)** — `#screen-builder` DOM removal + `continueFromBuilder` legacy stub removal + worker-bees-prototype.html retirement + dead-CSS pruning + `docs/worker-bees-audit.md` archive.
+
+---
+
 ## v3.63.161
 
 **Builder/Worker meld pass 2: User Manual rewrite — 5 setups → 4, Builder step retired, "Set up your hive" rename**
