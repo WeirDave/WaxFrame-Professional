@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260605-004
+// Build: 20260605-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -2092,10 +2092,9 @@ function goToScreen(id) {
     renderAISetupGrid();
     setTimeout(updateBeesRequirements, 0);
   }
-  if (id === 'screen-builder') {
-    renderBuilderPicker();
-    setTimeout(updateBuilderRequirements, 0);
-  }
+  // v3.63.163 — screen-builder handler removed (DOM was deleted from
+  // index.html in this release). renderBuilderPicker now only fires
+  // from the v3.63.69 Builder-console roster which no longer renders.
   if (id === 'screen-project') {
     setTimeout(updateProjectRequirements, 0);
     updateGoalCounter();
@@ -9566,17 +9565,11 @@ function continueFromBees() {
   goToScreen('screen-project');
 }
 
-// v3.63.147 — Legacy entry point. The Builder screen has been retired
-// and Worker Bees Continue routes directly to screen-project. This stub
-// remains in case any deep link or browser back-stack lands a user
-// here; route them to screen-project so they don't get stuck.
-function continueFromBuilder() {
-  if (!builder) {
-    if (activeAIs && activeAIs.length) builder = _aiListAlpha(activeAIs)[0].id;
-  }
-  saveHive();
-  goToScreen('screen-project');
-}
+// v3.63.163 — continueFromBuilder removed (was a v3.63.147 legacy stub).
+// The Builder screen DOM was deleted from index.html in v3.63.163 too,
+// so there's no caller left. If any old cached page references it via
+// inline onclick, the click silently fails — the user can still proceed
+// via the per-row 🔨 Builder button on Setup 1 (Set up your hive).
 
 function continueFromProject() {
   const name    = document.getElementById('projectName')?.value.trim();
@@ -13728,7 +13721,7 @@ const ICON_PICKER_BUNDLED = [
     { id: 'reference-bee',name: 'Reference Bee',src: 'images/WaxFrame_Reference_Bee_v1.png' },
     { id: 'history-bee',  name: 'History Bee',  src: 'images/WaxFrame_History_Bee_v1.png' },
     { id: 'approved-bee', name: 'Approved Bee', src: 'images/WaxFrame_Approved_Bee_v1.png' },
-    { id: 'builder',      name: 'Builder',      src: 'images/WaxFrame_Builder_v3.png' },
+    { id: 'builder',      name: 'Builder',      src: 'images/WaxFrame_Builder_v4.png' },
     { id: 'smoker',       name: 'Smoker',       src: 'images/WaxFrame_Smoker_v2.png' },
     { id: 'waxmaker',     name: 'Waxmaker',     src: 'images/WaxFrame_Waxmaker_v1.png' },
   ]},

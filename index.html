@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260605-004">
+  <meta name="waxframe-build" content="20260605-005">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.162">
+  <link rel="stylesheet" href="style.css?v=3.63.163">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.162",
+    "softwareVersion": "3.63.163",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -250,77 +250,16 @@
 
 
 <!-- ============================================================
-     SCREEN 3 — BUILDER  (Step 2 of 4)
+     SCREEN 3 — BUILDER (RETIRED in v3.63.147; DOM removed v3.63.163)
+     The standalone Builder selection screen was folded into Setup 1
+     (Set up your hive) via the per-row 🔨 Builder button. continueFromBuilder
+     was removed as part of the same cleanup. Any deep-link router that
+     receives "screen-builder" now no-ops harmlessly in goToScreen.
      ============================================================ -->
-<div class="screen" id="screen-builder">
-  <div class="fullscreen-layout">
-    <div class="fs-header">
-      <div class="fs-header-left">
-        <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" title="Back to Setup 1 — Set up your hive" onclick="goToScreen('screen-bees')">← Back</button>
-      </div>
-      <div class="fs-header-brand">
-        <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
-        <div>
-          <div class="fs-logo-name">WaxFrame</div>
-          <div class="fs-logo-tag">Many minds, one refined result.</div>
-          <span class="app-version-stamp"></span>
-        </div>
-      </div>
-<div class="fs-header-right">
-        <div class="setup-step-badge">Setup — Step 2 of 5</div>
-        <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
-        <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
-        <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️</button>
-        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
-      </div>
-    </div>
-
-    <div class="fs-body-single">
-      <div class="hp-section">
-        <div class="hp-section-header honeycomb-header">
-          <img src="images/WaxFrame_Builder_v3.png" class="hp-section-bee" alt="">
-          <div class="hp-section-title-block">
-            <h2 class="hp-section-title">Choose Your Builder <button class="goal-info-btn" onclick="document.getElementById('infoBuilderModal').classList.add('active')" title="About the Builder"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-            <p class="hp-section-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
-          </div>
-        </div>
-        <div class="hp-section-body">
-          <div class="builder-console-shell">
-            <section class="builder-console-primary" aria-label="Selected Builder">
-              <!-- v3.63.69 — selected Builder console. Reuses the same
-                   custom combobox as Worker Bees + Change Builder modal. Populated
-                   by setBuilder() once a Builder chip is selected; hidden until then. -->
-              <div class="builder-screen-model-wrap" id="builderScreenModelWrap" style="display:none;"></div>
-              <p class="gold-tip-card builder-console-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well. Avoid free-tier AIs as Builder — they run out of tokens fast. DeepSeek is cost-effective but slower. <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">Learn about tokens →</a></p>
-            </section>
-            <section class="builder-console-roster" aria-label="Available Builders">
-              <div class="builder-roster-kicker">Available Builders</div>
-              <div class="builder-pick-grid-large" id="builderPickGrid"></div>
-            </section>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <div class="fs-footer">
-      <div class="fs-footer-spacer"></div>
-      <div class="launch-requirements">
-        <span class="launch-req-title">To continue you need:</span>
-        <span class="launch-req-item" id="req-builder">✗ Builder selected</span>
-      </div>
-      <button title="Save your Builder and continue to Setup 3 — Your Project" class="btn btn-lg btn-cta" id="builderContinueBtn" onclick="continueFromBuilder()">
-        <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
-        Continue — Your Project →
-      </button>
-    </div>
-  </div>
-</div>
 
 
 <!-- ============================================================
-     SCREEN 4 — PROJECT  (Step 3 of 4)
+     SCREEN 4 — PROJECT  (Step 2 of 4)
      ============================================================ -->
 <div class="screen" id="screen-project">
   <div class="fullscreen-layout">
@@ -1855,7 +1794,7 @@
     </div>
     <div class="round-error-actions">
       <button title="Dismiss this error and stay on the work screen" class="finish-modal-btn finish-modal-btn-export round-error-retry-btn" onclick="closeRoundErrorModal()">↩ Try Again</button>
-      <button title="Close this error and switch to a different Builder AI" class="finish-modal-btn finish-modal-btn-transcript round-error-builder-btn" onclick="closeRoundErrorModal(); openChangeBuilder()"><img src="images/WaxFrame_Builder_v3.png" class="modal-btn-bee" alt="" onerror="this.style.display='none'"> Change Builder</button>
+      <button title="Close this error and switch to a different Builder AI" class="finish-modal-btn finish-modal-btn-transcript round-error-builder-btn" onclick="closeRoundErrorModal(); openChangeBuilder()"><img src="images/WaxFrame_Builder_v4.png" class="modal-btn-bee" alt="" onerror="this.style.display='none'"> Change Builder</button>
     </div>
     <button title="Dismiss this error and stay on the work screen" class="finish-modal-cancel" onclick="closeRoundErrorModal()">← Dismiss</button>
   </div>
@@ -2884,23 +2823,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.162';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.163';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.162"></script>
-<script src="lib/jszip.min.js?v=3.63.162"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.162"></script>
-<script src="js/version.js?v=3.63.162"></script>
-<script src="js/storage.js?v=3.63.162"></script>
-<script src="js/theme.js?v=3.63.162"></script>
-<script src="js/audio.js?v=3.63.162"></script>
-<script src="js/scenes.js?v=3.63.162"></script>
-<script src="js/wf-debug.js?v=3.63.162"></script>
-<script src="js/provider-models.js?v=3.63.162"></script>
-<script src="js/api.js?v=3.63.162"></script>
-<script src="js/templates.js?v=3.63.162"></script>
-<script src="js/api-links.js?v=3.63.162"></script>
-<script src="js/app.js?v=3.63.162"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.163"></script>
+<script src="lib/jszip.min.js?v=3.63.163"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.163"></script>
+<script src="js/version.js?v=3.63.163"></script>
+<script src="js/storage.js?v=3.63.163"></script>
+<script src="js/theme.js?v=3.63.163"></script>
+<script src="js/audio.js?v=3.63.163"></script>
+<script src="js/scenes.js?v=3.63.163"></script>
+<script src="js/wf-debug.js?v=3.63.163"></script>
+<script src="js/provider-models.js?v=3.63.163"></script>
+<script src="js/api.js?v=3.63.163"></script>
+<script src="js/templates.js?v=3.63.163"></script>
+<script src="js/api-links.js?v=3.63.163"></script>
+<script src="js/app.js?v=3.63.163"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
