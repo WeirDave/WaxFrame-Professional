@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-005
+// Build: 20260606-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-005';         // build stamp — update each session
+const BUILD       = '20260606-006';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -3661,14 +3661,31 @@ function renderTemplateGalleryBody() {
     ? _customs
     : WAXFRAME_TEMPLATES.filter(t => Array.isArray(t.paths) && t.paths.includes(path));
 
-  // Bucket by category, preserving original order. Same category list
-  // as before — Quick Start always first, Reviews & Recs last.
-  const order = (path === 'custom')
-    ? ['My Templates']
-    : ['Quick Start', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
+  // Bucket by category, preserving original order. Built-in path uses
+  // the fixed canonical order (Quick Start first, Reviews & Recs last).
+  // v3.63.188 — Custom path used to be hardcoded to ['My Templates'],
+  // a single bucket. Now the user can assign any category (built-in or
+  // free-form) at save time, so the order is computed from what's
+  // actually present: the canonical built-in buckets first (in the same
+  // order built-ins use, with 'My Templates' standing in for 'Quick
+  // Start' as the default), then any free-form custom buckets alphabetically.
+  let order;
+  if (path === 'custom') {
+    const CANONICAL_CUSTOM_ORDER = ['My Templates', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
+    const actualCats = [...new Set(visibleTemplates.map(t => (t.category || 'My Templates').trim() || 'My Templates'))];
+    const knownInOrder = CANONICAL_CUSTOM_ORDER.filter(c => actualCats.includes(c));
+    const unknownAlpha = actualCats.filter(c => !CANONICAL_CUSTOM_ORDER.includes(c)).sort((a, b) => a.localeCompare(b));
+    order = [...knownInOrder, ...unknownAlpha];
+  } else {
+    order = ['Quick Start', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
+  }
   const buckets = {};
   visibleTemplates.forEach(t => {
-    const k = t.category || 'Other';
+    // v3.63.188 — Custom-path fallback is 'My Templates' (the default
+    // bucket users land in when they don't pick a category at save).
+    // Built-in path stays as 'Other' for any rogue category — built-ins
+    // are authored, not user-supplied, so 'Other' is a defensive fallback.
+    const k = (t.category || (path === 'custom' ? 'My Templates' : 'Other')).trim() || (path === 'custom' ? 'My Templates' : 'Other');
     if (!buckets[k]) buckets[k] = [];
     buckets[k].push(t);
   });
@@ -3754,11 +3771,13 @@ function renderTemplateGalleryBody() {
     ? '<p class="template-gallery-empty">You haven\'t saved any templates yet. Finish a project you like, then use <strong>⭐ Save as Template</strong> (in the Finish panel or the Tools menu) to bank its setup here.</p>'
     : '<p class="template-gallery-empty">No templates found for this path.</p>';
 
-  // v3.63.178 — Sidebar nav for jumping between category sections. Only
-  // built for the scratch/refine paths (which have 5–6 category buckets);
-  // custom path has a single "My Templates" bucket so a sidebar would be
-  // pointless. Each link scrollIntoViews to its section by id.
-  if (path !== 'custom' && visibleCats.length > 1) {
+  // v3.63.178 — Sidebar nav for jumping between category sections.
+  // v3.63.188 — Custom path can now have multiple categories (the user
+  // picks one at save time), so the sidebar applies there too once they
+  // have 2+ buckets. Single-bucket custom views (the common case for
+  // users with a handful of templates all in "My Templates") still
+  // render as a flat list. Each link scrollIntoViews to its section by id.
+  if (visibleCats.length > 1) {
     const sidebarLinks = visibleCats.map(cat =>
       `<button type="button" class="template-gallery-sidebar-link" onclick="document.getElementById('tpl-cat-${catSlug(cat)}').scrollIntoView({behavior:'smooth', block:'start'})">${esc(cat)}</button>`
     ).join('');
@@ -3868,7 +3887,12 @@ function captureTemplateFromProject(meta) {
     custom:      true,
     name:        ((meta && meta.name) || 'My Template').trim(),
     icon:        ((meta && meta.icon) || '\ud83d\udcc1').trim() || '\ud83d\udcc1',
-    category:    'My Templates',
+    // v3.63.188 \u2014 Per-template category. Backward-compat: pre-v3.63.188
+    // saves default to 'My Templates'. UI picker in saveTemplateModal
+    // offers the same six bucket names as built-in templates plus a
+    // free-form custom slot. Sidebar nav in renderTemplateGalleryBody
+    // appears for the custom path when the user has 2+ categories.
+    category:    ((meta && meta.category) || 'My Templates').trim() || 'My Templates',
     createdTs:   ts,
     appVersion:  (typeof APP_VERSION === 'string' ? APP_VERSION : ''),
     srcName:     proj.projectName    || '',   // v3.63.45 — for export filename
@@ -3899,6 +3923,13 @@ function openSaveTemplateModal() {
   const nameEl = document.getElementById('saveTemplateName');
   const iconEl = document.getElementById('saveTemplateIcon');
   const descEl = document.getElementById('saveTemplateDesc');
+  const catEl  = document.getElementById('saveTemplateCategory');
+  const catCustomEl = document.getElementById('saveTemplateCategoryCustom');
+  // v3.63.188 — Built-in category list mirrors the bucket order used by
+  // built-in templates. If the saved category isn't one of these (a
+  // free-form custom bucket), the select flips to '__custom__' and the
+  // text input pre-fills with the actual stored value.
+  const BUILTIN_CATEGORIES = ['My Templates', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
   // v3.63.44 (Phase 2) — edit mode: if we're editing an existing custom
   // template, prefill from it and relabel the modal as an update.
   const editTpl = window._editingTemplateId
@@ -3910,12 +3941,24 @@ function openSaveTemplateModal() {
     if (nameEl) nameEl.value = editTpl.name || '';
     if (iconEl) iconEl.value = editTpl.icon || '\ud83d\udcc1';
     if (descEl) descEl.value = editTpl.description || '';
+    if (catEl) {
+      const editCat = (editTpl.category || 'My Templates').trim();
+      if (BUILTIN_CATEGORIES.includes(editCat)) {
+        catEl.value = editCat;
+        if (catCustomEl) { catCustomEl.style.display = 'none'; catCustomEl.value = ''; }
+      } else {
+        catEl.value = '__custom__';
+        if (catCustomEl) { catCustomEl.style.display = ''; catCustomEl.value = editCat; }
+      }
+    }
     if (titleEl) titleEl.textContent = '\u270f\ufe0f Update Template';
     if (btnEl)   btnEl.textContent   = '\u270f\ufe0f Update Template';
   } else {
     if (nameEl) nameEl.value = (proj.projectName ? proj.projectName + ' \u2014 recipe' : '');
     if (iconEl) iconEl.value = '\ud83d\udcc1';
     if (descEl) descEl.value = '';
+    if (catEl) catEl.value = 'My Templates';
+    if (catCustomEl) { catCustomEl.style.display = 'none'; catCustomEl.value = ''; }
     if (titleEl) titleEl.textContent = '\u2b50 Save as Template';
     if (btnEl)   btnEl.textContent   = '\u2b50 Save Template';
   }
@@ -3935,12 +3978,36 @@ function closeSaveTemplateModal() {
   const modal = document.getElementById('saveTemplateModal');
   if (modal) modal.classList.remove('active');
 }
+// v3.63.188 \u2014 Toggle the custom-category text input when the select
+// flips to / away from '__custom__'. Wired via inline onchange on the
+// category select. Focus jumps to the text input when revealed so the
+// user can type immediately.
+function onSaveTemplateCategoryChange() {
+  const catEl = document.getElementById('saveTemplateCategory');
+  const customEl = document.getElementById('saveTemplateCategoryCustom');
+  if (!catEl || !customEl) return;
+  if (catEl.value === '__custom__') {
+    customEl.style.display = '';
+    setTimeout(() => customEl.focus(), 30);
+  } else {
+    customEl.style.display = 'none';
+    customEl.value = '';
+  }
+}
 function confirmSaveTemplate() {
   const name = (document.getElementById('saveTemplateName')?.value || '').trim();
   if (!name) { toast('\u26a0\ufe0f Give your template a name'); return; }
   const icon = (document.getElementById('saveTemplateIcon')?.value || '').trim();
   const description = (document.getElementById('saveTemplateDesc')?.value || '').trim();
-  const tpl = captureTemplateFromProject({ name, icon, description });
+  // v3.63.188 \u2014 Resolve category from the select; if '__custom__' is
+  // picked, read the free-form text input. Empty custom name falls back
+  // to 'My Templates' rather than blocking the save.
+  const catSelVal = (document.getElementById('saveTemplateCategory')?.value || 'My Templates').trim();
+  const catCustomVal = (document.getElementById('saveTemplateCategoryCustom')?.value || '').trim();
+  const category = (catSelVal === '__custom__')
+    ? (catCustomVal || 'My Templates')
+    : (catSelVal || 'My Templates');
+  const tpl = captureTemplateFromProject({ name, icon, description, category });
   if (!tpl) return; // capture toasts its own reason
   const all = loadCustomTemplates();
   // v3.63.44 (Phase 2) — update an existing template in place when editing.
@@ -4095,7 +4162,11 @@ function _readImportedTemplate(file) {
       custom:      true,
       name:        (typeof src.name === 'string' ? src.name : 'Imported template').slice(0, 80),
       icon:        ((typeof src.icon === 'string' ? src.icon : '') || '\ud83d\udcc1').slice(0, 4) || '\ud83d\udcc1',
-      category:    'My Templates',
+      // v3.63.188 \u2014 Preserve imported category when present so a shared
+      // template arrives in the same bucket the author saved it under.
+      // Falls back to 'My Templates' for pre-v3.63.188 exports (no category
+      // field) or for files where the field is missing/empty.
+      category:    ((typeof src.category === 'string' ? src.category : '').trim() || 'My Templates').slice(0, 40),
       createdTs:   Date.now(),
       importedTs:  Date.now(),
       appVersion:  (typeof APP_VERSION === 'string' ? APP_VERSION : ''),

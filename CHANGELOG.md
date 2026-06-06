@@ -2,6 +2,52 @@
 
 ---
 
+## v3.63.188
+
+**Custom Template Categories: pick a category at save time, sidebar nav appears once you have 2+**
+
+Build: `20260606-006`<br>
+Released: `2026-06-06`
+
+Long-standing backlog item: custom templates all landed in a single "My Templates" bucket and the Template Gallery sidebar nav was hardcoded off for the custom path because there was only ever one bucket. As users bank more saved recipes, that flat list stopped scaling — a Cover Letter recipe and a Restaurant Review recipe both showed up in the same undifferentiated grid.
+
+### Save-as-Template modal
+
+A **Category** field now sits between Icon and Description in the Save-as-Template modal:
+
+- The select offers the same six bucket names built-in templates use: *My Templates* (default), *Career & Hiring*, *Business & Sales*, *Content & Marketing*, *Personal & Everyday*, *Reviews & Recommendations*
+- A `+ Custom category…` option reveals a free-form text input for whatever bucket the user wants (max 40 chars). Picking a built-in option hides the text input again
+- Edit mode prefills correctly — if the saved category isn't a built-in, the select flips to `__custom__` and the text input pre-fills with the stored value
+- Empty custom name falls back to `My Templates` rather than blocking the save
+
+### Schema
+
+`captureTemplateFromProject` now reads `meta.category` and persists it onto the saved template object. Backward compatible: any pre-v3.63.188 saved template without a category field renders into `My Templates` by default (same bucket it always rendered to). `_readImportedTemplate` preserves the imported `category` field when present so shared templates land in the same bucket the author saved them under; falls back to `My Templates` for pre-v3.63.188 export files.
+
+`duplicateCustomTemplate` already deep-cloned all fields, so it inherits category for free.
+
+### Template Gallery render
+
+`renderTemplateGalleryBody` previously hardcoded `order = ['My Templates']` for the custom path. Now it computes the visible category order dynamically:
+
+1. **Canonical buckets first**, in the same order built-ins use: *My Templates → Career & Hiring → Business & Sales → Content & Marketing → Personal & Everyday → Reviews & Recommendations* — but only the ones that actually have templates in them
+2. **Free-form buckets after**, alphabetized so the user can scan a known order
+
+The bucket-key fallback for custom-path templates flipped from `'Other'` to `'My Templates'`. (`'Other'` stays as the fallback for the built-in path — built-ins are authored, not user-supplied, so a rogue category there is a defensive case.)
+
+### Sidebar nav
+
+The `if (path !== 'custom' && visibleCats.length > 1)` guard on the sidebar dropped its `path !== 'custom'` term. Now the sidebar appears for any path whenever there are 2+ category buckets visible. Single-bucket custom views (the common case for users with a few templates all in "My Templates") still render as a flat list.
+
+### Files touched
+
+- [index.html](index.html) — `saveTemplateModal` got the `<select id="saveTemplateCategory">` with the six built-in options plus `__custom__`, and the hidden `<input id="saveTemplateCategoryCustom">` that reveals on `__custom__` selection.
+- [js/app.js](js/app.js) — `captureTemplateFromProject` accepts `meta.category`; `openSaveTemplateModal` prefills the select (or flips to `__custom__` for free-form saved categories); `confirmSaveTemplate` resolves the category before passing it to capture; new `onSaveTemplateCategoryChange` helper toggles the custom-input visibility on select change; `renderTemplateGalleryBody` computes dynamic order for the custom path and lifts the sidebar gate to apply to all paths; `_readImportedTemplate` preserves the imported category.
+- [js/version.js](js/version.js), [js/app.js](js/app.js), [package.json](package.json) — stamps bumped to v3.63.188 / 20260606-006.
+- HTML/JS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.187
 
 **Bee dot strip border opacity to 0.5 — matches console + conflicts transparency**
