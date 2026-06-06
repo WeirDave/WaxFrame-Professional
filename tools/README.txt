@@ -35,13 +35,12 @@ From a PowerShell prompt in this folder:
 
     pwsh -ExecutionPolicy Bypass -File ".\capture-screenshots.ps1"
 
-That produces 16 PNGs in the repo's screenshots\ folder:
+That produces 14 PNGs in the repo's screenshots\ folder:
   - screenshot_welcome_dark.png + light
-  - screenshot_setup1_dark.png + light  (Worker Bees)
-  - screenshot_setup2_dark.png + light  (Builder)
-  - screenshot_setup3_dark.png + light  (Your Project)
-  - screenshot_setup4_dark.png + light  (Reference Material)
-  - screenshot_setup5_dark.png + light  (Starting Document)
+  - screenshot_setup1_dark.png + light  (Worker Bees — Builder is picked here too since v3.63.147)
+  - screenshot_setup2_dark.png + light  (Your Project)
+  - screenshot_setup3_dark.png + light  (Reference Material)
+  - screenshot_setup4_dark.png + light  (Starting Document)
   - screenshot_settings_dark.png + light
   - screenshot_work_dark.png + light  (populated Cookies session)
 
