@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.184
+
+**Bee dot strip: solid card surface so the AI bees stop fading into the page honeycomb (light mode especially) + backlog hygiene to v235**
+
+Build: `20260606-002`<br>
+Released: `2026-06-06`
+
+David's report from the work screen at 1366×768: *"the round cards for the AI are very hard to read"* — the bee dots in the laptop-tier `.bee-dot-strip` were sitting on a translucent dark overlay (`rgba(0,0,0,0.45)` dark mode, `rgba(0,0,0,0.12)` light mode) that let the page honeycomb show through, washing out the individual dots. The amber bee icons fight the amber honeycomb body texture; without a solid card behind them, the eye has nothing to anchor on.
+
+### The fix
+
+`.bee-dot-strip` is now a solid card in both themes:
+
+- **Dark mode** → `background: var(--bg)` (`#0a0c12`, the deepest black in the surface ramp). The dot fill at `var(--surface2)` (`#181b24`) is slightly lighter than the strip — each dot reads as a tiny elevated bubble.
+- **Light mode** → `background: var(--surface)` (`#ffffff`, pure white). The dot fill at `var(--surface2)` (`#f0f2f8`) is slightly grayer than the strip — same elevation effect, opposite polarity.
+- **Auto + prefers-light** → matches explicit light (added the missing `@media (max-width: 1600px) and (prefers-color-scheme: light) [data-theme="auto"]` override; the original CSS only had `[data-theme="light"]`, so `auto`-light fell through to the dark default).
+
+A `1px solid var(--border2)` border defines the card edge against the honeycomb body so it reads as a distinct surface rather than a tinted patch.
+
+The bee dots themselves are unchanged — same fill, same state borders (active, sending, working, responding, done, error), same 5px ring width from v3.32.29.
+
+### Backlog hygiene — v234 → v235
+
+Two items that were on v234's open queue were already done; carrying them along made the next sprint look bigger than it was:
+
+- **Notes button cut off at smaller effective viewport (DPI scaling case)** — CLOSED. v3.63.164 added the live viewport readout + DPI guidance to the min-screen overlay; v3.63.166's density pass collapses top-bar buttons to icon-only below 1500px so the Notes label can't truncate to "tes" anymore. Both ship and verified.
+- **Lock button initial state inversion** — CLOSED. v3.63.165 established the "icon shows CURRENT state, label shows ACTION on click" convention. Re-verified across all four lock toggles (per-row Applied Change, bulk Lock All, Lock my selection, Conflict Decision UI) on 2026-06-06.
+
+The lock-button-one-way bug stays open — static analysis on 2026-06-06 found no obvious cause; the `[wf:lock]` diagnostic logging shipped in v3.63.165 will surface the right answer next time David reproduces it.
+
+v235 also adds three 2026-06-06 observations: the v3.63.180–182 honeycomb-glass experiment got walked back over three iterations to plain surface variables; the page honeycomb texture stays on the page body but the modal didn't have anywhere for it to show through; the cache-bust query string drift across v3.63.180–182 cost a session of perceived "broken work" until v3.63.183 stamped the key.
+
+### Files touched
+
+- [style.css](style.css) — `.bee-dot-strip` solid-card treatment inside the existing `@media (max-width: 1600px)` block plus a new top-level `@media (max-width: 1600px) and (prefers-color-scheme: light)` for the auto-light path.
+- [docs/WaxFrame_Backlog_Master_v235.txt](docs/WaxFrame_Backlog_Master_v235.txt) — new file, supersedes v234.
+- [js/version.js](js/version.js), [js/app.js](js/app.js), [package.json](package.json) — stamps bumped to v3.63.184 / 20260606-002.
+- HTML/JS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.183
 
 **Project Templates modal: clean theme-variable surfaces (no honeycomb) + Perplexity `sonar-reasoning` added to fallback + `cleaner.html` removed**
