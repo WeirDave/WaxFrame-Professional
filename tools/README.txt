@@ -122,8 +122,8 @@ taking each screenshot:
   - Other screens just wait until the target screen element is visible
 
 This eliminates the timing race the older version had (which sometimes
-required 8-10 retries to land 16 clean shots). One clean pass should now
-produce all 16 correctly.
+required 8-10 retries to land all the clean shots). One clean pass should
+now produce all 14 correctly.
 
 No capture logic lives in the app code. The app is shipped clean and
 unmodified by any of this tooling.

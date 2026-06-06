@@ -95,8 +95,8 @@ The Builder also acts as your handyman. Write a directive in the **Notes drawer*
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup3_light.png">
-    <img src="screenshots/screenshot_setup3_dark.png" width="820" alt="Setup 2 — Your Project">
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup2_light.png">
+    <img src="screenshots/screenshot_setup2_dark.png" width="820" alt="Setup 2 — Your Project">
   </picture>
 </p>
 
@@ -117,8 +117,8 @@ Built-in templates cover cover letters, résumés, RFP responses, executive summ
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup4_light.png">
-    <img src="screenshots/screenshot_setup4_dark.png" width="820" alt="Setup 3 — Reference Material">
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup3_light.png">
+    <img src="screenshots/screenshot_setup3_dark.png" width="820" alt="Setup 3 — Reference Material">
   </picture>
 </p>
 
@@ -130,8 +130,8 @@ It's the lever behind the biggest convergence-speed gains we've measured. A blog
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup5_light.png">
-    <img src="screenshots/screenshot_setup5_dark.png" width="820" alt="Setup 4 — Starting Document">
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup4_light.png">
+    <img src="screenshots/screenshot_setup4_dark.png" width="820" alt="Setup 4 — Starting Document">
   </picture>
 </p>
 
