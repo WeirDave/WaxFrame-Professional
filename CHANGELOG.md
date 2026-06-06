@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.170
+
+**Welcome screen fits at 1366×768 again (pitch width matched to callouts + height-constrained density pass)**
+
+Build: `20260605-012`<br>
+Released: `2026-06-05`
+
+David's screenshot at 1366×768: the welcome screen overflowed after v3.63.169 added the convergence callout. Math: `welcome-inner { gap: 36px × 5 children + padding: 48px × 2 } + content height ≈ 870px`, but viewport is 768px. Plus an unrelated alignment issue I caught in the same pass: `.welcome-pitch` had `max-width: 500px` while the callouts below it had `max-width: 560px`, so the pitch was visibly narrower with mis-aligned left/right edges.
+
+### Pitch width matched to callouts
+
+`.welcome-pitch { max-width: 560px }` (was 500px). All three blocks (pitch, convergence, cost) now share the same column width and line up cleanly.
+
+### Height-constrained density pass (≤850px)
+
+New `@media (max-height: 850px)` block compacts the welcome-inner:
+
+- **Padding** `space-48` → `space-20` (top/bottom)
+- **Gap** `36px` → `space-16` (between children)
+- **Callout padding** `space-14 / space-18` → `space-10 / space-14`
+- **Callout headlines** `--fs-15` → `--fs-13`
+- **Callout sub-paragraphs** `--fs-13` → `--fs-12`
+- **Icons** `28px` → `22px`
+
+Result: ~170px reclaimed vertical. Welcome screen now fits in 768px without scroll AND still reads as breathing-room rather than cramped.
+
+---
+
 ## v3.63.169
 
 **Welcome screen — convergence callout ties the 3-round free trial to the Chocolate Chip Cookies template**
