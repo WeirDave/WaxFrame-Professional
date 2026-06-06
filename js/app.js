@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260605-018
+// Build: 20260605-019
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -3600,7 +3600,7 @@ function renderTemplateGalleryBody() {
              screen: opener clicks "Let's get started →" themselves to
              enter Setup 1 with the template already applied. From Setup
              2+: they see their filled-in fields immediately. -->
-        <button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template — fills in the Project Goal and a Reference scaffold so you can run a full round end-to-end"><strong>New to WaxFrame?</strong> Click here to try the <strong>⭐ Quick Start</strong> — a low-stakes Chocolate Chip Cookies demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</button>
+        <button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template — fills in the Project Goal and a Reference scaffold so you can run a full round end-to-end"><strong>New to WaxFrame? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</button>
         <div class="template-path-grid">
           <button class="template-path-card" onclick="selectTemplatePath('scratch')" type="button">
             <span class="template-path-card-icon">📝</span>
@@ -3686,8 +3686,8 @@ function renderTemplateGalleryBody() {
   const newuserCallout = (path === 'custom')
     ? `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()">\u2795 New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()">\u2b06 Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Hover a saved template to export \u2b07, duplicate \ud83d\udccb, edit \u270f\ufe0f, or delete \ud83d\uddd1 it.</span></div>`
     : (path === 'scratch')
-    ? `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>New to WaxFrame?</strong> Start with <strong>⭐ Quick Start</strong> below — it's a low-stakes chocolate-chip-cookie example that converges in a few rounds and teaches you the whole flow before you bring your own document.</p>`
-    : `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>Refining a draft?</strong> Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale. Want a guided tour first? Click <strong>Change</strong> above and run the <strong>⭐ Quick Start</strong> demo from the Starting from scratch side.</p>`;
+    ? `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>New to WaxFrame? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`
+    : `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>Refining a draft?</strong> Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale.</p><button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>Want a guided tour first? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies demo that shows you the whole hive flow before you bring your own document.</button>`;
 
   const sections = order.filter(c => buckets[c] && buckets[c].length).map(cat => `
     <div class="template-gallery-section">
