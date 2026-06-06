@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-008
+   Build: 20260606-009
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -7411,6 +7411,17 @@ kbd {
    the cascade; this guarantees the confirm is always on top regardless of which
    modal opened it. */
 #wfConfirmModal { z-index: 1000000; }
+
+/* v3.63.191 — Save-as-Template modal must stack ABOVE firstRunOfferModal.
+   Both share .finish-modal-overlay (z-index 99999) so DOM order normally
+   decides the winner. saveTemplateModal sits earlier in index.html than
+   firstRunOfferModal, so without this override the template modal opens
+   BEHIND the first-run offer when triggered via firstRunDoTemplate() —
+   visible in David's 2026-06-06 repro where the offer modal kept the
+   foreground after clicking "Save as a template". Bumped to 100000 so it
+   wins against firstRunOffer (99999) but loses to wfConfirm (1000000) —
+   confirmations launched from inside the save flow still surface above. */
+#saveTemplateModal { z-index: 100000; }
 
 .wf-confirm-modal {
   max-width: 480px;
