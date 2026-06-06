@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260605-016
+// Build: 20260605-017
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -3586,7 +3586,21 @@ function renderTemplateGalleryBody() {
       <div class="template-path-selector">
         <h3 class="template-path-selector-title">Are you starting from scratch, or refining an existing draft?</h3>
         <p class="template-path-selector-sub">Each template is a ready-made Project Goal — document type, audience, outcome, scope, and tone — that gives the hive a real brief to work from instead of an empty form. <strong>Applying one resets the project clean</strong> — goal fields, name, version, reference material, starting document, and any session history are all cleared first. Pick your starting condition below.</p>
-        <p class="template-gallery-intro template-gallery-intro--newuser"><strong>New to WaxFrame?</strong> Start with <strong>Starting from scratch</strong> and then click on <strong>⭐ Quick Start</strong> — a low-stakes chocolate-chip-cookie demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</p>
+        <!-- v3.63.175 — "New to WaxFrame?" promoted from a text callout to
+             a clickable CTA button. David's call: the 2-click instruction
+             ("start with Starting from scratch and then click ⭐ Quick Start")
+             is just instructions to do something we can do for them. One
+             click on this button calls applyTemplate('quick-start', 'scratch')
+             which fires the Quick Start template's built-in "A Note on
+             Naming & Versions" confirm modal as the consent gate, then
+             applies. The gallery modal closes (handled inside applyTemplate).
+             No auto-navigation — user stays on whatever screen they opened
+             the gallery from, per the v3.63.173 rollback's lesson that
+             auto-navigation cuts onboarding context. From the welcome
+             screen: opener clicks "Let's get started →" themselves to
+             enter Setup 1 with the template already applied. From Setup
+             2+: they see their filled-in fields immediately. -->
+        <button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template — fills in the Project Goal and a Reference scaffold so you can run a full round end-to-end"><strong>New to WaxFrame?</strong> Click here to try the <strong>⭐ Quick Start</strong> — a low-stakes Chocolate Chip Cookies demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</button>
         <div class="template-path-grid">
           <button class="template-path-card" onclick="selectTemplatePath('scratch')" type="button">
             <span class="template-path-card-icon">📝</span>
