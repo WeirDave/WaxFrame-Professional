@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260605-013">
+  <meta name="waxframe-build" content="20260605-014">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.171">
+  <link rel="stylesheet" href="style.css?v=3.63.172">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.171",
+    "softwareVersion": "3.63.172",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -127,23 +127,21 @@
         <span class="app-version-stamp"></span>
       </div>
     </div>
-    <!-- v3.63.171 — Pitch rewrite + convergence-callout fold-in. Two
-         drivers: (1) "starting from scratch, refining an existing document,
-         or generating the text for a presentation" was redundant — a
-         presentation-from-scratch IS starting from scratch, so the third
-         clause was just confusing the two real paths. There are exactly
-         two starting points: generate a draft, or bring an existing
-         document. (2) The separate green convergence callout from v3.63.169
-         was ~140px tall at 1366×768 and pushed the brand block off-screen
-         (David's screenshot: WaxFrame hexagon logo clipped at the top).
-         Folding the iterative-rounds + Chocolate-Chip-Cookies-trial-
-         calibration message INTO the pitch reclaims that vertical space
-         AND tells the workflow as one continuous story instead of
-         pitch-then-aside. Info button moved to the FRONT of the paragraph
-         (was trailing) — David's call: gives a clear visual anchor and
-         uses the white space that was previously below the brand block. -->
+    <!-- v3.63.172 — Pitch rewrite + inline Quick Start CTA. v3.63.171's pitch
+         pointed at "Menu → ⭐ Templates" as the Cookies path, but the Menu
+         had no Templates entry AND the gallery was 7 clicks deep behind
+         Setup 1 + 2 even once the user found it. David's call: don't just
+         fix the wording, fix the path. The inline "🍪 Try the Quick Start"
+         button collapses 7 clicks to 1 — applies the Cookies template
+         scratch-path and jumps straight to Setup 1 (the user still needs
+         to configure their hive / API keys, which IS load-bearing — we
+         can't skip that — but everything else is pre-filled). Reads
+         naturally in flow: "...3 rounds on purpose — [🍪 Try the Quick
+         Start →] (the Cookies recipe converged by round 3…)…". Pairs
+         with the new 📋 Templates nav-menu entry for users who want to
+         browse the gallery rather than jump straight to Cookies. -->
     <div class="welcome-pitch">
-      <p><button class="goal-info-btn welcome-info-inline welcome-info-lead" onclick="document.getElementById('infoHowItWorksModal').classList.add('active')" title="How the hive works"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>WaxFrame puts multiple AI assistants to work on your document. <strong>Start from scratch</strong> and we'll generate a draft — or <strong>bring an existing document</strong> to refine. Either way, the <strong>Builder</strong> writes and revises while the <strong>Reviewers</strong> give specific, numbered suggestions. Round by round it improves; you're done when <strong>all your reviewers agree</strong> the document is at its best. Your free trial includes <strong>3 rounds</strong> on purpose — the <strong>Chocolate Chip Cookies</strong> template (Menu → ⭐ Templates) converged by round 3 in every one of 11 test runs while we were sizing the trial, so you can see the whole cycle start to finish before spending a dime.</p>
+      <p><button class="goal-info-btn welcome-info-inline welcome-info-lead" onclick="document.getElementById('infoHowItWorksModal').classList.add('active')" title="How the hive works"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>WaxFrame puts multiple AI assistants to work on your document. <strong>Start from scratch</strong> and we'll generate a draft — or <strong>bring an existing document</strong> to refine. Either way, the <strong>Builder</strong> writes and revises while the <strong>Reviewers</strong> give specific, numbered suggestions. Round by round it improves; you're done when <strong>all your reviewers agree</strong> the document is at its best. Your free trial includes <strong>3 rounds</strong> on purpose — <button class="pitch-quickstart-btn" onclick="startQuickStartFromWelcome()" title="Pre-fill the Chocolate Chip Cookies project, then jump straight to Setup 1">🍪 Try the Quick Start →</button> (the Cookies recipe converged by round 3 in every one of 11 test runs while we were sizing the trial) so you can see the whole cycle start to finish before spending a dime.</p>
     </div>
 
     <!-- v3.63.146 — Cost-reality callout. Defuses "API key sounds expensive"
@@ -2903,23 +2901,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.171';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.172';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.171"></script>
-<script src="lib/jszip.min.js?v=3.63.171"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.171"></script>
-<script src="js/version.js?v=3.63.171"></script>
-<script src="js/storage.js?v=3.63.171"></script>
-<script src="js/theme.js?v=3.63.171"></script>
-<script src="js/audio.js?v=3.63.171"></script>
-<script src="js/scenes.js?v=3.63.171"></script>
-<script src="js/wf-debug.js?v=3.63.171"></script>
-<script src="js/provider-models.js?v=3.63.171"></script>
-<script src="js/api.js?v=3.63.171"></script>
-<script src="js/templates.js?v=3.63.171"></script>
-<script src="js/api-links.js?v=3.63.171"></script>
-<script src="js/app.js?v=3.63.171"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.172"></script>
+<script src="lib/jszip.min.js?v=3.63.172"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.172"></script>
+<script src="js/version.js?v=3.63.172"></script>
+<script src="js/storage.js?v=3.63.172"></script>
+<script src="js/theme.js?v=3.63.172"></script>
+<script src="js/audio.js?v=3.63.172"></script>
+<script src="js/scenes.js?v=3.63.172"></script>
+<script src="js/wf-debug.js?v=3.63.172"></script>
+<script src="js/provider-models.js?v=3.63.172"></script>
+<script src="js/api.js?v=3.63.172"></script>
+<script src="js/templates.js?v=3.63.172"></script>
+<script src="js/api-links.js?v=3.63.172"></script>
+<script src="js/app.js?v=3.63.172"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2989,6 +2987,15 @@ function wfMobileShareToast(msg) {
     <button title="Restore from a previously-saved WaxFrame checkpoint file" class="nav-item" onclick="importSession()">📂 Restore from Checkpoint</button>
     <button title="Manage your WaxFrame Pro license key" class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
     <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>
+    <!-- v3.63.172 — Templates entry. Until this release the template gallery
+         was reachable ONLY via the 📋 Use Template button on Setup 2 (Project),
+         which meant the welcome screen's pitch wording (which name-checks the
+         Chocolate Chip Cookies Quick Start template as the free-trial demo)
+         pointed at a path 7 clicks deep, behind Setup 1. David flagged it:
+         "we don't get there very quickly which is another flaw." This entry
+         opens the gallery modal from any screen — symmetric with the
+         existing Save as Template entry right below it. -->
+    <button title="Open the Template Gallery — pre-fill Project fields from a starting template (Quick Start, Cover Letter, Resume, RFP, etc.)" class="nav-item" onclick="closeNavMenu();showTemplateGallery()">&#x1F4CB; Templates</button>
     <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
 
     <div class="nav-divider"></div>
