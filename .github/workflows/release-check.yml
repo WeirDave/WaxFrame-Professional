@@ -1,5 +1,5 @@
 # ============================================================
-# WaxFrame — release-check.yml (v3.63.134)
+# WaxFrame — release-check.yml (v3.63.190)
 #
 # Runs on every push to main and every pull request targeting main.
 # Invokes tools/release-check.mjs to validate:
@@ -10,6 +10,10 @@
 #   • CSS token references (every var(--TOKEN) in style.css must
 #     resolve to a defined token — catches typos like the
 #     --space-22 / --modal-w-md mistakes that bit us in v3.63.131)
+#   • Cache-bust drift (if style.css or js/*.js changed since the
+#     last reachable tag, APP_VERSION must have advanced — catches
+#     the v3.63.180-182 failure mode where ?v= got stuck across
+#     multiple releases that all shipped CSS/JS)
 #
 # Fails the build on any inconsistency. Each problem is printed
 # with a file path and (when known) a line number, which GitHub
@@ -37,6 +41,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Full history + tags so check 4 can locate the last reachable
+          # tag and diff style.css / js/*.js against it. Default shallow
+          # clone has no tags and would force check 4 into its skip path.
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
