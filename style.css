@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-014
+   Build: 20260606-015
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2909,6 +2909,54 @@ body.helper-body .page-main {
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   padding: 6px 8px;
+}
+/* v3.63.197 — Topbar variant. The clock used to take a full vertical
+   stack in the right column (label / digits / controls = ~80px tall);
+   moved into the top bar next to the round badge it collapses into one
+   compact horizontal row that fits the existing header height. Same
+   element ids drive the same JS — only the layout changes. */
+.dual-clock-widget--topbar {
+  margin: 0 0 0 var(--space-12);
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.35);
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+.dual-clock-widget--topbar .dcw-bezel {
+  padding: 4px 8px;
+  gap: var(--space-8);
+  flex-direction: row;
+  align-items: center;
+}
+.dual-clock-widget--topbar .dcw-face {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-8);
+  padding: 0;
+}
+.dual-clock-widget--topbar .dcw-label-top {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+.dual-clock-widget--topbar .dcw-screen {
+  padding: 2px 8px;
+  width: auto;
+}
+.dual-clock-widget--topbar .dcw-digits {
+  font-size: 15px;
+}
+.dual-clock-widget--topbar .dcw-controls {
+  gap: 3px;
+}
+.dual-clock-widget--topbar .dcw-ctrl-btn {
+  padding: 1px 6px;
+  font-size: 10px;
+}
+[data-theme="light"] .dual-clock-widget--topbar { background: rgba(0,0,0,0.06); }
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .dual-clock-widget--topbar { background: rgba(0,0,0,0.06); }
 }
 .dcw-bezel {
   background: linear-gradient(145deg, #0a0c12, #151820);

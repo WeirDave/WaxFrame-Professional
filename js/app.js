@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-014
+// Build: 20260606-015
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-014';         // build stamp — update each session
+const BUILD       = '20260606-015';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -1347,10 +1347,23 @@ function stopRoundTimer() {
 }
 
 
-// ── Project Clock ──
-let _projClockInterval = null;
-let _projClockSeconds  = 0;
-let _projClockRunning  = false;
+// ── Project Clock (v3.63.197 — idle-aware) ──
+// Behavior: clock auto-pauses after 60 sec of zero user input on the page,
+// auto-resumes on next interaction. Distinguishes auto-idle-pause from
+// user-manual-pause so that hitting the pause button stays sticky (does
+// NOT auto-resume on next mouse move). David's call after the Joe Schmoe's
+// run where the project clock reported 76 min "engaged" but the true
+// engaged time was ~30 min — multitasking on phone/console/Claude while
+// the session sat idle inflated the figure. This idle detection records
+// honest engagement without requiring David to remember to hit Pause.
+const _PROJ_CLOCK_IDLE_MS = 60_000;
+let _projClockInterval     = null;
+let _projClockSeconds      = 0;
+let _projClockRunning      = false;
+let _projClockUserPaused   = false;   // true if user clicked Pause manually
+let _projClockIdlePaused   = false;   // true if auto-paused due to idle
+let _projClockLastInputTs  = Date.now();
+let _projClockIdleChecker  = null;
 
 function _projClockRender() {
   const el = document.getElementById('projectTimerDisplay');
@@ -1373,7 +1386,38 @@ function _projClockUpdateButtons() {
   }
 }
 
-function projectClockStart() {
+// One-time wiring of global input listeners + idle checker. Called lazily
+// from projectClockStart so we don't burn the listeners until the user
+// has actually started a session. Idempotent — safe to call repeatedly.
+function _projClockEnsureIdleWiring() {
+  if (_projClockIdleChecker) return;
+  const onInput = () => {
+    _projClockLastInputTs = Date.now();
+    // Auto-resume if we paused due to idle. Manual user-pause stays sticky.
+    if (_projClockIdlePaused && !_projClockUserPaused) {
+      _projClockIdlePaused = false;
+      _projClockStartInternal();
+    }
+    // Attention escalation always clears on any user input — see _attention*.
+    if (typeof _attentionClear === 'function') _attentionClear();
+  };
+  // Capture phase so we don't depend on bubbling through specific elements.
+  ['pointerdown', 'keydown', 'wheel', 'scroll', 'touchstart'].forEach(ev => {
+    window.addEventListener(ev, onInput, { capture: true, passive: true });
+  });
+  // Check every 5 sec — cheap, low jitter, no impact on the per-second tick.
+  _projClockIdleChecker = setInterval(() => {
+    if (!_projClockRunning) return;
+    if (_projClockUserPaused) return;
+    if (Date.now() - _projClockLastInputTs >= _PROJ_CLOCK_IDLE_MS) {
+      _projClockPauseInternal({ idle: true });
+    }
+  }, 5000);
+}
+
+// Internal start (no user-flag changes). Used by both the public
+// projectClockStart and the idle-resume path.
+function _projClockStartInternal() {
   if (_projClockRunning) return;
   _projClockRunning = true;
   _projClockInterval = setInterval(() => {
@@ -1383,21 +1427,85 @@ function projectClockStart() {
   _projClockUpdateButtons();
 }
 
-function projectClockPause() {
+// Internal pause (idle: true means auto-pause from idle detection;
+// idle: false means user clicked the Pause button).
+function _projClockPauseInternal({ idle }) {
   if (!_projClockRunning) return;
   _projClockRunning = false;
   clearInterval(_projClockInterval);
   _projClockInterval = null;
+  if (idle) _projClockIdlePaused = true;
+  else      _projClockUserPaused = true;
   _projClockUpdateButtons();
 }
 
+function projectClockStart() {
+  _projClockUserPaused = false;
+  _projClockIdlePaused = false;
+  _projClockLastInputTs = Date.now();
+  _projClockEnsureIdleWiring();
+  _projClockStartInternal();
+}
+
+function projectClockPause() {
+  _projClockPauseInternal({ idle: false });
+}
+
 function projectClockReset() {
-  _projClockRunning = false;
+  _projClockRunning    = false;
+  _projClockUserPaused = false;
+  _projClockIdlePaused = false;
   clearInterval(_projClockInterval);
   _projClockInterval = null;
-  _projClockSeconds = 0;
+  _projClockSeconds  = 0;
   _projClockRender();
   _projClockUpdateButtons();
+}
+
+// ── Attention escalation (v3.63.197) ──
+// When _autoHalt() fires (auto mode paused waiting for user decision), the
+// existing playAutoHaltSound() makes one alert noise. If the user is set-
+// and-forget multitasking (phone game, console, talking to Claude), they
+// can miss that single chirp and leave the session hanging. After 5 min
+// of no user input following the halt, escalate: flash the browser tab
+// title between "🚨 WaxFrame Needs You!" and the original title every
+// second, AND replay playAlertSound() every 30 sec until the user
+// interacts with the page. Sound respects window._isMuted via the
+// existing audio.js guard — escalation is silent if mute is on.
+let _attentionTitleFlasher = null;
+let _attentionSoundRepeater = null;
+let _attentionFirstSoundDelay = null;
+let _attentionOriginalTitle = '';
+
+function _attentionStart() {
+  _attentionClear();   // reset any prior state — single escalation at a time
+  _attentionFirstSoundDelay = setTimeout(() => {
+    // After 5 min: start flashing title + replay alert every 30 sec.
+    _attentionOriginalTitle = document.title;
+    let flip = false;
+    _attentionTitleFlasher = setInterval(() => {
+      flip = !flip;
+      document.title = flip ? '🚨 WaxFrame Needs You!' : _attentionOriginalTitle;
+    }, 1000);
+    if (typeof playAlertSound === 'function') {
+      try { playAlertSound(); } catch (e) {}
+    }
+    _attentionSoundRepeater = setInterval(() => {
+      if (typeof playAlertSound === 'function') {
+        try { playAlertSound(); } catch (e) {}
+      }
+    }, 30_000);
+  }, 5 * 60 * 1000);
+}
+
+function _attentionClear() {
+  if (_attentionFirstSoundDelay) { clearTimeout(_attentionFirstSoundDelay); _attentionFirstSoundDelay = null; }
+  if (_attentionTitleFlasher)    { clearInterval(_attentionTitleFlasher);    _attentionTitleFlasher = null; }
+  if (_attentionSoundRepeater)   { clearInterval(_attentionSoundRepeater);   _attentionSoundRepeater = null; }
+  if (_attentionOriginalTitle) {
+    document.title = _attentionOriginalTitle;
+    _attentionOriginalTitle = '';
+  }
 }
 
 function consoleLog(msg, type = 'info', rawData = null, link = null) {
@@ -3205,6 +3313,14 @@ function _autoHalt(reasonCode, reasonText) {
   if (reasonCode !== 'converged' && typeof playAutoHaltSound === 'function') {
     try { playAutoHaltSound(); } catch (e) {}
   }
+  // v3.63.197 — Attention escalation. The first halt-sound above is
+  // useful when David is at the keyboard; useless when he's wandered off
+  // to the phone / center console / a parallel conversation. Start a
+  // 5-min countdown; if no user input by then, flash the tab title and
+  // replay the alert sound every 30 sec until they interact. Skip on
+  // converged for the same reason as the halt sound — the project is
+  // done, escalating "needs you!" makes no sense.
+  if (reasonCode !== 'converged') _attentionStart();
 }
 
 function autoHaltResume() {

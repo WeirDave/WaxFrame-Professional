@@ -2,6 +2,46 @@
 
 ---
 
+## v3.63.197
+
+**Smart project clock + Auto-mode attention escalation + per-round timer retired**
+
+Build: `20260606-015`<br>
+Released: `2026-06-06`
+
+Three coordinated changes that together make the time WaxFrame reports about your session honest, and make the app yell at you if you've wandered off mid-session.
+
+### Removed — per-round (ROUND) clock face
+
+The dual-clock widget had a ROUND face that ticked the elapsed time inside the current round. Originally added when David wasn't sure whether anything was happening; in practice it's been functionally invisible for ~40 releases. Removed the face and its label, dropped the `.dcw-divider` between them, and converted the widget into a single-face design.
+
+### Changed — project clock is now idle-aware
+
+The remaining PROJECT clock no longer needs the Pause button to be accurate. New module-scope state in `js/app.js` (`_projClockUserPaused`, `_projClockIdlePaused`, `_projClockLastInputTs`, `_projClockIdleChecker`) tracks user input across the page and auto-pauses after **60 sec of zero input**. Any subsequent input — `pointerdown`, `keydown`, `wheel`, `scroll`, `touchstart` — auto-resumes. Distinguishes the auto-idle-pause from the user clicking the Pause button: clicking Pause manually stays sticky and does NOT auto-resume on next mouse move.
+
+Caught by David during the Joe Schmoe's restaurant review run (T10 measurement, same day): the project clock reported **76 min engaged** but the true engaged time was closer to **30 min**. The other 45 min was phone games, center-console use, talking to Claude — real time, but not document-review work. Cause: David forgot to hit Pause when he stepped away. The clock had no way to know.
+
+Going forward the displayed engaged time reflects ACTUAL active engagement instead of wall-clock-since-last-Pause. The pattern handles the Joe Schmoe's failure mode automatically, and it generalizes to any user-driven run where focus is variable.
+
+### Changed — project clock relocated to the top bar
+
+With the ROUND face retired the widget no longer needs full-column real estate in the right column. Moved into `.work-topbar-center` next to the round badge as a new `.dual-clock-widget--topbar` variant — same element ids drive the same JS unchanged, only the layout changes. Reclaimed ~80px of vertical space in the right column; the Live Console grows by the same amount.
+
+### Added — Auto-mode attention escalation
+
+Set-and-forget on Auto mode is great until WaxFrame pauses for a user decision and you've wandered off. The existing `playAutoHaltSound()` plays once and that's it — easy to miss when you're not at the keyboard. New escalation in `_autoHalt()`: starts a **5-minute countdown** after the halt sound; if no user input by then, the browser tab title alternates every second between `🚨 WaxFrame Needs You!` and the original title, AND `playAlertSound()` replays every 30 seconds. Both stop the moment you touch the page — `_attentionClear()` is wired into the same global input listeners the idle clock uses, so any pointer/key/scroll/wheel/touch clears it.
+
+Sound respects the existing global mute (`window._isMuted` via `playAlertSound`) — escalation is silent if you've muted WaxFrame, the title flash is the only signal in that case.
+
+No settings toggle. The trigger condition is already narrow (auto mode halted for user decision + 5 min of zero input), the title flash is non-disruptive (just tab-text changes in a background tab), and the snooze is built-in — interacting with the page IS the snooze. If real users complain about a corner case down the road, adding a Settings checkbox is a 30-min follow-up.
+
+### Files Changed
+
+- Updated: `index.html` (ROUND face removed, dual-clock-widget relocated from right column to topbar-center next to round badge), `js/app.js` (project clock idle-aware machinery in `_projClock*` block; new `_attentionStart` / `_attentionClear` + hook in `_autoHalt`), `style.css` (new `.dual-clock-widget--topbar` compact horizontal variant), `CHANGELOG.md`, `js/version.js`, `package.json`
+- Version/build stamps to v3.63.197 / 20260606-015 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.196
 
 **Documentation screenshots regenerated for the post-Builder-retirement 4-screen setup flow**

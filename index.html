@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260606-014
+     Build: 20260606-015
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260606-014">
+  <meta name="waxframe-build" content="20260606-015">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.196">
+  <link rel="stylesheet" href="style.css?v=3.63.197">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.196",
+    "softwareVersion": "3.63.197",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -671,6 +671,26 @@
       </div>
       <div class="work-topbar-center">
         <span class="work-round-badge" id="workRoundBadge">Round 1 — Draft</span>
+        <!-- v3.63.197 — Project clock relocated from the right column
+             into the top bar (just right of the round badge). The whole
+             dual-clock-widget was reclaiming vertical real estate in the
+             right column that the Live Console below it desperately
+             wanted; in-header it's always visible at a glance and the
+             console grows ~120px. Same #projectTimerDisplay element +
+             same #projClockStartBtn/#projClockPauseBtn ids — all the
+             existing _projClock* JS keeps working unchanged. -->
+        <div class="dual-clock-widget dual-clock-widget--topbar" id="dualClockWidget">
+          <div class="dcw-bezel">
+            <div class="dcw-face dcw-face-project">
+              <div class="dcw-label-top">PROJECT</div>
+              <div class="dcw-screen"><span class="dcw-digits dcw-digits-project" id="projectTimerDisplay">00:00:00</span></div>
+              <div class="dcw-controls">
+                <button class="dcw-ctrl-btn dcw-ctrl-btn--start" id="projClockStartBtn" onclick="projectClockStart()" title="Start">&#9654;</button>
+                <button class="dcw-ctrl-btn dcw-ctrl-btn--pause" id="projClockPauseBtn" onclick="projectClockPause()" title="Pause">&#9646;&#9646;</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="work-topbar-right">
         <!-- v3.63.166 — .work-topbar-btn-label spans isolated so the
@@ -770,24 +790,8 @@
           </div>
           <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="work-right-logo-img">
         </div>
-        <div class="dual-clock-widget" id="dualClockWidget">
-          <div class="dcw-bezel">
-            <div class="dcw-face dcw-face-round">
-              <div class="dcw-label-top">ROUND</div>
-              <div class="dcw-screen"><span class="dcw-digits" id="roundTimerDisplay">00:00</span></div>
-              <div class="dcw-label-bot" id="roundTimerLabel">READY</div>
-            </div>
-            <div class="dcw-divider"></div>
-            <div class="dcw-face dcw-face-project">
-              <div class="dcw-label-top">PROJECT</div>
-              <div class="dcw-screen"><span class="dcw-digits dcw-digits-project" id="projectTimerDisplay">00:00:00</span></div>
-              <div class="dcw-controls">
-                <button class="dcw-ctrl-btn dcw-ctrl-btn--start" id="projClockStartBtn" onclick="projectClockStart()" title="Start">&#9654;</button>
-                <button class="dcw-ctrl-btn dcw-ctrl-btn--pause" id="projClockPauseBtn" onclick="projectClockPause()" title="Pause">&#9646;&#9646;</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- v3.63.197 — dual-clock-widget was here; relocated to .work-topbar-center
+             (just right of the round badge) so the Live Console reclaims this height. -->
         <div class="work-panel-header honeycomb-header">
           <span class="work-section-title">🖥️ Live Console <button class="goal-info-btn" onclick="document.getElementById('infoConsoleModal').classList.add('active')" title="About Live Console"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
@@ -2921,23 +2925,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.196';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.197';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.196"></script>
-<script src="lib/jszip.min.js?v=3.63.196"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.196"></script>
-<script src="js/version.js?v=3.63.196"></script>
-<script src="js/storage.js?v=3.63.196"></script>
-<script src="js/theme.js?v=3.63.196"></script>
-<script src="js/audio.js?v=3.63.196"></script>
-<script src="js/scenes.js?v=3.63.196"></script>
-<script src="js/wf-debug.js?v=3.63.196"></script>
-<script src="js/provider-models.js?v=3.63.196"></script>
-<script src="js/api.js?v=3.63.196"></script>
-<script src="js/templates.js?v=3.63.196"></script>
-<script src="js/api-links.js?v=3.63.196"></script>
-<script src="js/app.js?v=3.63.196"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.197"></script>
+<script src="lib/jszip.min.js?v=3.63.197"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.197"></script>
+<script src="js/version.js?v=3.63.197"></script>
+<script src="js/storage.js?v=3.63.197"></script>
+<script src="js/theme.js?v=3.63.197"></script>
+<script src="js/audio.js?v=3.63.197"></script>
+<script src="js/scenes.js?v=3.63.197"></script>
+<script src="js/wf-debug.js?v=3.63.197"></script>
+<script src="js/provider-models.js?v=3.63.197"></script>
+<script src="js/api.js?v=3.63.197"></script>
+<script src="js/templates.js?v=3.63.197"></script>
+<script src="js/api-links.js?v=3.63.197"></script>
+<script src="js/app.js?v=3.63.197"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
