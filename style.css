@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-022
+   Build: 20260605-023
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13937,6 +13937,33 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   letter-spacing: 0.08em;
   color: #ffffff;
   line-height: 1.25;
+}
+
+/* v3.63.181 — Theme-aware swap to match the .work-panel-header
+   pattern. v3.63.180 used dark glass in both modes (which matched
+   the .honeycomb-header variant); David clarified the intended
+   reference is the base .work-panel-header which flips to white
+   background + dark text in light mode. Dark mode keeps the dark
+   glass band (the v3.63.180 default rule above carries through). */
+[data-theme="light"] .template-path-indicator {
+  background: #ffffff;
+  backdrop-filter: none;
+  border-color: var(--border2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .template-path-indicator-label {
+  color: var(--text);
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .template-path-indicator {
+    background: #ffffff;
+    backdrop-filter: none;
+    border-color: var(--border2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+  [data-theme="auto"] .template-path-indicator-label {
+    color: var(--text);
+  }
 }
 .template-path-indicator-change {
   font-size: var(--fs-13);

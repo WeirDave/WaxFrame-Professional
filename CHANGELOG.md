@@ -2,6 +2,55 @@
 
 ---
 
+## v3.63.181
+
+**Path indicator theme-aware (white in light mode, dark glass in dark mode — matches `.work-panel-header`) + scratch explainer copy edit**
+
+Build: `20260605-023`<br>
+Released: `2026-06-05`
+
+David sent a screenshot of the working console's `🖥️ Live Console` header to clarify what the v3.63.180 path indicator was supposed to look like. The visual reference matched, but he caught a theme-handling miss: *"the background will be white in light mode and dark gray in black mode."*
+
+### Theme-aware path indicator
+
+v3.63.180 styled `.template-path-indicator` as dark glass in **both** themes (which corresponds to the `.work-panel-header.honeycomb-header` variant — used over the honeycomb-textured work-screen background). The actual reference David was pointing at is the base `.work-panel-header` ([style.css:2393-2407](style.css:2393)) which IS theme-aware: dark glass in dark mode, plain white in light mode.
+
+Added light-mode overrides:
+
+```css
+[data-theme="light"] .template-path-indicator {
+  background: #ffffff;
+  backdrop-filter: none;
+  border-color: var(--border2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .template-path-indicator-label {
+  color: var(--text);
+}
+```
+
+Same overrides scoped to `[data-theme="auto"]` under `@media (prefers-color-scheme: light)` for OS-theme followers. Dark mode keeps the v3.63.180 dark-glass rule (it's the default — no override needed).
+
+The Change button keeps its amber outline + amber-fill-on-hover in both modes (the amber accent reads against white background AND dark glass; no theme override needed).
+
+### Scratch explainer copy edit
+
+David's rewrite of the scratch path's explainer paragraph:
+
+- Was: *"…the hive will use it as a brief to generate Round 1 from your Project Goal, then refine it round by round."*
+- Now: *"…the hive will use this template to generate a document, then refine it round by round."*
+
+Drops the implementation-detail framing ("use it as a brief", "Round 1 from your Project Goal") in favor of plain natural language. Same meaning, less jargon.
+
+### Files touched
+
+- [style.css](style.css) — light-mode + auto-mode-light overrides added for `.template-path-indicator` and `.template-path-indicator-label`.
+- [js/app.js](js/app.js) — scratch `explainPara` copy edited.
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.181 / 20260605-023.
+- HTML/JS/CSS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.180
 
 **Template Gallery refine/scratch views: path indicator restyled as a real H2 section header + structure reordered + "rewriting wholesale" copy fixed**
