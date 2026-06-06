@@ -2,6 +2,46 @@
 
 ---
 
+## v3.63.171
+
+**Welcome screen pitch rewrite + convergence callout folded in (logo no longer clipped at 1366×768)**
+
+Build: `20260605-013`<br>
+Released: `2026-06-05`
+
+David's follow-up screenshot at 1366×768: v3.63.170 fit MOST of the welcome screen in viewport, but the WaxFrame hexagon logo was being clipped off the top edge of the page. He also flagged that the pitch copy itself read wrong: *"Whether you're starting from scratch, refining an existing document, or generating the text for a presentation or any other format — the hive handles it"* split the user's mental model into three buckets when there are only two real ones. A presentation-from-scratch IS starting from scratch; tacking it on as a third option just muddied the actual workflow.
+
+His direct guidance: *"either Generate a draft and make it better — Refine an existing document — both of which get reviewed and edited until everyone agrees that it's the best document possible."* That's the real shape.
+
+### Pitch rewritten — two paths, one story
+
+The pitch paragraph in [index.html](index.html) now reads:
+
+> WaxFrame puts multiple AI assistants to work on your document. **Start from scratch** and we'll generate a draft — or **bring an existing document** to refine. Either way, the **Builder** writes and revises while the **Reviewers** give specific, numbered suggestions. Round by round it improves; you're done when **all your reviewers agree** the document is at its best. Your free trial includes **3 rounds** on purpose — the **Chocolate Chip Cookies** template (Menu → ⭐ Templates) converged by round 3 in every one of 11 test runs while we were sizing the trial, so you can see the whole cycle start to finish before spending a dime.
+
+Two starting points, one workflow, one done-condition. The iterative-rounds + free-trial-calibration message that lived in the separate green callout (v3.63.169) is folded into the same paragraph — the workflow now reads as one continuous story instead of pitch-then-aside.
+
+### Convergence callout removed
+
+The `.welcome-convergence-callout` DOM block + all its CSS (`.welcome-convergence-callout`, `-icon`, `-body`, `-headline`, `-sub`, plus the light-mode overrides) deleted. The `@media (max-height: 850px)` density-pass references to it dropped. The message is fully preserved in the new pitch paragraph — what's gone is the visual container, ~140px of vertical real estate that was pushing the brand block off-screen at 1366×768.
+
+### Info button moved to FRONT
+
+David's call: *"put the information button in front of the paragraph instead… we can use that space."* The ⓘ button that used to trail the pitch paragraph now LEADS it. New `.welcome-info-lead` modifier flips the spacing — `margin-left: 0; margin-right: var(--space-6)` so the gap sits between icon and the opening words instead of between the icon and the preceding sentence-end. Reads as a visual anchor on the left rim of the pitch column.
+
+### Net effect
+
+Two visible elements collapsed into one (pitch + convergence callout → meatier pitch). Vertical content at 1366×768 drops by ~140px, which is exactly the budget that was clipping the WaxFrame logo at the top.
+
+### Files touched
+
+- [index.html](index.html) — pitch rewritten; `.welcome-convergence-callout` DOM block removed; info button moved to lead position with `welcome-info-lead` modifier class.
+- [style.css](style.css) — `.welcome-convergence-*` rule block + light-mode overrides deleted; `@media (max-height: 850px)` block trimmed to cost-callout references only; `.welcome-info-lead` modifier added (margin-left:0; margin-right:var(--space-6)).
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.171 / 20260605-013.
+- HTML/JS/CSS sweep — 110 cache-bust + 29 build-stamp updates.
+
+---
+
 ## v3.63.170
 
 **Welcome screen fits at 1366×768 again (pitch width matched to callouts + height-constrained density pass)**
