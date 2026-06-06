@@ -25,6 +25,38 @@ CLOSED in v3.63.189 (the roll-up release):
 - Template Gallery modal CSS overrides folded into base — PARTIAL in v3.63.190.
   The v3.63.183 polish landed as an override block at style.css:14108-14135 layering theme-variable surfaces on top of the original v3.32.0 base definitions at style.css:13625-13767. Modal-set overrides (.template-gallery-modal, -hdr, -hdr h2, -body, -close, -hdr .intro) folded into the base; redundant rules deleted; semantically-changed rules carried up with a comment pointing at v3.63.183. Sidebar (.template-gallery-sidebar, -sidebar-label, -sidebar-link), .template-path-card, .template-card, .template-card-name, .template-card-desc, .template-gallery-section, and .template-gallery-section-title overrides further down the same block — plus the [data-theme="dark"] specialization at the bottom — STAY layered until a session with browser verification can fold them safely. The cascade interaction with the dark-mode block is the specific risk.
 
+CLOSED in the 2026-06-06 docs/rules audit pass:
+
+- Repo housekeeping — docs/ folder — CLOSED.
+  Removed: docs/WaxFrame_Backlog_Master_v231.txt through v234.txt (4 stale
+  backlog versions, per Rules Reference line 128: "docs/ ships IN the zip:
+  the LATEST backlog only ... NOT older backlogs"). Removed: docs/WaxFrame_
+  Playbook_Test_Master_v35.txt + v36.txt (2 stale playbook test versions;
+  v37 is current and carries all historical rows forward per its own
+  "Historical rows are permanent" rule). CHANGELOG.md markdown links to
+  the deleted files are now dead links — that's the intended tombstone
+  state per the policy. Git history retains the file contents for
+  archaeology if ever needed.
+
+- Triage CodeQL + Dependabot findings — CLOSED (no findings to triage).
+  No .github/dependabot.yml config exists; no Dependabot PRs open. No
+  CodeQL workflow exists. No open issues. The last CodeQL triage was
+  v3.63.15 (2026-05-28) which closed 5 alerts. Surface remains clean.
+  Re-open this item if a future security-tab scan surfaces something.
+
+- Rules reference updates — CLOSED in v3.63.190 work.
+  docs/WaxFrame_Rules_Reference.txt updated: version stamp bumped to
+  2026-06-06 (current production: v3.63.190). RELEASE CEREMONY section
+  gained a new item 2a documenting the release-check.mjs 4-check
+  validator (JS syntax, version-stamp consistency, CSS token references,
+  cache-bust drift). TEMPLATES section gained a Custom Categories
+  paragraph covering schema, modal UI, sidebar nav lift, ✏️ rename/merge/
+  delete affordance, and the 760px modal width. ARCHITECTURE NOTES section
+  gained the v3.63.183 "HONEYCOMB TEXTURE — body and panels YES, modals
+  NO" decision with the reason (modal overlay covers the body so locally-
+  applied texture has no anchor) and the directive that future modals use
+  the theme-variable surface ramp.
+
 CLOSED in the 2026-06-06 audit (were on v234, found already shipped):
 
 - Notes button cut off at smaller effective viewport (DPI scaling case) — CLOSED.
@@ -75,9 +107,7 @@ Open Features
 - CSS rule consolidation sweep
   - 2026-06-06 note: at least two duplicate definitions of .template-gallery-modal, .template-gallery-hdr, .template-gallery-body in style.css — the original at lines 13603-13745 and the v3.63.182 polish block at lines 14089-14111. The later block intentionally overrides. Same pattern likely exists for other heavily-iterated selectors. Sweep would consolidate to single definitions.
   - 2026-06-06 UPDATE: v3.63.190 folded the modal/hdr/close/body subset (5 selectors) into base. Remaining duplicates per the 2026-06-06 audit grep: .template-gallery-sidebar / -sidebar-label / -sidebar-link, .template-path-card, .template-card / .template-card.is-recommended / .template-card-name / .template-card-desc, .template-gallery-section / .template-gallery-section-title, and the .template-card-edit / -dup / -export / -del / -wrap edit-action button block at style.css:14765+. Each remaining group needs per-selector tracing because the cascade interacts with the [data-theme="dark"] specialization at style.css:14220+. Browser-verification session.
-- Repo housekeeping — docs/ folder
-- Triage CodeQL + Dependabot findings
-- Rules reference updates
+(housekeeping items below moved to CLOSED in the 2026-06-06 audit; see top)
 
 Observations
 
