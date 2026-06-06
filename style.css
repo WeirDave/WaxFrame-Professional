@@ -14093,15 +14093,14 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
    like the User Manual / Document Playbooks system: dark glass header,
    solid document cards, amber rails, and denser section labeling. */
 .template-gallery-modal {
-  background:
-    linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
-    url('images/WaxFrame_Honeycomb_BG_Dark.png');
-  background-size: auto, 300px auto;
-  background-repeat: repeat, repeat;
+  background: var(--surface);
   box-shadow: 0 24px 72px rgba(0,0,0,0.58);
 }
 .template-gallery-hdr {
-  background: rgba(0,0,0,0.55);
+  background:
+    linear-gradient(rgba(0,0,0,0.58), rgba(0,0,0,0.58)),
+    url('images/WaxFrame_Honeycomb_BG_Dark.png');
+  background-size: auto, 300px auto;
   border-bottom-color: rgba(255,255,255,0.1);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -14117,7 +14116,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   color: rgba(255,255,255,0.72);
 }
 .template-gallery-body {
-  background: transparent;
+  background: var(--surface);
 }
 .template-gallery-sidebar {
   background: var(--surface);
@@ -14174,26 +14173,11 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   line-height: 1.45;
 }
 [data-theme="dark"] .template-gallery-modal {
+  background: #11141d;
   border-color: rgba(148,163,184,0.32);
 }
 [data-theme="dark"] .template-gallery-body {
-  background: transparent;
-}
-[data-theme="light"] .template-gallery-modal {
-  background:
-    linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
-    url('images/WaxFrame_Honeycomb_BG_Light.png');
-  background-size: auto, 300px auto;
-  background-repeat: repeat, repeat;
-}
-@media (prefers-color-scheme: light) {
-  [data-theme="auto"] .template-gallery-modal {
-    background:
-      linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
-      url('images/WaxFrame_Honeycomb_BG_Light.png');
-    background-size: auto, 300px auto;
-    background-repeat: repeat, repeat;
-  }
+  background: #11141d;
 }
 [data-theme="dark"] .template-gallery-sidebar,
 [data-theme="dark"] .template-path-card,
