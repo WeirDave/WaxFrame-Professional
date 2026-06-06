@@ -2,6 +2,55 @@
 
 ---
 
+## v3.63.194
+
+**Live character counters on Save-as-Template + clearer messaging that templates bank reference material and starting documents**
+
+Build: `20260606-012`<br>
+Released: `2026-06-06`
+
+Three improvements from David's 2026-06-06 dogfooding session, all aimed at making the Custom Templates flow more transparent.
+
+### Added — live character counter on each length-capped Save-as-Template field
+
+David tested with a description that hit the 240-char cap mid-thought (the input cut him off at `"…how many charac"`). The cap was invisible until he hit it. Added a live counter beneath each of the three length-capped inputs:
+
+- Template name: shows `N / 60`
+- Custom category (when active): shows `N / 40`
+- Description: shows `N / 240`
+
+Counter sits below its input, dim by default, flips to **amber at 90% of cap** and **red at the cap** so the cliff edge is visible before it bites. Tabular-numeric font variant so the digits don't jiggle as you type. New `.save-template-charcount` class in `style.css` plus a `updateSaveTemplateCharCount(field)` function in `js/app.js` wired via inline `oninput` on each input. The custom-category counter hides/shows in sync with the custom-category text input.
+
+### Changed — Project Templates modal intro explains that custom templates bank reference material + starting document
+
+David's read of the always-visible modal intro at `index.html:1969` was that templates only fill in the **Project goal fields**. The full picture is bigger — Custom Templates also bank reference material and the starting document, so a saved template captures the **whole setup** (a fact that explains why "Save as Template" is reachable from the Working Document page, not just from the Project setup).
+
+Intro expanded from:
+> Templates fill in your Project fields with proven starting content for common document types. Pick one matching what you're writing, review the filled-in fields, and edit anything that doesn't fit your specific situation.
+
+To:
+> Templates fill in your Project fields with proven starting content for common document types. Pick one matching what you're writing, review the filled-in fields, and edit anything that doesn't fit. **Custom Templates** go further — they also bank your reference material and starting document, so a saved template captures the whole setup, not just the goal fields.
+
+### Changed — "+ New blank template" button is no longer a jarring teleport
+
+David clicked the **+ New blank template** button inside the gallery modal and got dumped to the project setup page with no setup of expectations. The old toast on landing said *"New template — fill in the setup, then Save as Template"* — too vague (what setup? just the goal? everything?).
+
+Two fixes:
+
+1. **Tooltip on the button itself** so the user sees what's about to happen BEFORE clicking:
+   > Opens the project editor with empty fields. Fill in your project goal — plus optional reference material and a starting document — then ⭐ Save as Template to bank the recipe. Closes this gallery.
+2. **Expanded toast after landing**:
+   > ➕ Fill in your project goal — plus optional reference material and starting document — then ⭐ Save as Template
+
+Also tweaked the custom-toolbar hint at the top of the Custom Templates view to prepend a one-sentence summary of what a custom template bundles (project goal + reference material + starting document + hive lineup), and added a tooltip on **⬆ Import template** explaining what it does.
+
+### Files Changed
+
+- Updated: `index.html` (top-level intro copy expanded; new `<div class="save-template-charcount">` elements after name, custom-category, and description inputs; `oninput` hooks added), `js/app.js` (new `updateSaveTemplateCharCount(field)` function, init calls in `openSaveTemplateModal`, sync in `onSaveTemplateCategoryChange`, expanded `newBlankTemplate` toast, new tooltips + custom-hint copy in `renderTemplateGalleryBody`), `style.css` (new `.save-template-charcount` rule plus `--warn` and `--max` color states), `CHANGELOG.md`, `js/version.js`, `package.json`
+- Version/build stamps to v3.63.194 / 20260606-012 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.193
 
 **Template Gallery grid track min raised so custom cards aren't squeezed by hover-action buttons**
