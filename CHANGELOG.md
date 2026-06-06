@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.185
+
+**Bee dot strip: switch to var(--surface) card + lift shadow + builder dot ring fix**
+
+Build: `20260606-003`<br>
+Released: `2026-06-06`
+
+Two follow-on tweaks from David's review of v3.63.184:
+
+### Strip moves from var(--bg) to var(--surface)
+
+v3.63.184 set `.bee-dot-strip` background to `var(--bg)` (deepest dark, `#0a0c12`). On the work screen that color reads almost identically to the page body — so even though the strip was solid, it kept looking like a translucent "header-style" overlay rather than a distinct card. Switched to `var(--surface)` (`#ffffff` light / `#111318` dark) — the same surface color as the Working Document, Live Console, and Conflicts panels. Added a `box-shadow: 0 2px 6px rgba(0,0,0,…)` so the card visibly lifts off the honeycomb body.
+
+Now the strip reads as part of the same "card" family as the rest of the work screen instead of as another section-header glass strip.
+
+### Builder dot ring switches to the standard gray border
+
+`.bee-dot.is-builder` was `background: var(--accent); border-color: var(--accent);` — the amber fill bled into the amber border so the dot looked "completely filled in" with no visible ring. Other dots use `border-color: var(--border2)` (gray ring) — David asked the builder to match that pattern while keeping the amber fill as the role identifier. Changed `border-color` to `var(--border2)`; amber fill + amber glow shadow stay so the builder still reads as the distinguished slot.
+
+### Files touched
+
+- [style.css](style.css) — `.bee-dot-strip` background swap + lift shadow; `.bee-dot.is-builder` border-color swap.
+- [js/version.js](js/version.js), [js/app.js](js/app.js), [package.json](package.json) — stamps bumped to v3.63.185 / 20260606-003.
+- HTML/JS sweep — cache-bust + build-stamp updates so the iteration actually reaches the browser.
+
+---
+
 ## v3.63.184
 
 **Bee dot strip: solid card surface so the AI bees stop fading into the page honeycomb (light mode especially) + backlog hygiene to v235**
