@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-008
+   Build: 20260605-009
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2768,11 +2768,33 @@ body.helper-body .page-main {
   .footer-status { font-size: var(--fs-12); }
 
   /* Smoke the Hive + Send to Builder shrink padding (they keep
-     their text because they're the primary CTAs on the screen). */
+     their text because they're the primary CTAs on the screen).
+     v3.63.167 — Further compaction: border 2px → 1px, vertical
+     padding space-6 → space-4, font fs-13 → fs-12, min-width 200 →
+     160. The buttons were the footer's height driver — David's
+     report: "the footer is still pretty tall, almost taller than
+     the header". Smoke the Hive remains the most visually prominent
+     element via the accent fill, not via bulk. */
   .footer-btn,
   .footer-btn-smoke {
-    font-size: var(--fs-13);
-    padding: var(--space-6) var(--space-14);
+    font-size: var(--fs-12);
+    padding: var(--space-4) var(--space-14);
+    border-width: 1px;
+    min-width: 160px;
+  }
+
+  /* v3.63.167 — Footer container itself gets explicit vertical
+     padding clamped tight so any descendant size budget is real
+     instead of inherited from the page. */
+  .work-footer {
+    padding: var(--space-4) var(--space-16);
+    gap: var(--space-10);
+  }
+
+  /* v3.63.167 — Footer-about button compacted to match the pill row. */
+  .footer-about-btn {
+    font-size: var(--fs-11);
+    padding: 2px var(--space-8);
   }
 }
 /* end v3.63.166 density pass */
