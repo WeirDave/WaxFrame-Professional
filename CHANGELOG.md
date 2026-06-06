@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.178
+
+**Template Gallery: widened to match the main app + sticky sidebar nav for jumping between categories**
+
+Build: `20260605-020`<br>
+Released: `2026-06-05`
+
+David's observations: the Templates modal looked narrower than the main app's content footprint, and with 19 templates across 6 categories scrolling through the grid was painful. Two fixes in one pass.
+
+### Modal widened to match the main app
+
+David's measurement was correct. At 1366×768:
+- Main app `.fs-body-single` content area: `1366 − 16×2 padding = 1334px`
+- Template Gallery modal (prior): `92vw = ~1257px`, capped at 1280px — **~54px gutter each side**
+
+Updated `.template-gallery-modal` from `width: 92vw; max-width: 1280px` to `width: 98vw; max-width: 1340px`. At 1366×768 the modal is now 1338px wide — almost exactly the main app's content footprint. On displays larger than ~1370px the 1340px cap kicks in so the modal doesn't sprawl past readable proportions.
+
+### Sticky sidebar nav for category jumps
+
+In the template-grid view (after picking Starting from scratch or Refining an existing draft), a left sidebar now renders alongside the category sections. Each visible category gets a jump-link button; click scrolls smoothly to that section. The sidebar uses `position: sticky` against `.template-gallery-body`'s `overflow-y: auto`, so it stays visible while the user scrolls through the categories on the right.
+
+**Conditional rendering**: the sidebar only appears when `path !== 'custom'` AND `visibleCats.length > 1`. The custom path has a single "My Templates" bucket — a nav with one entry is just clutter. The path-picker view (no path selected yet) doesn't get the sidebar either since it doesn't render categories.
+
+**Slug generation**: category names like `"Career & Hiring"` become section IDs `"tpl-cat-career-hiring"` via a simple slugifier (lowercase → non-alphanumeric → single hyphens → trim hyphens).
+
+**Layout sketch**:
+```
+┌──────────────┬──────────────────────────────────┐
+│  Jump to     │  Quick Start                     │
+│  Quick Start │    ⭐ Quick Start                 │
+│  Career &…   │                                  │
+│  Business…   │  Career & Hiring                 │
+│  Content &…  │    Cover Letter · Job Desc · …   │
+│  …           │  …                               │
+└──────────────┴──────────────────────────────────┘
+        180px              flex: 1
+```
+
+### Files touched
+
+- [style.css](style.css) — `.template-gallery-modal` width bumped; new `.template-gallery-with-sidebar`, `.template-gallery-sidebar`, `.template-gallery-sidebar-label`, `.template-gallery-sidebar-link`, `.template-gallery-main` rules added.
+- [js/app.js](js/app.js) — `catSlug()` helper added; each section's `<div>` gets `id="tpl-cat-${slug}"`; body innerHTML wraps sections in the sidebar flex container when applicable.
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.178 / 20260605-020.
+- HTML/JS/CSS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.177
 
 **Quick Start CTAs: dropped the ⭐ (icon collision with Custom Templates), one-bold-phrase formatting, scratch+refine callouts also actionized**
