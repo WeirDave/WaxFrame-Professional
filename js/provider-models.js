@@ -41,7 +41,7 @@
     mistral:    ['mistral-large-latest', 'mistral-small-latest', 'ministral-8b-latest'],
     together:   ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Qwen/Qwen2.5-72B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1'],
     cohere:     ['command-r-plus', 'command-r', 'command-a-03-2025'],
-    perplexity: ['sonar', 'sonar-pro', 'sonar-deep-research', 'sonar-reasoning-pro']
+    perplexity: ['sonar', 'sonar-pro', 'sonar-reasoning', 'sonar-reasoning-pro', 'sonar-deep-research']
   };
 
   // Structural filter — blocks models whose API contract fundamentally differs
