@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.191
+
+**Save-as-Template modal now stacks above the first-run offer modal**
+
+Build: `20260606-009`<br>
+Released: `2026-06-06`
+
+### Fixed — modal stacking when Save-as-Template is launched from the first-run offer
+
+David hit this 2026-06-06 setting up the restaurant review (T10) and deciding to dogfood the new Custom Categories feature at the same time. Clicked **⭐ Save as a template** from the **"Set up and ready to run"** first-run offer modal — the Save-as-Template modal opened *behind* the offer modal, leaving the offer modal in the foreground. Same z-index, DOM order decided the loser.
+
+Both modals share `.finish-modal-overlay` at `z-index: 99999`. `#saveTemplateModal` sits earlier in `index.html` than `#firstRunOfferModal`, so without an override the offer modal wins the cascade when both are active. `#saveCheckpointModal` works correctly in the same nested flow only because it happens to sit *after* the offer modal in DOM order.
+
+Added a one-line z-index override in `style.css` for `#saveTemplateModal` at `100000` — above the first-run offer (99999), below `#wfConfirmModal` (1000000) so confirmations launched from inside the save flow still surface above the template modal.
+
+Preserves the v3.63.62 intent that the first-run offer stays open under the action you picked, so you can do **checkpoint backup → template save → "I'm done"** in one continuous flow without re-opening the offer from the menu.
+
+### Files Changed
+
+- Updated: `style.css` (new `#saveTemplateModal { z-index: 100000; }` rule near the existing `#wfConfirmModal` override at line 7413), `CHANGELOG.md`, `js/version.js`, `package.json`
+- Version/build stamps to v3.63.191 / 20260606-009 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.190
 
 **Cache-bust drift validator + Template Gallery modal CSS consolidation**
