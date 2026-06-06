@@ -107,7 +107,8 @@ Open Features
 - CSS rule consolidation sweep
   - 2026-06-06 note: at least two duplicate definitions of .template-gallery-modal, .template-gallery-hdr, .template-gallery-body in style.css — the original at lines 13603-13745 and the v3.63.182 polish block at lines 14089-14111. The later block intentionally overrides. Same pattern likely exists for other heavily-iterated selectors. Sweep would consolidate to single definitions.
   - 2026-06-06 UPDATE: v3.63.190 folded the modal/hdr/close/body subset (5 selectors) into base. Remaining duplicates per the 2026-06-06 audit grep: .template-gallery-sidebar / -sidebar-label / -sidebar-link, .template-path-card, .template-card / .template-card.is-recommended / .template-card-name / .template-card-desc, .template-gallery-section / .template-gallery-section-title, and the .template-card-edit / -dup / -export / -del / -wrap edit-action button block at style.css:14765+. Each remaining group needs per-selector tracing because the cascade interacts with the [data-theme="dark"] specialization at style.css:14220+. Browser-verification session.
-(housekeeping items below moved to CLOSED in the 2026-06-06 audit; see top)
+
+(Repo housekeeping — docs/ folder, Triage CodeQL + Dependabot findings, and Rules reference updates were CLOSED in the 2026-06-06 audit — see top of file.)
 
 Observations
 
