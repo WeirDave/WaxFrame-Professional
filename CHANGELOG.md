@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.182
+
+**Project Templates theme polish: modal and catalog now match the documentation card system in light and dark mode**
+
+Build: `20260605-024`<br>
+Released: `2026-06-05`
+
+David asked for the Project Templates screens to stop feeling visually separate from the rest of WaxFrame's documentation and helper pages. The first local pass leaned too hard into dark mode, so this release finishes the job properly across both themes.
+
+### Project Templates modal
+
+The Project Templates modal now uses the same document-card language as the User Manual and Document Playbooks:
+
+- White document cards on the soft page canvas in light mode.
+- Separated charcoal cards on the dark modal canvas in dark mode.
+- Matching 4px amber left rails for template cards and path cards.
+- Stronger section labels, tighter card titles, and cleaner sidebar treatment.
+- Theme-specific modal header handling: plain white in light mode, honeycomb glass in dark mode.
+
+Dark mode received its own final pass after David asked whether it would get the same treatment. The dark layer now changes only color, background, and shadow values; the amber border width stays the same as light mode.
+
+### Public Template Catalog
+
+The standalone `templates.html` catalog received matching card polish so it sits visually beside the User Manual and Document Playbooks instead of reading like a separate grid:
+
+- Template catalog cards now share the same solid-card + amber-rail rhythm.
+- Search/scaffold/details surfaces were aligned with the helper-page surface tokens.
+- Fact labels and detail labels now use the same amber emphasis used elsewhere in the documentation system.
+
+### Files touched
+
+- [style.css](style.css) — Project Templates modal theme polish plus public Template Catalog card polish.
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.182 / 20260605-024.
+- HTML/JS/CSS sweep — cache-bust + build-stamp updates.
+- [docs/WaxFrame_Backlog_Master_v234.txt](docs/WaxFrame_Backlog_Master_v234.txt) — backlog state advanced.
+
+---
+
 ## v3.63.181
 
 **Path indicator theme-aware (white in light mode, dark glass in dark mode — matches `.work-panel-header`) + scratch explainer copy edit**
