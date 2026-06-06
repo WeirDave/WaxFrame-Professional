@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.187
+
+**Bee dot strip border opacity to 0.5 — matches console + conflicts transparency**
+
+Build: `20260606-005`<br>
+Released: `2026-06-06`
+
+David noticed v3.63.186's blue border was visually wider than the green console and amber conflicts borders despite all three being 4px. Cause: the green and amber are `rgba(...,0.45)` and `rgba(...,0.5)` translucent fills, but the blue was at full saturation. Same px width reads as different visual weight.
+
+Switched the blue border to a translucent fill across all three theme paths to match the existing pattern:
+
+- Dark (default) → `rgba(77,138,255,0.5)` (the dark-mode `--blue` `#4d8aff` at 50%)
+- Light → `rgba(37,99,235,0.5)` (the light-mode `--blue` `#2563eb` at 50%)
+- Auto + prefers-light → `rgba(29,78,216,0.5)` (the auto-light `--blue` `#1d4ed8` at 50%)
+
+Hardcoded the rgba values per theme block — same approach `.console-body-wrap` and `.conflicts-panel` use. CSS variables don't have a translucent-blue token to point at.
+
+### Files touched
+
+- [style.css](style.css) — `.bee-dot-strip` border color from `var(--blue)` to per-theme `rgba(...,0.5)`.
+- [js/version.js](js/version.js), [js/app.js](js/app.js), [package.json](package.json) — stamps bumped to v3.63.187 / 20260606-005.
+- HTML/JS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.186
 
 **Bee dot strip border: 4px var(--blue), matching the .console-body-wrap and .conflicts-panel width**
