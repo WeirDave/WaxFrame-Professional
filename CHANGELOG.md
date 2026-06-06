@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.198
+
+**Round badge + Send to Builder + Smoke the Hive get a 3D raised treatment matching the clock bezel**
+
+Build: `20260606-016`<br>
+Released: `2026-06-06`
+
+### Changed — three buttons now read as physical raised elements instead of flat outlines
+
+After v3.63.197 moved the project clock into the top bar next to the Round badge, David flagged the visual mismatch: the clock has a real 3D bezel (recessed dark screen + inset shadow + drop shadow) while the surrounding buttons all read as flat outlines. Three buttons got the matching raised treatment so the work-screen UI feels cohesive:
+
+1. **`.work-round-badge`** in light mode — was previously flattened to white-with-amber-border via the light-mode override. Restored the 3D feel: subtle white-to-light-gray vertical gradient + inset top highlight + bottom drop shadow + soft amber glow. Dark mode already had its dark bezel treatment (matching the clock's bezel gradient) and stays unchanged.
+2. **`.footer-btn`** (Send to Builder) — was a transparent rectangle with a 2px amber outline. Now: vertical gradient background, inset top highlight + inset bottom shadow + drop shadow. Hover lifts; `:active` depresses with an inset shadow stack so the press is tactile.
+3. **`.footer-btn-smoke`** (Smoke the Hive) — was a flat amber fill. Now: light-amber-to-dark-amber vertical gradient + white inset top highlight + amber-tinted drop shadow + faint outer glow. The "primary CTA" weight reads clearly. Hover still inverts to white-on-amber (preserved behavior) but layered on the new shadow stack. `:active` depresses.
+
+All three share the same shadow vocabulary so they look like they're cut from the same physical surface. Disabled states drop the elevation shadows so disabled reads as "not raised, can't press."
+
+### Files Changed
+
+- Updated: `style.css` (light-mode override for `.work-round-badge` now restores the 3D treatment instead of flattening; `.footer-btn` + `.footer-btn-smoke` rewritten with raised gradient + inset + drop-shadow + `:active` press states), `CHANGELOG.md`, `js/version.js`, `package.json`
+- Version/build stamps to v3.63.198 / 20260606-016 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.197
 
 **Smart project clock + Auto-mode attention escalation + per-round timer retired**
