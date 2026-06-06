@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.175
+
+**"New to WaxFrame?" callout in the Template Gallery promoted from text to a one-click CTA**
+
+Build: `20260605-017`<br>
+Released: `2026-06-05`
+
+David's call after walking through the v3.63.174 Templates flow: the path-picker view of the Template Gallery already has a *"New to WaxFrame? Start with Starting from scratch and then click on ⭐ Quick Start…"* callout (added in v3.32.4), but it's just instructions — *"do this, then do that"* — when we could just do it for them on click. His suggestion: *"we always know that particular one is going to be from scratch… instead of all that huge blurb we should just say 'New to WaxFrame? Click here to use the Quick Start template' and then just click it."*
+
+### Fix
+
+In [js/app.js](js/app.js) `renderTemplateGalleryBody()`'s path-picker block, the existing `<p class="template-gallery-intro template-gallery-intro--newuser">` was promoted to a `<button>` with the same classes plus a new `--cta` modifier. Click calls `applyTemplate('quick-start', 'scratch')` directly. `applyTemplate` already fires the Quick Start template's built-in *"A Note on Naming & Versions"* confirm modal as the consent gate and already closes the gallery modal before applying — both behaviors are reused, no new wiring needed.
+
+Click count from the Template Gallery to a Quick Start application:
+- Before: 3 clicks (📝 Starting from scratch → ⭐ Quick Start card → "Got it — apply Quick Start")
+- After: 2 clicks (CTA banner → "Got it — apply Quick Start")
+
+Combined with the v3.63.172 Menu entry, the whole path from welcome screen to applied Cookies template is now: **Menu → 📋 Templates → CTA → consent → done** (4 clicks total, was 7).
+
+### No auto-navigation (deliberate)
+
+Per the v3.63.173 rollback's lesson — David objected to v3.63.172's inline button on the grounds that auto-navigation to Setup 1 cuts onboarding context — the CTA does NOT navigate after apply. The user stays on whatever screen they opened the gallery from. From welcome they continue by clicking "Let's get started →" themselves to enter Setup 1; from Setup 2+ they see their filled-in Project fields right away.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `<p>` → `<button>` in the path-picker callout; same content (light rewording: "Click here to try the ⭐ Quick Start" instead of "Start with Starting from scratch and then click ⭐ Quick Start").
+- [style.css](style.css) — `button.template-gallery-intro--cta` modifier added: full-width, left-aligned, `font: inherit`, 2px accent border replacing the `--newuser` border-left, hover state with lift + glow.
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.175 / 20260605-017.
+- HTML/JS/CSS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.174
 
 **Scratch-path templates now auto-switch Setup 4 to Start from Scratch (Andy/Cookies onboarding fix)**
