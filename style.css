@@ -13921,12 +13921,10 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   justify-content: space-between;
   gap: var(--space-16);
   padding: var(--space-14) var(--space-20);
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface3);
+  border: 1px solid var(--border2);
   border-radius: var(--radius-md);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   margin-bottom: var(--space-16);
 }
 .template-path-indicator-label {
@@ -13935,13 +13933,10 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #ffffff;
+  color: var(--text);
   line-height: 1.25;
 }
 
-/* v3.63.180 dark-glass band carries through to both themes — David
-   reverted the v3.63.182 theme-aware swap so the .honeycomb-header
-   pattern reads consistently across light and dark mode. */
 .template-path-indicator-change {
   font-size: var(--fs-13);
   font-weight: 600;
@@ -14088,36 +14083,33 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   white-space: nowrap;
 }
 
-/* v3.63.182 — Documentation-aligned polish for Project Templates.
-   Keeps the v3.63.178–181 modal structure, but makes the surfaces read
-   like the User Manual / Document Playbooks system: dark glass header,
-   solid document cards, amber rails, and denser section labeling. */
+/* Clean theme-variable-driven surfaces — no textures, no glass overlays.
+   Light mode: white modal box, light-gray header strip. Dark mode: dark
+   modal box, slightly-lighter header strip. Text colors flip with theme. */
 .template-gallery-modal {
-  background:
-    linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
-    url('images/WaxFrame_Honeycomb_BG_Dark.png');
-  background-size: auto, 300px auto;
-  background-repeat: repeat, repeat;
+  background: var(--surface);
   box-shadow: 0 24px 72px rgba(0,0,0,0.58);
 }
 .template-gallery-hdr {
-  background: rgba(0,0,0,0.55);
-  border-bottom-color: rgba(255,255,255,0.1);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border2);
 }
 .template-gallery-hdr h2 {
-  color: #ffffff;
+  color: var(--text);
 }
 .template-gallery-hdr .template-gallery-intro {
-  color: rgba(255,255,255,0.82);
+  color: var(--text-dim);
 }
 .template-gallery-close {
-  border-color: rgba(255,255,255,0.2);
-  color: rgba(255,255,255,0.72);
+  border-color: var(--border2);
+  color: var(--text-dim);
+}
+.template-gallery-close:hover {
+  border-color: var(--accent, #f4b400);
+  color: var(--accent, #f4b400);
 }
 .template-gallery-body {
-  background: transparent;
+  background: var(--surface);
 }
 .template-gallery-sidebar {
   background: var(--surface);
@@ -14175,25 +14167,6 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 [data-theme="dark"] .template-gallery-modal {
   border-color: rgba(148,163,184,0.32);
-}
-[data-theme="dark"] .template-gallery-body {
-  background: transparent;
-}
-[data-theme="light"] .template-gallery-modal {
-  background:
-    linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
-    url('images/WaxFrame_Honeycomb_BG_Light.png');
-  background-size: auto, 300px auto;
-  background-repeat: repeat, repeat;
-}
-@media (prefers-color-scheme: light) {
-  [data-theme="auto"] .template-gallery-modal {
-    background:
-      linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
-      url('images/WaxFrame_Honeycomb_BG_Light.png');
-    background-size: auto, 300px auto;
-    background-repeat: repeat, repeat;
-  }
 }
 [data-theme="dark"] .template-gallery-sidebar,
 [data-theme="dark"] .template-path-card,
