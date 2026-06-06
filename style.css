@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-007
+   Build: 20260606-008
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13644,10 +13644,14 @@ kbd {
   align-items: stretch;
   text-align: left;
   gap: 0;
-  background: var(--surface2);
+  /* v3.63.183 — Clean theme-variable surfaces. Light mode → white box,
+     light-gray header strip. Dark mode → dark box, slightly-lighter
+     header strip. Was previously a single var(--surface2) block + the
+     v3.63.180-182 honeycomb-glass experiment; both are gone. */
+  background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 24px 72px rgba(0,0,0,0.58);
   overflow: hidden;
 }
 
@@ -13657,7 +13661,7 @@ kbd {
   gap: var(--space-16);
   padding: 22px 26px var(--space-18);
   border-bottom: 1px solid var(--border2);
-  background: transparent;
+  background: var(--surface2);
   position: relative;
   width: 100%;
   box-sizing: border-box;
@@ -13676,6 +13680,7 @@ kbd {
 .template-gallery-hdr h2 {
   margin: 0 0 var(--space-6);
   text-align: left;
+  color: var(--text);
 }
 .template-gallery-intro {
   margin: 0;
@@ -13768,6 +13773,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   padding: var(--space-18) 26px 26px;
   overflow-y: auto;
   flex: 1;
+  background: var(--surface);
 }
 .template-gallery-empty {
   text-align: center;
@@ -14105,34 +14111,11 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   white-space: nowrap;
 }
 
-/* Clean theme-variable-driven surfaces — no textures, no glass overlays.
-   Light mode: white modal box, light-gray header strip. Dark mode: dark
-   modal box, slightly-lighter header strip. Text colors flip with theme. */
-.template-gallery-modal {
-  background: var(--surface);
-  box-shadow: 0 24px 72px rgba(0,0,0,0.58);
-}
-.template-gallery-hdr {
-  background: var(--surface2);
-  border-bottom: 1px solid var(--border2);
-}
-.template-gallery-hdr h2 {
-  color: var(--text);
-}
-.template-gallery-hdr .template-gallery-intro {
-  color: var(--text-dim);
-}
-.template-gallery-close {
-  border-color: var(--border2);
-  color: var(--text-dim);
-}
-.template-gallery-close:hover {
-  border-color: var(--accent, #f4b400);
-  color: var(--accent, #f4b400);
-}
-.template-gallery-body {
-  background: var(--surface);
-}
+/* v3.63.190 — Modal/hdr/close/body theme overrides consolidated up into
+   the base definitions at the top of this section. The sidebar/path-card/
+   template-card overrides below remain as a layered override block;
+   folding them in safely needs browser verification because the cascade
+   interacts with the [data-theme="dark"] specializations further down. */
 .template-gallery-sidebar {
   background: var(--surface);
   border: 1px solid var(--border2);

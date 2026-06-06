@@ -22,6 +22,9 @@ CLOSED in v3.63.189 (the roll-up release):
 - Cache-bust drift validator — CLOSED in v3.63.190 (release-check.mjs check 4).
   Catches the v3.63.180-182 failure mode where multiple "ceremonial" releases shipped CSS/JS changes against the same ?v= key. New check compares HEAD against the most recent reachable tag (HEAD^ when HEAD is itself tagged) and fails if style.css or any js/*.js changed since that tag but APP_VERSION did not. Workflow checkout now uses fetch-depth: 0 so tags are present in CI. Combined with the existing check that ?v= must match APP_VERSION, this closes the loop: ship code → bump APP_VERSION → cache-bust follows.
 
+- Template Gallery modal CSS overrides folded into base — PARTIAL in v3.63.190.
+  The v3.63.183 polish landed as an override block at style.css:14108-14135 layering theme-variable surfaces on top of the original v3.32.0 base definitions at style.css:13625-13767. Modal-set overrides (.template-gallery-modal, -hdr, -hdr h2, -body, -close, -hdr .intro) folded into the base; redundant rules deleted; semantically-changed rules carried up with a comment pointing at v3.63.183. Sidebar (.template-gallery-sidebar, -sidebar-label, -sidebar-link), .template-path-card, .template-card, .template-card-name, .template-card-desc, .template-gallery-section, and .template-gallery-section-title overrides further down the same block — plus the [data-theme="dark"] specialization at the bottom — STAY layered until a session with browser verification can fold them safely. The cascade interaction with the dark-mode block is the specific risk.
+
 CLOSED in the 2026-06-06 audit (were on v234, found already shipped):
 
 - Notes button cut off at smaller effective viewport (DPI scaling case) — CLOSED.
@@ -71,6 +74,7 @@ Open Features
 - Provider Catalog foundation (parked)
 - CSS rule consolidation sweep
   - 2026-06-06 note: at least two duplicate definitions of .template-gallery-modal, .template-gallery-hdr, .template-gallery-body in style.css — the original at lines 13603-13745 and the v3.63.182 polish block at lines 14089-14111. The later block intentionally overrides. Same pattern likely exists for other heavily-iterated selectors. Sweep would consolidate to single definitions.
+  - 2026-06-06 UPDATE: v3.63.190 folded the modal/hdr/close/body subset (5 selectors) into base. Remaining duplicates per the 2026-06-06 audit grep: .template-gallery-sidebar / -sidebar-label / -sidebar-link, .template-path-card, .template-card / .template-card.is-recommended / .template-card-name / .template-card-desc, .template-gallery-section / .template-gallery-section-title, and the .template-card-edit / -dup / -export / -del / -wrap edit-action button block at style.css:14765+. Each remaining group needs per-selector tracing because the cascade interacts with the [data-theme="dark"] specialization at style.css:14220+. Browser-verification session.
 - Repo housekeeping — docs/ folder
 - Triage CodeQL + Dependabot findings
 - Rules reference updates
