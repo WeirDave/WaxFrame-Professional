@@ -2208,7 +2208,7 @@ body.helper-body .page-main {
     padding: var(--space-8) var(--space-10);
     flex-shrink: 0;
     background: var(--surface);
-    border: 4px solid var(--blue);
+    border: 4px solid rgba(77,138,255,0.5);
     border-radius: 8px;
     box-shadow: 0 0 12px var(--blue-dim);
     margin: 2px var(--space-8) var(--space-4);
@@ -2216,14 +2216,14 @@ body.helper-body .page-main {
   [data-theme="light"] .bee-dot-strip,
   .bee-dot-strip-light {
     background: #ffffff;
-    border-color: var(--blue);
+    border-color: rgba(37,99,235,0.5);
     box-shadow: 0 0 12px var(--blue-dim);
   }
 }
 @media (max-width: 1600px) and (prefers-color-scheme: light) {
   [data-theme="auto"] .bee-dot-strip {
     background: #ffffff;
-    border-color: var(--blue);
+    border-color: rgba(29,78,216,0.5);
     box-shadow: 0 0 12px var(--blue-dim);
   }
 }
