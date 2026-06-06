@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-010
+   Build: 20260606-011
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14035,7 +14035,16 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 
 .template-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  /* v3.63.193 — Min track raised from 240px to 380px. The 4-button hover
+     action set on custom-template cards (⬇ ⌜ ✏️ 🗑) reserves 152px on the
+     right via .template-card-wrap > .template-card { padding-right: 152px }
+     at line ~14930. With a 240px track that left ~88px for content — icon
+     (32px) + gap (12px) + ~30px internal padding ate it, leaving the text
+     column at ~14px wide and wrapping one character per line. Caught by
+     David 2026-06-06 with the restaurant review test template. 380px gives
+     228px content area on custom cards (good text-column width) and ~340px
+     on built-in cards (which only reserve ~40px for the delete button). */
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: var(--space-12);
 }
 
