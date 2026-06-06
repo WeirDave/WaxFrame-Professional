@@ -2194,18 +2194,34 @@ body.helper-body .page-main {
 @media (max-width: 1600px) {
   .hex-grid        { display: none; }
   .hive-edit-btn   { display: inline-flex; }
+  /* v3.63.184 — Strip now a solid card so the bee dots have a clean
+     canvas instead of fading into the page honeycomb. David's report:
+     "the round cards for the AI are very hard to read in light mode."
+     White card in light mode, deepest-black card in dark mode; border
+     gives definition against the honeycomb body. Dots themselves keep
+     their existing var(--surface2) fill — slight tonal lift against
+     the card so each bee reads as an elevated bubble. */
   .bee-dot-strip   {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-6);
     padding: var(--space-6) var(--space-10) var(--space-6);
     flex-shrink: 0;
-    background: rgba(0,0,0,0.45);
+    background: var(--bg);
+    border: 1px solid var(--border2);
     border-radius: 8px;
     margin: 2px var(--space-8) var(--space-4);
   }
   [data-theme="light"] .bee-dot-strip,
-  .bee-dot-strip-light { background: rgba(0,0,0,0.12); }
+  .bee-dot-strip-light { background: var(--surface); border-color: var(--border2); }
+}
+@media (max-width: 1600px) and (prefers-color-scheme: light) {
+  [data-theme="auto"] .bee-dot-strip {
+    background: var(--surface);
+    border-color: var(--border2);
+  }
+}
+@media (max-width: 1600px) {
 
   /* v3.32.29 — Laptop dot overhaul.
      • Ring width bumped from 2px → 5px (bold). Inner space drops from
