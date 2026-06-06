@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-015
+   Build: 20260606-016
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1478,18 +1478,29 @@ body.helper-body .page-main {
   text-shadow: 0 0 10px rgba(245,166,35,0.5);
 }
 [data-theme="light"] .work-round-badge {
-  background: #ffffff;
+  /* v3.63.197 — 3D raised treatment matching the clock bezel aesthetic.
+     Subtle vertical gradient + inset top highlight + drop shadow so the
+     pill reads as a physical pressed-out bezel rather than a flat outline. */
+  background: linear-gradient(180deg, #ffffff 0%, #f2f2f2 100%);
   border: 2px solid var(--accent);
   color: var(--accent);
-  box-shadow: 0 2px 8px rgba(245,166,35,0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    inset 0 -1px 0 rgba(0,0,0,0.06),
+    0 3px 8px rgba(0,0,0,0.10),
+    0 0 14px rgba(245,166,35,0.18);
   text-shadow: none;
 }
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .work-round-badge {
-    background: #ffffff;
+    background: linear-gradient(180deg, #ffffff 0%, #f2f2f2 100%);
     border: 2px solid var(--accent);
     color: var(--accent);
-    box-shadow: 0 2px 8px rgba(245,166,35,0.2);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.9),
+      inset 0 -1px 0 rgba(0,0,0,0.06),
+      0 3px 8px rgba(0,0,0,0.10),
+      0 0 14px rgba(245,166,35,0.18);
     text-shadow: none;
   }
 }
@@ -3228,40 +3239,94 @@ body.helper-body .page-main {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
+  /* v3.63.197 — 3D raised treatment matching the round-badge + clock
+     bezel aesthetic. Subtle gradient + inset top highlight + drop shadow
+     so the button reads as a pressed-out physical element rather than a
+     flat outline. Light + dark mode share the structure; the linear-
+     gradient stops are tuned per theme to keep contrast against the
+     surrounding panel. Hover lifts further; :active depresses. */
+  background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.10) 100%);
   border: 2px solid var(--accent);
   border-radius: var(--radius-sm);
   cursor: pointer;
   padding: var(--space-8) var(--space-40);
-  transition: all 0.15s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
   min-width: 200px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 3px 6px rgba(0,0,0,0.22);
 }
 .footer-btn:hover {
-  background: var(--accent-dim);
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
   transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 6px 14px rgba(0,0,0,0.30);
 }
-.footer-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.footer-btn:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.35),
+    inset 0 -1px 0 rgba(255,255,255,0.05),
+    0 1px 2px rgba(0,0,0,0.18);
+}
+.footer-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 1px 2px rgba(0,0,0,0.10);
+}
 .footer-btn-smoke {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent);
+  /* v3.63.197 — Same 3D raised pattern as .footer-btn but on the amber
+     fill: lighter amber top to darker amber bottom, top inset highlight,
+     amber-tinted drop shadow + a faint outer glow for the "primary CTA"
+     read. The original :hover was a full color invert; kept that
+     behavior (text + bg swap) but layered the new shadow stack on top. */
+  background: linear-gradient(180deg, #f7b94c 0%, #d99000 100%);
   border: 2px solid var(--accent);
   border-radius: var(--radius-sm);
   cursor: pointer;
   padding: var(--space-8) var(--space-40);
   min-width: 200px;
-  transition: all 0.15s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.45),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 3px 8px rgba(245,166,35,0.30),
+    0 1px 2px rgba(0,0,0,0.20);
 }
 .footer-btn-smoke:hover {
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
   border-color: var(--accent);
   color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(245,166,35,0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    inset 0 -1px 0 rgba(0,0,0,0.06),
+    0 8px 24px rgba(245,166,35,0.45),
+    0 2px 6px rgba(0,0,0,0.18);
+}
+.footer-btn-smoke:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 8px rgba(0,0,0,0.30),
+    inset 0 -1px 0 rgba(255,255,255,0.10),
+    0 1px 3px rgba(245,166,35,0.25);
 }
 .footer-btn-smoke:hover span { color: var(--accent); }
-.footer-btn-smoke:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.footer-btn-smoke:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
 .footer-btn-smoke.running {
   animation: shakePulse 0.8s ease-in-out infinite alternate;
 }
