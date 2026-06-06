@@ -13921,7 +13921,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   justify-content: space-between;
   gap: var(--space-16);
   padding: var(--space-14) var(--space-20);
-  background: var(--surface3);
+  background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--radius-md);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
