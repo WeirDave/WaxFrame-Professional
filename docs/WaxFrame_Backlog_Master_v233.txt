@@ -63,6 +63,11 @@ Open Features / Tasks
 - #27 Worker Bees rework: 3-group ordering (defaults / customs / servers)
 - #35 Auto-classify tier picks always
 - #36 Worker Bees rework: server provider group label
+- Custom template categories
+  - When the user saves a project as a custom template (📋 Save as Template), let them assign a category — same category list as the built-in templates (Career & Hiring, Business & Sales, Content & Marketing, Personal & Everyday, Reviews & Recommendations) OR a free-form custom category
+  - Render the categories in the Template Gallery sidebar nav (added v3.63.178) for the Custom Templates view, just like the scratch/refine sidebars — so users with 10+ custom templates can navigate by category rather than scrolling a flat list
+  - Currently all custom templates land in a single "My Templates" bucket; the sidebar nav is skipped on the custom path because there's only one bucket. With categories, the sidebar becomes useful and the custom view matches the built-in view shape
+  - Requires: schema bump on the custom template JSON (add category field, backward-compat default for existing entries), UI in Save-as-Template modal for category picker, conditional sidebar rendering in renderTemplateGalleryBody for path === 'custom' when category count > 1
 - Per-row "Manual override" tag — needs delta tracking
 - Per-tier WHY text: classifier currently produces one overall WHY
 - Restore-from-Checkpoint diff-and-pick UI — PARKED
