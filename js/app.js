@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260605-019
+// Build: 20260605-020
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -3689,8 +3689,14 @@ function renderTemplateGalleryBody() {
     ? `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>New to WaxFrame? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`
     : `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>Refining a draft?</strong> Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale.</p><button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>Want a guided tour first? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies demo that shows you the whole hive flow before you bring your own document.</button>`;
 
-  const sections = order.filter(c => buckets[c] && buckets[c].length).map(cat => `
-    <div class="template-gallery-section">
+  // v3.63.178 — Slugify category name for sidebar jump-link targets.
+  // Lowercase, replace any run of non-alphanumerics with single hyphens,
+  // strip leading/trailing hyphens. "Career & Hiring" → "career-hiring".
+  const catSlug = (cat) => cat.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  const visibleCats = order.filter(c => buckets[c] && buckets[c].length);
+  const sections = visibleCats.map(cat => `
+    <div class="template-gallery-section" id="tpl-cat-${catSlug(cat)}">
       <h3 class="template-gallery-section-title">${esc(cat)}</h3>
       <div class="template-gallery-grid">
         ${buckets[cat].map(t => {
@@ -3733,7 +3739,26 @@ function renderTemplateGalleryBody() {
   const _emptyMsg = (path === 'custom')
     ? '<p class="template-gallery-empty">You haven\'t saved any templates yet. Finish a project you like, then use <strong>⭐ Save as Template</strong> (in the Finish panel or the Tools menu) to bank its setup here.</p>'
     : '<p class="template-gallery-empty">No templates found for this path.</p>';
-  body.innerHTML = pathIndicator + newuserCallout + (sections || _emptyMsg);
+
+  // v3.63.178 — Sidebar nav for jumping between category sections. Only
+  // built for the scratch/refine paths (which have 5–6 category buckets);
+  // custom path has a single "My Templates" bucket so a sidebar would be
+  // pointless. Each link scrollIntoViews to its section by id.
+  if (path !== 'custom' && visibleCats.length > 1) {
+    const sidebarLinks = visibleCats.map(cat =>
+      `<button type="button" class="template-gallery-sidebar-link" onclick="document.getElementById('tpl-cat-${catSlug(cat)}').scrollIntoView({behavior:'smooth', block:'start'})">${esc(cat)}</button>`
+    ).join('');
+    body.innerHTML = pathIndicator + newuserCallout +
+      `<div class="template-gallery-with-sidebar">
+         <aside class="template-gallery-sidebar">
+           <div class="template-gallery-sidebar-label">Jump to</div>
+           ${sidebarLinks}
+         </aside>
+         <div class="template-gallery-main">${sections}</div>
+       </div>`;
+  } else {
+    body.innerHTML = pathIndicator + newuserCallout + (sections || _emptyMsg);
+  }
 }
 
 // ============================================================

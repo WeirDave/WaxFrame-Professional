@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-019
+   Build: 20260605-020
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13601,8 +13601,14 @@ kbd {
  * ========================================================= */
 
 .template-gallery-modal {
-  max-width: 1280px;
-  width: 92vw;
+  /* v3.63.178 — David's measurement was right: at 1366×768 the prior
+     92vw/1280px cap left ~54px gutter on each side, vs the main app's
+     .fs-body-single content width of ~1334px (1366 − 16×2 padding).
+     Widened to 98vw / 1340px so the gallery matches the surrounding
+     app's content footprint; on larger displays the 1340px cap kicks
+     in so the modal doesn't sprawl past readable proportions. */
+  max-width: 1340px;
+  width: 98vw;
   max-height: 88vh;
   display: flex;
   flex-direction: column;
@@ -13732,6 +13738,76 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   text-align: center;
   color: var(--text-dim);
   padding: var(--space-32);
+}
+
+/* v3.63.178 — Sidebar nav for category jumps inside the template-grid
+   view. Rendered only when there's more than one visible category (so
+   scratch/refine paths get it; the custom-templates view does not since
+   it has only "My Templates"). Position:sticky keeps the nav visible
+   while the user scrolls through the category sections below it. The
+   sidebar sits inside .template-gallery-body which already has
+   overflow-y:auto, so sticky works against that scrolling container
+   without extra plumbing. */
+.template-gallery-with-sidebar {
+  display: flex;
+  gap: var(--space-20);
+  align-items: flex-start;
+  margin-top: var(--space-12);
+}
+.template-gallery-sidebar {
+  flex: 0 0 180px;
+  position: sticky;
+  top: 0;
+  padding: var(--space-12) 0;
+  border-right: 1px solid var(--border2);
+  align-self: flex-start;
+  max-height: calc(88vh - 200px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.template-gallery-sidebar-label {
+  font-size: var(--fs-11);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--text-dim);
+  padding: 0 var(--space-14);
+  margin-bottom: var(--space-8);
+}
+.template-gallery-sidebar-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  padding: var(--space-8) var(--space-14);
+  margin-right: -1px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: var(--fs-13);
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.3;
+  transition: background-color 0.1s, color 0.1s, border-left-color 0.1s;
+}
+.template-gallery-sidebar-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text);
+  border-left-color: var(--accent);
+}
+[data-theme="dark"] .template-gallery-sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .template-gallery-sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+.template-gallery-main {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ── v3.37.0 — Dual-path template picker ─────────────────────────
