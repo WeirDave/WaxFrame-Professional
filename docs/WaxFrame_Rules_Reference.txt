@@ -1,5 +1,5 @@
 WaxFrame Professional — Project Rules Reference
-Last updated: 2026-05-29 (current production: v3.63.49)
+Last updated: 2026-06-06 (current production: v3.63.190)
 
 Living reference of the conventions and hard rules this project runs under.
 Update when a rule changes; this is the onboarding/consistency anchor for any
@@ -110,6 +110,25 @@ RELEASE CEREMONY (every release)
    file off the sweep is what produced the version-drift Codex flagged.
    Cache-bust ?v=X.Y.Z on all 9 HTML covers every CSS/JS/lib reference.
    Build stamp format: 20260529-NNN (date + zero-padded session sequence).
+
+2a. Pre-flight: tools/release-check.mjs runs in CI on every push and PR,
+    and locally via `node tools/release-check.mjs`. Four checks:
+    (1) JS syntax via node --check on every js/*.js,
+    (2) Version-stamp consistency — APP_VERSION matches package.json,
+        JSON-LD softwareVersion in index.html, every ?v= cache-bust,
+        every waxframe-build meta, every // Build: comment,
+    (3) CSS token references — every var(--TOKEN) in style.css resolves
+        to a defined token (catches the v3.63.131 --space-22 / --modal-w-md
+        typos that silently fell back),
+    (4) Cache-bust drift — if style.css or any js/*.js changed since the
+        last reachable tag, APP_VERSION must have advanced. This catches
+        the v3.63.180-182 failure mode: CSS/JS shipped three releases in
+        a row against the same ?v= key, leaving CDN + browser caches
+        serving stale files. Combined with check 2, this closes the loop:
+        ship code → bump APP_VERSION → ?v= follows. The workflow checkout
+        uses fetch-depth: 0 so tags are present in CI.
+    If any check fails the build is red; fix the underlying drift, don't
+    skip the hook.
 
 3. CHANGELOG.md entry prepended (every commit gets a CHANGELOG line). The
    Build/Released metadata lives HERE, not in the release notes.
@@ -241,6 +260,21 @@ TEMPLATES (built-in + custom)
 - Imported templates ALWAYS get a fresh local id and field-sanitized contents
   (their strings reach element ids / onclick / visible card text). Never trust
   an imported id or pass imported structure through unsanitized.
+- CUSTOM CATEGORIES (since v3.63.188): each saved custom template carries a
+  `category` field on the JSON. Save-as-Template modal renders a Category
+  select with six built-in options — My Templates, Career & Hiring, Business
+  & Sales, Content & Marketing, Personal & Everyday, Reviews & Recommendations
+  — plus a "+ Custom category..." free-form text input. The schema is
+  backward-compatible: pre-v3.63.188 saved templates default to "My Templates"
+  on read. renderTemplateGalleryBody computes category order on the custom
+  path dynamically (canonical buckets in built-in order first, then any
+  free-form buckets alphabetized). The sidebar nav appears on the custom
+  path whenever there are 2+ visible buckets — single-bucket case skips the
+  sidebar to match the pre-categories view. Free-form buckets expose a ✏️
+  affordance in the sidebar that opens a single prompt for rename / merge
+  into existing / fall back to default; built-in buckets stay non-renamable.
+  The Save-as-Template modal is 760px wide (was 520px pre-v3.63.189) so the
+  Icon and Category fields share a row instead of stacking.
 
 
 ====================================================================
@@ -278,6 +312,22 @@ ARCHITECTURE NOTES (load-bearing)
   are load-bearing despite no visible effect; class names built via JS
   template-literal concatenation evade word-boundary grep. Visual smoke
   testing on every screen is a pre-deploy gate for any CSS cleanup.
+- HONEYCOMB TEXTURE — body and panels YES, modals NO (decided v3.63.183).
+  The amber honeycomb tile lives on html/body, .hp-section-header strips,
+  and work-screen panel backgrounds. It does NOT belong on modal surfaces.
+  Reason: the page can carry the texture because section headers float
+  over it as glass strips; a modal can't because the modal overlay covers
+  the body, so there's no underlying texture to show through — applying
+  it modal-locally produces a confused "where is this background coming
+  from" effect. The v3.63.180-182 experiment that put honeycomb on the
+  Project Templates modal was walked back to clean var(--surface) /
+  var(--surface2) / var(--text) / var(--text-dim) / var(--border2) theme
+  variables in v3.63.183 and the same pattern carries forward. Future
+  modals should use the theme-variable surface ramp, not invent new
+  texture treatments. Same logic applies to any other "modal-specific
+  texture" idea — if the structural pattern (visible texture through a
+  glass header strip) is not present, the texture has no anchor and
+  reads as noise.
 
 
 ====================================================================
