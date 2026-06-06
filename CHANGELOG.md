@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.167
+
+**Footer compaction — shorter than the header now**
+
+Build: `20260605-009`<br>
+Released: `2026-06-05`
+
+David's report after v3.63.166: *"the footer is still pretty tall... almost taller than the header at this point"*. The base `.footer-btn` / `.footer-btn-smoke` rules used `padding: var(--space-8) var(--space-40)` + `2px solid` borders + `min-width: 200px`, which made them the work-screen's tallest element. v3.63.166's density pass only trimmed padding to space-6 — not enough.
+
+### Footer button compaction (below 1500px)
+
+- **Vertical padding** `space-6` → `space-4`
+- **Border** `2px` → `1px`
+- **Font** `--fs-13` → `--fs-12`
+- **Min-width** `200px` → `160px`
+
+Smoke the Hive stays visually prominent via its accent fill, not via bulk.
+
+### Footer container
+
+Explicit `padding: var(--space-4) var(--space-16)` + tightened `gap: var(--space-10)` so the container itself doesn't add slack. Below 1500px now.
+
+### About button
+
+`.footer-about-btn` shrinks to `--fs-11` + `2px / space-8` padding to match the rest of the pill row.
+
+The header and footer should now read as visually balanced — neither dominates the screen.
+
+---
+
 ## v3.63.166
 
 **Work-screen density pass for 1366×768 — Notes button unclipped, right column compacted, footer pills tightened**
