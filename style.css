@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-020
+   Build: 20260605-021
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13674,8 +13674,17 @@ kbd {
 .hp-section-sub--newuser {
   color: var(--text);
   padding: var(--space-8) var(--space-12);
-  background: var(--accent-dim);
-  border-left: 3px solid var(--accent, #f4b400);
+  /* v3.63.179 — Was solid accent-dim background + 3px border-left
+     accent stripe. David's read in the refine-view stack (path
+     indicator → "Refining a draft?" text card → CTA button below):
+     three amber-tinted blobs all read the same; the middle text
+     card needs to be visually subtler so the eye can separate them.
+     Border-only (no fill) gives the same shape and amber accent
+     framing without competing with the path indicator above OR
+     the CTA button below. The --cta button variant overrides this
+     to add the fill back since buttons need to look clickable. */
+  background: transparent;
+  border: 1px solid var(--accent, #f4b400);
   border-radius: var(--radius-sm);
   margin-top: var(--space-8);
 }
@@ -13697,8 +13706,12 @@ button.template-gallery-intro--cta {
   font-size: var(--fs-sm);
   line-height: 1.5;
   cursor: pointer;
+  /* v3.63.179 — Override the --newuser base (which is now border-only,
+     transparent fill) to restore the tinted background. Buttons need
+     the fill to read as clickable; the plain text-paragraph variant of
+     --newuser stays border-only. */
+  background: var(--accent-dim);
   border: 2px solid var(--accent, #f4b400);
-  border-left-width: 2px;
   padding: var(--space-10) var(--space-14);
   transition: background-color 0.15s, transform 0.05s, box-shadow 0.15s;
 }
@@ -13846,7 +13859,12 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   gap: var(--space-14);
   padding: var(--space-20) var(--space-20);
   background: var(--surface3);
-  border: 2px solid var(--border2);
+  /* v3.63.179 — Was 2px solid. Switched to dashed to match the
+     WaxFrame house pattern (1px/2px dashed var(--border2) is used
+     throughout the welcome-card, setup-card, and helper-card
+     surfaces). David's call for visual continuity between the
+     template cards and the documentation cards elsewhere. */
+  border: 2px dashed var(--border2);
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
@@ -13956,7 +13974,11 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   /* v3.32.1 — modal surface is --surface2, so cards use --surface3 for
      contrast inside the modal (one step lighter than the modal body). */
   background: var(--surface3);
-  border: 1px solid var(--border2);
+  /* v3.63.179 — Was 1px solid. Switched to dashed to match the
+     WaxFrame house pattern (welcome cards, setup cards, helper cards
+     all use dashed borders). David's call for visual continuity
+     across the modal and the documentation pages. */
+  border: 1px dashed var(--border2);
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;

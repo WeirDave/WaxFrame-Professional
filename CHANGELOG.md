@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.179
+
+**"Refining a draft?" card border-only + template cards switched to dashed for documentation-card continuity + custom template categories filed to backlog**
+
+Build: `20260605-021`<br>
+Released: `2026-06-05`
+
+Two visual continuity fixes from David's read of v3.63.178, plus one backlog file:
+
+### `.template-gallery-intro--newuser` → border-only
+
+The refine-view stack from v3.63.177 (path indicator at top → *"Refining a draft?"* text card in the middle → CTA button at the bottom) had three amber-tinted blobs reading as one visual block. David's call: the middle text card needs to be visually subtler so the eye can separate the three elements.
+
+Changed `.template-gallery-intro--newuser` from solid `--accent-dim` background + `border-left: 3px solid` accent stripe to **transparent background + `border: 1px solid` accent** full-frame. Same shape, same amber framing, no fill competing with the indicator above or the button below.
+
+The `--cta` button variant explicitly re-adds the `--accent-dim` background so buttons stay tinted (they need the fill to read as clickable; the plain text-paragraph variant stays border-only).
+
+### Template cards switched to dashed borders (house-pattern continuity)
+
+David's observation: *"cards in the templates are like buttons but we don't treat them like our other buttons really… they're like a third kind of button. They have gold border on there but it's not dotted. Do you think CSS-wise we should maintain some continuity by making that happen?"*
+
+`border: 1px dashed var(--border2)` is the WaxFrame house pattern, used in 30+ places across `.welcome-card`, setup cards, helper cards, and documentation surfaces. The template gallery's `.template-card` and `.template-path-card` were the holdouts using `solid` borders — read as a third visual language inside an otherwise consistent app.
+
+- `.template-card`: `1px solid var(--border2)` → `1px dashed var(--border2)`
+- `.template-path-card`: `2px solid var(--border2)` → `2px dashed var(--border2)`
+
+Everything else preserved: `--surface3` background, `--radius-md` corners, accent-color hover (border-color flips to accent on hover, gives the cards their interactive amber glow). The `.template-card.is-recommended` Quick Start variant inherits dashed from the base + amber accent color from its own override = dashed amber border with the existing glow shadow.
+
+### Backlog: custom template categories + sidebar
+
+Added to [docs/WaxFrame_Backlog_Master_v233.txt](docs/WaxFrame_Backlog_Master_v233.txt). When users save a project as a custom template, let them assign a category (built-in list OR free-form). The v3.63.178 sidebar nav currently skips the custom path because there's only one bucket; with categories the sidebar becomes useful and the custom view matches the built-in view's shape. Schema bump on the custom template JSON + Save-as-Template modal picker + conditional sidebar in `renderTemplateGalleryBody`.
+
+### Files touched
+
+- [style.css](style.css) — `.template-gallery-intro--newuser` flipped to border-only; `.template-gallery-intro--cta` explicitly re-adds background; `.template-card` and `.template-path-card` flipped from solid → dashed.
+- [docs/WaxFrame_Backlog_Master_v233.txt](docs/WaxFrame_Backlog_Master_v233.txt) — Custom template categories entry added under Open Features / Tasks.
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.179 / 20260605-021.
+- HTML/JS/CSS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.178
 
 **Template Gallery: widened to match the main app + sticky sidebar nav for jumping between categories**
