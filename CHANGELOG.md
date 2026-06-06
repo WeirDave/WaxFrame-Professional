@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.186
+
+**Bee dot strip border: 4px var(--blue), matching the .console-body-wrap and .conflicts-panel width**
+
+Build: `20260606-004`<br>
+Released: `2026-06-06`
+
+David's call: the bee-dot strip card from v3.63.185 was reading well but the 1px gray border made it feel like a side card next to the green-bordered Live Console and amber-bordered Conflicts panels rather than a peer card. Bumped the border to **4px** (same as the other two work-screen cards) and switched the color to `var(--blue)` — the model-recommender accent. Now the strip reads as the third member of the "panel card" family with the AI/model identity color encoded in the ring.
+
+Glow shadow followed the same pattern: replaced the v3.63.185 elevation shadow with `box-shadow: 0 0 12px var(--blue-dim)` — the analog of `.console-body-wrap`'s `0 0 12px rgba(0,179,0,0.07)` green glow and `.conflicts-panel`'s `0 0 12px rgba(245,166,35,0.08)` amber glow. Theme-aware via the `--blue-dim` variable (10–12% blue across light/dark/auto).
+
+### Files touched
+
+- [style.css](style.css) — `.bee-dot-strip` border 1px gray → 4px `var(--blue)`; box-shadow swapped from elevation shadow to `var(--blue-dim)` glow.
+- [js/version.js](js/version.js), [js/app.js](js/app.js), [package.json](package.json) — stamps bumped to v3.63.186 / 20260606-004.
+- HTML/JS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.185
 
 **Bee dot strip: switch to var(--surface) card + lift shadow + builder dot ring fix**
