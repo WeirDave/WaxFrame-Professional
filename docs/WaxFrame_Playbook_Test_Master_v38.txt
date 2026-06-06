@@ -1,10 +1,10 @@
 ════════════════════════════════════════════════════════════
-WAXFRAME — PLAYBOOK TEST MASTER (v37)
+WAXFRAME — PLAYBOOK TEST MASTER (v38)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-06-04 (Trim to TripAdvisor standalone first-measured — Review – Manly Bikes – Trip Advisor v1.0, 10-AI hive with Gemini builder, 3 rounds / 7 min / majority convergence with 4 holdouts. Closes the "STILL OPEN: standalone Trim to TripAdvisor" gap noted in v36. Same session also validated v3.63.130 selective EXPORT modal end-to-end and v3.63.132 Jamba-as-Reviewer-only behavior.)
-WaxFrame version:    v3.39.12 Pro and later (current: v3.63.134 Pro)
+Last updated:        2026-06-06 (T10 Business / Service Review FIRST-MEASURED via Joe Schmoe's restaurant review v1.0 — closes the last home-runnable QA gap on the formal playbook list. 10-AI hive, Gemini Builder throughout, 12 rounds, majority convergence at R12 with 3 holdouts. 17 of 19 templates now measured; only T3 RFP Response remains open. Same session also surfaced bugs that became the v3.63.191-195 patch run — modal stacking, category dropdown scope, grid track min, char counters, name cap.)
+WaxFrame version:    v3.39.12 Pro and later (current: v3.63.196 Pro)
 Maintained by:       R David Paine III
-Lives:               docs\WaxFrame_Playbook_Test_Master_v37.txt
+Lives:               docs\WaxFrame_Playbook_Test_Master_v38.txt
 
 This is David's project to-do list — strictly the test runs
 that gather convergence data. Companion to:
@@ -17,6 +17,53 @@ Two-document persistence system, per memory rule:
                 + PROJECTS TO RUN NEXT + PENDING TESTS detail
                 + HISTORICAL RUNS (permanent)
   • Backlog Master = code work + ideas + bug-fix list
+
+CHANGES IN v38 (from v37, 2026-06-06):
+  - T10 BUSINESS / SERVICE REVIEW FIRST-MEASURED.
+    David ran "Review - Joe Schmoe's - 5123 Ball Rd, Cypress, CA
+    90630 v1.0" — real restaurant visit on 6/5/2026, business lunch
+    with a vendor. 10-AI hive with Gemini as Builder throughout;
+    REFINE path via Reference-Material-only-scaffold-with-empty-
+    Starting-Document; 12 rounds (8 review with full hive + 4
+    builder-only at R3/R5/R8/R10); ~102 min wall-clock; majority
+    convergence at R12 with 3 holdouts (Jamba, Cohere, Together AI
+    — all line-level polish, no architectural disagreement). Final
+    396 words / 2,330 chars — sits squarely in the natural length
+    band for a restaurant review (Yelp avg ~250 words, TripAdvisor
+    ~350-400). Closes the "STILL OPEN: T10 needs HOME service
+    experience" gap noted in v37; only T3 RFP Response remains
+    open from the formal playbook list (17 of 19 measured).
+  - ENGAGED-TIME METHODOLOGY ESTABLISHED for forgot-to-pause runs.
+    Project-clock "engaged" is over-stated whenever the user
+    multitasks during idle gaps without hitting Pause. Honest
+    formula David proposed during this run: compute AI processing
+    time from the scout bundle ringBuffer directly (parallel
+    workers → max(worker_elapsed) + builder_elapsed per round;
+    builder-only rounds are just builder elapsed), then add ~2 min
+    per review round + ~30 sec per builder-only round + ~5 min
+    setup pad for human review. Worked example on Joe Schmoe's:
+    11.2 min AI (sum of per-round max-worker + builder times) +
+    ~18 min human review + ~5 min setup = ~30 min estimated true
+    engaged, vs 76 min reported by the project clock, vs 102 min
+    wall-clock. The gap (~45 min) was phone games / center-console
+    use / talking to Claude — real but not document-review work.
+    USE THIS METHODOLOGY for any user-driven HISTORICAL RUNS entry
+    where the user reports forgot-to-pause inflation. Same caveat
+    the T4 Recipe (lunch break) and T9 Hotel (R5→R7 idle gap)
+    entries already carry, now generalized with a defensible math
+    approach instead of just hedging.
+  - WaxFrame version bumped to current v3.63.196 Pro (CHANGELOG
+    has per-version detail across v3.63.190 through .196). Of
+    particular note for this test file: the Joe Schmoe's run was
+    captured against v3.63.195 Pro and surfaced 5 separate bugs
+    that became v3.63.191-.195 — modal-stacking (.191), category
+    dropdown scope label (.192), grid track min (.193, the
+    headline visual bug where a single custom template rendered
+    as a one-character-per-line vertical sliver), live char
+    counters + clearer modal intro (.194), and template name cap
+    60→120 with prefill truncation (.195). The same session also
+    surfaced the Builder-screen-retirement screenshot doc gap that
+    became v3.63.196 (capture.mjs + README.md + user manual).
 
 CHANGES IN v37 (from v36, 2026-06-04):
   - TRIM TO TRIPADVISOR STANDALONE measured for the first time.
