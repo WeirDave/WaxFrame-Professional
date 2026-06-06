@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260605-014
+// Build: 20260605-015
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -3532,26 +3532,13 @@ function showTemplateGallery() {
   modal.classList.add('active');
 }
 
-// v3.63.172 — Welcome-screen Quick Start shortcut. The inline
-// "🍪 Try the Quick Start →" button in the welcome pitch wires here.
-// Calls applyTemplate('quick-start', 'scratch') — fires the Quick
-// Start template's built-in "A Note on Naming & Versions" confirm
-// modal first, which serves as the user's consent gate (and as the
-// teaching moment that names "Recipe - Chocolate Chip Cookies / v1.0"
-// for them). If the user accepts, the Project fields are populated
-// and we navigate to Setup 1 (Hive) so they can configure API keys
-// before kicking off Round 1. If the user cancels at the confirm
-// modal, applyTemplate returns early without touching state — the
-// goToScreen call still fires, dropping them on Setup 1 with no
-// template applied (functionally equivalent to clicking the regular
-// "Let's get started →" button, which is fine). Inline-attribute
-// bindings on the welcome screen need the function on window so the
-// onclick can resolve it (see v3.63.156 swapAIModelFromHiveCard fix).
-async function startQuickStartFromWelcome() {
-  await applyTemplate('quick-start', 'scratch');
-  goToScreen('screen-bees');
-}
-window.startQuickStartFromWelcome = startQuickStartFromWelcome;
+// v3.63.173 — startQuickStartFromWelcome() removed. The inline button
+// it wired (added in v3.63.172) landed users on Setup 1 with the
+// Cookies template pre-applied, but David's read after live-testing
+// was that the jump cuts the natural onboarding context — the user
+// hits Setup 1 not understanding why they're there. The Cookies
+// template is still reachable from Menu → 📋 Templates; that's the
+// right pace.
 
 // v3.37.0 — Path selector handler. Called when the user clicks one of
 // the two big path cards. Sets module state and re-renders the gallery
