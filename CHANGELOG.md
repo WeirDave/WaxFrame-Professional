@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.173
+
+**Inline Quick Start button rolled back + Setup 1 title block centered to match bilateral-bee framing**
+
+Build: `20260605-015`<br>
+Released: `2026-06-05`
+
+Two changes, both from David's live-testing of v3.63.172:
+
+### Inline Quick Start button rolled back
+
+He clicked the v3.63.172 inline `🍪 Try the Quick Start →` button, watched the "A Note on Naming & Versions" consent modal fire, accepted, and landed on Setup 1 with the Cookies template pre-applied. His read: *"I think it's a bad idea notwithstanding the fact that it pops up this particular modal."* The issue isn't the modal — it's the jump itself. The user arrives at Setup 1 with no on-screen context for why a template is already loaded, and the natural onboarding pace (read welcome → set up hive → set up project → optionally apply a template at that stage) is the right shape.
+
+What's preserved:
+- The `📋 Templates` Menu entry from v3.63.172 stays — that's the right place for a discoverable templates path
+- The pitch wording stays accurate (it now reads `Menu → 📋 Templates`, which IS a real path as of v3.63.172)
+
+What's deleted:
+- The inline `.pitch-quickstart-btn` button in [index.html](index.html)
+- `startQuickStartFromWelcome()` in [js/app.js](js/app.js)
+- `.pitch-quickstart-btn` rule block in [style.css](style.css)
+
+### Setup 1 title block centered
+
+David's observation: *"Walker B and Bill Gurby on either side of the header — the framing of this seems like it's not really left-justified anymore, it's more center-justified."* Setup 1 is the only screen with bees on both sides of the header band (Worker Bee left from v3.63.x, Builder Bee right from v3.63.148). The left-justified title block was fighting the bilateral symmetry of the framing.
+
+Fix scoped via `:has()` so only the bilateral-bee header gets the centered treatment — Setup 2/3/4 (Worker Bee on the left only) keep their default left alignment.
+
+```css
+.hp-section-header:has(.hp-section-bee-builder) .hp-section-title-block {
+  text-align: center;
+}
+.hp-section-header:has(.hp-section-bee-builder) .hp-section-title {
+  justify-content: center;   /* h2 is display:flex; needs this in addition to text-align */
+}
+```
+
+### Files touched
+
+- [index.html](index.html) — inline button removed from pitch; plain-text Cookies reference restored with corrected Menu path.
+- [js/app.js](js/app.js) — `startQuickStartFromWelcome()` deleted.
+- [style.css](style.css) — `.pitch-quickstart-btn` rules deleted; bilateral-bee centering rule added to `.hp-section-title-block` block.
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.173 / 20260605-015.
+- HTML/JS/CSS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.172
 
 **Templates reachable from Menu + one-click Quick Start from the welcome screen**

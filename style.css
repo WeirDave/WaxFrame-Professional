@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-014
+   Build: 20260605-015
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -690,33 +690,9 @@ body.helper-body .page-main {
   margin-right: var(--space-6);
 }
 
-/* v3.63.172 — Inline Quick Start affordance inside the welcome pitch.
-   Sits in flowing text where the Cookies template is name-checked.
-   Click → applyTemplate('quick-start','scratch') + goToScreen
-   ('screen-bees'). Accent-colored so it reads as a discrete action
-   without breaking the paragraph's visual rhythm. */
-.pitch-quickstart-btn {
-  display: inline-block;
-  background: var(--accent);
-  color: #1a1a1a;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 2px 10px;
-  font-size: var(--fs-13);
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-  vertical-align: baseline;
-  line-height: 1.4;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-  transition: background-color 0.15s, transform 0.05s;
-}
-.pitch-quickstart-btn:hover {
-  background: var(--accent-hover, #f0b020);
-  transform: translateY(-1px);
-}
-.pitch-quickstart-btn:active { transform: translateY(0); }
+/* v3.63.173 — .pitch-quickstart-btn rules (added v3.63.172) deleted
+   alongside the inline button they styled. See index.html v3.63.173
+   comment for the why. */
 
 .welcome-choices {
   display: flex;
@@ -12413,6 +12389,22 @@ kbd {
 .hp-section-title-block {
   flex: 1;
   min-width: 0;
+}
+
+/* v3.63.173 — Center the title block when the header has bees on
+   BOTH sides (only Setup 1 — Worker Bee left, Builder Bee right).
+   David's observation: with two mascots framing the header, left-
+   justified text fights the symmetry; centered text matches the
+   bilateral framing. Scoped via :has() so it applies only to the
+   bilateral-bee header — Setup 2/3/4 (Worker Bee only on the left)
+   retain their default left-justification. The h2 inside uses
+   display:flex, so justify-content:center is needed in addition to
+   text-align:center to actually center the title row. */
+.hp-section-header:has(.hp-section-bee-builder) .hp-section-title-block {
+  text-align: center;
+}
+.hp-section-header:has(.hp-section-bee-builder) .hp-section-title {
+  justify-content: center;
 }
 
 /* All title typography uses 3-class specificity (0,3,0) so it beats
