@@ -1,7 +1,10 @@
-WaxFrame Backlog Master v235
+WaxFrame Backlog Master v236
 2026-06-06
 
-State: v3.63.183 Pro shipped on main. Project Templates modal rewritten to clean theme-variable surfaces (var(--surface) for the box and body, var(--surface2) for the gallery header strip and the path indicator, var(--text) / var(--text-dim) for typography, var(--border2) for the close-button border) — no honeycomb tile, no rgba dark-glass overlay, no backdrop-filter blur. Whites and light grays in light mode, blacks and dark grays in dark mode; both themes mirror each other structurally. Dark-mode card hover converted from rgba(245,166,35,0.10) full-replacement to a 10% amber tint layered over a solid #151927 so the cards stay opaque on hover regardless of what's behind them. Perplexity MODEL_FALLBACKS list bumped from 4 to 5 Sonar models (sonar-reasoning was missing; the discovery prompt's own example in api.js:444 already lists all 5). cleaner.html standalone utility removed — first paid user (Andy, RFI work) does not have the Dropbox-legacy custom-AI ID collision bug. Build stamp and cache-bust query string swept across all HTML/JS so the CDN and browsers actually pick up the work that previously shipped against the stale ?v=3.63.182 key.
+State: v3.63.189 Pro shipped on main, published as a single roll-up release covering v3.63.183 through v3.63.189 (the intermediate ceremonies were not tag-cut). Custom Template Categories headline feature landed — Save-as-Template modal now has a Category select with six built-in options plus free-form custom, schema persists the category on each saved template (backward-compat default "My Templates" for pre-v3.63.188 entries), the Template Gallery custom-path sidebar nav appears whenever 2+ buckets exist, and the sidebar exposes a ✏️ rename/merge/delete prompt per free-form bucket. Modal width grew 520px → 760px so Icon and Category share a row. Bee-dot strip iterated through four micro-passes to land at solid var(--surface) card with 4px translucent blue border and var(--blue-dim) glow shadow, matching the green-bordered console and amber-bordered conflicts panels in border-width family. Builder dot border swapped from var(--accent) to var(--border2) so the amber fill stops looking "completely filled in." Project Templates surface cleanup completed (var(--surface) / var(--surface2) / var(--text) / var(--text-dim) / var(--border2) throughout, no honeycomb, no rgba dark-glass, no backdrop-filter). Release-check workflow itself fixed at f1dc6bf (style.css:3 build stamp not being swept; style.css:15095 var(--info) was undefined → var(--blue)).
+
+PRIOR STATE (v3.63.183, retained for context until next release reshuffles the margin):
+Project Templates modal rewritten to clean theme-variable surfaces. Light mode used whites and light grays; dark mode used blacks and dark grays. cleaner.html standalone utility removed — first paid user (Andy, RFI work) does not have the Dropbox-legacy custom-AI ID collision bug. Perplexity MODEL_FALLBACKS list bumped from 4 to 5 Sonar models.
 
 PRIOR STATE (v3.63.182, retained for context until next release reshuffles the margin):
 Project Templates modal and public Template Catalog received documentation-aligned visual polish. Light mode used a white header, soft document canvas, white cards, amber rails, denser section labels. Dark mode received the same structural treatment with separated charcoal cards and amber rails. The honeycomb-glass header pattern introduced here is what v3.63.183 reverted; the document-card structure stays.
@@ -10,6 +13,14 @@ PRIOR STATE (v3.63.164, retained for context until next release reshuffles the m
 Live viewport readout added to min-screen-overlay so users see the actual failure mode (CSS-pixel viewport, not display resolution). Inline IIFE that runs immediately (NOT deferred to app.js DOMContentLoaded because users hitting the overlay are by definition users whose viewport is too small for the full app to load). Resize + visualViewport.resize listeners for live updates including zoom and DPI changes. Hint flips green ("above the minimum") vs red ("needs N px wider and M px taller"). DPI scaling guidance added to the resize-help paragraph.
 
 Inspired by a real David user incident: user's display was 1920x1080 but browser viewport was restricted somehow, had to switch browsers to fix. A "what is my screen resolution" link would have misdiagnosed; the inline viewport readout points at the actual problem.
+
+CLOSED in v3.63.189 (the roll-up release):
+
+- Custom template categories — CLOSED in v3.63.188.
+  Save-as-Template modal got a Category select with six built-in options (My Templates, Career & Hiring, Business & Sales, Content & Marketing, Personal & Everyday, Reviews & Recommendations) plus a `+ Custom category…` free-form text input. Schema persists `category` on each saved template; backward-compat default "My Templates" for pre-v3.63.188 entries. renderTemplateGalleryBody computes category order dynamically on the custom path (canonical buckets in built-in order first, then free-form buckets alphabetized). Sidebar nav lifted to appear on custom path whenever 2+ buckets exist. Free-form buckets expose a ✏️ next to their label that opens a single prompt for rename / merge into existing / fall back to default. Modal width grew 520px → 760px so Icon and Category share a row instead of stacking.
+
+- Cache-bust drift validator — CLOSED in v3.63.190 (release-check.mjs check 4).
+  Catches the v3.63.180-182 failure mode where multiple "ceremonial" releases shipped CSS/JS changes against the same ?v= key. New check compares HEAD against the most recent reachable tag (HEAD^ when HEAD is itself tagged) and fails if style.css or any js/*.js changed since that tag but APP_VERSION did not. Workflow checkout now uses fetch-depth: 0 so tags are present in CI. Combined with the existing check that ?v= must match APP_VERSION, this closes the loop: ship code → bump APP_VERSION → cache-bust follows.
 
 CLOSED in the 2026-06-06 audit (were on v234, found already shipped):
 
@@ -42,16 +53,9 @@ Open Bugs
 
 Open Features
 
-- Custom template categories
-  - When the user saves a project as a custom template, let them assign a category — same category list as the built-in templates (Career & Hiring, Business & Sales, Content & Marketing, Personal & Everyday, Reviews & Recommendations) OR a free-form custom category
-  - Render the categories in the Template Gallery sidebar nav for the Custom Templates view, just like the scratch/refine sidebars — so users with 10+ custom templates can navigate by category rather than scrolling a flat list
-  - Currently all custom templates land in a single "My Templates" bucket; the sidebar nav is skipped on the custom path because there's only one bucket. With categories, the sidebar becomes useful and the custom view matches the built-in view shape
-  - Requires: schema bump on the custom template JSON (add category field, backward-compat default for existing entries), UI in Save-as-Template modal for category picker, conditional sidebar rendering in renderTemplateGalleryBody for path == custom when category count > 1
-
 - Screenshot regeneration for README + User Manual (FLAGGED, not done)
 - #10 Hive Profiles: "Save current as named profile"
 - #12 Hive Profiles: dedicated docs page (hive-profiles.html)
-- #24 Worker Bees rework: drop sub-1366px responsive code
 - #27 Worker Bees rework: 3-group ordering (defaults / customs / servers)
 - #35 Auto-classify tier picks always
 - #36 Worker Bees rework: server provider group label
@@ -72,6 +76,12 @@ Open Features
 - Rules reference updates
 
 Observations
+
+- 2026-06-06 — v3.63.183 through v3.63.189 published as a single rolled-up GitHub release rather than 7 separate ceremonies. Pattern decision: when intermediate ceremonies share a coherent theme (here: Project Templates polish + bee-strip iteration + the headline Custom Categories feature), publish as one release with a multi-section body. Versions in between remain unsplit in the CHANGELOG for archaeology, but the Releases sidebar stays clean. Tag pushes from the sandbox 403'd; tags were created via the web UI publish flow.
+
+- 2026-06-06 — Cache-bust drift validator (release-check.mjs check 4) added in v3.63.190 work. Catches the v3.63.180-182 failure mode the project lived through three months ago — multiple "ceremonial" releases shipping CSS/JS against the same ?v= key. Sample output on the current state: "16 CSS/JS file(s) changed since v3.63.182; APP_VERSION advanced 3.63.182 → 3.63.189". The failure case ("CSS/JS shipped but APP_VERSION did NOT advance") is what the check is for; the success case logs the deltas so future archaeology is faster.
+
+- 2026-06-06 — Worker Bees rework #24 ("drop sub-1366px responsive code") REMOVED from backlog. v3.63.166 density pass at style.css:2742 explicitly handles the 1366×768 Notes-button-truncated-to-'tes' failure mode by collapsing top-bar buttons to icon-only with tooltip labels under 1500px. Removing that code would re-introduce the bug the v3.63.166 pass shipped to fix.
 
 - 2026-06-06 — v3.63.183 was net cleanup. Stripped the v3.63.180-182 Project Templates honeycomb experiment back to the existing theme surface ramp. Three iterations earlier in the session (honeycomb-in-header → honeycomb-as-modal-body → flat var(--surface) surfaces) walked back to the simplest theme that matched the rest of the app. Lesson: when the theme stack already has a working surface ramp, prefer it over inventing modal-specific texture treatments.
 

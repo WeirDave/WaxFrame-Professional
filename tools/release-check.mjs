@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // ============================================================
-// WaxFrame — release-check.mjs (v3.63.134)
+// WaxFrame — release-check.mjs (v3.63.190)
 //
 // Pre-flight checks that run as a GitHub Action on every push to main,
 // and can also be run locally (`node tools/release-check.mjs`). Catches
-// the kinds of typos and drift that bit us in v3.63.131:
+// the kinds of typos and drift that bit us in v3.63.131 and v3.63.180-182:
 //
 //   1. JS syntax — every .js file under js/ must parse cleanly.
 //   2. Version-stamp consistency — APP_VERSION (js/version.js) must
@@ -17,6 +17,13 @@
 //      same file. This is the check that would have caught the
 //      v3.63.131 `--space-22` and `--modal-w-md` typos which silently
 //      failed at runtime with no browser warning.
+//   4. Cache-bust drift — if style.css or any js/*.js changed since the
+//      last reachable tag, APP_VERSION must have advanced. This catches
+//      the v3.63.180-182 failure mode: CSS/JS shipped multiple times
+//      against the same ?v= key, leaving CDN and browser caches serving
+//      stale files until the next "ceremonial" bump finally swept the
+//      cache-bust. Check 2 already enforces ?v= matches APP_VERSION;
+//      check 4 enforces APP_VERSION advances when shipped code does.
 //
 // Exit 0 on success, 1 on any failure. Failures print a line per
 // problem with file path + line number when possible, suitable for
@@ -251,6 +258,80 @@ if (missing === 0) {
   ok(`${referenced.size} unique token refs, all defined`);
 } else {
   ok(`${referenced.size} unique token refs, ${missing} undefined (see above)`);
+}
+
+// ── Check 4: Cache-bust drift since last tag ────────────────
+
+section('Cache-bust drift since last tag');
+
+// The failure mode: between v3.63.180 and v3.63.182, three "ceremonial"
+// releases shipped CSS/JS changes without the cache-bust ?v= query
+// advancing. End result was CDN + browser caches serving stale files
+// until v3.63.183 finally swept the key. Check 2 enforces ?v= matches
+// APP_VERSION; this check enforces that APP_VERSION moved since the last
+// release whenever shippable code did. The two checks combined close the
+// loop: ship code → bump APP_VERSION → ?v= follows.
+//
+// Compares HEAD against the most recent tag reachable from HEAD. If HEAD
+// itself is tagged (the typical case immediately after a release-cut
+// commit), looks at the PREVIOUS tag instead via HEAD^. Skips silently
+// when no reachable tag exists — first commit on a fresh repo, shallow
+// CI clone without `fetch-depth: 0`, or PR branches that haven't been
+// rebased onto a tagged main. The skip is intentional: a missing tag is
+// noise, not a real drift signal.
+
+function gitOut(args) {
+  try {
+    return execFileSync('git', args, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
+  } catch {
+    return null;
+  }
+}
+
+let prevTag = null;
+const tagOnHead = gitOut(['tag', '--points-at', 'HEAD']);
+const describeRef = tagOnHead ? 'HEAD^' : 'HEAD';
+prevTag = gitOut(['describe', '--tags', '--abbrev=0', '--match', 'v*', describeRef]);
+
+if (!prevTag) {
+  ok('no reachable tag — skipping (first commit, shallow clone, or no tag history)');
+} else {
+  const diffOut = gitOut(['diff', '--name-only', `${prevTag}..HEAD`]);
+  if (diffOut === null) {
+    ok(`could not diff against ${prevTag} — skipping`);
+  } else {
+    const changed = diffOut ? diffOut.split('\n') : [];
+    const shipped = changed.filter(f => f === 'style.css' || /^js\/[^/]+\.js$/.test(f));
+
+    if (shipped.length === 0) {
+      ok(`no CSS/JS changes since ${prevTag}`);
+    } else {
+      // Read APP_VERSION at prevTag for comparison. If the file didn't
+      // exist there or its shape was different, fall back to the tag's
+      // own name as a proxy (v3.63.182 → 3.63.182). The tag-name fallback
+      // is sound because the tag IS the version stamp by convention.
+      const prevVersionJs = gitOut(['show', `${prevTag}:js/version.js`]);
+      let prevAppVersion = null;
+      if (prevVersionJs) {
+        const m = prevVersionJs.match(/const\s+APP_VERSION\s*=\s*['"]v?([\d.]+)\s+Pro['"]/);
+        if (m) prevAppVersion = m[1];
+      }
+      if (!prevAppVersion) {
+        const m = prevTag.match(/^v?([\d.]+)/);
+        if (m) prevAppVersion = m[1];
+      }
+
+      if (appVersion && prevAppVersion && appVersion === prevAppVersion) {
+        const preview = shipped.slice(0, 5).join(', ');
+        const more = shipped.length > 5 ? ` (+${shipped.length - 5} more)` : '';
+        fail('js/version.js', `${shipped.length} CSS/JS file(s) changed since ${prevTag} but APP_VERSION still ${appVersion} — bump APP_VERSION so ?v= invalidates stale caches. Changed: ${preview}${more}`);
+      } else if (appVersion && prevAppVersion) {
+        ok(`${shipped.length} CSS/JS file(s) changed since ${prevTag}; APP_VERSION advanced ${prevAppVersion} → ${appVersion}`);
+      } else {
+        ok(`${shipped.length} CSS/JS file(s) changed since ${prevTag}; could not compare APP_VERSION (skipping)`);
+      }
+    }
+  }
 }
 
 // ── Report ──────────────────────────────────────────────────
