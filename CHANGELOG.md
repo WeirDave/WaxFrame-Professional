@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.169
+
+**Welcome screen — convergence callout ties the 3-round free trial to the Chocolate Chip Cookies template**
+
+Build: `20260605-011`<br>
+Released: `2026-06-05`
+
+Real user incident: a first-time user (Andy) ran one round on an RFI response, got a document back, thought *"OK I have a document"*, and stopped. WaxFrame's value is the iterative refinement until reviewers converge — but that's not communicated to anyone who skims the intro. David's catch: *"if he went through the chocolate chip cookie thing then he would have seen that it converges and makes the best document it can make"*.
+
+### The pedagogy of the 3-round free trial
+
+David's context (worth preserving): the 3-round free trial wasn't arbitrary. When he and his AI collaborator were sizing the trial limit, they ran the Chocolate Chip Cookies template **11 times** and observed it converged at or before round 3 every single time. The 3-round cap is calibrated to that template specifically — so a new user running the cookies template gets the **full convergence arc start to finish** without spending a dime. See the whole cycle, then decide whether to license. The trial cap reads as **intentional pedagogy** rather than an arbitrary paywall.
+
+### What this release adds
+
+A new `.welcome-convergence-callout` block on the welcome screen, sitting between the pitch and the cost callout. Green-tinted (semaphore "iterative / progress"; pairs visually with the gold cost callout below without competing):
+
+> 🔄 **Keep running rounds until the hive converges**
+>
+> WaxFrame is **iterative** — one round isn't done. Each round refines further; you're finished when **all your reviewers agree** the document is at its best. Your free trial gives you **3 rounds** on purpose: the **Chocolate Chip Cookies** template (Menu → ⭐ Templates) converged by round 3 in every one of 11 test runs while we were sizing the trial — so you can see the whole cycle start to finish before spending a dime.
+
+Three messages folded together so a skimmer gets all of them:
+
+1. It's iterative — one round isn't done
+2. Convergence = all reviewers agree it's at its best
+3. The cookies template is the calibrated free-trial demo
+
+Welcome screen flow is now: **what it does → how it works (iterative) → what it costs → menu hint → CTA**.
+
+---
+
 ## v3.63.168
 
 **AI API Pricing intro — point users at the "Check rates →" link by name**
