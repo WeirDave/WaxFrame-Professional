@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.196
+
+**Documentation screenshots regenerated for the post-Builder-retirement 4-screen setup flow**
+
+Build: `20260606-014`<br>
+Released: `2026-06-06`
+
+### Fixed — screenshot machinery + docs out of sync with the v3.63.147 Builder retirement
+
+When the standalone Builder selection screen was folded into Setup 1 (Worker Bees) via the per-row 🔨 Builder button in v3.63.147 (DOM removal v3.63.163), the documentation pipeline never caught up. `tools/capture.mjs` kept trying to find `#screen-builder` and failed every run. `README.md` and `waxframe-user-manual.html` still referenced the old 5-screen filenames (`setup3` for Project, `setup4` for Reference, `setup5` for Document). Backlog had this flagged as `Screenshot regeneration for README + User Manual (FLAGGED, not done)` for ~50 releases.
+
+Caught when David re-ran the script today and saw `setup2 FAILED (no-screen-element)` both themes.
+
+Three-part fix landed across two commits:
+
+1. **`tools/capture.mjs`** — `SHOTS` array updated: `screen-builder → setup2` entry removed; subsequent entries renumbered (`screen-project → setup2`, `screen-reference → setup3`, `screen-document → setup4`). `tools/README.txt` deliverable list updated from 16 PNGs to 14, and the readiness-handshake note adjusted accordingly. Tooling-only — no version bump.
+2. **Screenshots regenerated** by David on Windows against the v3.63.195 live app, captured all 14 cleanly on the first try after the fix. New `setup2/3/4` content matches the actual user-visible flow.
+3. **`README.md` + `waxframe-user-manual.html`** updated to point at the renumbered filenames. User manual `alt` text and `<figcaption>` text both updated from "Setup Step 3/4/5" → "Setup Step 2/3/4" to match the live app's step numbering. README `alt` text was already correctly numbered from a prior pass; only the `src=` paths needed bumping.
+
+Orphan `screenshots/screenshot_setup5_*.png` files removed via `git rm` — they were stale captures of the Starting Document screen at the old filename, no longer referenced anywhere.
+
+### Why this matters
+
+Anyone landing on the GitHub README or the in-app User Manual now sees screenshots that match the actual app screens they'll navigate. The old screenshots depicted a 5-step flow with a standalone Builder screen that hasn't existed for ~50 releases — first-time users would hit Setup 1 looking for Worker Bees + Builder picker (now correct) and then expect to advance to a "Builder" screen that doesn't exist anymore.
+
+### Files Changed
+
+- Updated: `README.md` (3 `src=` paths bumped), `waxframe-user-manual.html` (3 image figures: `src=`, `alt=`, `<figcaption>` numbers), `tools/README.txt` (architecture-notes wording fix), `CHANGELOG.md`, `js/version.js`, `package.json`
+- Regenerated: 12 PNGs in `screenshots/` (setup1/2/3/4 + welcome + settings + work, both themes — pushed by David in commit `0876bc6`)
+- Deleted: `screenshots/screenshot_setup5_dark.png`, `screenshots/screenshot_setup5_light.png` (orphans)
+- Version/build stamps to v3.63.196 / 20260606-014 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.195
 
 **Template name cap bumped 60 → 120, prefill no longer overflows the cap**
