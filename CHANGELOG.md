@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.176
+
+**Stale multi-click Quick Start instructions reduced — they describe a path the v3.63.175 CTA collapsed**
+
+Build: `20260605-018`<br>
+Released: `2026-06-05`
+
+David caught two paragraphs telling the user to "click 📋 Use Template, pick Starting from scratch, then choose ⭐ Quick Start" — instructions that became obsolete the moment the v3.63.175 CTA collapsed those three clicks into one. Reduced both to point at the new one-click affordance.
+
+### Setup 2 (Your Project) callout
+
+[index.html:307](index.html:307) — was ~440 chars across 3 sentences telling the user to do a 3-step click path then describing the demo's properties twice. Reduced to one sentence (~210 chars):
+
+> *"New to WaxFrame? Click 📋 Use Template above and hit the gold ⭐ Quick Start CTA at the top of the gallery — one click applies a low-stakes Chocolate Chip Cookies demo so you can see the whole hive flow before bringing your own document."*
+
+### User Manual Step 5 paragraph
+
+[waxframe-user-manual.html:563](waxframe-user-manual.html:563) — same triage. Manual gets a touch more context than the UI callout (it's a manual), but the multi-click instruction is gone:
+
+> *"…First time here? Open 📋 Use Template and click the gold "⭐ Quick Start" CTA at the top of the gallery — one click applies a low-stakes Chocolate Chip Cookies demo project. Same flow as any real document; small enough to see convergence quickly and harmless enough to focus on learning the workflow."*
+
+### Files touched
+
+- [index.html](index.html) — Setup 2 callout reduced.
+- [waxframe-user-manual.html](waxframe-user-manual.html) — Step 5 paragraph reduced.
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.176 / 20260605-018.
+- HTML/JS/CSS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.175
 
 **"New to WaxFrame?" callout in the Template Gallery promoted from text to a one-click CTA**
