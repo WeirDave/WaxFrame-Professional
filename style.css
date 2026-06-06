@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-019
+   Build: 20260606-020
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1007,19 +1007,23 @@ body.helper-body .page-main {
   flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-8) var(--space-12);
-  /* v3.63.26 — Match the .wf-card pattern from api-details.html:
-     1px solid gray border all around, plus a 4px gray left edge that
-     state classes (.key-valid / .key-invalid) recolor without
-     touching the other three sides. Pre-v3.63.26 the cards used a
-     1px dashed border that flipped to solid amber on hover and on
-     expand — heavy visual emphasis on chrome that competed with the
-     colored validation edge for attention. The card itself is now a
-     neutral container; the colored edge alone carries state. */
+  /* v3.63.26 — Match the .wf-card pattern: 1px solid gray border all
+     around, plus a 4px gray left edge that state classes (.key-valid /
+     .key-invalid) recolor without touching the other three sides. The
+     card itself is a neutral container; the colored edge carries state. */
   border: 1px solid var(--border2);
   border-left: 4px solid var(--border2);
   border-radius: var(--radius-sm);
-  background: var(--surface);
-  transition: all 0.12s;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.10) 100%);
+  /* v3.63.202 — 3D card treatment matching the rest of the swept UI.
+     Subtle gradient + inset top highlight + inset bottom shadow + drop
+     shadow under the row. Hover on collapsed rows still tints amber but
+     now adds the hover shadow stack so the row reads as "lifting." */
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.10),
+    0 2px 5px rgba(0,0,0,0.18);
 }
 /* v3.31.0 — legacy .ai-setup-row:hover and .ai-setup-row.checked rules
    removed. Hover and active state are now handled by mode-aware
@@ -13952,18 +13956,22 @@ kbd {
   scroll-margin-top: 80px;
 }
 .ai-setup-row.is-collapsed:hover {
-  /* v3.63.26 — Drop the amber border-color override that paired with
-     this background tint. Background change alone is enough hover
-     affordance and lets the colored validation edge stay visible. */
-  background: var(--accent-dim);
+  /* v3.63.202 — Hover lifts the card. Amber tint preserved; shadow stack
+     gets the hover variant so the row physically pops up. */
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 4px 10px rgba(245,166,35,0.20);
 }
 .ai-setup-row.is-expanded {
-  /* v3.63.26 — Drop the amber border-color + border-style overrides.
-     The chevron rotation (▶ → ▼) and the visible expanded panel
-     below the summary row are sufficient signal that the card is
-     open; we don't need to also recolor the chrome. Background
-     tweak preserved for subtle distinction from collapsed rows. */
+  /* When expanded, the row is open and shouldn't lift on hover. Subtle
+     sunken-card feel: keep the inset highlights but no drop shadow lift. */
   background: var(--surface);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.18),
+    inset 0 -1px 0 rgba(255,255,255,0.05);
 }
 /* Greyed-out state for no-key rows. Applies on the summary line only;
    when the row is expanded, the expanded panel uses normal text color
@@ -16466,12 +16474,23 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
    grey on light mode". Now reads as the same intentional branded
    panel in both light and dark themes. */
 .bees-sidebar-block {
-  background: rgba(0, 0, 0, 0.55);
+  /* v3.63.202 — JUMP TO AI sidebar panel picks up a real bezel: subtle
+     gradient on top of the dark navy surface + inset top highlight +
+     stronger drop shadow so the panel reads as a physical recessed
+     control panel rather than a flat slab. Same dark-navy base
+     preserved (per the v3.63.160 "side menu should not be grey on light
+     mode" decision); the 3D depth is added on top. */
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.10) 100%),
+    rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -1px 0 rgba(0,0,0,0.28),
+    0 4px 14px rgba(0, 0, 0, 0.45);
   padding: var(--space-10) var(--space-12);
 }
 .bees-sidebar-block .bees-sidebar-heading,
@@ -16529,13 +16548,26 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   text-decoration: none;
   font-size: var(--fs-12);
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  /* v3.63.202 — Per-provider jump links inside the JUMP TO AI sidebar
+     pick up a subtle pill 3D feel on hover. At rest the rows stay flat
+     so the panel reads as a navigation list (not a button stack); on
+     hover they lift slightly with the small-pill shadow stack. */
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s;
   white-space: nowrap;
   overflow: hidden;
 }
 .bees-sidebar-jump:hover {
-  background: var(--accent-dim, rgba(244, 180, 0, 0.10));
+  background: linear-gradient(180deg, rgba(244,180,0,0.18) 0%, rgba(244,180,0,0.06) 100%);
   color: var(--accent, #f4b400);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 2px 6px rgba(0,0,0,0.30);
+}
+.bees-sidebar-jump:active {
+  transform: translateY(0);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.35);
 }
 .bees-sidebar-jump-icon {
   width: 16px;
