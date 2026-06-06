@@ -2,6 +2,57 @@
 
 ---
 
+## v3.63.189
+
+**Save-as-Template modal grows sideways + category rename / merge / delete in one prompt**
+
+Build: `20260606-007`<br>
+Released: `2026-06-06`
+
+Two follow-ons from David testing v3.63.188:
+
+### Modal width — wider, not taller
+
+The Save-as-Template modal at 520px max-width with stacked labels grew below the fold at 1366×768 laptop viewports once the Category field landed. Bumped `.save-template-modal` max-width to 760px and put **Icon + Category on the same row**:
+
+- Icon column is fixed at 120px (single emoji input doesn't need more room)
+- Category column flexes to fill the rest, and the free-form custom-category text input drops to a second line *inside* the Category column when revealed (still visually grouped with the select that owns it)
+- Dropped the legacy 80px hard width on `.save-template-input--icon` — width:100% inside the 120px column reads cleaner
+
+Result: the form fits the visible viewport on a 1366×768 laptop without scrolling, and the layout reads as "metadata row" + "description" + "actions" instead of a long list of labeled fields.
+
+### Category rename / merge / delete
+
+David's case from 2026-06-06: *"if they have three things they set up as 'Amazon reviews' and now want them to just be 'Reviews', they'd have to individually go into each one — that seems like a mess."* Confirmed. Editing each template was the only path before; not OK.
+
+Added a ✏️ button next to **free-form** bucket names in the Template Gallery sidebar (the six canonical built-in buckets stay non-renamable since they're universal). One click opens a prompt with the current name pre-filled, and the response drives three operations from one affordance:
+
+- **Rename** — type a new name; all templates in the bucket update to it
+- **Merge** — type the name of an existing bucket; the two combine
+- **Delete** — type `My Templates` or leave blank; the free-form bucket disappears and its templates fall to the default
+
+The new `renameCustomCategory(oldName)` function:
+
+1. Filters custom templates to those in `oldName`
+2. If zero, toasts and bails (sidebar shouldn't show this case but defensive)
+3. `window.prompt` with the explanation and current name pre-filled
+4. Cancel → no-op; same name → no-op
+5. Truncates new name to 40 chars (matches the save modal's custom input cap)
+6. Updates `t.category` on each affected template, saves, re-renders
+7. Toast confirms the count: *"3 templates renamed to 'Reviews'"* or *"3 templates moved to My Templates"*
+
+The pencil button uses the same `.template-gallery-sidebar` styling family with a translucent rest state (opacity 0.55) lifting to full opacity + amber-dim background on hover, so it doesn't compete with the bucket link itself for visual weight.
+
+### Files touched
+
+- [index.html](index.html) — Save-as-Template modal Icon + Category fields wrapped in `<div class="save-template-row">` with two flex columns.
+- [style.css](style.css) — `.save-template-modal` max-width 520→760px; new `.save-template-row`/`.save-template-col` flex layout; `.save-template-input--icon` width removed; new `.template-gallery-sidebar-item` row + `.template-gallery-sidebar-rename` button styles.
+- [js/app.js](js/app.js) — `renderTemplateGalleryBody` sidebar emits the ✏️ next to free-form custom-path buckets; new `renameCustomCategory(oldName)` function handles rename / merge / delete in one prompt.
+- [js/version.js](js/version.js), [js/app.js](js/app.js), [package.json](package.json) — stamps bumped to v3.63.189 / 20260606-007.
+- HTML/JS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.188
 
 **Custom Template Categories: pick a category at save time, sidebar nav appears once you have 2+**
