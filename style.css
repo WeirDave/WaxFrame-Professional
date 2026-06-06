@@ -13939,32 +13939,9 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   line-height: 1.25;
 }
 
-/* v3.63.182 — Theme-aware swap to match the .work-panel-header
-   pattern. v3.63.180 used dark glass in both modes (which matched
-   the .honeycomb-header variant); David clarified the intended
-   reference is the base .work-panel-header which flips to white
-   background + dark text in light mode. Dark mode keeps the dark
-   glass band (the v3.63.180 default rule above carries through). */
-[data-theme="light"] .template-path-indicator {
-  background: #ffffff;
-  backdrop-filter: none;
-  border-color: var(--border2);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-[data-theme="light"] .template-path-indicator-label {
-  color: var(--text);
-}
-@media (prefers-color-scheme: light) {
-  [data-theme="auto"] .template-path-indicator {
-    background: #ffffff;
-    backdrop-filter: none;
-    border-color: var(--border2);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  }
-  [data-theme="auto"] .template-path-indicator-label {
-    color: var(--text);
-  }
-}
+/* v3.63.180 dark-glass band carries through to both themes — David
+   reverted the v3.63.182 theme-aware swap so the .honeycomb-header
+   pattern reads consistently across light and dark mode. */
 .template-path-indicator-change {
   font-size: var(--fs-13);
   font-weight: 600;
@@ -14227,23 +14204,6 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   background: var(--surface2);
   box-shadow: 0 18px 48px rgba(0,0,0,0.20);
 }
-[data-theme="light"] .template-gallery-hdr {
-  background: #ffffff;
-  background-image: none;
-  border-bottom-color: var(--border2);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-[data-theme="light"] .template-gallery-hdr h2 {
-  color: var(--text);
-}
-[data-theme="light"] .template-gallery-hdr .template-gallery-intro {
-  color: var(--text-dim);
-}
-[data-theme="light"] .template-gallery-close {
-  border-color: var(--border2);
-  color: var(--text-dim);
-}
 [data-theme="light"] .template-gallery-body {
   background: var(--surface2);
 }
@@ -14256,23 +14216,6 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   [data-theme="auto"] .template-gallery-modal {
     background: var(--surface2);
     box-shadow: 0 18px 48px rgba(0,0,0,0.20);
-  }
-  [data-theme="auto"] .template-gallery-hdr {
-    background: #ffffff;
-    background-image: none;
-    border-bottom-color: var(--border2);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-  [data-theme="auto"] .template-gallery-hdr h2 {
-    color: var(--text);
-  }
-  [data-theme="auto"] .template-gallery-hdr .template-gallery-intro {
-    color: var(--text-dim);
-  }
-  [data-theme="auto"] .template-gallery-close {
-    border-color: var(--border2);
-    color: var(--text-dim);
   }
   [data-theme="auto"] .template-gallery-body {
     background: var(--surface2);
