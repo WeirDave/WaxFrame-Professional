@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.199
+
+**3D raised treatment swept across all primary button + pill classes**
+
+Build: `20260606-017`<br>
+Released: `2026-06-06`
+
+### Changed — `.btn`, `.btn-accent`, `.theme-opt`, `.mute-btn`, `.length-guard-indicator`, `.license-badge`, `.auto-mode-toggle` all picked up the bezel vocabulary
+
+David's reaction to the v3.63.198 footer-button treatment was *"now I want all my buttons to look like that"* — so the same shadow vocabulary now sweeps the rest of the work-screen UI. Every button class participates in the same physical-surface language: subtle vertical gradient + inset top highlight + inset bottom shadow + outer drop shadow + `:active` depression.
+
+Per-class treatments:
+
+- **`.btn`** (base, used hundreds of places — modal action rows, panel header controls like Copy / Export / Clear / Diff: Words, etc.) — switched from dashed border + flat transparent background to solid border + subtle vertical gradient + 3D shadow stack. Existing colors, sizes, padding all preserved.
+- **`.btn-accent`** (primary CTA like Finish) — picks up the amber gradient + white inset top highlight + amber-tinted drop shadow. The v3.36.29 white-on-amber → amber-on-white hover flip is preserved but layered on the new shadow stack.
+- **`.theme-opt`** (☀️ / ⚙️ / 🌙 theme pills) — small-pill 3D treatment. `.active` state gets the filled amber gradient (matches `.btn-accent`) so the selected theme reads as pressed-in / lit-up.
+- **`.mute-btn`** — green-dim gradient when sounds are on, red-dim gradient when muted; both states raised with inset highlights.
+- **`.length-guard-indicator`** (armed/off) — green gradient when armed, red gradient when off; both 3D.
+- **`.license-badge`** (unlicensed/licensed) — red gradient when unlicensed (alarm), green gradient when licensed (matches `.length-guard-indicator` so the two "all-good" footer pills feel identical).
+- **`.auto-mode-toggle`** (Manual/Auto) — amber-dim gradient in Manual, green-dim in Auto, both with 3D shadow stack. Hovers saturate the gradient and lift.
+
+All hover states share the same vocabulary: lift 1-2px + brighter shadow + saturated gradient. All `:active` states share: depress 1px + inset shadow stack so the press is tactile. Disabled states drop the elevation entirely.
+
+Result: the whole work-screen UI now reads as cut from a single physical surface. The clock bezel, the round badge, the footer action buttons, every panel header control, every footer pill — same language.
+
+### Files Changed
+
+- Updated: `style.css` (`.btn`, `.btn-accent`, `.theme-opt`, `.mute-btn`, `.length-guard-indicator` armed + off states, `.license-badge` unlicensed + licensed, `.auto-mode-toggle` Manual + Auto states — all rewritten with vertical-gradient backgrounds + inset + drop shadows + `:active` depression), `CHANGELOG.md`, `js/version.js`, `package.json`
+- Version/build stamps to v3.63.199 / 20260606-017 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.198
 
 **Round badge + Send to Builder + Smoke the Hive get a 3D raised treatment matching the clock bezel**

@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-016
+   Build: 20260606-017
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -326,25 +326,54 @@ body.helper-body .page-main {
 /* ══════════════════════════════════════
    BUTTONS
 ══════════════════════════════════════ */
+/* v3.63.199 — 3D raised treatment swept across the primary button classes.
+   Same shadow vocabulary as the footer buttons (v3.63.197/198) and the
+   clock bezel: subtle vertical gradient + inset top highlight + inset
+   bottom shadow + outer drop shadow + :active depression. David asked for
+   this sweep after seeing the footer buttons; vocabulary kept identical so
+   the whole work-screen UI reads as cut from the same physical surface.
+   Border switched from dashed to solid because dashed reads as "optional/
+   draft outline" and undermines the raised-button language. Existing
+   colors, sizes, padding all preserved. */
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: transparent;
-  border: 1px dashed var(--border2);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.08) 100%);
+  border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
   font-size: 13px;
   padding: 7px 14px;
-  transition: all 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 2px 4px rgba(0,0,0,0.18);
 }
-.btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.08) 100%);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -1px 0 rgba(0,0,0,0.16),
+    0 4px 10px rgba(0,0,0,0.22);
+}
+.btn:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.30),
+    inset 0 -1px 0 rgba(255,255,255,0.05),
+    0 1px 2px rgba(0,0,0,0.15);
+}
 .btn.btn-copied {
   border-color: var(--green);
-  background: var(--green-dim);
+  background: linear-gradient(180deg, var(--green-dim) 0%, rgba(0,0,0,0.08) 100%);
   color: var(--green);
   transition: all 0.15s ease-out;
 }
@@ -363,34 +392,39 @@ body.helper-body .page-main {
   background: rgba(0,0,0,0.5);
 }
 
-/* Accent (filled) — always readable */
+/* Accent (filled) — always readable. v3.63.199 — picks up the same 3D
+   raised treatment as .footer-btn-smoke: amber gradient (lighter top,
+   darker bottom) + white inset top highlight + amber-tinted drop shadow.
+   White-on-amber base preserved (v3.36.30); white-on-amber hover flip
+   preserved (v3.36.29) but with the new shadow vocabulary layered on. */
 .btn-accent {
-  background: var(--accent);
+  background: linear-gradient(180deg, #f7b94c 0%, #d99000 100%);
   border-color: var(--accent);
-  /* v3.36.30 — Base text color is white to match .footer-btn-smoke's
-     light-theme rule (L2589 sets footer-btn-smoke color to #ffffff).
-     White-on-amber base + amber-on-white hover gives the symmetric
-     flip that Smoke uses. Was: color #0a0c12 (dark). Same fix-the-
-     class-not-the-overrides pattern as v3.36.29 — every primary CTA
-     across the app now has consistent resting text color. */
   color: #ffffff;
   font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.45),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 3px 8px rgba(245,166,35,0.30),
+    0 1px 2px rgba(0,0,0,0.20);
 }
 .btn-accent:hover {
-  /* v3.36.29 — Smoke-style hover treatment applied to all .btn-accent
-     buttons for UX consistency. Background flips from amber to white,
-     text turns amber, button lifts 2px, larger amber glow shadow. Same
-     visual language as the footer-btn-smoke hover (the Smoke-the-Hive
-     button) — every primary CTA in the app now feels the same on hover.
-     Previously: subtle accent-hover background tint + small lift +
-     small shadow + dark text retained. Light/auto theme overrides
-     below removed — these absolute-color values work across all themes
-     and we want the same flip everywhere. */
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
   border-color: var(--accent);
   color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(245,166,35,0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    inset 0 -1px 0 rgba(0,0,0,0.06),
+    0 8px 24px rgba(245,166,35,0.45),
+    0 2px 6px rgba(0,0,0,0.18);
+}
+.btn-accent:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 8px rgba(0,0,0,0.30),
+    inset 0 -1px 0 rgba(255,255,255,0.10),
+    0 1px 3px rgba(245,166,35,0.25);
 }
 /* v3.36.29 — Light/auto theme overrides removed (was: dark-brown bg
    on hover). The universal .btn-accent:hover rule above uses
@@ -402,8 +436,13 @@ body.helper-body .page-main {
 .btn-cta { min-width: 320px; justify-content: center; }
 
 /* ── THEME TOGGLE ── */
+/* v3.63.199 — Small-pill 3D treatment. Same shadow vocabulary as .btn,
+   scaled to pill size. Applies to theme toggles, mute, length-guard,
+   slow-alerts, license badge — every footer/header pill picks up the
+   raised feel. .active states get the filled-button (.btn-accent) shadow
+   stack so the "selected" pill reads as pressed-in / lit-up. */
 .theme-opt {
-  background: transparent;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.06) 100%);
   border: 1px solid var(--border2);
   border-radius: 20px;
   color: var(--muted);
@@ -411,44 +450,86 @@ body.helper-body .page-main {
   font-size: var(--fs-11);
   font-weight: 600;
   padding: var(--space-4) var(--space-12);
-  transition: all 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
   white-space: nowrap;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    inset 0 -1px 0 rgba(0,0,0,0.10),
+    0 1px 2px rgba(0,0,0,0.15);
 }
 .theme-opt.active {
-  background: var(--accent);
+  background: linear-gradient(180deg, #f7b94c 0%, #d99000 100%);
   border-color: var(--accent);
   color: #0a0c12;
   font-weight: 700;
   cursor: default;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 0 rgba(0,0,0,0.20),
+    0 2px 6px rgba(245,166,35,0.30);
 }
 .theme-opt:hover:not(.active) {
   border-color: var(--accent);
   color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 3px 7px rgba(0,0,0,0.20);
+}
+.theme-opt:active:not(.active) {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,0.25),
+    inset 0 -1px 0 rgba(255,255,255,0.04),
+    0 1px 1px rgba(0,0,0,0.12);
 }
 /* Mute button — color-coded state indicator. Green = sounds on, red = muted.
    Sits left of theme toggles, separated by a small gap. Overrides the dim
    transparent .theme-opt base because mute is a state indicator, not a
    radio-group selector — different control type, different visual weight. */
+/* Mute button — color-coded state pill. v3.63.199 — picks up the
+   small-pill 3D shadow stack (inherited from .theme-opt above) plus
+   green/red gradient backgrounds tinted for the state. The dimmed
+   gradient bottom keeps the "rounded" feel without saturating. */
 .mute-btn {
   margin-right: 4px;
-  background: var(--green-dim);
+  background: linear-gradient(180deg, var(--green-dim) 0%, rgba(0,0,0,0.10) 100%);
   border-color: var(--green);
   color: var(--green);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 1px 3px rgba(46, 204, 113, 0.22);
 }
 .mute-btn:hover:not(.is-muted) {
-  background: var(--green);
+  background: linear-gradient(180deg, #4ad988 0%, #19a052 100%);
   border-color: var(--green);
   color: var(--bg);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 3px 8px rgba(46, 204, 113, 0.40);
 }
 .mute-btn.is-muted {
-  background: var(--red-dim);
+  background: linear-gradient(180deg, var(--red-dim) 0%, rgba(0,0,0,0.10) 100%);
   border-color: var(--red);
   color: var(--red);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 1px 3px rgba(192,21,42,0.25);
 }
 .mute-btn.is-muted:hover {
-  background: var(--red);
+  background: linear-gradient(180deg, #e93e55 0%, #a01122 100%);
   border-color: var(--red);
   color: var(--bg);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 3px 8px rgba(192,21,42,0.45);
 }
 .theme-toggle {
   display: flex;
@@ -7740,11 +7821,14 @@ kbd {
    rule (round-count counter was removed from the pill in v3.36.14;
    the rule was a straggler).
 */
+/* v3.63.199 — Auto-mode toggle picks up the small-pill 3D vocabulary.
+   Two states (Manual = amber-dim, Auto = green-dim) both get the inset
+   highlight + drop shadow; hover saturates the gradient and lifts. */
 .auto-mode-toggle {
   display: inline-flex;
   align-items: center;
   gap: var(--space-6);
-  background: var(--accent-dim);
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
   border: 1px solid var(--accent);
   border-radius: 20px;
   color: var(--accent);
@@ -7752,14 +7836,29 @@ kbd {
   font-size: var(--fs-11);
   font-weight: 700;
   padding: var(--space-4) var(--space-10);
-  transition: all 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
   white-space: nowrap;
   user-select: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 1px 3px rgba(245, 166, 35, 0.25);
 }
 .auto-mode-toggle:hover:not(.is-auto) {
-  background: var(--accent);
+  background: linear-gradient(180deg, #f7b94c 0%, #d99000 100%);
   color: #0a0c12;
-  box-shadow: 0 0 10px rgba(245, 166, 35, 0.45);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 4px 10px rgba(245, 166, 35, 0.45);
+}
+.auto-mode-toggle:active:not(.is-auto) {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,0.25),
+    inset 0 -1px 0 rgba(255,255,255,0.06),
+    0 1px 1px rgba(245, 166, 35, 0.18);
 }
 .auto-mode-toggle .auto-mode-icon {
   /* v3.36.19 — line-height removed for the same reason as
@@ -7773,14 +7872,29 @@ kbd {
   letter-spacing: 0.01em;
 }
 .auto-mode-toggle.is-auto {
-  background: var(--green-dim);
+  background: linear-gradient(180deg, var(--green-dim) 0%, rgba(0,0,0,0.10) 100%);
   border-color: var(--green);
   color: var(--green);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 1px 3px rgba(46, 204, 113, 0.25);
 }
 .auto-mode-toggle.is-auto:hover {
-  background: var(--green);
+  background: linear-gradient(180deg, #4ad988 0%, #19a052 100%);
   color: #0a0c12;
-  box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 4px 10px rgba(46, 204, 113, 0.45);
+}
+.auto-mode-toggle.is-auto:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,0.25),
+    inset 0 -1px 0 rgba(255,255,255,0.06),
+    0 1px 1px rgba(46, 204, 113, 0.18);
 }
 .auto-mode-toggle.is-auto .auto-mode-icon {
   animation: autoModePulse 1.6s ease-in-out infinite;
@@ -7881,47 +7995,66 @@ kbd {
   gap: var(--space-4);
   font-size: var(--fs-11);
   font-weight: 700;
-  /* v3.36.20 — Explicit line-height matches html/body's 1.6.
-     The .license-badge sibling is a <span> that inherits body
-     line-height; this <button> does NOT (UA default ~1.15-1.2).
-     Without this override the pill renders ~4px shorter than
-     License. v3.36.19's icon-line-height removal was the wrong
-     layer — the parent line-height drives the inline-flex
-     container height, not the icon child's line-height. */
   line-height: 1.6;
   padding: var(--space-4) var(--space-10);
   border-radius: 20px;
-  background: var(--green-dim);
+  /* v3.63.199 — Small-pill 3D treatment matching .theme-opt/.mute-btn.
+     Green-dim gradient for armed state; the on-color stays at the
+     border; raised feel comes from inset highlight + drop shadow. */
+  background: linear-gradient(180deg, var(--green-dim) 0%, rgba(0,0,0,0.10) 100%);
   border: 1px solid var(--green);
   color: var(--green);
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
-  transition: all 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 1px 3px rgba(46, 204, 113, 0.22);
 }
 .length-guard-indicator:hover {
-  background: var(--green);
+  background: linear-gradient(180deg, #4ad988 0%, #19a052 100%);
   color: #0a0c12;
-  box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 4px 10px rgba(46, 204, 113, 0.45);
+}
+.length-guard-indicator:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,0.25),
+    inset 0 -1px 0 rgba(255,255,255,0.06),
+    0 1px 1px rgba(46, 204, 113, 0.18);
 }
 .length-guard-indicator.is-off {
-  /* v3.39.0 — Universal pill pattern: dim background + colored border +
-     colored text, same shape as .auto-mode-toggle's two states and the
-     on-state above. Previous solid-red treatment was the only pill in
-     the toolbar breaking the rule. Red semantics preserved (guard off
-     is still a warning) but rendered with --red-dim / --red so it sits
-     visually alongside the other footer pills. Border explicit at 1px
-     (same as default state) so the height stays parity-stable across
-     on/off transitions. */
-  background: var(--red-dim);
+  /* v3.63.199 — Red-dim gradient with 3D shadow stack matches the other
+     small pills; "guard off" still reads as warning via the red color. */
+  background: linear-gradient(180deg, var(--red-dim) 0%, rgba(0,0,0,0.10) 100%);
   border: 1px solid var(--red);
   color: var(--red);
-  box-shadow: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 1px 3px rgba(248, 113, 113, 0.25);
 }
 .length-guard-indicator.is-off:hover {
-  background: var(--red);
+  background: linear-gradient(180deg, #f87171 0%, #b03434 100%);
   color: #0a0c12;
-  box-shadow: 0 0 10px rgba(248,113,113,0.45);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 4px 10px rgba(248, 113, 113, 0.45);
+}
+.length-guard-indicator.is-off:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,0.25),
+    inset 0 -1px 0 rgba(255,255,255,0.06),
+    0 1px 1px rgba(248, 113, 113, 0.18);
 }
 .length-guard-indicator-icon {
   /* v3.36.19 — line-height removed. Was 1, which clamped the
@@ -8227,31 +8360,66 @@ kbd {
    LICENSE BADGE + MODAL
 ══════════════════════════════════════ */
 
+/* v3.63.199 — Small-pill 3D treatment for both states. Unlicensed state
+   uses a red gradient (alarm) with the inset shadow stack; Licensed swaps
+   to the green-dim gradient matching .length-guard-indicator so the two
+   "all-good" pills in the footer feel identical. */
 .license-badge {
   font-size: var(--fs-11);
   font-weight: 700;
   padding: var(--space-4) var(--space-10);
   border-radius: 20px;
-  border: none;
+  border: 1px solid #c0152a;
   color: #e8ecf4;
-  background: #c0152a;
+  background: linear-gradient(180deg, #d83040 0%, #95101e 100%);
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
   user-select: none;
-  box-shadow: 0 0 8px rgba(192,21,42,0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -1px 0 rgba(0,0,0,0.25),
+    0 2px 6px rgba(192,21,42,0.45);
 }
-.license-badge:hover { background: #e01830; box-shadow: 0 0 12px rgba(192,21,42,0.7); }
+.license-badge:hover {
+  background: linear-gradient(180deg, #e93e55 0%, #a01122 100%);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.35),
+    inset 0 -1px 0 rgba(0,0,0,0.28),
+    0 4px 12px rgba(192,21,42,0.60);
+}
+.license-badge:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.35),
+    inset 0 -1px 0 rgba(255,255,255,0.10),
+    0 1px 2px rgba(192,21,42,0.30);
+}
 .license-badge.licensed {
-  background: var(--green-dim);
+  background: linear-gradient(180deg, var(--green-dim) 0%, rgba(0,0,0,0.10) 100%);
   border: 1px solid var(--green);
   color: var(--green);
-  box-shadow: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 1px 3px rgba(46, 204, 113, 0.22);
 }
 .license-badge.licensed:hover {
-  background: var(--green);
+  background: linear-gradient(180deg, #4ad988 0%, #19a052 100%);
   color: #0a0c12;
-  box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 4px 10px rgba(46, 204, 113, 0.45);
+}
+.license-badge.licensed:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,0.25),
+    inset 0 -1px 0 rgba(255,255,255,0.06),
+    0 1px 1px rgba(46, 204, 113, 0.18);
 }
 
 .license-modal-overlay {
