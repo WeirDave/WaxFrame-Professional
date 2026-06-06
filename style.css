@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-021
+   Build: 20260605-022
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13904,21 +13904,39 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   color: var(--text-dim);
   line-height: 1.5;
 }
+/* v3.63.180 — Path indicator restyled as a real section header.
+   Was an amber-tinted band (which fought visually with the gold CTA
+   button + the gold-bordered "Refining a draft?" card below in the
+   v3.63.179 stack); David's call: it's the section header for this
+   view, so it should look like the app's other section headers —
+   the dark-glass .hp-section-header pattern used on Setup 1/2/3/4
+   and the working console. Same dark-glass band, same white
+   uppercase title, same 18px / 700 / 0.08em letter-spacing as the
+   work-screen headers. Change button restyled to read clearly
+   against the dark glass (amber outline, transparent fill, amber
+   hover-flip). */
 .template-path-indicator {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-12);
-  padding: var(--space-10) var(--space-14);
-  background: var(--accent-dim);
-  border: 1px solid var(--accent, #f4b400);
-  border-radius: var(--radius-sm);
+  gap: var(--space-16);
+  padding: var(--space-14) var(--space-20);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   margin-bottom: var(--space-16);
 }
 .template-path-indicator-label {
-  font-size: var(--fs-13);
-  font-weight: 600;
-  color: var(--text);
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  line-height: 1.25;
 }
 .template-path-indicator-change {
   font-size: var(--fs-13);
@@ -13927,15 +13945,32 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   background: transparent;
   border: 1px solid var(--accent, #f4b400);
   border-radius: var(--radius-sm);
-  padding: var(--space-4) var(--space-12);
+  padding: var(--space-6) var(--space-14);
   cursor: pointer;
   font-family: var(--font);
   transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
 }
 .template-path-indicator-change:hover {
   background: var(--accent, #f4b400);
   color: #000;
 }
+
+/* v3.63.180 — Descriptive paragraph that explains the section,
+   placed below the CTA button in scratch and refine views. Just
+   plain explanatory text — no border, no fill, no card framing.
+   Pure typography that reads as "here's what this section is
+   about" without competing with the H2 header above or the CTA
+   button between them. */
+.template-gallery-explain {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin: var(--space-12) 0 var(--space-20);
+  padding: 0;
+  max-width: 920px;
+}
+.template-gallery-explain strong { color: var(--text); }
 
 /* Mobile-ish narrowing — the dual-path-card grid stacks on narrower
    modals (still desktop-only viewport but the modal can be narrower
