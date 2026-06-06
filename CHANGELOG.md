@@ -2,6 +2,71 @@
 
 ---
 
+## v3.63.180
+
+**Template Gallery refine/scratch views: path indicator restyled as a real H2 section header + structure reordered + "rewriting wholesale" copy fixed**
+
+Build: `20260605-022`<br>
+Released: `2026-06-05`
+
+David's read of v3.63.179: *"This is terrible writing and it's in a weird box."* Three intertwined problems that got fixed together.
+
+### 1. Path indicator → real H2 section header
+
+The `📝 Starting from scratch` / `✂️ Refining an existing draft` band at the top of the template-grid views was rendering as an amber-tinted strip that competed visually with the gold CTA button below it. David's observation: *"that becomes the header — shouldn't it be like H2 inside that box and have the same CSS as the headers of the working page? That would keep some continuity going on."*
+
+Restyled `.template-path-indicator` to match the `.hp-section-header` pattern used on Setup 1/2/3/4 and the working console:
+
+- **Was**: `background: var(--accent-dim)` + `border: 1px solid var(--accent)` + small amber pill look
+- **Now**: `background: rgba(0,0,0,0.55)` + `backdrop-filter: blur(6px)` + `border: 1px solid rgba(255,255,255,0.1)` + dark glass box-shadow
+
+Label restyled to match `.hp-section-title`: `font-size: 18px`, `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: 0.08em`, `color: #ffffff`. Change button kept its amber outline + amber-fill hover (reads cleanly against the dark glass).
+
+### 2. Structure reordered — CTA second, explainer third (David's spec)
+
+David's pattern: *"the 'guided tour first' box should be right underneath 'Refining an existing draft' and then the paragraph about refining should be below that as just regular text — like explaining what this section is about."*
+
+Old refine stack:
+```
+1. Path indicator (amber band)
+2. "Refining a draft?" text card (gold-outlined box — David's "weird box")
+3. CTA button ("Want a guided tour first?")
+4. Categories
+```
+
+New refine stack:
+```
+1. Path indicator (H2 dark-glass band)
+2. CTA button ("Want a guided tour first?")
+3. Plain explainer paragraph (no box, no border)
+4. Categories
+```
+
+Scratch view got the same treatment for symmetry — header → CTA → plain explainer → categories. Previously the scratch view had no explainer at all; now it gets a parallel `<p class="template-gallery-explain">` for consistent structure.
+
+### 3. Copy rewritten — no more "rewriting wholesale"
+
+David called out the refine line: *"'Refining a draft? Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale.' This is terrible writing. No one talks like that, doesn't even make sense."*
+
+Refine explainer rewritten:
+> *"These templates are designed to refine work you've already written. Pick the one closest to your document type — the hive will polish, tighten, and restructure it round by round rather than starting over."*
+
+Scratch explainer (new):
+> *"These templates are designed to spark a first draft. Pick the one closest to what you're writing — the hive will use it as a brief to generate Round 1 from your Project Goal, then refine it round by round."*
+
+### Code shape
+
+`renderTemplateGalleryBody` was doing a single ternary that returned the full callout markup. Refactored into separate `ctaButton` and `explainPara` variables built in an `if/else` block, then concatenated. Easier to maintain when copy or order changes (and this is the third time we've reshuffled it).
+
+### Files touched
+
+- [style.css](style.css) — `.template-path-indicator` flipped to dark-glass H2 pattern; `.template-path-indicator-label` typography matched to `.hp-section-title`; new `.template-gallery-explain` plain-paragraph rule added.
+- [js/app.js](js/app.js) — `renderTemplateGalleryBody` per-path header content split into `ctaButton` + `explainPara`; scratch + refine explainer copy added; refine copy rewritten.
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.180 / 20260605-022.
+- HTML/JS/CSS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.179
 
 **"Refining a draft?" card border-only + template cards switched to dashed for documentation-card continuity + custom template categories filed to backlog**
