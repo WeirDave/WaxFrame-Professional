@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-011
+   Build: 20260606-012
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14881,6 +14881,21 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   font-style: italic;
   line-height: 1.45;
 }
+/* v3.63.194 — Live character counter for the three length-capped inputs
+   in the Save-as-Template modal (name 60, custom-category 40, description
+   240). Right-aligned, dim by default; flips to amber at 90% of cap and
+   red at the cap so users see the cliff edge coming. David caught his test
+   description getting truncated at "charac…" on hitting 240 without warning. */
+.save-template-charcount {
+  font-size: var(--fs-11);
+  color: var(--text-dim);
+  text-align: right;
+  margin: var(--space-4) 0 0;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.save-template-charcount--warn { color: var(--accent); }
+.save-template-charcount--max  { color: var(--red); font-weight: 700; }
 /* v3.63.37 — Custom Templates path-card centered on its own full-width row
    (third card in a 2-col grid would otherwise sit orphaned bottom-left). */
 .template-path-card--custom {

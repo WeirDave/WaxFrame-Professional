@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-011
+// Build: 20260606-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-011';         // build stamp — update each session
+const BUILD       = '20260606-012';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -3710,7 +3710,7 @@ function renderTemplateGalleryBody() {
   // new users browsing for onboarding).
   let ctaButton = '';
   let explainPara = '';
-  if (path === 'custom') ctaButton = `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()">➕ New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()">⬆ Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Hover a saved template to export ⬇, duplicate 📋, edit ✏️, or delete 🗑 it.</span></div>`;
+  if (path === 'custom') ctaButton = `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()" title="Opens the project editor with empty fields. Fill in your project goal — plus optional reference material and a starting document — then ⭐ Save as Template to bank the recipe. Closes this gallery.">➕ New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()" title="Load a template file (.json) someone shared with you, or one you exported from another machine.">⬆ Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Custom templates bank your project goal, reference material, starting document, and the hive that ran them. Hover a saved template to export ⬇, duplicate 📋, edit ✏️, or delete 🗑 it.</span></div>`;
   else if (path === 'scratch') {
     ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>New to WaxFrame? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`;
     explainPara = `<p class="template-gallery-explain">These templates are designed to spark a <strong>first draft</strong>. Pick the one closest to what you're writing — the hive will use this template to generate a document, then refine it round by round.</p>`;
@@ -3972,6 +3972,13 @@ function openSaveTemplateModal() {
     if (titleEl) titleEl.textContent = '\u2b50 Save as Template';
     if (btnEl)   btnEl.textContent   = '\u2b50 Save Template';
   }
+  // v3.63.194 — Initialize char counters for the three length-capped
+  // inputs (name 60, custom-category 40, description 240). David caught
+  // his test description getting truncated at "charac…" on hitting the
+  // 240 cap without warning; a live counter avoids the cliff-edge cutoff.
+  updateSaveTemplateCharCount('name');
+  updateSaveTemplateCharCount('category');
+  updateSaveTemplateCharCount('desc');
   // Show the lineup that will be captured so the save is transparent.
   const hiveEl = document.getElementById('saveTemplateHive');
   if (hiveEl) {
@@ -3996,13 +4003,44 @@ function onSaveTemplateCategoryChange() {
   const catEl = document.getElementById('saveTemplateCategory');
   const customEl = document.getElementById('saveTemplateCategoryCustom');
   if (!catEl || !customEl) return;
+  const counterEl = document.getElementById('saveTemplateCategoryCustomCount');
   if (catEl.value === '__custom__') {
     customEl.style.display = '';
+    if (counterEl) counterEl.style.display = '';
     setTimeout(() => customEl.focus(), 30);
   } else {
     customEl.style.display = 'none';
+    if (counterEl) counterEl.style.display = 'none';
     customEl.value = '';
   }
+  // v3.63.194 — Refresh the counter so it doesn't lag behind the
+  // visibility flip (and resets to 0/40 when switching back to built-in).
+  updateSaveTemplateCharCount('category');
+}
+
+// v3.63.194 — Live character counter for the three length-capped
+// inputs in the Save-as-Template modal. Wired via inline oninput on each
+// input plus an init pass from openSaveTemplateModal. David tested with
+// a description that hit the 240 cap mid-thought ("how many charac…"
+// truncated); the counter surfaces the cap before it bites. Hits a warn
+// state at 90% of max so users get a heads-up, not a surprise.
+function updateSaveTemplateCharCount(field) {
+  const map = {
+    name:     { input: 'saveTemplateName',           counter: 'saveTemplateNameCount',           max: 60  },
+    category: { input: 'saveTemplateCategoryCustom', counter: 'saveTemplateCategoryCustomCount', max: 40  },
+    desc:     { input: 'saveTemplateDesc',           counter: 'saveTemplateDescCount',           max: 240 }
+  };
+  const cfg = map[field];
+  if (!cfg) return;
+  const inp     = document.getElementById(cfg.input);
+  const counter = document.getElementById(cfg.counter);
+  if (!inp || !counter) return;
+  const len = inp.value.length;
+  counter.textContent = `${len} / ${cfg.max}`;
+  const nearLimit = len >= Math.floor(cfg.max * 0.9);
+  const atLimit   = len >= cfg.max;
+  counter.classList.toggle('save-template-charcount--warn', nearLimit && !atLimit);
+  counter.classList.toggle('save-template-charcount--max',  atLimit);
 }
 function confirmSaveTemplate() {
   const name = (document.getElementById('saveTemplateName')?.value || '').trim();
@@ -4093,7 +4131,13 @@ async function newBlankTemplate() {
   const g = document.getElementById('templateGalleryModal');
   if (g) g.classList.remove('active');
   if (typeof goToScreen === 'function') goToScreen('screen-project');
-  toast('\u2795 New template \u2014 fill in the setup, then Save as Template', 5500);
+  // v3.63.194 \u2014 Expanded toast wording. David flagged the previous
+  // "fill in the setup, then Save as Template" as too vague \u2014 users
+  // don't immediately know the setup includes reference material and
+  // a starting document, not just the goal fields. The button tooltip
+  // (in renderTemplateGalleryBody) sets the same expectation BEFORE
+  // the click; this toast confirms it AFTER landing on the project page.
+  toast('\u2795 Fill in your project goal \u2014 plus optional reference material and starting document \u2014 then \u2b50 Save as Template', 7000);
 }
 
 // ============================================================
