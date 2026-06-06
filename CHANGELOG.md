@@ -2,6 +2,45 @@
 
 ---
 
+## v3.63.201
+
+**Site-wide 3D sweep — Phase 2 + 3: per-row lock, AI row controls, ghost / chip / hive cards, clock control buttons**
+
+Build: `20260606-019`<br>
+Released: `2026-06-06`
+
+### Changed — second batch of 3D vocabulary across the remaining high-frequency buttons
+
+Continuation of the site-wide 3D sweep that started in v3.63.200. This pass hits the next tier of high-frequency interactions:
+
+- **`.applied-lock-btn`** (per-row lock on every conflict card) + `.applied-lock-btn-locked` + `.applied-lock-btn-disabled` — amber-keyed when unlocked / actionable, green-keyed when locked, dim-green when disabled. All three states now use the small-pill 3D shadow stack with hover lift and active depress.
+- **`.ai-recheck-btn`** (per-AI Recommend Model) — blue-keyed small-pill 3D, matches `.ai-test-btn` semantically.
+- **`.ai-eye-btn`** (👁 show / hide API key) — neutral small-pill 3D with amber border on hover.
+- **`.ai-clear-key-btn`** (🗑 clear key) — red-keyed small-pill 3D (destructive warning).
+- **`.btn-ghost`** (variant of `.btn` used over honeycomb-textured backgrounds) — darker translucent gradient that preserves readability over the texture, same shadow vocabulary as `.btn`.
+- **`.cb-confirm-btn`** (Custom Builder confirm modal button) — amber-raised primary CTA treatment, matches `.btn-accent`.
+- **`.builder-chip`** (v3.63.149 Phase-2 Builder roster picker chips) — 3D button with `.is-selected` state showing amber gradient + glow ("lit up"). Same treatment as `.builder-pick-btn.selected`.
+- **`.dcw-ctrl-btn`** (▶ / ⏸ buttons inside the project clock bezel) — tight small-pill 3D scaled to fit inside the bezel.
+- **`.ai-hive-card`** (Tier-grid status displays in Worker Bees sub-views) — lighter touch since these are status displays, not buttons. Bezel edges + subtle drop shadow but NO press states. `.is-active` state uses green tint to signal "in active session."
+
+### What's still on the dashed-amber pattern
+
+A few legacy classes are still on the v3.36-era dashed-amber-outline treatment and will get swept in a future commit when they surface during real use:
+
+- `.btn-apply-decisions`, `.btn-apply-nolock` (Apply / Apply without lock in Conflicts panel — only visible mid-decision-flow)
+- `.bulk-select-remove-btn`
+- `.btn-danger`, `.nav-hamburger`, `.ai-getkey-link`, `.ai-setup-builder-btn`
+- DEV toolbar buttons (intentionally distinct so the dev workflow stays visually separated)
+
+Trigger to ship Phase 3 cleanup: anytime one of these surfaces during a session and reads as visually out-of-place against the rest.
+
+### Files Changed
+
+- Updated: `style.css` — rewrote `.applied-lock-btn` + variants, `.ai-recheck-btn`, `.ai-eye-btn`, `.ai-clear-key-btn`, `.btn-ghost`, `.cb-confirm-btn`, `.builder-chip` + `.is-selected`, `.dcw-ctrl-btn` + `:active`, `.ai-hive-card` + `.is-active`. `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.201 / 20260606-019 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.200
 
 **Site-wide 3D sweep — Phase 1: CSS variables + modals + Conflicts panel + Template Gallery action buttons**
