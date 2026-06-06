@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.183
+
+**Project Templates modal: clean theme-variable surfaces (no honeycomb) + Perplexity `sonar-reasoning` added to fallback + `cleaner.html` removed**
+
+Build: `20260606-001`<br>
+Released: `2026-06-06`
+
+David asked to take the honeycomb idea away from the Project Templates modal entirely and switch to plain whites/light grays in light mode and blacks/dark grays in dark mode. The v3.63.180–182 honeycomb-glass header pattern was making the modal feel like a separate visual idiom from the surrounding helper pages; this release simplifies it back to the surface ramp the rest of the app already uses.
+
+### Project Templates modal
+
+`.template-gallery-modal`, `.template-gallery-hdr`, `.template-gallery-body`, `.template-gallery-close`, and `.template-path-indicator` all switched to theme-variable backgrounds:
+
+- Modal box → `var(--surface)` — `#ffffff` light, `#111318` dark
+- Header strip + path indicator → `var(--surface2)` — `#f0f2f8` light, `#181b24` dark
+- Body → `var(--surface)`
+- Title and label text → `var(--text)`; intro/dim text → `var(--text-dim)`
+- Close button → `var(--border2)` border, `var(--text-dim)` glyph, amber on hover
+
+No background images, no `linear-gradient` overlays, no `backdrop-filter` blur. Both themes mirror each other structurally — only the swatches differ.
+
+The path indicator strip and the gallery header now share `--surface2` so the two strips read as one continuous treatment instead of two surface tiers stacked.
+
+### Dark-mode card hover transparency fix
+
+`[data-theme="dark"] .template-card:hover` was using `background: rgba(245,166,35,0.10)` as a full background replacement — 90% transparent, so any non-solid background behind the card showed through (this read as cards going transparent on hover during the honeycomb-body experiment). Layered the same 10% amber tint as a `linear-gradient` over a solid `#151927` so the card stays opaque on hover regardless of what's behind it. Same fix on `.template-path-card:hover` and `.template-gallery-sidebar-link:hover`.
+
+### Perplexity fallback list
+
+`MODEL_FALLBACKS.perplexity` in `js/provider-models.js` listed 4 Sonar models (`sonar`, `sonar-pro`, `sonar-deep-research`, `sonar-reasoning-pro`). The documented Sonar family is 5; the discovery prompt's own example in `js/api.js:444` already lists all 5. Added the missing `sonar-reasoning` and reordered to match the discovery example: base → pro → reasoning → reasoning-pro → deep-research.
+
+Only matters when Perplexity's live `/chat-completion` discovery call fails (rate-limit, transient 5xx). With the fix, users still see the full Sonar lineup in their dropdown even when discovery doesn't reach Perplexity.
+
+### `cleaner.html` removed
+
+The Backup Cleaner was a standalone Windows-Dropbox repair utility for normalizing legacy timestamp-suffixed custom-AI IDs (`cohere_<ts>` collisions etc.). The bug only ever affected David's own old files, and Andy — the first paid user, working on an RFI — doesn't have any of that legacy state. Removed as dead code; 826 lines gone.
+
+### Files touched
+
+- [style.css](style.css) — Project Templates modal + path indicator rewrite (net −44 lines across the two reworked blocks).
+- [js/provider-models.js](js/provider-models.js) — Perplexity fallback list bumped from 4 to 5 models.
+- [cleaner.html](cleaner.html) — deleted.
+- [js/version.js](js/version.js), [js/app.js](js/app.js), [package.json](package.json) — stamps bumped to v3.63.183 / 20260606-001.
+- HTML/JS sweep — cache-bust + build-stamp updates so the CDN and browsers actually pick up the CSS/JS changes (the previous v3.63.180–182 churn shipped against the same `?v=3.63.182` cache key, which was masking the new files behind stale browser cache).
+
+---
+
 ## v3.63.182
 
 **Project Templates theme polish: modal and catalog now match the documentation card system in light and dark mode**
