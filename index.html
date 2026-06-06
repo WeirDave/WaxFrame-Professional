@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260606-006
+     Build: 20260606-007
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260606-006">
+  <meta name="waxframe-build" content="20260606-007">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.188">
+  <link rel="stylesheet" href="style.css?v=3.63.189">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.188",
+    "softwareVersion": "3.63.189",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1982,19 +1982,25 @@
     <p class="save-template-note">Saved to this browser, on your hard drive. (Sharing templates with other people is coming in a later update.)</p>
     <label class="save-template-label" for="saveTemplateName">Template name</label>
     <input type="text" id="saveTemplateName" class="save-template-input" maxlength="60" placeholder="e.g. Tight 1-page cover letter">
-    <label class="save-template-label" for="saveTemplateIcon">Icon (optional)</label>
-    <input type="text" id="saveTemplateIcon" class="save-template-input save-template-input--icon" maxlength="4" placeholder="&#x1F4C1;">
-    <label class="save-template-label" for="saveTemplateCategory">Category</label>
-    <select id="saveTemplateCategory" class="save-template-input" onchange="onSaveTemplateCategoryChange()">
-      <option value="My Templates">My Templates (default)</option>
-      <option value="Career &amp; Hiring">Career &amp; Hiring</option>
-      <option value="Business &amp; Sales">Business &amp; Sales</option>
-      <option value="Content &amp; Marketing">Content &amp; Marketing</option>
-      <option value="Personal &amp; Everyday">Personal &amp; Everyday</option>
-      <option value="Reviews &amp; Recommendations">Reviews &amp; Recommendations</option>
-      <option value="__custom__">+ Custom category&hellip;</option>
-    </select>
-    <input type="text" id="saveTemplateCategoryCustom" class="save-template-input" maxlength="40" placeholder="Type your category name" style="display:none">
+    <div class="save-template-row">
+      <div class="save-template-col save-template-col--icon">
+        <label class="save-template-label" for="saveTemplateIcon">Icon (optional)</label>
+        <input type="text" id="saveTemplateIcon" class="save-template-input save-template-input--icon" maxlength="4" placeholder="&#x1F4C1;">
+      </div>
+      <div class="save-template-col save-template-col--category">
+        <label class="save-template-label" for="saveTemplateCategory">Category</label>
+        <select id="saveTemplateCategory" class="save-template-input" onchange="onSaveTemplateCategoryChange()">
+          <option value="My Templates">My Templates (default)</option>
+          <option value="Career &amp; Hiring">Career &amp; Hiring</option>
+          <option value="Business &amp; Sales">Business &amp; Sales</option>
+          <option value="Content &amp; Marketing">Content &amp; Marketing</option>
+          <option value="Personal &amp; Everyday">Personal &amp; Everyday</option>
+          <option value="Reviews &amp; Recommendations">Reviews &amp; Recommendations</option>
+          <option value="__custom__">+ Custom category&hellip;</option>
+        </select>
+        <input type="text" id="saveTemplateCategoryCustom" class="save-template-input" maxlength="40" placeholder="Type your category name" style="display:none">
+      </div>
+    </div>
     <label class="save-template-label" for="saveTemplateDesc">Description (optional)</label>
     <textarea id="saveTemplateDesc" class="save-template-input save-template-textarea" maxlength="240" rows="2" placeholder="What makes this recipe work / when to use it"></textarea>
     <p class="save-template-hive" id="saveTemplateHive"></p>
@@ -2911,23 +2917,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.188';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.189';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.188"></script>
-<script src="lib/jszip.min.js?v=3.63.188"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.188"></script>
-<script src="js/version.js?v=3.63.188"></script>
-<script src="js/storage.js?v=3.63.188"></script>
-<script src="js/theme.js?v=3.63.188"></script>
-<script src="js/audio.js?v=3.63.188"></script>
-<script src="js/scenes.js?v=3.63.188"></script>
-<script src="js/wf-debug.js?v=3.63.188"></script>
-<script src="js/provider-models.js?v=3.63.188"></script>
-<script src="js/api.js?v=3.63.188"></script>
-<script src="js/templates.js?v=3.63.188"></script>
-<script src="js/api-links.js?v=3.63.188"></script>
-<script src="js/app.js?v=3.63.188"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.189"></script>
+<script src="lib/jszip.min.js?v=3.63.189"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.189"></script>
+<script src="js/version.js?v=3.63.189"></script>
+<script src="js/storage.js?v=3.63.189"></script>
+<script src="js/theme.js?v=3.63.189"></script>
+<script src="js/audio.js?v=3.63.189"></script>
+<script src="js/scenes.js?v=3.63.189"></script>
+<script src="js/wf-debug.js?v=3.63.189"></script>
+<script src="js/provider-models.js?v=3.63.189"></script>
+<script src="js/api.js?v=3.63.189"></script>
+<script src="js/templates.js?v=3.63.189"></script>
+<script src="js/api-links.js?v=3.63.189"></script>
+<script src="js/app.js?v=3.63.189"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

@@ -14149,6 +14149,36 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   padding: var(--space-8) var(--space-10);
   margin: 0 0 2px;
 }
+/* v3.63.189 — Rename affordance for free-form custom categories. Lives
+   in a row with the sidebar link; ✏️ sits to the right at low opacity,
+   lifts on hover. Click fires renameCustomCategory() which handles
+   rename, merge-into-existing, or fall-back-to-default in one prompt. */
+.template-gallery-sidebar-item {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  margin: 0 0 2px;
+}
+.template-gallery-sidebar-item .template-gallery-sidebar-link {
+  flex: 1;
+  margin: 0;
+  text-align: left;
+}
+.template-gallery-sidebar-rename {
+  border: 1px dashed transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: var(--space-6) var(--space-8);
+  opacity: 0.55;
+  transition: opacity 0.15s, background 0.15s, border-color 0.15s;
+  font-size: var(--fs-12);
+}
+.template-gallery-sidebar-rename:hover {
+  opacity: 1;
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
 .template-gallery-sidebar-link:hover {
   border-color: var(--accent);
   background: var(--accent-dim);
@@ -14748,9 +14778,27 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 
 /* Save-as-Template modal ----------------------------------- */
 .save-template-modal {
-  max-width: 520px;
+  max-width: 760px;
   text-align: left;
 }
+/* v3.63.189 — Two-column row for the Icon + Category fields so the
+   modal grows sideways instead of down. Icon stays narrow (it's a single
+   emoji input); Category takes the rest of the row. Custom-category text
+   input drops to a second line inside the Category column when revealed. */
+.save-template-row {
+  display: flex;
+  gap: var(--space-16);
+  align-items: flex-start;
+}
+.save-template-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.save-template-col--icon     { flex: 0 0 120px; }
+.save-template-col--category { flex: 1; }
+.save-template-col .save-template-label:first-child { margin-top: 0; }
+.save-template-col--category #saveTemplateCategoryCustom { margin-top: var(--space-8); }
 .save-template-sub {
   font-size: var(--fs-sm);
   color: var(--text-dim);
@@ -14782,7 +14830,9 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   border-color: var(--accent);
 }
 .save-template-input--icon {
-  width: 80px;
+  /* v3.63.189 — Drop the 80px hard width; now sits in a 120px flex
+     column next to Category, so width:100% on the .save-template-input
+     base rule fills the column cleanly. */
   text-align: center;
   font-size: var(--fs-24);
 }
