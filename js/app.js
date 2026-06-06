@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260605-021
+// Build: 20260605-022
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -3679,15 +3679,29 @@ function renderTemplateGalleryBody() {
       <button class="template-path-indicator-change" onclick="resetTemplatePath()" type="button">Change</button>
     </div>`;
 
-  // v3.38.1 — Per-path newuser callout. Scratch path points at the
-  // Quick Start card rendered below; refine path reframes for users
-  // who already have a draft and points back to the path picker for
-  // the onboarding demo.
-  const newuserCallout = (path === 'custom')
-    ? `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()">\u2795 New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()">\u2b06 Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Hover a saved template to export \u2b07, duplicate \ud83d\udccb, edit \u270f\ufe0f, or delete \ud83d\uddd1 it.</span></div>`
-    : (path === 'scratch')
-    ? `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>New to WaxFrame? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`
-    : `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>Refining a draft?</strong> Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale.</p><button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>Want a guided tour first? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies demo that shows you the whole hive flow before you bring your own document.</button>`;
+  // v3.63.180 — Per-path header content rebuilt. Was a single ternary
+  // returning the full callout markup; now split into ctaButton and
+  // explainPara so the gallery body can render them in the new order
+  // David specified: path indicator (H2-style band) → CTA button →
+  // descriptive paragraph → category sections. The refine descriptive
+  // text was rewritten from the v3.63.177 "Refining a draft? Pick the
+  // template…rewriting wholesale" line, which David called out as
+  // robotic. New text uses natural phrasing and explains what the
+  // section does without trying to be clever. For custom path the
+  // ctaButton slot holds the existing toolbar (no explain text —
+  // custom users are returning users banking their own setups, not
+  // new users browsing for onboarding).
+  let ctaButton = '';
+  let explainPara = '';
+  if (path === 'custom') ctaButton = `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()">➕ New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()">⬆ Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Hover a saved template to export ⬇, duplicate 📋, edit ✏️, or delete 🗑 it.</span></div>`;
+  else if (path === 'scratch') {
+    ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>New to WaxFrame? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`;
+    explainPara = `<p class="template-gallery-explain">These templates are designed to spark a <strong>first draft</strong>. Pick the one closest to what you're writing — the hive will use it as a brief to generate Round 1 from your Project Goal, then refine it round by round.</p>`;
+  } else {
+    ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>Want a guided tour first? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies demo that shows you the whole hive flow before you bring your own document.</button>`;
+    explainPara = `<p class="template-gallery-explain">These templates are designed to <strong>refine work you've already written</strong>. Pick the one closest to your document type — the hive will polish, tighten, and restructure it round by round rather than starting over.</p>`;
+  }
+  const newuserCallout = ctaButton + explainPara;
 
   // v3.63.178 — Slugify category name for sidebar jump-link targets.
   // Lowercase, replace any run of non-alphanumerics with single hyphens,
