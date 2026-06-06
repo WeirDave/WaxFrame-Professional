@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-017
+   Build: 20260606-018
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -148,6 +148,69 @@ input, textarea, select { font-family: inherit; }
   --modal-w-lg:   900px;
   --modal-w-xl:  1200px;
   --modal-w-2xl: 1320px;
+
+  /* v3.63.200 — 3D BUTTON SHADOW VOCABULARY (centralized).
+     Every interactive surface in the app uses one of three stacks:
+       --shadow-3d-raised      → primary CTAs (Smoke, Finish, Save, Send)
+       --shadow-3d-button      → secondary action buttons (.btn, modal-row)
+       --shadow-3d-pill        → small pills (theme, mute, license, length-guard)
+     Each has a -hover and -active variant. Change the tokens here and
+     every raised button across the app updates uniformly. Pattern:
+       inset top highlight   = "light hitting the top edge"
+       inset bottom shadow   = "the dark underside of the bezel"
+       outer drop shadow     = "elevation above the panel"
+     Active states invert the inset stack so the button reads as pressed
+     into the surface, drop shadow shrinks to imply the button is closer
+     to the panel. */
+  --shadow-3d-raised:
+    inset 0 1px 0 rgba(255,255,255,0.45),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 3px 8px rgba(245,166,35,0.30),
+    0 1px 2px rgba(0,0,0,0.20);
+  --shadow-3d-raised-hover:
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    inset 0 -1px 0 rgba(0,0,0,0.06),
+    0 8px 24px rgba(245,166,35,0.45),
+    0 2px 6px rgba(0,0,0,0.18);
+  --shadow-3d-raised-active:
+    inset 0 2px 8px rgba(0,0,0,0.30),
+    inset 0 -1px 0 rgba(255,255,255,0.10),
+    0 1px 3px rgba(245,166,35,0.25);
+  --shadow-3d-button:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 3px 6px rgba(0,0,0,0.22);
+  --shadow-3d-button-hover:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 6px 14px rgba(0,0,0,0.30);
+  --shadow-3d-button-active:
+    inset 0 2px 6px rgba(0,0,0,0.35),
+    inset 0 -1px 0 rgba(255,255,255,0.05),
+    0 1px 2px rgba(0,0,0,0.18);
+  --shadow-3d-pill:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    inset 0 -1px 0 rgba(0,0,0,0.10),
+    0 1px 2px rgba(0,0,0,0.15);
+  --shadow-3d-pill-hover:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 3px 7px rgba(0,0,0,0.20);
+  --shadow-3d-pill-active:
+    inset 0 2px 5px rgba(0,0,0,0.25),
+    inset 0 -1px 0 rgba(255,255,255,0.04),
+    0 1px 1px rgba(0,0,0,0.12);
+  /* Gradient backgrounds — paired with the shadow tokens. */
+  --bg-3d-button:
+    linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.10) 100%);
+  --bg-3d-button-hover:
+    linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
+  --bg-3d-amber:
+    linear-gradient(180deg, #f7b94c 0%, #d99000 100%);
+  --bg-3d-amber-hover:
+    linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
+  --bg-3d-pill:
+    linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.06) 100%);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1233,6 +1296,9 @@ body.helper-body .page-main {
 .cb-confirm-btn:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
 .cb-confirm-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* v3.63.200 — Builder picker cards get the 3D button treatment.
+   .selected state uses the amber-dim gradient so the chosen Builder
+   reads as "lit up" / pressed-in among siblings. */
 .builder-pick-btn {
   display: flex;
   flex-direction: column;
@@ -1240,35 +1306,39 @@ body.helper-body .page-main {
   justify-content: center;
   gap: var(--space-10);
   padding: var(--space-20) var(--space-12) var(--space-14);
-  border: 1px dashed var(--border2);
+  border: 1px solid var(--border2);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--bg-3d-button);
   color: var(--text-dim);
   font-size: var(--fs-13);
   font-weight: 500;
-  transition: all 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
   position: relative;
   min-width: 100px;
   cursor: pointer;
-  /* v3.32.19 — Defensive overflow clip so a long AI name (e.g. an
-     Alfredo-prefixed model like "[Base] Claude-3-7-Sonnet") can't
-     visually overflow the card and collide with neighboring cards
-     in the grid. The wrap behavior is provided by .builder-pick-name
-     below; this is the safety net for any edge case where wrap can't
-     fit the content (extreme widths, custom AIs with single super-
-     long unbreakable tokens, etc.). */
   overflow: hidden;
+  box-shadow: var(--shadow-3d-button);
 }
 .builder-pick-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: var(--accent-dim);
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-button-hover);
+}
+.builder-pick-btn:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-button-active);
 }
 .builder-pick-btn.selected {
   border: 2px solid var(--accent);
-  background: var(--accent-dim);
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
   color: var(--accent);
   font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 4px 12px rgba(245,166,35,0.30);
 }
 .builder-pick-icon {
   width: 36px;
@@ -4326,21 +4396,33 @@ body.helper-body .page-main {
   white-space: nowrap;
 }
 .ai-clear-key-btn:hover { background: var(--red-dim); }
+/* v3.63.200 — Per-AI Test Key button gets the small-pill 3D treatment,
+   blue-keyed since it's a Test/Verify action. Matches .ai-recheck-btn. */
 .ai-test-btn {
-  background: transparent;
+  background: linear-gradient(180deg, var(--blue-dim) 0%, rgba(0,0,0,0.10) 100%);
   border: 1px solid var(--blue);
   border-radius: var(--radius-sm);
   color: var(--blue);
   font-size: 10px;
   font-weight: 700;
   padding: 4px 7px;
-  transition: all 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
   flex-shrink: 0;
   white-space: nowrap;
   line-height: 1;
+  box-shadow: var(--shadow-3d-pill);
 }
-.ai-test-btn:hover { background: var(--blue-dim); }
-.ai-test-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.ai-test-btn:hover {
+  background: linear-gradient(180deg, #5cb3ff 0%, #1e6fb8 100%);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-pill-hover);
+}
+.ai-test-btn:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-pill-active);
+}
+.ai-test-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: 0 1px 2px rgba(0,0,0,0.10); }
 
 /* ── IMPORT FROM MODEL SERVER ── */
 .import-server-modal {
@@ -6454,34 +6536,44 @@ kbd {
 .applied-changes-header-text {
   flex: 1 1 auto;
 }
+/* v3.63.200 — Conflict panel bulk Lock-All / Unlock-All pills get the
+   small-pill 3D treatment. Amber when "lock all" available, green-dim
+   when already in the "all locked" state. */
 .applied-bulk-btn {
   font-family: inherit;
   font-size: var(--fs-11);
   font-weight: 700;
   padding: var(--space-4) var(--space-10);
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
   color: var(--accent);
   border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  box-shadow: var(--shadow-3d-pill);
 }
 .applied-bulk-btn:hover {
-  background: var(--accent);
+  background: var(--bg-3d-amber);
   color: var(--bg);
-  box-shadow: 0 0 8px rgba(255, 165, 0, 0.35);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-pill-hover);
+}
+.applied-bulk-btn:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-pill-active);
 }
 .applied-bulk-btn-locked {
-  background: var(--green-dim);
+  background: linear-gradient(180deg, var(--green-dim) 0%, rgba(0,0,0,0.10) 100%);
   color: var(--green);
   border-color: var(--green);
 }
 .applied-bulk-btn-locked:hover {
-  background: var(--green);
+  background: linear-gradient(180deg, #4ad988 0%, #19a052 100%);
   color: #0a0c12;
-  box-shadow: 0 0 8px rgba(46, 204, 113, 0.35);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-pill-hover);
 }
 .applied-changes-blurb {
   font-size: var(--fs-12);
@@ -7509,6 +7601,13 @@ kbd {
   width: 100%;
 }
 
+/* v3.63.200 — Modal action buttons swept into the 3D raised vocabulary.
+   Same shadow tokens as .btn / .btn-accent / .footer-btn — every modal
+   action now reads as a physical bezel-button matching the work-screen
+   UI. Variants keep their semantic colors (accent for export/transcript,
+   green for new). Dashed-amber resting outline retired in favor of solid
+   border + raised gradient + inset highlight + drop shadow; this is the
+   "modal buttons are real buttons" follow-up to David's full-site sweep. */
 .finish-modal-btn {
   width: 100%;
   padding: 13px var(--space-20);
@@ -7517,49 +7616,57 @@ kbd {
   font-size: var(--fs-15);
   font-weight: 700;
   cursor: pointer;
-  background: transparent;
-  transition: all 0.12s;
+  background: var(--bg-3d-button);
+  border: 1px solid var(--border2);
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-8);
+  box-shadow: var(--shadow-3d-button);
+}
+.finish-modal-btn:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-button-active);
 }
 
 .finish-modal-btn-export {
-  border: 1px dashed var(--accent);
+  border-color: var(--accent);
   color: var(--text);
 }
 .finish-modal-btn-export:hover {
-  background: var(--accent-dim);
-  border-style: solid;
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
   color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-button-hover);
 }
 
 .finish-modal-btn-new {
-  border: 1px dashed var(--green);
+  border-color: var(--green);
   color: var(--text);
   flex-direction: column;
   gap: var(--space-4);
 }
 .finish-modal-btn-new:hover {
-  background: var(--green-dim);
-  border-style: solid;
+  background: linear-gradient(180deg, var(--green-dim) 0%, rgba(0,0,0,0.10) 100%);
   color: var(--green);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-button-hover);
 }
 
 /* v3.28.1 — Missing .finish-modal-btn-transcript definition. The Round
    Error Modal's "Change Builder" button referenced this class but it was
-   never declared, so the button rendered invisible (transparent
-   background, no border, no color). Same dashed→solid pattern as -export
-   and -new, but accent-keyed since it's a Builder action. */
+   never declared, so the button rendered invisible. Now uses the same
+   3D treatment as -export. */
 .finish-modal-btn-transcript {
-  border: 1px dashed var(--accent);
+  border-color: var(--accent);
   color: var(--text);
 }
 .finish-modal-btn-transcript:hover {
-  background: var(--accent-dim);
-  border-style: solid;
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
   color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-button-hover);
 }
 .finish-modal-btn-new-sub {
   font-size: var(--fs-11);
@@ -7576,21 +7683,28 @@ kbd {
   margin-top: var(--space-4);
 }
 .finish-modal-cancel {
-  background: transparent;
-  border: 1px dashed var(--border2);
+  background: var(--bg-3d-button);
+  border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
   font-size: var(--fs-13);
   font-weight: 500;
   cursor: pointer;
   padding: var(--space-6) var(--space-16);
-  transition: all 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
   font-family: var(--font);
+  box-shadow: var(--shadow-3d-button);
 }
 .finish-modal-cancel:hover {
   border-color: var(--accent);
   color: var(--accent);
-  background: var(--accent-dim);
+  background: var(--bg-3d-button-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-button-hover);
+}
+.finish-modal-cancel:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-button-active);
 }
 
 /* ══════════════════════════════════════
@@ -7928,9 +8042,12 @@ kbd {
   gap: var(--space-10);
   margin-top: var(--space-16);
 }
+/* v3.63.200 — Auto-halt modal buttons (Resume / Stop / Promote / etc.)
+   join the 3D vocabulary. Variants keep their colors: default secondary,
+   resume amber-filled (matches .btn-accent), stop red. */
 .auto-halt-btn {
   appearance: none;
-  background: var(--surface2);
+  background: var(--bg-3d-button);
   border: 1px solid var(--border2);
   border-radius: 8px;
   color: var(--text);
@@ -7939,40 +8056,67 @@ kbd {
   font-size: var(--fs-14);
   font-weight: 600;
   padding: var(--space-12) var(--space-16);
-  transition: all 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
+  box-shadow: var(--shadow-3d-button);
 }
 .auto-halt-btn:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
+  background: var(--bg-3d-button-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-button-hover);
+}
+.auto-halt-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-button-active);
 }
 .auto-halt-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.10);
 }
 .auto-halt-btn.auto-halt-resume {
-  background: var(--accent);
+  background: var(--bg-3d-amber);
   border-color: var(--accent);
-  color: var(--bg);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: var(--shadow-3d-raised);
 }
 .auto-halt-btn.auto-halt-resume:hover:not(:disabled) {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  color: var(--bg);
+  background: var(--bg-3d-amber-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-3d-raised-hover);
+}
+.auto-halt-btn.auto-halt-resume:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-raised-active);
 }
 .auto-halt-btn.auto-halt-resume:disabled:hover {
-  background: var(--accent);
+  background: var(--bg-3d-amber);
   border-color: var(--accent);
-  color: var(--bg);
+  color: #ffffff;
 }
 .auto-halt-btn.auto-halt-stop {
   color: var(--red);
   border-color: var(--red);
-  background: var(--red-dim);
+  background: linear-gradient(180deg, var(--red-dim) 0%, rgba(0,0,0,0.10) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.18),
+    0 2px 6px rgba(192,21,42,0.30);
 }
 .auto-halt-btn.auto-halt-stop:hover:not(:disabled) {
-  background: var(--red);
+  background: linear-gradient(180deg, #e93e55 0%, #a01122 100%);
   border-color: var(--red);
-  color: var(--bg);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.35),
+    inset 0 -1px 0 rgba(0,0,0,0.22),
+    0 6px 18px rgba(192,21,42,0.50);
 }
 /* End v3.35.0 — Auto Mode ───────────────────────────────────────── */
 
@@ -8866,14 +9010,26 @@ kbd {
 .helper-body a.link-accent:hover { text-decoration: underline; }
 
 /* ── Close button (helper pages) ── */
+/* v3.63.200 — Helper-page close button picks up the 3D vocabulary. */
 .close-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  background: transparent; border: 1px dashed var(--border2);
+  background: var(--bg-3d-button); border: 1px solid var(--border2);
   border-radius: var(--radius-sm); color: var(--text-dim);
   font-family: var(--font); font-size: 13px;
-  padding: 8px 16px; cursor: pointer; transition: all 0.12s; white-space: nowrap;
+  padding: 8px 16px; cursor: pointer; white-space: nowrap;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
+  box-shadow: var(--shadow-3d-button);
 }
-.close-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.close-btn:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--bg-3d-button-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-button-hover);
+}
+.close-btn:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-button-active);
+}
 
 /* ── Helper page header ── */
 .page-header {
@@ -14040,13 +14196,15 @@ button.template-gallery-intro--cta:hover {
   transform: translateY(-1px);
 }
 button.template-gallery-intro--cta:active { transform: translateY(0); }
+/* v3.63.200 — Template gallery X close button picks up the small-pill 3D
+   treatment. Same shadow tokens as .theme-opt — small but raised. */
 .template-gallery-close {
   position: absolute;
   top: 14px;
   right: 16px;
   width: 32px;
   height: 32px;
-  background: transparent;
+  background: var(--bg-3d-pill);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
@@ -14055,10 +14213,18 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
+  box-shadow: var(--shadow-3d-pill);
 }
 .template-gallery-close:hover {
   border-color: var(--accent, #f4b400);
   color: var(--accent, #f4b400);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-pill-hover);
+}
+.template-gallery-close:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-pill-active);
 }
 
 .template-gallery-body {
@@ -14173,32 +14339,34 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   grid-template-columns: 1fr 1fr;
   gap: var(--space-16);
 }
+/* v3.63.200 — Path-picker cards (Starting from scratch / Refining /
+   Custom Templates) get the 3D button vocabulary. They're big buttons —
+   primary user choices when opening the Template Gallery. */
 .template-path-card {
   display: flex;
   align-items: flex-start;
   gap: var(--space-14);
   padding: var(--space-20) var(--space-20);
-  background: var(--surface3);
-  /* v3.63.179 — Was 2px solid. Switched to dashed to match the
-     WaxFrame house pattern (1px/2px dashed var(--border2) is used
-     throughout the welcome-card, setup-card, and helper-card
-     surfaces). David's call for visual continuity between the
-     template cards and the documentation cards elsewhere. */
-  border: 2px dashed var(--border2);
+  background: var(--bg-3d-button);
+  border: 2px solid var(--border2);
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
   font-family: var(--font);
   color: var(--text);
-  transition: border-color 0.12s, background 0.12s, transform 0.06s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
   min-height: 140px;
+  box-shadow: var(--shadow-3d-button);
 }
 .template-path-card:hover {
   border-color: var(--accent, #f4b400);
-  background: var(--accent-dim);
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-3d-button-hover);
 }
 .template-path-card:active {
   transform: translateY(1px);
+  box-shadow: var(--shadow-3d-button-active);
 }
 .template-path-card:focus-visible {
   outline: 2px solid var(--accent, #f4b400);
@@ -15026,6 +15194,9 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   /* leave room for the delete button so long names don't slip under it */
   padding-right: var(--space-40);
 }
+/* v3.63.200 — Template card hover-action mini buttons (🗑 ✏️ 📋 ⬇) get
+   the small-pill 3D treatment. Stay hidden until card-hover (opacity:0)
+   but the bezel + shadow stack carries through whenever they're visible. */
 .template-card-del {
   position: absolute;
   top: var(--space-8);
@@ -15038,13 +15209,14 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   padding: 0;
   font-size: var(--fs-sm);
   line-height: 1;
-  background: var(--surface2);
+  background: var(--bg-3d-pill);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.12s, border-color 0.12s, color 0.12s, background 0.12s;
+  transition: opacity 0.12s, transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
+  box-shadow: var(--shadow-3d-pill);
 }
 .template-card-wrap:hover .template-card-del,
 .template-card-del:focus-visible {
@@ -15203,13 +15375,14 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   padding: 0;
   font-size: var(--fs-sm);
   line-height: 1;
-  background: var(--surface2);
+  background: var(--bg-3d-pill);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.12s, border-color 0.12s, color 0.12s, background 0.12s;
+  transition: opacity 0.12s, transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
+  box-shadow: var(--shadow-3d-pill);
 }
 /* Position offsets — buttons stack right-to-left from the card edge.
    del = ~var(--space-8) (rightmost, defined above), then 36px spacing
@@ -15264,19 +15437,31 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   margin-bottom: var(--space-16);
   flex-wrap: wrap;
 }
+/* v3.63.200 — Template toolbar buttons (New blank / Import) get the
+   3D button vocabulary, amber-keyed since they're action affordances. */
 .template-new-blank {
   font-family: var(--font);
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--accent);
-  background: var(--accent-dim);
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
   border: 1px solid var(--accent);
   border-radius: var(--radius-md);
   padding: var(--space-8) var(--space-16);
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
+  box-shadow: var(--shadow-3d-button);
 }
-.template-new-blank:hover { background: var(--accent); color: #0a0c12; }
+.template-new-blank:hover {
+  background: var(--bg-3d-amber);
+  color: #0a0c12;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-button-hover);
+}
+.template-new-blank:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-button-active);
+}
 .template-custom-hint { font-size: var(--fs-12); color: var(--text-dim); }
 /* v3.63.45 — Phase 3: export affordance (third hover button on custom cards). */
 .template-card-export { right: 80px; }   /* export | edit | delete, left-to-right */
