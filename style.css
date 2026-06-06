@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-011
+   Build: 20260605-012
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -485,6 +485,28 @@ body.helper-body .page-main {
   gap: 36px;
   align-items: center;
 }
+/* v3.63.170 — At viewport heights ≤ 850px (the canonical 1366×768
+   laptop) the 36px gap × 5 children + 96px vertical padding made the
+   welcome screen overflow once the v3.63.169 convergence callout was
+   added. Tighten gap + padding + callout vertical padding so all six
+   elements (logo, pitch, convergence, cost, menu-hint, CTA) fit in
+   one viewport without scroll. */
+@media (max-height: 850px) {
+  .welcome-inner {
+    padding: var(--space-20) var(--space-32);
+    gap: var(--space-16);
+  }
+  .welcome-convergence-callout,
+  .welcome-cost-callout {
+    padding: var(--space-10) var(--space-14);
+  }
+  .welcome-convergence-headline,
+  .welcome-cost-headline { font-size: var(--fs-13); }
+  .welcome-convergence-sub,
+  .welcome-cost-sub { font-size: var(--fs-12); }
+  .welcome-convergence-icon,
+  .welcome-cost-icon { font-size: 22px; }
+}
 
 .welcome-logo {
   display: flex;
@@ -600,7 +622,11 @@ body.helper-body .page-main {
   color: var(--text-dim);
   font-size: var(--fs-15);
   line-height: 1.7;
-  max-width: 500px;
+  /* v3.63.170 — Was max-width:500px which made the pitch visibly
+     narrower than the 560px callouts below it; left edge mis-aligned.
+     Bumped to 560px so all three (pitch, convergence, cost) share the
+     same column width. */
+  max-width: 560px;
 }
 .welcome-pitch strong { color: var(--text); }
 
