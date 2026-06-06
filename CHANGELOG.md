@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.193
+
+**Template Gallery grid track min raised so custom cards aren't squeezed by hover-action buttons**
+
+Build: `20260606-011`<br>
+Released: `2026-06-06`
+
+### Fixed — single custom template rendering as a one-character-per-line vertical sliver
+
+David caught this 2026-06-06 testing Custom Categories with a restaurant review template that had a real-length name and description. The card rendered with the icon column visible, but the text column was wrapping at maybe one character per line — "Review-" / "Joe" / "Schmoe's" / "5123" / "Ball" / "Rd" each on their own line, the whole card a tall narrow sliver on the left side of the gallery body.
+
+Latent layout bug since the 4-button hover-action set (⬇ export, 📋 duplicate, ✏️ edit, 🗑 delete) shipped in v3.63.176-ish:
+
+- `.template-gallery-grid` at `style.css:14036` uses `repeat(auto-fill, minmax(240px, 1fr))` — so each track is 240px minimum.
+- `.template-card-wrap > .template-card` at `style.css:14928` reserves **152px of right padding** for the 4 hover-action buttons (per the position offsets at 14913-14915: edit at right:44px, dup at right:80px, export at right:116px, plus del's own right offset).
+- That left 240 − 152 = **88px for content**. Subtract the internal h-padding (~30px), icon column (32px), and gap (12px) and the text column was **~14px wide** — narrower than the average character, hence the one-char-per-line wrap.
+
+Bumped grid track min from 240px → **380px**:
+
+- Custom cards: 380 − 152 = **228px content area** = icon + gap + ~184px text column. Readable.
+- Built-in cards (which only reserve ~40px right padding for the optional delete button): ~340px content area, more comfortable than before.
+- On a 1340px modal that's 3 columns at ~415px each instead of 5 columns at ~256px each. Wider cards trade some density for legibility — which is the right call when you've gone to the trouble of saving a setup as a template you want to recognize at a glance.
+
+You probably hadn't hit this before because previous custom templates either had short names or weren't in the first card slot to trigger the visible squeeze.
+
+### Files Changed
+
+- Updated: `style.css` (grid minmax min 240px → 380px at `.template-gallery-grid`), `CHANGELOG.md`, `js/version.js`, `package.json`
+- Version/build stamps to v3.63.193 / 20260606-011 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.192
 
 **Save-as-Template category dropdown disambiguates its scope**
