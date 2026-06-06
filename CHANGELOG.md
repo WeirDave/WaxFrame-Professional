@@ -2,6 +2,50 @@
 
 ---
 
+## v3.63.172
+
+**Templates reachable from Menu + one-click Quick Start from the welcome screen**
+
+Build: `20260605-014`<br>
+Released: `2026-06-05`
+
+David caught a real flaw in v3.63.171's pitch: the wording pointed users at `Menu → ⭐ Templates` to find the Chocolate Chip Cookies template, but the Menu had no Templates entry at all — and even if it did, the gallery was buried seven clicks deep behind Setup 1 (Hive) and Setup 2 (Project). His exact words: *"we don't get there very quickly which is another flaw. Maybe we should examine that before we reword."*
+
+Audit confirmed:
+
+1. **No Templates entry in the navigation drawer** ([index.html:2974-3013](index.html:2974)). The drawer had Save as Template (write) but no browse counterpart.
+2. **Cookies template was 7 clicks from the welcome screen**: Let's get started → Setup 1 → Next → Setup 2 → 📋 Use Template button → Start from Scratch path → Quick Start card → confirm. Each of those steps is reasonable on its own, but stacked they're a wall between a first-time user and the convergence-arc demo that the free trial is calibrated around.
+
+Two fixes in one release.
+
+### 📋 Templates in the Menu
+
+New nav-item slotted in the Tools section right above Save as Template, symmetric with it ([index.html:2992](index.html:2992)). Calls `showTemplateGallery()` — the gallery modal already worked from any screen, it just wasn't exposed anywhere except the Setup 2 button. Now any screen has a Menu path to the gallery.
+
+### 🍪 Inline Quick Start button in the welcome pitch
+
+The pitch paragraph now contains an inline accent-colored button — `🍪 Try the Quick Start →` — where the Cookies template was previously name-checked in plain text. Click it and `startQuickStartFromWelcome()` ([js/app.js:3535](js/app.js:3535)) calls `applyTemplate('quick-start', 'scratch')` then `goToScreen('screen-bees')`. The Quick Start template's own built-in `confirmModal` ("A Note on Naming & Versions") fires first, which acts as the user's consent gate and as a teaching moment that names *"Recipe - Chocolate Chip Cookies / v1.0"* for them. After confirm, Project fields are populated and the user lands on Setup 1 (Hive). The hive setup is still load-bearing — we can't skip the API-key step — but everything else in the project is pre-filled.
+
+**Click count**: 7 → 1.
+
+The button is styled with `.pitch-quickstart-btn` ([style.css:694](style.css:694)) — accent background, dark text, baseline-aligned so it sits naturally mid-sentence without breaking the paragraph's visual rhythm.
+
+### Pitch wording updated to match
+
+Removed the `Menu → ⭐ Templates` path reference (no longer needed — the inline button IS the path). The Cookies template is now name-checked in a parenthetical after the button rather than as the subject of the sentence:
+
+> *"…Your free trial includes **3 rounds** on purpose — [🍪 Try the Quick Start →] (the Cookies recipe converged by round 3 in every one of 11 test runs while we were sizing the trial) so you can see the whole cycle start to finish before spending a dime."*
+
+### Files touched
+
+- [index.html](index.html) — Templates nav-item added; pitch rewritten with inline `.pitch-quickstart-btn`.
+- [js/app.js](js/app.js) — `startQuickStartFromWelcome()` added near `showTemplateGallery()` with window binding (inline-onclick attribute resolution; see v3.63.156 swapAIModelFromHiveCard fix).
+- [style.css](style.css) — `.pitch-quickstart-btn` styles added.
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.172 / 20260605-014.
+- HTML/JS/CSS sweep — 110 cache-bust + 29 build-stamp updates.
+
+---
+
 ## v3.63.171
 
 **Welcome screen pitch rewrite + convergence callout folded in (logo no longer clipped at 1366×768)**

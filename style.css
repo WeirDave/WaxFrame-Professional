@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-013
+   Build: 20260605-014
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -689,6 +689,34 @@ body.helper-body .page-main {
   margin-left: 0;
   margin-right: var(--space-6);
 }
+
+/* v3.63.172 — Inline Quick Start affordance inside the welcome pitch.
+   Sits in flowing text where the Cookies template is name-checked.
+   Click → applyTemplate('quick-start','scratch') + goToScreen
+   ('screen-bees'). Accent-colored so it reads as a discrete action
+   without breaking the paragraph's visual rhythm. */
+.pitch-quickstart-btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #1a1a1a;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 2px 10px;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  vertical-align: baseline;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  transition: background-color 0.15s, transform 0.05s;
+}
+.pitch-quickstart-btn:hover {
+  background: var(--accent-hover, #f0b020);
+  transform: translateY(-1px);
+}
+.pitch-quickstart-btn:active { transform: translateY(0); }
 
 .welcome-choices {
   display: flex;
