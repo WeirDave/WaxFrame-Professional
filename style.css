@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-016
+   Build: 20260605-017
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13673,6 +13673,35 @@ kbd {
   border-radius: var(--radius-sm);
   margin-top: var(--space-8);
 }
+
+/* v3.63.175 — Button variant of the --newuser callout. Used in the
+   path-picker view of the Template Gallery to promote the "New to
+   WaxFrame?" callout from explanatory text to a one-click CTA that
+   applies the Quick Start template directly (collapses the prior
+   2-click path-then-card navigation). Inherits the amber-accent
+   tinting from --newuser; layers button-reset (font/text-align/width)
+   and hover state on top. The 2px solid border replaces the
+   border-left so the button reads as a discrete actionable element
+   rather than a callout-with-text-inside. */
+button.template-gallery-intro--cta {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  cursor: pointer;
+  border: 2px solid var(--accent, #f4b400);
+  border-left-width: 2px;
+  padding: var(--space-10) var(--space-14);
+  transition: background-color 0.15s, transform 0.05s, box-shadow 0.15s;
+}
+button.template-gallery-intro--cta:hover {
+  background: var(--accent-dim, rgba(244, 180, 0, 0.18));
+  box-shadow: 0 2px 8px rgba(244, 180, 0, 0.25);
+  transform: translateY(-1px);
+}
+button.template-gallery-intro--cta:active { transform: translateY(0); }
 .template-gallery-close {
   position: absolute;
   top: 14px;
