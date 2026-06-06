@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260605-023
+   Build: 20260605-024
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13939,7 +13939,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   line-height: 1.25;
 }
 
-/* v3.63.181 — Theme-aware swap to match the .work-panel-header
+/* v3.63.182 — Theme-aware swap to match the .work-panel-header
    pattern. v3.63.180 used dark glass in both modes (which matched
    the .honeycomb-header variant); David clarified the intended
    reference is the base .work-panel-header which flips to white
@@ -14109,6 +14109,179 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   border-radius: var(--radius-sm);
   vertical-align: middle;
   white-space: nowrap;
+}
+
+/* v3.63.182 — Documentation-aligned polish for Project Templates.
+   Keeps the v3.63.178–181 modal structure, but makes the surfaces read
+   like the User Manual / Document Playbooks system: dark glass header,
+   solid document cards, amber rails, and denser section labeling. */
+.template-gallery-modal {
+  background: var(--surface);
+  box-shadow: 0 24px 72px rgba(0,0,0,0.58);
+}
+.template-gallery-hdr {
+  background:
+    linear-gradient(rgba(0,0,0,0.58), rgba(0,0,0,0.58)),
+    url('images/WaxFrame_Honeycomb_BG_Dark.png');
+  background-size: auto, 300px auto;
+  border-bottom-color: rgba(255,255,255,0.1);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.template-gallery-hdr h2 {
+  color: #ffffff;
+}
+.template-gallery-hdr .template-gallery-intro {
+  color: rgba(255,255,255,0.82);
+}
+.template-gallery-close {
+  border-color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.72);
+}
+.template-gallery-body {
+  background: var(--surface);
+}
+.template-gallery-sidebar {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  padding: var(--space-12);
+}
+.template-gallery-sidebar-label {
+  padding: 0 var(--space-8);
+}
+.template-gallery-sidebar-link {
+  border: 1px dashed transparent;
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-8) var(--space-10);
+  margin: 0 0 2px;
+}
+.template-gallery-sidebar-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.template-path-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 4px solid var(--border2);
+}
+.template-path-card:hover {
+  border-left-color: var(--accent, #f4b400);
+}
+.template-gallery-section + .template-gallery-section {
+  margin-top: var(--space-24);
+}
+.template-gallery-section-title {
+  font-size: var(--fs-12);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.template-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 4px solid var(--border2);
+}
+.template-card:hover,
+.template-card.is-recommended {
+  border-left-color: var(--accent, #f4b400);
+}
+.template-card-name {
+  font-size: var(--fs-13);
+  font-weight: 800;
+  line-height: 1.3;
+}
+.template-card-desc {
+  line-height: 1.45;
+}
+[data-theme="dark"] .template-gallery-modal {
+  background: #11141d;
+  border-color: rgba(148,163,184,0.32);
+}
+[data-theme="dark"] .template-gallery-body {
+  background: #11141d;
+}
+[data-theme="dark"] .template-gallery-sidebar,
+[data-theme="dark"] .template-path-card,
+[data-theme="dark"] .template-card {
+  background: #151927;
+  border-color: rgba(148,163,184,0.34);
+}
+[data-theme="dark"] .template-path-card,
+[data-theme="dark"] .template-card {
+  border-left-color: rgba(148,163,184,0.46);
+}
+[data-theme="dark"] .template-card:hover,
+[data-theme="dark"] .template-card.is-recommended,
+[data-theme="dark"] .template-path-card:hover {
+  background: rgba(245,166,35,0.10);
+  border-color: rgba(245,166,35,0.55);
+  border-left-color: var(--accent, #f4b400);
+  box-shadow: 0 0 22px rgba(245,166,35,0.12);
+}
+[data-theme="dark"] .template-gallery-sidebar-link:hover {
+  background: rgba(245,166,35,0.10);
+}
+[data-theme="light"] .template-gallery-modal {
+  background: var(--surface2);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.20);
+}
+[data-theme="light"] .template-gallery-hdr {
+  background: #ffffff;
+  background-image: none;
+  border-bottom-color: var(--border2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+[data-theme="light"] .template-gallery-hdr h2 {
+  color: var(--text);
+}
+[data-theme="light"] .template-gallery-hdr .template-gallery-intro {
+  color: var(--text-dim);
+}
+[data-theme="light"] .template-gallery-close {
+  border-color: var(--border2);
+  color: var(--text-dim);
+}
+[data-theme="light"] .template-gallery-body {
+  background: var(--surface2);
+}
+[data-theme="light"] .template-gallery-sidebar,
+[data-theme="light"] .template-path-card,
+[data-theme="light"] .template-card {
+  background: #ffffff;
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .template-gallery-modal {
+    background: var(--surface2);
+    box-shadow: 0 18px 48px rgba(0,0,0,0.20);
+  }
+  [data-theme="auto"] .template-gallery-hdr {
+    background: #ffffff;
+    background-image: none;
+    border-bottom-color: var(--border2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  [data-theme="auto"] .template-gallery-hdr h2 {
+    color: var(--text);
+  }
+  [data-theme="auto"] .template-gallery-hdr .template-gallery-intro {
+    color: var(--text-dim);
+  }
+  [data-theme="auto"] .template-gallery-close {
+    border-color: var(--border2);
+    color: var(--text-dim);
+  }
+  [data-theme="auto"] .template-gallery-body {
+    background: var(--surface2);
+  }
+  [data-theme="auto"] .template-gallery-sidebar,
+  [data-theme="auto"] .template-path-card,
+  [data-theme="auto"] .template-card {
+    background: #ffffff;
+  }
 }
 
 /* =========================================================
@@ -15338,6 +15511,56 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 .tpl-export-all-btn:disabled {
   opacity: 0.6;
   cursor: progress;
+}
+
+/* v3.63.182 — Public Template Catalog card polish. Mirrors the
+   documentation card language so templates.html sits visually beside
+   the User Manual and Document Playbooks instead of looking like a
+   separate marketing grid. */
+.helper-body .tpl-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 4px solid var(--border2);
+}
+.helper-body .tpl-card:hover {
+  background: var(--surface);
+  border-color: var(--border2);
+  border-left-color: var(--accent);
+}
+.helper-body .tpl-card-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.3;
+}
+.helper-body .tpl-card-desc {
+  color: var(--text-dim);
+}
+.helper-body .tpl-card-facts,
+.helper-body .tpl-scaffold-summary,
+.helper-body .tpl-details {
+  border-top-color: var(--border2);
+}
+.helper-body .tpl-card-fact-label,
+.helper-body .tpl-details-label {
+  color: var(--accent);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.helper-body .tpl-card-fact-val,
+.helper-body .tpl-details-val {
+  color: var(--text-dim);
+}
+.helper-body .tpl-search-bar {
+  background: var(--surface);
+  border-color: var(--border2);
+}
+.helper-body .tpl-search-input,
+.helper-body .tpl-scaffold-body,
+.helper-body .tpl-details-body {
+  background: var(--surface2);
+  border-color: var(--border2);
 }
 
 /* ══════════════════════════════════════
