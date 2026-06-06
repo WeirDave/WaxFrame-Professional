@@ -2,6 +2,54 @@
 
 ---
 
+## v3.63.177
+
+**Quick Start CTAs: dropped the ⭐ (icon collision with Custom Templates), one-bold-phrase formatting, scratch+refine callouts also actionized**
+
+Build: `20260605-019`<br>
+Released: `2026-06-05`
+
+Three follow-on fixes after David lived with the v3.63.175/176 changes:
+
+### 1. Dropped the ⭐ from Quick Start text references
+
+The path picker has three cards: 📝 Starting from scratch, ✂️ Refining an existing draft, **⭐ Custom Templates**. The ⭐ in that context means "Custom Templates." When v3.63.175/176 referred to the Quick Start template in text as "⭐ Quick Start," that ⭐ collided with the Custom Templates icon and read as *"go to the Custom Templates section."* David: *"the star is associated with custom templates and it's not a custom template so you need to do away with that."* The ⭐ stays on the actual Quick Start card icon (the card has the word "Quick Start" right next to it — no ambiguity); it's been removed from every text reference.
+
+### 2. One-bold-phrase CTA formatting
+
+Was: **New to WaxFrame?** Click here to try the **⭐ Quick Start** — *normal text*. Two separate bold fragments split by normal text, plus a star that doesn't mean what it looks like.
+
+Now: **New to WaxFrame? Click here to try the Quick Start** — *normal text*. One continuous bold phrase as the action; the rest of the paragraph as supporting normal text. Reads as one CTA, not two.
+
+Applied to:
+- Path picker view (the original v3.63.175 button)
+- Scratch grid view (newly actionized — see below)
+- Refine grid view (newly actionized — see below)
+
+### 3. Scratch & refine grid-view callouts promoted from text to action buttons
+
+Previously these were text paragraphs that REDIRECTED the user:
+- Scratch view: *"Start with ⭐ Quick Start below"* — pointed at the Quick Start card on the same page (still 2 clicks)
+- Refine view: *"Want a guided tour first? Click Change above and run the ⭐ Quick Start demo from the Starting from scratch side"* — pointed at a 3-step path (back to picker → scratch path → Quick Start card)
+
+David: *"if someone's going to click on it in there because they decided yeah I'll just run the quick start then you shouldn't direct them where to go, you should just say click here and have it automatically do the quick start. Otherwise it's not really a quick start."*
+
+Both now use the same `.template-gallery-intro--cta` button pattern as the path-picker callout — one click calls `applyTemplate('quick-start', 'scratch')` directly. Refine-view splits into two elements: a text intro for the refine-path guidance (still useful — *"Pick the template that matches what you've already written…"*) followed by a separate CTA button for the *"Want a guided tour first?"* affordance.
+
+### 4. Also cleaned up the lingering "CTA" jargon
+
+v3.63.176 used "CTA" in the Setup 2 callout and User Manual paragraph — marketing jargon that doesn't belong in user-facing copy. Both replaced with plain "button."
+
+### Files touched
+
+- [js/app.js](js/app.js) — path-picker button reworded; scratch + refine grid-view callouts converted from `<p>` to `<button>` with `applyTemplate('quick-start', 'scratch')` onclick.
+- [index.html](index.html) — Setup 2 callout: ⭐ dropped + "CTA" → "button".
+- [waxframe-user-manual.html](waxframe-user-manual.html) — Step 5 paragraph: ⭐ dropped + "CTA" → "button".
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.177 / 20260605-019.
+- HTML/JS/CSS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.176
 
 **Stale multi-click Quick Start instructions reduced — they describe a path the v3.63.175 CTA collapsed**
