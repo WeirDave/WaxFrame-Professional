@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.200
+
+**Site-wide 3D sweep — Phase 1: CSS variables + modals + Conflicts panel + Template Gallery action buttons**
+
+Build: `20260606-018`<br>
+Released: `2026-06-06`
+
+### Added — centralized CSS variables for the 3D shadow vocabulary
+
+New `--shadow-3d-raised`, `--shadow-3d-button`, `--shadow-3d-pill` (each with `-hover` and `-active` variants) plus `--bg-3d-button`, `--bg-3d-amber`, `--bg-3d-pill` declared at `:root`. Every raised button across the app can now resolve depth + gradient through tokens; future tuning is one place instead of many. Already-updated classes (`.btn`, `.btn-accent`, `.theme-opt`, etc.) keep their hardcoded values for now — switching them to the variables is a no-behavior-change cleanup for a future commit.
+
+### Changed — Phase 1 sweep of the 3D vocabulary across modal action buttons + Conflicts panel + Template Gallery
+
+After seeing the first-run offer modal still using dashed-amber buttons next to the new 3D work-screen UI, David asked for an entire-site sweep. This is the first of 2-3 phases. Phase 1 hits the **highest-visibility** classes the user touches during a normal session:
+
+- **Modal action buttons** — `.finish-modal-btn`, `.finish-modal-btn-export`, `.finish-modal-btn-new`, `.finish-modal-btn-transcript`, `.finish-modal-cancel` all dropped the dashed-amber resting outline in favor of solid border + 3D raised gradient + inset highlight + drop shadow + `:active` press depression.
+- **Auto-halt modal buttons** — `.auto-halt-btn` (default secondary), `.auto-halt-btn.auto-halt-resume` (amber-filled primary, matches `.btn-accent`), `.auto-halt-btn.auto-halt-stop` (red-keyed warning) all picked up the 3D treatment with hover-lift / active-depress.
+- **Close buttons** — `.close-btn` (helper pages), `.template-gallery-close` (gallery X) got raised pill treatment.
+- **Template Gallery path cards** — `.template-path-card` (Starting from scratch / Refining / Custom) is now a big raised button with `:hover` lift and `:active` press. The selected-bezel feel reinforces that these are primary user choices.
+- **Template card hover-actions** — `.template-card-del`, `.template-card-edit`, `.template-card-dup`, `.template-card-export` (the 4-button stack on custom template cards) all picked up small-pill 3D treatment; still hidden until card-hover (`opacity: 0`) but visible-state bezel is consistent.
+- **Template toolbar** — `.template-new-blank` (➕ New blank template, ⬆ Import template) raised with amber-keyed hover.
+- **Builder picker cards** — `.builder-pick-btn` got 3D treatment; `.selected` state uses the amber-dim gradient + amber glow so the active Builder reads as "lit up among siblings."
+- **Conflicts panel** — `.applied-bulk-btn` (Lock All / Unlock All) and `.applied-bulk-btn-locked` (when already all-locked) picked up small-pill 3D treatment.
+- **AI test button** — `.ai-test-btn` (Test Key per AI) got blue-keyed pill 3D.
+
+### Phases ahead
+
+- **Phase 2** (next commit when ready) — Hive AI cards (`.ai-hive-card`, `.ai-card`, etc.) — these are status displays, not buttons, so they'll get a lighter touch: bezel-edge treatment but no press states.
+- **Phase 3** (later) — DEV toolbar, less-used modals (Worker Bees Phase 2 details, model picker), helper-page navigation. Still ~150 classes remain in the inventory; most are niche or rarely-clicked and only need the treatment to feel cohesive when stumbled upon.
+
+### Files Changed
+
+- Updated: `style.css` — new shadow tokens at `:root`; rewrote `.finish-modal-btn` + variants, `.finish-modal-cancel`, `.auto-halt-btn` + resume/stop variants, `.close-btn`, `.template-gallery-close`, `.template-path-card`, `.template-card-del/edit/dup/export`, `.template-new-blank`, `.builder-pick-btn` + `.selected`, `.applied-bulk-btn` + `-locked`, `.ai-test-btn`. `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.200 / 20260606-018 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.199
 
 **3D raised treatment swept across all primary button + pill classes**
