@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260605-022
+// Build: 20260605-023
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -3696,7 +3696,7 @@ function renderTemplateGalleryBody() {
   if (path === 'custom') ctaButton = `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()">➕ New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()">⬆ Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Hover a saved template to export ⬇, duplicate 📋, edit ✏️, or delete 🗑 it.</span></div>`;
   else if (path === 'scratch') {
     ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>New to WaxFrame? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`;
-    explainPara = `<p class="template-gallery-explain">These templates are designed to spark a <strong>first draft</strong>. Pick the one closest to what you're writing — the hive will use it as a brief to generate Round 1 from your Project Goal, then refine it round by round.</p>`;
+    explainPara = `<p class="template-gallery-explain">These templates are designed to spark a <strong>first draft</strong>. Pick the one closest to what you're writing — the hive will use this template to generate a document, then refine it round by round.</p>`;
   } else {
     ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>Want a guided tour first? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies demo that shows you the whole hive flow before you bring your own document.</button>`;
     explainPara = `<p class="template-gallery-explain">These templates are designed to <strong>refine work you've already written</strong>. Pick the one closest to your document type — the hive will polish, tighten, and restructure it round by round rather than starting over.</p>`;
