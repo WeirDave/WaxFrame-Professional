@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.195
+
+**Template name cap bumped 60 → 120, prefill no longer overflows the cap**
+
+Build: `20260606-013`<br>
+Released: `2026-06-06`
+
+### Fixed — prefilled template name could exceed the displayed character cap
+
+David caught this 2026-06-06 immediately after the v3.63.194 char counters shipped. His test project name was `"Review - Joe Schmoe's - 5123 Ball Rd, Cypress, CA 90630"` (55 chars). The auto-prefill in `openSaveTemplateModal` writes `"{projectName} — recipe"` directly via `nameEl.value = ...` at `js/app.js:3967`, producing a 64-char value. The counter immediately went red showing `64 / 60` — for content the user hadn't typed.
+
+Two-part root cause:
+
+1. **Setting `.value` programmatically bypasses the `maxlength` HTML attribute.** `maxlength` only enforces what a user *types* into an input; assigning `.value` writes whatever you give it. So a 60-char cap was real for typing but a soft suggestion for the prefill.
+2. **The 60-char cap was too low for real-world project names.** Many users have descriptive multi-part project names (location + scope + version). Plus the auto-suffix `" — recipe"` consumes 9 chars on top.
+
+Two-part fix:
+
+- **Cap bumped 60 → 120** in the `maxlength` attribute (`index.html:1984`), the initial counter display (`0 / 120`), and the JS counter map in `updateSaveTemplateCharCount`. Gives generous room for a long project name + suffix without enabling sprawl.
+- **Prefill now truncates the project-name source to fit.** New logic in `openSaveTemplateModal`: `cap = 120 − " — recipe".length = 111`. If the project name exceeds 111 chars, it's sliced down before the suffix is appended, so the prefilled template name never exceeds 120. Project name length itself stays unlimited.
+
+### Files Changed
+
+- Updated: `index.html` (saveTemplateName `maxlength="60"` → `"120"`; initial counter `0 / 60` → `0 / 120`), `js/app.js` (prefill truncation in `openSaveTemplateModal`; `updateSaveTemplateCharCount` name map `max: 60` → `120`), `CHANGELOG.md`, `js/version.js`, `package.json`
+- Version/build stamps to v3.63.195 / 20260606-013 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.194
 
 **Live character counters on Save-as-Template + clearer messaging that templates bank reference material and starting documents**
