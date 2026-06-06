@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.192
+
+**Save-as-Template category dropdown disambiguates its scope**
+
+Build: `20260606-010`<br>
+Released: `2026-06-06`
+
+### Fixed — category dropdown wording made it look like custom templates would file into built-in sections
+
+David hit this 2026-06-06 dogfooding Custom Categories on the restaurant review template: looking at the Category dropdown's options (My Templates, Career & Hiring, Business & Sales, …) — which intentionally mirror the built-in template section names so users can reuse the familiar taxonomy — his natural read was *"picking Business & Sales puts this custom template in the built-in Business & Sales section."*
+
+It doesn't. Code at `js/app.js:3660-3691` filters the Custom Templates path to `loadCustomTemplates()` only and renders the buckets inside the ⭐ Custom Templates path's sidebar nav. A custom template with category "Business & Sales" appears in **⭐ Custom Templates → Business & Sales bucket**, not in **📝 Starting from scratch → Business & Sales**. But the dropdown labels gave no signal about scope.
+
+Two-line copy clarification in `index.html`:
+
+- Field label renamed: **Category** → **Category in Custom Templates** — scope is now visible in the label itself, not just implied.
+- New helper paragraph beneath the dropdown (and the free-form custom input): *"Subdivides your Custom Templates view only — built-in template sections aren't affected."*
+
+New `.save-template-help` CSS rule in `style.css` near `.save-template-note` — same dim italic styling but with positive top margin (the `.note` class has negative top margin because it sits tight under the sub-paragraph, which isn't right for a label-below-input position).
+
+### Files Changed
+
+- Updated: `index.html` (Category field relabel + new `<p class="save-template-help">` helper line in `#saveTemplateModal`), `style.css` (new `.save-template-help` rule), `CHANGELOG.md`, `js/version.js`, `package.json`
+- Version/build stamps to v3.63.192 / 20260606-010 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.191
 
 **Save-as-Template modal now stacks above the first-run offer modal**

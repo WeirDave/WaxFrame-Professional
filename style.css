@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-009
+   Build: 20260606-010
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14856,6 +14856,21 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   color: var(--text-dim);
   margin: calc(var(--space-12) * -1) 0 0;
   font-style: italic;
+}
+/* v3.63.192 — Small italic helper that sits below the Category dropdown
+   inside the Save-as-Template modal to disambiguate scope. David's read of
+   the v3.63.188 dropdown was that picking "Business & Sales" would file the
+   custom template INTO the built-in Business & Sales section, when it
+   actually subdivides only within the ⭐ Custom Templates view. This line
+   makes that explicit. Uses positive top margin (not the negative one
+   .save-template-note has) because it sits naturally below an input, not
+   tight under a paragraph. */
+.save-template-help {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  margin: var(--space-6) 0 0;
+  font-style: italic;
+  line-height: 1.45;
 }
 /* v3.63.37 — Custom Templates path-card centered on its own full-width row
    (third card in a 2-col grid would otherwise sit orphaned bottom-left). */
