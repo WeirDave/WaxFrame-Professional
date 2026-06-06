@@ -2,6 +2,45 @@
 
 ---
 
+## v3.63.190
+
+**Cache-bust drift validator + Template Gallery modal CSS consolidation**
+
+Build: `20260606-008`<br>
+Released: `2026-06-06`
+
+Two cleanup items off the post-v3.63.189 backlog.
+
+### Cache-bust drift validator (release-check check 4)
+
+The v3.63.180–182 cycle shipped CSS/JS changes against the same `?v=` query string for three consecutive releases. CDN and browser caches kept serving stale files; David spent at least one session reverting work he thought was broken when the actual issue was stale cache. Backlog observation flagged this as worth adding to the release-check validator.
+
+Implemented as a fourth check in `tools/release-check.mjs`. Compares `HEAD` against the most recent reachable tag (uses `HEAD^` when `HEAD` is itself tagged, so a release-cut commit sees the *previous* release). If `style.css` or any `js/*.js` shows up in `git diff --name-only <prev-tag>..HEAD`, then `APP_VERSION` at `HEAD` must differ from `APP_VERSION` at the previous tag. Skips silently when no reachable tag exists (first commit, shallow clone, or unrebased PR branch) — a missing tag is noise, not a real drift signal.
+
+Combined with the existing check 2 (every `?v=` in HTML must match `APP_VERSION`), check 4 closes the loop: ship code → bump `APP_VERSION` → cache-bust query follows.
+
+The GitHub Actions workflow checkout switched from the default shallow clone to `fetch-depth: 0` so tags are present in CI. Local invocation already had everything it needs.
+
+### Template Gallery modal CSS consolidation
+
+The v3.63.183 polish landed as an override block at `style.css:14108-14135` that layered theme-variable surfaces on top of the original v3.32.0 `.template-gallery-modal` / `.template-gallery-hdr` / `.template-gallery-body` / `.template-gallery-close` definitions at `style.css:13625-13767`. The override approach worked but left future readers with two places to look when changing a property.
+
+Folded the modal-set overrides directly into the base definitions:
+
+- `.template-gallery-modal` — `background: var(--surface)` (was `var(--surface2)` + an override flipping it), `box-shadow: 0 24px 72px rgba(0,0,0,0.58)` (was `var(--shadow-lg)` + an override)
+- `.template-gallery-hdr` — `background: var(--surface2)` (was `transparent` + an override)
+- `.template-gallery-hdr h2` — added `color: var(--text)` (was inherited + an override)
+- `.template-gallery-body` — added `background: var(--surface)` (was unset + an override)
+- `.template-gallery-close` + `:hover` and `.template-gallery-hdr .template-gallery-intro` — overrides were redundant (same values as the base); deleted
+
+The sidebar, path-card, template-card, and section-title overrides further down the same block stay layered — folding those safely without a browser to verify the cascade interaction with the `[data-theme="dark"]` specializations needs its own session. Backlog notes the work as "modal-only piece done, deeper sweep deferred."
+
+### Backlog v236
+
+`docs/WaxFrame_Backlog_Master_v236.txt` supersedes v235. Closed Custom Template Categories (shipped v3.63.188) and the cache-bust drift validator (shipped this release). Removed Worker Bees rework #24 ("drop sub-1366px responsive code") — would re-introduce the 1366×768 Notes-button-clipping-to-'tes' failure the v3.63.166 density pass shipped to fix.
+
+---
+
 ## v3.63.189
 
 **Save-as-Template modal grows sideways + category rename / merge / delete in one prompt**
