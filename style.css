@@ -2194,13 +2194,13 @@ body.helper-body .page-main {
 @media (max-width: 1600px) {
   .hex-grid        { display: none; }
   .hive-edit-btn   { display: inline-flex; }
-  /* v3.63.184/185 — Strip is now a solid card on the standard surface
-     ramp, not a translucent overlay. var(--bg) read too close to the
-     page body in dark mode and the strip looked like a dark-glass band
-     similar to the header. var(--surface) puts it at the same "card"
-     level as the Working Document / Live Console panels — pure white
-     in light mode, lifted near-black in dark mode. Border + small drop
-     shadow give visual elevation against the page honeycomb. */
+  /* v3.63.184/185/186 — Strip is a solid card on the standard surface
+     ramp with a 4px var(--blue) border, matching .console-body-wrap
+     (green 4px) and .conflicts-panel (amber 4px) — same width, blue
+     ring corresponds to the model-recommender accent. var(--surface)
+     puts the card at the same level as the Working Document, Live
+     Console, and Conflicts panels. var(--blue-dim) glow lifts it off
+     the honeycomb body. */
   .bee-dot-strip   {
     display: flex;
     flex-wrap: wrap;
@@ -2208,23 +2208,23 @@ body.helper-body .page-main {
     padding: var(--space-8) var(--space-10);
     flex-shrink: 0;
     background: var(--surface);
-    border: 1px solid var(--border2);
+    border: 4px solid var(--blue);
     border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    box-shadow: 0 0 12px var(--blue-dim);
     margin: 2px var(--space-8) var(--space-4);
   }
   [data-theme="light"] .bee-dot-strip,
   .bee-dot-strip-light {
     background: #ffffff;
-    border-color: var(--border2);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    border-color: var(--blue);
+    box-shadow: 0 0 12px var(--blue-dim);
   }
 }
 @media (max-width: 1600px) and (prefers-color-scheme: light) {
   [data-theme="auto"] .bee-dot-strip {
     background: #ffffff;
-    border-color: var(--border2);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    border-color: var(--blue);
+    box-shadow: 0 0 12px var(--blue-dim);
   }
 }
 @media (max-width: 1600px) {
