@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260605-015
+// Build: 20260605-016
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -4317,6 +4317,23 @@ async function applyTemplate(templateId, path) {
       _pasteTa.value = pc.pastedDocument;
       if (typeof switchDocTab === 'function') switchDocTab('paste');
     }
+  } else if (path === 'scratch' && typeof switchDocTab === 'function') {
+    // v3.63.174 — Scratch-path templates auto-switch Setup 4 to the
+    // Start from Scratch tab. Real-user incident: Andy ran the
+    // Quick Start (Chocolate Chip Cookies) template, walked through
+    // Setup 2 + 3, then hit Setup 4 still on the default Upload File
+    // tab. With no document to upload (because Quick Start is
+    // scratch-path — the AI generates the first draft from the
+    // recipe goal), the Upload prompt read as "you need to upload
+    // something" and stalled him. David's diagnosis: "it's not
+    // really clear that they need to be on start from scratch."
+    // Surgical fix: when a scratch-path template is applied, flip
+    // the doc tab to scratch so the user arrives on Setup 4 already
+    // on the right tab. Paste-path templates (with pastedDocument)
+    // already switch to paste above; refine-path templates without
+    // pastedDocument leave Upload as the default (which is the
+    // right call — they came to refine an uploaded document).
+    switchDocTab('scratch');
   }
 
   // Fire the same downstream updates the user's input would trigger.
