@@ -2194,31 +2194,37 @@ body.helper-body .page-main {
 @media (max-width: 1600px) {
   .hex-grid        { display: none; }
   .hive-edit-btn   { display: inline-flex; }
-  /* v3.63.184 — Strip now a solid card so the bee dots have a clean
-     canvas instead of fading into the page honeycomb. David's report:
-     "the round cards for the AI are very hard to read in light mode."
-     White card in light mode, deepest-black card in dark mode; border
-     gives definition against the honeycomb body. Dots themselves keep
-     their existing var(--surface2) fill — slight tonal lift against
-     the card so each bee reads as an elevated bubble. */
+  /* v3.63.184/185 — Strip is now a solid card on the standard surface
+     ramp, not a translucent overlay. var(--bg) read too close to the
+     page body in dark mode and the strip looked like a dark-glass band
+     similar to the header. var(--surface) puts it at the same "card"
+     level as the Working Document / Live Console panels — pure white
+     in light mode, lifted near-black in dark mode. Border + small drop
+     shadow give visual elevation against the page honeycomb. */
   .bee-dot-strip   {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-6);
-    padding: var(--space-6) var(--space-10) var(--space-6);
+    padding: var(--space-8) var(--space-10);
     flex-shrink: 0;
-    background: var(--bg);
+    background: var(--surface);
     border: 1px solid var(--border2);
     border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
     margin: 2px var(--space-8) var(--space-4);
   }
   [data-theme="light"] .bee-dot-strip,
-  .bee-dot-strip-light { background: var(--surface); border-color: var(--border2); }
+  .bee-dot-strip-light {
+    background: #ffffff;
+    border-color: var(--border2);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
 }
 @media (max-width: 1600px) and (prefers-color-scheme: light) {
   [data-theme="auto"] .bee-dot-strip {
-    background: var(--surface);
+    background: #ffffff;
     border-color: var(--border2);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
 }
 @media (max-width: 1600px) {
@@ -2295,7 +2301,7 @@ body.helper-body .page-main {
   /* State colours for dots */
   .bee-dot.is-builder  {
     background: var(--accent);
-    border-color: var(--accent);
+    border-color: var(--border2);
     box-shadow: 0 0 8px rgba(245,166,35,0.6);
   }
   .bee-dot.is-active   { border-color: var(--border2); }
