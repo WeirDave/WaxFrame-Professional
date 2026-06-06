@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.168
+
+**AI API Pricing intro — point users at the "Check rates →" link by name**
+
+Build: `20260605-010`<br>
+Released: `2026-06-05`
+
+David's observation: the intro on the AI API Pricing page tells users to *"verify at the linked billing page before committing to a heavy session"*, but doesn't name the link. The provider table rows DO have a `Check rates →` link in the Billing column — but the intro never points there. Users have to figure out the connection themselves.
+
+Fix: name the link explicitly in three places.
+
+- **Intro sub-line** (line 176): *"...use the **Check rates →** link in each provider's row below to verify the current rate before committing to a heavy session."*
+- **Visible FAQ paragraph** (line 317): *"...click the **Check rates →** link in each provider's row..."*
+- **FAQ JSON-LD answer** (line 85): same wording, for search-engine consistency
+
+Now the prose calls the link out by name, so users know exactly where to click.
+
+---
+
 ## v3.63.167
 
 **Footer compaction — shorter than the header now**
