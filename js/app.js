@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-012
+// Build: 20260606-013
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-012';         // build stamp — update each session
+const BUILD       = '20260606-013';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -3964,7 +3964,24 @@ function openSaveTemplateModal() {
     if (titleEl) titleEl.textContent = '\u270f\ufe0f Update Template';
     if (btnEl)   btnEl.textContent   = '\u270f\ufe0f Update Template';
   } else {
-    if (nameEl) nameEl.value = (proj.projectName ? proj.projectName + ' \u2014 recipe' : '');
+    // v3.63.195 \u2014 Prefill template name as "{projectName} \u2014 recipe" but
+    // truncate so the result fits the 120-char cap. Assigning .value
+    // BYPASSES the maxlength HTML attribute (David caught this 2026-06-06
+    // when his "Review - Joe Schmoe's - 5123 Ball Rd, ..." project name +
+    // " \u2014 recipe" wrote 64 chars into a field with maxlength=60 and his
+    // counter went red even though he'd typed nothing). Truncate at the
+    // source so prefill respects the cap users see in the counter.
+    if (nameEl) {
+      const SUFFIX = ' \u2014 recipe';
+      const NAME_MAX = 120;
+      if (proj.projectName) {
+        const cap = NAME_MAX - SUFFIX.length;
+        const pn = proj.projectName.length > cap ? proj.projectName.slice(0, cap) : proj.projectName;
+        nameEl.value = pn + SUFFIX;
+      } else {
+        nameEl.value = '';
+      }
+    }
     if (iconEl) iconEl.value = '\ud83d\udcc1';
     if (descEl) descEl.value = '';
     if (catEl) catEl.value = 'My Templates';
@@ -4025,8 +4042,10 @@ function onSaveTemplateCategoryChange() {
 // truncated); the counter surfaces the cap before it bites. Hits a warn
 // state at 90% of max so users get a heads-up, not a surprise.
 function updateSaveTemplateCharCount(field) {
+  // v3.63.195 — name cap bumped 60 → 120 after David's "{long project
+  // name} — recipe" auto-prefill went over the prior 60 cap.
   const map = {
-    name:     { input: 'saveTemplateName',           counter: 'saveTemplateNameCount',           max: 60  },
+    name:     { input: 'saveTemplateName',           counter: 'saveTemplateNameCount',           max: 120 },
     category: { input: 'saveTemplateCategoryCustom', counter: 'saveTemplateCategoryCustomCount', max: 40  },
     desc:     { input: 'saveTemplateDesc',           counter: 'saveTemplateDescCount',           max: 240 }
   };
