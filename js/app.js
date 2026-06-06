@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-006
+// Build: 20260606-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-006';         // build stamp — update each session
+const BUILD       = '20260606-007';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -3778,9 +3778,19 @@ function renderTemplateGalleryBody() {
   // users with a handful of templates all in "My Templates") still
   // render as a flat list. Each link scrollIntoViews to its section by id.
   if (visibleCats.length > 1) {
-    const sidebarLinks = visibleCats.map(cat =>
-      `<button type="button" class="template-gallery-sidebar-link" onclick="document.getElementById('tpl-cat-${catSlug(cat)}').scrollIntoView({behavior:'smooth', block:'start'})">${esc(cat)}</button>`
-    ).join('');
+    // v3.63.189 — Custom-path sidebar gets a rename affordance next to
+    // free-form buckets so users can merge or clean up a category in
+    // bulk instead of editing each template one at a time. Built-in
+    // bucket names (the six canonical) stay non-renamable since they're
+    // universal and apply to built-in templates too.
+    const BUILTIN_CUSTOM_CATS = ['My Templates', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
+    const sidebarLinks = visibleCats.map(cat => {
+      const linkBtn = `<button type="button" class="template-gallery-sidebar-link" onclick="document.getElementById('tpl-cat-${catSlug(cat)}').scrollIntoView({behavior:'smooth', block:'start'})">${esc(cat)}</button>`;
+      const isFreeForm = path === 'custom' && !BUILTIN_CUSTOM_CATS.includes(cat);
+      if (!isFreeForm) return linkBtn;
+      const renameBtn = `<button type="button" class="template-gallery-sidebar-rename" onclick="renameCustomCategory('${escapeHtml(cat)}')" title="Rename or merge this category (bulk-updates all templates in it)">✏️</button>`;
+      return `<div class="template-gallery-sidebar-item">${linkBtn}${renameBtn}</div>`;
+    }).join('');
     body.innerHTML = pathIndicator + newuserCallout +
       `<div class="template-gallery-with-sidebar">
          <aside class="template-gallery-sidebar">
@@ -4246,6 +4256,43 @@ function duplicateCustomTemplate(id) {
 function setCustomTemplateSort(mode) {
   window._customTemplateSort = (mode === 'alpha') ? 'alpha' : 'recent';
   if (typeof renderTemplateGalleryBody === 'function') renderTemplateGalleryBody();
+}
+
+// v3.63.189 — Bulk rename / merge / delete a custom category. Wired
+// from the ✏️ button next to free-form bucket names in the Template
+// Gallery sidebar. One affordance covers three operations:
+//   RENAME: type a new name → all templates in oldName move to newName
+//   MERGE:  type an existing category name → buckets combine
+//   DELETE: type 'My Templates' (or leave empty) → contents fall to the
+//           default bucket and the free-form bucket disappears
+// David's case from 2026-06-06: three "Amazon reviews" templates that
+// should just be "Reviews" — editing each one would be a mess. This
+// fires once, updates all matching templates, re-renders.
+function renameCustomCategory(oldName) {
+  oldName = (oldName || '').trim();
+  if (!oldName) return;
+  const all = loadCustomTemplates();
+  const affected = all.filter(t => (t.category || '').trim() === oldName);
+  if (affected.length === 0) {
+    toast(`⚠️ No templates found under "${oldName}"`);
+    return;
+  }
+  const input = window.prompt(
+    `Rename category "${oldName}" (${affected.length} template${affected.length === 1 ? '' : 's'}).\n\n` +
+    `Type the new category name. Type "My Templates" or leave blank to drop this bucket and move the templates to the default. ` +
+    `Type the name of an existing category to merge into it.`,
+    oldName
+  );
+  if (input === null) return; // user hit Cancel
+  const newName = (input || '').trim() || 'My Templates';
+  if (newName === oldName) return; // no-op
+  // 40-char cap matches the save-as-template modal's free-form input.
+  const finalName = newName.slice(0, 40);
+  affected.forEach(t => { t.category = finalName; });
+  saveCustomTemplates(all);
+  if (typeof renderTemplateGalleryBody === 'function') renderTemplateGalleryBody();
+  const verb = (finalName === 'My Templates') ? 'moved to My Templates' : `renamed to "${finalName}"`;
+  toast(`✓ ${affected.length} template${affected.length === 1 ? '' : 's'} ${verb}`, 5000);
 }
 
 // Apply a template by id and path. v3.37.0 dual-path:
