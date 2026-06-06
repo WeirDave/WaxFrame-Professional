@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.174
+
+**Scratch-path templates now auto-switch Setup 4 to Start from Scratch (Andy/Cookies onboarding fix)**
+
+Build: `20260605-016`<br>
+Released: `2026-06-05`
+
+Real-user onboarding incident, surfaced by David: Andy applied the Quick Start (Chocolate Chip Cookies) template, walked through Setup 2 (Project) and Setup 3 (Reference), then arrived at Setup 4 (Starting Document) still on the default **Upload File** tab. Quick Start is a `paths: ["scratch"]` template — the AI generates the first draft from the recipe goal, there's no document to upload — but the Upload prompt read as *"you need to upload something"* and stalled him there. David's diagnosis: *"it's not really clear that they need to be on Start from Scratch."*
+
+He floated changing the global Setup 4 default to Start from Scratch as the fix, but that would surprise the majority case (users coming to refine an existing document — Upload is the right default for them). A surgical fix scoped to the template-applied scenario is cleaner.
+
+### Fix
+
+In [js/app.js](js/app.js) `applyTemplate()`, an `else if (path === 'scratch')` branch was added right after the existing `pastedDocument` check:
+
+```js
+if (typeof pc.pastedDocument === 'string' && pc.pastedDocument.length > 0) {
+  // ...write to paste textarea + switchDocTab('paste')...
+} else if (path === 'scratch' && typeof switchDocTab === 'function') {
+  switchDocTab('scratch');
+}
+```
+
+So now:
+- Templates with `pastedDocument` (paste-path content) → auto-switch to **Paste Text** (unchanged from v3.63.36)
+- Templates with `path === 'scratch'` (Quick Start, future scratch-only templates) → auto-switch to **Start from Scratch** *(new)*
+- Templates with `path === 'refine'` and no `pastedDocument` → leave **Upload File** as the default (unchanged — that's correct for refining an uploaded document)
+- No template applied → leave **Upload File** as the default (unchanged — most common path for non-template users)
+
+### Behavioral outcome
+
+When the next Andy applies Quick Start from `Menu → 📋 Templates`, they'll walk through Setup 2 → 3 → 4 and arrive on Setup 4 already on the **Start from Scratch** tab, with the scratch-path messaging *("WaxFrame will ask all your AIs to create a first draft based on your project goal")* showing — which matches what they're actually about to do.
+
+### Files touched
+
+- [js/app.js](js/app.js) — scratch-path switchDocTab branch added inside `applyTemplate()`.
+- [js/version.js](js/version.js), [package.json](package.json) — stamp bumped to v3.63.174 / 20260605-016.
+- HTML/JS/CSS sweep — cache-bust + build-stamp updates.
+
+---
+
 ## v3.63.173
 
 **Inline Quick Start button rolled back + Setup 1 title block centered to match bilateral-bee framing**
