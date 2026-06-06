@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.202
+
+**3D sweep — Worker Bees AI cards + JUMP TO AI sidebar**
+
+Build: `20260606-020`<br>
+Released: `2026-06-06`
+
+### Changed — Worker Bees setup screen gets the 3D treatment
+
+David flagged the AI rows and the JUMP TO AI sidebar as still looking flat against the rest of the swept UI. Both now match.
+
+- **`.ai-setup-row`** (the per-AI cards on Setup 1 — ChatGPT, Claude, Gemini, etc.) — base rest state gets a subtle vertical gradient + inset top highlight + drop shadow so each card reads as a physical raised surface. The 4px colored left edge for `.key-valid` / `.key-invalid` state is preserved unchanged — that signal stays as-is.
+- **`.ai-setup-row.is-collapsed:hover`** — hover lifts the card 1px and brightens the shadow with an amber tint so the row physically pops up before you click.
+- **`.ai-setup-row.is-expanded`** — when the row is open, the card switches to a sunken-card feel (inset top shadow instead of raised highlight). Reads as "you've drilled into this one — it's depressed into the surface."
+- **`.bees-sidebar-block`** (JUMP TO AI sidebar dark-navy panel) — gradient added on top of the dark-navy base + inset top highlight + stronger drop shadow. Reads as a real physical control panel sitting on top of the page background. The dark-navy color is preserved per the v3.63.160 "the side menu should not be grey on light mode" decision.
+- **`.bees-sidebar-jump`** (per-provider navigation links inside the sidebar) — at rest the rows stay flat so the panel reads as a nav list, not a button stack. On hover they lift 1px with a small-pill shadow + amber tint. `:active` depresses.
+
+### Files Changed
+
+- Updated: `style.css` — rewrote `.ai-setup-row` base + `.is-collapsed:hover` + `.is-expanded`, `.bees-sidebar-block`, `.bees-sidebar-jump` + `:hover` + `:active`. `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.202 / 20260606-020 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.201
 
 **Site-wide 3D sweep — Phase 2 + 3: per-row lock, AI row controls, ghost / chip / hive cards, clock control buttons**
