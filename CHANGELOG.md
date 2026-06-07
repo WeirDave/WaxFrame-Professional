@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.222
+
+**Template path card CSS consolidation**
+
+Build: `20260607-009`<br>
+Released: `2026-06-07`
+
+### Changed — path and template cards share their base shell
+
+Extracted the shared card reset used by template path cards and regular template cards into one common selector block. The path cards keep their larger spacing, raised shadow, and hover lift; regular template cards keep their grid sizing and compact hover behavior.
+
+### Files Changed
+
+- Updated: `style.css`, `docs/WaxFrame_Backlog_Master_v241.txt`, `CHANGELOG.md`
+- Version/build stamps to v3.63.222 / 20260607-009 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.221
 
 **Template sidebar dashed hover removal**

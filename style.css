@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260607-008
+   Build: 20260607-009
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14727,11 +14727,10 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 /* v3.63.200 — Path-picker cards (Starting from scratch / Refining /
    Custom Templates) get the 3D button vocabulary. They're big buttons —
    primary user choices when opening the Template Gallery. */
-.template-path-card {
+.template-path-card,
+.template-card {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-14);
-  padding: var(--space-20) var(--space-20);
   background: var(--surface);
   border: 1px solid var(--border2);
   border-left: 4px solid var(--border2);
@@ -14739,6 +14738,10 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   cursor: pointer;
   text-align: left;
   font-family: var(--font);
+}
+.template-path-card {
+  gap: var(--space-14);
+  padding: var(--space-20) var(--space-20);
   color: var(--text);
   transition: transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
   min-height: 140px;
@@ -14885,23 +14888,8 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 
 .template-card {
-  display: flex;
-  align-items: flex-start;
   gap: var(--space-12);
   padding: var(--space-14) var(--space-16);
-  /* v3.32.1 — modal surface is --surface2, so cards use --surface3 for
-     contrast inside the modal (one step lighter than the modal body). */
-  background: var(--surface);
-  /* v3.63.179 — Was 1px solid. Switched to dashed to match the
-     WaxFrame house pattern (welcome cards, setup cards, helper cards
-     all use dashed borders). David's call for visual continuity
-     across the modal and the documentation pages. */
-  border: 1px solid var(--border2);
-  border-left: 4px solid var(--border2);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  text-align: left;
-  font-family: var(--font);
   transition: border-color 0.12s, background 0.12s, transform 0.06s;
   min-height: 84px;
 }
