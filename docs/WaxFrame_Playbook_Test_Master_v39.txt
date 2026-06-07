@@ -1,7 +1,7 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — PLAYBOOK TEST MASTER (v39)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-06-06 (Joe Schmoe's Google Maps trim v1.0 — second measured run today using the v3.63.189 Joe Schmoe's master review as source. 10-AI hive, Gemini Builder throughout, 4 rounds, majority convergence at R4 with holdouts. First measured data point on the NEW SMART CLOCK (v3.63.197) — reported 10 min engaged vs ~20 min wall-clock; honest reading, idle-pause working as designed. Cohere R1 runaway-loop failure mode observed: 136+ numbered "remove this phrase" items including line numbers that don't exist; recovered by R3. Validates the planned multi-platform review workflow: write master at no-limit, trim only when master exceeds platform cap.)
+Last updated:        2026-06-06 (Joe Schmoe's Google Maps trim v1.0 — second measured run today using the v3.63.189 Joe Schmoe's master review as source. 10-AI hive, Gemini Builder throughout, 4 rounds, majority convergence at R4 with holdouts. First measured data point on the NEW SMART CLOCK (v3.63.197) — reported 10 min engaged vs ~20 min wall-clock; honest reading, idle-pause working as designed. Two distinct AI failure modes observed in the same run: Cohere R1 long-source-doc runaway loop (136+ "remove" items, recovered by R3) and Together AI persistent meta-talk wrapper (preamble + outro padding every round, every round, doesn't recover — distinct failure mode from Cohere's loop). Validates the planned multi-platform review workflow: write master at no-limit, trim only when master exceeds platform cap.)
 WaxFrame version:    v3.39.12 Pro and later (current: v3.63.203 Pro)
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Playbook_Test_Master_v39.txt
@@ -39,28 +39,63 @@ CHANGES IN v39 (from v38, 2026-06-06):
     Final document 750-1,200 char Google Maps format,
     bottom-line-first headline, with the menu-link clarification
     Builder applied from user decisions in R2.
-  - OBSERVED COHERE R1 RUNAWAY FAILURE MODE.
-    In Round 1 of the Google Maps trim, Cohere produced 136+
-    numbered "remove this phrase" suggestions, looping the same
-    removals for line numbers that don't exist (doc was ~20
-    lines; Cohere went to "Line 148"). Output got cut off
-    mid-suggestion at #136 — Cohere hit an internal token cap
-    or output buffer limit. Likely cause: Cohere's "remove
-    non-essential" heuristic recursively kept finding things to
-    remove in the long narrative arc of the source review,
-    looping the same suggestion until output exhaustion. By
-    R3 Cohere was back to normal (3 reasonable suggestions),
-    so this was an R1-only runaway tied to the long-source-doc
-    starting state. NOT a Cohere-vs-Builder issue and NOT a
-    convergence-blocking failure (R4 still converged). Flag in
-    observations as "Cohere R1 long-source-doc runaway" — if
-    pattern repeats on other long-source-doc trims, escalate
-    to a Cohere-specific reviewer-guard (e.g. truncate
-    suggestion lists to top-5 in the response parser).
-    Important: David initially flagged this as a Perplexity
-    issue; Perplexity was actually clean throughout (3 sharp
-    suggestions in R1, NO CHANGES NEEDED in R3 and R4). The
-    runaway was Cohere.
+  - TWO DISTINCT AI FAILURE MODES OBSERVED THIS RUN.
+
+    (a) COHERE R1 LONG-SOURCE-DOC RUNAWAY LOOP.
+    In Round 1, Cohere produced 136+ numbered "remove this
+    phrase" suggestions, looping the same removals for line
+    numbers that don't exist (doc was ~20 lines; Cohere went
+    to "Line 148"). Output cut off mid-suggestion at #136 —
+    Cohere hit an internal token cap or output buffer limit.
+    Likely cause: Cohere's "remove non-essential" heuristic
+    recursively kept finding things to remove in the long
+    narrative arc of the source review, looping the same
+    suggestion until output exhaustion. By R3 Cohere was back
+    to normal (3 reasonable suggestions). R1-only runaway tied
+    to the long-source-doc starting state. NOT a Cohere-vs-
+    Builder issue and NOT convergence-blocking (R4 still
+    converged). Mitigation if pattern repeats on other long-
+    source-doc trims: Cohere-specific reviewer-guard that
+    truncates suggestion lists to top-5 in the response parser.
+
+    (b) TOGETHER AI PERSISTENT META-TALK WRAPPER.
+    The failure mode David actually flagged during review.
+    Every round, every response, Together AI wraps its output
+    in identical preamble + outro padding that says nothing:
+      OPENER (R1):  "Here are my top 3 suggestions to improve
+                     the document:"
+      OPENER (R3+): "Based on the provided instructions, I
+                     will give specific, numbered suggestions
+                     to improve the document. Here are my top
+                     3 most impactful suggestions:"
+      CLOSER:       "These suggestions aim to improve the
+                     document's clarity, precision, and
+                     internal consistency, while maintaining
+                     its original meaning and purpose."
+    This is meta-talk — Together AI restates the brief back at
+    the hive instead of just giving the answer. Burns ~80-100
+    tokens per round on filler that contributes nothing to the
+    Builder's decision. Distinct from Cohere's R1 loop:
+    Cohere's was a one-time output-exhaustion failure that
+    recovered; Together AI's is a persistent pattern across
+    every round. Doesn't recover on its own.
+    Mitigation candidates: (i) prompt-engineering tweak to the
+    Together AI reviewer instructions ("respond with only the
+    numbered suggestions — no preamble, no closing summary"),
+    (ii) response parser strips Together AI preamble/outro
+    sentences before sending the suggestions to the Builder,
+    (iii) reviewer instructions globally tightened with a
+    "NO META-TALK" directive (risk: harmless for other AIs
+    but stylistically might over-constrain Mistral's variety).
+    Best first attempt is (i) — Together AI-targeted parser
+    pre-strip in api.js or scenes.js where Together AI
+    response normalization happens.
+
+    Important misattribution correction: David's initial read
+    flagged this as Perplexity. Perplexity was actually clean
+    throughout — 3 sharp suggestions in R1, NO CHANGES NEEDED
+    in R3 and R4, no preamble or outro. The meta-talk pattern
+    is Together AI's, not Perplexity's.
   - REVIEW WORKFLOW CONFIRMED by this run.
     David tested the multi-platform review workflow by
     attempting a TripAdvisor trim immediately after the master
@@ -727,7 +762,7 @@ as wall-clock; see Backlog v10 Section 2).
 
   Date        Run                                          Hive  Builder      Rounds  Wall-clock   Engaged†  Final length      Status
   ──────────  ───────────────────────────────────────────  ────  ───────────  ──────  ───────────  ────────  ────────────────  ──────────────
-  2026-06-06  Review – Joe Schmoe's – Google v1.0 (Trim to Google Maps)  10    Gemini       4 (3 rev + 1 BO)  ~20 min     10 min§   ~1,100c           majority (R4, holdouts; Cohere R1 runaway)
+  2026-06-06  Review – Joe Schmoe's – Google v1.0 (Trim to Google Maps)  10    Gemini       4 (3 rev + 1 BO)  ~20 min     10 min§   ~1,100c           majority (R4, holdouts; Cohere R1 runaway + Together AI meta-talk every round)
   2026-06-06  Review – Joe Schmoe's – Cypress v1.0 (Biz/Svc Review T10) 10    Gemini       12 (8 rev + 4 BO) ~102 min    76 min*   396w / 2,330c     majority (R12, 3 holdouts)
   2026-06-04  Review – Manly Bikes – Trip Advisor v1.0 (Trim to TripAdvisor) 10    Gemini       3 (2 rev + 1 BO)  7 min       n/a       478w / ~3,000c    majority (R3, 4 holdouts)
   2026-05-31  BAGAIL Packing Cubes v1.0 (Product Rev, Amzn) 10    DeepSeek     9 (5 rev + 3 BO)  26 min       25.6 min  390w / 2,323c     majority (R9, 4 holdouts)
