@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.208
+
+**Closed two backlog items: server-mode group label + auto-classify tier picks on profile apply**
+
+Build: `20260606-026`<br>
+Released: `2026-06-06`
+
+David's request during the backlog walk-through: knock out the items I think need doing that don't require his product input. First two from that batch shipping together.
+
+### Closed — backlog #36 "Worker Bees server provider group label"
+
+Server-mode Worker Bees rendering was previously a flat unlabeled list. Internet mode already groups Defaults + Customs with section headers, but Server mode just dropped the server-imported AIs into a single column with no group label. Made the bulk-select toolbar's scope ambiguous and broke visual parallel with the other mode.
+
+Now Server mode renders with a **"Model Servers"** group label header, matching the Internet-mode "Custom AIs (N)" pattern: gold count chip, same styling, same position. `renderAISetupGrid()` at `js/app.js:4888` updated.
+
+### Closed — backlog #35 "Auto-classify tier picks always" (self-healing variant)
+
+Auto-classify on every key save was the original ask but that races with the user's natural verification flow (v3.26.6 lesson). Shipped a more surgical version: when the user picks a non-Custom Hive Profile and some providers don't have tier-classification data cached, kick off classification for those providers in the background AND silently re-apply the same profile once classifications return.
+
+User-visible flow: pick Cheap profile → toast says "Cheap — classifying N providers in the background, picks will fill in shortly…" → background classifications complete → the same profile re-applies silently with the new picks → hive composition updates without a second click.
+
+Self-healing edge cases:
+- If user flips to Custom or a different tier while background classification is running, the re-apply is skipped (checks `getActiveHiveProfile() === profileId`).
+- Per-provider `.catch()` so one classification failure doesn't block others from filling in.
+- No cost if all providers already have cached tier data — `missingTierProviders` set is empty, no API calls fired.
+
+The note text in `renderHiveProfileBar` that previously told users to "Click 'Recommend Models for All' to populate" still appears for the "applied 0, skipped 0" edge case (zero AIs total — first-time user with no keys yet). For the practical case (user has keys, some providers haven't been classified), the auto-classify path takes over.
+
+### Files Changed
+
+- Updated: `js/app.js` (`renderAISetupGrid` server-mode branch adds "Model Servers" label; `applyHiveProfile` tracks missing-tier providers and fires `classifyTiersForProvider` in background, silently re-applies on completion), `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.208 / 20260606-026 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.207
 
 **Quick Start CTA now leads with ⭐ Quick Start as the bold label — matches the Project page instruction**

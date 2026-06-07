@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-025
+// Build: 20260606-026
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-025';         // build stamp — update each session
+const BUILD       = '20260606-026';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4939,7 +4939,18 @@ function renderAISetupGrid() {
   let listHTML;
   let prefixedBulkSelectHTML = bulkSelectHTML; // Server mode: keep at top.
   if (_hiveMode === 'server') {
-    listHTML = _aiListAlpha(visible).map(ai => buildAISetupRowHTML(ai)).join('');
+    // v3.63.208 (closes backlog #36) — Server mode now gets a "Model
+    // Servers" group label, mirroring the Internet-mode "Default
+    // providers" / "Custom AIs" structure. Was rendering as a flat
+    // unlabeled list previously, which made the scope of the bulk-
+    // select toolbar ambiguous and lost the visual parallel with the
+    // other mode. Count chip uses the same .ai-setup-group-count gold
+    // treatment as Custom AIs (v3.63.157 decision).
+    const sortedServer = _aiListAlpha(visible);
+    listHTML = sortedServer.length
+      ? `<div class="ai-setup-group-label">Model Servers <span class="ai-setup-group-count">${sortedServer.length}</span></div>`
+        + sortedServer.map(ai => buildAISetupRowHTML(ai)).join('')
+      : '';
   } else {
     const isDef    = ai => !!DEFAULT_AIS.find(d => d.id === ai.id);
     const defaults = _aiListAlpha(visible.filter(isDef));
@@ -5809,13 +5820,24 @@ function applyHiveProfile(profileId) {
   }
 
   let applied = 0, skipped = 0, total = 0;
+  // v3.63.208 (closes backlog #35) — Track providers that get skipped
+  // due to missing tier-classification data so we can auto-classify them
+  // in the background. Self-heals the "no tier picks cached yet" wall
+  // without the user having to find and click the Classify Tiers dev-
+  // toolbar button. Re-applies the profile silently once classifications
+  // come back so the picks fill in without re-clicking.
+  const missingTierProviders = new Set();
   aiList.forEach(ai => {
     const cfg = API_CONFIGS[ai.provider];
     if (!cfg?._key) return;  // No key, no swap.
     total++;
     const tiersBlob = (typeof getCachedTiers === 'function') ? getCachedTiers(ai.provider) : null;
     const tierModel = tiersBlob?.tiers?.[opt.tier] || null;
-    if (!tierModel) { skipped++; return; }
+    if (!tierModel) {
+      skipped++;
+      if (!tiersBlob) missingTierProviders.add(ai.provider);
+      return;
+    }
     if (cfg.model === tierModel) { applied++; return; }  // Already on it; count it.
     // v3.63.155 — keepExpanded:false so bulk apply doesn't blow open
     // every row; silent:true so we don't get N per-AI toasts (the
@@ -5826,14 +5848,39 @@ function applyHiveProfile(profileId) {
 
   renderAISetupGrid();
   if (typeof toast === 'function') {
-    if (applied === 0) {
+    if (applied === 0 && missingTierProviders.size > 0) {
+      toast(`${opt.icon} ${opt.label.split(' — ')[0]} — classifying ${missingTierProviders.size} provider${missingTierProviders.size === 1 ? '' : 's'} in the background, picks will fill in shortly…`);
+    } else if (applied === 0) {
       toast(`${opt.icon} ${opt.label.split(' — ')[0]} — no AIs have ${opt.tier} picks cached yet. Click "Recommend Models for All" first.`);
+    } else if (skipped > 0 && missingTierProviders.size > 0) {
+      toast(`${opt.icon} Applied ${opt.label.split(' — ')[0]} to ${applied} of ${total} AIs — classifying ${missingTierProviders.size} more in the background…`);
     } else if (skipped > 0) {
       toast(`${opt.icon} Applied ${opt.label.split(' — ')[0]} to ${applied} of ${total} AIs (${skipped} have no ${opt.tier} pick cached).`);
     } else {
       toast(`${opt.icon} Applied ${opt.label.split(' — ')[0]} to ${applied} ${applied === 1 ? 'AI' : 'AIs'}.`);
     }
   }
+
+  // v3.63.208 — Fire the background tier-classification for any providers
+  // that had a keyed AI but no cached tier data. Once a provider's
+  // classification lands, silently re-apply THIS profile so the new picks
+  // get swept into the hive without a second user click. Uses Promise.all
+  // with per-provider catch so one failure doesn't block the others.
+  if (missingTierProviders.size > 0 && typeof classifyTiersForProvider === 'function') {
+    Promise.all([...missingTierProviders].map(p =>
+      classifyTiersForProvider(p).catch(e => {
+        console.warn(`[hive-profile:auto-classify] ${p} failed:`, e);
+        return null;
+      })
+    )).then(() => {
+      // Only re-apply if this is still the active profile (user might
+      // have flipped to Custom or a different tier while we were waiting).
+      if (getActiveHiveProfile() === profileId) {
+        applyHiveProfile(profileId);
+      }
+    });
+  }
+
   return { applied, skipped, total };
 }
 
