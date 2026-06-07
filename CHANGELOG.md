@@ -2,6 +2,32 @@
 
 ---
 
+## v3.63.207
+
+**Quick Start CTA now leads with ⭐ Quick Start as the bold label — matches the Project page instruction**
+
+Build: `20260606-025`<br>
+Released: `2026-06-06`
+
+### Fixed — Project page told users to "hit the gold Quick Start button" but the button buried "Quick Start" mid-sentence
+
+David caught the mismatch: the Project page instruction text reads *"New to WaxFrame? Click 📋 Use Template above and hit the gold Quick Start button at the top of the gallery"* — but in the gallery the button led with *"New to WaxFrame? Click here to try the Quick Start"* and "Quick Start" was tucked at the end of the first phrase, not visually scannable as a button label.
+
+All three gallery CTAs (path-picker state + scratch path + refine path) now lead with **⭐ Quick Start** as the bold label, then the contextual prompt + description as supporting copy. New flow on each:
+
+- Path-picker state: **⭐ Quick Start** — New to WaxFrame? Click here for a low-stakes Chocolate Chip Cookies demo…
+- Scratch path: **⭐ Quick Start** — New to WaxFrame? Click here for a low-stakes Chocolate Chip Cookies example…
+- Refine path: **⭐ Quick Start** — Want a guided tour first? Click here for a low-stakes Chocolate Chip Cookies demo…
+
+A new user reading the Project page hint, clicking Use Template, and scanning the gallery now sees "⭐ Quick Start" as a clearly-labeled CTA at the top — exactly what the hint promised.
+
+### Files Changed
+
+- Updated: `js/app.js` (three Quick Start CTA strings in `renderTemplateGalleryBody` reordered to lead with the bold ⭐ Quick Start label), `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.207 / 20260606-025 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.206
 
 **Doc stats vocabulary now matches the Length Constraint units — characters · words · paragraphs · pages**
