@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.216
+
+**One-round Builder failover for content-filtered output**
+
+Build: `20260607-003`<br>
+Released: `2026-06-07`
+
+### Added — Builder CONTENT_FILTERED failover
+
+When the active Builder's provider blocks a normal Hive round with a content-filter/safety response, WaxFrame now retries that same Builder phase once with the next usable Builder candidate from the recommendation cache. If the alternate Builder succeeds, the round commits normally and the saved Builder preference remains unchanged for the next round.
+
+The user gets a toast and live-console breadcrumb explaining the temporary failover. Round history records the Builder that actually completed the round so exports and diagnostics remain accurate.
+
+### Fixed — provider content-filter detection
+
+`callAPI()` now converts HTTP and structured provider safety/block reasons into a `CONTENT_FILTERED` error instead of treating them as generic API failures. Non-content-filter API errors still follow the existing rate-limit, timeout, network, CORS, and generic HTTP paths.
+
+### Files Changed
+
+- Updated: `js/app.js`, `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v240.txt`
+- Removed: `docs/WaxFrame_Backlog_Master_v237.txt` (keeps the three-version backlog window)
+- Version/build stamps to v3.63.216 / 20260607-003 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.215
 
 **License persistence hardening + Settings license home**

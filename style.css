@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260607-002
+   Build: 20260607-003
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -16695,7 +16695,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   flex-direction: column;
   gap: var(--space-12);
 }
-/* v3.63.215 — Sidebar mirrors the custom-AI bulk-select toolbar container
+/* v3.63.216 — Sidebar mirrors the custom-AI bulk-select toolbar container
    (.bulk-select-toolbar): theme-aware --surface2 + --border, so light mode
    gets the softer gray and dark mode gets the matching dark panel. */
 .bees-sidebar-block {
@@ -17090,7 +17090,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
  * left and the status reads to the right; on narrow screens
  * flex-wrap kicks in and the note drops below.
  * ============================================================ */
-/* v3.63.215 — Match the custom-AI bulk-select toolbar container. Uses the
+/* v3.63.216 — Match the custom-AI bulk-select toolbar container. Uses the
    same theme-aware panel tokens instead of hardcoded light-mode colors. */
 .hive-profile-bar {
   display: flex;
@@ -17116,7 +17116,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   flex-shrink: 0;
 }
 /* v3.63.212 — Save / Delete profile buttons stay compact inside the
-   profile bar; v3.63.215 returns them to the normal setup-panel contrast. */
+   profile bar; v3.63.216 returns them to the normal setup-panel contrast. */
 .hive-profile-bar-save,
 .hive-profile-bar-delete {
   flex-shrink: 0;

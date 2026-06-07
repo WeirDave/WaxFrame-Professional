@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260607-002
+// Build: 20260607-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -151,6 +151,23 @@ function getReviewerRecommendation(aiId) {
 }
 function getBuilderRecommendation(aiId) {
   return getCachedRecommendation(`${getCacheIdForAI(aiId)}-builder`);
+}
+
+function _isContentFilteredSignal(value) {
+  const s = (value == null ? '' : String(value)).toUpperCase();
+  return /CONTENT[_\s-]?FILTER|\bSAFETY\b|BLOCK_REASON|PROMPT[_\s-]?BLOCK|BLOCKED|PROHIBITED/.test(s);
+}
+
+function _makeContentFilteredError(ai, reason) {
+  const suffix = reason ? ` (${reason})` : '';
+  const err = new Error(`CONTENT_FILTERED: ${ai?.name || 'Builder'} output was blocked by the provider${suffix}`);
+  err.code = 'CONTENT_FILTERED';
+  err.contentFiltered = true;
+  return err;
+}
+
+function isContentFilteredError(err) {
+  return !!(err && (err.contentFiltered || err.code === 'CONTENT_FILTERED' || _isContentFilteredSignal(err.message)));
 }
 
 function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
@@ -566,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260607-002';         // build stamp — update each session
+const BUILD       = '20260607-003';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -14684,6 +14701,85 @@ function _iconPickerConfirmUpload() {
   _iconPickerSelect(dataURL);
 }
 
+function getBuilderContentFilterFailoverCandidate(primaryAI) {
+  const pool = (Array.isArray(activeAIs) ? activeAIs : [])
+    .filter(ai => ai && ai.id !== primaryAI?.id)
+    .filter(ai => !window.sessionAIs || window.sessionAIs.has(ai.id))
+    .map((ai, idx) => {
+      const cfg = API_CONFIGS[ai.provider];
+      if (!cfg?._key) return null;
+      const rec = getBuilderRecommendation(ai.id);
+      const recModel = rec?.model && !isBuilderIncapableModel(rec.model) ? rec.model : '';
+      const model = recModel || cfg.model || '';
+      if (!model || isBuilderIncapableModel(model)) return null;
+      return {
+        ai,
+        model,
+        why: rec?.why || '',
+        fromRecommendation: !!recModel,
+        rank: (recModel ? 0 : 1),
+        idx
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a.rank - b.rank) || (a.idx - b.idx));
+  return pool[0] || null;
+}
+
+async function callBuilderWithContentFilterFailover(primaryAI, reviews, notes) {
+  const attempts = [];
+  const runAttempt = async (ai, modelOverride, isFailover) => {
+    const cfg = API_CONFIGS[ai.provider];
+    const originalModel = cfg?.model;
+    if (cfg && modelOverride && modelOverride !== cfg.model) cfg.model = modelOverride;
+    const prompt = buildPromptForAI(ai, reviews, { builderIdOverride: ai.id });
+    const keyHint = cfg?._key?.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
+    const modelNote = modelOverride && modelOverride !== originalModel ? ` · model: ${modelOverride}` : '';
+    consoleLog(`📤 ${ai.name} (Builder${isFailover ? ' failover' : ''}) — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint}${modelNote})`, 'send');
+    try {
+      const response = await callAPI(ai, prompt, notes, 'builder');
+      return { ai, prompt, response, modelUsed: cfg?.model || modelOverride || originalModel || '', isFailover };
+    } catch (err) {
+      err._wfBuilderAI = ai;
+      err._wfBuilderPrompt = prompt;
+      err._wfBuilderModel = cfg?.model || modelOverride || originalModel || '';
+      throw err;
+    } finally {
+      if (cfg && modelOverride && originalModel !== undefined) cfg.model = originalModel;
+    }
+  };
+
+  try {
+    return await runAttempt(primaryAI, '', false);
+  } catch (err) {
+    if (!isContentFilteredError(err)) throw err;
+    attempts.push(err);
+  }
+
+  const candidate = getBuilderContentFilterFailoverCandidate(primaryAI);
+  if (!candidate) {
+    const err = attempts[0];
+    err.message += ' — no alternate Builder candidate with a usable key/model was available.';
+    throw err;
+  }
+
+  setBeeStatus(primaryAI.id, 'error', 'Content filtered');
+  setBeeStatus(candidate.ai.id, 'sending', 'Failover Builder…');
+  setStatus(`⚠️ ${primaryAI.name} was content-filtered — retrying this round with ${candidate.ai.name}…`);
+  toast(`⚠️ ${primaryAI.name} was content-filtered — retrying once with ${candidate.ai.name}`, 6500);
+  consoleLog(`🔁 Builder failover: ${primaryAI.name} hit CONTENT_FILTERED. Retrying this round with ${candidate.ai.name}${candidate.fromRecommendation ? ` using recommended Builder model ${candidate.model}` : ''}. Saved Builder preference stays unchanged.`, 'warn');
+
+  try {
+    const result = await runAttempt(candidate.ai, candidate.model, true);
+    result.failoverFrom = primaryAI;
+    result.failoverModel = candidate.model;
+    return result;
+  } catch (err) {
+    if (!err._wfBuilderAI) err._wfBuilderAI = candidate.ai;
+    throw err;
+  }
+}
+
 // Picker invocation for a specific Import Server checklist row. Updates
 // _importRowIcons[i] and re-renders only that row's <img> rather than the
 // whole list — keeps focus/scroll position intact during rapid icon edits.
@@ -15558,7 +15654,7 @@ function getPrompt(key, fallback) {
   } catch(e) { return fallback; }
 }
 
-function buildPromptForAI(ai, reviewerResponses) {
+function buildPromptForAI(ai, reviewerResponses, opts = {}) {
   const doc      = document.getElementById('workDocument')?.value.trim() || '';
   const goal     = assembleProjectGoal();
   const name     = document.getElementById('projectName')?.value.trim()  || '';
@@ -15573,10 +15669,11 @@ function buildPromptForAI(ai, reviewerResponses) {
   const sep      = '─'.repeat(60);
   const eq       = '═'.repeat(60);
   const isScratch     = !doc;
-  const isBuilder     = ai.id === builder;
+  const promptBuilderId = opts.builderIdOverride || builder;
+  const isBuilder     = ai.id === promptBuilderId;
   const isReview      = phase === 'review';
   const hasResponses  = reviewerResponses && reviewerResponses.length > 0;
-  const builderAI     = activeAIs.find(a => a.id === builder);
+  const builderAI     = activeAIs.find(a => a.id === promptBuilderId);
 
   // Add line numbers to document so AIs can reference them precisely
   const numberedDoc = doc ? doc.split('\n').map((line, i) => `${String(i + 1).padStart(4, ' ')}  ${line}`).join('\n') : '';
@@ -16296,10 +16393,11 @@ async function runRound() {
   // identically. Consolidated to 'idle' alongside the dead-branch trim.
   activeAIs.forEach(ai => setBeeStatus(ai.id, 'idle', ''));
 
-  const builderAI = activeAIs.find(ai => ai.id === builder);
+  let builderAI = activeAIs.find(ai => ai.id === builder);
   let builderHadError = false;
   let _failedRoundReason = '';
   let _failedRoundDetails = '';
+  let _builderUsedThisRoundId = builder;
   // v3.35.0 — Auto Mode capture. The bottom of runRound nulls
   // window._lastConflicts before the post-round chain check runs, so
   // we snapshot conflicts here for the USER DECISION majority resolver.
@@ -16805,12 +16903,17 @@ async function runRound() {
         : _notesAtBuilderCall;
       consoleLog(`🎯 This-round notes (used by Builder this round): ${_np}`, 'info');
     }
-    const builderPrompt = buildPromptForAI(builderAI, successfulReviews);
-    const bCfg = API_CONFIGS[builderAI.provider];
-    const bKeyHint = bCfg?._key?.length > 8 ? bCfg._key.slice(0,4) + '••••' + bCfg._key.slice(-4) : '••••';
-    consoleLog(`📤 ${builderAI.name} (Builder) — sending request (${builderPrompt.length.toLocaleString()} chars · key: ${bKeyHint})`, 'send');
+    let builderPrompt = '';
     try {
-      const builderResponse = await callAPI(builderAI, builderPrompt, _notesAtBuilderCall, 'builder');
+      const builderCall = await callBuilderWithContentFilterFailover(builderAI, successfulReviews, _notesAtBuilderCall);
+      builderAI = builderCall.ai;
+      builderPrompt = builderCall.prompt;
+      _builderUsedThisRoundId = builderAI.id;
+      const builderResponse = builderCall.response;
+      if (builderCall.isFailover && builderCall.failoverFrom) {
+        consoleLog(`✅ Builder failover succeeded — ${builderAI.name} built this round; saved Builder remains ${builderCall.failoverFrom.name}.`, 'success');
+        toast(`✅ ${builderAI.name} completed this round; saved Builder stays ${builderCall.failoverFrom.name}`, 5000);
+      }
       const newDoc    = stripBuilderEnvelope(extractDocument(builderResponse));
       const conflicts = extractConflicts(builderResponse);
       // Defensive pass: validate USER DECISIONs against returned doc + this
@@ -17037,11 +17140,16 @@ async function runRound() {
     } catch(e) {
       builderHadError = true;
       _failedRoundReason = 'api';
-      _failedRoundDetails = `Builder: ${builderAI.name} · Error: ${e.message} · Time: ${new Date().toLocaleTimeString()}`;
+      const errAI = e._wfBuilderAI || builderAI;
+      const errPrompt = e._wfBuilderPrompt || builderPrompt || '';
+      builderAI = errAI;
+      builderPrompt = errPrompt;
+      _builderUsedThisRoundId = errAI?.id || builder;
+      _failedRoundDetails = `Builder: ${errAI?.name || 'Unknown'} · Error: ${e.message}${errPrompt ? ` · Chars sent: ${errPrompt.length.toLocaleString()}` : ''} · Time: ${new Date().toLocaleTimeString()}`;
       window._lastConflicts = null;
-      setBeeStatus(builderAI.id, 'error', e.message);
+      if (errAI?.id) setBeeStatus(errAI.id, 'error', e.message);
       setStatus(`⚠️ Builder failed: ${e.message}`);
-      consoleLog(`❌ Builder (${builderAI.name}) failed: ${e.message}`, 'error');
+      consoleLog(`❌ Builder (${errAI?.name || 'Unknown'}) failed: ${e.message}`, 'error');
     }
   }
 
@@ -17087,9 +17195,9 @@ async function runRound() {
     timestamp:      new Date().toLocaleTimeString(),
     timestampISO:   new Date().toISOString(),
     outcome:        'continuing',
-    builderId:      builder,
-      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
-      referenceMaterialAtRound: snapshotReferenceDocs()
+    builderId:      _builderUsedThisRoundId || builder,
+    resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
+    referenceMaterialAtRound: snapshotReferenceDocs()
   });
   window._lastConflicts = null;
   window._lastAppliedChanges = null;
@@ -17179,7 +17287,7 @@ async function runRound() {
       timestamp:      new Date().toLocaleTimeString(),
       timestampISO:   new Date().toISOString(),
       outcome:        'round_failed',
-      builderId:      builder,
+      builderId:      _builderUsedThisRoundId || builder,
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       failed:         true,
       failReason:     _failedRoundReason || 'unknown',
@@ -17393,10 +17501,11 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     const msg = err?.error?.message || `HTTP ${response.status}`;
+    const rawErr = JSON.stringify(err, null, 2);
     const rawData = {
       aiName:     ai.name,
       status:     `HTTP ${response.status} ${response.statusText}`,
-      rawJson:    JSON.stringify(err, null, 2),
+      rawJson:    rawErr,
       consoleUrl: ai.apiConsole || null
     };
     const ctx = {
@@ -17417,6 +17526,13 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
       WF_DEBUG.showCard(entry, ctx);
       throw new Error('RATE_LIMITED:' + msg);
     }
+    if (_isContentFilteredSignal(msg) || _isContentFilteredSignal(rawErr)) {
+      const cfErr = _makeContentFilteredError(ai, msg);
+      consoleLog(`🛡️ ${ai.name} — provider content filter blocked output: ${msg}`, 'warn', rawData);
+      const entry = WF_DEBUG.classify(cfErr, ctx);
+      WF_DEBUG.showCard(entry, ctx);
+      throw cfErr;
+    }
     consoleLog(`❌ ${ai.name} — HTTP ${response.status}: ${msg}`, 'error', rawData,
       // v3.35.4 — Bug A. When the AI has a known apiConsole URL,
       // append a clickable link to the console error line. The
@@ -17432,6 +17548,27 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
   }
 
   const data = await response.json();
+  const finishReason = data?.choices?.[0]?.finish_reason || data?.candidates?.[0]?.finishReason || data?.stop_reason || data?.promptFeedback?.blockReason || null;
+  const promptBlockReason = data?.promptFeedback?.blockReason || data?.candidates?.[0]?.finishReason || '';
+  if (_isContentFilteredSignal(finishReason) || _isContentFilteredSignal(promptBlockReason)) {
+    const reason = finishReason || promptBlockReason || 'provider safety filter';
+    const ctx = {
+      aiName:       ai.name,
+      aiId:         ai.id,
+      provider:     ai.provider,
+      aiConsoleUrl: ai.apiConsole || null,
+      aiDocsUrl:    ai.apiDocs || null,
+      isCustomEndpoint,
+      status:       response.status,
+      message:      reason,
+      raw:          JSON.stringify(data, null, 2)
+    };
+    const cfErr = _makeContentFilteredError(ai, reason);
+    consoleLog(`🛡️ ${ai.name} — provider content filter blocked output (${reason})`, 'warn');
+    const entry = WF_DEBUG.classify(cfErr, ctx);
+    WF_DEBUG.showCard(entry, ctx);
+    throw cfErr;
+  }
   // v3.39.13 — Measure elapsed AFTER the response body is fully consumed.
   // `await fetch()` resolves when HEADERS arrive, not when the body finishes
   // streaming. Most providers don't flush headers until the body is mostly
