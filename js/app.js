@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260607-001
+// Build: 20260607-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260607-001';         // build stamp — update each session
+const BUILD       = '20260607-002';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -856,6 +856,7 @@ function renderSettings() {
   // help.html uses (window.wipeLocalStorage etc.), so behavior is identical
   // across both surfaces.
   wireSettingsWipeButtons();
+  renderSettingsLicense();
   const toggle = document.getElementById('setAutoNeverDisableBuilder');
   if (toggle) toggle.checked = getAutoNeverDisableBuilder();
   const streak = document.getElementById('setAutoStreakLimit');
@@ -1913,7 +1914,12 @@ function saveLicense(key) {
     existing.valid = true;
     existing.key   = key;
     localStorage.setItem(LS_LICENSE, JSON.stringify(existing));
-  } catch(e) { console.warn('[saveLicense] write failed:', e); }
+    const saved = JSON.parse(localStorage.getItem(LS_LICENSE) || 'null');
+    return !!(saved && saved.valid === true && saved.key === key);
+  } catch(e) {
+    console.warn('[saveLicense] write failed:', e);
+    return false;
+  }
 }
 
 function getLicenseKey() {
@@ -1922,6 +1928,13 @@ function getLicenseKey() {
     const data = JSON.parse(localStorage.getItem(LS_LICENSE) || 'null');
     return (data && data.valid && data.key) ? data.key : null;
   } catch(e) { return null; }
+}
+
+function maskLicenseKey(key) {
+  if (key && key.length >= 8) {
+    return key.slice(0, -8).replace(/[A-Za-z0-9]/g, '•') + key.slice(-8);
+  }
+  return '••••••••-••••••••-••••••••-••••••••';
 }
 
 function clearLicense() {
@@ -1933,6 +1946,108 @@ function clearLicense() {
     delete data.key;
     localStorage.setItem(LS_LICENSE, JSON.stringify(data));
   } catch(e) { console.warn('[clearLicense] write failed:', e); }
+}
+
+async function verifyAndSaveLicenseKey(key) {
+  try {
+    const resp = await fetch('https://api.gumroad.com/v2/licenses/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        product_id:           GUMROAD_PRODUCT_ID,
+        license_key:          key,
+        increment_uses_count: 'false'
+      })
+    });
+    const data = await resp.json();
+    if (data.success && !data.purchase?.refunded && !data.purchase?.chargebacked) {
+      if (!saveLicense(key)) {
+        return {
+          ok: false,
+          message: 'License verified, but this browser could not save it. Check site storage settings or clear space, then try again.'
+        };
+      }
+      return { ok: true };
+    }
+    return { ok: false, message: data.message || 'Invalid key. Check your Gumroad receipt and try again.' };
+  } catch(e) {
+    return { ok: false, message: 'Could not reach Gumroad. Check your connection and try again.' };
+  }
+}
+
+function renderSettingsLicense() {
+  const statusName = document.getElementById('setLicenseStatusName');
+  const statusHelp = document.getElementById('setLicenseStatusHelp');
+  const removeBtn  = document.getElementById('setLicenseRemoveBtn');
+  const input      = document.getElementById('setLicenseKeyInput');
+  const inputName  = document.getElementById('setLicenseInputName');
+  const errEl      = document.getElementById('setLicenseError');
+  const submitBtn  = document.getElementById('setLicenseSubmitBtn');
+  const key        = getLicenseKey();
+
+  if (statusName) statusName.textContent = key ? 'WaxFrame Pro is active' : 'Free trial';
+  if (statusHelp) {
+    if (key) {
+      statusHelp.textContent = `Saved in this browser: ${maskLicenseKey(key)}`;
+    } else {
+      const used = getTrialRoundsUsed();
+      const remaining = Math.max(0, FREE_TRIAL_ROUNDS - used);
+      statusHelp.textContent = remaining > 0
+        ? `${remaining} free round${remaining === 1 ? '' : 's'} left. Enter a license key below to unlock unlimited rounds.`
+        : 'Your free trial has expired. Enter a license key below to keep running rounds.';
+    }
+  }
+  if (removeBtn) removeBtn.style.display = key ? '' : 'none';
+  if (input) {
+    input.value = '';
+    input.placeholder = key ? 'Paste a new key to replace the saved license' : 'XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX';
+  }
+  if (inputName) inputName.textContent = key ? 'Replace license key' : 'License key';
+  if (submitBtn) submitBtn.textContent = key ? 'Replace License Key' : 'Save License Key';
+  if (errEl) errEl.textContent = '';
+}
+
+function openLicenseSettings(reason) {
+  openSettings();
+  setTimeout(() => {
+    renderSettingsLicense();
+    const section = document.getElementById('settingsLicenseSection');
+    const input   = document.getElementById('setLicenseKeyInput');
+    const errEl   = document.getElementById('setLicenseError');
+    if (reason === 'trial_expired' && errEl) {
+      errEl.textContent = `You've used your ${FREE_TRIAL_ROUNDS} free rounds. Enter your license key here to keep going.`;
+    }
+    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    input?.focus();
+  }, 80);
+}
+
+async function submitSettingsLicenseKey() {
+  const input = document.getElementById('setLicenseKeyInput');
+  const errEl = document.getElementById('setLicenseError');
+  const btn   = document.getElementById('setLicenseSubmitBtn');
+  const key   = input?.value.trim();
+
+  if (!key) { if (errEl) errEl.textContent = 'Please enter your license key.'; return; }
+  if (btn)   { btn.disabled = true; btn.textContent = 'Verifying…'; }
+  if (errEl) errEl.textContent = '';
+
+  const wasLicensed = !!getLicenseKey();
+  const result = await verifyAndSaveLicenseKey(key);
+  if (result.ok) {
+    if (input) input.value = '';
+    updateLicenseBadge();
+    renderSettingsLicense();
+    toast(wasLicensed ? '🔑 License key replaced' : '🔑 WaxFrame Pro unlocked', 3500);
+    if (!wasLicensed) playUnlockScene();
+  } else if (errEl) {
+    errEl.textContent = result.message;
+  }
+
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = getLicenseKey() ? 'Replace License Key' : 'Save License Key';
+  }
 }
 
 
@@ -2049,59 +2164,6 @@ function attachDevToolbarDrag() {
 // so all scene functions are globally available by the time app.js
 // code references them.
 
-function showLicenseModal(reason) {
-  const modal = document.getElementById('licenseModal');
-  const msg   = document.getElementById('licenseModalMsg');
-  if (msg) {
-    msg.textContent = reason === 'trial_expired'
-      ? `You've used your ${FREE_TRIAL_ROUNDS} free rounds. Enter your license key to keep going.`
-      : 'Enter your license key to continue using WaxFrame Pro.';
-  }
-  if (modal) modal.classList.add('active');
-  setTimeout(() => document.getElementById('licenseKeyInput')?.focus(), 100);
-}
-
-function hideLicenseModal() {
-  const modal = document.getElementById('licenseModal');
-  if (modal) modal.classList.remove('active');
-}
-
-async function submitLicenseKey() {
-  const input = document.getElementById('licenseKeyInput');
-  const errEl = document.getElementById('licenseKeyError');
-  const btn   = document.getElementById('licenseSubmitBtn');
-  const key   = input?.value.trim();
-
-  if (!key) { if (errEl) errEl.textContent = 'Please enter your license key.'; return; }
-  if (btn)   { btn.disabled = true; btn.textContent = 'Verifying…'; }
-  if (errEl) errEl.textContent = '';
-
-  try {
-    const resp = await fetch('https://api.gumroad.com/v2/licenses/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        product_id:           GUMROAD_PRODUCT_ID,
-        license_key:          key,
-        increment_uses_count: 'false'
-      })
-    });
-    const data = await resp.json();
-    if (data.success && !data.purchase?.refunded && !data.purchase?.chargebacked) {
-      saveLicense(key);
-      hideLicenseModal();
-      updateLicenseBadge();
-      playUnlockScene();
-    } else {
-      if (errEl) errEl.textContent = data.message || 'Invalid key. Check your Gumroad receipt and try again.';
-    }
-  } catch(e) {
-    if (errEl) errEl.textContent = 'Could not reach Gumroad. Check your connection and try again.';
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Unlock Pro'; }
-  }
-}
-
 function updateLicenseBadge() {
   // v3.55.5 — Keep the pinned Buy footer in sync with license state:
   // visible for non-licensed (trial) users, hidden once a valid license is
@@ -2114,48 +2176,22 @@ function updateLicenseBadge() {
   if (!badge) return;
   if (isLicensed()) {
     badge.textContent = '✓ Licensed';
-    badge.title       = 'WaxFrame Pro — manage license';
+    badge.title       = 'WaxFrame Pro — manage license in Settings';
     badge.classList.add('licensed');
-    badge.onclick     = () => showLicenseManageModal();
+    badge.onclick     = () => openLicenseSettings();
   } else {
     const used      = getTrialRoundsUsed();
     const remaining = Math.max(0, FREE_TRIAL_ROUNDS - used);
     badge.textContent = remaining > 0
       ? `Trial — ${remaining} round${remaining === 1 ? '' : 's'} left`
       : 'Trial expired';
-    badge.title   = 'Click to enter license key';
+    badge.title   = 'Click to enter license key in Settings';
     badge.classList.remove('licensed');
-    badge.onclick = () => showLicenseModal('');
+    badge.onclick = () => openLicenseSettings();
   }
-}
-
-// ── License Manage Modal — shown when licensed badge is clicked ──
-function showLicenseManageModal() {
-  const modal = document.getElementById('licenseManageModal');
-  const keyEl = document.getElementById('licenseManageKey');
-  if (keyEl) {
-    const key = getLicenseKey();
-    // Mask all but the last 8 characters: "••••••••-••••••••-••••••••-XXXXXXXX"
-    if (key && key.length >= 8) {
-      const masked = key.slice(0, -8).replace(/[A-Za-z0-9]/g, '•') + key.slice(-8);
-      keyEl.textContent = masked;
-    } else {
-      keyEl.textContent = '••••••••-••••••••-••••••••-••••••••';
-    }
+  if (document.getElementById('screen-settings')?.classList.contains('active')) {
+    renderSettingsLicense();
   }
-  if (modal) modal.classList.add('active');
-}
-
-function hideLicenseManageModal() {
-  const modal = document.getElementById('licenseManageModal');
-  if (modal) modal.classList.remove('active');
-}
-
-function replaceLicenseKey() {
-  // Open the entry modal so a new key can be submitted; old key remains
-  // valid until the new one verifies, so the user is never locked out mid-flow.
-  hideLicenseManageModal();
-  showLicenseModal('');
 }
 
 async function confirmRemoveLicense() {
@@ -2169,8 +2205,8 @@ async function confirmRemoveLicense() {
   );
   if (!ok) return;
   clearLicense();
-  hideLicenseManageModal();
   updateLicenseBadge();
+  renderSettingsLicense();
   toast('License key removed');
 }
 function goToScreen(id) {
@@ -15699,7 +15735,7 @@ async function runBuilderOnly() {
   // ── LICENSE CHECK ──
   if (!isLicensed()) {
     const used = getTrialRoundsUsed();
-    if (used >= FREE_TRIAL_ROUNDS) { showLicenseModal('trial_expired'); return; }
+    if (used >= FREE_TRIAL_ROUNDS) { openLicenseSettings('trial_expired'); return; }
   }
 
   btn.disabled = true;
@@ -16196,7 +16232,7 @@ async function runRound() {
   if (!isLicensed()) {
     const used = getTrialRoundsUsed();
     if (used >= FREE_TRIAL_ROUNDS) {
-      showLicenseModal('trial_expired');
+      openLicenseSettings('trial_expired');
       return;
     }
   }
@@ -20217,6 +20253,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Stamp version and build number into UI — APP_VERSION comes from version.js
   document.querySelectorAll('.app-version-stamp').forEach(el => el.textContent = APP_VERSION);
   document.title = 'WaxFrame ' + APP_VERSION;
+  const aboutVersionEl = document.getElementById('aboutVersion');
+  if (aboutVersionEl) aboutVersionEl.textContent = APP_VERSION;
+  document.querySelectorAll('.app-build-stamp').forEach(el => el.textContent = BUILD);
   const buildEl = document.getElementById('aboutBuild');
   if (buildEl) buildEl.textContent = BUILD;
   updateSetupRequirements();

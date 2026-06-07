@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260607-001
+     Build: 20260607-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260607-001">
+  <meta name="waxframe-build" content="20260607-002">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.214">
+  <link rel="stylesheet" href="style.css?v=3.63.215">
 </head>
 <body class="helper-body">
 
@@ -66,7 +66,7 @@
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
-    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
+    <a class="nav-item" href="index.html#settings" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 Account &amp; License</a>
 
     <div class="nav-divider"></div>
     <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
@@ -242,9 +242,9 @@
       <div class="wh-block-title">Entering your license key</div>
       <ol class="wh-steps">
         <li class="wh-step"><span class="wh-step-num">1</span><span>Click the <strong>Menu</strong> button in the top left corner of any screen. It shows three horizontal lines with the word <strong>Menu</strong> next to it.</span></li>
-        <li class="wh-step"><span class="wh-step-num">2</span><span>In the menu panel that slides in from the left, click <strong>🔑 Enter License Key</strong>.</span></li>
-        <li class="wh-step"><span class="wh-step-num">3</span><span>A dialog box appears. Paste your license key into the field and click <strong>Unlock Pro</strong>.</span></li>
-        <li class="wh-step"><span class="wh-step-num">4</span><span>WaxFrame validates the key against the server. If valid, a confirmation animation plays and unlimited rounds are unlocked immediately. A small license badge appears in the top bar of the Work screen to confirm your status.</span></li>
+        <li class="wh-step"><span class="wh-step-num">2</span><span>In the menu panel that slides in from the left, click <strong>⚙ Settings</strong>.</span></li>
+        <li class="wh-step"><span class="wh-step-num">3</span><span>Use the <strong>🔑 Account &amp; License</strong> section at the top of Settings. Paste your license key into the field and click <strong>Save License Key</strong>.</span></li>
+        <li class="wh-step"><span class="wh-step-num">4</span><span>WaxFrame validates the key against Gumroad. If valid, the WaxFrame Unlocked animation plays and unlimited rounds are unlocked immediately. The footer license badge changes to confirm your Pro status.</span></li>
       </ol>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -1080,11 +1080,11 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">License badge</span>
-        <span class="goal-info-desc">A small indicator showing your current license status — either the number of free trial rounds remaining or a Pro indicator if you have a valid license. Click it to open the Manage License modal where you can replace, remove, or check the status of your license key.</span>
+        <span class="goal-info-desc">A small indicator showing your current license status — either the number of free trial rounds remaining or a Pro indicator if you have a valid license. Click it to jump to <a href="#settings" class="link-accent">Settings → Account &amp; License</a>, where you can enter, replace, remove, or check the status of your license key.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">ℹ️ About</span>
-        <span class="goal-info-desc">Opens the About modal with credits, build info, and license details.</span>
+        <span class="goal-info-desc">Opens the About modal with the WaxFrame logo, tagline, Worker Bee art, credits, and the current version/build details.</span>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -1421,7 +1421,7 @@
         <div class="hp-section-header is-bare">
           <div class="hp-section-title-block">
             <h2 class="hp-section-title">Settings</h2>
-            <p class="hp-section-sub">Per-machine preferences for Auto Mode behavior, OCR provider, workflow toggles, background model-list refresh, and dismissed confirmation prompts. Open from <strong>Menu → ⚙ Settings</strong>. Changes save automatically and apply to every project on this browser.</p>
+            <p class="hp-section-sub">Per-machine preferences for license management, Auto Mode behavior, OCR provider, workflow toggles, background model-list refresh, and dismissed confirmation prompts. Open from <strong>Menu → ⚙ Settings</strong>. Changes save automatically and apply to every project on this browser.</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -1430,8 +1430,13 @@
     <figure class="ss-shot">
       <img class="ss-dark" src="screenshots/screenshot_settings_dark.png" alt="WaxFrame Settings screen" loading="lazy">
       <img class="ss-light" src="screenshots/screenshot_settings_light.png" alt="WaxFrame Settings screen" loading="lazy">
-      <figcaption>The Settings screen — per-machine preferences for Auto Mode, Vision/OCR, Workflow, and Updates.</figcaption>
+      <figcaption>The Settings screen — per-machine license management and preferences for Auto Mode, Vision/OCR, Workflow, and Updates.</figcaption>
     </figure>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Account &amp; License section</div>
+      <p>The first Settings section shows your current license state and handles normal license management. If you are on the free trial, it shows how many rounds remain and provides a field for your Gumroad license key. If WaxFrame Pro is active, it shows a masked copy of the saved key and lets you replace or remove it. The key is stored locally in this browser; WaxFrame contacts Gumroad only when you submit or replace a key.</p>
+    </div>
 
     <div class="wh-block">
       <div class="wh-block-title">Where preferences live</div>
@@ -2048,8 +2053,8 @@
 </div>
 <!-- ========================================================
      LICENSE MODALS — helper-page (v3.22.6)
-     Mirrors in-app license modals for parity. License pill in
-     footer-right toggles between these via license-helper.js.
+     Documentation/helper pages do not have the full Settings screen,
+     so their footer license pill still uses these compact helper modals.
      ======================================================== -->
 <div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
   <div class="license-modal">
@@ -2079,13 +2084,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.214"></script>
-<script src="lib/docx.min.js?v=3.63.214"></script>
-<script src="js/docx-export.js?v=3.63.214"></script>
-<script src="js/nav-helper.js?v=3.63.214"></script>
-<script src="js/license-helper.js?v=3.63.214"></script>
-<script src="js/version.js?v=3.63.214"></script>
-<script src="js/docs-scrollspy.js?v=3.63.214"></script>
+<script src="js/theme.js?v=3.63.215"></script>
+<script src="lib/docx.min.js?v=3.63.215"></script>
+<script src="js/docx-export.js?v=3.63.215"></script>
+<script src="js/nav-helper.js?v=3.63.215"></script>
+<script src="js/license-helper.js?v=3.63.215"></script>
+<script src="js/version.js?v=3.63.215"></script>
+<script src="js/docs-scrollspy.js?v=3.63.215"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
