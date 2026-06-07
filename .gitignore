@@ -7,6 +7,9 @@ tools/pricing-worker/.wrangler/
 # Claude Code worktrees + dev tooling (local-only audit servers, etc.)
 .claude/
 
+# Generated release bundles/staging folders
+release-artifacts/
+
 # OS noise
 .DS_Store
 Thumbs.db

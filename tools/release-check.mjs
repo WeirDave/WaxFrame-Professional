@@ -57,7 +57,7 @@ const section = (title) => console.log(`\n▶ ${title}`);
 function walk(dir, predicate) {
   const out = [];
   for (const entry of readdirSync(dir)) {
-    if (entry === 'node_modules' || entry === '.git' || entry === '.claude') continue;
+    if (entry === 'node_modules' || entry === '.git' || entry === '.claude' || entry === 'release-artifacts') continue;
     const p = join(dir, entry);
     const s = statSync(p);
     if (s.isDirectory()) out.push(...walk(p, predicate));
