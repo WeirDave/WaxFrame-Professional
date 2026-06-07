@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-024
+// Build: 20260606-025
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-024';         // build stamp — update each session
+const BUILD       = '20260606-025';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -3716,7 +3716,7 @@ function renderTemplateGalleryBody() {
              screen: opener clicks "Let's get started →" themselves to
              enter Setup 1 with the template already applied. From Setup
              2+: they see their filled-in fields immediately. -->
-        <button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template — fills in the Project Goal and a Reference scaffold so you can run a full round end-to-end"><strong>New to WaxFrame? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</button>
+        <button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template — fills in the Project Goal and a Reference scaffold so you can run a full round end-to-end"><strong>⭐ Quick Start</strong> — New to WaxFrame? Click here for a low-stakes Chocolate Chip Cookies demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</button>
         <div class="template-path-grid">
           <button class="template-path-card" onclick="selectTemplatePath('scratch')" type="button">
             <span class="template-path-card-icon">📝</span>
@@ -3828,10 +3828,10 @@ function renderTemplateGalleryBody() {
   let explainPara = '';
   if (path === 'custom') ctaButton = `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()" title="Opens the project editor with empty fields. Fill in your project goal — plus optional reference material and a starting document — then ⭐ Save as Template to bank the recipe. Closes this gallery.">➕ New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()" title="Load a template file (.json) someone shared with you, or one you exported from another machine.">⬆ Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Custom templates bank your project goal, reference material, starting document, and the hive that ran them. Hover a saved template to export ⬇, duplicate 📋, edit ✏️, or delete 🗑 it.</span></div>`;
   else if (path === 'scratch') {
-    ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>New to WaxFrame? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`;
+    ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>⭐ Quick Start</strong> — New to WaxFrame? Click here for a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`;
     explainPara = `<p class="template-gallery-explain">These templates are designed to spark a <strong>first draft</strong>. Pick the one closest to what you're writing — the hive will use this template to generate a document, then refine it round by round.</p>`;
   } else {
-    ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>Want a guided tour first? Click here to try the Quick Start</strong> — a low-stakes Chocolate Chip Cookies demo that shows you the whole hive flow before you bring your own document.</button>`;
+    ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>⭐ Quick Start</strong> — Want a guided tour first? Click here for a low-stakes Chocolate Chip Cookies demo that shows you the whole hive flow before you bring your own document.</button>`;
     explainPara = `<p class="template-gallery-explain">These templates are designed to <strong>refine work you've already written</strong>. Pick the one closest to your document type — the hive will polish, tighten, and restructure it round by round rather than starting over.</p>`;
   }
   const newuserCallout = ctaButton + explainPara;
