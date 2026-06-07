@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-023
+// Build: 20260606-024
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-023';         // build stamp — update each session
+const BUILD       = '20260606-024';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -10076,9 +10076,11 @@ function handlePasteTextInput() {
     } else {
       const s = (typeof computeRefStats === 'function')
         ? computeRefStats(text)
-        : { chars: text.length, words: 0, lines: 0, paragraphs: 0, tokens: Math.round(text.length / 4) };
+        : { chars: text.length, words: 0, paragraphs: 0, pages: 0 };
       statsEl.style.display = '';
-      statsEl.textContent = `${s.chars.toLocaleString()} chars · ${s.words.toLocaleString()} words · ${s.lines.toLocaleString()} lines · ${s.paragraphs.toLocaleString()} paragraphs · ${s.tokens.toLocaleString()} tokens (est.)`;
+      statsEl.textContent = (typeof formatDocStatsLine === 'function')
+        ? formatDocStatsLine(s)
+        : `${s.chars.toLocaleString()} chars`;
     }
   }
 }
@@ -10461,8 +10463,10 @@ async function processFile(file) {
     // down this file and is the same helper Reference Material uses.
     const _ssStats = (typeof computeRefStats === 'function')
       ? computeRefStats(docText)
-      : { chars: docText.length, words: 0, lines: 0, paragraphs: 0, tokens: Math.round(docText.length / 4) };
-    const _ssStatLine = `${_ssStats.chars.toLocaleString()} chars · ${_ssStats.words.toLocaleString()} words · ${_ssStats.lines.toLocaleString()} lines · ${_ssStats.paragraphs.toLocaleString()} paragraphs · ${_ssStats.tokens.toLocaleString()} tokens (est.)`;
+      : { chars: docText.length, words: 0, paragraphs: 0, pages: 0 };
+    const _ssStatLine = (typeof formatDocStatsLine === 'function')
+      ? formatDocStatsLine(_ssStats)
+      : `${_ssStats.chars.toLocaleString()} chars`;
     if (warnings.length > 0) {
       status.textContent = `⚠️ ${_ssStatLine} from ${file.name} — ${warnings[0]}`;
       setFileStatusState(status, 'warn');
@@ -12635,11 +12639,10 @@ function refCardMarkup(doc, index) {
   <div class="ref-card-body">
     ${body}
     <div class="ref-card-counters" id="refCardCounters-${idAttr}">
-      <span class="ref-counter-item"><span class="ref-counter-sublabel">Chars:</span> <span class="ref-card-count-chars">${stats.chars.toLocaleString()}</span></span>
+      <span class="ref-counter-item"><span class="ref-counter-sublabel">Characters:</span> <span class="ref-card-count-chars">${stats.chars.toLocaleString()}</span></span>
       <span class="ref-counter-item"><span class="ref-counter-sublabel">Words:</span> <span class="ref-card-count-words">${stats.words.toLocaleString()}</span></span>
-      <span class="ref-counter-item"><span class="ref-counter-sublabel">Lines:</span> <span class="ref-card-count-lines">${stats.lines.toLocaleString()}</span></span>
       <span class="ref-counter-item"><span class="ref-counter-sublabel">Paragraphs:</span> <span class="ref-card-count-paragraphs">${stats.paragraphs.toLocaleString()}</span></span>
-      <span class="ref-counter-item"><span class="ref-counter-sublabel">Tokens (est.):</span> <span class="ref-card-count-tokens">${stats.tokens.toLocaleString()}</span></span>
+      <span class="ref-counter-item"><span class="ref-counter-sublabel">Pages:</span> <span class="ref-card-count-pages">≈${(stats.pages < 0.1 ? '<0.1' : stats.pages.toFixed(1))}</span></span>
     </div>
   </div>
 </div>`;
@@ -12668,7 +12671,25 @@ function computeRefStats(text) {
         return trimmed.length > 0 && /[.!?]/.test(trimmed);
       }).length
     : 0;
-  return { chars, words, tokens, lines, paragraphs };
+  // v3.63.206 — Pages derived from words using the same WORDS_PER_PAGE
+  // (600) the length-constraint logic uses. The Reference Material doc
+  // cards, Starting Document upload status, and paste-text live readout
+  // all swap "lines · tokens" for "paragraphs · pages" so the vocabulary
+  // matches the Length Constraint unit picker (chars/words/paragraphs/
+  // pages). Legacy lines + tokens still returned for any other caller.
+  const pages = words / WORDS_PER_PAGE;
+  return { chars, words, tokens, lines, paragraphs, pages };
+}
+
+// v3.63.206 — Single source of truth for the canonical four-unit stats
+// readout (chars · words · paragraphs · pages). Used by Ref Material
+// card counters, Starting Document upload status, and paste-text live
+// stats. Pages format matches the length-hint convention (≈ prefix,
+// .toFixed(1), <0.1 floor) for consistency with the length-gate display.
+function formatDocStatsLine(s) {
+  const pages = s.pages || 0;
+  const pagesStr = pages < 0.1 ? '<0.1' : pages.toFixed(1);
+  return `${s.chars.toLocaleString()} chars · ${s.words.toLocaleString()} words · ${s.paragraphs.toLocaleString()} paragraphs · ≈${pagesStr} pages`;
 }
 
 // Add a new empty paste-mode reference document and focus its textarea so
