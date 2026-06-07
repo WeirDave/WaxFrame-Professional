@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.221
+
+**Template sidebar dashed hover removal**
+
+Build: `20260607-008`<br>
+Released: `2026-06-07`
+
+### Fixed — template sidebar hover has no dashed box state
+
+Removed the dashed border from template-gallery category links entirely. Sidebar links now use a solid transparent border plus the left accent rail, so hover cannot expose a dotted rectangle around the item.
+
+### Files Changed
+
+- Updated: `style.css`, `CHANGELOG.md`
+- Version/build stamps to v3.63.221 / 20260607-008 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.220
 
 **Template gallery sidebar hover polish**
