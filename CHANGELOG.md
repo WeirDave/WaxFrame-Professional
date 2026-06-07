@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.209
+
+**Per-row "Manual override" badge — see which AIs diverge from your active Hive Profile**
+
+Build: `20260606-027`<br>
+Released: `2026-06-06`
+
+### Closed — backlog "Per-row Manual override tag — needs delta tracking"
+
+When you have a Hive Profile active (Cheap / Balanced / Thinker / Fast) and you manually swap one AI's model away from what the profile recommends, you currently have no visual signal that the row is now diverging from the profile's intent. This adds an **`✏️ override`** amber pill in the summary row of any AI whose current model differs from the active profile's expected tier pick for that provider.
+
+Hover the badge for diagnostic context: *"ChatGPT is using gpt-4.5 — the active 💰 Cheap profile would pick gpt-4-mini instead. Switch the model from the row above to bring it back into the profile."*
+
+Hidden in cases where the comparison doesn't apply:
+- AI has no key (no swap possible)
+- Active profile is Custom (no expected pick)
+- No cached tier classification yet for this provider (background classifier from v3.63.208 will fill in; badge appears on the next render after data lands)
+
+Pure additive — no behavior change, just visibility into the divergence. Pairs with v3.63.208's self-healing auto-classify so the badge is reliable across freshly-added providers.
+
+### Files Changed
+
+- Updated: `js/app.js` (new `_buildProfileOverrideBadgeHTML` helper; `buildAISetupRowHTML` injects the badge between the compact model dropdown and the Builder button), `style.css` (new `.ai-setup-override-badge` rule with small-pill 3D shadow stack), `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.209 / 20260606-027 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.208
 
 **Closed two backlog items: server-mode group label + auto-classify tier picks on profile apply**
