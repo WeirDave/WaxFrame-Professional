@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.213
+
+**New hive-profiles.html docs page — backlog #12 closed**
+
+Build: `20260606-031`<br>
+Released: `2026-06-06`
+
+### Closed — backlog #12 "Hive Profiles: dedicated docs page (hive-profiles.html)"
+
+New standalone helper page covering the full Hive Profiles surface that just shipped in v3.63.208 (auto-classify), v3.63.209 (override badge), and v3.63.212 (save current as profile). Mirrors the structure of `what-are-tokens.html` and the other helper pages: page-header chrome, slim nav menu, FAQPage JSON-LD schema, hp-section content blocks.
+
+Content covers:
+
+- **What a Hive Profile does** — one dropdown swaps every AI's model pick coordinated to a single intent
+- **The five built-in profiles** — Custom / 💰 Cheap / ⚖️ Balanced / 🧠 Thinker / ⚡ Fast — table format with "what it picks" + "use when" columns
+- **How tier classification works** — WaxFrame asks each provider's API to categorize its own model lineup, results cached per-provider
+- **Auto-classify on first profile pick** — background classification + silent re-apply when picks land
+- **The ✏️ override badge** — appears on rows that diverge from the active profile; hover for what the profile would pick instead
+- **Custom Hive Profiles** — save current per-AI picks as a named profile, distinct from built-in tier profiles
+- **Saved vs. tier semantics** — built-in tracks new models as they appear; saved profile snapshots a specific configuration
+- **Edge cases** — AIs that lost their key, AIs added after save, provider-retired models
+
+### Nav-menu sweep
+
+Added 🐝 Hive Profiles link to the helper-page nav on every other helper page (api-details, ai-api-pricing, ai-business-proposal, ai-cover-letter-editor, ai-resume-review, document-playbooks, index, privacy, prompt-editor, templates, terms, waxframe-user-manual, what-are-tokens) so users opening the nav from anywhere see the new page.
+
+### Files Changed
+
+- Added: `hive-profiles.html` (new standalone helper page, ~280 lines)
+- Updated: 13 HTML files to add the new nav link, plus `CHANGELOG.md`, `js/version.js`, `package.json`
+- Version/build stamps to v3.63.213 / 20260606-031 across 10 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.212
 
 **Save current hive as a named profile — backlog #10 closed**

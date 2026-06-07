@@ -1,0 +1,355 @@
+<!-- ============================================================
+     WaxFrame — hive-profiles.html
+     Build: 20260606-031
+     Author: WeirDave (R David Paine III) | License: AGPL-3.0
+     GitHub: github.com/WeirDave/WaxFrame-Professional
+     ============================================================ -->
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="waxframe-build" content="20260606-031">
+  <title>Hive Profiles — WaxFrame Reference</title>
+  <meta name="description" content="Hive Profiles let you swap every AI's model pick across the whole hive with one click — Cheap, Balanced, Thinker, Fast, or your own saved configuration.">
+  <link rel="canonical" href="https://waxframe.com/hive-profiles.html">
+  <meta property="og:title" content="Hive Profiles — WaxFrame Reference">
+  <meta property="og:description" content="Hive Profiles let you swap every AI's model pick across the whole hive with one click — Cheap, Balanced, Thinker, Fast, or your own saved configuration.">
+  <meta property="og:url" content="https://waxframe.com/hive-profiles.html">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Hive Profiles — WaxFrame Reference">
+  <meta name="twitter:description" content="Hive Profiles let you swap every AI's model pick across the whole hive with one click — Cheap, Balanced, Thinker, Fast, or your own saved configuration.">
+  <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
+  <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
+  <link rel="stylesheet" href="style.css?v=3.63.213">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is a Hive Profile?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A Hive Profile is a one-click way to swap every AI in your hive to the model that matches a single intent — Cheap, Balanced, Thinker, Fast — without picking models one row at a time. Five built-in profiles ship with WaxFrame; you can also save your own current per-AI picks as a custom named profile."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How are the Cheap, Balanced, Thinker, and Fast tiers picked?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "WaxFrame asks each AI's own API to categorize its current model lineup into four tier slots: cheapest reliable pick, best capability per dollar, deepest reasoning model, lowest-latency model. The classification is cached per provider so the Hive Profile dropdown can apply tier picks instantly. When you pick a tier profile and any provider hasn't been classified yet, classification runs automatically in the background and the profile re-applies once it finishes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is a Custom Hive Profile?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A Custom Hive Profile captures a SNAPSHOT of your current per-AI model picks under a name you choose. Picking the profile from the dropdown sweeps every AI back to the model it had at save time. Different from built-in tier profiles, which derive picks from the live tier classification — custom profiles always reproduce the exact same configuration."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What does the ✏️ override badge mean?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "The ✏️ override badge appears on any AI row whose current model differs from the active profile's expected pick for that provider. It tells you which AIs you've hand-tuned away from the profile. Hover the badge to see what the profile would pick instead. The badge disappears as soon as you bring the row back to the profile's pick."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "When should I save a Custom Profile vs use a built-in tier?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Use a built-in tier when you want a CATEGORY ('always pick the cheapest reliable model') and you want it to track new models as they appear. Save a Custom Profile when you want a SPECIFIC CONFIGURATION ('exactly these models, in exactly this combination') that should stay the same regardless of what the classifier learns."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body class="helper-body">
+
+<!-- ========================================================
+     SLIM HELPER-PAGE NAV MENU (v3.22.5)
+     ======================================================== -->
+<div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+
+<div class="nav-panel" id="navPanel">
+  <div class="nav-panel-header">
+    <div class="nav-panel-brand">
+      <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="nav-panel-logo">
+      <div class="nav-panel-brand-text">
+        <span class="nav-panel-title">WaxFrame</span>
+        <span class="nav-panel-tagline">Many minds, one refined result.</span>
+        <span class="app-version-stamp nav-panel-version"></span>
+        <button class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+      </div>
+    </div>
+    <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
+  </div>
+
+  <div class="nav-body">
+    <div class="nav-section-label">Help & Support</div>
+    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
+    <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🐝 Hive Profiles</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">WaxFrame App</div>
+    <a class="nav-item" href="index.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
+    <a class="nav-item" href="waxframe-user-manual.html#settings" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⚙ Settings</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Tools</div>
+    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
+
+    <div class="nav-divider"></div>
+    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Legal</div>
+    <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
+    <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
+  </div>
+</div>
+
+<!-- ========================================================
+     UNIFIED HELPER-PAGE HEADER (v3.22.5)
+     ======================================================== -->
+<div class="page-header">
+  <div class="page-header-left">
+    <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+  </div>
+  <div class="page-header-brand">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
+    <div class="page-header-brand-text">
+      <div class="page-header-name">WaxFrame</div>
+      <div class="page-header-tag">Many minds, one refined result.</div>
+      <span class="app-version-stamp helper-version-stamp"></span>
+    </div>
+  </div>
+  <div class="page-header-controls">
+    <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
+    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
+    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
+    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+  </div>
+</div>
+
+<div class="page-main" id="top">
+
+<div class="hp-section">
+  <div class="hp-section-header">
+    <img src="images/WaxFrame_Token_Bee_v1.png" alt="" class="hp-section-bee">
+    <div class="hp-section-title-block">
+      <h1 class="hp-section-title">Hive Profiles</h1>
+      <p class="hp-section-sub">Swap every AI in your hive to a coordinated model strategy with one click — Cheap, Balanced, Thinker, Fast, or a configuration you've saved yourself. This page explains how the built-in profiles pick models, when to save your own, and what the override badge is telling you.</p>
+    </div>
+  </div>
+  <div class="hp-section-body">
+
+    <h2>What a Hive Profile Does</h2>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">One dropdown, every AI</h3>
+      <p>The Hive Profile dropdown sits at the top of the Worker Bees screen (Internet mode). Picking a profile from it tells every AI in your hive to switch to the model that fits that profile's intent — without you having to click into each AI row and pick models one at a time.</p>
+      <p>Five profiles ship built-in (🛠 Custom plus four tier-based picks), and you can save as many of your own as you want.</p>
+    </div>
+
+    <div class="wf-tip">
+      <span class="wf-tip-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt=""></span>
+      <div class="wf-tip-body">Hive Profiles only apply in Internet mode (cloud AIs like ChatGPT, Claude, Gemini). Server-imported AIs from LM Studio / Open WebUI / etc. don't get tier classification — they only have whatever models the server exposes.</div>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>The Built-in Profiles</h2>
+
+    <div class="wf-card is-green">
+      <table class="ai-table">
+        <tr>
+          <th>Profile</th>
+          <th>What it picks</th>
+          <th>Use when</th>
+        </tr>
+        <tr>
+          <td><strong>🛠 Custom</strong></td>
+          <td>Whatever's already saved on each row</td>
+          <td>You've hand-picked specific models per AI and want them left alone</td>
+        </tr>
+        <tr>
+          <td><strong>💰 Cheap</strong></td>
+          <td>Cheapest model each provider considers reliable for production use</td>
+          <td>Long sessions, big documents, draft work where token cost matters more than polish</td>
+        </tr>
+        <tr>
+          <td><strong>⚖️ Balanced</strong></td>
+          <td>Best capability per dollar — the provider's "default" answer</td>
+          <td>Your everyday hive. Good middle ground for most documents</td>
+        </tr>
+        <tr>
+          <td><strong>🧠 Thinker</strong></td>
+          <td>Deepest reasoning model each provider offers</td>
+          <td>Complex analytical documents — RFPs, legal review, technical guides where structured thought matters</td>
+        </tr>
+        <tr>
+          <td><strong>⚡ Fast</strong></td>
+          <td>Lowest-latency model each provider offers</td>
+          <td>Quick iteration, large hives where round-time stacks up, drafts where speed beats nuance</td>
+        </tr>
+      </table>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>How Tier Classification Works</h2>
+
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">Behind the scenes</h3>
+      <p>When you pick a tier profile (Cheap, Balanced, Thinker, or Fast), WaxFrame doesn't guess which model is which — it asks each provider's own API to classify its models. Each AI receives a numbered list of every model it offers and is asked to pick one for each of the four tier slots, plus a one-sentence reason for each pick.</p>
+      <p>The classification gets cached per provider in your browser. The next time you pick a tier profile, the answer is already there and the dropdown applies instantly with no API calls.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">Auto-classify on first profile pick</h3>
+      <p>If you pick a tier profile and one of your providers hasn't been classified yet, you'll see a toast like <em>"💰 Cheap — classifying 2 providers in the background, picks will fill in shortly…"</em></p>
+      <p>WaxFrame fires the classification calls in the background. As each provider's classification lands, the profile re-applies silently — the new picks get swept into the hive without a second click from you.</p>
+      <p>If you flip to a different profile while classification is still running, the re-apply is skipped — your new choice wins.</p>
+    </div>
+
+    <div class="wf-tip">
+      <span class="wf-tip-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt=""></span>
+      <div class="wf-tip-body">Want to see each AI's reasoning for its tier picks? Expand any AI row and click <strong>▸ Why each pick</strong>. Four rows fold open — one per tier — each showing the model and a one-sentence justification from the AI itself.</div>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>The ✏️ Override Badge</h2>
+
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">Spot the hand-tuned rows at a glance</h3>
+      <p>When a Hive Profile is active and you manually swap one AI's model — say you applied the 💰 Cheap profile but then changed Claude to the Opus model for a particular session — that AI's row gets an <strong>✏️ override</strong> badge next to its model dropdown.</p>
+      <p>The badge tells you, at a glance, which AIs are now diverging from the profile's intent. Hover the badge to see what the profile would have picked instead:</p>
+      <p style="font-style: italic; color: var(--text-dim);">"Claude is using claude-opus-4-5 — the active 💰 Cheap profile would pick claude-haiku-4 instead. Switch the model from the row above to bring it back into the profile."</p>
+      <p>Switching the model back to what the profile expects clears the badge. Switching the profile to Custom also clears it (Custom has no expected pick to diverge from).</p>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Custom Hive Profiles</h2>
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">Save your current configuration as a named profile</h3>
+      <p>Built-in tier profiles are great for general intent ("always pick the cheap one"). But sometimes you want to preserve a SPECIFIC configuration — a hive you've hand-tuned for a particular kind of work — so you can pull it back up with one click later.</p>
+      <p>Click <strong>💾 Save current as profile</strong> in the Hive Profile bar. A modal asks for a name (40 chars) and an optional single-emoji icon. The current per-AI model picks are captured as a snapshot under your chosen name.</p>
+      <p>Your saved profile shows up in the Hive Profile dropdown under a <strong>"Your saved profiles"</strong> group, separated from the built-in tiers. Picking it sweeps every AI back to the model it had at save time.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">Saved vs. tier — pick the right tool</h3>
+      <p><strong>Use a built-in tier</strong> when you want a category that tracks new models as they appear. "Cheap" in six months will pick whatever the cheapest reliable model is then, not the model that was cheap today.</p>
+      <p><strong>Use a saved profile</strong> when you want exactly these models, in exactly this combination, forever. If a provider releases a new cheaper model after you save, your saved profile keeps the old pick — that's the point. Snapshot, not category.</p>
+    </div>
+
+    <div class="wf-tip">
+      <span class="wf-tip-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt=""></span>
+      <div class="wf-tip-body">When a saved profile is active, a <strong>🗑 Delete profile</strong> button appears next to the dropdown. Confirms before deletion. Deleting the active profile falls back to Custom mode.</div>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Edge Cases & Gotchas</h2>
+
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">What happens when an AI loses its key or gets removed?</h3>
+      <p>Saved profiles capture an AI's model snapshot, not the AI itself. If you delete a Custom AI from your hive and then apply a saved profile that referenced it, that AI is silently skipped — you'll see a count in the toast ("Applied to 8 of 10 AIs, 2 missing or unkeyed").</p>
+      <p>If an AI's key gets removed but the AI is still in the hive, same outcome: skipped, counted in the missing-or-unkeyed total.</p>
+    </div>
+
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">What if I added new AIs after saving a profile?</h3>
+      <p>Saved profiles only capture AIs that had a key and a non-empty model at save time. AIs you add later won't be touched by the profile — they keep whatever model you've picked for them. To bring the new AIs under the profile's coverage, save a fresh profile that includes them.</p>
+    </div>
+
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">What if a provider drops a model from its API?</h3>
+      <p>If a saved profile points an AI at a model that the provider has since retired, the next time you apply the profile the row will land on a model that no longer exists. You'll usually see this as a ⚠ deprecation flag on the AI row. Switch the row to a current model and re-save the profile to keep it useful.</p>
+    </div>
+
+  </div>
+</div>
+
+<a href="#top" class="back-to-top" id="backToTop" title="Back to top">↑ Top</a>
+
+</div>
+
+<!-- ========================================================
+     SHARED HELPER MODALS (About + License — v3.22.5)
+     ======================================================== -->
+<div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)document.getElementById('aboutModalHelper').classList.remove('active')">
+  <div class="finish-modal">
+    <h2 class="finish-modal-title">About WaxFrame</h2>
+    <p class="finish-modal-msg">WaxFrame is a vanilla HTML/CSS/JS app for refining documents through multi-AI hives. Free trial available — buy WaxFrame Pro on <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" class="link-accent">Gumroad</a>.</p>
+    <p class="finish-modal-msg">Open source on GitHub: <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">WeirDave/WaxFrame-Professional</a>. AGPL-3.0 license.</p>
+    <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Close</button>
+  </div>
+</div>
+
+<div class="finish-modal-overlay" id="openSourceModal" onclick="if(event.target===this)document.getElementById('openSourceModal').classList.remove('active')">
+  <div class="finish-modal">
+    <h2 class="finish-modal-title">Open Source</h2>
+    <p class="finish-modal-msg">WaxFrame runs entirely in your browser. No server holds your document, your API keys, or your session — everything lives in your browser's local storage and goes directly to the AI APIs you've configured. Buy the Pro license to support continued development.</p>
+    <p class="finish-modal-msg">Source at <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a>.</p>
+    <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Close</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">WaxFrame Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">Manage License</h2>
+    <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
+    <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
+    <div class="license-modal-actions">
+      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+  </div>
+</div>
+
+
+<script src="js/theme.js?v=3.63.213"></script>
+<script src="lib/docx.min.js?v=3.63.213"></script>
+<script src="js/docx-export.js?v=3.63.213"></script>
+<script src="js/nav-helper.js?v=3.63.213"></script>
+<script src="js/license-helper.js?v=3.63.213"></script>
+<script src="js/version.js?v=3.63.213"></script>
+<script>
+  document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
+</script>
+</body>
+</html>
