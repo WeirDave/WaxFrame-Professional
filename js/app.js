@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-029
+// Build: 20260606-030
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-029';         // build stamp — update each session
+const BUILD       = '20260606-030';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -5863,11 +5863,131 @@ function getActiveHiveProfile() {
   try {
     const raw = localStorage.getItem('waxframe_hive_profile');
     if (!raw) return 'custom';
-    return HIVE_PROFILE_OPTIONS.find(o => o.id === raw) ? raw : 'custom';
+    const all = getAllHiveProfileOptions();
+    return all.find(o => o.id === raw) ? raw : 'custom';
   } catch (e) { return 'custom'; }
 }
 function setActiveHiveProfile(id) {
   try { localStorage.setItem('waxframe_hive_profile', id); } catch (e) { /* defensive */ }
+}
+
+// v3.63.212 (closes backlog #10 "Hive Profiles: Save current as named
+// profile") — User-saved hive profiles stored in localStorage. Each
+// custom profile captures a SNAPSHOT of per-AI model picks at save time
+// (id → model map), distinct from built-in profiles which derive picks
+// at apply time from cached tier classifications. Applying a custom
+// profile sweeps each AI to its snapshotted model verbatim — no tier
+// lookup, no provider-level classification dependency.
+//
+// Schema for each entry:
+//   { id, label, icon, picks: { aiId: model, ... }, ts }
+//
+// `id` is user_<timestamp> to avoid collision with built-in ids
+// ('cheap', 'balanced', etc.). `label` is the user-supplied display
+// name shown in the dropdown. `icon` is a single emoji (or short
+// glyph) rendered as a visual key. `picks` records ONLY AIs that had
+// a non-empty model at save time — AIs added to the hive after the
+// profile was saved are simply skipped when the profile applies
+// (not an error; the user can re-save to include them).
+const CUSTOM_HIVE_PROFILES_KEY = 'waxframe_custom_hive_profiles';
+
+function loadCustomHiveProfiles() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CUSTOM_HIVE_PROFILES_KEY) || '[]');
+    return Array.isArray(raw) ? raw : [];
+  } catch (e) { return []; }
+}
+
+function saveCustomHiveProfiles(arr) {
+  try {
+    localStorage.setItem(CUSTOM_HIVE_PROFILES_KEY, JSON.stringify(arr || []));
+  } catch (e) { console.warn('[hive-profiles] save failed:', e); }
+}
+
+// Returns the unified dropdown options list: built-in profiles followed
+// by user-saved custom profiles, each tagged with `isCustom: true` so
+// renderHiveProfileBar and applyHiveProfile can branch correctly.
+function getAllHiveProfileOptions() {
+  const builtIns = HIVE_PROFILE_OPTIONS.map(o => ({ ...o, isCustom: false }));
+  const customs = loadCustomHiveProfiles().map(p => ({
+    id: p.id,
+    label: `${p.icon || '⭐'} ${p.label}`,
+    tier: null,            // custom profiles have no tier; they apply by snapshot
+    icon: p.icon || '⭐',
+    picks: p.picks || {},
+    isCustom: true,
+    rawLabel: p.label
+  }));
+  return [...builtIns, ...customs];
+}
+
+// Capture the current hive's per-AI model picks as a snapshot for save.
+// Only includes AIs with a key AND a non-empty model — partially-configured
+// rows would round-trip as data drift if we tried to persist them.
+function captureCurrentHiveSnapshot() {
+  const picks = {};
+  if (!Array.isArray(aiList)) return picks;
+  aiList.forEach(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    if (!cfg?._key || !cfg?.model) return;
+    picks[ai.id] = cfg.model;
+  });
+  return picks;
+}
+
+function openSaveHiveProfileModal() {
+  const modal = document.getElementById('saveHiveProfileModal');
+  if (!modal) return;
+  const nameEl = document.getElementById('saveHiveProfileName');
+  const iconEl = document.getElementById('saveHiveProfileIcon');
+  if (nameEl) nameEl.value = '';
+  if (iconEl) iconEl.value = '⭐';
+  const snapshot = captureCurrentHiveSnapshot();
+  const summaryEl = document.getElementById('saveHiveProfileSummary');
+  if (summaryEl) {
+    const n = Object.keys(snapshot).length;
+    summaryEl.textContent = n
+      ? `Will capture ${n} AI${n === 1 ? '' : 's'} with their current model picks.`
+      : 'No keyed AIs to capture — set up at least one AI first.';
+  }
+  modal.classList.add('active');
+}
+
+function closeSaveHiveProfileModal() {
+  const modal = document.getElementById('saveHiveProfileModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function confirmSaveHiveProfile() {
+  const name = (document.getElementById('saveHiveProfileName')?.value || '').trim();
+  if (!name) { toast('⚠️ Give your profile a name'); return; }
+  const icon = ((document.getElementById('saveHiveProfileIcon')?.value || '').trim()) || '⭐';
+  const picks = captureCurrentHiveSnapshot();
+  if (!Object.keys(picks).length) {
+    toast('⚠️ No keyed AIs to capture — set up at least one AI first');
+    return;
+  }
+  const profiles = loadCustomHiveProfiles();
+  const entry = { id: `user_${Date.now()}`, label: name, icon, picks, ts: Date.now() };
+  profiles.push(entry);
+  saveCustomHiveProfiles(profiles);
+  closeSaveHiveProfileModal();
+  setActiveHiveProfile(entry.id);
+  renderAISetupGrid();
+  toast(`💾 Saved hive profile "${name}" (${Object.keys(picks).length} AI${Object.keys(picks).length === 1 ? '' : 's'} captured)`);
+}
+
+function deleteCustomHiveProfile(id) {
+  const profiles = loadCustomHiveProfiles();
+  const entry = profiles.find(p => p.id === id);
+  if (!entry) return;
+  if (!confirm(`Delete hive profile "${entry.label}"? This cannot be undone.`)) return;
+  const filtered = profiles.filter(p => p.id !== id);
+  saveCustomHiveProfiles(filtered);
+  // If the deleted profile was active, fall back to Custom.
+  if (getActiveHiveProfile() === id) setActiveHiveProfile('custom');
+  renderAISetupGrid();
+  toast(`🗑 Deleted hive profile "${entry.label}"`);
 }
 
 // Apply a profile to every keyed AI in the hive. For each AI:
@@ -5878,9 +5998,37 @@ function setActiveHiveProfile(id) {
 // the chosen tier returned NONE for this AI, or the AI has no key.
 // Returns a summary { applied, skipped, total } for the toast.
 function applyHiveProfile(profileId) {
-  const opt = HIVE_PROFILE_OPTIONS.find(o => o.id === profileId);
+  const all = getAllHiveProfileOptions();
+  const opt = all.find(o => o.id === profileId);
   if (!opt) return null;
   setActiveHiveProfile(profileId);
+
+  // v3.63.212 — Custom hive profile branch. User-saved profiles store a
+  // snapshot of per-AI model picks; apply them verbatim. Skips any AIs
+  // that no longer exist in the hive (deleted custom AI, etc.) or lost
+  // their key since the snapshot was taken.
+  if (opt.isCustom && opt.picks) {
+    let applied = 0, skipped = 0, total = 0;
+    Object.entries(opt.picks).forEach(([aiId, model]) => {
+      total++;
+      const ai = aiList.find(a => a.id === aiId);
+      if (!ai) { skipped++; return; }                  // AI no longer present
+      const cfg = API_CONFIGS[ai.provider];
+      if (!cfg?._key) { skipped++; return; }            // AI lost its key
+      if (cfg.model === model) { applied++; return; }   // already on it
+      if (typeof saveModelForAI === 'function') saveModelForAI(ai.id, model, { keepExpanded: false, silent: true });
+      applied++;
+    });
+    renderAISetupGrid();
+    if (typeof toast === 'function') {
+      if (skipped > 0) {
+        toast(`${opt.icon} Applied "${opt.rawLabel}" to ${applied} of ${total} AIs (${skipped} missing or unkeyed).`);
+      } else {
+        toast(`${opt.icon} Applied "${opt.rawLabel}" to ${applied} AI${applied === 1 ? '' : 's'}.`);
+      }
+    }
+    return { applied, skipped, total };
+  }
 
   if (!opt.tier) {
     // "Custom" — no swap, just record the choice and re-render.
@@ -6077,23 +6225,40 @@ function renderHiveProfileBar() {
   if (_hiveMode !== 'internet') { bar.innerHTML = ''; return; }
 
   const active = getActiveHiveProfile();
-  const activeOpt = HIVE_PROFILE_OPTIONS.find(o => o.id === active) || HIVE_PROFILE_OPTIONS[0];
-  const options = HIVE_PROFILE_OPTIONS.map(o =>
-    `<option value="${o.id}"${o.id === active ? ' selected' : ''}>${escapeHtml(o.label)}</option>`
-  ).join('');
+  const allOpts = getAllHiveProfileOptions();
+  const activeOpt = allOpts.find(o => o.id === active) || allOpts[0];
+  // v3.63.212 — Split built-in vs custom into two <optgroup>s for clarity.
+  // Built-ins always appear; the Custom group only renders when the user
+  // has saved at least one profile.
+  const builtIns = allOpts.filter(o => !o.isCustom);
+  const customs  = allOpts.filter(o => o.isCustom);
+  const renderOpt = o => `<option value="${o.id}"${o.id === active ? ' selected' : ''}>${escapeHtml(o.label)}</option>`;
+  let options = builtIns.map(renderOpt).join('');
+  if (customs.length) {
+    options += `<optgroup label="Your saved profiles">${customs.map(renderOpt).join('')}</optgroup>`;
+  }
 
   // Note text. Differs by active profile:
   //   • Custom → describes the per-AI manual picks state
   //   • Tier   → how many AIs match vs. how many overrode
-  // v3.63.157 — Custom note reworded. The prior "Switch profile above"
-  // phrasing didn't make sense because the dropdown IS the control the
-  // user just interacted with — there's no profile "above" the
-  // dropdown, the dropdown IS the profile picker. New wording reads as
-  // a status statement about the current setup rather than an
-  // imperative pointing at a control that doesn't exist.
+  //   • Saved (v3.63.212) → how many of the snapshotted AIs are still on
+  //     their snapshotted model
   let note = '';
   if (active === 'custom') {
-    note = 'Each AI is using a manually-picked model. Pick a tier from the dropdown to apply one across the whole hive.';
+    note = 'Each AI is using a manually-picked model. Pick a profile from the dropdown to apply one across the whole hive.';
+  } else if (activeOpt?.isCustom) {
+    let matched = 0, total = 0;
+    Object.entries(activeOpt.picks || {}).forEach(([aiId, model]) => {
+      total++;
+      const ai = aiList.find(a => a.id === aiId);
+      const cfg = ai ? API_CONFIGS[ai.provider] : null;
+      if (cfg?.model === model) matched++;
+    });
+    if (matched === total) {
+      note = `All ${total} captured AI${total === 1 ? '' : 's'} match the saved profile.`;
+    } else {
+      note = `${matched} of ${total} captured AIs match the saved profile. The rest were manually overridden.`;
+    }
   } else {
     const tier = activeOpt.tier;
     let matched = 0, available = 0;
@@ -6115,11 +6280,23 @@ function renderHiveProfileBar() {
     }
   }
 
+  // v3.63.212 — Save Current as Profile button + delete-active-profile
+  // button. Save button is always available (will warn if no keyed AIs to
+  // capture). Delete only appears when the active profile is a custom one
+  // (built-ins can't be deleted). Both call into the helpers defined
+  // alongside HIVE_PROFILE_OPTIONS.
+  const saveBtn = `<button class="btn btn-sm hive-profile-bar-save" onclick="openSaveHiveProfileModal()" title="Save your current per-AI model picks as a reusable named profile">💾 Save current as profile</button>`;
+  const delBtn = activeOpt?.isCustom
+    ? `<button class="btn btn-sm hive-profile-bar-delete" onclick="deleteCustomHiveProfile('${escapeHtml(activeOpt.id)}')" title="Delete the saved profile &quot;${escapeHtml(activeOpt.rawLabel)}&quot;">🗑 Delete profile</button>`
+    : '';
+
   bar.innerHTML = `
     <span class="hive-profile-bar-label">Hive Profile:</span>
     <select class="hive-profile-bar-select" id="hiveProfileSelect" onchange="applyHiveProfile(this.value)">
       ${options}
     </select>
+    ${saveBtn}
+    ${delBtn}
     <span class="hive-profile-bar-note">${note}</span>
   `;
 }
