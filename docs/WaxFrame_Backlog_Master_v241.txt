@@ -269,9 +269,6 @@ OPEN FEATURES
            halves the surface area for theme bugs.
    STATE:  PARTIAL — remaining duplicate groups listed below.
    WHERE:  Remaining duplicate selector groups:
-             • .template-gallery-sidebar /
-               .template-gallery-sidebar-label /
-               .template-gallery-sidebar-link
              • .template-path-card
              • .template-card /
                .template-card.is-recommended /

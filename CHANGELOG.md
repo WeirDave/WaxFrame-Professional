@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.219
+
+**Template gallery sidebar CSS consolidation**
+
+Build: `20260607-006`<br>
+Released: `2026-06-07`
+
+### Changed — sidebar controls share one reset rule
+
+Consolidated the duplicate button-reset styling shared by template-gallery sidebar links and rename controls into one common selector block. Link-specific layout and rename-specific sizing remain separate, keeping the sidebar behavior intact while reducing the duplicate CSS surface.
+
+### Files Changed
+
+- Updated: `style.css`, `docs/WaxFrame_Backlog_Master_v241.txt`, `CHANGELOG.md`
+- Version/build stamps to v3.63.219 / 20260607-006 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.218
 
 **Template export arrow direction**
