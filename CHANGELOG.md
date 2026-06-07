@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.220
+
+**Template gallery sidebar hover polish**
+
+Build: `20260607-007`<br>
+Released: `2026-06-07`
+
+### Fixed — sidebar hover no longer draws a dashed box
+
+Adjusted template-gallery sidebar link hover styling so it keeps the soft accent fill and left accent rail without lighting up the dashed reset border around the whole menu item.
+
+### Files Changed
+
+- Updated: `style.css`, `CHANGELOG.md`
+- Version/build stamps to v3.63.220 / 20260607-007 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.219
 
 **Template gallery sidebar CSS consolidation**
