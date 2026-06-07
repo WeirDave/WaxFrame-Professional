@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260607-004
+     Build: 20260607-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260607-004">
+  <meta name="waxframe-build" content="20260607-005">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.217">
+  <link rel="stylesheet" href="style.css?v=3.63.218">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.217",
+    "softwareVersion": "3.63.218",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2944,23 +2944,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.217';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.218';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.217"></script>
-<script src="lib/jszip.min.js?v=3.63.217"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.217"></script>
-<script src="js/version.js?v=3.63.217"></script>
-<script src="js/storage.js?v=3.63.217"></script>
-<script src="js/theme.js?v=3.63.217"></script>
-<script src="js/audio.js?v=3.63.217"></script>
-<script src="js/scenes.js?v=3.63.217"></script>
-<script src="js/wf-debug.js?v=3.63.217"></script>
-<script src="js/provider-models.js?v=3.63.217"></script>
-<script src="js/api.js?v=3.63.217"></script>
-<script src="js/templates.js?v=3.63.217"></script>
-<script src="js/api-links.js?v=3.63.217"></script>
-<script src="js/app.js?v=3.63.217"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.218"></script>
+<script src="lib/jszip.min.js?v=3.63.218"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.218"></script>
+<script src="js/version.js?v=3.63.218"></script>
+<script src="js/storage.js?v=3.63.218"></script>
+<script src="js/theme.js?v=3.63.218"></script>
+<script src="js/audio.js?v=3.63.218"></script>
+<script src="js/scenes.js?v=3.63.218"></script>
+<script src="js/wf-debug.js?v=3.63.218"></script>
+<script src="js/provider-models.js?v=3.63.218"></script>
+<script src="js/api.js?v=3.63.218"></script>
+<script src="js/templates.js?v=3.63.218"></script>
+<script src="js/api-links.js?v=3.63.218"></script>
+<script src="js/app.js?v=3.63.218"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2984,8 +2984,8 @@ function wfMobileShareToast(msg) {
           <h2 class="finish-modal-title about-modal-title">WaxFrame</h2>
           <p class="about-modal-tagline">Many minds, one refined result.</p>
           <div class="about-version-row">
-            <span class="about-version-pill"><span id="aboutVersion">v3.63.217 Pro</span></span>
-            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260607-004</strong></span>
+            <span class="about-version-pill"><span id="aboutVersion">v3.63.218 Pro</span></span>
+            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260607-005</strong></span>
           </div>
         </div>
       </div>
@@ -2994,7 +2994,7 @@ function wfMobileShareToast(msg) {
     <div class="about-modal-body">
       <p class="about-modal-intro">Browser-native document refinement powered by your own AI keys, your hive configuration, and a local-first workspace.</p>
       <div class="about-info-stack">
-        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.217 Pro</span> · Build <strong class="app-build-stamp">20260607-004</strong></div></div>
+        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.218 Pro</span> · Build <strong class="app-build-stamp">20260607-005</strong></div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Stack</h3><div class="wf-card-body">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">License</h3><div class="wf-card-body">AGPL-3.0 — open source, free to use and modify with attribution.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Legal</h3><div class="wf-card-body"><a href="privacy.html" target="_blank" rel="noopener noreferrer" class="link-accent">Privacy Policy</a> · <a href="terms.html" target="_blank" rel="noopener noreferrer" class="link-accent">Terms of Use</a></div></div>
