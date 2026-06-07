@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.206
+
+**Doc stats vocabulary now matches the Length Constraint units — characters · words · paragraphs · pages**
+
+Build: `20260606-024`<br>
+Released: `2026-06-06`
+
+### Changed — dropped lines + tokens, added pages
+
+David's call: stats should match the **Length Constraint unit picker** exactly (Characters / Words / Paragraphs / Pages). Previously the doc-stats surfaces showed `chars · words · lines · paragraphs · tokens (est.)` — five metrics, two of which (lines and tokens) don't appear anywhere else as a length unit. The user's mental model is "this doc is X pages, length-cap is Y pages" — having lines and tokens in the readout while the cap is in pages was a mismatch.
+
+Now consistent across **all three surfaces**:
+
+- **Reference Material doc-card counters** — `Characters · Words · Paragraphs · Pages`
+- **Starting Document upload status** (file upload, warning + success paths) — `X chars · Y words · Z paragraphs · ≈W pages`
+- **Paste-text live readout** — same format, updates on every keystroke
+
+Pages displayed as `≈0.7 pages` (with `≈` prefix and one decimal, matching the existing length-hint convention) using the same `WORDS_PER_PAGE = 600` constant the length-constraint logic uses. So a 396-word doc reads as `≈0.7 pages` everywhere — exactly the same number the length-gate would compute.
+
+New shared `formatDocStatsLine()` helper in `js/app.js` so all three surfaces compute the readout identically. Future tweaks to the format happen in one place.
+
+`computeRefStats()` still returns `lines` and `tokens` for any other callers (export logic, telemetry) — only the display surfaces switched to the new four-unit vocabulary.
+
+### Files Changed
+
+- Updated: `js/app.js` (`computeRefStats` now also returns `pages`; new `formatDocStatsLine` helper; Reference Material doc-card counter row swapped Lines+Tokens for Pages; Starting Document upload + paste-text live readout both call `formatDocStatsLine`), `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.206 / 20260606-024 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.205
 
 **Trim templates show target range as a chip on the gallery card — decide whether to trim before applying**
