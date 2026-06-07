@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.210
+
+**Per-tier WHY: classifier explains each of cheap/balanced/thinker/fast picks separately**
+
+Build: `20260606-028`<br>
+Released: `2026-06-06`
+
+### Closed — backlog "Per-tier WHY text: classifier currently produces one overall WHY"
+
+The tier-classifier prompt previously asked each AI to summarize all four tier picks (cheap/balanced/thinker/fast) in a single 200-char WHY line. The result was always too generic to explain any specific pick — "I picked these because they balance capability and cost" doesn't tell you why gpt-4-mini got the Cheap slot.
+
+Prompt now asks for four separate WHY lines (`WHY_CHEAP` / `WHY_BALANCED` / `WHY_THINKER` / `WHY_FAST`), each capped at 140 chars. The parser captures all four into a `whyTiers: { cheap, balanced, thinker, fast }` object stored alongside the existing `tiers` and legacy `why` fields in the localStorage cache.
+
+The "Why each pick" expander on each AI's expanded row now renders FOUR rows (one per tier) instead of one combined "💰⚖️🧠⚡ Tiers" row, with the tier icon + name as the label and the model id + reason as the body. Visually pairs with the 6-card grid above so each card has its rationale row directly below.
+
+**Backward compat:** Older cached classifications (pre-v3.63.210) only have the legacy single `why` string. The display layer falls back to the combined "💰⚖️🧠⚡ Tiers" row in that case — they degrade gracefully and pick up the new per-tier rows the next time the user re-classifies.
+
+### Files Changed
+
+- Updated: `js/app.js` (tier-classifier prompt extended with 4 WHY_<TIER> lines; `_parseTierResponse` captures `whyTiers` object; `setCachedTiers` persists `whyTiers` in the cache; `_renderHiveTierWhyBlock` renders per-tier rows with legacy fallback), `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.210 / 20260606-028 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.209
 
 **Per-row "Manual override" badge — see which AIs diverge from your active Hive Profile**
