@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-026
+// Build: 20260606-027
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-026';         // build stamp — update each session
+const BUILD       = '20260606-027';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -5339,6 +5339,32 @@ function _buildRowStatusPill(ai, hasKey) {
   return '';
 }
 
+// v3.63.209 — Profile-override badge helper. Returns the badge HTML when
+// the row's current model diverges from the active Hive Profile's expected
+// tier pick for the row's provider, or empty string otherwise. Skip cases:
+//   • no key → no swap ever happens, so no "override" concept
+//   • active profile is Custom → no expected pick to diverge from
+//   • no cached tier data for this provider → can't know what's expected
+//     (background classifier will fill in via v3.63.208's auto-classify
+//     path; badge appears on the next render after tier data lands)
+function _buildProfileOverrideBadgeHTML(ai, cfg, hasKey) {
+  if (!hasKey || !cfg) return '';
+  const activeProfile = (typeof getActiveHiveProfile === 'function') ? getActiveHiveProfile() : null;
+  if (!activeProfile || activeProfile === 'custom') return '';
+  const opt = (typeof HIVE_PROFILE_OPTIONS !== 'undefined')
+    ? HIVE_PROFILE_OPTIONS.find(o => o.id === activeProfile)
+    : null;
+  if (!opt?.tier) return '';
+  const tiersBlob = (typeof getCachedTiers === 'function') ? getCachedTiers(ai.provider) : null;
+  const expected  = tiersBlob?.tiers?.[opt.tier] || null;
+  if (!expected) return '';        // no data yet — defer judgement
+  if (cfg.model === expected) return ''; // matches profile, no override
+  // Diverges — render the badge. Title carries the diagnostic context so a
+  // hover reveals what the profile would pick vs what the row is on now.
+  const profileName = opt.label.split(' — ')[0];
+  return `<span class="ai-setup-override-badge" title="${escapeHtml(ai.name)} is using ${escapeHtml(cfg.model)} — the active ${escapeHtml(profileName)} profile would pick ${escapeHtml(expected)} instead. Switch the model from the row above to bring it back into the profile.">✏️ override</span>`;
+}
+
 // v3.31.0 — Single-row template. Two visual states:
 //   collapsed (default): icon + name + (custom-only) checkbox
 //   expanded:           the above + key field, model selector, etc.
@@ -5527,6 +5553,16 @@ function buildAISetupRowHTML(ai) {
       title="${escapeHtml(title)}">${label}</a>`;
   }
 
+  // v3.63.209 (closes backlog "Per-row Manual override tag") — When a Hive
+  // Profile is active (anything but Custom) and this AI's current model
+  // diverges from the profile's expected tier pick for this provider,
+  // surface a small "✏️ override" badge in the summary row. Gives the user
+  // an at-a-glance answer to "which AIs are running on something other
+  // than what the active profile says?" Hidden when profile is Custom (no
+  // expected pick), when AI has no key, or when there's no cached tier
+  // data yet for this provider (background classification will fill it
+  // in via v3.63.208's self-healing applyHiveProfile flow).
+  const overrideBadgeHTML = _buildProfileOverrideBadgeHTML(ai, cfg, hasKey);
   // Column alignment — slot widths pinned via CSS so the columns align
   // across rows regardless of name / key / Builder state.
   const statusPillHTML = _buildRowStatusPill(ai, hasKey)
@@ -5547,6 +5583,7 @@ function buildAISetupRowHTML(ai) {
         ${statusPillHTML}
         ${modelLabelHTML}
         ${compactModel}
+        ${overrideBadgeHTML}
         ${builderButtonHTML}
         ${manageLinkHTML}
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
