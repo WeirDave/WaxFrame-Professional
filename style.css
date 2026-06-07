@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-020
+   Build: 20260606-021
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -5390,25 +5390,42 @@ kbd {
   margin: 0 0 var(--space-8);
   flex-wrap: wrap;
 }
+/* v3.63.203 — Length mode segmented pills (No limit / Hard cap / Target
+   / Range) get the small-pill 3D treatment. Inactive pills are subtle
+   raised buttons; .is-active uses the amber gradient + glow so the
+   selected mode reads as pressed-in / lit. Same vocabulary as
+   .theme-opt + .theme-opt.active in the top bar. */
 .length-mode-pill {
   padding: var(--space-6) var(--space-14);
-  background: var(--surface2);
+  background: var(--bg-3d-pill);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
   font-size: var(--fs-13);
   font-family: var(--font-display);
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
+  box-shadow: var(--shadow-3d-pill);
 }
 .length-mode-pill:hover {
-  background: var(--surface3);
+  background: var(--bg-3d-button-hover);
   color: var(--text);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-3d-pill-hover);
+}
+.length-mode-pill:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-3d-pill-active);
 }
 .length-mode-pill.is-active {
-  background: var(--accent);
+  background: var(--bg-3d-amber);
   border-color: var(--accent);
   color: #0a0c12;
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 0 rgba(0,0,0,0.20),
+    0 2px 6px rgba(245,166,35,0.30);
 }
 [data-theme="light"] .length-mode-pill.is-active {
   color: #ffffff;
@@ -12394,26 +12411,52 @@ kbd {
   padding: var(--space-14) var(--space-18);
   text-align: center;
 }
+/* v3.63.203 — Reference Material doc cards get a real 3D bezel.
+   Body picks up a subtle gradient + inset highlight + drop shadow so
+   each uploaded doc card reads as a physical raised slab; the dark-navy
+   header strip becomes the "control band" with its own inset top
+   highlight + inset bottom shadow under the band. */
 .ref-card {
-  background: transparent;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.10) 100%);
   border: 1px solid var(--border2);
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.10),
+    0 3px 8px rgba(0,0,0,0.22);
+}
+.ref-card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 6px 14px rgba(0,0,0,0.28);
 }
 .ref-card:focus-within {
   border-color: var(--accent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 6px 16px rgba(245,166,35,0.30);
 }
 .ref-card-hdr {
   display: flex;
   align-items: center;
   gap: var(--space-8);
   padding: var(--space-10) var(--space-14);
-  background: rgba(0,0,0,0.55);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.12) 100%),
+    rgba(0,0,0,0.55);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 -1px 0 rgba(0,0,0,0.25);
 }
 .ref-card-source-badge {
   flex-shrink: 0;
@@ -12660,23 +12703,39 @@ kbd {
   gap: 12px;
   margin: 14px 0;
 }
+/* v3.63.203 — Paste Text + Upload File big drop targets get the 3D
+   raised treatment. The 2px dashed border IS the "drop here" affordance
+   signature — kept dashed (this is one of the few places where dashed
+   stays right per the David's "dashed = honey-soft signature" framing)
+   but combined with the bezel gradient + drop shadow so the card still
+   reads as a physical target rather than a flat outline. Drag-over and
+   hover both saturate the gradient + lift the card. */
 .ref-action-target {
   border: 2px dashed var(--border2);
   border-radius: var(--radius-md);
   padding: var(--space-16) var(--space-18);
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.18s, background 0.18s;
-  background: var(--surface);
+  transition: transform 0.12s, box-shadow 0.12s, border-color 0.18s, background 0.18s;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.10) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 130px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 3px 8px rgba(0,0,0,0.20);
 }
 .ref-action-target:hover, .ref-action-target.drag-over {
   border-color: var(--accent);
-  background: var(--accent-dim);
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(0,0,0,0.14),
+    0 8px 20px rgba(245,166,35,0.30);
 }
 .ref-action-icon { font-size: 26px /* out-of-scale */; margin-bottom: var(--space-6); line-height: 1; }
 .ref-action-text { font-size: var(--fs-14); font-weight: 600; color: var(--text); margin-bottom: var(--space-4); }
