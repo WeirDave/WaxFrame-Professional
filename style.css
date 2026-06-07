@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-028
+   Build: 20260606-029
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -16918,6 +16918,24 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 .ai-recommend-status.is-empty {
   font-style: italic;
+}
+/* v3.63.211 — Inline filter-awareness note. Surfaces next to the Last
+   Recommended line when the code-side recommender filter dropped any
+   Builder-incapable or structurally-unfit models before sending the
+   candidate list. Title attribute names up to 5 dropped models. */
+.ai-recommend-filter-note {
+  display: inline-block;
+  margin-left: var(--space-6);
+  padding: 1px var(--space-6);
+  font-size: var(--fs-11);
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--bg-3d-pill);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  cursor: help;
+  white-space: nowrap;
+  box-shadow: var(--shadow-3d-pill);
 }
 
 /* Full-width key input — ChatGPT keys are very long (sk-proj-…); the
