@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-021
+   Build: 20260606-022
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1495,6 +1495,21 @@ body.helper-body .page-main {
 .file-status--warn     { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 .file-status--error    { background: var(--red-dim);    border-color: var(--red);    color: var(--red);    }
 .file-status-line      { font-size: var(--fs-11); margin-top: var(--space-4); opacity: 0.85; }
+/* v3.63.204 — Paste-text live stats readout. Sits below the paste textarea
+   showing chars/words/lines/paragraphs/tokens parity with Reference Material's
+   doc-card counters. Dim, monospace-feel via tabular-nums so the digits
+   don't jiggle as the user types. */
+.paste-text-stats {
+  margin-top: var(--space-6);
+  padding: var(--space-6) var(--space-10);
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  background: var(--bg-3d-pill);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-3d-pill);
+}
 /* v3.63.10 — Multi-file upload batch banner. Persistent queue indicator owned
    end-to-end by the drain loop (independent of .file-status + the OCR
    heartbeat) so a running batch stays visible through long OCR stretches.
