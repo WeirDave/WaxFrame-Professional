@@ -2,6 +2,49 @@
 
 ---
 
+## v3.63.212
+
+**Save current hive as a named profile — backlog #10 closed**
+
+Build: `20260606-030`<br>
+Released: `2026-06-06`
+
+### Closed — backlog #10 "Hive Profiles: Save current as named profile"
+
+User-saved hive profiles ship. The Hive Profile dropdown (Worker Bees, Internet mode) used to have only five fixed presets: Custom / 💰 Cheap / ⚖️ Balanced / 🧠 Thinker / ⚡ Fast. Now you can capture your current per-AI model picks as a NEW named profile and apply it on any future session with one click.
+
+### How it works
+
+- New **"💾 Save current as profile"** button in the Hive Profile bar. Opens a modal asking for a profile name (40 chars) and an optional single-emoji icon. The current snapshot — every AI's current model — is captured at save time.
+- The new profile appears in the dropdown under a **"Your saved profiles"** optgroup, separated from the five built-in tier-based presets.
+- Picking a saved profile from the dropdown applies the snapshot: every AI snaps back to the model captured at save time. AIs that have since been removed from the hive are silently skipped; AIs that have lost their key are also skipped (you'll see a count in the toast).
+- When a saved profile is active, a **"🗑 Delete profile"** button appears next to the dropdown. Confirms before deletion. Deleting the active profile falls back to Custom.
+
+### Schema
+
+```json
+{
+  "id": "user_1717000000000",
+  "label": "RFI Work Mode",
+  "icon": "🏢",
+  "picks": { "chatgpt": "gpt-4.5", "claude": "claude-opus-4-5", ... },
+  "ts": 1717000000000
+}
+```
+
+Stored as a JSON array under `localStorage['waxframe_custom_hive_profiles']`. IDs are timestamp-based to avoid collisions with built-in ids ('cheap', 'balanced', etc.).
+
+### Distinction from built-in profiles
+
+Built-in tier profiles derive their picks at apply time by reading each provider's cached tier classification (so they auto-update as the classifier learns new models). Saved profiles capture a snapshot — same model every time you re-apply, regardless of what the classifier thinks. Use built-ins for "always cheap" / "always thinker" semantics, saved profiles for "exactly this configuration" semantics.
+
+### Files Changed
+
+- Updated: `js/app.js` (new helpers: `loadCustomHiveProfiles`, `saveCustomHiveProfiles`, `getAllHiveProfileOptions`, `captureCurrentHiveSnapshot`, `openSaveHiveProfileModal`, `closeSaveHiveProfileModal`, `confirmSaveHiveProfile`, `deleteCustomHiveProfile`; `applyHiveProfile` branches on `isCustom` to apply per-AI snapshot; `renderHiveProfileBar` adds optgroup + Save/Delete buttons + custom-profile status note), `index.html` (new `#saveHiveProfileModal` markup), `style.css` (new `.hive-profile-bar-save` + `.hive-profile-bar-delete` rules), `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.212 / 20260606-030 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.211
 
 **Filter-awareness warning: inline per-row pill + summary toast at end of Recommend Models for All**

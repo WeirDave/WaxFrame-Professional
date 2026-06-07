@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-029
+   Build: 20260606-030
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -17040,6 +17040,29 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 .hive-profile-bar-note {
   /* override the default text-dim so the note stays legible on the dark bar */
   color: rgba(255, 255, 255, 0.78);
+}
+/* v3.63.212 — Save / Delete profile buttons inside the dark profile bar.
+   Inherit the .btn 3D base from the global sweep; just override the colors
+   so they read against the dark backdrop. Both stay compact. */
+.hive-profile-bar-save,
+.hive-profile-bar-delete {
+  flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(0,0,0,0.18) 100%);
+  color: rgba(255,255,255,0.90);
+  border-color: rgba(255,255,255,0.25);
+}
+.hive-profile-bar-save:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.hive-profile-bar-delete {
+  color: rgba(255, 200, 200, 0.85);
+  border-color: rgba(248, 113, 113, 0.45);
+}
+.hive-profile-bar-delete:hover {
+  color: #ffffff;
+  background: linear-gradient(180deg, #e93e55 0%, #a01122 100%);
+  border-color: var(--red);
 }
 .hive-profile-bar-select {
   background: var(--bg);
