@@ -1,10 +1,10 @@
 ════════════════════════════════════════════════════════════
-WAXFRAME — PLAYBOOK TEST MASTER (v39)
+WAXFRAME — PLAYBOOK TEST MASTER (v38)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-06-06 (Joe Schmoe's Google Maps trim v1.0 — second measured run today using the v3.63.189 Joe Schmoe's master review as source. 10-AI hive, Gemini Builder throughout, 4 rounds, majority convergence at R4 with holdouts. First measured data point on the NEW SMART CLOCK (v3.63.197) — reported 10 min engaged vs ~20 min wall-clock; honest reading, idle-pause working as designed. Cohere R1 runaway-loop failure mode observed: 136+ numbered "remove this phrase" items including line numbers that don't exist; recovered by R3. Validates the planned multi-platform review workflow: write master at no-limit, trim only when master exceeds platform cap.)
-WaxFrame version:    v3.39.12 Pro and later (current: v3.63.203 Pro)
+Last updated:        2026-06-06 (T10 Business / Service Review FIRST-MEASURED via Joe Schmoe's restaurant review v1.0 — closes the last home-runnable QA gap on the formal playbook list. 10-AI hive, Gemini Builder throughout, 12 rounds, majority convergence at R12 with 3 holdouts. 17 of 19 templates now measured; only T3 RFP Response remains open. Same session also surfaced bugs that became the v3.63.191-195 patch run — modal stacking, category dropdown scope, grid track min, char counters, name cap.)
+WaxFrame version:    v3.39.12 Pro and later (current: v3.63.196 Pro)
 Maintained by:       R David Paine III
-Lives:               docs\WaxFrame_Playbook_Test_Master_v39.txt
+Lives:               docs\WaxFrame_Playbook_Test_Master_v38.txt
 
 This is David's project to-do list — strictly the test runs
 that gather convergence data. Companion to:
@@ -17,75 +17,6 @@ Two-document persistence system, per memory rule:
                 + PROJECTS TO RUN NEXT + PENDING TESTS detail
                 + HISTORICAL RUNS (permanent)
   • Backlog Master = code work + ideas + bug-fix list
-
-CHANGES IN v39 (from v38, 2026-06-06):
-  - JOE SCHMOE'S GOOGLE MAPS TRIM v1.0 MEASURED. Same day as
-    the master Joe Schmoe's review (12 rounds, 76 min reported
-    yesterday). David used the Joe Schmoe's master review as the
-    source document (loaded into Reference Material) and ran the
-    Trim to Google Maps template at REFINE path. 10-AI hive,
-    Gemini Builder throughout, 4 rounds total (R1 review + R2
-    builder-only after user decisions + R3 review + R4
-    convergence). Wall-clock R1-export = ~20 min; project clock
-    reported 10 min engaged — FIRST RUN VALIDATING THE NEW
-    SMART CLOCK (v3.63.197 idle-aware auto-pause). The 10/20
-    ratio matches the methodology proposed during the Joe
-    Schmoe's master review write-up: AI processing time
-    (estimated ~3-5 min from 4 rounds, parallel reviewers) +
-    human review/decision time (~5-7 min) = ~10 min engaged,
-    rest of wall-clock was the smart clock correctly pausing
-    during the long R1->BO interval where David handled the
-    Cohere-runaway decision and the menu-link rewrite decision.
-    Final document 750-1,200 char Google Maps format,
-    bottom-line-first headline, with the menu-link clarification
-    Builder applied from user decisions in R2.
-  - OBSERVED COHERE R1 RUNAWAY FAILURE MODE.
-    In Round 1 of the Google Maps trim, Cohere produced 136+
-    numbered "remove this phrase" suggestions, looping the same
-    removals for line numbers that don't exist (doc was ~20
-    lines; Cohere went to "Line 148"). Output got cut off
-    mid-suggestion at #136 — Cohere hit an internal token cap
-    or output buffer limit. Likely cause: Cohere's "remove
-    non-essential" heuristic recursively kept finding things to
-    remove in the long narrative arc of the source review,
-    looping the same suggestion until output exhaustion. By
-    R3 Cohere was back to normal (3 reasonable suggestions),
-    so this was an R1-only runaway tied to the long-source-doc
-    starting state. NOT a Cohere-vs-Builder issue and NOT a
-    convergence-blocking failure (R4 still converged). Flag in
-    observations as "Cohere R1 long-source-doc runaway" — if
-    pattern repeats on other long-source-doc trims, escalate
-    to a Cohere-specific reviewer-guard (e.g. truncate
-    suggestion lists to top-5 in the response parser).
-    Important: David initially flagged this as a Perplexity
-    issue; Perplexity was actually clean throughout (3 sharp
-    suggestions in R1, NO CHANGES NEEDED in R3 and R4). The
-    runaway was Cohere.
-  - REVIEW WORKFLOW CONFIRMED by this run.
-    David tested the multi-platform review workflow by
-    attempting a TripAdvisor trim immediately after the master
-    Joe Schmoe's review yesterday. Realized at setup time that
-    the master was already at the TripAdvisor target length
-    (396 words / 2,330 chars ~= TripAdvisor sweet spot
-    350-500 words) and ABANDONED the run without burning
-    tokens. Then ran the Google Maps trim today because the
-    master exceeded Google's 1,200-char cap by 2x. The
-    workflow that emerges: write master at no-limit (T10
-    Business / Service Review), then trim per-platform ONLY
-    when master exceeds that platform's natural length. Google
-    Maps trim is almost always needed (strictest cap); Yelp
-    and TripAdvisor trims are optional, only when the master
-    is significantly over the platform sweet spot. Recommend
-    surfacing platform target ranges in the trim template
-    descriptions so users can decide BEFORE starting a run
-    whether trim is even needed. Trim templates already
-    pre-fill the Length Constraint pills (David noticed his
-    TripAdvisor template said "no limit" which is what made
-    him realize the master was already in range).
-  - WaxFrame version bumped to current v3.63.203 Pro. Notable
-    for this test file: v3.63.197 shipped the idle-aware
-    smart clock that this run validates, v3.63.198-203
-    progressively swept the entire UI to a 3D bezel vocabulary.
 
 CHANGES IN v38 (from v37, 2026-06-06):
   - T10 BUSINESS / SERVICE REVIEW FIRST-MEASURED.
@@ -727,8 +658,6 @@ as wall-clock; see Backlog v10 Section 2).
 
   Date        Run                                          Hive  Builder      Rounds  Wall-clock   Engaged†  Final length      Status
   ──────────  ───────────────────────────────────────────  ────  ───────────  ──────  ───────────  ────────  ────────────────  ──────────────
-  2026-06-06  Review – Joe Schmoe's – Google v1.0 (Trim to Google Maps)  10    Gemini       4 (3 rev + 1 BO)  ~20 min     10 min§   ~1,100c           majority (R4, holdouts; Cohere R1 runaway)
-  2026-06-06  Review – Joe Schmoe's – Cypress v1.0 (Biz/Svc Review T10) 10    Gemini       12 (8 rev + 4 BO) ~102 min    76 min*   396w / 2,330c     majority (R12, 3 holdouts)
   2026-06-04  Review – Manly Bikes – Trip Advisor v1.0 (Trim to TripAdvisor) 10    Gemini       3 (2 rev + 1 BO)  7 min       n/a       478w / ~3,000c    majority (R3, 4 holdouts)
   2026-05-31  BAGAIL Packing Cubes v1.0 (Product Rev, Amzn) 10    DeepSeek     9 (5 rev + 3 BO)  26 min       25.6 min  390w / 2,323c     majority (R9, 4 holdouts)
   2026-05-29  Hive Sweep Run B2 — Fernbox (3-AI REPEAT)        3     ChatGPT      8 (5 rev)   13.4 min eng n/a       77w / 461c        unanimous (R8) — CONFIRMS 3-AI bump
@@ -782,19 +711,6 @@ as wall-clock; see Backlog v10 Section 2).
    runs on the same source. The outlier is documented but does
    not change the architectural verdict (split outperforms
    combined on length-positioning regardless of wall-clock).
-§  Joe Schmoe's Google Maps trim 10 min = FIRST RUN against
-   the new smart clock (v3.63.197 idle-aware auto-pause).
-   Project clock paused during the 16-min R1->BO gap where
-   David was handling the Cohere-runaway decision and the
-   menu-link rewrite decision in extended idle bursts. The
-   10/20 reported/wall-clock ratio is the first measured proof
-   that the smart clock is honest — compare to the same-day
-   Joe Schmoe's master review at 76 min reported / ~102 min
-   wall-clock (forgot-to-pause case) where the project clock
-   was inflated by ~45 min of phone-game / center-console /
-   talking-to-Claude time. Methodology now ratifies: trust
-   v3.63.197+ engaged-time figures; flag pre-v3.63.197
-   "engaged" figures with the * caveat.
 
 Older entries are partial — captured before the tracking
 table existed. Backfill from session backups when there's a
