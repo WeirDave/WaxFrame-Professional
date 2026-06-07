@@ -11,9 +11,9 @@ Released: `2026-06-07`
 
 ### Added — Builder CONTENT_FILTERED failover
 
-When the active Builder's provider blocks a normal Hive round with a content-filter/safety response, WaxFrame now retries that same Builder phase once with the next usable Builder candidate from the recommendation cache. If the alternate Builder succeeds, the round commits normally and the saved Builder preference remains unchanged for the next round.
+When the active Builder's provider blocks a normal Hive round with a content-filter/safety response, WaxFrame now opens the existing Change Builder picker in a temporary retry mode. The user chooses which available Builder should retry that same Builder phase once. If the chosen Builder succeeds, the round commits normally and the saved Builder preference remains unchanged for the next round.
 
-The user gets a toast and live-console breadcrumb explaining the temporary failover. Round history records the Builder that actually completed the round so exports and diagnostics remain accurate.
+The user gets a toast and live-console breadcrumb explaining the temporary failover. Round history records the Builder that actually completed the round so exports and diagnostics remain accurate. Cancelling the picker cleanly fails the round instead of silently switching Builders.
 
 ### Fixed — provider content-filter detection
 

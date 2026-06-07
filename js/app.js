@@ -1688,6 +1688,10 @@ function copyGoal() {
 // the project-screen restructure as redundant with the new Clear Project
 // button now positioned in the section header. No remaining call sites.
 
+let _cbTempResolve = null;
+let _cbTempCandidates = null;
+let _cbTempMode = false;
+
 function openChangeBuilder(opts) {
   // v3.49.0 — Optional opts.reason replaces the default modal subtitle;
   // opts.excludeId filters that AI out of the picker grid. Used by the
@@ -1708,13 +1712,15 @@ function openChangeBuilder(opts) {
       'The Builder rewrites the document each round. Click <strong>🔨 Builder</strong> on whichever AI you want — model can be swapped from the dropdown next to its name. <strong>Cost note:</strong> the Builder reads project setup, reference material, the full document, and every reviewer\'s suggestions every round — switching to a premium model raises per-round cost.'
     );
   }
+  _cbTempMode = !!opts?.temporaryPick;
+  _cbTempCandidates = Array.isArray(opts?.candidates) ? opts.candidates : null;
   const excludeId = opts?.excludeId || null;
   const grid = document.getElementById('changeBuilderGrid');
   if (grid) {
-    const candidates = excludeId
-      ? activeAIs.filter(a => a.id !== excludeId)
-      : activeAIs;
-    grid.innerHTML = candidates.map(_renderCBRow).join('');
+    const candidates = _cbTempCandidates
+      ? _cbTempCandidates.map(c => c.ai).filter(Boolean)
+      : (excludeId ? activeAIs.filter(a => a.id !== excludeId) : activeAIs);
+    grid.innerHTML = candidates.map(ai => _renderCBRow(ai, _cbTempCandidates?.find(c => c.ai?.id === ai.id))).join('');
   }
   _cbPendingId = null;
   const modal = document.getElementById('changeBuilderModal');
@@ -1726,14 +1732,19 @@ function openChangeBuilder(opts) {
 // Mirrors the .ai-setup-row collapsed-summary layout but without the
 // chevron / expand affordance (no expansion needed — everything lives
 // in the row).
-function _renderCBRow(ai) {
+function _renderCBRow(ai, tempCandidate = null) {
   const cfg = API_CONFIGS[ai.provider];
   const isCurrent = (typeof builder !== 'undefined' && ai.id === builder);
-  const isIncapable = isBuilderIncapableModel(cfg?.model || ai.provider || '');
+  const selectedModel = tempCandidate?.model || cfg?.model || '';
+  const isIncapable = isBuilderIncapableModel(selectedModel || ai.provider || '');
   const iconEl = resolveAiIcon(ai, 'cb-row-icon', 24);
-  const modelSel = _buildCompactModelSelect(ai, cfg?.model || '');
+  const modelSel = _buildCompactModelSelect(ai, selectedModel);
+  const pickTitle = _cbTempMode
+    ? `Retry this round with ${escapeHtml(ai.name)}. Your saved Builder will not change.`
+    : `Click to make ${escapeHtml(ai.name)} the Builder.`;
+  const pickLabel = _cbTempMode ? '🔁 Retry round' : '🔨 Builder';
   let builderBtn;
-  if (isCurrent) {
+  if (isCurrent && !_cbTempMode) {
     builderBtn = `<button class="ai-setup-builder-btn is-active" type="button"
       onclick="event.stopPropagation(); event.preventDefault(); return false;"
       title="${escapeHtml(ai.name)} is the Builder.">🔨 Builder</button>`;
@@ -1744,7 +1755,7 @@ function _renderCBRow(ai) {
   } else {
     builderBtn = `<button class="ai-setup-builder-btn is-pickable" type="button"
       onclick="event.stopPropagation(); event.preventDefault(); _cbPickBuilder('${ai.id}'); return false;"
-      title="Click to make ${escapeHtml(ai.name)} the Builder.">🔨 Builder</button>`;
+      title="${pickTitle}">${pickLabel}</button>`;
   }
   return `<div class="cb-row" data-ai-id="${escapeHtml(ai.id)}">
     ${iconEl}
@@ -1760,8 +1771,22 @@ function _renderCBRow(ai) {
 // Models are already persisted by the per-row dropdown's onchange, so
 // no separate model-save step is needed here.
 function _cbPickBuilder(id) {
-  if (typeof setBuilder === 'function') setBuilder(id);
-  if (typeof closeChangeBuilder === 'function') closeChangeBuilder();
+  if (_cbTempMode && _cbTempResolve) {
+    const found = _cbTempCandidates?.find(c => c.ai?.id === id) || null;
+    const cfg = found ? API_CONFIGS[found.ai.provider] : null;
+    const candidate = found ? { ...found, model: cfg?.model || found.model || '' } : null;
+    _cbTempResolve(candidate);
+    _cbTempResolve = null;
+    _cbTempCandidates = null;
+    _cbTempMode = false;
+    if (typeof closeChangeBuilder === 'function') closeChangeBuilder();
+    return;
+  }
+  if (_pendingBuilderDisable && typeof setBuilderFromModal === 'function') setBuilderFromModal(id);
+  else {
+    if (typeof setBuilder === 'function') setBuilder(id);
+    if (typeof closeChangeBuilder === 'function') closeChangeBuilder();
+  }
 }
 if (typeof window !== 'undefined') {
   window._cbPickBuilder = _cbPickBuilder;
@@ -1779,6 +1804,12 @@ function closeChangeBuilder() {
   _cbPendingId = null;
   const modal = document.getElementById('changeBuilderModal');
   if (modal) modal.classList.remove('active');
+  if (_cbTempMode && _cbTempResolve) {
+    _cbTempResolve(null);
+  }
+  _cbTempResolve = null;
+  _cbTempCandidates = null;
+  _cbTempMode = false;
   // v3.49.0 — If user cancelled the builder-disable flow, drop the
   // pending disable so the original toggle-off is forgotten. The AI
   // remains enabled and as the current builder.
@@ -14701,8 +14732,8 @@ function _iconPickerConfirmUpload() {
   _iconPickerSelect(dataURL);
 }
 
-function getBuilderContentFilterFailoverCandidate(primaryAI) {
-  const pool = (Array.isArray(activeAIs) ? activeAIs : [])
+function getBuilderContentFilterFailoverCandidates(primaryAI) {
+  return (Array.isArray(activeAIs) ? activeAIs : [])
     .filter(ai => ai && ai.id !== primaryAI?.id)
     .filter(ai => !window.sessionAIs || window.sessionAIs.has(ai.id))
     .map((ai, idx) => {
@@ -14723,7 +14754,18 @@ function getBuilderContentFilterFailoverCandidate(primaryAI) {
     })
     .filter(Boolean)
     .sort((a, b) => (a.rank - b.rank) || (a.idx - b.idx));
-  return pool[0] || null;
+}
+
+function promptBuilderContentFilterFailover(primaryAI, candidates) {
+  return new Promise(resolve => {
+    _cbTempResolve = resolve;
+    const names = candidates.map(c => c.ai.name).join(', ');
+    openChangeBuilder({
+      temporaryPick: true,
+      candidates,
+      reason: `<strong>${escapeHtml(primaryAI.name)}</strong> was blocked by its provider's content filter for this Builder pass. Pick a temporary Builder to retry <strong>this round only</strong>. Your saved Builder stays ${escapeHtml(primaryAI.name)} for the next round.<br><br><strong>Available retry Builders:</strong> ${escapeHtml(names)}`
+    });
+  });
 }
 
 async function callBuilderWithContentFilterFailover(primaryAI, reviews, notes) {
@@ -14756,18 +14798,29 @@ async function callBuilderWithContentFilterFailover(primaryAI, reviews, notes) {
     attempts.push(err);
   }
 
-  const candidate = getBuilderContentFilterFailoverCandidate(primaryAI);
-  if (!candidate) {
+  const candidates = getBuilderContentFilterFailoverCandidates(primaryAI);
+  if (!candidates.length) {
     const err = attempts[0];
     err.message += ' — no alternate Builder candidate with a usable key/model was available.';
     throw err;
   }
 
   setBeeStatus(primaryAI.id, 'error', 'Content filtered');
+  setStatus(`⚠️ ${primaryAI.name} was content-filtered — choose a temporary Builder to retry this round…`);
+  toast(`⚠️ ${primaryAI.name} was content-filtered — pick a retry Builder`, 6500);
+  consoleLog(`🔁 Builder failover needed: ${primaryAI.name} hit CONTENT_FILTERED. Waiting for user to choose a one-round retry Builder. Saved Builder preference stays unchanged.`, 'warn');
+
+  const candidate = await promptBuilderContentFilterFailover(primaryAI, candidates);
+  if (!candidate) {
+    const err = attempts[0];
+    err.message += ' — retry Builder selection was cancelled.';
+    throw err;
+  }
+
   setBeeStatus(candidate.ai.id, 'sending', 'Failover Builder…');
   setStatus(`⚠️ ${primaryAI.name} was content-filtered — retrying this round with ${candidate.ai.name}…`);
-  toast(`⚠️ ${primaryAI.name} was content-filtered — retrying once with ${candidate.ai.name}`, 6500);
-  consoleLog(`🔁 Builder failover: ${primaryAI.name} hit CONTENT_FILTERED. Retrying this round with ${candidate.ai.name}${candidate.fromRecommendation ? ` using recommended Builder model ${candidate.model}` : ''}. Saved Builder preference stays unchanged.`, 'warn');
+  toast(`🔁 Retrying this round with ${candidate.ai.name}; saved Builder stays ${primaryAI.name}`, 6500);
+  consoleLog(`🔁 Builder failover: user chose ${candidate.ai.name} for this round${candidate.model ? ` using ${candidate.model}` : ''}. Saved Builder preference stays unchanged.`, 'warn');
 
   try {
     const result = await runAttempt(candidate.ai, candidate.model, true);
