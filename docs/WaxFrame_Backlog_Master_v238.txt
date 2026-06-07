@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v237
+WaxFrame Backlog Master v238
 2026-06-06
 
 State: v3.63.196 Pro shipped on main. Six post-v3.63.189 patches landed today end-to-end with proper Releases sidebar entries — v3.63.190 (cache-bust drift validator + Template Gallery modal CSS partial consolidation), v3.63.191 (Save-as-Template modal z-index above first-run offer), v3.63.192 (Category dropdown disambiguates scope), v3.63.193 (grid track min 240px → 380px so custom cards aren't squeezed by hover-action buttons), v3.63.194 (live char counters + clearer modal intro about reference + starting document being part of templates), v3.63.195 (template name cap 60 → 120 with prefill truncation), and v3.63.196 (Builder-screen-retirement screenshot regen across capture.mjs + README.md + waxframe-user-manual.html, closing the FLAGGED-for-~50-releases doc gap). First end-to-end programmatic release publication via gh CLI authenticated with a fine-grained PAT — Anthropic ticket #65923 filed for the missing create_release MCP tool + sandbox proxy tag-push 403 (workaround uses gh CLI; user-supplied PAT, revoke at session end). T10 Business / Service Review measured today via Joe Schmoe's restaurant review v1.0 — closes the last home-runnable QA gap on the formal playbook list (17 of 19 templates now measured; only T3 RFP Response remains open, blocked on upstream scaffold conversation).
@@ -103,16 +103,16 @@ Open Bugs
 Open Features
 
 (Screenshot regeneration for README + User Manual — CLOSED in v3.63.196 — see top.)
-- #10 Hive Profiles: "Save current as named profile"
-- #12 Hive Profiles: dedicated docs page (hive-profiles.html)
-- #27 Worker Bees rework: 3-group ordering (defaults / customs / servers)
-- #35 Auto-classify tier picks always
-- #36 Worker Bees rework: server provider group label
-- Per-row "Manual override" tag — needs delta tracking
-- Per-tier WHY text: classifier currently produces one overall WHY
+(#10 Hive Profiles: "Save current as named profile" — CLOSED in v3.63.212. Schema at localStorage['waxframe_custom_hive_profiles'] = array of {id, label, icon, picks: {aiId: model}, ts}. Save button in profile bar opens modal; capture from current keyed+modeled AIs only; apply path branches on isCustom in applyHiveProfile. Delete affordance appears when active profile is custom.)
+(#12 Hive Profiles: dedicated docs page hive-profiles.html — CLOSED in v3.63.213. Mirrors what-are-tokens.html structure with FAQPage JSON-LD. Nav-menu sweep added the 🐝 Hive Profiles link to 13 other helper pages.)
+(#27 Worker Bees rework: 3-group ordering — effectively CLOSED. Internet mode already had Defaults + Customs labels; #36 added Model Servers label in server mode, closing the third group. The historical "3-group in one view" framing is moot post-mode-toggle architecture.)
+(#35 Auto-classify tier picks always — CLOSED in v3.63.208 via self-healing applyHiveProfile. Picks profile → tracks missingTierProviders → fires classifyTiersForProvider in background → silently re-applies same profile on completion. Guards against profile-flipped-while-classifying via getActiveHiveProfile() === profileId check.)
+(#36 Worker Bees rework: server provider group label — CLOSED in v3.63.208. Server-mode renderAISetupGrid branch now renders a "Model Servers <count>" group label matching the Internet-mode Customs label pattern.)
+(Per-row "Manual override" tag — CLOSED in v3.63.209. _buildProfileOverrideBadgeHTML compares cfg.model vs active profile's expected tier pick for the provider; renders ✏️ override badge when divergent. Hidden when profile=custom or AI has no key or no cached tier yet.)
+(Per-tier WHY text — CLOSED in v3.63.210. Classifier prompt now asks for WHY_CHEAP / WHY_BALANCED / WHY_THINKER / WHY_FAST separately. Parser extracts into whyTiers object; setCachedTiers persists. Why-each-pick expander renders 4 per-tier rows. Backward-compat fallback to legacy single-WHY for older cached entries.)
 - Restore-from-Checkpoint diff-and-pick UI — PARKED
 - Hive parallel fan-out RPS-awareness
-- Model recommender filter-awareness warning
+(Model recommender filter-awareness warning — CLOSED in v3.63.211. Inline per-row .ai-recommend-filter-note pill shows "⚠ N filtered" when droppedCount > 0 across role recs; summary toast appended to recommendModelsForAll completion sums totals across the hive. recommendModel now returns + caches droppedCount + droppedSample.)
 - Failover Builder behavior — single-round CONTENT_FILTERED handling
 - Builder-incapable family list expansion
 - Pause/resume at reviewer seam
