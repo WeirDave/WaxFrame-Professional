@@ -1,0 +1,347 @@
+WaxFrame Backlog Master v239
+2026-06-07
+
+ABOUT THIS DOCUMENT
+────────────────────────────────────────────────────────────
+This is the canonical list of open work for WaxFrame
+Professional — bugs that need fixing and features that need
+building. Each entry is written to stand on its own so any
+person or AI assistant can pick it up cold and understand:
+
+  WHAT     — what the thing is, in plain language
+  WHY      — what problem it solves or what value it adds
+  STATE    — current status (OPEN / PARTIAL / PARKED / DEFERRED)
+  WHERE    — file:line pointers into the codebase
+  DONE     — what "done" looks like (acceptance criteria)
+
+Companion document: docs/WaxFrame_Playbook_Test_Master_vN.txt
+(test runs + measured convergence data).
+
+Changelog content does NOT belong here. Released work goes
+to CHANGELOG.md and is removed from this file the moment it
+ships.
+
+
+════════════════════════════════════════════════════════════
+OPEN BUGS
+════════════════════════════════════════════════════════════
+
+1. Lock button one-way — does not unlock
+   ─────────────────────────────────────────────────────────
+   WHAT:   In the Conflicts panel each applied change has a
+           per-row lock button. Clicking it once locks the
+           change (prevents Builder from overwriting it on
+           later rounds). Clicking it again is supposed to
+           unlock — but currently does nothing visible.
+   WHY:    Users get stuck with a permanently locked change
+           and have to clear the whole conflicts panel to
+           recover. Removes a piece of fine-grained user
+           control during refinement.
+   STATE:  DEFERRED — waiting on user repro with the
+           v3.63.165 diagnostic console line captured.
+   WHERE:  lockAppliedChange()       at app.js:18485
+           diagnostic console.log    at app.js:18504
+                                     ('[wf:lock]', ...)
+           silent return on empty    at app.js:18514
+           renderConflicts target    document.getElementById(
+                                     'conflictsPanel')
+   DONE:   Clicking a locked lock button toggles it back to
+           unlocked state in both the data model AND the
+           rendered UI; subsequent Builder rounds can edit
+           that line again.
+   HYPOTHESES (ranked by likelihood):
+     a. change.locked is false at click time — rendered
+        state and data state have diverged, most likely if
+        the history array got reassigned between renders.
+     b. The UNLOCK branch enters correctly but the silent
+        return at app.js:18514 fires because change.new
+        became an empty string.
+     c. The UNLOCK branch runs cleanly but
+        getElementById('conflictsPanel') returned null
+        inside renderConflicts() and the function silently
+        bailed without re-rendering.
+
+
+════════════════════════════════════════════════════════════
+OPEN FEATURES
+════════════════════════════════════════════════════════════
+
+1. Restore-from-Checkpoint diff-and-pick UI
+   ─────────────────────────────────────────────────────────
+   WHAT:   When the user restores a WaxFrame checkpoint file
+           (.json export of project + session + hive + keys
+           + builder + license), the current behavior is
+           wholesale replacement of the loaded state.
+           This feature would add a comparison UI showing
+           what's IN the checkpoint vs what's CURRENTLY
+           LOADED, with checkboxes per section so the user
+           can pick which pieces to restore.
+   WHY:    Real-world example: David wants the project setup
+           from yesterday's checkpoint but wants to keep
+           today's API keys and hive configuration. Today he
+           either accepts overwriting everything or doesn't
+           restore at all. A diff-and-pick UI fills that gap.
+   STATE:  PARKED — design understood, implementation not
+           started. Not on a near-term release path.
+   WHERE:  Restore flow lives in the import-checkpoint code
+           path in app.js (search for envelope parsing /
+           scope flags introduced in v3.63.130).
+   DONE:   Restore modal shows two columns (Current vs
+           Checkpoint) for each of the 6 envelope sections
+           (Project, Session, Hive, Keys, Builder, License),
+           each with a checkbox; only checked sections get
+           applied; unchecked sections stay untouched in
+           memory and storage.
+
+
+2. Hive parallel fan-out RPS-awareness
+   ─────────────────────────────────────────────────────────
+   WHAT:   Every refinement round, WaxFrame fires the
+           reviewer-prompt API call to all participating AI
+           providers in parallel (fan-out). Today the
+           fan-out is naive: all requests go out essentially
+           at once. Several providers cap RPS (Requests Per
+           Second) at low numbers — Cohere, Mistral,
+           Together AI and some Anthropic tiers — and will
+           return 429 (Too Many Requests) or silently slow
+           down when hit with simultaneous calls.
+   WHY:    A single user with multiple keys and a 10-AI hive
+           can saturate a low-RPS provider on round 1 and
+           start eating retries. Total wall-clock goes up,
+           and worst case a provider drops out of the round.
+           RPS-awareness would stagger requests per-provider
+           so we stay under each provider's cap while still
+           parallelizing across providers.
+   STATE:  OPEN — not started.
+   WHERE:  The fan-out dispatcher in app.js (the function
+           that builds and Promise.all-s the per-provider
+           request promises for a refinement round).
+   DONE:   Each provider has a configurable RPS ceiling
+           (default per-family value, override per-key);
+           the dispatcher queues requests so no provider
+           receives more than N concurrent in-flight calls;
+           no functional change to round semantics —
+           reviewers still all return before Builder runs.
+
+
+3. Failover Builder behavior — single-round CONTENT_FILTERED
+   ─────────────────────────────────────────────────────────
+   WHAT:   The Builder is the AI that assembles the working
+           document each round from the reviewer
+           suggestions. Occasionally a provider returns
+           CONTENT_FILTERED (their safety system blocked the
+           output, usually because of a phrase in the source
+           material or a reviewer's wording). Today this
+           interrupts the round and the user has to manually
+           switch Builder.
+   WHY:    Most CONTENT_FILTERED hits are one-round flukes —
+           the next round with slightly different reviewer
+           inputs goes through fine. Auto-failing-over to a
+           backup Builder for just the bad round preserves
+           flow without losing data.
+   STATE:  OPEN — not started.
+   WHERE:  Builder dispatch + error handling in app.js.
+           Existing precedent: the Jamba-as-Builder filter
+           (v3.63.132) shows how a per-family rule is wired.
+   DONE:   When the active Builder returns CONTENT_FILTERED
+           on a single round, WaxFrame automatically retries
+           that round with the next-ranked Builder candidate
+           from the recommendations; if it succeeds, the
+           round commits normally; the active Builder
+           preference is restored for the following round
+           (this is a one-round failover, not a permanent
+           swap); user sees a toast explaining what happened.
+
+
+4. Builder-incapable family list expansion
+   ─────────────────────────────────────────────────────────
+   WHAT:   Some AI model families can't reliably act as
+           Builder — they break the %%CONFLICTS_START%%
+           marker block, truncate output mid-document, or
+           hallucinate formatting that breaks the parser.
+           WaxFrame maintains a filter list of these
+           families. Today the list contains Jamba (added
+           v3.63.132) and a handful of others.
+   WHY:    Every time a new provider/family is added (e.g.
+           Cohere Command-A-Plus, Together AI families), it
+           needs to be evaluated as Builder. Some pass, some
+           fail. The list has to expand as the provider
+           catalog grows.
+   STATE:  OPEN — ongoing housekeeping. No specific candidate
+           queued for this entry.
+   WHERE:  Builder-capable filter logic in app.js
+           (recommendation engine + Builder dropdown
+           filtering). Cross-reference: Jamba filter at the
+           recommendModel() path.
+   DONE:   A new family proves structurally incompatible as
+           Builder in two consecutive measured runs → it
+           goes on the list; recommendation engine excludes
+           it from Builder picks; Builder dropdown either
+           hides it or shows it disabled with a tooltip.
+
+
+5. Pause/Resume at reviewer seam
+   ─────────────────────────────────────────────────────────
+   WHAT:   A refinement round has natural phases:
+             (1) reviewers analyze the working document,
+             (2) conflicts surface in the Conflicts panel,
+             (3) user decides on any USER DECISION conflicts,
+             (4) Builder applies the decisions and writes
+                 the new working document,
+             (5) the next round starts.
+           The "reviewer seam" is the moment between phases
+           (1) and (4) — reviewers done, Builder not yet
+           fired. This feature would expose a Pause button
+           at that seam: freeze the session, persist state,
+           and let the user resume later.
+   WHY:    Long sessions (15+ rounds) overlap with meal
+           breaks, meetings, rate-limit windows. Today the
+           user either powers through or loses the round.
+           A clean pause point preserves engaged-time
+           accuracy (smart clock pauses) and gives the user
+           breathing room without dropping work.
+   STATE:  OPEN — not started.
+   WHERE:  Round state machine in app.js. Existing precedent:
+           smart project clock idle-pause (v3.63.197) shows
+           how session state can be paused cleanly.
+   DONE:   At the reviewer seam, a Pause button appears;
+           clicking it saves full round state to
+           localStorage, halts the Builder dispatch, and
+           shows a Resume button; clicking Resume re-fires
+           the Builder with the captured reviewer outputs;
+           smart clock is paused for the duration; no data
+           loss if the browser tab is closed (state survives
+           a reload via localStorage).
+
+
+6. File System Access API exploration
+   ─────────────────────────────────────────────────────────
+   WHAT:   The File System Access API is a modern browser
+           API (Chrome, Edge, Opera; not Firefox or Safari)
+           that lets a web app read and write files on the
+           user's disk directly, with permission, instead of
+           using <input type="file"> upload dialogs and
+           download links. The user grants the app a handle
+           to a folder or file once, and the app can then
+           read/write that location continuously.
+   WHY:    WaxFrame's Project, Template, and Checkpoint
+           save/load flows today are upload-and-download.
+           If we adopted FSA for browsers that support it,
+           users could pick a working folder once and have
+           Projects auto-save as they go, with checkpoints
+           landing in the same folder — much closer to a
+           "real" desktop app feel without leaving the
+           browser. Firefox/Safari users would keep the
+           current flow.
+   STATE:  OPEN — research phase. No code yet.
+   WHERE:  N/A — exploration. Likely landing zone is the
+           project save/load code path in app.js + any
+           settings UI for "Working Folder."
+   DONE:   A spike branch demonstrates: (a) detect FSA
+           support, (b) prompt for a working folder, (c)
+           auto-save the current Project to that folder
+           every N seconds, (d) load existing Projects
+           from that folder on launch; UX comparison
+           written up; go/no-go decision on shipping.
+
+
+7. Provider Catalog foundation
+   ─────────────────────────────────────────────────────────
+   WHAT:   Today each AI provider (OpenAI, Anthropic,
+           Google, Cohere, DeepSeek, Mistral, Grok,
+           Perplexity, Together AI, Jamba, etc.) is
+           hardcoded into app.js. Each one has its quirks:
+           auth header format, endpoint URL, request body
+           schema, response shape, model list, model-family
+           defaults, RPS ceiling, structural-Builder
+           capability. Adding a new provider means patching
+           app.js in at least 5 places (auth helper,
+           dispatcher, response parser, model dropdown,
+           recommendation classifier).
+   WHY:    The provider list will keep growing. A Provider
+           Catalog turns each provider into a data record
+           — one JSON-like object per provider with all the
+           knobs above — and the dispatcher reads the
+           catalog instead of branching on hardcoded
+           provider names. Adding a provider becomes "drop
+           in a catalog entry," not "patch five functions."
+   STATE:  PARKED — the refactor is too big to justify until
+           the provider list grows further or a redesign
+           forces it. Foundation work (extracting the shape
+           of a catalog entry) could happen incrementally.
+   WHERE:  Affects most provider-specific branches in
+           app.js: auth header building, request body
+           construction, response parsing, model dropdown
+           population, recommend-model classifier.
+   DONE:   Phase 1 (foundation): a typed shape for a
+           Provider entry is defined and one existing
+           provider is migrated to read from the catalog
+           with no behavior change; Phase 2 (rollout):
+           remaining providers migrate one by one; Phase 3
+           (payoff): a new provider can be added by writing
+           a catalog entry + key UI plumbing, no dispatcher
+           changes needed.
+
+
+8. CSS rule consolidation sweep — PARTIAL
+   ─────────────────────────────────────────────────────────
+   WHAT:   style.css has accumulated duplicate CSS rules
+           over many releases — the same selector defined
+           two or three times with slightly different
+           property sets. v3.63.190 folded the modal base
+           classes together (.modal / -hdr / -close / -body).
+           Several duplicate groups remain.
+   WHY:    Duplicates make every CSS change risky — you fix
+           one definition, miss the second, and the bug
+           comes back in dark mode or on a specific screen.
+           Consolidation makes style.css predictable and
+           halves the surface area for theme bugs.
+   STATE:  PARTIAL — modal base done in v3.63.190.
+           Remaining duplicate groups listed below.
+   WHERE:  Remaining duplicate selector groups:
+             • .template-gallery-sidebar /
+               .template-gallery-sidebar-label /
+               .template-gallery-sidebar-link
+             • .template-path-card
+             • .template-card /
+               .template-card.is-recommended /
+               .template-card-name /
+               .template-card-desc
+             • .template-gallery-section /
+               .template-gallery-section-title
+             • .template-card-edit / -dup / -export / -del /
+               -wrap   (edit-action button block at
+               style.css:14765+)
+           Critical interaction: dark theme specialization
+           at style.css:14220+ — naive deletions can
+           silently break dark mode. Per-selector tracing
+           required.
+   DONE:   Each remaining duplicate group is merged into a
+           single canonical block; dark-theme overrides
+           still render correctly (verified in browser,
+           both light and dark mode, on the Templates
+           gallery + Custom Templates pages); style.css
+           line count drops noticeably with no visual
+           regression.
+
+
+════════════════════════════════════════════════════════════
+NOTES ON FORMAT
+════════════════════════════════════════════════════════════
+Every entry above uses the same five-field structure:
+WHAT, WHY, STATE, WHERE, DONE. Going forward, any new
+backlog entry MUST follow that structure so the document
+stays pickup-ready for any reader.
+
+State vocabulary:
+  OPEN      — known and ready to work on; no blockers.
+  PARTIAL   — work has started, more remains; current
+              state described in the entry.
+  PARKED    — design is understood but not on a near-term
+              release path; revisit later.
+  DEFERRED  — paused waiting on an external input
+              (user repro, upstream decision, etc.).
+
+When an item ships, it moves to CHANGELOG.md and is
+DELETED from this file. No "CLOSED" section here — the
+changelog is the system of record for completed work.
