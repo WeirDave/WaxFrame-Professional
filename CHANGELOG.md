@@ -21,9 +21,13 @@ Retuned the Worker Bees setup side menu and Hive Profile top bar to mirror the c
 
 Consolidated repeated Template Gallery selectors and removed the stale `.template-card-export` override that conflicted with the current four-button card action layout.
 
+### Nav drawer ordering
+
+Sorted the side-menu action groups alphabetically by visible label: Tools, Help & Support, Advanced, and Legal. The flow-based Navigation group stays in setup/work order.
+
 ### Files Changed
 
-- Updated: `.gitignore`, `style.css`, `tools/release-check.mjs`, `CHANGELOG.md`
+- Updated: `.gitignore`, `index.html`, `style.css`, `tools/release-check.mjs`, `CHANGELOG.md`
 - Version/build stamps to v3.63.214 / 20260607-001 across HTML, JS, CSS, and `package.json`
 
 ---

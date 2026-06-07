@@ -3029,10 +3029,11 @@ function wfMobileShareToast(msg) {
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
-    <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Save Checkpoint</button>
-    <button title="Restore from a previously-saved WaxFrame checkpoint file" class="nav-item" onclick="importSession()">📂 Restore from Checkpoint</button>
     <button title="Manage your WaxFrame Pro license key" class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
+    <button title="Restore from a previously-saved WaxFrame checkpoint file" class="nav-item" onclick="importSession()">📂 Restore from Checkpoint</button>
     <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>
+    <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
+    <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Save Checkpoint</button>
     <!-- v3.63.172 — Templates entry. Until this release the template gallery
          was reachable ONLY via the 📋 Use Template button on Setup 2 (Project),
          which meant the welcome screen's pitch wording (which name-checks the
@@ -3040,26 +3041,26 @@ function wfMobileShareToast(msg) {
          pointed at a path 7 clicks deep, behind Setup 1. David flagged it:
          "we don't get there very quickly which is another flaw." This entry
          opens the gallery modal from any screen — symmetric with the
-         existing Save as Template entry right below it. -->
+         existing Save as Template entry in this Tools section. -->
     <button title="Open the Template Gallery — pre-fill Project fields from a starting template (Quick Start, Cover Letter, Resume, RFP, etc.)" class="nav-item" onclick="closeNavMenu();showTemplateGallery()">&#x1F4CB; Templates</button>
-    <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Help & Support</div>
-    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
+    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
-    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
     <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🐝 Hive Profiles</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Advanced</div>
-    <a class="nav-item" href="prompt-editor.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">✏️ Prompt Editor</a>
     <button title="Open Developer Tools — for testing and debugging" class="nav-item nav-item-dev" onclick="closeNavMenu();showDevModal()">🛠 Dev Tools</button>
     <div class="nav-dev-section" id="navDevSection">
       <button title="Exit Dev Mode and return to normal user mode" class="nav-item nav-item-exit-dev" onclick="closeNavMenu();exitDevMode()">🚪 Exit Dev Mode</button>
     </div>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">✏️ Prompt Editor</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Legal</div>
