@@ -2,6 +2,32 @@
 
 ---
 
+## v3.63.214
+
+**Release-check artifact scope + Worker Bees gray retune**
+
+Build: `20260607-001`<br>
+Released: `2026-06-07`
+
+### Release-check scope fix
+
+`tools/release-check.mjs` now skips generated `release-artifacts/` folders during its repository walk. The command was correctly passing current tracked app files, but it still scanned old untracked release bundles and failed on their stale `?v=3.63.182` cache-bust strings. Added `release-artifacts/` to `.gitignore` so generated bundles stay out of normal release checks and commits.
+
+### Worker Bees visual polish
+
+Lightened the Worker Bees setup side menu and Hive Profile top bar to match the softer custom-AI selected header instead of using the darker gray block treatment. The new palette uses `#f0f2f8` panels, `#d0d4e8` borders, dark readable text, and white selects so the page feels consistent with the rest of the setup screen.
+
+### Template Gallery CSS cleanup
+
+Consolidated repeated Template Gallery selectors and removed the stale `.template-card-export` override that conflicted with the current four-button card action layout.
+
+### Files Changed
+
+- Updated: `.gitignore`, `style.css`, `tools/release-check.mjs`, `CHANGELOG.md`
+- Version/build stamps to v3.63.214 / 20260607-001 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.213
 
 **New hive-profiles.html docs page — backlog #12 closed**

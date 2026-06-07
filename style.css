@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-031
+   Build: 20260607-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14463,8 +14463,10 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   flex: 0 0 180px;
   position: sticky;
   top: 0;
-  padding: var(--space-12) 0;
-  border-right: 1px solid var(--border2);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  padding: var(--space-12);
   align-self: flex-start;
   max-height: calc(88vh - 200px);
   overflow-y: auto;
@@ -14477,7 +14479,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   letter-spacing: 0.06em;
   font-weight: 700;
   color: var(--text-dim);
-  padding: 0 var(--space-14);
+  padding: 0 var(--space-8);
   margin-bottom: var(--space-8);
 }
 .template-gallery-sidebar-link {
@@ -14485,10 +14487,11 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   width: 100%;
   text-align: left;
   background: transparent;
-  border: none;
-  border-left: 3px solid transparent;
-  padding: var(--space-8) var(--space-14);
-  margin-right: -1px;
+  border: 1px dashed transparent;
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-8) var(--space-10);
+  margin: 0 0 2px;
   color: var(--text-dim);
   cursor: pointer;
   font-size: var(--fs-13);
@@ -14498,17 +14501,9 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   transition: background-color 0.1s, color 0.1s, border-left-color 0.1s;
 }
 .template-gallery-sidebar-link:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--text);
-  border-left-color: var(--accent);
-}
-[data-theme="dark"] .template-gallery-sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-@media (prefers-color-scheme: dark) {
-  [data-theme="auto"] .template-gallery-sidebar-link:hover {
-    background: rgba(255, 255, 255, 0.04);
-  }
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
 }
 .template-gallery-main {
   flex: 1;
@@ -14553,8 +14548,9 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   align-items: flex-start;
   gap: var(--space-14);
   padding: var(--space-20) var(--space-20);
-  background: var(--bg-3d-button);
-  border: 2px solid var(--border2);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 4px solid var(--border2);
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
@@ -14566,6 +14562,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 .template-path-card:hover {
   border-color: var(--accent, #f4b400);
+  border-left-color: var(--accent, #f4b400);
   background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
   transform: translateY(-2px);
   box-shadow: var(--shadow-3d-button-hover);
@@ -14675,14 +14672,14 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 
 .template-gallery-section + .template-gallery-section {
-  margin-top: 22px;
+  margin-top: var(--space-24);
 }
 .template-gallery-section-title {
-  font-size: var(--fs-base);
-  font-weight: 600;
+  font-size: var(--fs-12);
+  font-weight: 800;
   color: var(--accent, #f4b400);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
   margin: 0 0 var(--space-10);
   padding-bottom: var(--space-6);
   border-bottom: 1px dashed var(--border2);
@@ -14710,12 +14707,13 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   padding: var(--space-14) var(--space-16);
   /* v3.32.1 — modal surface is --surface2, so cards use --surface3 for
      contrast inside the modal (one step lighter than the modal body). */
-  background: var(--surface3);
+  background: var(--surface);
   /* v3.63.179 — Was 1px solid. Switched to dashed to match the
      WaxFrame house pattern (welcome cards, setup cards, helper cards
      all use dashed borders). David's call for visual continuity
      across the modal and the documentation pages. */
-  border: 1px dashed var(--border2);
+  border: 1px solid var(--border2);
+  border-left: 4px solid var(--border2);
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
@@ -14725,6 +14723,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 .template-card:hover {
   border-color: var(--accent, #f4b400);
+  border-left-color: var(--accent, #f4b400);
   background: var(--accent-dim);
 }
 .template-card:active {
@@ -14744,15 +14743,16 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   min-width: 0;
 }
 .template-card-name {
-  font-size: var(--fs-base);
-  font-weight: 600;
+  font-size: var(--fs-13);
+  font-weight: 800;
   color: var(--text);
+  line-height: 1.3;
   margin-bottom: var(--space-4);
 }
 .template-card-desc {
   font-size: var(--fs-12);
   color: var(--text-dim);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 /* v3.32.4 — Recommended card variant + badge.
@@ -14763,6 +14763,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
    in renderTemplateGalleryBody attaches .is-recommended to it. */
 .template-card.is-recommended {
   border-color: var(--accent, #f4b400);
+  border-left-color: var(--accent, #f4b400);
   background: var(--accent-dim);
   box-shadow: 0 0 16px rgba(245,166,35,0.12);
 }
@@ -14808,27 +14809,6 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   box-shadow: var(--shadow-3d-pill);
 }
 
-/* v3.63.190 — Modal/hdr/close/body theme overrides consolidated up into
-   the base definitions at the top of this section. The sidebar/path-card/
-   template-card overrides below remain as a layered override block;
-   folding them in safely needs browser verification because the cascade
-   interacts with the [data-theme="dark"] specializations further down. */
-.template-gallery-sidebar {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-md);
-  padding: var(--space-12);
-}
-.template-gallery-sidebar-label {
-  padding: 0 var(--space-8);
-}
-.template-gallery-sidebar-link {
-  border: 1px dashed transparent;
-  border-left-width: 3px;
-  border-radius: var(--radius-sm);
-  padding: var(--space-8) var(--space-10);
-  margin: 0 0 2px;
-}
 /* v3.63.189 — Rename affordance for free-form custom categories. Lives
    in a row with the sidebar link; ✏️ sits to the right at low opacity,
    lifts on hover. Click fires renameCustomCategory() which handles
@@ -14858,44 +14838,6 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   opacity: 1;
   border-color: var(--accent);
   background: var(--accent-dim);
-}
-.template-gallery-sidebar-link:hover {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-  color: var(--accent);
-}
-.template-path-card {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-left: 4px solid var(--border2);
-}
-.template-path-card:hover {
-  border-left-color: var(--accent, #f4b400);
-}
-.template-gallery-section + .template-gallery-section {
-  margin-top: var(--space-24);
-}
-.template-gallery-section-title {
-  font-size: var(--fs-12);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-.template-card {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-left: 4px solid var(--border2);
-}
-.template-card:hover,
-.template-card.is-recommended {
-  border-left-color: var(--accent, #f4b400);
-}
-.template-card-name {
-  font-size: var(--fs-13);
-  font-weight: 800;
-  line-height: 1.3;
-}
-.template-card-desc {
-  line-height: 1.45;
 }
 [data-theme="dark"] .template-gallery-modal {
   border-color: rgba(148,163,184,0.32);
@@ -15691,19 +15633,6 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   box-shadow: var(--shadow-3d-button-active);
 }
 .template-custom-hint { font-size: var(--fs-12); color: var(--text-dim); }
-/* v3.63.45 — Phase 3: export affordance (third hover button on custom cards). */
-.template-card-export { right: 80px; }   /* export | edit | delete, left-to-right */
-.template-card-wrap:hover .template-card-export,
-.template-card-export:focus-visible { opacity: 1; }
-.template-card-export {
-  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-  padding: 0; font-size: var(--fs-sm); line-height: 1;
-  background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm);
-  color: var(--text-dim); cursor: pointer; opacity: 0;
-  transition: opacity 0.12s, border-color 0.12s, color 0.12s, background 0.12s;
-}
-.template-card-export:hover { border-color: var(--accent); color: var(--accent); background: var(--surface3); }
-.template-card-export:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .template-import-btn { background: var(--surface3); color: var(--text); border-color: var(--border2); }
 .template-import-btn:hover { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
 
@@ -16586,46 +16515,32 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   flex-direction: column;
   gap: var(--space-12);
 }
-/* v3.63.160 — Solid dark-navy treatment matches .work-panel-header
-   .honeycomb-header on the work screen (rgba(0,0,0,0.55) + 6px blur).
-   Was rgba(0,0,0,0.25) which read as muddy grey in light mode over
-   the amber honeycomb backdrop. David: "The side menu should not be
-   grey on light mode". Now reads as the same intentional branded
-   panel in both light and dark themes. */
+/* v3.63.214 — Sidebar now matches the softer setup-panel gray used by
+   the custom-AI bulk-select toolbar. The previous dark overlay treatment
+   was too heavy against the otherwise airy Worker Bees setup page. */
 .bees-sidebar-block {
-  /* v3.63.202 — JUMP TO AI sidebar panel picks up a real bezel: subtle
-     gradient on top of the dark navy surface + inset top highlight +
-     stronger drop shadow so the panel reads as a physical recessed
-     control panel rather than a flat slab. Same dark-navy base
-     preserved (per the v3.63.160 "side menu should not be grey on light
-     mode" decision); the 3D depth is added on top. */
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.10) 100%),
-    rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: #f0f2f8;
+  border: 1px solid #d0d4e8;
   border-radius: 10px;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.14),
-    inset 0 -1px 0 rgba(0,0,0,0.28),
-    0 4px 14px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    0 2px 8px rgba(0, 0, 0, 0.12);
   padding: var(--space-10) var(--space-12);
 }
 .bees-sidebar-block .bees-sidebar-heading,
 .bees-sidebar-block .bees-sidebar-subhead,
 .bees-sidebar-block .bees-sidebar-jump,
 .bees-sidebar-block .bees-sidebar-related {
-  color: rgba(255, 255, 255, 0.92);
+  color: #0f1221;
 }
 [data-theme="light"] .bees-sidebar-block .bees-sidebar-heading,
 [data-theme="light"] .bees-sidebar-block .bees-sidebar-subhead,
 [data-theme="light"] .bees-sidebar-block .bees-sidebar-jump,
 [data-theme="light"] .bees-sidebar-block .bees-sidebar-related {
-  color: rgba(255, 255, 255, 0.92);
+  color: #0f1221;
 }
 [data-theme="light"] .bees-sidebar-block .bees-sidebar-jump:not(.has-key) .bees-sidebar-jump-name {
-  color: rgba(255, 255, 255, 0.55);
+  color: #384060;
 }
 .bees-sidebar-heading {
   font-size: 10.5px;
@@ -16676,17 +16591,16 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   overflow: hidden;
 }
 .bees-sidebar-jump:hover {
-  background: linear-gradient(180deg, rgba(244,180,0,0.18) 0%, rgba(244,180,0,0.06) 100%);
+  background: var(--accent-dim, rgba(244, 180, 0, 0.10));
   color: var(--accent, #f4b400);
   transform: translateY(-1px);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.14),
-    inset 0 -1px 0 rgba(0,0,0,0.18),
-    0 2px 6px rgba(0,0,0,0.30);
+    0 2px 6px rgba(0,0,0,0.12);
 }
 .bees-sidebar-jump:active {
   transform: translateY(0);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.35);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.16);
 }
 .bees-sidebar-jump-icon {
   width: 16px;
@@ -16707,7 +16621,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   flex-shrink: 0;
 }
 .bees-sidebar-jump:not(.has-key) .bees-sidebar-jump-name {
-  color: var(--text-dim);
+  color: #384060;
 }
 
 /* Related links */
@@ -17005,21 +16919,18 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
  * left and the status reads to the right; on narrow screens
  * flex-wrap kicks in and the note drops below.
  * ============================================================ */
-/* v3.63.160 — Solid dark-navy treatment matches the work-screen
-   .work-panel-header.honeycomb-header pattern + the .bees-sidebar-block
-   it sits alongside. Was rgba(0,0,0,0.25) which read as grey in light
-   mode (David: "and neither should the header hive profile"). */
+/* v3.63.214 — Match the custom-AI bulk-select toolbar: lighter setup-panel
+   gray instead of the old dark overlay. Keeps the profile controls grouped
+   without visually outweighing the AI rows below. */
 .hive-profile-bar {
   display: flex;
   align-items: center;
   gap: var(--space-12);
   padding: var(--space-10) var(--space-14);
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: #f0f2f8;
+  border: 1px solid #d0d4e8;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   margin: 0 0 var(--space-10);
   flex-wrap: wrap;
 }
@@ -17030,33 +16941,25 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   font-size: var(--fs-12);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  /* v3.63.160 — Light text on the new dark-navy bar background, in
-     both themes. Was var(--text-dim) which read as muddy grey on the
-     light-mode amber backdrop now that the bar is solid dark. */
-  color: rgba(255, 255, 255, 0.85);
+  color: #384060;
   font-weight: 700;
   flex-shrink: 0;
 }
-.hive-profile-bar-note {
-  /* override the default text-dim so the note stays legible on the dark bar */
-  color: rgba(255, 255, 255, 0.78);
-}
-/* v3.63.212 — Save / Delete profile buttons inside the dark profile bar.
-   Inherit the .btn 3D base from the global sweep; just override the colors
-   so they read against the dark backdrop. Both stay compact. */
+/* v3.63.212 — Save / Delete profile buttons stay compact inside the
+   profile bar; v3.63.214 returns them to the normal setup-panel contrast. */
 .hive-profile-bar-save,
 .hive-profile-bar-delete {
   flex-shrink: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(0,0,0,0.18) 100%);
-  color: rgba(255,255,255,0.90);
-  border-color: rgba(255,255,255,0.25);
+  background: #e4e7f4;
+  color: #0f1221;
+  border-color: #b8bdd8;
 }
 .hive-profile-bar-save:hover {
   color: var(--accent);
   border-color: var(--accent);
 }
 .hive-profile-bar-delete {
-  color: rgba(255, 200, 200, 0.85);
+  color: var(--red);
   border-color: rgba(248, 113, 113, 0.45);
 }
 .hive-profile-bar-delete:hover {
@@ -17065,10 +16968,10 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   border-color: var(--red);
 }
 .hive-profile-bar-select {
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: #ffffff;
+  border: 1px solid #d0d4e8;
   border-radius: var(--radius-sm);
-  color: var(--text);
+  color: #0f1221;
   padding: var(--space-6) var(--space-10);
   font-size: var(--fs-13);
   font-family: inherit;
@@ -17081,7 +16984,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 .hive-profile-bar-note {
   font-size: var(--fs-12);
-  color: var(--text-dim);
+  color: #384060;
   margin-left: auto;
   /* v3.63.157 — Was max-width:420px which forced awkward mid-sentence
      wraps (David's report: "the word wrap for the rest of the drop
