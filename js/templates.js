@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
-// Build: 20260606-022
+// Build: 20260606-023
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -1325,7 +1325,8 @@ const WAXFRAME_TEMPLATES = [
     "name": "Trim to TripAdvisor",
     "icon": "✈️",
     "category": "Reviews & Recommendations",
-    "description": "Convert a long-form review into a TripAdvisor-ready version: detailed narrative travel-context tone, 500–900 words. Source visible to reviewers every round so factual cuts can be verified.",
+    "lengthBadge": "500–900 words",
+    "description": "Convert a long-form review into a TripAdvisor-ready version: detailed narrative travel-context tone. Source visible to reviewers every round so factual cuts can be verified.",
     "paths": ["refine"],
     "pathContent": {
       "refine": {
@@ -1357,7 +1358,8 @@ const WAXFRAME_TEMPLATES = [
     "name": "Trim to Google Maps",
     "icon": "📍",
     "category": "Reviews & Recommendations",
-    "description": "Convert a long-form review into a Google Maps-ready version: skim-friendly, bottom-line-first, 750–1,200 characters. Source visible to reviewers every round so brutal cuts can be verified against the original.",
+    "lengthBadge": "750–1,200 chars",
+    "description": "Convert a long-form review into a Google Maps-ready version: skim-friendly, bottom-line-first. Source visible to reviewers every round so brutal cuts can be verified against the original.",
     "paths": ["refine"],
     "pathContent": {
       "refine": {
@@ -1389,7 +1391,8 @@ const WAXFRAME_TEMPLATES = [
     "name": "Rewrite as Yelp",
     "icon": "💬",
     "category": "Reviews & Recommendations",
-    "description": "Rewrite a long-form review as a Yelp review: conversational, personality-forward, first-person, 300–700 words. Voice transformation is the main job — same facts, different prose register.",
+    "lengthBadge": "300–700 words",
+    "description": "Rewrite a long-form review as a Yelp review: conversational, personality-forward, first-person. Voice transformation is the main job — same facts, different prose register.",
     "paths": ["refine"],
     "pathContent": {
       "refine": {

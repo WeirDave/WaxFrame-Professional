@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-022
+   Build: 20260606-023
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14761,6 +14761,28 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   border-radius: var(--radius-sm);
   vertical-align: middle;
   white-space: nowrap;
+}
+/* v3.63.205 — Length-target badge on template cards. Distinct visual
+   from .template-card-badge (the "⭐ Start Here" amber-fill chip): this
+   one is a subtle outlined pill keyed to text-dim so it reads as
+   informational metadata rather than a recommendation. Right-aligned-
+   ish via auto margin so it floats to the trailing edge of the name
+   row when there's room. Tabular-nums so numbers in ranges align. */
+.template-card-length-badge {
+  display: inline-block;
+  margin-left: var(--space-8);
+  padding: 1px var(--space-8);
+  font-size: var(--fs-11);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--bg-3d-pill);
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  vertical-align: middle;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--shadow-3d-pill);
 }
 
 /* v3.63.190 — Modal/hdr/close/body theme overrides consolidated up into

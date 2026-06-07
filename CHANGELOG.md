@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.205
+
+**Trim templates show target range as a chip on the gallery card — decide whether to trim before applying**
+
+Build: `20260606-023`<br>
+Released: `2026-06-06`
+
+### Added — length-target badge on template gallery cards
+
+David's review workflow problem: he picks "Trim to TripAdvisor" from the gallery, then on Project setup sees the Length Constraint pills pre-filled with the target range (500–900 words), realizes his master review is already in range, and abandons. Useful — but the realization comes AFTER applying the template, which costs context and breaks flow. Real fix: surface the target range at gallery-pick time so the decide-whether-trim-is-even-needed call happens before applying.
+
+New optional `lengthBadge` field on template definitions in `js/templates.js`. When present, the gallery renderer (`renderTemplateGalleryBody` in `js/app.js`) displays it as a subtle outlined chip next to the template name on the card. Three trim templates get the badge:
+
+- **Trim to TripAdvisor** → `500–900 words`
+- **Trim to Google Maps** → `750–1,200 chars`
+- **Rewrite as Yelp** → `300–700 words`
+
+Visually distinct from the existing `.template-card-badge` (the amber-filled "⭐ Start Here" chip on Quick Start) — `.template-card-length-badge` is outlined, dim-text, tabular-nums, reads as informational metadata rather than a recommendation. Won't compete with the recommended-badge on Quick Start.
+
+### Why this can't be done as a "compare to your master" badge
+
+David caught this UX dead-end: the template gallery opens BEFORE Starting Document or Reference Material exist (you're on the Project screen with empty fields when the gallery pops). So a "your master fits this template" green-check badge has nothing to compare against at gallery-pick time. The static target-range chip is the right answer because it's purely informational — no comparison source needed.
+
+### Files Changed
+
+- Updated: `js/templates.js` (new `lengthBadge` field on the three trim templates), `js/app.js` (`renderTemplateGalleryBody` now renders the `.template-card-length-badge` chip when `t.lengthBadge` is present), `style.css` (new `.template-card-length-badge` rule using the 3D pill bezel + tabular-nums), `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.205 / 20260606-023 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.204
 
 **Starting Document stats now match Reference Material — chars · words · lines · paragraphs · tokens**
