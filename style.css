@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260606-026
+   Build: 20260606-027
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1144,6 +1144,29 @@ body.helper-body .page-main {
    AI name, before the spacer that pushes action buttons to the right.
    Uses the accent tokens so it visually echoes other warn-state UI
    without needing a new color. */
+/* v3.63.209 — Profile-override badge. Surfaces when a row's current model
+   diverges from the active Hive Profile's expected tier pick for that
+   provider. Small amber pill matching the deprecation-flag size language
+   but with the small-pill 3D shadow stack + "manual override" semantic. */
+.ai-setup-override-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: var(--space-6);
+  padding: 0 var(--space-8);
+  height: 20px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-11);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
+  border: 1px solid var(--accent);
+  cursor: help;
+  user-select: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-3d-pill);
+}
 .ai-setup-deprecation-flag {
   display: inline-flex;
   align-items: center;
