@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.218
+
+**Template export arrow direction**
+
+Build: `20260607-005`<br>
+Released: `2026-06-07`
+
+### Changed — export icon points outward
+
+Custom-template export actions now use `⬆` instead of `⬇`, matching the idea that exporting sends the template outward from WaxFrame. Updated the card hover export button, the custom-template toolbar hint, the Templates page "Export all as .zip" button, and the matching CSS source comments.
+
+### Files Changed
+
+- Updated: `js/app.js`, `templates.html`, `style.css`, `CHANGELOG.md`
+- Version/build stamps to v3.63.218 / 20260607-005 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.217
 
 **Template card CSS action-button consolidation**
