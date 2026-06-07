@@ -267,12 +267,7 @@ OPEN FEATURES
            comes back in dark mode or on a specific screen.
            Consolidation makes style.css predictable and
            halves the surface area for theme bugs.
-   STATE:  PARTIAL — modal base done in v3.63.190.
-           Remaining duplicate groups listed below. v3.63.217
-           consolidated the custom-template hover action button
-           block (.template-card-edit / -dup / -export / -del /
-           -wrap), which had the clearest exact duplicate base
-           declarations.
+   STATE:  PARTIAL — remaining duplicate groups listed below.
    WHERE:  Remaining duplicate selector groups:
              • .template-gallery-sidebar /
                .template-gallery-sidebar-label /
