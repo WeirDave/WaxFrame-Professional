@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-022
+// Build: 20260606-023
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-022';         // build stamp — update each session
+const BUILD       = '20260606-023';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -3864,11 +3864,22 @@ function renderTemplateGalleryBody() {
           // used as the fallback for templates that don't need per-path
           // wording (e.g. cover-letter already reads "Create or refine…").
           const desc = (t.pathContent && t.pathContent[path] && t.pathContent[path].description) || t.description || '';
+          // v3.63.205 — Length-target badge on the card-name row. Surfaces the
+          // platform target range at gallery-pick time so users can decide
+          // whether the template is even needed without applying it first.
+          // David's call after the Joe Schmoe's runs: he abandoned a
+          // TripAdvisor trim attempt because the master review was already
+          // at TripAdvisor target length — but only realized that AFTER
+          // applying the template and looking at the Length Constraint pills.
+          // Now the target range is right on the gallery card.
+          const lengthBadge = t.lengthBadge
+            ? `<span class="template-card-length-badge">${esc(t.lengthBadge)}</span>`
+            : '';
           const cardBtn = `
           <button class="${cardCls}" onclick="applyTemplate('${escapeHtml(t.id)}', '${path}')" title="Apply the ${escapeHtml(t.name)} template (${escapeHtml(pathLabel)})">
             <span class="template-card-icon">${esc(t.icon || '📄')}</span>
             <div class="template-card-text">
-              <div class="template-card-name">${esc(t.name)}${badge}</div>
+              <div class="template-card-name">${esc(t.name)}${badge}${lengthBadge}</div>
               <div class="template-card-desc">${esc(desc)}</div>
             </div>
           </button>`;
