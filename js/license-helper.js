@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — license-helper.js
-// Build: 20260607-001
+// Build: 20260607-002
 //  Self-contained license badge + modal logic for helper pages.
 //  Mirrors the in-app license functions in app.js, minus the
 //  trial-rounds tracking (helper pages don't run rounds, so the
@@ -41,7 +41,12 @@ function saveLicense(key) {
     existing.valid = true;
     existing.key   = key;
     localStorage.setItem(LS_LICENSE_HELPER, JSON.stringify(existing));
-  } catch(e) {}
+    const saved = JSON.parse(localStorage.getItem(LS_LICENSE_HELPER) || 'null');
+    return !!(saved && saved.valid === true && saved.key === key);
+  } catch(e) {
+    console.warn('[license-helper saveLicense] write failed:', e);
+    return false;
+  }
 }
 
 function clearLicense() {
@@ -114,7 +119,10 @@ async function submitLicenseKey() {
     });
     const data = await resp.json();
     if (data.success && !data.purchase?.refunded && !data.purchase?.chargebacked) {
-      saveLicense(key);
+      if (!saveLicense(key)) {
+        if (errEl) errEl.textContent = 'License verified, but this browser could not save it. Check site storage settings or clear space, then try again.';
+        return;
+      }
       hideLicenseModal();
       updateLicenseBadge();
     } else {

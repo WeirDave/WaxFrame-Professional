@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260607-001
+   Build: 20260607-002
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -5317,6 +5317,133 @@ kbd {
   padding: var(--space-28) 36px var(--space-28);
   align-items: flex-start;
 }
+.finish-modal.goal-info-modal.about-modal {
+  max-width: 960px;
+  padding: 0;
+  align-items: stretch;
+  overflow-y: auto;
+}
+.about-modal-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-24);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-28) 36px var(--space-24);
+  background:
+    radial-gradient(circle at 82% 18%, var(--accent-dim), transparent 36%),
+    linear-gradient(135deg, var(--surface), var(--surface2));
+  border-bottom: 1px solid var(--border2);
+  overflow: hidden;
+}
+.about-modal-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-18);
+  min-width: 0;
+}
+.about-modal-logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.about-modal-brand-copy {
+  min-width: 0;
+}
+.about-modal-kicker {
+  margin: 0 0 var(--space-6);
+  font-size: var(--fs-11);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.about-modal-title {
+  margin: 0;
+  line-height: 1.05;
+}
+.about-modal-tagline {
+  margin: var(--space-6) 0 var(--space-12);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.about-version-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+.about-version-pill,
+.about-build-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-size: var(--fs-12);
+  font-weight: 700;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.about-version-pill {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.about-modal-bee {
+  width: 210px;
+  max-width: 32%;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 14px 18px rgba(0,0,0,0.22));
+}
+.about-modal-body {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-20) 36px var(--space-28);
+}
+.about-modal-intro {
+  max-width: 720px;
+  margin: 0 0 var(--space-16);
+  color: var(--text-dim);
+  font-size: var(--fs-14);
+  line-height: 1.55;
+}
+.about-version-inline {
+  font-weight: 700;
+  color: var(--accent);
+}
+.about-credit-line {
+  grid-column: 1 / -1;
+}
+@media (max-width: 760px) {
+  .about-modal-hero {
+    align-items: flex-start;
+    padding: var(--space-20);
+  }
+  .about-modal-brand {
+    align-items: flex-start;
+  }
+  .about-modal-logo {
+    width: 72px;
+    height: 72px;
+  }
+  .about-modal-bee {
+    width: 120px;
+    max-width: 28%;
+  }
+  .about-modal-body {
+    padding: var(--space-18) var(--space-20) var(--space-20);
+  }
+}
 .goal-info-icon {
   font-size: var(--fs-32);
   text-align: center;
@@ -8510,6 +8637,55 @@ kbd {
   border-color: var(--accent, #f4b400);
   box-shadow: 0 0 0 2px var(--accent-dim);
 }
+.settings-license-section {
+  border-color: var(--accent);
+  background:
+    linear-gradient(180deg, var(--accent-dim) 0%, transparent 70%),
+    var(--surface2, rgba(255,255,255,0.02));
+}
+.settings-license-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  flex: 0 1 520px;
+}
+.settings-license-input {
+  min-width: 280px;
+  width: 100%;
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: var(--fs-sm);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md, 10px);
+  padding: var(--space-8) var(--space-10);
+}
+.settings-license-input:focus {
+  outline: none;
+  border-color: var(--accent, #f4b400);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+.settings-license-error {
+  min-height: 18px;
+  margin-top: var(--space-4);
+  text-align: left;
+}
+@media (max-width: 900px) {
+  .settings-row {
+    flex-direction: column;
+    gap: var(--space-12);
+  }
+  .settings-license-controls {
+    width: 100%;
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .settings-license-input {
+    min-width: 220px;
+  }
+}
 .settings-inline-controls {
   display: flex;
   align-items: center;
@@ -8661,7 +8837,7 @@ kbd {
 }
 
 /* ══════════════════════════════════════
-   LICENSE BADGE + MODAL
+   LICENSE BADGE + SHARED MODAL STYLES
 ══════════════════════════════════════ */
 
 /* v3.63.199 — Small-pill 3D treatment for both states. Unlicensed state
@@ -10764,8 +10940,7 @@ kbd {
 .goal-modal-refine-text  { font-family: var(--font-mono); font-size: var(--fs-12); line-height: 1.6; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: var(--space-10) var(--space-14); white-space: pre-wrap; max-height: 120px; overflow-y: auto; }
 .goal-modal-footer       { display: flex; gap: var(--space-10); margin-top: var(--space-16); align-items: center; }
 
-/* ── About modal logo ── */
-.about-modal-logo { width: 80px; height: 80px; object-fit: contain; margin-bottom: var(--space-8); }
+/* About modal logo is styled with the full About modal layout block. */
 
 /* ── Goal info modal icon ── */
 .goal-info-modal-icon { width: 72px; height: 72px; }
@@ -13315,10 +13490,10 @@ kbd {
    matches the helper-page cards, just denser and with uppercase honey
    labels for the row headers (consistent with nav section-label style). */
 .about-info-stack {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-8);
-  margin: var(--space-12) 0;
+  margin: var(--space-12) 0 var(--space-18);
   text-align: left;
 }
 .about-info-stack .wf-card {
@@ -13337,6 +13512,11 @@ kbd {
   font-size: var(--fs-13);
   line-height: 1.5;
   color: var(--text);
+}
+@media (max-width: 760px) {
+  .about-info-stack {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── Tip primitive (.wf-tip) ─────────────────────────────────── */
@@ -16515,7 +16695,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   flex-direction: column;
   gap: var(--space-12);
 }
-/* v3.63.214 — Sidebar mirrors the custom-AI bulk-select toolbar container
+/* v3.63.215 — Sidebar mirrors the custom-AI bulk-select toolbar container
    (.bulk-select-toolbar): theme-aware --surface2 + --border, so light mode
    gets the softer gray and dark mode gets the matching dark panel. */
 .bees-sidebar-block {
@@ -16910,7 +17090,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
  * left and the status reads to the right; on narrow screens
  * flex-wrap kicks in and the note drops below.
  * ============================================================ */
-/* v3.63.214 — Match the custom-AI bulk-select toolbar container. Uses the
+/* v3.63.215 — Match the custom-AI bulk-select toolbar container. Uses the
    same theme-aware panel tokens instead of hardcoded light-mode colors. */
 .hive-profile-bar {
   display: flex;
@@ -16936,7 +17116,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   flex-shrink: 0;
 }
 /* v3.63.212 — Save / Delete profile buttons stay compact inside the
-   profile bar; v3.63.214 returns them to the normal setup-panel contrast. */
+   profile bar; v3.63.215 returns them to the normal setup-panel contrast. */
 .hive-profile-bar-save,
 .hive-profile-bar-delete {
   flex-shrink: 0;

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260607-001
+// Build: 20260607-002
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -985,9 +985,9 @@ function loadSettings() {
                        carry _waxframe_backup_scrubbed: true on a v4
                        envelope; with no users in the wild, the import
                        branch was dropped in v3.63.130. If such a file ever
-                       surfaces it imports via the v4 default path, which
-                       overwrites local LS_LICENSE with the file's null —
-                       a license loss, but a single-keystroke recovery.
+                       surfaces it imports via the v4 default path, but null
+                       license fields now preserve the local license rather
+                       than clearing it.
      v3 (v3.21.12+)  — LS_SESSION_MIRROR removed (IDB became source of truth).
      v2 (v3.21.10/11)— LS_SESSION_MIRROR present alongside LS_SESSION.
    ============================================================= */
@@ -1407,28 +1407,23 @@ async function importSession() {
           if (scope.license) {
             if (data.LS_LICENSE) {
               localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
-            } else {
-              // scope.license=true + null LS_LICENSE means "I ticked License
-              // but had none set" — clear local to match.
-              localStorage.removeItem(LS_LICENSE);
             }
           }
-          // !scope.license → leave local license untouched (the file's null
-          // is intentional omission, not "remove local license").
+          // Missing/null license never clears local license. A checkpoint can
+          // bring a license in, but it should not remove a license already
+          // saved in this browser.
         } else {
           // v4 (and earlier) all-or-nothing path. Null fields = overwrite
           // local with empty. Legacy scrubbed checkpoints from v3.63.59-129
           // would have hit a special _waxframe_backup_scrubbed branch here;
           // that branch was retired in v3.63.130 with zero users in the
           // wild. If such a file ever surfaces it imports through this
-          // default path — the local license gets wiped (recoverable by
-          // re-entering the key) but everything else is fine.
+          // default path, but null license fields preserve the local license.
           if (data.LS_HIVE) localStorage.setItem(LS_HIVE, data.LS_HIVE);
           if (data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
           if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
           if (Object.prototype.hasOwnProperty.call(data, 'LS_LICENSE')) {
             if (data.LS_LICENSE) localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
-            else                 localStorage.removeItem(LS_LICENSE);
           }
         }
         // LS_SESSION is the legacy localStorage session blob (almost always
@@ -1494,7 +1489,7 @@ async function importSession() {
           } else {
             preservedTags.push('hive');
           }
-          if (scope.license) restoredTags.push('license'); else preservedTags.push('license');
+          if (scope.license && data.LS_LICENSE) restoredTags.push('license'); else preservedTags.push('license');
           const restoredPart  = restoredTags.length  ? `Restored: ${restoredTags.join(', ')}` : 'Nothing restored';
           const preservedPart = preservedTags.length ? ` · Kept local: ${preservedTags.join(', ')}` : '';
           toast(`✅ ${restoredPart}${preservedPart}. Reloading…`, 7000);

@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.215
+
+**License persistence hardening + Settings license home**
+
+Build: `20260607-002`<br>
+Released: `2026-06-07`
+
+### Fixed — license save could look successful without persisting
+
+License entry now verifies the browser actually wrote `waxframe_v2_license` after Gumroad validates the key. If localStorage is blocked, full, or otherwise refuses the write, WaxFrame keeps the license entry surface open and shows a storage-specific error instead of playing the unlock scene and then falling back to trial state on reload. The same guard was added to helper pages through `js/license-helper.js`.
+
+### Fixed — checkpoint restore can no longer clear a local license by omission
+
+Restore-from-checkpoint still imports a license when a checkpoint actually contains one, but a missing/null `LS_LICENSE` field now preserves the browser's existing license instead of deleting it. This protects users who import an older or license-free checkpoint after they have already unlocked Pro locally.
+
+### Settings-owned license management
+
+The main app no longer uses separate license entry/manage modals. License management now lives in **Settings → Account & License**, and the footer license pill routes there whether the user is licensed, unlicensed, or trial-expired. First-time successful unlocks still play the WaxFrame Unlocked scene.
+
+### About modal refresh
+
+The About panel now has a branded header with the WaxFrame logo, tagline, current version/build stamps, and Worker Bee art. Version/build stamps have HTML fallbacks and are refreshed from the app constants on load, so the About panel cannot come up blank if script timing is late. Credits now include WeirDave, Claude, and Codex.
+
+### Files Changed
+
+- Updated: `index.html`, `js/app.js`, `js/license-helper.js`, `js/storage.js`, `style.css`, `CHANGELOG.md`
+- Version/build stamps to v3.63.215 / 20260607-002 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.214
 
 **Release-check artifact scope + Worker Bees gray retune**
