@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.203
+
+**3D sweep — Project setup length-mode pills + Reference Material doc cards + drop targets**
+
+Build: `20260606-021`<br>
+Released: `2026-06-06`
+
+### Changed — Project setup screen + Reference Material screen pick up 3D bezel treatment
+
+David flagged the Length Constraint mode buttons (Project setup) and the Reference Material doc cards as still looking flat. Both now match the swept 3D vocabulary.
+
+- **`.length-mode-pill`** (No limit / Hard cap / Target / Range segmented selector on Project setup) — small-pill 3D treatment. Inactive pills are subtle raised buttons with bezel highlight; `.is-active` uses the amber gradient + glow so the chosen mode reads as pressed-in / lit-up. Same vocabulary as `.theme-opt` + `.theme-opt.active`.
+- **`.ref-card`** (per-document cards in Reference Material listing) — base gradient + inset top highlight + drop shadow makes each uploaded doc card read as a physical raised slab. Hover lifts; `:focus-within` adds amber-tinted glow when an inline rename input is focused.
+- **`.ref-card-hdr`** (dark-navy header strip on each ref doc card — title + position arrows + remove) — now has its own gradient + inset top highlight + inset bottom shadow so the header strip reads as a "control band" recessed into the card body.
+- **`.ref-action-target`** (the big Paste Text + Upload File drop-target cards at the top of Reference Material) — the 2px dashed border IS preserved as the "drop here" affordance signature (this is one of the few places where dashed stays right per the "dashed = honey-soft signature" framing), but combined with the bezel gradient + inset highlight + drop shadow so the card reads as a physical target instead of a flat outline. Hover/drag-over saturates the gradient to amber and lifts the card 2px with an amber glow.
+
+### Files Changed
+
+- Updated: `style.css` — rewrote `.length-mode-pill` + `:hover` + `:active` + `.is-active`, `.ref-card` + `:hover` + `:focus-within`, `.ref-card-hdr`, `.ref-action-target` + `:hover/.drag-over`. `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.203 / 20260606-021 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.202
 
 **3D sweep — Worker Bees AI cards + JUMP TO AI sidebar**
