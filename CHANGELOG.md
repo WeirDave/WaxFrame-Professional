@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.223
+
+**Template card state CSS consolidation**
+
+Build: `20260607-010`<br>
+Released: `2026-06-07`
+
+### Changed — template card hover and recommended states share gold styling
+
+Consolidated the repeated gold border/background treatment shared by template-card hover and recommended states. The recommended card still keeps its separate glow shadow, and regular template card name/description rules remain single-purpose.
+
+### Files Changed
+
+- Updated: `style.css`, `docs/WaxFrame_Backlog_Master_v241.txt`, `CHANGELOG.md`
+- Version/build stamps to v3.63.223 / 20260607-010 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.222
 
 **Template path card CSS consolidation**

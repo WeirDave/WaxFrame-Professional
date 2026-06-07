@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260607-009
+   Build: 20260607-010
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14893,7 +14893,8 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   transition: border-color 0.12s, background 0.12s, transform 0.06s;
   min-height: 84px;
 }
-.template-card:hover {
+.template-card:hover,
+.template-card.is-recommended {
   border-color: var(--accent, #f4b400);
   border-left-color: var(--accent, #f4b400);
   background: var(--accent-dim);
@@ -14934,14 +14935,9 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
    first-time users" badge inside the name line. The hard-coded id check
    in renderTemplateGalleryBody attaches .is-recommended to it. */
 .template-card.is-recommended {
-  border-color: var(--accent, #f4b400);
-  border-left-color: var(--accent, #f4b400);
-  background: var(--accent-dim);
   box-shadow: 0 0 16px rgba(245,166,35,0.12);
 }
 .template-card.is-recommended:hover {
-  border-color: var(--accent, #f4b400);
-  background: var(--accent-dim);
   box-shadow: 0 0 24px rgba(245,166,35,0.20);
 }
 .template-card-badge {
