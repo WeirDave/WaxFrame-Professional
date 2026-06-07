@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-028
+// Build: 20260606-029
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-028';         // build stamp — update each session
+const BUILD       = '20260606-029';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -5428,8 +5428,20 @@ function buildAISetupRowHTML(ai) {
     const reviewerRec = (typeof getReviewerRecommendation === 'function') ? getReviewerRecommendation(ai.id) : null;
     const builderRec  = (typeof getBuilderRecommendation  === 'function') ? getBuilderRecommendation(ai.id)  : null;
     const recommendBtn = (showRecheck) ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's own API to recommend its best Reviewer and Builder models for WaxFrame">Recommend Models</button>` : '';
+    // v3.63.211 — Filter-awareness inline note. Sum droppedCount across
+    // the two role recommendations so the user sees "(N filtered)" when
+    // the code-side filter removed any models from the candidate pool.
+    // Title attribute on hover names up to 5 of the dropped models so
+    // the user can see specifically what was removed.
+    const _droppedR = reviewerRec?.droppedCount || 0;
+    const _droppedB = builderRec?.droppedCount  || 0;
+    const _droppedTotal = _droppedR + _droppedB;
+    const _droppedSample = [...(reviewerRec?.droppedSample || []), ...(builderRec?.droppedSample || [])].slice(0, 5);
+    const filterNote = _droppedTotal > 0
+      ? `<span class="ai-recommend-filter-note" title="${escapeHtml(_droppedTotal)} model${_droppedTotal === 1 ? '' : 's'} filtered before recommendation — Builder-incapable or structurally-unfit variants (embeddings, audio-only, reasoning, etc.). Sample: ${escapeHtml(_droppedSample.join(', '))}${_droppedSample.length < _droppedTotal ? '…' : ''}">⚠ ${_droppedTotal} filtered</span>`
+      : '';
     const recommendNote = (reviewerRec?.model || builderRec?.model)
-      ? `<span class="ai-recommend-status">Last recommended ✨ ${escapeHtml(reviewerRec?.model || '—')} · 🔨 ${escapeHtml(builderRec?.model || '—')}</span>`
+      ? `<span class="ai-recommend-status">Last recommended ✨ ${escapeHtml(reviewerRec?.model || '—')} · 🔨 ${escapeHtml(builderRec?.model || '—')}${filterNote ? ' ' + filterNote : ''}</span>`
       : (hasKey ? `<span class="ai-recommend-status is-empty">Click to populate the 6-card grid below.</span>` : '');
     const recommendRow = (recommendBtn || recommendNote)
       ? `<div class="ai-recommend-row">${recommendBtn}${recommendNote}</div>`
@@ -6633,10 +6645,25 @@ async function recommendModelsForAll() {
       }
     }, 5000);
   }
+  // v3.63.211 — Filter-awareness summary toast. Sum droppedCount across
+  // every eligible AI's cached reviewer + builder recommendations to give
+  // the user a single "we filtered N total models out of the pool" stat
+  // when the bulk run completes. Reads from the cache (just-written by
+  // the recheckModelForAI calls above) so this works whether they were
+  // fresh recommendations or cache hits.
+  let _filteredTotal = 0;
+  eligible.forEach(ai => {
+    const r = (typeof getReviewerRecommendation === 'function') ? getReviewerRecommendation(ai.id) : null;
+    const b = (typeof getBuilderRecommendation  === 'function') ? getBuilderRecommendation(ai.id)  : null;
+    _filteredTotal += (r?.droppedCount || 0) + (b?.droppedCount || 0);
+  });
+  const _filterTail = _filteredTotal > 0
+    ? ` · ⚠ filtered ${_filteredTotal} Builder-incapable / unfit model${_filteredTotal === 1 ? '' : 's'} (see per-row notes)`
+    : '';
   if (failed > 0) {
-    toast(`✓ Recommend complete: ${succeeded} succeeded, ${failed} failed (see console)`, 5000);
+    toast(`✓ Recommend complete: ${succeeded} succeeded, ${failed} failed (see console)${_filterTail}`, 5000);
   } else {
-    toast(`✓ Recommend Models for All complete (${succeeded} processed)`, 5000);
+    toast(`✓ Recommend Models for All complete (${succeeded} processed)${_filterTail}`, 5000);
   }
 }
 
@@ -8218,7 +8245,7 @@ async function classifyTiersForAllKeyed(opts) {
   return Object.fromEntries(entries);
 }
 
-function setCachedRecommendation(cacheId, model, why, labels, none) {
+function setCachedRecommendation(cacheId, model, why, labels, none, filterMeta) {
   if (!cacheId) return;
   // v3.32.10 — cache supports a NONE state (model=null) for the case where
   // the AI explicitly declines to recommend (Builder role: only reasoning
@@ -8230,6 +8257,13 @@ function setCachedRecommendation(cacheId, model, why, labels, none) {
     const payload = none
       ? { ts: Date.now(), model: null, why: why || '', labels: {}, none: true }
       : { ts: Date.now(), model, why, labels: labels || {} };
+    // v3.63.211 — Persist filter-awareness metadata when present
+    // (droppedCount + a small droppedSample of names) so the row UI can
+    // show "(N filtered)" inline next to the recommendation badge.
+    if (filterMeta && typeof filterMeta === 'object') {
+      if (typeof filterMeta.droppedCount === 'number') payload.droppedCount = filterMeta.droppedCount;
+      if (Array.isArray(filterMeta.droppedSample)) payload.droppedSample = filterMeta.droppedSample;
+    }
     localStorage.setItem(key, JSON.stringify(payload));
   } catch(e) { console.warn(`[recommend-cache:${cacheId}] write failed:`, e); }
 }
@@ -8400,8 +8434,19 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
     // pattern recheck needed.
     const tag = _role === 'builder' ? 'Builder' : 'Reviewer';
     const labels = { [resolved]: { tag, why } };
-    setCachedRecommendation(cacheId, resolved, why, labels);
-    return { model: resolved, why, labels, cached: false };
+    // v3.63.211 (closes backlog "Model recommender filter-awareness warning")
+    // — Track how many models the code-side filter dropped before sending
+    // the list to the asking AI. The recommender will never recommend a
+    // filtered-out model (good), but the silent filtering was previously
+    // invisible to the user. droppedCount lands on the result + cache so
+    // the row UI can show "(N filtered)" inline, and recommendModelsForAll
+    // can sum the drops for a closing summary toast.
+    const droppedCount  = models.length - filteredModels.length;
+    const droppedSample = droppedCount > 0
+      ? models.filter(m => !filteredModels.includes(m)).slice(0, 5)
+      : [];
+    setCachedRecommendation(cacheId, resolved, why, labels, false, { droppedCount, droppedSample });
+    return { model: resolved, why, labels, cached: false, droppedCount, droppedSample };
   } catch(e) {
     console.warn('[recommend] failed:', e);
     return null;

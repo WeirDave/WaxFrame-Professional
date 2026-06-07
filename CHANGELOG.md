@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.211
+
+**Filter-awareness warning: inline per-row pill + summary toast at end of Recommend Models for All**
+
+Build: `20260606-029`<br>
+Released: `2026-06-06`
+
+### Closed — backlog "Model recommender filter-awareness warning"
+
+The code-side filter (`filterModelsForRole`) drops Builder-incapable and structurally-unfit models (embeddings, audio-only, code-only, reasoning variants when picking for Builder) before sending the candidate list to the asking AI. Previously this was completely invisible to the user — the recommender just appeared to skip models, and the console log was the only signal.
+
+David's UX call: surface it both as a **per-row inline pill** AND a **summary toast at the end of Recommend Models for All** ("both is smarter").
+
+Inline pill (`.ai-recommend-filter-note`) — small amber `⚠ N filtered` chip appended to the Last Recommended line on each AI's expanded panel when its reviewer + builder recommendations dropped any models. Hover the chip for the diagnostic title:
+> *"3 models filtered before recommendation — Builder-incapable or structurally-unfit variants (embeddings, audio-only, reasoning, etc.). Sample: jamba-1.6-mini, jamba-thinking, …"*
+
+Summary toast — when Recommend Models for All completes, the existing "Recommend complete" toast now appends `· ⚠ filtered N Builder-incapable / unfit model(s) (see per-row notes)` when any AI's pool was trimmed. Single roll-up so you don't get N toasts for N AIs.
+
+### Data plumbing
+
+`recommendModel` now returns `droppedCount` and `droppedSample` (top 5 dropped names) alongside the existing `model`, `why`, `labels`, `cached` fields. `setCachedRecommendation` persists both to localStorage so the inline pill survives reloads. `getReviewerRecommendation` / `getBuilderRecommendation` read them back; `recommendModelsForAll` sums across the hive for the summary toast.
+
+Backward compat: pre-v3.63.211 cached recommendations have neither field; pill stays hidden, summary toast falls through to the original wording.
+
+### Files Changed
+
+- Updated: `js/app.js` (`recommendModel` returns + caches `droppedCount`/`droppedSample`; `setCachedRecommendation` accepts a `filterMeta` arg; `buildAISetupRowHTML` renders the inline `.ai-recommend-filter-note` pill; `recommendModelsForAll` appends the filter tail to its summary toast), `style.css` (new `.ai-recommend-filter-note` rule with small-pill 3D shadow stack), `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.211 / 20260606-029 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.210
 
 **Per-tier WHY: classifier explains each of cheap/balanced/thinker/fast picks separately**
