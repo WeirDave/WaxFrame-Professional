@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260607-003
+   Build: 20260607-004
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -15541,16 +15541,18 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 .template-card-wrap > .template-card {
   flex: 1;
-  /* leave room for the delete button so long names don't slip under it */
-  padding-right: var(--space-40);
+  /* leave room for the hover action buttons so long names don't slip under them */
+  padding-right: 152px;
 }
 /* v3.63.200 — Template card hover-action mini buttons (🗑 ✏️ 📋 ⬇) get
    the small-pill 3D treatment. Stay hidden until card-hover (opacity:0)
    but the bezel + shadow stack carries through whenever they're visible. */
-.template-card-del {
+.template-card-del,
+.template-card-export,
+.template-card-dup,
+.template-card-edit {
   position: absolute;
   top: var(--space-8);
-  right: var(--space-8);
   width: 28px;
   height: 28px;
   display: flex;
@@ -15568,8 +15570,18 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   transition: opacity 0.12s, transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
   box-shadow: var(--shadow-3d-pill);
 }
+.template-card-del    { right: var(--space-8); }
+.template-card-edit   { right: 44px; }   /* second from right (left of del) */
+.template-card-dup    { right: 80px; }   /* third from right */
+.template-card-export { right: 116px; }  /* leftmost of the four */
 .template-card-wrap:hover .template-card-del,
-.template-card-del:focus-visible {
+.template-card-wrap:hover .template-card-edit,
+.template-card-wrap:hover .template-card-dup,
+.template-card-wrap:hover .template-card-export,
+.template-card-del:focus-visible,
+.template-card-edit:focus-visible,
+.template-card-dup:focus-visible,
+.template-card-export:focus-visible {
   opacity: 1;
 }
 .template-card-del:hover {
@@ -15577,7 +15589,17 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   color: var(--red);
   background: var(--surface3);
 }
-.template-card-del:focus-visible {
+.template-card-edit:hover,
+.template-card-dup:hover,
+.template-card-export:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--surface3);
+}
+.template-card-del:focus-visible,
+.template-card-edit:focus-visible,
+.template-card-dup:focus-visible,
+.template-card-export:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -15707,53 +15729,8 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   max-width: calc(50% - (var(--space-16) / 2));
   justify-self: center;
 }
-/* v3.63.44 — Phase 2: custom-template edit affordance + new-blank toolbar. */
-/* v3.63.135 — added .template-card-dup (duplicate-to-variant). Buttons are
-   stacked right-to-left from the card edge: del (rightmost) → edit → dup →
-   export. Each shares the base styling here; per-button `right` offsets
-   below position them; hover-tint colors differ by action. */
-.template-card-export,
-.template-card-dup,
-.template-card-edit {
-  position: absolute;
-  top: var(--space-8);
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  font-size: var(--fs-sm);
-  line-height: 1;
-  background: var(--bg-3d-pill);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text-dim);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.12s, transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s, color 0.12s;
-  box-shadow: var(--shadow-3d-pill);
-}
-/* Position offsets — buttons stack right-to-left from the card edge.
-   del = ~var(--space-8) (rightmost, defined above), then 36px spacing
-   per button to the left. With three buttons left of del, the card
-   needs ~152px right-padding. */
-.template-card-edit   { right: 44px; }   /* second from right (left of del) */
-.template-card-dup    { right: 80px; }   /* third from right */
-.template-card-export { right: 116px; }  /* leftmost of the four */
-.template-card-wrap:hover .template-card-edit,
-.template-card-wrap:hover .template-card-dup,
-.template-card-wrap:hover .template-card-export,
-.template-card-edit:focus-visible,
-.template-card-dup:focus-visible,
-.template-card-export:focus-visible { opacity: 1; }
-.template-card-edit:hover   { border-color: var(--accent); color: var(--accent); background: var(--surface3); }
-.template-card-dup:hover    { border-color: var(--accent); color: var(--accent); background: var(--surface3); }
-.template-card-export:hover { border-color: var(--accent); color: var(--accent); background: var(--surface3); }
-.template-card-edit:focus-visible,
-.template-card-dup:focus-visible,
-.template-card-export:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.template-card-wrap > .template-card { padding-right: 152px; }
+/* v3.63.44 / v3.63.135 — Custom-template edit / duplicate / export
+   affordances share the consolidated hover-action button block above. */
 
 /* v3.63.135 — Sort dropdown in the custom-templates toolbar. Only
    appears when there are 2+ saved templates (single template doesn't
