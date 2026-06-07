@@ -3014,58 +3014,68 @@ function wfMobileShareToast(msg) {
     <button title="Close the menu" class="nav-close-btn" onclick="closeNavMenu()">✕</button>
   </div>
   <div class="nav-body">
-    <div class="nav-section-label">Navigation</div>
-    <button title="Return to the Home / Welcome screen" class="nav-item" onclick="closeNavMenu();confirmGoHome()">⌂ Home</button>
-    <button title="Open Setup 1 — Set up your hive (Worker Bees, models, and Builder)" class="nav-item" onclick="closeNavMenu();goToScreen('screen-bees')">· Setup 1 — Set up your hive</button>
-    <!-- v3.63.147 — "Setup 2 — Builder" nav item retired. Builder selection
-         now happens inline on the Worker Bees screen via the per-row 🔨
-         "Make this the Builder" affordance. -->
+    <details class="nav-section" open>
+      <summary class="nav-section-label">Navigation</summary>
+      <button title="Return to the Home / Welcome screen" class="nav-item" onclick="closeNavMenu();confirmGoHome()">⌂ Home</button>
+      <button title="Open Setup 1 — Set up your hive (Worker Bees, models, and Builder)" class="nav-item" onclick="closeNavMenu();goToScreen('screen-bees')">· Setup 1 — Set up your hive</button>
+      <!-- v3.63.147 — "Setup 2 — Builder" nav item retired. Builder selection
+           now happens inline on the Worker Bees screen via the per-row 🔨
+           "Make this the Builder" affordance. -->
 
-    <button title="Open Setup 2 — Your Project" class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">· Setup 2 — Your Project</button>
-    <button title="Open Setup 3 — Reference Material" class="nav-item" onclick="closeNavMenu();goToScreen('screen-reference')">· Setup 3 — Reference Material</button>
-    <button title="Open Setup 4 — Starting Document" class="nav-item" onclick="closeNavMenu();goToScreen('screen-document')">· Setup 4 — Starting Document</button>
-    <button title="Return to the Working Console (the main work screen)" class="nav-item" onclick="closeNavMenu();goToScreen('screen-work')">· Working Console</button>
-    <button title="Open Settings — preferences and Auto-mode options" class="nav-item" onclick="closeNavMenu();openSettings()">⚙ Settings</button>
-
-    <div class="nav-divider"></div>
-    <div class="nav-section-label">Tools</div>
-    <button title="Manage your WaxFrame Pro license key" class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
-    <button title="Restore from a previously-saved WaxFrame checkpoint file" class="nav-item" onclick="importSession()">📂 Restore from Checkpoint</button>
-    <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>
-    <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
-    <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Save Checkpoint</button>
-    <!-- v3.63.172 — Templates entry. Until this release the template gallery
-         was reachable ONLY via the 📋 Use Template button on Setup 2 (Project),
-         which meant the welcome screen's pitch wording (which name-checks the
-         Chocolate Chip Cookies Quick Start template as the free-trial demo)
-         pointed at a path 7 clicks deep, behind Setup 1. David flagged it:
-         "we don't get there very quickly which is another flaw." This entry
-         opens the gallery modal from any screen — symmetric with the
-         existing Save as Template entry in this Tools section. -->
-    <button title="Open the Template Gallery — pre-fill Project fields from a starting template (Quick Start, Cover Letter, Resume, RFP, etc.)" class="nav-item" onclick="closeNavMenu();showTemplateGallery()">&#x1F4CB; Templates</button>
+      <button title="Open Setup 2 — Your Project" class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">· Setup 2 — Your Project</button>
+      <button title="Open Setup 3 — Reference Material" class="nav-item" onclick="closeNavMenu();goToScreen('screen-reference')">· Setup 3 — Reference Material</button>
+      <button title="Open Setup 4 — Starting Document" class="nav-item" onclick="closeNavMenu();goToScreen('screen-document')">· Setup 4 — Starting Document</button>
+      <button title="Return to the Working Console (the main work screen)" class="nav-item" onclick="closeNavMenu();goToScreen('screen-work')">· Working Console</button>
+      <button title="Open Settings — preferences and Auto-mode options" class="nav-item" onclick="closeNavMenu();openSettings()">⚙ Settings</button>
+    </details>
 
     <div class="nav-divider"></div>
-    <div class="nav-section-label">Help & Support</div>
-    <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
-    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
-    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
-    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🐝 Hive Profiles</a>
-    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
-    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+    <details class="nav-section">
+      <summary class="nav-section-label">Tools</summary>
+      <button title="Manage your WaxFrame Pro license key" class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
+      <button title="Restore from a previously-saved WaxFrame checkpoint file" class="nav-item" onclick="importSession()">📂 Restore from Checkpoint</button>
+      <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>
+      <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
+      <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Save Checkpoint</button>
+      <!-- v3.63.172 — Templates entry. Until this release the template gallery
+           was reachable ONLY via the 📋 Use Template button on Setup 2 (Project),
+           which meant the welcome screen's pitch wording (which name-checks the
+           Chocolate Chip Cookies Quick Start template as the free-trial demo)
+           pointed at a path 7 clicks deep, behind Setup 1. David flagged it:
+           "we don't get there very quickly which is another flaw." This entry
+           opens the gallery modal from any screen — symmetric with the
+           existing Save as Template entry in this Tools section. -->
+      <button title="Open the Template Gallery — pre-fill Project fields from a starting template (Quick Start, Cover Letter, Resume, RFP, etc.)" class="nav-item" onclick="closeNavMenu();showTemplateGallery()">&#x1F4CB; Templates</button>
+    </details>
 
     <div class="nav-divider"></div>
-    <div class="nav-section-label">Advanced</div>
-    <button title="Open Developer Tools — for testing and debugging" class="nav-item nav-item-dev" onclick="closeNavMenu();showDevModal()">🛠 Dev Tools</button>
-    <div class="nav-dev-section" id="navDevSection">
-      <button title="Exit Dev Mode and return to normal user mode" class="nav-item nav-item-exit-dev" onclick="closeNavMenu();exitDevMode()">🚪 Exit Dev Mode</button>
-    </div>
-    <a class="nav-item" href="prompt-editor.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">✏️ Prompt Editor</a>
+    <details class="nav-section">
+      <summary class="nav-section-label">Help & Support</summary>
+      <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
+      <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
+      <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
+      <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
+      <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🐝 Hive Profiles</a>
+      <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
+      <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+    </details>
 
     <div class="nav-divider"></div>
-    <div class="nav-section-label">Legal</div>
-    <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
-    <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
+    <details class="nav-section">
+      <summary class="nav-section-label">Advanced</summary>
+      <button title="Open Developer Tools — for testing and debugging" class="nav-item nav-item-dev" onclick="closeNavMenu();showDevModal()">🛠 Dev Tools</button>
+      <div class="nav-dev-section" id="navDevSection">
+        <button title="Exit Dev Mode and return to normal user mode" class="nav-item nav-item-exit-dev" onclick="closeNavMenu();exitDevMode()">🚪 Exit Dev Mode</button>
+      </div>
+      <a class="nav-item" href="prompt-editor.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">✏️ Prompt Editor</a>
+    </details>
+
+    <div class="nav-divider"></div>
+    <details class="nav-section">
+      <summary class="nav-section-label">Legal</summary>
+      <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
+      <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
+    </details>
   </div>
   <!-- v3.55.5 — Pinned upgrade CTA. Sits OUTSIDE .nav-body (which scrolls),
        so it's always visible at the bottom of the panel. Shown only to
