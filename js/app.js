@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-027
+// Build: 20260606-028
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-027';         // build stamp — update each session
+const BUILD       = '20260606-028';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -5140,6 +5140,11 @@ function _renderHiveRolesAndTiers(ai, currentModel) {
   const tiersBlob   = getCachedTiers(ai.provider);
   const tiersObj    = tiersBlob?.tiers || null;
   const tiersWhy    = tiersBlob?.why || '';
+  // v3.63.210 — Per-tier WHY available when the classification was
+  // produced by the post-v3.63.210 prompt. Older cached classifications
+  // only have the legacy `why` string; the display layer falls back to a
+  // single combined row in that case.
+  const whyTiers    = tiersBlob?.whyTiers || null;
   const hasAnyRole  = !!(reviewerRec?.model || builderRec?.model);
   const hasAnyTier  = !!tiersObj;
   if (!hasAnyRole && !hasAnyTier) return '';
@@ -5162,9 +5167,9 @@ function _renderHiveRolesAndTiers(ai, currentModel) {
     </div>` : '';
 
   // "Why each pick" expander. We have per-role WHY (from reviewer/builderRec)
-  // and an overall tiers WHY (single block; the parser doesn't separate per-
-  // tier explanations yet). Render each as a row so the user gets a unified
-  // rationale view.
+  // and per-tier WHY (whyTiers since v3.63.210 — older cached entries only
+  // have a single tiersWhy legacy string). Render one row per pick so the
+  // user gets a unified rationale view.
   const whyRows = [];
   if (reviewerRec?.model && reviewerRec?.why) {
     whyRows.push(`<div class="ai-hive-why-row"><div class="ai-hive-why-tier">✨ Reviewer</div><div class="ai-hive-why-text"><code>${escapeHtml(reviewerRec.model)}</code><br>${escapeHtml(reviewerRec.why)}</div></div>`);
@@ -5174,7 +5179,23 @@ function _renderHiveRolesAndTiers(ai, currentModel) {
   } else if (builderRec?.none && builderRec?.why) {
     whyRows.push(`<div class="ai-hive-why-row"><div class="ai-hive-why-tier">🔨 Builder</div><div class="ai-hive-why-text"><em>— none available —</em><br>${escapeHtml(builderRec.why)}</div></div>`);
   }
-  if (tiersWhy) {
+  // v3.63.210 — Per-tier WHY rows when whyTiers is populated. Falls back
+  // to the legacy single-WHY block when the classification predates the
+  // per-tier prompt. Tier icons match the .ai-hive-card-tier set so each
+  // row visually pairs with its tier card above.
+  const TIER_ICONS = { cheap: '💰 Cheap', balanced: '⚖️ Balanced', thinker: '🧠 Thinker', fast: '⚡ Fast' };
+  let pushedPerTier = false;
+  if (whyTiers && tiersObj) {
+    for (const t of ['cheap', 'balanced', 'thinker', 'fast']) {
+      const tierModel = tiersObj[t];
+      const tierWhy   = whyTiers[t];
+      if (tierModel && tierWhy) {
+        whyRows.push(`<div class="ai-hive-why-row"><div class="ai-hive-why-tier">${TIER_ICONS[t]}</div><div class="ai-hive-why-text"><code>${escapeHtml(tierModel)}</code><br>${escapeHtml(tierWhy)}</div></div>`);
+        pushedPerTier = true;
+      }
+    }
+  }
+  if (!pushedPerTier && tiersWhy) {
     whyRows.push(`<div class="ai-hive-why-row"><div class="ai-hive-why-tier">💰⚖️🧠⚡ Tiers</div><div class="ai-hive-why-text">${escapeHtml(tiersWhy)}</div></div>`);
   }
   const whyExpander = whyRows.length ? `
@@ -7905,7 +7926,10 @@ CHEAP: <the number from the list, or NONE>
 BALANCED: <the number from the list, or NONE>
 THINKER: <the number from the list, or NONE>
 FAST: <the number from the list, or NONE>
-WHY: <one sentence justifying any non-obvious pick, max 200 chars>`;
+WHY_CHEAP: <one sentence on why this is your cheap pick — max 140 chars>
+WHY_BALANCED: <one sentence on why this is your balanced pick — max 140 chars>
+WHY_THINKER: <one sentence on why this is your thinker pick — max 140 chars>
+WHY_FAST: <one sentence on why this is your fast pick — max 140 chars>`;
 
 // Per-provider tier cache. Same key shape as the existing recommender cache
 // so the storage layer's serialization path is unchanged.
@@ -7920,6 +7944,13 @@ function setCachedTiers(provider, tiers, why, meta) {
       // every cached classification.
       if (meta.modelSource) payload.modelSource = meta.modelSource;
       if (meta.askingModel) payload.askingModel = meta.askingModel;
+      // v3.63.210 — Per-tier WHY support. Persist the four WHY_<TIER>
+      // entries when the parser captured them. Older cache entries omit
+      // whyTiers; the display layer falls back to the legacy `why` string
+      // for those until they're re-classified.
+      if (meta.whyTiers && typeof meta.whyTiers === 'object') {
+        payload.whyTiers = meta.whyTiers;
+      }
     }
     localStorage.setItem(`waxframe_tiers_${provider}`, JSON.stringify(payload));
   } catch(e) { console.warn(`[tiers-cache:${provider}] write failed:`, e); }
@@ -7940,7 +7971,15 @@ function getCachedTiers(provider) {
 // model id from `models` (by NUMBER) or null (NONE / unparseable).
 function _parseTierResponse(text, models) {
   if (!text) return null;
-  const out = { cheap: null, balanced: null, thinker: null, fast: null, why: '' };
+  // v3.63.210 — Per-tier WHY support. The classifier prompt now asks for
+  // a WHY_<TIER> line per slot instead of a single summary WHY. Parse all
+  // four into whyTiers; for backward compat the legacy `why` field is
+  // populated as the concatenation of any whyTiers present, so callers
+  // that haven't migrated still get something useful. If the model only
+  // emitted a single WHY: line (older format), capture that into legacy
+  // and leave whyTiers empty — the UI degrades to "no per-tier reasoning
+  // for this classification, refresh to get the new format."
+  const out = { cheap: null, balanced: null, thinker: null, fast: null, why: '', whyTiers: { cheap: '', balanced: '', thinker: '', fast: '' } };
   const slots = ['cheap', 'balanced', 'thinker', 'fast'];
   for (const slot of slots) {
     const re = new RegExp(`^[ \\t>*#\`.\\-]*${slot}:\\s*([^\\n\\r]+)`, 'gim');
@@ -7956,8 +7995,29 @@ function _parseTierResponse(text, models) {
       out[slot] = raw;
     }
   }
-  const whyMatches = [...text.matchAll(/^[ \t>*#`.\-]*why:\s*([^\n\r]+)/gim)];
-  if (whyMatches.length) out.why = whyMatches[whyMatches.length - 1][1].trim();
+  // v3.63.210 — Parse the per-tier WHY lines (WHY_CHEAP, WHY_BALANCED,
+  // WHY_THINKER, WHY_FAST). Fall back to single WHY: line for backward
+  // compat with classifications produced by older prompt versions.
+  for (const slot of slots) {
+    const re = new RegExp(`^[ \\t>*#\`.\\-]*why_${slot}:\\s*([^\\n\\r]+)`, 'gim');
+    const matches = [...text.matchAll(re)];
+    if (matches.length) {
+      out.whyTiers[slot] = matches[matches.length - 1][1].trim();
+    }
+  }
+  // Synthesize legacy `why` from any per-tier entries that landed (joined
+  // with ". " separators) so older callers still get a usable summary.
+  const perTierJoined = slots
+    .filter(s => out.whyTiers[s] && out[s])
+    .map(s => `${s}: ${out.whyTiers[s]}`)
+    .join(' · ');
+  if (perTierJoined) {
+    out.why = perTierJoined;
+  } else {
+    // Older response format — single WHY: line.
+    const whyMatches = [...text.matchAll(/^[ \t>*#`.\-]*why:\s*([^\n\r]+)/gim)];
+    if (whyMatches.length) out.why = whyMatches[whyMatches.length - 1][1].trim();
+  }
   return out;
 }
 
@@ -8116,7 +8176,7 @@ async function classifyTiersForProvider(provider, opts) {
       balanced: parsed.balanced,
       thinker:  parsed.thinker,
       fast:     parsed.fast
-    }, parsed.why, { modelSource, askingModel });
+    }, parsed.why, { modelSource, askingModel, whyTiers: parsed.whyTiers });
     console.info(`[tiers:${provider}] classified (source: ${modelSource}, asker: ${askingModel}) —`, parsed);
     return { ...parsed, cached: false, modelSource, askingModel };
   } catch (e) {
