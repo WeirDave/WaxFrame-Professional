@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.217
+
+**Template card CSS action-button consolidation**
+
+Build: `20260607-004`<br>
+Released: `2026-06-07`
+
+### Changed — custom-template hover action CSS
+
+Consolidated the duplicate CSS base rules for custom-template card hover actions (`delete`, `edit`, `duplicate`, and `export`) into one shared selector block. Per-action positioning and hover colors remain separate, so the rendered buttons keep the same behavior while `style.css` loses a duplicated rule cluster.
+
+### Scope note
+
+This pass stayed CSS-only and did not touch the inline/nested app wiring in `index.html`. The broader template gallery consolidation item remains partial for later visual tracing.
+
+### Files Changed
+
+- Updated: `style.css`, `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v241.txt`
+- Removed: `docs/WaxFrame_Backlog_Master_v238.txt` (keeps the three-version backlog window)
+- Version/build stamps to v3.63.217 / 20260607-004 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.216
 
 **One-round Builder failover for content-filtered output**
