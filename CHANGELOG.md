@@ -15,7 +15,7 @@ Released: `2026-06-07`
 
 ### Worker Bees visual polish
 
-Lightened the Worker Bees setup side menu and Hive Profile top bar to match the softer custom-AI selected header instead of using the darker gray block treatment. The new palette uses `#f0f2f8` panels, `#d0d4e8` borders, dark readable text, and white selects so the page feels consistent with the rest of the setup screen.
+Retuned the Worker Bees setup side menu and Hive Profile top bar to mirror the custom-AI selected header container (`.bulk-select-toolbar`) instead of using the darker overlay treatment. Both now use the same theme-aware tokens: `--surface2`, `--border`, `--text`, and `--text-dim`. Light mode gets the softer gray panel (`#f0f2f8` / `#d0d4e8`); dark mode gets the matching dark panel instead of being forced into the light palette.
 
 ### Template Gallery CSS cleanup
 

@@ -16515,12 +16515,12 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   flex-direction: column;
   gap: var(--space-12);
 }
-/* v3.63.214 — Sidebar now matches the softer setup-panel gray used by
-   the custom-AI bulk-select toolbar. The previous dark overlay treatment
-   was too heavy against the otherwise airy Worker Bees setup page. */
+/* v3.63.214 — Sidebar mirrors the custom-AI bulk-select toolbar container
+   (.bulk-select-toolbar): theme-aware --surface2 + --border, so light mode
+   gets the softer gray and dark mode gets the matching dark panel. */
 .bees-sidebar-block {
-  background: #f0f2f8;
-  border: 1px solid #d0d4e8;
+  background: var(--surface2);
+  border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.16),
@@ -16531,16 +16531,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 .bees-sidebar-block .bees-sidebar-subhead,
 .bees-sidebar-block .bees-sidebar-jump,
 .bees-sidebar-block .bees-sidebar-related {
-  color: #0f1221;
-}
-[data-theme="light"] .bees-sidebar-block .bees-sidebar-heading,
-[data-theme="light"] .bees-sidebar-block .bees-sidebar-subhead,
-[data-theme="light"] .bees-sidebar-block .bees-sidebar-jump,
-[data-theme="light"] .bees-sidebar-block .bees-sidebar-related {
-  color: #0f1221;
-}
-[data-theme="light"] .bees-sidebar-block .bees-sidebar-jump:not(.has-key) .bees-sidebar-jump-name {
-  color: #384060;
+  color: var(--text);
 }
 .bees-sidebar-heading {
   font-size: 10.5px;
@@ -16621,7 +16612,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   flex-shrink: 0;
 }
 .bees-sidebar-jump:not(.has-key) .bees-sidebar-jump-name {
-  color: #384060;
+  color: var(--text-dim);
 }
 
 /* Related links */
@@ -16919,16 +16910,15 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
  * left and the status reads to the right; on narrow screens
  * flex-wrap kicks in and the note drops below.
  * ============================================================ */
-/* v3.63.214 — Match the custom-AI bulk-select toolbar: lighter setup-panel
-   gray instead of the old dark overlay. Keeps the profile controls grouped
-   without visually outweighing the AI rows below. */
+/* v3.63.214 — Match the custom-AI bulk-select toolbar container. Uses the
+   same theme-aware panel tokens instead of hardcoded light-mode colors. */
 .hive-profile-bar {
   display: flex;
   align-items: center;
   gap: var(--space-12);
   padding: var(--space-10) var(--space-14);
-  background: #f0f2f8;
-  border: 1px solid #d0d4e8;
+  background: var(--surface2);
+  border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   margin: 0 0 var(--space-10);
@@ -16941,7 +16931,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   font-size: var(--fs-12);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #384060;
+  color: var(--text-dim);
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -16950,9 +16940,9 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 .hive-profile-bar-save,
 .hive-profile-bar-delete {
   flex-shrink: 0;
-  background: #e4e7f4;
-  color: #0f1221;
-  border-color: #b8bdd8;
+  background: var(--bg-3d-button);
+  color: var(--text);
+  border-color: var(--border);
 }
 .hive-profile-bar-save:hover {
   color: var(--accent);
@@ -16968,10 +16958,10 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   border-color: var(--red);
 }
 .hive-profile-bar-select {
-  background: #ffffff;
-  border: 1px solid #d0d4e8;
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  color: #0f1221;
+  color: var(--text);
   padding: var(--space-6) var(--space-10);
   font-size: var(--fs-13);
   font-family: inherit;
@@ -16984,7 +16974,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 .hive-profile-bar-note {
   font-size: var(--fs-12);
-  color: #384060;
+  color: var(--text-dim);
   margin-left: auto;
   /* v3.63.157 — Was max-width:420px which forced awkward mid-sentence
      wraps (David's report: "the word wrap for the rest of the drop
