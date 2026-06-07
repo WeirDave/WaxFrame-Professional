@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.204
+
+**Starting Document stats now match Reference Material — chars · words · lines · paragraphs · tokens**
+
+Build: `20260606-022`<br>
+Released: `2026-06-06`
+
+### Fixed — Starting Document stats display was missing words / lines / paragraphs / tokens
+
+David flagged this during the Joe Schmoe's Google Maps trim dogfood: he loaded the master review as Starting Document and the upload status line read `2,411 chars from Review-Joe-Schmoe-s....txt` — chars only. Same doc loaded as Reference Material reads `Chars: 2,411 · Words: 409 · Lines: 19 · Paragraphs: 9 · Tokens (est.): 603`. Two surfaces, same document, different metric vocabulary.
+
+Brought to parity. Both upload paths (success + warnings) on Setup 4 — Starting Document now use the same `computeRefStats()` helper that powers the Reference Material doc-card counters. New stat-line format consistent across the app:
+
+> `2,411 chars · 409 words · 19 lines · 9 paragraphs · 603 tokens (est.)`
+
+### Added — live stats readout on the Paste Text path
+
+The paste-text tab had NO stats display at all. Just a textarea and a Clear button. Added a `.paste-text-stats` element below the textarea that updates live on every keystroke via `handlePasteTextInput()`. Hidden when empty; populated with the same `computeRefStats()` output as the upload status line. Now `paste` and `upload` tabs both show the same stats vocabulary, AND both match the Reference Material doc cards.
+
+CSS: new `.paste-text-stats` rule using the 3D pill bezel + tabular-nums so the digits don't jiggle as the user types.
+
+### Files Changed
+
+- Updated: `js/app.js` (file-upload status now uses `computeRefStats`-derived stat line on both warning and success paths; `handlePasteTextInput` populates the new `#pasteTextStats` element), `index.html` (new `<div id="pasteTextStats">` below the paste textarea), `style.css` (new `.paste-text-stats` rule), `CHANGELOG.md`, `js/version.js`, `package.json`.
+- Version/build stamps to v3.63.204 / 20260606-022 across 9 HTML, 14 JS, style.css, package.json
+
+---
+
 ## v3.63.203
 
 **3D sweep — Project setup length-mode pills + Reference Material doc cards + drop targets**

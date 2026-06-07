@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260606-021
+// Build: 20260606-022
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -566,7 +566,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260606-021';         // build stamp — update each session
+const BUILD       = '20260606-022';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -10052,6 +10052,24 @@ function handlePasteTextInput() {
   // Cheap operation (word/char counts on a single string), runs after
   // the existing save debounce work so it never blocks input handling.
   if (typeof renderSourceSizeCheck === 'function') renderSourceSizeCheck();
+  // v3.63.204 — Live stats readout matching the Reference Material doc-
+  // card counters (chars · words · lines · paragraphs · tokens). Same
+  // computeRefStats helper used by ref cards and the file-upload status
+  // line, so paste / upload / reference all read identically.
+  const statsEl = document.getElementById('pasteTextStats');
+  if (statsEl) {
+    const text = ta.value || '';
+    if (!text.trim()) {
+      statsEl.style.display = 'none';
+      statsEl.textContent = '';
+    } else {
+      const s = (typeof computeRefStats === 'function')
+        ? computeRefStats(text)
+        : { chars: text.length, words: 0, lines: 0, paragraphs: 0, tokens: Math.round(text.length / 4) };
+      statsEl.style.display = '';
+      statsEl.textContent = `${s.chars.toLocaleString()} chars · ${s.words.toLocaleString()} words · ${s.lines.toLocaleString()} lines · ${s.paragraphs.toLocaleString()} paragraphs · ${s.tokens.toLocaleString()} tokens (est.)`;
+    }
+  }
 }
 
 // ============================================================
@@ -10420,8 +10438,22 @@ async function processFile(file) {
 
     // Show status — green if clean, amber if warnings
     const warnings = doc.warnings || [];
+    // v3.63.204 — Starting Document file-upload status line now shows the
+    // same full stats vocabulary the Reference Material doc cards use
+    // (chars · words · lines · paragraphs · tokens). Previously only chars
+    // (warning path) or chars/words depending on template (success path).
+    // David's call after the Joe Schmoe's Google Maps trim: the master
+    // review uploaded as Starting Document showed only "2,411 chars" while
+    // the same doc loaded as Reference Material showed "Chars: 2,411 ·
+    // Words: 409 · Lines: 19 · Paragraphs: 9 · Tokens (est.): 603" —
+    // bringing the two surfaces to parity. computeRefStats lives further
+    // down this file and is the same helper Reference Material uses.
+    const _ssStats = (typeof computeRefStats === 'function')
+      ? computeRefStats(docText)
+      : { chars: docText.length, words: 0, lines: 0, paragraphs: 0, tokens: Math.round(docText.length / 4) };
+    const _ssStatLine = `${_ssStats.chars.toLocaleString()} chars · ${_ssStats.words.toLocaleString()} words · ${_ssStats.lines.toLocaleString()} lines · ${_ssStats.paragraphs.toLocaleString()} paragraphs · ${_ssStats.tokens.toLocaleString()} tokens (est.)`;
     if (warnings.length > 0) {
-      status.textContent = `⚠️ ${docText.length.toLocaleString()} chars from ${file.name} — ${warnings[0]}`;
+      status.textContent = `⚠️ ${_ssStatLine} from ${file.name} — ${warnings[0]}`;
       setFileStatusState(status, 'warn');
       if (warnings.length > 1) {
         warnings.slice(1).forEach(w => {
@@ -10452,20 +10484,15 @@ async function processFile(file) {
         }
       }
     } else {
-      // v3.52.6 — Banner unit matches the active template's lengthUnit.
-      // Word-mode templates (Yelp, TripAdvisor) want the headline number
-      // to be word count, since that's the constraint they'll be measured
-      // against. Falls back to characters when no template is loaded yet
-      // or when the template uses character mode (Google Maps).
-      const tplUnit = document.getElementById('lengthUnit')?.value || '';
-      let countDisplay;
-      if (tplUnit === 'words') {
-        const wc = (docText || '').trim().split(/\s+/).filter(Boolean).length;
-        countDisplay = `${wc.toLocaleString()} words`;
-      } else {
-        countDisplay = `${docText.length.toLocaleString()} characters`;
-      }
-      status.textContent = `✅ ${countDisplay} extracted from ${file.name}`;
+      // v3.63.204 — Same full stats vocabulary as the warning path above.
+      // The v3.52.6 tplUnit-based truncation (chars-only or words-only
+      // depending on active template) is gone — users want to see ALL
+      // the stats at upload time, regardless of which template's length
+      // unit is currently active. Template's length-unit handling
+      // happens elsewhere (Length Constraint pills on Project setup
+      // and the source-size-check helper); the upload status line is
+      // a "what did I just upload" readout, not a length-vs-budget call.
+      status.textContent = `✅ ${_ssStatLine} extracted from ${file.name}`;
       setFileStatusState(status, 'success');
     }
 
