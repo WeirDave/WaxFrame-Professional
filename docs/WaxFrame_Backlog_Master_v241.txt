@@ -254,36 +254,6 @@ OPEN FEATURES
            changes needed.
 
 
-7. CSS rule consolidation sweep — PARTIAL
-   ─────────────────────────────────────────────────────────
-   WHAT:   style.css has accumulated duplicate CSS rules
-           over many releases — the same selector defined
-           two or three times with slightly different
-           property sets. v3.63.190 folded the modal base
-           classes together (.modal / -hdr / -close / -body).
-           Several duplicate groups remain.
-   WHY:    Duplicates make every CSS change risky — you fix
-           one definition, miss the second, and the bug
-           comes back in dark mode or on a specific screen.
-           Consolidation makes style.css predictable and
-           halves the surface area for theme bugs.
-   STATE:  PARTIAL — remaining duplicate groups listed below.
-   WHERE:  Remaining duplicate selector groups:
-             • .template-gallery-section /
-               .template-gallery-section-title
-           Critical interaction: dark theme specialization
-           at style.css:14220+ — naive deletions can
-           silently break dark mode. Per-selector tracing
-           required.
-   DONE:   Each remaining duplicate group is merged into a
-           single canonical block; dark-theme overrides
-           still render correctly (verified in browser,
-           both light and dark mode, on the Templates
-           gallery + Custom Templates pages); style.css
-           line count drops noticeably with no visual
-           regression.
-
-
 ════════════════════════════════════════════════════════════
 NOTES ON FORMAT
 ════════════════════════════════════════════════════════════

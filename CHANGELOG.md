@@ -2,6 +2,28 @@
 
 ---
 
+## v3.63.224
+
+**Template gallery section CSS consolidation**
+
+Build: `20260607-011`<br>
+Released: `2026-06-07`
+
+### Changed — final template-gallery section rule normalized
+
+Normalized template-gallery section spacing into a canonical `.template-gallery-section` block with the existing adjacent-section gap preserved. The section-title styling remains the single canonical header rule.
+
+### Backlog cleanup
+
+The CSS rule consolidation sweep is complete and has been removed from `docs/WaxFrame_Backlog_Master_v241.txt`.
+
+### Files Changed
+
+- Updated: `style.css`, `docs/WaxFrame_Backlog_Master_v241.txt`, `CHANGELOG.md`
+- Version/build stamps to v3.63.224 / 20260607-011 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.223
 
 **Template card state CSS consolidation**
