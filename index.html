@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260608-001
+     Build: 20260608-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-001">
+  <meta name="waxframe-build" content="20260608-002">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.225">
+  <link rel="stylesheet" href="style.css?v=3.63.226">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.225",
+    "softwareVersion": "3.63.226",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1069,7 +1069,7 @@
             <div class="settings-row settings-row-actions">
               <div class="settings-row-label">
                 <span class="settings-row-name">Reset suppressed prompts</span>
-                <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), per-project Checkpoint Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. (The Restore from Checkpoint warning is intentionally NOT dismissable — it's a security trust gate that fires every time. The Save Checkpoint modal is the action surface, not a yes/no gate, so it has no suppression either.) Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
+                <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), per-project Checkpoint Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. (The Checkpoint - Restore warning is intentionally NOT dismissable — it's a security trust gate that fires every time. The Checkpoint - Save modal is the action surface, not a yes/no gate, so it has no suppression either.) Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
               </div>
               <button class="btn settings-reset-btn" onclick="resetSuppressedPrompts()" title="Bring back every dismissed confirmation modal">↺ Reset suppressed prompts</button>
             </div>
@@ -1101,7 +1101,7 @@
 
           <div class="settings-section">
             <h2 class="settings-section-title">🧹 Storage</h2>
-            <p class="settings-section-desc">WaxFrame stores everything locally in your browser across three storage layers — nothing leaves your machine. Each button below targets one layer; the last wipes everything. Wipes are irreversible from inside the app; save a checkpoint of anything worth keeping first (Menu → 💾 Save Checkpoint), or use your existing export buttons on the work screen. Each wipe needs a two-click confirm. After a wipe the page reloads so the app starts fresh.</p>
+            <p class="settings-section-desc">WaxFrame stores everything locally in your browser across three storage layers — nothing leaves your machine. Each button below targets one layer; the last wipes everything. Wipes are irreversible from inside the app; save a checkpoint of anything worth keeping first (Menu → 💾 Checkpoint - Save), or use your existing export buttons on the work screen. Each wipe needs a two-click confirm. After a wipe the page reloads so the app starts fresh.</p>
 
             <div class="settings-row settings-row-actions">
               <div class="settings-row-label">
@@ -2057,7 +2057,7 @@
 </div>
 
 <!-- SAVE CHECKPOINT MODAL (v3.63.130) — selective EXPORT, replaces the
-     pre-checkpoint sensitive-backup wfConfirm and the Save Checkpoint
+     pre-checkpoint sensitive-backup wfConfirm and the Checkpoint - Save
      (Scrubbed) menu item. Checkboxes pick which sections go in the file.
      Defaults reflect the most common portable-project case: take the
      project + session, leave hive/keys/builder behind so the file restores
@@ -2067,7 +2067,7 @@
      outcome the old Scrubbed flow produced, now reachable from one modal). -->
 <div class="finish-modal-overlay" id="saveCheckpointModal" onclick="if(event.target===this)closeSaveCheckpointModal()">
   <div class="finish-modal save-checkpoint-modal">
-    <h2 class="finish-modal-title">&#x1F4BE; Save Checkpoint</h2>
+    <h2 class="finish-modal-title">&#x1F4BE; Checkpoint - Save</h2>
     <p class="finish-modal-msg">Pick what goes in this checkpoint. Stored locally &mdash; checkpoints may include your document text, AI responses, API keys, license key, and debug traces. Keep them somewhere private and only share with people you trust.</p>
     <div class="checkpoint-scope-list">
       <label class="checkpoint-scope-row">
@@ -2115,7 +2115,7 @@
     </div>
     <div class="finish-modal-footer-btns">
       <button class="finish-modal-cancel" onclick="closeSaveCheckpointModal()">Cancel</button>
-      <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="confirmSaveCheckpoint()">&#x1F4BE; Save Checkpoint</button>
+      <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="confirmSaveCheckpoint()">&#x1F4BE; Checkpoint - Save</button>
     </div>
   </div>
 </div>
@@ -2131,7 +2131,7 @@
      Cancel calls closeRestoreCheckpointModal(). -->
 <div class="finish-modal-overlay" id="restoreCheckpointModal" onclick="if(event.target===this)closeRestoreCheckpointModal()">
   <div class="finish-modal restore-checkpoint-modal">
-    <h2 class="finish-modal-title">&#x1F504; Restore from Checkpoint</h2>
+    <h2 class="finish-modal-title">&#x1F504; Checkpoint - Restore</h2>
     <p class="finish-modal-msg" id="restoreCheckpointFileMeta">Reading checkpoint&hellip;</p>
     <div class="restore-diff-table">
       <div class="restore-diff-hdr">
@@ -2449,11 +2449,11 @@
         <span class="goal-info-desc">Browse every completed round in the current session — see the document at each round, every reviewer response, the Builder's resolutions, and any USER DECISION blocks. Export the full transcript as a single file from here.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">💾 Save Checkpoint</span>
+        <span class="info-label">💾 Checkpoint - Save</span>
         <span class="goal-info-desc">Save a checkpoint of your full current state — hive, project, reference material, round history, work-in-progress document — to a single JSON file you can restore from later. Recommended before any risky operation or experimental round, and as a periodic safety net on long projects.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">📂 Restore from Checkpoint</span>
+        <span class="info-label">📂 Checkpoint - Restore</span>
         <span class="goal-info-desc">Restore from a previously-saved checkpoint JSON. After picking the file you'll see a Current vs Checkpoint diff with a checkbox per section (project, session, hive, keys, builder, license) — tick only what you want to bring forward. Unticked sections keep their current local values, so you can pull yesterday's project setup while keeping today's API keys.</span>
       </div>
       <p><strong>Settings</strong></p>
@@ -3037,23 +3037,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.225';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.226';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.225"></script>
-<script src="lib/jszip.min.js?v=3.63.225"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.225"></script>
-<script src="js/version.js?v=3.63.225"></script>
-<script src="js/storage.js?v=3.63.225"></script>
-<script src="js/theme.js?v=3.63.225"></script>
-<script src="js/audio.js?v=3.63.225"></script>
-<script src="js/scenes.js?v=3.63.225"></script>
-<script src="js/wf-debug.js?v=3.63.225"></script>
-<script src="js/provider-models.js?v=3.63.225"></script>
-<script src="js/api.js?v=3.63.225"></script>
-<script src="js/templates.js?v=3.63.225"></script>
-<script src="js/api-links.js?v=3.63.225"></script>
-<script src="js/app.js?v=3.63.225"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.226"></script>
+<script src="lib/jszip.min.js?v=3.63.226"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.226"></script>
+<script src="js/version.js?v=3.63.226"></script>
+<script src="js/storage.js?v=3.63.226"></script>
+<script src="js/theme.js?v=3.63.226"></script>
+<script src="js/audio.js?v=3.63.226"></script>
+<script src="js/scenes.js?v=3.63.226"></script>
+<script src="js/wf-debug.js?v=3.63.226"></script>
+<script src="js/provider-models.js?v=3.63.226"></script>
+<script src="js/api.js?v=3.63.226"></script>
+<script src="js/templates.js?v=3.63.226"></script>
+<script src="js/api-links.js?v=3.63.226"></script>
+<script src="js/app.js?v=3.63.226"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -3078,7 +3078,7 @@ function wfMobileShareToast(msg) {
           <p class="about-modal-tagline">Many minds, one refined result.</p>
           <div class="about-version-row">
             <span class="about-version-pill"><span id="aboutVersion">v3.63.224 Pro</span></span>
-            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-001</strong></span>
+            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-002</strong></span>
           </div>
         </div>
       </div>
@@ -3087,7 +3087,7 @@ function wfMobileShareToast(msg) {
     <div class="about-modal-body">
       <p class="about-modal-intro">Browser-native document refinement powered by your own AI keys, your hive configuration, and a local-first workspace.</p>
       <div class="about-info-stack">
-        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-001</strong></div></div>
+        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-002</strong></div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Stack</h3><div class="wf-card-body">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">License</h3><div class="wf-card-body">AGPL-3.0 — open source, free to use and modify with attribution.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Legal</h3><div class="wf-card-body"><a href="privacy.html" target="_blank" rel="noopener noreferrer" class="link-accent">Privacy Policy</a> · <a href="terms.html" target="_blank" rel="noopener noreferrer" class="link-accent">Terms of Use</a></div></div>
@@ -3137,10 +3137,10 @@ function wfMobileShareToast(msg) {
     <div class="nav-divider"></div>
     <details class="nav-section">
       <summary class="nav-section-label">Tools</summary>
-      <button title="Restore from a previously-saved WaxFrame checkpoint file — diff-and-pick which sections to bring forward" class="nav-item" onclick="importSession()">📂 Restore from Checkpoint</button>
+      <button title="Restore from a previously-saved WaxFrame checkpoint file — diff-and-pick which sections to bring forward" class="nav-item" onclick="importSession()">📂 Checkpoint - Restore</button>
       <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>
       <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
-      <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Save Checkpoint</button>
+      <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Checkpoint - Save</button>
       <!-- v3.63.172 — Templates entry. Until this release the template gallery
            was reachable ONLY via the 📋 Use Template button on Setup 2 (Project),
            which meant the welcome screen's pitch wording (which name-checks the

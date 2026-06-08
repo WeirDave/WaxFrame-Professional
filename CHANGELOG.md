@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.226
+
+**Checkpoint menu items grouped alphabetically**
+
+Build: `20260608-002`<br>
+Released: `2026-06-08`
+
+### Changed — "Save Checkpoint" / "Restore from Checkpoint" → "Checkpoint - Save" / "Checkpoint - Restore"
+
+Renamed the two checkpoint nav-menu entries so they sort next to each other in the Tools section. "Save Checkpoint" became "Checkpoint - Save"; "Restore from Checkpoint" became "Checkpoint - Restore". Modal titles, in-app help labels, settings descriptions, user manual references, and the Restore trust-warning title were all updated to match. No functional change.
+
+### Files Changed
+
+- Updated: `index.html`, `help.html`, `waxframe-user-manual.html` (menu labels, modal titles, doc references)
+- Updated: `js/storage.js` (wfConfirm title for the Restore trust warning)
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.226 / 20260608-002 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.225
 
 **Restore-from-Checkpoint diff-and-pick UI**

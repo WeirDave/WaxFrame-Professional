@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260608-001
+// Build: 20260608-002
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1341,7 +1341,7 @@ async function importSession() {
   // Only sections the user ticks get applied. Unticked sections preserve
   // local state byte-for-byte. _applyCheckpoint() does the writes.
   const proceed = await wfConfirm(
-    'Restore from Checkpoint',
+    'Checkpoint - Restore',
     "Only restore checkpoints you created or trust. A checkpoint can replace your local project, AI setup, API keys, and session state — you'll get to pick which parts after choosing the file.",
     { okText: 'Choose file' }
   );
