@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260607-011
+     Build: 20260608-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260607-011">
+  <meta name="waxframe-build" content="20260608-001">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.224">
+  <link rel="stylesheet" href="style.css?v=3.63.225">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.224",
+    "softwareVersion": "3.63.225",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2120,6 +2120,99 @@
   </div>
 </div>
 
+<!-- RESTORE CHECKPOINT MODAL (v3.63.225 — diff-and-pick UI)
+     Shown after the user picks a checkpoint file (via the menu's "Restore
+     from Checkpoint" entry, which calls importSession()). For each of the
+     six envelope sections, displays Current vs Checkpoint side-by-side and
+     lets the user opt OUT of any section before applying. Defaults: every
+     available section pre-ticked. Sections the file doesn't carry are
+     disabled with a "(not in checkpoint)" hint so the user understands why
+     those rows aren't pickable. Confirm calls confirmRestoreCheckpoint();
+     Cancel calls closeRestoreCheckpointModal(). -->
+<div class="finish-modal-overlay" id="restoreCheckpointModal" onclick="if(event.target===this)closeRestoreCheckpointModal()">
+  <div class="finish-modal restore-checkpoint-modal">
+    <h2 class="finish-modal-title">&#x1F504; Restore from Checkpoint</h2>
+    <p class="finish-modal-msg" id="restoreCheckpointFileMeta">Reading checkpoint&hellip;</p>
+    <div class="restore-diff-table">
+      <div class="restore-diff-hdr">
+        <div class="restore-diff-hdr-cell">Section</div>
+        <div class="restore-diff-hdr-cell">Current</div>
+        <div class="restore-diff-hdr-cell">Checkpoint</div>
+      </div>
+      <label class="restore-diff-row">
+        <span class="restore-diff-pick">
+          <input type="checkbox" id="restoreScopeProject">
+          <span class="checkpoint-scope-text">
+            <span class="checkpoint-scope-name">Project</span>
+            <span class="checkpoint-scope-desc">Goal, reference material, length settings</span>
+          </span>
+        </span>
+        <span class="restore-diff-cell" id="restoreCurrentProject"></span>
+        <span class="restore-diff-cell" id="restoreCheckpointProject"></span>
+      </label>
+      <label class="restore-diff-row">
+        <span class="restore-diff-pick">
+          <input type="checkbox" id="restoreScopeSession">
+          <span class="checkpoint-scope-text">
+            <span class="checkpoint-scope-name">Session in progress</span>
+            <span class="checkpoint-scope-desc">Round history, working document, console, notes</span>
+          </span>
+        </span>
+        <span class="restore-diff-cell" id="restoreCurrentSession"></span>
+        <span class="restore-diff-cell" id="restoreCheckpointSession"></span>
+      </label>
+      <label class="restore-diff-row">
+        <span class="restore-diff-pick">
+          <input type="checkbox" id="restoreScopeHive" onchange="updateRestoreCheckpointScopeChildren()">
+          <span class="checkpoint-scope-text">
+            <span class="checkpoint-scope-name">Hive composition</span>
+            <span class="checkpoint-scope-desc">Active AIs, custom-AI configs, per-AI model selections</span>
+          </span>
+        </span>
+        <span class="restore-diff-cell" id="restoreCurrentHive"></span>
+        <span class="restore-diff-cell" id="restoreCheckpointHive"></span>
+      </label>
+      <label class="restore-diff-row restore-diff-row-child">
+        <span class="restore-diff-pick">
+          <input type="checkbox" id="restoreScopeKeys">
+          <span class="checkpoint-scope-text">
+            <span class="checkpoint-scope-name">API keys</span>
+            <span class="checkpoint-scope-desc">Merges into your local hive if Hive is unticked</span>
+          </span>
+        </span>
+        <span class="restore-diff-cell" id="restoreCurrentKeys"></span>
+        <span class="restore-diff-cell" id="restoreCheckpointKeys"></span>
+      </label>
+      <label class="restore-diff-row restore-diff-row-child">
+        <span class="restore-diff-pick">
+          <input type="checkbox" id="restoreScopeBuilder">
+          <span class="checkpoint-scope-text">
+            <span class="checkpoint-scope-name">Builder selection</span>
+            <span class="checkpoint-scope-desc">Merges into your local hive if Hive is unticked</span>
+          </span>
+        </span>
+        <span class="restore-diff-cell" id="restoreCurrentBuilder"></span>
+        <span class="restore-diff-cell" id="restoreCheckpointBuilder"></span>
+      </label>
+      <label class="restore-diff-row">
+        <span class="restore-diff-pick">
+          <input type="checkbox" id="restoreScopeLicense">
+          <span class="checkpoint-scope-text">
+            <span class="checkpoint-scope-name">License</span>
+            <span class="checkpoint-scope-desc">Your WaxFrame Pro license key</span>
+          </span>
+        </span>
+        <span class="restore-diff-cell" id="restoreCurrentLicense"></span>
+        <span class="restore-diff-cell" id="restoreCheckpointLicense"></span>
+      </label>
+    </div>
+    <div class="finish-modal-footer-btns">
+      <button class="finish-modal-cancel" onclick="closeRestoreCheckpointModal()">Cancel</button>
+      <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="confirmRestoreCheckpoint()">&#x1F504; Restore Selected</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -2361,7 +2454,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">📂 Restore from Checkpoint</span>
-        <span class="goal-info-desc">Restore from a previously-saved checkpoint JSON. Replaces your current session entirely, so save a checkpoint of your current work first if you need to keep both.</span>
+        <span class="goal-info-desc">Restore from a previously-saved checkpoint JSON. After picking the file you'll see a Current vs Checkpoint diff with a checkbox per section (project, session, hive, keys, builder, license) — tick only what you want to bring forward. Unticked sections keep their current local values, so you can pull yesterday's project setup while keeping today's API keys.</span>
       </div>
       <p><strong>Settings</strong></p>
       <div class="goal-info-row">
@@ -2944,23 +3037,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.224';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.225';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.224"></script>
-<script src="lib/jszip.min.js?v=3.63.224"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.224"></script>
-<script src="js/version.js?v=3.63.224"></script>
-<script src="js/storage.js?v=3.63.224"></script>
-<script src="js/theme.js?v=3.63.224"></script>
-<script src="js/audio.js?v=3.63.224"></script>
-<script src="js/scenes.js?v=3.63.224"></script>
-<script src="js/wf-debug.js?v=3.63.224"></script>
-<script src="js/provider-models.js?v=3.63.224"></script>
-<script src="js/api.js?v=3.63.224"></script>
-<script src="js/templates.js?v=3.63.224"></script>
-<script src="js/api-links.js?v=3.63.224"></script>
-<script src="js/app.js?v=3.63.224"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.225"></script>
+<script src="lib/jszip.min.js?v=3.63.225"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.225"></script>
+<script src="js/version.js?v=3.63.225"></script>
+<script src="js/storage.js?v=3.63.225"></script>
+<script src="js/theme.js?v=3.63.225"></script>
+<script src="js/audio.js?v=3.63.225"></script>
+<script src="js/scenes.js?v=3.63.225"></script>
+<script src="js/wf-debug.js?v=3.63.225"></script>
+<script src="js/provider-models.js?v=3.63.225"></script>
+<script src="js/api.js?v=3.63.225"></script>
+<script src="js/templates.js?v=3.63.225"></script>
+<script src="js/api-links.js?v=3.63.225"></script>
+<script src="js/app.js?v=3.63.225"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2985,7 +3078,7 @@ function wfMobileShareToast(msg) {
           <p class="about-modal-tagline">Many minds, one refined result.</p>
           <div class="about-version-row">
             <span class="about-version-pill"><span id="aboutVersion">v3.63.224 Pro</span></span>
-            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260607-011</strong></span>
+            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-001</strong></span>
           </div>
         </div>
       </div>
@@ -2994,7 +3087,7 @@ function wfMobileShareToast(msg) {
     <div class="about-modal-body">
       <p class="about-modal-intro">Browser-native document refinement powered by your own AI keys, your hive configuration, and a local-first workspace.</p>
       <div class="about-info-stack">
-        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260607-011</strong></div></div>
+        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-001</strong></div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Stack</h3><div class="wf-card-body">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">License</h3><div class="wf-card-body">AGPL-3.0 — open source, free to use and modify with attribution.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Legal</h3><div class="wf-card-body"><a href="privacy.html" target="_blank" rel="noopener noreferrer" class="link-accent">Privacy Policy</a> · <a href="terms.html" target="_blank" rel="noopener noreferrer" class="link-accent">Terms of Use</a></div></div>
@@ -3044,7 +3137,7 @@ function wfMobileShareToast(msg) {
     <div class="nav-divider"></div>
     <details class="nav-section">
       <summary class="nav-section-label">Tools</summary>
-      <button title="Restore from a previously-saved WaxFrame checkpoint file" class="nav-item" onclick="importSession()">📂 Restore from Checkpoint</button>
+      <button title="Restore from a previously-saved WaxFrame checkpoint file — diff-and-pick which sections to bring forward" class="nav-item" onclick="importSession()">📂 Restore from Checkpoint</button>
       <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>
       <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
       <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Save Checkpoint</button>

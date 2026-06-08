@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260607-011
+// Build: 20260608-001
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1336,9 +1336,13 @@ async function importSession() {
   // trust boundary (replaces project, keys, session); per the project
   // rule, suppressKey belongs only on informational confirms, never on
   // a safety brake. This warning must fire every time.
+  // v3.63.225 — After parsing, hand off to _openRestoreCheckpointModal()
+  // which shows a Current vs Checkpoint diff with a per-section checkbox.
+  // Only sections the user ticks get applied. Unticked sections preserve
+  // local state byte-for-byte. _applyCheckpoint() does the writes.
   const proceed = await wfConfirm(
     'Restore from Checkpoint',
-    "Only restore checkpoints you created or trust. A checkpoint can replace your local project, AI setup, API keys, and session state.",
+    "Only restore checkpoints you created or trust. A checkpoint can replace your local project, AI setup, API keys, and session state — you'll get to pick which parts after choosing the file.",
     { okText: 'Choose file' }
   );
   if (!proceed) { closeNavMenu(); return; }
@@ -1363,148 +1367,7 @@ async function importSession() {
           return;
         }
         if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame checkpoint file'); return; }
-
-        // v3.63.130 — Format-version branch. v5 introduces selective EXPORT:
-        // the file carries `_waxframe_backup_scope` declaring which sections
-        // were intentionally included. Omitted sections (scope=false) write
-        // null in the envelope and the importer PRESERVES the receiver's
-        // local value rather than overwriting with null. v4 and earlier
-        // use the legacy all-or-nothing path below (null = wipe local).
-        const ver = data._waxframe_backup_version || 1;
-        const scope = (ver >= 5 && data._waxframe_backup_scope && typeof data._waxframe_backup_scope === 'object')
-          ? data._waxframe_backup_scope
-          : null;
-
-        // ── Restore localStorage layers ──
-        if (scope) {
-          // v5 selective path. Each section consults its scope flag; when
-          // unticked, leave local state alone. When Hive is ticked but
-          // Keys/Builder were unticked, the file's hive.keys is {} and
-          // hive.builder is '' — merge the local values back in so the
-          // user keeps their existing keys and Builder choice.
-          if (scope.hive && data.LS_HIVE) {
-            try {
-              const importedHive = JSON.parse(data.LS_HIVE);
-              if (!scope.keys || !scope.builder) {
-                const existingRaw  = localStorage.getItem(LS_HIVE);
-                const existingHive = existingRaw ? (() => { try { return JSON.parse(existingRaw); } catch(_) { return null; } })() : null;
-                if (!scope.keys && existingHive && existingHive.keys && typeof existingHive.keys === 'object') {
-                  importedHive.keys = existingHive.keys;
-                }
-                if (!scope.builder && existingHive && typeof existingHive.builder === 'string') {
-                  importedHive.builder = existingHive.builder;
-                }
-              }
-              localStorage.setItem(LS_HIVE, JSON.stringify(importedHive));
-            } catch (mergeErr) {
-              console.warn('[importSession] v5 hive merge failed; falling back to direct overwrite:', mergeErr);
-              localStorage.setItem(LS_HIVE, data.LS_HIVE);
-            }
-          }
-          // !scope.hive → leave local hive untouched (including keys + builder).
-          if (scope.project && data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
-          // !scope.project → leave local project untouched.
-          if (scope.license) {
-            if (data.LS_LICENSE) {
-              localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
-            }
-          }
-          // Missing/null license never clears local license. A checkpoint can
-          // bring a license in, but it should not remove a license already
-          // saved in this browser.
-        } else {
-          // v4 (and earlier) all-or-nothing path. Null fields = overwrite
-          // local with empty. Legacy scrubbed checkpoints from v3.63.59-129
-          // would have hit a special _waxframe_backup_scrubbed branch here;
-          // that branch was retired in v3.63.130 with zero users in the
-          // wild. If such a file ever surfaces it imports through this
-          // default path, but null license fields preserve the local license.
-          if (data.LS_HIVE) localStorage.setItem(LS_HIVE, data.LS_HIVE);
-          if (data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
-          if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
-          if (Object.prototype.hasOwnProperty.call(data, 'LS_LICENSE')) {
-            if (data.LS_LICENSE) localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
-          }
-        }
-        // LS_SESSION is the legacy localStorage session blob (almost always
-        // null since the IDB migration). v5 honors session scope; legacy
-        // path wrote it unconditionally above.
-        if (scope && scope.session && data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
-
-        // Note: v2 backups include LS_SESSION_MIRROR but mirror was removed in
-        // v3.21.12 / format v3 — IDB_SESSION is now the single source of truth.
-        // ── (v3.35.2) IDB write is no longer optional for v4 ──
-        // Prior versions skipped the IDB write when data.IDB_SESSION was
-        // null/missing — leaving any prior session in IDB to bleed through
-        // after location.reload(). A v4 checkpoint must be a true time-
-        // machine, including the case where the captured state was "from-
-        // scratch, no rounds run yet". When IDB_SESSION is null/missing in
-        // a v4 file now, we explicitly wipe IDB so the reload reads the
-        // captured project setup against an empty session.
-        // ── (v3.63.130) v5 path defers to scope.session ──
-        // !scope.session → leave local IDB untouched (don't wipe, don't
-        // restore). scope.session + null IDB → user checkpointed an empty
-        // session intentionally; wipe local to match.
-        let restoredFromIDB = false;
-        let wipedToScratch  = false;
-        if (scope && !scope.session) {
-          // v5 with session unticked — preserve local IDB. No flag needed:
-          // the v5 toast branch below consults scope.session directly.
-        } else if (data.IDB_SESSION) {
-          try {
-            await idbSet(data.IDB_SESSION);
-            try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(_) {}
-            restoredFromIDB = true;
-          } catch(idbErr) {
-            console.error('[importSession] IDB restore failed:', idbErr);
-            toast(`⚠️ Project restored but IDB session write failed: ${idbErr.message || idbErr}. See console.`, 14000);
-          }
-        } else {
-          try {
-            await idbClear();
-            localStorage.removeItem('waxframe_v2_session_exists');
-            wipedToScratch = true;
-          } catch(clearErr) {
-            console.error('[importSession] IDB clear failed:', clearErr);
-            toast(`⚠️ Project restored but IDB clear failed: ${clearErr.message || clearErr}. Prior session may persist.`, 14000);
-          }
-        }
-
-        // Diagnostic toast — be explicit about what was captured + restored.
-        if (scope) {
-          // v5 path — summarize what got restored vs preserved.
-          const restoredTags = [];
-          const preservedTags = [];
-          if (scope.project) restoredTags.push('project'); else preservedTags.push('project');
-          if (scope.session) {
-            const sh = data.IDB_SESSION?.history?.length || 0;
-            restoredTags.push(sh > 0 ? `session (${sh} rounds)` : 'session (empty)');
-          } else {
-            preservedTags.push('session');
-          }
-          if (scope.hive) {
-            const hiveLabel = (scope.keys && scope.builder) ? 'hive+keys+builder'
-              : (scope.keys ? 'hive+keys' : (scope.builder ? 'hive+builder' : 'hive only'));
-            restoredTags.push(hiveLabel);
-          } else {
-            preservedTags.push('hive');
-          }
-          if (scope.license && data.LS_LICENSE) restoredTags.push('license'); else preservedTags.push('license');
-          const restoredPart  = restoredTags.length  ? `Restored: ${restoredTags.join(', ')}` : 'Nothing restored';
-          const preservedPart = preservedTags.length ? ` · Kept local: ${preservedTags.join(', ')}` : '';
-          toast(`✅ ${restoredPart}${preservedPart}. Reloading…`, 7000);
-        } else if (ver < 2 && !data.IDB_SESSION) {
-          toast('⚠️ Old checkpoint format (pre-v3.21.10) — only project setup + API keys restored, session reset to fresh. Reloading…', 12000);
-        } else if (restoredFromIDB) {
-          const sh = data.IDB_SESSION?.history?.length || 0;
-          const sd = data.IDB_SESSION?.docText?.length || 0;
-          toast(`✅ Checkpoint restored — ${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document. Reloading…`, 6000);
-        } else if (wipedToScratch) {
-          toast('✅ Checkpoint restored — captured pre-Round-1 state, session reset to fresh. Reloading…', 6000);
-        } else {
-          toast('✅ Project setup restored — reloading…', 6000);
-        }
-        setTimeout(() => location.reload(), 1500);
+        await _openRestoreCheckpointModal(data);
       } catch(e) {
         toast('⚠️ Could not read file — is it a WaxFrame checkpoint?');
       }
@@ -1513,4 +1376,319 @@ async function importSession() {
   };
   closeNavMenu();
   input.click();
+}
+
+// v3.63.225 — Per-section summary helpers. Each takes the raw checkpoint
+// field (or live localStorage value) and returns a short human-readable
+// string for the Current vs Checkpoint diff modal. Pure functions — no DOM,
+// no side effects, safe to call with null/undefined/garbage input.
+function _restoreSummarizeProject(raw) {
+  if (!raw) return '(none)';
+  let p; try { p = JSON.parse(raw); } catch(_) { return '(unreadable)'; }
+  if (!p || typeof p !== 'object') return '(none)';
+  const name = (p.projectName || '').trim();
+  const ver  = (p.projectVersion || '').trim();
+  if (!name && !ver) return '(unnamed project)';
+  return ver ? `${name || '(unnamed)'} ${ver}` : (name || '(unnamed)');
+}
+
+function _restoreSummarizeSession(idb) {
+  if (!idb || typeof idb !== 'object') return '(empty)';
+  const rounds  = Array.isArray(idb.history) ? idb.history.length : 0;
+  const docLen  = typeof idb.docText === 'string' ? idb.docText.length : 0;
+  if (!rounds && !docLen) return '(empty)';
+  const docPart = docLen ? `${docLen.toLocaleString()} chars` : 'empty doc';
+  return `${rounds} round${rounds === 1 ? '' : 's'} · ${docPart}`;
+}
+
+function _restoreSummarizeHive(hive) {
+  if (!hive || typeof hive !== 'object') return '(empty)';
+  const aiCount = Array.isArray(hive.aiIds) ? hive.aiIds.length
+                : Array.isArray(hive.list)  ? hive.list.length
+                : 0;
+  const customCount = Array.isArray(hive.customAIs) ? hive.customAIs.length : 0;
+  if (!aiCount && !customCount) return '(no AIs)';
+  const parts = [`${aiCount} AI${aiCount === 1 ? '' : 's'}`];
+  if (customCount) parts.push(`${customCount} custom`);
+  return parts.join(' · ');
+}
+
+function _restoreSummarizeKeys(hive) {
+  if (!hive || typeof hive !== 'object' || !hive.keys || typeof hive.keys !== 'object') return '(none)';
+  const n = Object.values(hive.keys).filter(v => typeof v === 'string' && v.trim()).length;
+  return n ? `${n} key${n === 1 ? '' : 's'} set` : '(none)';
+}
+
+function _restoreSummarizeBuilder(hive) {
+  if (!hive || typeof hive !== 'object') return '(none)';
+  const id = typeof hive.builder === 'string' ? hive.builder.trim() : '';
+  return id || '(none)';
+}
+
+function _restoreSummarizeLicense(raw) {
+  if (!raw) return '(not set)';
+  // The license blob shape varies (string or JSON wrapper). Don't show the
+  // key value — just say it's present, so the modal stays safe to screenshot.
+  return 'Set';
+}
+
+// v3.63.225 — Build the Current vs Checkpoint diff modal. Reads live state,
+// parses the checkpoint's sections, populates the modal rows, stashes the
+// checkpoint data on window._pendingRestoreData for confirmRestoreCheckpoint()
+// to consume, then shows the modal. Sections the file doesn't carry are
+// shown but disabled with a "(not in checkpoint)" hint so the user
+// understands why those rows can't be picked.
+async function _openRestoreCheckpointModal(data) {
+  const ver       = data._waxframe_backup_version || 1;
+  const fileScope = (ver >= 5 && data._waxframe_backup_scope && typeof data._waxframe_backup_scope === 'object')
+    ? data._waxframe_backup_scope
+    : null;
+
+  let parsedCkHive = null;
+  try { parsedCkHive = data.LS_HIVE ? JSON.parse(data.LS_HIVE) : null; } catch(_) { parsedCkHive = null; }
+
+  // Section availability mask. A section is "available" iff the file
+  // actually carries restorable content for it. v5 also gates on the
+  // file's scope flag (a section saved with scope=false has null content
+  // by design). v4 and earlier files use field presence only.
+  const ckHasKeys    = !!(parsedCkHive && parsedCkHive.keys && typeof parsedCkHive.keys === 'object'
+                          && Object.values(parsedCkHive.keys).some(v => typeof v === 'string' && v.trim()));
+  const ckHasBuilder = !!(parsedCkHive && typeof parsedCkHive.builder === 'string' && parsedCkHive.builder.trim());
+  const has = {
+    project: fileScope ? (!!fileScope.project && !!data.LS_PROJECT) : !!data.LS_PROJECT,
+    session: fileScope ? (!!fileScope.session && !!(data.LS_SESSION || data.IDB_SESSION))
+                       : !!(data.LS_SESSION || data.IDB_SESSION),
+    hive:    fileScope ? (!!fileScope.hive    && !!data.LS_HIVE) : !!data.LS_HIVE,
+    keys:    fileScope ? (!!fileScope.keys    && ckHasKeys)      : ckHasKeys,
+    builder: fileScope ? (!!fileScope.builder && ckHasBuilder)   : ckHasBuilder,
+    license: fileScope ? (!!fileScope.license && !!data.LS_LICENSE) : !!data.LS_LICENSE,
+  };
+
+  // Snapshot current local state for the left column.
+  const liveHiveRaw = localStorage.getItem(LS_HIVE);
+  let liveHive = null;
+  try { liveHive = liveHiveRaw ? JSON.parse(liveHiveRaw) : null; } catch(_) { liveHive = null; }
+  const liveProjectRaw = localStorage.getItem(LS_PROJECT);
+  const liveLicenseRaw = localStorage.getItem(LS_LICENSE);
+  let liveSessionIDB = null;
+  try { liveSessionIDB = await idbGet(); } catch(_) { liveSessionIDB = null; }
+
+  const cur = {
+    project: _restoreSummarizeProject(liveProjectRaw),
+    session: _restoreSummarizeSession(liveSessionIDB),
+    hive:    _restoreSummarizeHive(liveHive),
+    keys:    _restoreSummarizeKeys(liveHive),
+    builder: _restoreSummarizeBuilder(liveHive),
+    license: _restoreSummarizeLicense(liveLicenseRaw),
+  };
+  const ck = {
+    project: _restoreSummarizeProject(data.LS_PROJECT),
+    session: _restoreSummarizeSession(data.IDB_SESSION),
+    hive:    _restoreSummarizeHive(parsedCkHive),
+    keys:    _restoreSummarizeKeys(parsedCkHive),
+    builder: _restoreSummarizeBuilder(parsedCkHive),
+    license: _restoreSummarizeLicense(data.LS_LICENSE),
+  };
+
+  // Stash for the modal's confirm handler.
+  window._pendingRestoreData = data;
+  window._pendingRestoreHas  = has;
+
+  // Wire each row. Keys/Builder are children of Hive — disable them if
+  // their parent isn't available; otherwise they can be picked independently
+  // (e.g. "bring just my keys forward without overwriting the hive").
+  const setRow = (key, suffix) => {
+    const cb     = document.getElementById('restoreScope'    + suffix);
+    const curEl  = document.getElementById('restoreCurrent'  + suffix);
+    const ckEl   = document.getElementById('restoreCheckpoint' + suffix);
+    if (cb) {
+      cb.checked  = !!has[key];
+      cb.disabled = !has[key];
+    }
+    if (curEl) curEl.textContent = cur[key];
+    if (ckEl)  ckEl.textContent  = has[key] ? ck[key] : '(not in checkpoint)';
+  };
+  setRow('project', 'Project');
+  setRow('session', 'Session');
+  setRow('hive',    'Hive');
+  setRow('keys',    'Keys');
+  setRow('builder', 'Builder');
+  setRow('license', 'License');
+
+  // Header line: where the file came from + when it was saved.
+  const fileVer = data._waxframe_app_version || '(unknown version)';
+  const tsRaw   = data._waxframe_backup_ts;
+  const fileTs  = (typeof tsRaw === 'number' && tsRaw > 0) ? new Date(tsRaw).toLocaleString() : '(no timestamp)';
+  const metaEl  = document.getElementById('restoreCheckpointFileMeta');
+  if (metaEl) {
+    metaEl.textContent = `From ${fileVer} · Saved ${fileTs}. Tick the sections you want to restore — unticked sections keep their current local values.`;
+  }
+
+  document.getElementById('restoreCheckpointModal')?.classList.add('active');
+}
+
+function closeRestoreCheckpointModal() {
+  document.getElementById('restoreCheckpointModal')?.classList.remove('active');
+  window._pendingRestoreData = null;
+  window._pendingRestoreHas  = null;
+}
+
+// v3.63.225 — Hive parent gates Keys + Builder children. With Hive unticked,
+// the user can still bring just keys or just the builder forward (sub-merge
+// into the local hive), so children are NOT auto-unticked when Hive flips
+// off — but if there's nothing usable in the file for a child, its checkbox
+// stays disabled regardless. This is more permissive than the save modal,
+// where Keys+Builder require Hive to be ticked (file-shape consistency).
+function updateRestoreCheckpointScopeChildren() {
+  // Currently a no-op stub — the children are independently pickable.
+  // Reserved for a future "uncheck all" / "check all" affordance.
+}
+
+async function confirmRestoreCheckpoint() {
+  const data = window._pendingRestoreData;
+  const has  = window._pendingRestoreHas;
+  if (!data || !has) { closeRestoreCheckpointModal(); return; }
+
+  // AND the user's picks with availability — a disabled+checked state shouldn't
+  // be possible via the UI, but enforce here so a stale DOM can't produce a
+  // nonsense apply (e.g. trying to restore a section the file doesn't have).
+  const userScope = {
+    project: !!document.getElementById('restoreScopeProject')?.checked && has.project,
+    session: !!document.getElementById('restoreScopeSession')?.checked && has.session,
+    hive:    !!document.getElementById('restoreScopeHive')?.checked    && has.hive,
+    keys:    !!document.getElementById('restoreScopeKeys')?.checked    && has.keys,
+    builder: !!document.getElementById('restoreScopeBuilder')?.checked && has.builder,
+    license: !!document.getElementById('restoreScopeLicense')?.checked && has.license,
+  };
+
+  const any = userScope.project || userScope.session || userScope.hive
+           || userScope.keys    || userScope.builder || userScope.license;
+  if (!any) {
+    toast('⚠️ Nothing selected — tick at least one section or hit Cancel');
+    return;
+  }
+
+  document.getElementById('restoreCheckpointModal')?.classList.remove('active');
+  await _applyCheckpoint(data, userScope);
+  window._pendingRestoreData = null;
+  window._pendingRestoreHas  = null;
+}
+
+// v3.63.225 — Apply a parsed checkpoint to local storage, gated by the
+// user's per-section picks. Mirrors the v5 selective-import semantics from
+// the prior monolithic importSession(): unticked sections preserve local
+// state, sub-fields (keys/builder) can be picked independently of the
+// parent (hive composition). Ends with a location.reload() so live state
+// re-reads from storage cleanly.
+async function _applyCheckpoint(data, scope) {
+  try {
+    // ── Hive (with optional keys / builder sub-fields) ──
+    if (scope.hive && data.LS_HIVE) {
+      try {
+        const importedHive = JSON.parse(data.LS_HIVE);
+        const existingRaw  = localStorage.getItem(LS_HIVE);
+        const existingHive = existingRaw ? (() => { try { return JSON.parse(existingRaw); } catch(_) { return null; } })() : null;
+        // User unticked keys/builder → preserve local sub-fields rather than
+        // overwriting with whatever the file carries (including empties).
+        if (!scope.keys && existingHive && existingHive.keys && typeof existingHive.keys === 'object') {
+          importedHive.keys = existingHive.keys;
+        }
+        if (!scope.builder && existingHive && typeof existingHive.builder === 'string') {
+          importedHive.builder = existingHive.builder;
+        }
+        localStorage.setItem(LS_HIVE, JSON.stringify(importedHive));
+      } catch (mergeErr) {
+        console.warn('[_applyCheckpoint] hive merge failed; falling back to direct overwrite:', mergeErr);
+        localStorage.setItem(LS_HIVE, data.LS_HIVE);
+      }
+    } else if (!scope.hive && (scope.keys || scope.builder) && data.LS_HIVE) {
+      // Sub-field-only restore — user kept the local hive composition but
+      // wants the checkpoint's keys and/or builder merged in. Walk through
+      // the local hive and patch in those sub-fields without touching
+      // anything else. Skip silently if the local hive is unreadable.
+      try {
+        const importedHive = JSON.parse(data.LS_HIVE);
+        const existingRaw  = localStorage.getItem(LS_HIVE);
+        const existingHive = existingRaw ? (() => { try { return JSON.parse(existingRaw); } catch(_) { return null; } })() : {};
+        if (scope.keys && importedHive.keys && typeof importedHive.keys === 'object') {
+          existingHive.keys = { ...(existingHive.keys || {}), ...importedHive.keys };
+        }
+        if (scope.builder && typeof importedHive.builder === 'string' && importedHive.builder.trim()) {
+          existingHive.builder = importedHive.builder;
+        }
+        localStorage.setItem(LS_HIVE, JSON.stringify(existingHive));
+      } catch (mergeErr) {
+        console.warn('[_applyCheckpoint] keys/builder sub-merge failed:', mergeErr);
+      }
+    }
+
+    // ── Project (atomic, no sub-fields) ──
+    if (scope.project && data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
+
+    // ── License (atomic). Missing/null never clears local. ──
+    if (scope.license && data.LS_LICENSE) localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
+
+    // ── Session: localStorage layer first (legacy, rarely populated), then IDB ──
+    if (scope.session && data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
+
+    let restoredFromIDB = false;
+    let wipedToScratch  = false;
+    if (scope.session) {
+      if (data.IDB_SESSION) {
+        try {
+          await idbSet(data.IDB_SESSION);
+          try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(_) {}
+          restoredFromIDB = true;
+        } catch(idbErr) {
+          console.error('[_applyCheckpoint] IDB restore failed:', idbErr);
+          toast(`⚠️ Project restored but IDB session write failed: ${idbErr.message || idbErr}. See console.`, 14000);
+        }
+      } else {
+        // User explicitly ticked Session but the file's IDB blob is null —
+        // means the checkpoint captured a pre-Round-1 state intentionally.
+        // Match by wiping local IDB so reload shows the captured fresh setup.
+        try {
+          await idbClear();
+          localStorage.removeItem('waxframe_v2_session_exists');
+          wipedToScratch = true;
+        } catch(clearErr) {
+          console.error('[_applyCheckpoint] IDB clear failed:', clearErr);
+          toast(`⚠️ Project restored but IDB clear failed: ${clearErr.message || clearErr}. Prior session may persist.`, 14000);
+        }
+      }
+    }
+    // !scope.session → leave local IDB untouched (don't wipe, don't restore).
+
+    // Toast summary — restored vs preserved sections, with sub-field detail.
+    const restoredTags  = [];
+    const preservedTags = [];
+    if (scope.project) restoredTags.push('project'); else preservedTags.push('project');
+    if (scope.session) {
+      const sh = data.IDB_SESSION?.history?.length || 0;
+      restoredTags.push(sh > 0 ? `session (${sh} rounds)` : 'session (empty)');
+    } else {
+      preservedTags.push('session');
+    }
+    if (scope.hive) {
+      const hiveLabel = (scope.keys && scope.builder) ? 'hive+keys+builder'
+        : (scope.keys ? 'hive+keys' : (scope.builder ? 'hive+builder' : 'hive only'));
+      restoredTags.push(hiveLabel);
+    } else if (scope.keys || scope.builder) {
+      const subLabel = (scope.keys && scope.builder) ? 'keys+builder' : (scope.keys ? 'keys' : 'builder');
+      restoredTags.push(subLabel + ' (merged)');
+      preservedTags.push('hive composition');
+    } else {
+      preservedTags.push('hive');
+    }
+    if (scope.license && data.LS_LICENSE) restoredTags.push('license'); else preservedTags.push('license');
+
+    const restoredPart  = restoredTags.length  ? `Restored: ${restoredTags.join(', ')}` : 'Nothing restored';
+    const preservedPart = preservedTags.length ? ` · Kept local: ${preservedTags.join(', ')}` : '';
+    toast(`✅ ${restoredPart}${preservedPart}. Reloading…`, 7000);
+
+    setTimeout(() => location.reload(), 1500);
+  } catch (e) {
+    console.error('[_applyCheckpoint]', e);
+    toast('⚠️ Restore failed — see console.');
+  }
 }
