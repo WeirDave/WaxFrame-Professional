@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260607-011
+   Build: 20260608-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10926,6 +10926,57 @@ kbd {
 .checkpoint-scope-text { display: flex; flex-direction: column; gap: 2px; }
 .checkpoint-scope-name { font-size: var(--fs-13); color: var(--text); font-weight: 600; }
 .checkpoint-scope-desc { font-size: var(--fs-12); color: var(--text-dim); }
+
+/* ── Restore Checkpoint modal (v3.63.225 — diff-and-pick UI) ──
+   Three-column grid per row: pick (checkbox + label) | Current | Checkpoint.
+   The header row uses the same grid template so columns line up. Rows
+   inherit hover + disabled styling from the save-modal scope rows. */
+.restore-checkpoint-modal { max-width: var(--modal-w-xl, 900px); text-align: left; }
+.restore-diff-table {
+  display: flex; flex-direction: column; gap: var(--space-4);
+  padding: var(--space-14); background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  margin: var(--space-14) 0; max-height: 60vh; overflow-y: auto;
+  box-sizing: border-box;
+}
+.restore-diff-hdr,
+.restore-diff-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) 1fr 1fr;
+  gap: var(--space-10);
+  align-items: start;
+  padding: var(--space-8) var(--space-6);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+}
+.restore-diff-hdr {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border2);
+  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
+}
+.restore-diff-hdr-cell { padding: 0 var(--space-4); }
+.restore-diff-row { cursor: pointer; transition: background .12s; }
+.restore-diff-row:hover { background: var(--surface3); }
+.restore-diff-row input[type="checkbox"] {
+  margin-top: 3px; flex: none; cursor: pointer;
+  width: 16px; height: 16px;
+}
+.restore-diff-row input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .4; }
+.restore-diff-row:has(input:disabled) { cursor: not-allowed; opacity: .55; }
+.restore-diff-row-child .restore-diff-pick { padding-left: var(--space-24); }
+.restore-diff-pick {
+  display: flex; align-items: flex-start; gap: var(--space-10);
+}
+.restore-diff-cell {
+  font-size: var(--fs-12);
+  color: var(--text);
+  padding: 2px var(--space-4);
+  word-break: break-word;
+  line-height: 1.4;
+}
 
 /* ── Project goal modal ── */
 .goal-modal-name         { font-size: var(--fs-13); color: var(--text); font-weight: 600; margin-bottom: 2px; }

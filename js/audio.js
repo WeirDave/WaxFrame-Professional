@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — audio.js
-// Build: 20260607-011
+// Build: 20260608-001
 //  All audio play* functions for the main app. Pulled out of app.js
 //  in v3.41.0 as part of the cross-cutting cleanup pass — these
 //  functions form a cohesive subsystem (audio synthesis via Web Audio
