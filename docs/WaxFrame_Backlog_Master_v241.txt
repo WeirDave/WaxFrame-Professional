@@ -66,35 +66,7 @@ OPEN BUGS
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
 
-1. Restore-from-Checkpoint diff-and-pick UI
-   ─────────────────────────────────────────────────────────
-   WHAT:   When the user restores a WaxFrame checkpoint file
-           (.json export of project + session + hive + keys
-           + builder + license), the current behavior is
-           wholesale replacement of the loaded state.
-           This feature would add a comparison UI showing
-           what's IN the checkpoint vs what's CURRENTLY
-           LOADED, with checkboxes per section so the user
-           can pick which pieces to restore.
-   WHY:    Real-world example: David wants the project setup
-           from yesterday's checkpoint but wants to keep
-           today's API keys and hive configuration. Today he
-           either accepts overwriting everything or doesn't
-           restore at all. A diff-and-pick UI fills that gap.
-   STATE:  PARKED — design understood, implementation not
-           started. Not on a near-term release path.
-   WHERE:  Restore flow lives in the import-checkpoint code
-           path in app.js (search for envelope parsing /
-           scope flags introduced in v3.63.130).
-   DONE:   Restore modal shows two columns (Current vs
-           Checkpoint) for each of the 6 envelope sections
-           (Project, Session, Hive, Keys, Builder, License),
-           each with a checkbox; only checked sections get
-           applied; unchecked sections stay untouched in
-           memory and storage.
-
-
-2. Hive parallel fan-out RPS-awareness
+1. Hive parallel fan-out RPS-awareness
    ─────────────────────────────────────────────────────────
    WHAT:   Every refinement round, WaxFrame fires the
            reviewer-prompt API call to all participating AI
@@ -124,7 +96,7 @@ OPEN FEATURES
            reviewers still all return before Builder runs.
 
 
-3. Builder-incapable family list expansion
+2. Builder-incapable family list expansion
    ─────────────────────────────────────────────────────────
    WHAT:   Some AI model families can't reliably act as
            Builder — they break the %%CONFLICTS_START%%
@@ -151,7 +123,7 @@ OPEN FEATURES
            hides it or shows it disabled with a tooltip.
 
 
-4. Pause/Resume at reviewer seam
+3. Pause/Resume at reviewer seam
    ─────────────────────────────────────────────────────────
    WHAT:   A refinement round has natural phases:
              (1) reviewers analyze the working document,
@@ -185,7 +157,7 @@ OPEN FEATURES
            a reload via localStorage).
 
 
-5. File System Access API exploration
+4. File System Access API exploration
    ─────────────────────────────────────────────────────────
    WHAT:   The File System Access API is a modern browser
            API (Chrome, Edge, Opera; not Firefox or Safari)
@@ -216,7 +188,7 @@ OPEN FEATURES
            written up; go/no-go decision on shipping.
 
 
-6. Provider Catalog foundation
+5. Provider Catalog foundation
    ─────────────────────────────────────────────────────────
    WHAT:   Today each AI provider (OpenAI, Anthropic,
            Google, Cohere, DeepSeek, Mistral, Grok,
@@ -254,7 +226,7 @@ OPEN FEATURES
            changes needed.
 
 
-7. Prompt instruction modularization
+6. Prompt instruction modularization
    ─────────────────────────────────────────────────────────
    WHAT:   The instructions WaxFrame sends to each AI are
            still largely assembled inline in app.js. Reviewer

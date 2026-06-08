@@ -2,6 +2,32 @@
 
 ---
 
+## v3.63.225
+
+**Restore-from-Checkpoint diff-and-pick UI**
+
+Build: `20260608-001`<br>
+Released: `2026-06-08`
+
+### Added — pick which sections of a checkpoint to restore
+
+Restoring a checkpoint now opens a Current vs Checkpoint diff modal with a per-section checkbox for each of the six envelope sections: Project, Session, Hive composition, API keys, Builder selection, and License. Each row shows a short summary of what's currently loaded and what the checkpoint carries — number of rounds, document size, AI count, keys configured, builder id. Only ticked sections get applied; unticked sections keep their current local values byte-for-byte.
+
+Real-world fit: bring yesterday's project setup forward without overwriting today's API keys. Pull just the Builder selection from one machine to another without bringing the rest of the hive composition with it. Sections the file doesn't carry (because the saver unticked them) show "(not in checkpoint)" and are disabled, so the user can't pick a section that has no data to restore.
+
+Sub-fields (Keys, Builder) can be picked independently of their parent (Hive composition) on the restore side — picking Keys without Hive merges just the keys into the local hive without touching anything else. The save modal still gates Keys/Builder behind Hive for file-shape consistency.
+
+### Files Changed
+
+- Updated: `js/storage.js` (refactored `importSession()` to open the new modal; added `_openRestoreCheckpointModal`, `confirmRestoreCheckpoint`, `closeRestoreCheckpointModal`, `_applyCheckpoint`, and six per-section summary helpers)
+- Updated: `index.html` (new `restoreCheckpointModal` markup; help-modal description rewritten for the diff-and-pick flow; nav-item tooltip updated)
+- Updated: `style.css` (new `.restore-diff-table` / `.restore-diff-row` / `.restore-diff-cell` styles for the 3-column grid layout)
+- Updated: `docs/WaxFrame_Backlog_Master_v241.txt` (Open Features #1 removed — closed by this release)
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.225 / 20260608-001 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.224
 
 **Template gallery section CSS consolidation**
