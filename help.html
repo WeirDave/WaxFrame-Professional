@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260608-001
+  Build: 20260608-002
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-001">
+  <meta name="waxframe-build" content="20260608-002">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
   <link rel="canonical" href="https://waxframe.com/help.html">
@@ -345,7 +345,7 @@
         <li><b>sessionStorage</b> — per-tab storage the browser clears automatically when you close the tab. WaxFrame doesn't currently use it — this button is here as a thorough cleanup in case a future feature does.</li>
       </ul>
       <p><b>What this does NOT touch:</b> any data on the AI provider's servers (your API account, your keys, your usage history). To revoke an API key, do that in the provider's console (<a href="api-details.html">API Key Guide</a>).</p>
-      <p><b>Wipes are irreversible from inside the app.</b> If you have a hive or project worth keeping, save a checkpoint first (Menu → 💾 Save Checkpoint) before wiping.</p>
+      <p><b>Wipes are irreversible from inside the app.</b> If you have a hive or project worth keeping, save a checkpoint first (Menu → 💾 Checkpoint - Save) before wiping.</p>
       <div class="links" style="flex-direction:column;align-items:flex-start;gap:10px;max-width:560px;">
         <button id="wipeLocalStorageBtn"   type="button" class="btn-danger">Wipe localStorage (hive, keys, settings)</button>
         <button id="wipeIndexedDBBtn"      type="button" class="btn-danger">Wipe IndexedDB (session, rounds, document)</button>
@@ -371,9 +371,9 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.225"></script>
-  <script src="js/storage.js?v=3.63.225"></script>
-  <script src="js/provider-models.js?v=3.63.225"></script>
+  <script src="js/version.js?v=3.63.226"></script>
+  <script src="js/storage.js?v=3.63.226"></script>
+  <script src="js/provider-models.js?v=3.63.226"></script>
   <script>
   (function () {
     'use strict';

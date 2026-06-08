@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260608-001
+     Build: 20260608-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-001">
+  <meta name="waxframe-build" content="20260608-002">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.225">
+  <link rel="stylesheet" href="style.css?v=3.63.226">
 </head>
 <body class="helper-body">
 
@@ -284,7 +284,7 @@
       <div class="wh-block-title">How WaxFrame runs — browser-based, no install</div>
       <p>WaxFrame is a browser-based application. There is nothing to install — you open <code>index.html</code> in any modern web browser and the app runs entirely in that browser window. Your API keys, settings, and session data are saved in your browser's local storage, not in the folder. This means the files in the folder never change as you use the app.</p>
       <div class="wh-warn">
-        <p>⚠️ Because your data lives in your browser, clearing your browser's site data or cache will permanently erase your saved API keys, settings, and any unsaved session. Use <strong>Menu → 💾 Save Checkpoint</strong> regularly to save a copy of your session that you can restore later.</p>
+        <p>⚠️ Because your data lives in your browser, clearing your browser's site data or cache will permanently erase your saved API keys, settings, and any unsaved session. Use <strong>Menu → 💾 Checkpoint - Save</strong> regularly to save a copy of your session that you can restore later.</p>
       </div>
     </div>
 
@@ -920,7 +920,7 @@
     <div class="wh-block">
       <div class="wh-block-title">Clicking Launch WaxFrame →</div>
       <p>The <strong>Launch WaxFrame →</strong> button at the bottom right of the Starting Document screen is inactive until the document requirement is green. Once it is, click <strong>Launch WaxFrame →</strong> to move to the Work screen and begin your session. WaxFrame saves your project configuration automatically at this point.</p>
-      <p>The first time you reach the Work screen for a project, WaxFrame nudges you with a <strong>💾 Save a checkpoint?</strong> modal. This is the pre-token-burn checkpoint — a free, fast moment to grab a checkpoint of your exact starting state so you can restore it if anything drifts later. The modal offers <em>Save Checkpoint</em>, <em>Not now</em>, and a <em>Don't ask again for this project</em> checkbox. See <a href="#settings" class="link-accent">Settings → Checkpoint Nudge</a> for the full rules.</p>
+      <p>The first time you reach the Work screen for a project, WaxFrame nudges you with a <strong>💾 Save a checkpoint?</strong> modal. This is the pre-token-burn checkpoint — a free, fast moment to grab a checkpoint of your exact starting state so you can restore it if anything drifts later. The modal offers <em>Checkpoint - Save</em>, <em>Not now</em>, and a <em>Don't ask again for this project</em> checkbox. See <a href="#settings" class="link-accent">Settings → Checkpoint Nudge</a> for the full rules.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
@@ -1314,7 +1314,7 @@
         <span class="goal-info-desc">Closes the Finish panel and takes you back to the Welcome screen. Your session is preserved — you can return to the Work screen via Setup → Continue at any time. This does not export or clear your session.</span>
       </div>
       <div class="wh-warn">
-        <p>⚠️ <strong>Export before you start a new project.</strong> Clicking <strong>Start New Project</strong> permanently clears your working document and round history. There is no way to recover them. Always use <strong>💾 Export Document</strong> before clicking Start New Project if there is any chance you will want this session's content again. If you want to be able to <em>resume</em> the full session later — with all rounds, conflicts, and working document intact — use <strong>Menu → 💾 Save Checkpoint</strong> first.</p>
+        <p>⚠️ <strong>Export before you start a new project.</strong> Clicking <strong>Start New Project</strong> permanently clears your working document and round history. There is no way to recover them. Always use <strong>💾 Export Document</strong> before clicking Start New Project if there is any chance you will want this session's content again. If you want to be able to <em>resume</em> the full session later — with all rounds, conflicts, and working document intact — use <strong>Menu → 💾 Checkpoint - Save</strong> first.</p>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -1513,7 +1513,7 @@
       <ul>
         <li><strong>📏 Disable length guard?</strong> — fires when you flip the Length Guard from armed to off via the footer pill or the Settings toggle. Explains that rounds and convergence events will no longer be blocked when the document is out of length range.</li>
         <li><strong>📏 Re-arm length guard?</strong> — fires when you flip the Length Guard from off back to armed. Explains that blocking will resume.</li>
-        <li><strong>Save Checkpoint</strong> — fires before you save a full checkpoint. Warns that the checkpoint may contain your document text, AI responses, API keys, license key, and debug traces, and asks you to store it somewhere private.</li>
+        <li><strong>Checkpoint - Save</strong> — fires before you save a full checkpoint. Warns that the checkpoint may contain your document text, AI responses, API keys, license key, and debug traces, and asks you to store it somewhere private.</li>
         <li><strong>💾 Save a checkpoint?</strong> (per-project) — fires once per project on first reach of the work screen. Per-project key derived from project name + version; see the Checkpoint Nudge block below for full semantics.</li>
         <li><strong>Switch to Server / Internet mode</strong> — informational warning that flipping modes hides the other side's AIs from the inventory view (keys preserved, switch back anytime).</li>
         <li><strong>Add reference doc mid-session?</strong> — informational warning that a new reference document takes effect on the NEXT round; past rounds keep their original snapshot.</li>
@@ -1522,7 +1522,7 @@
         <li><strong>Apply Template</strong> (per-template) — fires before applying a template that includes an educational primer (e.g., Quick Start's naming/versioning teaching moment). Suppression is per-template — silencing Quick Start's primer does not silence primers on other templates.</li>
       </ul>
 
-      <p><strong>Intentionally NOT dismissable</strong> (security/safety brakes — these fire every time): the Restore from Checkpoint warning (restoring a checkpoint can replace your whole project, AI setup, API keys, and session — a trust decision that must be made each time), plus destructive confirms like Remove API Key, Clear Project, Clear Working Document, and Remove Custom AIs.</p>
+      <p><strong>Intentionally NOT dismissable</strong> (security/safety brakes — these fire every time): the Checkpoint - Restore warning (restoring a checkpoint can replace your whole project, AI setup, API keys, and session — a trust decision that must be made each time), plus destructive confirms like Remove API Key, Clear Project, Clear Working Document, and Remove Custom AIs.</p>
       <p><strong>How dismissal persists:</strong></p>
       <ul>
         <li>Tick the checkbox, then click the confirm button → the suppression is saved and that modal will not appear again.</li>
@@ -1537,9 +1537,9 @@
       <p>The first time you reach the work screen for a project — right after finishing the 5 setup screens and clicking <strong>Smoke the Hive</strong> — WaxFrame nudges you to save a checkpoint before you burn any tokens. The checkpoint captures your hive setup, project goal, reference material, and starting document, so if anything goes sideways during the run (a credit hiccup, an unexpected drift in the document, or a new direction you want to try without losing this one) you can restore the exact starting state.</p>
       <p>This modal carries a <em>Don't ask again for this project</em> checkbox, but the semantics are a little different from the four informational confirms above:</p>
       <ul>
-        <li><strong>💾 Save Checkpoint</strong> — runs the existing Save Checkpoint flow. If you have not dismissed the <em>Save Checkpoint</em> warning, that fires next; otherwise the checkpoint saves immediately.</li>
+        <li><strong>💾 Checkpoint - Save</strong> — runs the existing Checkpoint - Save flow. If you have not dismissed the <em>Checkpoint - Save</em> warning, that fires next; otherwise the checkpoint saves immediately.</li>
         <li><strong>Not now</strong> (checkbox <em>unchecked</em>) — silent for the current session. If you launch into the same project again in a future browser session, you will see the nudge again.</li>
-        <li><strong>Don't ask again</strong> (checkbox <em>checked</em>, then either button) — persists a per-project suppression. The nudge will not fire again for this project on this browser, regardless of which button you clicked. Both <em>Save Checkpoint with checked</em> and <em>Not now with checked</em> persist the dismissal.</li>
+        <li><strong>Don't ask again</strong> (checkbox <em>checked</em>, then either button) — persists a per-project suppression. The nudge will not fire again for this project on this browser, regardless of which button you clicked. Both <em>Checkpoint - Save with checked</em> and <em>Not now with checked</em> persist the dismissal.</li>
       </ul>
       <p>The per-project key is derived from your project name and version. Renaming the project resets the suppression — treat that as a feature rather than a bug. Clicking ↺ Reset suppressed prompts in the Settings panel also clears all checkpoint-nudge dismissals along with the four informational confirms.</p>
     </div>
@@ -1965,12 +1965,12 @@
     <div class="wh-block">
       <div class="wh-block-title">The diagnostic bundle</div>
       <p>The Help page has a single button that exports a JSON snapshot of your session — your active hive configuration, your project setup, your current document round, browser environment, and recent error history. Before the file is written to your downloads folder, three things are stripped automatically: <strong>every API key</strong>, <strong>your license key</strong>, and (optionally, with a checkbox) <strong>your document text and AI responses</strong>. Document and reference text are kept by default because they are usually what support needs to reproduce a content-related bug; uncheck the box if your document is sensitive.</p>
-      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be restored. For a restorable share-safe file, save a checkpoint with API keys and license unticked (see <a href="#checkpoint-scope" class="link-accent">Save Checkpoint scope</a> below). For a private restorable copy of your full session, save a checkpoint with everything ticked — it keeps your keys and is restorable, but should only be stored somewhere you trust.</p>
+      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be restored. For a restorable share-safe file, save a checkpoint with API keys and license unticked (see <a href="#checkpoint-scope" class="link-accent">Checkpoint - Save scope</a> below). For a private restorable copy of your full session, save a checkpoint with everything ticked — it keeps your keys and is restorable, but should only be stored somewhere you trust.</p>
     </div>
 
     <div class="wh-block" id="checkpoint-scope">
-      <div class="wh-block-title">Save Checkpoint scope (share-safe via checkboxes)</div>
-      <p>The <strong>💾 Save Checkpoint</strong> modal in the <strong>☰</strong> menu lets you tick which sections go in the checkpoint file. Six sections, each independently chooseable:</p>
+      <div class="wh-block-title">Checkpoint - Save scope (share-safe via checkboxes)</div>
+      <p>The <strong>💾 Checkpoint - Save</strong> modal in the <strong>☰</strong> menu lets you tick which sections go in the checkpoint file. Six sections, each independently chooseable:</p>
       <ul>
         <li><strong>Project</strong> — goal, reference material, length settings</li>
         <li><strong>Session in progress</strong> — round history, working document, console transcript, notes</li>
@@ -1987,7 +1987,7 @@
         <li><strong>Public share-safe</strong> (forum, support ticket, archive without secrets) — tick Project + Session only. No hive, no keys, no license — nothing sensitive leaves the file.</li>
       </ul>
       <p>When the file is restored, WaxFrame honors the scope: unticked sections in the file leave the receiver's local state untouched. A toast on import lists exactly what was restored vs kept local. (Older format-v4 checkpoints from before v3.63.130 use the prior all-or-nothing semantic — they overwrite local state with whatever's in the file. Format v5 is selective; v4 and prior are not.)</p>
-      <p>Quick rule of thumb: <strong>Save Checkpoint with everything ticked</strong> for your own offline copy (sensitive — keep private), <strong>untick Keys + License</strong> when sharing with anyone else, <strong>Diagnostic Bundle</strong> for sending to support only (export-only, cannot restore).</p>
+      <p>Quick rule of thumb: <strong>Checkpoint - Save with everything ticked</strong> for your own offline copy (sensitive — keep private), <strong>untick Keys + License</strong> when sharing with anyone else, <strong>Diagnostic Bundle</strong> for sending to support only (export-only, cannot restore).</p>
     </div>
 
     <div class="wh-block">
@@ -2084,13 +2084,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.225"></script>
-<script src="lib/docx.min.js?v=3.63.225"></script>
-<script src="js/docx-export.js?v=3.63.225"></script>
-<script src="js/nav-helper.js?v=3.63.225"></script>
-<script src="js/license-helper.js?v=3.63.225"></script>
-<script src="js/version.js?v=3.63.225"></script>
-<script src="js/docs-scrollspy.js?v=3.63.225"></script>
+<script src="js/theme.js?v=3.63.226"></script>
+<script src="lib/docx.min.js?v=3.63.226"></script>
+<script src="js/docx-export.js?v=3.63.226"></script>
+<script src="js/nav-helper.js?v=3.63.226"></script>
+<script src="js/license-helper.js?v=3.63.226"></script>
+<script src="js/version.js?v=3.63.226"></script>
+<script src="js/docs-scrollspy.js?v=3.63.226"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
