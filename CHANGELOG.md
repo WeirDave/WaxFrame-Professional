@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.232
+
+**Checkpoints: amber hover outline + clearer "wrong file" error copy**
+
+Build: `20260608-008`<br>
+Released: `2026-06-08`
+
+### Changed — row hover uses an amber outline instead of a gray fill
+
+Hovering a Checkpoints row now draws an amber outline around the pick area (checkbox + name + description) and adds a subtle amber tint behind it &mdash; matching the "this is selectable" language used elsewhere in the app (active mode pills, focused controls). The previous gray hover fill didn't fit the rest of the UI vocabulary.
+
+### Changed — wrong-file error reads more naturally
+
+The body of the "Not a WaxFrame checkpoint" inline error reads:
+
+> That JSON file doesn't look like a WaxFrame checkpoint. Checkpoints have "Checkpoint" in the filename and are produced by the "Checkpoint - Save" option in this app. Please double check the file you are trying to restore.
+
+(Previously called the Save flow by its raw name without quoting, and ended with a curt "Try a different file.")
+
+### Files Changed
+
+- Updated: `style.css` &mdash; `.checkpoint-row:hover .checkpoint-row-pick` now uses `outline: 2px solid var(--accent)` + `background: var(--accent-dim)` instead of `background: var(--surface3)`
+- Updated: `js/storage.js` &mdash; rewrote the "Not a WaxFrame checkpoint" error body
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.232 / 20260608-008 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.231
 
 **Checkpoints: gold hover stays gold, full-width on wider monitors, inline error for wrong files**

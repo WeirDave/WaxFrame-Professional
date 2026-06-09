@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260608-007
+// Build: 20260608-008
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1245,7 +1245,7 @@ function chooseCheckpointFile() {
         if (!data._waxframe_backup) {
           _showRestoreError(
             'Not a WaxFrame checkpoint',
-            'That JSON file doesn\'t look like a WaxFrame checkpoint. Checkpoints have "Checkpoint" in the filename and are produced by Checkpoint - Save in this app. Try a different file.'
+            'That JSON file doesn\'t look like a WaxFrame checkpoint. Checkpoints have "Checkpoint" in the filename and are produced by the "Checkpoint - Save" option in this app. Please double check the file you are trying to restore.'
           );
           return;
         }
