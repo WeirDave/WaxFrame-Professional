@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260608-013
+// Build: 20260608-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260608-013';         // build stamp — update each session
+const BUILD       = '20260608-014';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -1181,11 +1181,21 @@ function closeFirstRunOffer() {
   window._checkpointNudgeDismissedThisSession = true;
 }
 function firstRunDoBackup() {
-  // v3.63.62 — Do NOT close the modal. User may want template after.
+  // v3.63.62 → v3.63.238 — Originally kept the modal open so the user
+  // could pick BOTH save-actions back-to-back. With v3.63.227's
+  // modal-to-screen migration, backupSession() now navigates to the
+  // dedicated Checkpoints screen, and a lingering nudge on top of
+  // that screen is obstructive. Close the nudge on click; the
+  // user can always reach the other action via the Tools menu.
+  if (typeof closeFirstRunOffer === 'function') closeFirstRunOffer();
   if (typeof backupSession === 'function') backupSession();
 }
 function firstRunDoTemplate() {
-  // v3.63.62 — Do NOT close the modal. User may want backup after.
+  // v3.63.62 → v3.63.238 — Same change as firstRunDoBackup for
+  // consistency: close the nudge so it doesn't sit on top of the
+  // save-template modal. User can reach the other action (save
+  // checkpoint) from the Tools menu if they want both.
+  if (typeof closeFirstRunOffer === 'function') closeFirstRunOffer();
   if (typeof openSaveTemplateModal === 'function') openSaveTemplateModal();
 }
 
@@ -4319,10 +4329,13 @@ function confirmSaveTemplate() {
   // worth backing up (post-Round-1) so we don't pester users who saved a
   // template right after setup. Uses wfConfirm with no suppressKey since
   // this is a one-off contextual nudge, not a recurring warning.
-  // v3.63.62 — Skip when firstRunOfferModal is active. In that flow the
-  // user can see the Backup option already, so prompting again would be
-  // redundant. The firstRunOfferModal stays open and the user clicks
-  // Backup themselves if they want it.
+  // v3.63.62 → v3.63.238 — Skip when firstRunOfferModal is active. The
+  // check originally mattered because the nudge stayed open after Save
+  // as Template, so its visible Backup button was still in reach.
+  // v3.63.238 closes the nudge on either pick (so the user can interact
+  // with the post-pick UI without a floating modal), which makes this
+  // branch a defensive no-op now — kept for safety in case some future
+  // flow leaves the nudge mounted.
   setTimeout(async () => {
     const firstRunActive = document.getElementById('firstRunOfferModal')?.classList.contains('active');
     if (firstRunActive) return;
