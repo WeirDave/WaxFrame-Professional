@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.229
+
+**Checkpoints preview rows color-coded + Select all / Select none buttons**
+
+Build: `20260608-005`<br>
+Released: `2026-06-08`
+
+### Changed — preview rows visually differentiated
+
+The two labeled preview lines on each Restore row now look different so the eye can distinguish them without reading the labels. The **In your current state** row stays muted (dim grey left border, dim grey label, neutral background) — that's "where you are." The **In this checkpoint file** row gets the accent gold treatment (gold left border, gold label, gold-tinted background) — that's "the new thing coming in." Save mode rows have just the one local-state preview, so they stay neutral.
+
+### Added — Select all / Select none buttons
+
+A small toolbar at the top of each panel offers **Select all** and **Select none** buttons. In Restore mode the buttons skip disabled checkboxes (sections the file doesn't carry), so they never tick a row that can't be applied. Useful for the "I just want everything" or "let me start clean" cases instead of tapping nine checkboxes individually.
+
+### Files Changed
+
+- Updated: `js/storage.js` — added `checkpointSelectAll(mode)` and `checkpointSelectNone(mode)` handlers
+- Updated: `index.html` — preview rows tagged with `.checkpoint-row-preview-local` and `.checkpoint-row-preview-file` modifier classes; bulk-action toolbars added at the top of both panels
+- Updated: `style.css` — color-coded preview row styles (`.checkpoint-row-preview-local` and `.checkpoint-row-preview-file`); `.checkpoint-bulk-actions` and `.checkpoint-bulk-btn` styles for the toolbar
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.229 / 20260608-005 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.228
 
 **Checkpoints screen — human-friendly redesign + promoted to Step 7 in the manual**

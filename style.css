@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260608-004
+   Build: 20260608-005
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11047,17 +11047,16 @@ kbd {
   word-break: break-all;
 }
 
-/* Preview lines — labeled values stacked below the description. The label
-   is dim/uppercase, the value is normal text. Same indent as the desc so
-   the row reads as one block. */
+/* Preview lines — labeled values stacked below the description. Each
+   preview is its own card with a colored left border so the eye can
+   distinguish "where you are" from "what's coming in" without reading
+   the labels. Local state stays muted (text-dim border + label); the
+   checkpoint file value gets the accent gold treatment so it pops as
+   the "new thing" being considered for restore. */
 .checkpoint-row-previews {
   display: flex; flex-direction: column;
-  gap: 4px;
+  gap: var(--space-6);
   margin-left: 26px;          /* align with text under checkbox */
-  padding: var(--space-8) var(--space-10);
-  background: var(--surface2);
-  border-left: 2px solid var(--accent);
-  border-radius: var(--radius-sm);
 }
 .checkpoint-row-preview {
   display: flex;
@@ -11065,19 +11064,60 @@ kbd {
   gap: var(--space-8);
   font-size: var(--fs-13);
   line-height: 1.45;
+  padding: var(--space-8) var(--space-12);
+  background: var(--surface2);
+  border-left: 3px solid var(--text-dim);
+  border-radius: var(--radius-sm);
+}
+.checkpoint-row-preview-local {
+  border-left-color: var(--text-dim);
+}
+.checkpoint-row-preview-file {
+  border-left-color: var(--accent);
+  background: var(--accent-dim);
 }
 .checkpoint-row-preview-label {
   color: var(--text-dim);
   font-size: var(--fs-12);
   font-weight: 600;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
   min-width: 200px;
   flex: none;
+}
+.checkpoint-row-preview-file .checkpoint-row-preview-label {
+  color: var(--accent);
 }
 .checkpoint-row-preview-value {
   color: var(--text);
   word-break: break-word;
   flex: 1;
+}
+
+/* Bulk select-all / select-none buttons at the top of each panel.
+   Small, right-aligned, secondary visual weight — convenience action,
+   not a primary control. */
+.checkpoint-bulk-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  margin: 0 0 var(--space-12);
+}
+.checkpoint-bulk-btn {
+  font-size: var(--fs-12);
+  padding: var(--space-6) var(--space-12);
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 600;
+  transition: color .12s, border-color .12s, background .12s;
+}
+.checkpoint-bulk-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
 }
 
 /* Action button row at the bottom of each panel. */
