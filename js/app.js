@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260608-019
+// Build: 20260608-020
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260608-019';         // build stamp — update each session
+const BUILD       = '20260608-020';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4364,7 +4364,7 @@ async function editCustomTemplate(id) {
   finally { window._editLoadInProgress = false; }
   window._editingTemplateId = id;             // applyTemplate -> clearProject cleared it; set for the save step
   if (typeof goToScreen === 'function') goToScreen('screen-project');
-  toast('\u270f\ufe0f Editing template \u2014 change the setup, then Update Template', 5500);
+  toast('\u270f\ufe0f Editing template \u2014 change the setup, then Template - Update', 5500);
 }
 
 // v3.63.44 (Phase 2) — start a brand-new template from a blank setup.
