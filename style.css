@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260608-006
+   Build: 20260608-007
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10911,9 +10911,10 @@ kbd {
    state"), Restore has two ("In your current state" + "In this checkpoint
    file"). No grid columns; the row reads top-to-bottom as one record. */
 
-/* Widen the Checkpoints screen — 9 sections + plain-language descriptions
-   need more horizontal room than the default 1200px hp-section cap. */
-#screen-checkpoint .hp-section { max-width: 1500px; }
+/* Drop the hp-section width cap on the Checkpoints screen so wide
+   monitors get the full available real estate; at 1368px laptop width
+   the .fs-body-single padding already produces sensible margins. */
+#screen-checkpoint .hp-section { max-width: none; width: 100%; }
 
 .checkpoint-mode-toggle {
   display: flex; gap: var(--space-8);
@@ -11000,18 +11001,19 @@ kbd {
 
 /* Scope row — vertical stack: pick (checkbox + name + desc + JSON) on top,
    preview line(s) below. Same shape for Save and Restore — Restore just
-   has a second labeled preview line for the checkpoint value. */
+   has a second labeled preview line for the checkpoint value.
+   Hover localized to the pick block so the gold-tinted file preview
+   keeps its color stable; previously the row-wide hover bg was washing
+   out the file preview's translucent gold into a gray-gold mush. */
 .checkpoint-row {
   display: flex; flex-direction: column;
   gap: var(--space-8);
   padding: var(--space-12) var(--space-10);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background .12s;
   border-bottom: 1px dashed var(--border2);
 }
 .checkpoint-row:last-child { border-bottom: none; }
-.checkpoint-row:hover { background: var(--surface3); }
 .checkpoint-row input[type="checkbox"] {
   margin-top: 3px; flex: none; cursor: pointer;
   width: 16px; height: 16px;
@@ -11021,7 +11023,12 @@ kbd {
 
 .checkpoint-row-pick {
   display: flex; align-items: flex-start; gap: var(--space-10);
+  padding: var(--space-6) var(--space-8);
+  margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-8));
+  border-radius: var(--radius-sm);
+  transition: background .12s;
 }
+.checkpoint-row:hover .checkpoint-row-pick { background: var(--surface3); }
 .checkpoint-row-text {
   display: flex; flex-direction: column; gap: 3px;
 }
@@ -11074,7 +11081,12 @@ kbd {
 }
 .checkpoint-row-preview-file {
   border-left-color: var(--accent);
-  background: var(--accent-dim);
+  /* Solid gold-tinted background via color-mix so the gold tone stays
+     stable when ancestors change background (e.g. row hover). The
+     transparent --accent-dim used previously was washing out into
+     gray-gold mush whenever a hover/focus state layered something
+     underneath. */
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface2));
 }
 .checkpoint-row-preview-label {
   color: var(--text-dim);
@@ -11092,6 +11104,29 @@ kbd {
   color: var(--text);
   word-break: break-word;
   flex: 1;
+}
+
+/* Inline error banner shown in the Restore intro panel when the picked
+   file fails validation. Lives between the trust warning and the action
+   buttons so it's right where the user is looking after clicking Choose
+   File. Hidden by default; .active toggles visibility. */
+.checkpoint-restore-error {
+  display: none;
+  padding: var(--space-12) var(--space-14);
+  margin: 0 0 var(--space-16);
+  background: color-mix(in srgb, var(--red) 14%, var(--surface2));
+  border: 1px solid var(--red);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: var(--fs-13);
+  line-height: 1.5;
+}
+.checkpoint-restore-error.active { display: block; }
+.checkpoint-restore-error-title {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--red);
 }
 
 /* Bulk select-all / select-none buttons at the top of each panel.
