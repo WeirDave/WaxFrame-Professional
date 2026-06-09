@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260608-016
+// Build: 20260608-017
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260608-016';         // build stamp — update each session
+const BUILD       = '20260608-017';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -6074,11 +6074,20 @@ function confirmSaveHiveProfile() {
   toast(`💾 Saved hive profile "${name}" (${Object.keys(picks).length} AI${Object.keys(picks).length === 1 ? '' : 's'} captured)`);
 }
 
-function deleteCustomHiveProfile(id) {
+async function deleteCustomHiveProfile(id) {
   const profiles = loadCustomHiveProfiles();
   const entry = profiles.find(p => p.id === id);
   if (!entry) return;
-  if (!confirm(`Delete hive profile "${entry.label}"? This cannot be undone.`)) return;
+  // v3.63.241 — Replaced native browser confirm() with wfConfirm() so the
+  // delete dialog matches every other destructive confirm in the app
+  // (Remove API Key, Clear Project, etc.). Native confirm() was a vestige
+  // — caught by the v3.63.241 behavior-consistency audit.
+  const ok = await wfConfirm(
+    'Delete hive profile',
+    `Delete hive profile "${entry.label}"? This can't be undone.`,
+    { okText: 'Delete', destructive: true }
+  );
+  if (!ok) return;
   const filtered = profiles.filter(p => p.id !== id);
   saveCustomHiveProfiles(filtered);
   // If the deleted profile was active, fall back to Custom.

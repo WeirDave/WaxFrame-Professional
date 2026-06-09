@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.241
+
+**Behavior-consistency audit: replaced last native confirm() with wfConfirm()**
+
+Build: `20260608-017`<br>
+Released: `2026-06-08`
+
+### Fixed — "Delete hive profile" used a native browser `confirm()` instead of the styled modal
+
+`deleteCustomHiveProfile()` was the lone remaining caller of the browser's native `confirm()` &mdash; an OS dialog that doesn't match the WaxFrame visual language. Every other destructive confirm (Remove API Key, Clear Project, Clear Working Document, Remove Custom AIs) goes through `wfConfirm()` which renders a themed modal with proper destructive styling. This was caught by the v3.63.241 audit pass per the `behavior-consistency` category in `docs/WaxFrame_Audit_Methodology_v1.txt`.
+
+Replaced with `await wfConfirm('Delete hive profile', ..., { destructive: true })`. Function became `async`; the rest of the function body is unchanged.
+
+### Files Changed
+
+- Updated: `js/app.js` &mdash; `deleteCustomHiveProfile()` switched to `wfConfirm()`
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.241 / 20260608-017 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.240
 
 **"What's in the Menu" info modal: brought in line with the actual nav menu**
