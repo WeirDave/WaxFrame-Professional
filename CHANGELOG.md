@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.235
+
+**Round History modal docks to the top of the viewport like every other modal**
+
+Build: `20260608-011`<br>
+Released: `2026-06-08`
+
+### Fixed — Round History modal opened in the vertical middle of the viewport
+
+Every other modal in the app (Template - Save, the various confirms, the Template - Use gallery, etc.) opens docked to the top of the viewport via `.finish-modal-overlay.active { align-items: flex-start }`. Round History was using its own overlay class which inherited the base `align-items: center` and floated in the middle. Added the same `align-items: flex-start` rule to `.hist-modal-overlay.active` so it matches; also added `overflow-y: auto` on the overlay so tall content scrolls cleanly like the finish-modal overlay does.
+
+### Files Changed
+
+- Updated: `style.css` — `.hist-modal-overlay.active` now uses `align-items: flex-start`; overlay gets `overflow-y: auto`
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.235 / 20260608-011 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.234
 
 **Template - Save & Save Hive Profile modals: chrome standardized to match the rest of the modal family**

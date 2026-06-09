@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260608-010
+   Build: 20260608-011
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -7757,9 +7757,14 @@ kbd {
   justify-content: center;
   padding: var(--space-24);
   backdrop-filter: blur(4px);
+  overflow-y: auto;
 }
+/* v3.63.235 — Dock to top of viewport like .finish-modal-overlay.active
+   does, so Round History opens in the same position as every other
+   modal in the app instead of floating in the vertical middle. */
 .hist-modal-overlay.active {
   display: flex;
+  align-items: flex-start;
 }
 .hist-modal {
   background: var(--surface);
