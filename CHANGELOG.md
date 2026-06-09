@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.242
+
+**"Also save a backup?" prompt rewords to use Checkpoint terminology**
+
+Build: `20260608-018`<br>
+Released: `2026-06-08`
+
+### Changed — post-template "save a backup?" prompt now says "Save Checkpoint"
+
+After saving a template, WaxFrame fires a `wfConfirm` asking if you want to also save a backup. The wording said "Also save a session backup?" with a `💾 Save Backup` button &mdash; vestige of an earlier "Backup" naming. Now reads "Also save a checkpoint?" with `💾 Save Checkpoint` button to match the unified Checkpoint terminology used everywhere else.
+
+### Files Changed
+
+- Updated: `js/app.js` &mdash; post-template `wfConfirm` reworded
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.242 / 20260608-018 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.241
 
 **Behavior-consistency audit: replaced last native confirm() with wfConfirm()**
