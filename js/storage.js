@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260608-018
+// Build: 20260608-019
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1271,11 +1271,10 @@ async function confirmSaveCheckpoint() {
   await _writeCheckpoint(scope);
 }
 
-// Internal — the actual save logic. Reads live state, applies scope
-// (omitted sections become null in the file; when Hive is ticked but Keys
-// or Builder are unticked, the sub-field inside LS_HIVE is blanked while
-// the rest of the hive composition is kept), writes a format-v5 envelope,
-// streams it to a Blob download.
+// Internal — the actual save logic. Reads live state, applies the 9-key
+// granular scope (omitted sub-sections are spliced out of LS_PROJECT /
+// LS_HIVE before write — the file carries only the fields the user
+// ticked), writes a format-v6 envelope, streams it to a Blob download.
 async function _writeCheckpoint(scope) {
   // v3.35.2 — Flush in-memory state to IDB before reading the snapshot.
   // Without this, a checkpoint taken while in-memory state hadn't yet been

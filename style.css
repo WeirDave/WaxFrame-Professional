@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260608-018
+   Build: 20260608-019
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12344,10 +12344,6 @@ kbd {
   flex-shrink: 0;
   flex-wrap: wrap;
   box-sizing: border-box;
-}
-
-/* ══ SHORT VIEWPORT — hide refine panel, show button+popover ══ */
-@media (max-height: 920px) {
 }
 
 /* ══ DOC TAB HINT ══ */

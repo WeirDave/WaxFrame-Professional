@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.243
+
+**Code-comment & dead-CSS cleanup**
+
+Build: `20260608-019`<br>
+Released: `2026-06-08`
+
+### Changed — `_writeCheckpoint` doc-comment updated for the v6 format
+
+The block comment above `_writeCheckpoint()` in `js/storage.js` still described the v5 envelope format ("when Hive is ticked but Keys or Builder are unticked, the sub-field inside LS_HIVE is blanked"). Updated to describe the v6 9-key granular splice that actually runs.
+
+### Removed — empty `@media (max-height: 920px)` block in `style.css`
+
+Pure dead rule &mdash; a media-query brace with nothing inside. Removed.
+
+### Files Changed
+
+- Updated: `js/storage.js` &mdash; `_writeCheckpoint` doc-comment
+- Updated: `style.css` &mdash; empty media query removed
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.243 / 20260608-019 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.242
 
 **"Also save a backup?" prompt rewords to use Checkpoint terminology**
