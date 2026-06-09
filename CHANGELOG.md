@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.240
+
+**"What's in the Menu" info modal: brought in line with the actual nav menu**
+
+Build: `20260608-016`<br>
+Released: `2026-06-08`
+
+### Fixed — info modal mismatched the real menu in several places
+
+The welcome screen's "What's in the Menu" info modal (`infoMenuModal`) had drifted from the actual nav menu structure as features changed. This pass syncs them:
+
+- **Setup steps**: was "Setup 1–5" (incorrect — there are 4 setup steps, not 5). Corrected to "Setup 1–4".
+- **Tools section reorder**: now lists Checkpoint - Restore, Checkpoint - Save, Round History, Template - Save, Template - Use in the same order as the actual menu.
+- **Templates missing entirely**: added `⭐ Template - Save` and `📋 Template - Use` entries which were absent from the info modal even though they're in the menu (the menu has them since v3.63.233; the info modal never got the matching entries).
+- **"Documentation" → "Help & Support"**: renamed the section header to match the menu's section label. Added the three entries that were missing from the info modal: `💰 AI API Pricing`, `🛟 Help`, `🐝 Hive Profiles`.
+- **"Legal" section added**: privacy/terms entries were in the menu but missing from the info modal. Added.
+
+The info modal now serves as a faithful overview of every menu item, so a new user clicking the ⓘ next to "Menu" gets a complete picture.
+
+### Files Changed
+
+- Updated: `index.html` &mdash; `infoMenuModal` rewrite (Tools reorder + Template entries added; Help & Support rename + missing entries; Legal section added; Setup count corrected)
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.240 / 20260608-016 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.239
 
 **Audit pass: stale label refs + outdated Checkpoint nav tooltips**
