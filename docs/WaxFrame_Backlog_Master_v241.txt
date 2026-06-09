@@ -265,6 +265,36 @@ OPEN FEATURES
            can point at these modules without parsing app.js.
 
 
+7. Replace last native window.prompt() with a styled wfPrompt()
+   ─────────────────────────────────────────────────────────
+   WHAT:   renameCustomCategory() in app.js (~line 4567) uses
+           window.prompt() to ask for a new category name when
+           a user clicks the ✏️ on a custom-template bucket.
+           This is the only remaining native browser prompt in
+           the codebase — every other text-input collection
+           goes through styled in-app modals, and every other
+           binary confirm goes through wfConfirm().
+   WHY:    Native browser prompts are jarring against the
+           rest of the app's visual language. They render in
+           the OS chrome (different fonts, different theme)
+           and break the spell of a polished app. The audit
+           pass that landed v3.63.241 caught the native
+           confirm() vestige and replaced it; this is the
+           prompt() counterpart.
+   STATE:  OPEN — small but needs a new wfPrompt() helper
+           (or extension of wfConfirm to accept an input
+           field). Building the helper is the bulk of the
+           work; the callsite swap is one line.
+   WHERE:  renameCustomCategory() at js/app.js:4558.
+           wfConfirm() lives at js/app.js:~7751 as the model
+           to extend or pattern after.
+   DONE:   A wfPrompt(title, body, opts) helper exists,
+           returns Promise<string|null> (null on cancel).
+           renameCustomCategory() awaits wfPrompt() instead
+           of calling window.prompt(). Visual styling
+           matches wfConfirm's modal chrome.
+
+
 ════════════════════════════════════════════════════════════
 NOTES ON FORMAT
 ════════════════════════════════════════════════════════════
