@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260608-008
+// Build: 20260608-009
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260608-008';         // build stamp — update each session
+const BUILD       = '20260608-009';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -3910,7 +3910,7 @@ function renderTemplateGalleryBody() {
   // new users browsing for onboarding).
   let ctaButton = '';
   let explainPara = '';
-  if (path === 'custom') ctaButton = `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()" title="Opens the project editor with empty fields. Fill in your project goal — plus optional reference material and a starting document — then ⭐ Save as Template to bank the recipe. Closes this gallery.">➕ New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()" title="Load a template file (.json) someone shared with you, or one you exported from another machine.">⬆ Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Custom templates bank your project goal, reference material, starting document, and the hive that ran them. Hover a saved template to export ⬆, duplicate 📋, edit ✏️, or delete 🗑 it.</span></div>`;
+  if (path === 'custom') ctaButton = `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()" title="Opens the project editor with empty fields. Fill in your project goal — plus optional reference material and a starting document — then ⭐ Template - Save to bank the recipe. Closes this gallery.">➕ New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()" title="Load a template file (.json) someone shared with you, or one you exported from another machine.">⬆ Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Custom templates bank your project goal, reference material, starting document, and the hive that ran them. Hover a saved template to export ⬆, duplicate 📋, edit ✏️, or delete 🗑 it.</span></div>`;
   else if (path === 'scratch') {
     ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>⭐ Quick Start</strong> — New to WaxFrame? Click here for a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`;
     explainPara = `<p class="template-gallery-explain">These templates are designed to spark a <strong>first draft</strong>. Pick the one closest to what you're writing — the hive will use this template to generate a document, then refine it round by round.</p>`;
@@ -3979,7 +3979,7 @@ function renderTemplateGalleryBody() {
     </div>`).join('');
 
   const _emptyMsg = (path === 'custom')
-    ? '<p class="template-gallery-empty">You haven\'t saved any templates yet. Finish a project you like, then use <strong>⭐ Save as Template</strong> (in the Finish panel or the Tools menu) to bank its setup here.</p>'
+    ? '<p class="template-gallery-empty">You haven\'t saved any templates yet. Finish a project you like, then use <strong>⭐ Template - Save</strong> (in the Finish panel or the Tools menu) to bank its setup here.</p>'
     : '<p class="template-gallery-empty">No templates found for this path.</p>';
 
   // v3.63.178 — Sidebar nav for jumping between category sections.
@@ -4197,8 +4197,8 @@ function openSaveTemplateModal() {
     if (descEl) descEl.value = '';
     if (catEl) catEl.value = 'My Templates';
     if (catCustomEl) { catCustomEl.style.display = 'none'; catCustomEl.value = ''; }
-    if (titleEl) titleEl.textContent = '\u2b50 Save as Template';
-    if (btnEl)   btnEl.textContent   = '\u2b50 Save Template';
+    if (titleEl) titleEl.textContent = '\u2b50 Template - Save';
+    if (btnEl)   btnEl.textContent   = '\u2b50 Template - Save';
   }
   // v3.63.194 — Initialize char counters for the three length-capped
   // inputs (name 60, custom-category 40, description 240). David caught
@@ -4367,7 +4367,7 @@ async function newBlankTemplate() {
   // a starting document, not just the goal fields. The button tooltip
   // (in renderTemplateGalleryBody) sets the same expectation BEFORE
   // the click; this toast confirms it AFTER landing on the project page.
-  toast('\u2795 Fill in your project goal \u2014 plus optional reference material and starting document \u2014 then \u2b50 Save as Template', 7000);
+  toast('\u2795 Fill in your project goal \u2014 plus optional reference material and starting document \u2014 then \u2b50 Template - Save', 7000);
 }
 
 // ============================================================

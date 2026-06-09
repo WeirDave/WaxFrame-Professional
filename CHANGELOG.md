@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.233
+
+**Template menu entries renamed to mirror the Checkpoint pattern**
+
+Build: `20260608-009`<br>
+Released: `2026-06-08`
+
+### Changed — "Save as Template" / "Templates" → "Template - Save" / "Template - Use"
+
+The two template-related entries in the Tools nav menu were named inconsistently with each other ("Save as Template" is an action verb-noun; "Templates" is just a noun, and they didn't group visually). Renamed to mirror the Checkpoint - Save / Checkpoint - Restore pattern:
+
+- "⭐ Save as Template" &rarr; "⭐ Template - Save"
+- "📋 Templates" &rarr; "📋 Template - Use"
+
+Both Template entries now sit adjacent in the Tools menu, same as the two Checkpoint entries. The matching changes ripple through the modal title, the Finish-panel CTA, the gallery empty-state message, the new-blank-template tooltip, and the post-apply toast &mdash; everywhere the old name appeared as a user-visible label.
+
+The contextual "📋 Use Template" button on the Setup 2 project screen stays as-is &mdash; it's a CTA in context, not a menu item, so its natural verb-first phrasing fits where it lives.
+
+### Files Changed
+
+- Updated: `index.html` &mdash; nav menu entries reordered + renamed; Finish-panel "Save as Template" CTA renamed; save-template modal title renamed
+- Updated: `js/app.js` &mdash; dynamic title setter (`saveTemplateTitle.textContent`), gallery empty-state HTML, new-blank-template tooltip, post-apply toast
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.233 / 20260608-009 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.232
 
 **Checkpoints: amber hover outline + clearer "wrong file" error copy**
