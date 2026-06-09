@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.239
+
+**Audit pass: stale label refs + outdated Checkpoint nav tooltips**
+
+Build: `20260608-015`<br>
+Released: `2026-06-08`
+
+### Fixed — welcome pitch referenced retired menu label
+
+The welcome-screen pitch said "Menu → 📋 Templates" but the menu item was renamed to "Template - Use" in v3.63.233. Updated to match.
+
+### Changed — Checkpoint nav tooltips updated for the 9-section model
+
+The Tools-menu tooltips for `Checkpoint - Save` and `Checkpoint - Restore` still listed the old 6-section split (project, session, hive, keys, builder, license) from before the v3.63.227 promotion to a screen + the 9-section expansion. Rewrote both tooltips to enumerate the current nine sections and reflect that the click opens the Checkpoints screen (not a modal).
+
+### Files Changed
+
+- Updated: `index.html` &mdash; welcome pitch reference fixed, Checkpoint nav tooltips updated
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.239 / 20260608-015 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.238
 
 **First-run Save Checkpoint nudge closes on click — no more floating modal over the Checkpoints screen**
