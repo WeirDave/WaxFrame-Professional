@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260608-007
+   Build: 20260608-008
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11026,9 +11026,18 @@ kbd {
   padding: var(--space-6) var(--space-8);
   margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-8));
   border-radius: var(--radius-sm);
-  transition: background .12s;
+  transition: background .12s, outline-color .12s;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }
-.checkpoint-row:hover .checkpoint-row-pick { background: var(--surface3); }
+/* v3.63.232 — amber outline on hover instead of gray fill. Matches the
+   "selectable thing" language used elsewhere in the app (active mode
+   pills, focused controls). The accent-dim tint is subtle enough not
+   to compete with the solid gold of the file preview below. */
+.checkpoint-row:hover .checkpoint-row-pick {
+  outline-color: var(--accent);
+  background: var(--accent-dim);
+}
 .checkpoint-row-text {
   display: flex; flex-direction: column; gap: 3px;
 }
