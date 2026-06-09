@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260608-004
+// Build: 20260608-005
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1164,6 +1164,26 @@ async function _refreshSaveCheckpointCurrentSummaries() {
     const cap = key[0].toUpperCase() + key.slice(1);
     const el = document.getElementById('saveCurrent' + cap);
     if (el) el.textContent = summaries[key];
+  }
+}
+
+// v3.63.229 — Bulk select-all / select-none for the active panel. Skips
+// disabled checkboxes (sections the file doesn't carry, in Restore mode).
+// Wired to the toolbar at the top of each panel.
+function checkpointSelectAll(mode) {
+  const prefix = mode === 'save' ? 'saveScope' : 'restoreScope';
+  for (const key of _CHECKPOINT_SCOPE_KEYS) {
+    const cap = key[0].toUpperCase() + key.slice(1);
+    const el = document.getElementById(prefix + cap);
+    if (el && !el.disabled) el.checked = true;
+  }
+}
+function checkpointSelectNone(mode) {
+  const prefix = mode === 'save' ? 'saveScope' : 'restoreScope';
+  for (const key of _CHECKPOINT_SCOPE_KEYS) {
+    const cap = key[0].toUpperCase() + key.slice(1);
+    const el = document.getElementById(prefix + cap);
+    if (el && !el.disabled) el.checked = false;
   }
 }
 
