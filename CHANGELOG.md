@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.230
+
+**Checkpoints screen uses the Project Bee**
+
+Build: `20260608-006`<br>
+Released: `2026-06-08`
+
+### Changed — section header art
+
+Swapped the Checkpoints screen header bee from Worker Bee to Project Bee &mdash; the screen is about project state portability, not the hive of reviewer AIs, so the Project Bee is the right thematic match.
+
+### Files Changed
+
+- Updated: `index.html` (Checkpoints `#screen-checkpoint` header image)
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.230 / 20260608-006 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.229
 
 **Checkpoints preview rows color-coded + Select all / Select none buttons**
