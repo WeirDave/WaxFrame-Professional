@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260608-002
+     Build: 20260608-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-002">
+  <meta name="waxframe-build" content="20260608-003">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.226">
+  <link rel="stylesheet" href="style.css?v=3.63.227">
 </head>
 <body class="helper-body">
 
@@ -1513,7 +1513,10 @@
       <ul>
         <li><strong>📏 Disable length guard?</strong> — fires when you flip the Length Guard from armed to off via the footer pill or the Settings toggle. Explains that rounds and convergence events will no longer be blocked when the document is out of length range.</li>
         <li><strong>📏 Re-arm length guard?</strong> — fires when you flip the Length Guard from off back to armed. Explains that blocking will resume.</li>
-        <li><strong>Checkpoint - Save</strong> — fires before you save a full checkpoint. Warns that the checkpoint may contain your document text, AI responses, API keys, license key, and debug traces, and asks you to store it somewhere private.</li>
+        <!-- v3.63.227 — The Checkpoint - Save warning modal was retired
+             when Save moved to its own screen. The screen IS the action
+             surface, so a pre-modal "are you sure" gate is no longer
+             needed. Suppression entry removed accordingly. -->
         <li><strong>💾 Save a checkpoint?</strong> (per-project) — fires once per project on first reach of the work screen. Per-project key derived from project name + version; see the Checkpoint Nudge block below for full semantics.</li>
         <li><strong>Switch to Server / Internet mode</strong> — informational warning that flipping modes hides the other side's AIs from the inventory view (keys preserved, switch back anytime).</li>
         <li><strong>Add reference doc mid-session?</strong> — informational warning that a new reference document takes effect on the NEXT round; past rounds keep their original snapshot.</li>
@@ -1537,7 +1540,7 @@
       <p>The first time you reach the work screen for a project — right after finishing the 5 setup screens and clicking <strong>Smoke the Hive</strong> — WaxFrame nudges you to save a checkpoint before you burn any tokens. The checkpoint captures your hive setup, project goal, reference material, and starting document, so if anything goes sideways during the run (a credit hiccup, an unexpected drift in the document, or a new direction you want to try without losing this one) you can restore the exact starting state.</p>
       <p>This modal carries a <em>Don't ask again for this project</em> checkbox, but the semantics are a little different from the four informational confirms above:</p>
       <ul>
-        <li><strong>💾 Checkpoint - Save</strong> — runs the existing Checkpoint - Save flow. If you have not dismissed the <em>Checkpoint - Save</em> warning, that fires next; otherwise the checkpoint saves immediately.</li>
+        <li><strong>💾 Checkpoint - Save</strong> — opens the Checkpoints screen in Save mode with the nine scope checkboxes (Project info, Reference Material, Starting Document, Session, AI list, Model picks, API keys, Builder, License) so you can pick which sections go in the file.</li>
         <li><strong>Not now</strong> (checkbox <em>unchecked</em>) — silent for the current session. If you launch into the same project again in a future browser session, you will see the nudge again.</li>
         <li><strong>Don't ask again</strong> (checkbox <em>checked</em>, then either button) — persists a per-project suppression. The nudge will not fire again for this project on this browser, regardless of which button you clicked. Both <em>Checkpoint - Save with checked</em> and <em>Not now with checked</em> persist the dismissal.</li>
       </ul>
@@ -1969,25 +1972,40 @@
     </div>
 
     <div class="wh-block" id="checkpoint-scope">
-      <div class="wh-block-title">Checkpoint - Save scope (share-safe via checkboxes)</div>
-      <p>The <strong>💾 Checkpoint - Save</strong> modal in the <strong>☰</strong> menu lets you tick which sections go in the checkpoint file. Six sections, each independently chooseable:</p>
+      <div class="wh-block-title">Checkpoints screen — 9 granular sections (Save and Restore)</div>
+      <p>As of v3.63.227, Save and Restore live on a dedicated <strong>Checkpoints</strong> screen with a mode toggle at the top. The screen exposes <strong>9 independent scope checkboxes</strong> grouped into 4 visual blocks (Project / Session / Hive / License). Each row labels the exact JSON fields it maps to so you can verify what's in the file against what the UI says is in it.</p>
+      <p><strong>Project</strong> (3 rows):</p>
       <ul>
-        <li><strong>Project</strong> — goal, reference material, length settings</li>
-        <li><strong>Session in progress</strong> — round history, working document, console transcript, notes</li>
-        <li><strong>Hive composition</strong> — which AIs are active, custom-AI configs, per-AI model selections (parent — gates the two below)</li>
-        <li><strong>API keys</strong> — the API keys for each AI in your hive (requires Hive)</li>
-        <li><strong>Builder selection</strong> — which AI is currently set as Builder (requires Hive)</li>
-        <li><strong>License</strong> — your WaxFrame Pro license key (default on for self-portability; untick when sharing)</li>
+        <li><strong>Project info</strong> — name, version, goal fields (doc type, audience, outcome, scope, tone, notes), length settings, export mask, doc tab. <code>JSON: projectName, projectVersion, goalDocType, goalAudience, goalOutcome, goalScope, goalTone, goalNotes, exportMask, lengthMode, lengthLimit, lengthMin, lengthUnit, docTab</code></li>
+        <li><strong>Reference Material</strong> — uploaded reference documents attached on Setup 3. <code>JSON: referenceDocs</code></li>
+        <li><strong>Starting Document</strong> — the pasted starting document from Setup 4. <code>JSON: pastedDocument</code></li>
       </ul>
+      <p><strong>Session</strong> (1 row):</p>
+      <ul>
+        <li><strong>Session in progress</strong> — round history, current working document, live console transcript, notes, debug ring buffer. <code>JSON: IDB_SESSION.{history, docText, consoleHTML, notes, standingNotes, ringBuffer, lastFailure}</code></li>
+      </ul>
+      <p><strong>Hive</strong> (4 rows — each independently tickable, no parent/child gating):</p>
+      <ul>
+        <li><strong>AI list</strong> — which default AIs are active, custom-AI configs, hive mode (internet vs server). Does NOT include model picks or keys. <code>JSON: activeAIIds, knownDefaultIds, hiveMode, customAIs, customAIConfigs</code></li>
+        <li><strong>Model picks</strong> — per-AI model overrides (e.g. Claude → claude-opus-4-5-20251101). Separated from AI list so you can bring a hive composition forward without overriding the receiver's local model picks (e.g. work Sonnet vs home Opus). <code>JSON: models</code></li>
+        <li><strong>API keys</strong> — the API key string saved for each AI. <code>JSON: keys</code></li>
+        <li><strong>Builder selection</strong> — which AI is currently set as Builder. <code>JSON: builder</code></li>
+      </ul>
+      <p><strong>License</strong> (1 row):</p>
+      <ul>
+        <li><strong>License key</strong> — your WaxFrame Pro license. Default ON for Save (self-portability), default OFF for Restore (if you already have a license locally, you don't need to re-import it). <code>JSON: LS_LICENSE</code></li>
+      </ul>
+      <p><strong>Save mode</strong> shows what's actually in your live state right now in a Current column next to each row, so you preview what's about to land in the file. <strong>Restore mode</strong> shows Current next to Checkpoint, so you see exactly what each picked section would replace.</p>
       <p>Recipes for common cases:</p>
       <ul>
-        <li><strong>Self-backup before a risky round</strong> — tick everything. Saves your full state for restore on the same machine.</li>
-        <li><strong>Portable project across your own machines</strong> (work → home) — tick Project + Session + License. Leave Hive/Keys/Builder unticked so the home machine's hive isn't replaced by the work machine's hive (e.g. with an internal AI gateway unreachable at home).</li>
-        <li><strong>Hand a project to a coworker who has their own license</strong> — tick Project + Session + Hive + Builder. Untick Keys + License. The coworker gets your project and hive lineup, uses their own keys and license to continue.</li>
-        <li><strong>Public share-safe</strong> (forum, support ticket, archive without secrets) — tick Project + Session only. No hive, no keys, no license — nothing sensitive leaves the file.</li>
+        <li><strong>Self-backup before a risky round</strong> — tick everything. Full state restorable on the same machine.</li>
+        <li><strong>Portable project across your own machines</strong> (work → home) — tick Project info + Reference Material + Starting Document + Session + License. Leave the four Hive rows unticked so the home hive isn't replaced.</li>
+        <li><strong>Bring the AI lineup forward without overriding model picks</strong> — tick AI list, leave Model picks unticked. Useful when work and home use different Claude tiers (Sonnet vs Opus).</li>
+        <li><strong>Hand a project to a coworker who has their own license</strong> — tick Project info + Reference Material + Starting Document + Session + AI list + Builder. Untick Model picks, Keys, License.</li>
+        <li><strong>Public share-safe</strong> (forum, support ticket, archive without secrets) — tick Project info + Reference Material + Starting Document + Session only. No hive, no keys, no license — nothing sensitive leaves the file.</li>
       </ul>
-      <p>When the file is restored, WaxFrame honors the scope: unticked sections in the file leave the receiver's local state untouched. A toast on import lists exactly what was restored vs kept local. (Older format-v4 checkpoints from before v3.63.130 use the prior all-or-nothing semantic — they overwrite local state with whatever's in the file. Format v5 is selective; v4 and prior are not.)</p>
-      <p>Quick rule of thumb: <strong>Checkpoint - Save with everything ticked</strong> for your own offline copy (sensitive — keep private), <strong>untick Keys + License</strong> when sharing with anyone else, <strong>Diagnostic Bundle</strong> for sending to support only (export-only, cannot restore).</p>
+      <p>When the file is restored, WaxFrame splices granularly: ticked sub-sections overwrite their local fields; everything else stays byte-for-byte. A toast on import lists exactly what was restored vs kept local. (Older format-v5 checkpoints from v3.63.130–226 are still importable — their 6-key scope maps onto the new 9-key model by inspecting which sub-fields the file actually carries. Format-v4 and earlier carry no scope; the diff modal shows what's present in the file and lets you pick row by row.)</p>
+      <p>Quick rule of thumb: <strong>save with everything ticked</strong> for your own offline copy (sensitive — keep private), <strong>untick Keys + License</strong> when sharing with anyone else, <strong>Diagnostic Bundle</strong> for sending to support only (export-only, cannot restore).</p>
     </div>
 
     <div class="wh-block">
@@ -2084,13 +2102,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.226"></script>
-<script src="lib/docx.min.js?v=3.63.226"></script>
-<script src="js/docx-export.js?v=3.63.226"></script>
-<script src="js/nav-helper.js?v=3.63.226"></script>
-<script src="js/license-helper.js?v=3.63.226"></script>
-<script src="js/version.js?v=3.63.226"></script>
-<script src="js/docs-scrollspy.js?v=3.63.226"></script>
+<script src="js/theme.js?v=3.63.227"></script>
+<script src="lib/docx.min.js?v=3.63.227"></script>
+<script src="js/docx-export.js?v=3.63.227"></script>
+<script src="js/nav-helper.js?v=3.63.227"></script>
+<script src="js/license-helper.js?v=3.63.227"></script>
+<script src="js/version.js?v=3.63.227"></script>
+<script src="js/docs-scrollspy.js?v=3.63.227"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

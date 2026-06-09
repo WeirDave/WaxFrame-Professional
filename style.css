@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260608-002
+   Build: 20260608-003
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10901,81 +10901,183 @@ kbd {
 .finish-modal-title-goal   { margin-bottom: var(--space-6); }
 .finish-modal-cancel-accent { border-color: var(--accent); color: var(--accent); }
 
-/* ── Save Checkpoint modal (v3.63.130 — selective EXPORT) ── */
-.save-checkpoint-modal { max-width: var(--modal-w-base); text-align: left; }
-.checkpoint-scope-list {
-  display: flex; flex-direction: column; gap: var(--space-6);
-  padding: var(--space-14); background: var(--surface2);
-  border: 1px solid var(--border2); border-radius: var(--radius-sm);
-  margin: var(--space-14) 0; max-height: 55vh; overflow-y: auto;
-  box-sizing: border-box;
-}
-.checkpoint-scope-row {
-  display: flex; align-items: flex-start; gap: var(--space-10);
-  padding: var(--space-8) var(--space-6); border-radius: var(--radius-sm);
-  cursor: pointer; transition: background .12s;
-}
-.checkpoint-scope-row:hover { background: var(--surface3); }
-.checkpoint-scope-row input[type="checkbox"] {
-  margin-top: 3px; flex: none; cursor: pointer;
-  width: 16px; height: 16px;
-}
-.checkpoint-scope-row input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .4; }
-.checkpoint-scope-row:has(input:disabled) { cursor: not-allowed; opacity: .55; }
-.checkpoint-scope-row-child { padding-left: var(--space-24); }
-.checkpoint-scope-text { display: flex; flex-direction: column; gap: 2px; }
-.checkpoint-scope-name { font-size: var(--fs-13); color: var(--text); font-weight: 600; }
-.checkpoint-scope-desc { font-size: var(--fs-12); color: var(--text-dim); }
+/* ── Checkpoints screen (v3.63.227 — promoted from modal to screen) ──
+   Mode toggle pills, per-mode panels, 9 scope rows organized into 4 visual
+   groups (Project / Session / Hive / License). Save mode uses a 2-column
+   row layout (pick + Current). Restore mode uses a 3-column layout (pick +
+   Current + Checkpoint), enabled via the .checkpoint-row-diff modifier. */
 
-/* ── Restore Checkpoint modal (v3.63.225 — diff-and-pick UI) ──
-   Three-column grid per row: pick (checkbox + label) | Current | Checkpoint.
-   The header row uses the same grid template so columns line up. Rows
-   inherit hover + disabled styling from the save-modal scope rows. */
-.restore-checkpoint-modal { max-width: var(--modal-w-xl, 900px); text-align: left; }
-.restore-diff-table {
-  display: flex; flex-direction: column; gap: var(--space-4);
-  padding: var(--space-14); background: var(--surface2);
-  border: 1px solid var(--border2); border-radius: var(--radius-sm);
-  margin: var(--space-14) 0; max-height: 60vh; overflow-y: auto;
-  box-sizing: border-box;
+.checkpoint-mode-toggle {
+  display: flex; gap: var(--space-8);
+  margin: 0 0 var(--space-16) 0;
 }
-.restore-diff-hdr,
-.restore-diff-row {
-  display: grid;
-  grid-template-columns: minmax(220px, 1.4fr) 1fr 1fr;
-  gap: var(--space-10);
-  align-items: start;
-  padding: var(--space-8) var(--space-6);
+.checkpoint-mode-pill {
+  flex: 1;
+  padding: var(--space-10) var(--space-16);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md, 10px);
+  font-size: var(--fs-14);
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.checkpoint-mode-pill:hover { background: var(--surface3); color: var(--text); }
+.checkpoint-mode-pill.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.checkpoint-panel { display: block; }
+.checkpoint-panel-help {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0 0 var(--space-16) 0;
+}
+
+/* Trust warning shown in the Restore intro state. */
+.checkpoint-trust-warning {
+  padding: var(--space-14) var(--space-16);
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md, 10px);
+  margin: 0 0 var(--space-16) 0;
+}
+.checkpoint-trust-title {
+  margin: 0 0 var(--space-8) 0;
+  font-size: var(--fs-16);
+  color: var(--accent);
+  font-weight: 700;
+}
+.checkpoint-trust-warning p {
+  margin: 0;
+  font-size: var(--fs-13);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* Restore-mode file-meta header line shown above the diff rows. */
+.checkpoint-restore-file-meta {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+  margin: 0 0 var(--space-14) 0;
+  padding: var(--space-10) var(--space-12);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
-  box-sizing: border-box;
+  line-height: 1.5;
 }
-.restore-diff-hdr {
+
+/* Scope row groups — visual grouping under a section heading. */
+.checkpoint-row-group {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md, 10px);
+  margin: 0 0 var(--space-14) 0;
+  padding: var(--space-10) var(--space-12);
+}
+.checkpoint-row-group-label {
   font-size: var(--fs-12);
   color: var(--text-dim);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: var(--space-4) var(--space-4) var(--space-8);
   border-bottom: 1px solid var(--border2);
-  padding-bottom: var(--space-6);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-6);
 }
-.restore-diff-hdr-cell { padding: 0 var(--space-4); }
-.restore-diff-row { cursor: pointer; transition: background .12s; }
-.restore-diff-row:hover { background: var(--surface3); }
-.restore-diff-row input[type="checkbox"] {
+/* Diff-mode group header — 3-column layout to align with the rows below. */
+.checkpoint-row-group-label-diff {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.6fr) 1fr 1fr;
+  gap: var(--space-10);
+  align-items: end;
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: var(--space-4) var(--space-4) var(--space-8);
+  border-bottom: 1px solid var(--border2);
+  margin-bottom: var(--space-6);
+}
+.checkpoint-row-group-label-diff .checkpoint-col-label {
+  font-size: var(--fs-11);
+  letter-spacing: 0.05em;
+}
+
+/* Scope row — Save mode (2 columns: pick + Current). */
+.checkpoint-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.6fr) 1fr;
+  gap: var(--space-10);
+  align-items: start;
+  padding: var(--space-10) var(--space-6);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .12s;
+  border-bottom: 1px dashed var(--border2);
+}
+.checkpoint-row:last-child { border-bottom: none; }
+.checkpoint-row:hover { background: var(--surface3); }
+.checkpoint-row input[type="checkbox"] {
   margin-top: 3px; flex: none; cursor: pointer;
   width: 16px; height: 16px;
 }
-.restore-diff-row input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .4; }
-.restore-diff-row:has(input:disabled) { cursor: not-allowed; opacity: .55; }
-.restore-diff-row-child .restore-diff-pick { padding-left: var(--space-24); }
-.restore-diff-pick {
+.checkpoint-row input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .4; }
+.checkpoint-row:has(input:disabled) { cursor: not-allowed; opacity: .55; }
+
+/* Restore mode: switch to 3 columns. */
+.checkpoint-row.checkpoint-row-diff {
+  grid-template-columns: minmax(260px, 1.6fr) 1fr 1fr;
+}
+
+.checkpoint-row-pick {
   display: flex; align-items: flex-start; gap: var(--space-10);
 }
-.restore-diff-cell {
-  font-size: var(--fs-12);
+.checkpoint-row-text {
+  display: flex; flex-direction: column; gap: 3px;
+}
+.checkpoint-row-name {
+  font-size: var(--fs-14);
   color: var(--text);
-  padding: 2px var(--space-4);
+  font-weight: 600;
+}
+.checkpoint-row-desc {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.checkpoint-row-json {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px var(--space-6);
+  background: var(--surface3);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  color: var(--text-dim);
+  word-break: break-all;
+}
+.checkpoint-row-cur,
+.checkpoint-row-ck {
+  font-size: var(--fs-13);
+  color: var(--text);
+  padding: 4px var(--space-6);
   word-break: break-word;
-  line-height: 1.4;
+  line-height: 1.45;
+  align-self: center;
+}
+
+/* Action button row at the bottom of each panel. */
+.checkpoint-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-10);
+  margin: var(--space-16) 0 var(--space-8);
 }
 
 /* ── Project goal modal ── */
