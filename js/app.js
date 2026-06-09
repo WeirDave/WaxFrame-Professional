@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260608-017
+// Build: 20260608-018
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260608-017';         // build stamp — update each session
+const BUILD       = '20260608-018';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4344,9 +4344,9 @@ function confirmSaveTemplate() {
     if (!hasSessionContent) return;
     if (typeof wfConfirm !== 'function' || typeof backupSession !== 'function') return;
     const alsoBackup = await wfConfirm(
-      'Also save a session backup?',
-      "Your template captured the setup recipe (project goal, hive lineup, reference material). Your current round history and working document are NOT in the template — they only live in this browser. Save a session backup now so you can restore this exact session later if anything drifts.",
-      { okText: '💾 Save Backup', cancelText: 'Not now' }
+      'Also save a checkpoint?',
+      "Your template captured the setup recipe (project goal, hive lineup, reference material). Your current round history and working document are NOT in the template — they only live in this browser. Save a checkpoint now so you can restore this exact session later if anything drifts.",
+      { okText: '💾 Save Checkpoint', cancelText: 'Not now' }
     );
     if (alsoBackup) backupSession();
   }, 800);
