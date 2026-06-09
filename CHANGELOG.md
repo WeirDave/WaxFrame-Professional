@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.244
+
+**Edit-template toast aligned with the Template - X naming pattern**
+
+Build: `20260608-020`<br>
+Released: `2026-06-08`
+
+### Changed — edit-template toast no longer reads "Update Template" (verb-noun); matches "Template - Update"
+
+When you start editing a custom template, a toast at the bottom-right reads "✏️ Editing template — change the setup, then [button name]". The button text was renamed from "Update Template" to "Template - Update" in v3.63.234 to follow the noun-first menu pattern, but this toast still pointed at the old name. Updated so the toast and the actual button match.
+
+### Files Changed
+
+- Updated: `js/app.js` &mdash; `editCustomTemplate()` toast text
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.244 / 20260608-020 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.243
 
 **Code-comment & dead-CSS cleanup**
