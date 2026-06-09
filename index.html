@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260608-014
+     Build: 20260608-015
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-014">
+  <meta name="waxframe-build" content="20260608-015">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.238">
+  <link rel="stylesheet" href="style.css?v=3.63.239">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.238",
+    "softwareVersion": "3.63.239",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -140,7 +140,7 @@
          The startQuickStartFromWelcome() helper and .pitch-quickstart-btn
          CSS were deleted at the same time. -->
     <div class="welcome-pitch">
-      <p><button class="goal-info-btn welcome-info-inline welcome-info-lead" onclick="document.getElementById('infoHowItWorksModal').classList.add('active')" title="How the hive works"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>WaxFrame puts multiple AI assistants to work on your document. <strong>Start from scratch</strong> and we'll generate a draft — or <strong>bring an existing document</strong> to refine. Either way, the <strong>Builder</strong> writes and revises while the <strong>Reviewers</strong> give specific, numbered suggestions. Round by round it improves; you're done when <strong>all your reviewers agree</strong> the document is at its best. Your free trial includes <strong>3 rounds</strong> on purpose — the <strong>Chocolate Chip Cookies</strong> template (Menu → 📋 Templates) converged by round 3 in every one of 11 test runs while we were sizing the trial, so you can see the whole cycle start to finish before spending a dime.</p>
+      <p><button class="goal-info-btn welcome-info-inline welcome-info-lead" onclick="document.getElementById('infoHowItWorksModal').classList.add('active')" title="How the hive works"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>WaxFrame puts multiple AI assistants to work on your document. <strong>Start from scratch</strong> and we'll generate a draft — or <strong>bring an existing document</strong> to refine. Either way, the <strong>Builder</strong> writes and revises while the <strong>Reviewers</strong> give specific, numbered suggestions. Round by round it improves; you're done when <strong>all your reviewers agree</strong> the document is at its best. Your free trial includes <strong>3 rounds</strong> on purpose — the <strong>Chocolate Chip Cookies</strong> template (Menu → 📋 Template - Use) converged by round 3 in every one of 11 test runs while we were sizing the trial, so you can see the whole cycle start to finish before spending a dime.</p>
     </div>
 
     <!-- v3.63.146 — Cost-reality callout. Defuses "API key sounds expensive"
@@ -3356,23 +3356,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.238';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.239';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.238"></script>
-<script src="lib/jszip.min.js?v=3.63.238"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.238"></script>
-<script src="js/version.js?v=3.63.238"></script>
-<script src="js/storage.js?v=3.63.238"></script>
-<script src="js/theme.js?v=3.63.238"></script>
-<script src="js/audio.js?v=3.63.238"></script>
-<script src="js/scenes.js?v=3.63.238"></script>
-<script src="js/wf-debug.js?v=3.63.238"></script>
-<script src="js/provider-models.js?v=3.63.238"></script>
-<script src="js/api.js?v=3.63.238"></script>
-<script src="js/templates.js?v=3.63.238"></script>
-<script src="js/api-links.js?v=3.63.238"></script>
-<script src="js/app.js?v=3.63.238"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.239"></script>
+<script src="lib/jszip.min.js?v=3.63.239"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.239"></script>
+<script src="js/version.js?v=3.63.239"></script>
+<script src="js/storage.js?v=3.63.239"></script>
+<script src="js/theme.js?v=3.63.239"></script>
+<script src="js/audio.js?v=3.63.239"></script>
+<script src="js/scenes.js?v=3.63.239"></script>
+<script src="js/wf-debug.js?v=3.63.239"></script>
+<script src="js/provider-models.js?v=3.63.239"></script>
+<script src="js/api.js?v=3.63.239"></script>
+<script src="js/templates.js?v=3.63.239"></script>
+<script src="js/api-links.js?v=3.63.239"></script>
+<script src="js/app.js?v=3.63.239"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -3397,7 +3397,7 @@ function wfMobileShareToast(msg) {
           <p class="about-modal-tagline">Many minds, one refined result.</p>
           <div class="about-version-row">
             <span class="about-version-pill"><span id="aboutVersion">v3.63.224 Pro</span></span>
-            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-014</strong></span>
+            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-015</strong></span>
           </div>
         </div>
       </div>
@@ -3406,7 +3406,7 @@ function wfMobileShareToast(msg) {
     <div class="about-modal-body">
       <p class="about-modal-intro">Browser-native document refinement powered by your own AI keys, your hive configuration, and a local-first workspace.</p>
       <div class="about-info-stack">
-        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-014</strong></div></div>
+        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-015</strong></div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Stack</h3><div class="wf-card-body">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">License</h3><div class="wf-card-body">AGPL-3.0 — open source, free to use and modify with attribution.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Legal</h3><div class="wf-card-body"><a href="privacy.html" target="_blank" rel="noopener noreferrer" class="link-accent">Privacy Policy</a> · <a href="terms.html" target="_blank" rel="noopener noreferrer" class="link-accent">Terms of Use</a></div></div>
@@ -3456,8 +3456,8 @@ function wfMobileShareToast(msg) {
     <div class="nav-divider"></div>
     <details class="nav-section">
       <summary class="nav-section-label">Tools</summary>
-      <button title="Restore from a previously-saved WaxFrame checkpoint file — diff-and-pick which sections to bring forward" class="nav-item" onclick="importSession()">📂 Checkpoint - Restore</button>
-      <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Checkpoint - Save</button>
+      <button title="Open the Checkpoints screen in Restore mode — pick a checkpoint file and choose which of the nine sections to bring forward; unticked sections keep their current local values" class="nav-item" onclick="importSession()">📂 Checkpoint - Restore</button>
+      <button title="Open the Checkpoints screen in Save mode — pick which of the nine sections (project info, reference material, starting document, session, AI list, model picks, API keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Checkpoint - Save</button>
       <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>
       <!-- v3.63.233 — Template entries renamed to mirror the Checkpoint
            pattern (Template - Save / Template - Use). Grouped adjacent in
