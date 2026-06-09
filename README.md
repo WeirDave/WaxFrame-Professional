@@ -143,10 +143,6 @@ Three modes:
 
 ### 5. Smoke the hive
 
-<p align="center">
-  <img src="screenshots/screenshot_building_dark.png" width="820" alt="Work screen — the Builder synthesizing a round">
-</p>
-
 Every reviewer reads the document simultaneously and returns structured suggestions. The Builder evaluates them, merges what makes sense, rewrites the document in full, and produces the next version. The Live Console streams what's happening — which AI is sending, responding, succeeding, or failing — with timestamps and response previews.
 
 ### 6. Resolve conflicts
@@ -163,10 +159,6 @@ When reviewers disagree, WaxFrame surfaces a conflict card instead of silently a
 The conflicts panel always shows the current round only — it isn't a project-wide completion indicator. The document is "done" when the hive reaches convergence: a majority of reviewers stop proposing changes.
 
 ### 7. Iterate until convergence
-
-<p align="center">
-  <img src="screenshots/screenshot_convergence_dark.png" width="820" alt="Hive Approved — majority convergence reached">
-</p>
 
 Keep running rounds with **Smoke the Hive** until reviewer disagreement drops and the document stabilizes. There's no forced endpoint — you decide when it's done.
 
