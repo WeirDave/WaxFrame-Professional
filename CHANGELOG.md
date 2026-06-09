@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.236
+
+**Docs sidebar fixes — Settings goes to the app, License Key vestige removed**
+
+Build: `20260608-012`<br>
+Released: `2026-06-08`
+
+### Fixed — "⚙ Settings" in docs sidebar opens the actual app settings
+
+Across 13 docs pages (terms, privacy, manuals, landing pages, etc.) the "⚙ Settings" sidebar entry was pointing at `waxframe-user-manual.html#settings` &mdash; a docs section that *talks about* settings rather than the actual app settings screen. Repointed to `index.html#settings`, which the app handles by opening the Settings screen directly.
+
+### Fixed — "🔑 License Key" entry no longer pops a re-entry modal for licensed users
+
+The same docs sidebars had a `🔑 License Key` button under a "Tools" mini-group that unconditionally fired `showLicenseModal()` &mdash; the modal that asks for a license key. Clicking it while already licensed was confusing: it looked like the license had expired or been forgotten. Removed the entry (and its now-empty Tools mini-group) from all docs pages; the license can still be managed under Settings &rarr; Account & License inside the app. `showLicenseModal()` itself stays in `license-helper.js` for its legitimate uses (the licensed-badge click + auto-trigger when no valid key is stored).
+
+### Fixed — duplicate "Account & License" entry on the user manual
+
+The user manual sidebar had both `⚙ Settings` (was self-anchoring) and `🔑 Account & License` (pointing at the app). With Settings now also pointing at the app, the two would be duplicates. Removed the Account & License entry.
+
+### Files Changed
+
+- Updated: `terms.html`, `privacy.html`, `ai-api-pricing.html`, `api-details.html`, `document-playbooks.html`, `templates.html`, `what-are-tokens.html`, `hive-profiles.html`, `prompt-editor.html`, `help.html`, `waxframe-user-manual.html`, `ai-business-proposal.html`, `ai-cover-letter-editor.html`, `ai-resume-review.html` &mdash; sidebar repointed
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.236 / 20260608-012 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.235
 
 **Round History modal docks to the top of the viewport like every other modal**
