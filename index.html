@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260608-015
+     Build: 20260608-016
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-015">
+  <meta name="waxframe-build" content="20260608-016">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.239">
+  <link rel="stylesheet" href="style.css?v=3.63.240">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.239",
+    "softwareVersion": "3.63.240",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2758,22 +2758,30 @@
 
       <p><strong>Navigation</strong></p>
       <div class="goal-info-row">
-        <span class="info-label">Home + Setup 1–5 + Working Console + Settings</span>
+        <span class="info-label">Home + Setup 1–4 + Working Console + Settings</span>
         <span class="goal-info-desc">Direct jumps to every screen in the flow. Useful for going back to fix something — change the Builder, add another reviewer, edit the project goal, or manage preferences and license details — without rewinding through the rest of the setup. The active screen is highlighted so you always know where you are.</span>
       </div>
 
       <p><strong>Tools</strong></p>
       <div class="goal-info-row">
-        <span class="info-label">⏱ Round History</span>
-        <span class="goal-info-desc">Browse every completed round in the current session — see the document at each round, every reviewer response, the Builder's resolutions, and any USER DECISION blocks. Export the full transcript as a single file from here.</span>
+        <span class="info-label">📂 Checkpoint - Restore</span>
+        <span class="goal-info-desc">Opens the Checkpoints screen in Restore mode. After choosing a checkpoint file you'll see a Current vs Checkpoint diff with a checkbox per section (Project info, Reference Material, Starting Document, Session, AI list, Model picks, API keys, Builder, License). Tick only what you want to bring forward; unticked sections keep their current local values byte-for-byte. Pull yesterday's project setup without overwriting today's keys, or bring a checkpoint's AI list across machines while keeping local model picks intact.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">💾 Checkpoint - Save</span>
         <span class="goal-info-desc">Opens the Checkpoints screen in Save mode. Nine independent checkboxes pick which sections go in the file — Project info, Reference Material, Starting Document, Session in progress, AI list, Model picks, API keys, Builder selection, License. Each row shows what's actually in your live state right now and lists the exact JSON fields included. Recommended before any risky operation or experimental round, and as a periodic safety net on long projects.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">📂 Checkpoint - Restore</span>
-        <span class="goal-info-desc">Opens the Checkpoints screen in Restore mode. After choosing a checkpoint file you'll see a Current vs Checkpoint diff with a checkbox per section (Project info, Reference Material, Starting Document, Session, AI list, Model picks, API keys, Builder, License). Tick only what you want to bring forward; unticked sections keep their current local values byte-for-byte. Pull yesterday's project setup without overwriting today's keys, or bring a checkpoint's AI list across machines while keeping local model picks intact.</span>
+        <span class="info-label">⏱ Round History</span>
+        <span class="goal-info-desc">Browse every completed round in the current session — see the document at each round, every reviewer response, the Builder's resolutions, and any USER DECISION blocks. Export the full transcript as a single file from here.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">⭐ Template - Save</span>
+        <span class="goal-info-desc">Save your current project setup (goal fields, reference material, starting document, length guard, hive + Builder) as a reusable named template. Future projects can apply it from the Template gallery to skip retyping the same setup. Round history is NOT saved — templates are recipes, not snapshots.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">📋 Template - Use</span>
+        <span class="goal-info-desc">Opens the Template Gallery — pre-built templates (Quick Start, Cover Letter, Resume, RFP, etc.) plus any custom templates you've saved. Applying one populates your Project fields with proven starting content for that document type.</span>
       </div>
       <p><strong>Settings</strong></p>
       <div class="goal-info-row">
@@ -2781,7 +2789,11 @@
         <span class="goal-info-desc">Manage your WaxFrame Professional license in Settings — enter, replace, remove, or check status. Your trial round count is preserved across license changes, so removing a key can't escape an expired trial.</span>
       </div>
 
-      <p><strong>Documentation</strong></p>
+      <p><strong>Help &amp; Support</strong></p>
+      <div class="goal-info-row">
+        <span class="info-label">💰 AI API Pricing</span>
+        <span class="goal-info-desc">Current per-token costs for every default AI provider with cost-per-round estimates so you can predict spend before a project. Updated as providers change their rates.</span>
+      </div>
       <div class="goal-info-row">
         <span class="info-label">🔑 API Key Guide</span>
         <span class="goal-info-desc">How to get an API key from each of the six default providers (Anthropic, OpenAI, Google, Mistral, xAI, Perplexity), with direct billing links and the exact paid-plan tier you need for the Builder role.</span>
@@ -2789,6 +2801,14 @@
       <div class="goal-info-row">
         <span class="info-label">📋 Document Playbooks</span>
         <span class="goal-info-desc">Worked examples of WaxFrame on common document types — résumés, job descriptions, business proposals, thank-you letters, and more — with the exact Project Goal and Notes payload that converged the document, plus measured round counts and wall-clock times where available.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">🛟 Help</span>
+        <span class="goal-info-desc">Troubleshooting guide plus the one-click Diagnostic Bundle export — strips your API keys and license automatically, then gives you a pre-filled GitHub issue link so support has everything needed to reproduce a bug.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">🐝 Hive Profiles</span>
+        <span class="goal-info-desc">Documentation for the per-AI model recipe system — save your tuned hive setup as a named profile, switch between profiles with one click, and understand the cheap/balanced/thinker/fast tiering each profile picks across.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">📖 User Manual</span>
@@ -2803,6 +2823,16 @@
       <div class="goal-info-row">
         <span class="info-label">✏️ Prompt Editor</span>
         <span class="goal-info-desc">View and override the exact prompts WaxFrame sends to reviewers and the Builder. Most users never need it, but if you're tuning behavior or debugging an oddly-behaved AI, this is where you'd look.</span>
+      </div>
+
+      <p><strong>Legal</strong></p>
+      <div class="goal-info-row">
+        <span class="info-label">🛡️ Privacy Policy</span>
+        <span class="goal-info-desc">How WaxFrame handles your data — short version: it stores everything in your browser (IndexedDB and localStorage), never on a server, and sends your document text only to the AI providers whose keys you configured. No tracking, no analytics.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">📜 Terms of Use</span>
+        <span class="goal-info-desc">The legal terms covering use of the WaxFrame software and waxframe.com site. Short and plain-language.</span>
       </div>
 
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Documentation pages open in new browser tabs — your in-progress WaxFrame session won't be disturbed. The Menu also has an <strong>ℹ️ About</strong> button at the top with credits, build info, and license details.</p>
@@ -3356,23 +3386,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.239';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.240';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.239"></script>
-<script src="lib/jszip.min.js?v=3.63.239"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.239"></script>
-<script src="js/version.js?v=3.63.239"></script>
-<script src="js/storage.js?v=3.63.239"></script>
-<script src="js/theme.js?v=3.63.239"></script>
-<script src="js/audio.js?v=3.63.239"></script>
-<script src="js/scenes.js?v=3.63.239"></script>
-<script src="js/wf-debug.js?v=3.63.239"></script>
-<script src="js/provider-models.js?v=3.63.239"></script>
-<script src="js/api.js?v=3.63.239"></script>
-<script src="js/templates.js?v=3.63.239"></script>
-<script src="js/api-links.js?v=3.63.239"></script>
-<script src="js/app.js?v=3.63.239"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.240"></script>
+<script src="lib/jszip.min.js?v=3.63.240"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.240"></script>
+<script src="js/version.js?v=3.63.240"></script>
+<script src="js/storage.js?v=3.63.240"></script>
+<script src="js/theme.js?v=3.63.240"></script>
+<script src="js/audio.js?v=3.63.240"></script>
+<script src="js/scenes.js?v=3.63.240"></script>
+<script src="js/wf-debug.js?v=3.63.240"></script>
+<script src="js/provider-models.js?v=3.63.240"></script>
+<script src="js/api.js?v=3.63.240"></script>
+<script src="js/templates.js?v=3.63.240"></script>
+<script src="js/api-links.js?v=3.63.240"></script>
+<script src="js/app.js?v=3.63.240"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -3397,7 +3427,7 @@ function wfMobileShareToast(msg) {
           <p class="about-modal-tagline">Many minds, one refined result.</p>
           <div class="about-version-row">
             <span class="about-version-pill"><span id="aboutVersion">v3.63.224 Pro</span></span>
-            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-015</strong></span>
+            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-016</strong></span>
           </div>
         </div>
       </div>
@@ -3406,7 +3436,7 @@ function wfMobileShareToast(msg) {
     <div class="about-modal-body">
       <p class="about-modal-intro">Browser-native document refinement powered by your own AI keys, your hive configuration, and a local-first workspace.</p>
       <div class="about-info-stack">
-        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-015</strong></div></div>
+        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-016</strong></div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Stack</h3><div class="wf-card-body">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">License</h3><div class="wf-card-body">AGPL-3.0 — open source, free to use and modify with attribution.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Legal</h3><div class="wf-card-body"><a href="privacy.html" target="_blank" rel="noopener noreferrer" class="link-accent">Privacy Policy</a> · <a href="terms.html" target="_blank" rel="noopener noreferrer" class="link-accent">Terms of Use</a></div></div>
