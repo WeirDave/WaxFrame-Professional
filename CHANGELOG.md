@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.237
+
+**Audit pass: orphan CSS removed, manual nav cleanup, broken anchor fixed**
+
+Build: `20260608-013`<br>
+Released: `2026-06-08`
+
+### Changed — three orphan CSS rules removed
+
+`.save-template-actions`, `.save-template-sub`, and `.save-template-note` were left in `style.css` after the Template - Save / Save Hive Profile modal chrome was standardized in v3.63.234 (those modals now use the shared `.finish-modal-msg` and `.finish-modal-footer-btns` rules). The leftover rules were defined but not referenced from any HTML or JS &mdash; pure dead weight. Removed with a comment in their place pointing at the v3.63.234 standardization commit for archaeology.
+
+### Fixed — user manual sidebar had an empty "Tools" mini-group + missing "Support" label
+
+After the docs-sidebar fix in v3.63.236 the user manual was left with a `<div class="nav-section-label">Tools</div>` followed immediately by the next divider (no items between them), and the Buy WaxFrame Pro link was floating without its "Support" label. Restored the Support label and dropped the empty Tools group so the manual sidebar matches the other 13 docs pages.
+
+### Fixed — broken `#step1-status` anchor in user manual
+
+A "see the status bar block for why 2 vs 3 matters" link in Step 1 pointed at `#step1-status`, but no element on the page carried that ID. Added `id="step1-status"` to the "The status bar — knowing when you are ready" block on Step 1.
+
+### Files Changed
+
+- Updated: `style.css` &mdash; three orphan `.save-template-*` rules deleted
+- Updated: `waxframe-user-manual.html` &mdash; empty Tools group dropped, Support label restored, `#step1-status` anchor added
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.237 / 20260608-013 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.236
 
 **Docs sidebar fixes — Settings goes to the app, License Key vestige removed**
