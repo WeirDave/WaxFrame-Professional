@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260608-003
+     Build: 20260608-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-003">
+  <meta name="waxframe-build" content="20260608-004">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.227">
+  <link rel="stylesheet" href="style.css?v=3.63.228">
 </head>
 <body class="helper-body">
 
@@ -136,10 +136,11 @@
         <a href="#step5"  class="doc-sidebar-link">④ Setup 4 — Starting Document</a>
         <a href="#step6"  class="doc-sidebar-link">⑤ Step 5 — Launch WaxFrame</a>
         <a href="#step7"  class="doc-sidebar-link">⑥ Step 6 — The Work Screen</a>
-        <a href="#step8"  class="doc-sidebar-link">⑦ Step 7 — Run Your First Round</a>
-        <a href="#step9"  class="doc-sidebar-link">⑧ Step 8 — Review &amp; Resolve</a>
-        <a href="#step10" class="doc-sidebar-link">⑨ Step 9 — Run More Rounds</a>
-        <a href="#step11" class="doc-sidebar-link">⑩ Step 10 — Export &amp; Finish</a>
+        <a href="#step-checkpoint" class="doc-sidebar-link">⑦ Step 7 — Save Your First Checkpoint</a>
+        <a href="#step8"  class="doc-sidebar-link">⑧ Step 8 — Run Your First Round</a>
+        <a href="#step9"  class="doc-sidebar-link">⑨ Step 9 — Review &amp; Resolve</a>
+        <a href="#step10" class="doc-sidebar-link">⑩ Step 10 — Run More Rounds</a>
+        <a href="#step11" class="doc-sidebar-link">⑪ Step 11 — Export &amp; Finish</a>
 
         <div class="doc-sidebar-category">Configuration</div>
         <a href="#settings" class="doc-sidebar-link">⚙ Settings</a>
@@ -1091,10 +1092,83 @@
   </div>
 
 
+  <!-- v3.63.228 — Checkpoints chapter promoted from a Reference block to its
+       own workflow step. Lives between Step 6 (The Work Screen) and what was
+       Step 7 (Run Your First Round) because that is exactly when the
+       pre-Round-1 checkpoint nudge fires. The #checkpoint-scope anchor is
+       preserved on the chapter container so existing in-app deep links
+       still resolve to the same content. -->
+  <div class="wh-section" id="step-checkpoint">
+    <span id="checkpoint-scope"></span>
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">💾</div>
+      <div class="wh-section-title">Step 7 — Save Your First Checkpoint</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Why save a checkpoint before Round 1</div>
+      <p>The first time you reach the Work screen for a project, WaxFrame nudges you to save a checkpoint. This is the <strong>pre-token-burn checkpoint</strong> — a free, fast moment to capture your exact starting state before any AI calls have been made. If anything goes sideways later — a credit hiccup, a drift in the document you want to undo, a new direction you want to try without losing this one — you can restore from this checkpoint and pick up exactly where you started.</p>
+      <p>A checkpoint is a single JSON file that captures whichever pieces of your WaxFrame state you choose. You don't have to save everything; you pick which sections go in. Same on the restore side — when you bring a checkpoint back, you pick which sections to apply. Unticked sections keep their current local values byte-for-byte.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The Checkpoints screen — Save mode</div>
+      <p>The nudge button takes you to the <strong>Checkpoints</strong> screen in Save mode. You can also reach this any time from the <strong>☰</strong> menu via <strong>💾 Checkpoint - Save</strong>. The screen lists nine sections you can independently include or exclude. Each row tells you what's in the section and shows what's in your live state right now.</p>
+
+      <p><strong>Project</strong> group — three rows:</p>
+      <ul>
+        <li><strong>Project info</strong> — project name, version number, document type, target audience, desired outcome, scope and constraints, tone, notes, length settings, and the file export name.</li>
+        <li><strong>Reference Material</strong> — the documents you uploaded on Setup 3 for the hive to reference each round.</li>
+        <li><strong>Starting Document</strong> — the document you pasted on Setup 4 (if you started from a draft rather than from scratch).</li>
+      </ul>
+
+      <p><strong>Session</strong> group — one row:</p>
+      <ul>
+        <li><strong>Session in progress</strong> — your in-progress refinement: every round that's already run, the current working document, the live console transcript, your notes and standing notes, and the debug ring buffer. Include this when you want to resume the session later without losing progress. (On a fresh project before Round 1, the session is empty — but ticking it still means "include the session as it is now" so you can save the pre-Round-1 starting state.)</li>
+      </ul>
+
+      <p><strong>Hive</strong> group — four rows, each independently tickable. There's no parent/child gating; you can include just keys, or just the AI list, or any combination:</p>
+      <ul>
+        <li><strong>AI list</strong> — which default AIs are currently active in your hive, any custom AIs you've added with their endpoint configs, and the hive mode (Internet vs Server). Does <em>not</em> include the model picks or API keys — those are separate rows.</li>
+        <li><strong>Model picks</strong> — which specific model each AI is set to (e.g. Claude → Opus 4.5 vs Sonnet 4.6). Include this when sharing an exact-model recipe. Leave off when the receiving machine should pick its own best model per AI — useful when you have different access tiers at work vs home.</li>
+        <li><strong>API keys</strong> — the API key string saved for each AI in your hive. Sensitive — leave off when sharing the file with anyone else. Safe to include for your own private backups.</li>
+        <li><strong>Builder selection</strong> — which AI in your hive is currently set as the Builder for refinement rounds.</li>
+      </ul>
+
+      <p><strong>License</strong> group — one row:</p>
+      <ul>
+        <li><strong>License key</strong> — your WaxFrame Pro license key. Default on when saving for self-portability between your own machines (you don't want to lose your license when restoring at home from a work checkpoint).</li>
+      </ul>
+
+      <p>Tick what you want included, then click <strong>💾 Save Checkpoint</strong>. The file downloads with a name like <code>{project}-{version}-WaxFrame-Checkpoint-{date}.json</code>. Store it somewhere private — even with API keys and license unticked, a checkpoint can contain your document text and AI responses.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The Checkpoints screen — Restore mode</div>
+      <p>From the <strong>☰</strong> menu, <strong>📂 Checkpoint - Restore</strong> opens the same screen in Restore mode. After the trust warning, click <strong>📂 Choose Checkpoint File</strong> and pick the JSON. The screen swaps to a side-by-side comparison with the same nine sections — each row shows what's in your <em>current local state</em> and what's <em>in this checkpoint file</em>, side by side, so you see exactly what each ticked section would replace.</p>
+      <p>Defaults are conservative: project sub-sections and session are pre-ticked when the file carries them; everything hive-related is unticked by default (you usually keep your local hive); license is unticked by default (you don't re-import a license you already have locally). Tick what you want to bring forward, untick what to keep local. Click <strong>🔄 Restore Selected</strong> and the page reloads with the merged state.</p>
+      <p>Sections the file doesn't carry are shown but disabled, with a label that says <em>(not in checkpoint)</em> in the comparison column — so the missing rows are explicit rather than mysterious.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Common recipes</div>
+      <ul>
+        <li><strong>Self-backup before a risky round</strong> — tick everything. Saves your full state for restore on the same machine.</li>
+        <li><strong>Portable project across your own machines</strong> (work → home) — tick Project info + Reference Material + Starting Document + Session + License. Leave the four Hive rows unticked so the home hive isn't replaced.</li>
+        <li><strong>Bring the AI lineup forward without overriding model picks</strong> — tick AI list, leave Model picks unticked. Useful when work and home use different Claude tiers (Sonnet vs Opus).</li>
+        <li><strong>Hand a project to a coworker who has their own license</strong> — tick Project info + Reference Material + Starting Document + Session + AI list + Builder. Untick Model picks, Keys, License.</li>
+        <li><strong>Public share-safe</strong> (forum, support ticket, archive without secrets) — tick Project info + Reference Material + Starting Document + Session only. No hive, no keys, no license — nothing sensitive leaves the file.</li>
+      </ul>
+      <p>For a checkpoint nudge that's silenced per-project, see <a href="#settings" class="link-accent">Settings → Checkpoint Nudge</a>.</p>
+    </div>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+  </div>
+
+
   <div class="wh-section" id="step8">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑧</div>
-      <div class="wh-section-title">Step 7 — Run Your First Round</div>
+      <div class="wh-section-title">Step 8 — Run Your First Round</div>
     </div>
 
     <div class="wh-block">
@@ -1132,7 +1206,7 @@
   <div class="wh-section" id="step9">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑨</div>
-      <div class="wh-section-title">Step 8 — Review Results and Resolve Conflicts</div>
+      <div class="wh-section-title">Step 9 — Review Results and Resolve Conflicts</div>
     </div>
 
     <div class="wh-block">
@@ -1195,7 +1269,7 @@
   <div class="wh-section" id="step10">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑩</div>
-      <div class="wh-section-title">Step 9 — Run More Rounds</div>
+      <div class="wh-section-title">Step 10 — Run More Rounds</div>
     </div>
 
     <div class="wh-block">
@@ -1279,7 +1353,7 @@
   <div class="wh-section" id="step11">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">⑪</div>
-      <div class="wh-section-title">Step 10 — Export and Finish</div>
+      <div class="wh-section-title">Step 11 — Export and Finish</div>
     </div>
 
     <div class="wh-block">
@@ -1968,45 +2042,13 @@
     <div class="wh-block">
       <div class="wh-block-title">The diagnostic bundle</div>
       <p>The Help page has a single button that exports a JSON snapshot of your session — your active hive configuration, your project setup, your current document round, browser environment, and recent error history. Before the file is written to your downloads folder, three things are stripped automatically: <strong>every API key</strong>, <strong>your license key</strong>, and (optionally, with a checkbox) <strong>your document text and AI responses</strong>. Document and reference text are kept by default because they are usually what support needs to reproduce a content-related bug; uncheck the box if your document is sensitive.</p>
-      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be restored. For a restorable share-safe file, save a checkpoint with API keys and license unticked (see <a href="#checkpoint-scope" class="link-accent">Checkpoint - Save scope</a> below). For a private restorable copy of your full session, save a checkpoint with everything ticked — it keeps your keys and is restorable, but should only be stored somewhere you trust.</p>
+      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be restored. For a restorable share-safe file, save a checkpoint with API keys and license unticked (see <a href="#step-checkpoint" class="link-accent">Step 7 — Save Your First Checkpoint</a>). For a private restorable copy of your full session, save a checkpoint with everything ticked — it keeps your keys and is restorable, but should only be stored somewhere you trust.</p>
     </div>
 
-    <div class="wh-block" id="checkpoint-scope">
-      <div class="wh-block-title">Checkpoints screen — 9 granular sections (Save and Restore)</div>
-      <p>As of v3.63.227, Save and Restore live on a dedicated <strong>Checkpoints</strong> screen with a mode toggle at the top. The screen exposes <strong>9 independent scope checkboxes</strong> grouped into 4 visual blocks (Project / Session / Hive / License). Each row labels the exact JSON fields it maps to so you can verify what's in the file against what the UI says is in it.</p>
-      <p><strong>Project</strong> (3 rows):</p>
-      <ul>
-        <li><strong>Project info</strong> — name, version, goal fields (doc type, audience, outcome, scope, tone, notes), length settings, export mask, doc tab. <code>JSON: projectName, projectVersion, goalDocType, goalAudience, goalOutcome, goalScope, goalTone, goalNotes, exportMask, lengthMode, lengthLimit, lengthMin, lengthUnit, docTab</code></li>
-        <li><strong>Reference Material</strong> — uploaded reference documents attached on Setup 3. <code>JSON: referenceDocs</code></li>
-        <li><strong>Starting Document</strong> — the pasted starting document from Setup 4. <code>JSON: pastedDocument</code></li>
-      </ul>
-      <p><strong>Session</strong> (1 row):</p>
-      <ul>
-        <li><strong>Session in progress</strong> — round history, current working document, live console transcript, notes, debug ring buffer. <code>JSON: IDB_SESSION.{history, docText, consoleHTML, notes, standingNotes, ringBuffer, lastFailure}</code></li>
-      </ul>
-      <p><strong>Hive</strong> (4 rows — each independently tickable, no parent/child gating):</p>
-      <ul>
-        <li><strong>AI list</strong> — which default AIs are active, custom-AI configs, hive mode (internet vs server). Does NOT include model picks or keys. <code>JSON: activeAIIds, knownDefaultIds, hiveMode, customAIs, customAIConfigs</code></li>
-        <li><strong>Model picks</strong> — per-AI model overrides (e.g. Claude → claude-opus-4-5-20251101). Separated from AI list so you can bring a hive composition forward without overriding the receiver's local model picks (e.g. work Sonnet vs home Opus). <code>JSON: models</code></li>
-        <li><strong>API keys</strong> — the API key string saved for each AI. <code>JSON: keys</code></li>
-        <li><strong>Builder selection</strong> — which AI is currently set as Builder. <code>JSON: builder</code></li>
-      </ul>
-      <p><strong>License</strong> (1 row):</p>
-      <ul>
-        <li><strong>License key</strong> — your WaxFrame Pro license. Default ON for Save (self-portability), default OFF for Restore (if you already have a license locally, you don't need to re-import it). <code>JSON: LS_LICENSE</code></li>
-      </ul>
-      <p><strong>Save mode</strong> shows what's actually in your live state right now in a Current column next to each row, so you preview what's about to land in the file. <strong>Restore mode</strong> shows Current next to Checkpoint, so you see exactly what each picked section would replace.</p>
-      <p>Recipes for common cases:</p>
-      <ul>
-        <li><strong>Self-backup before a risky round</strong> — tick everything. Full state restorable on the same machine.</li>
-        <li><strong>Portable project across your own machines</strong> (work → home) — tick Project info + Reference Material + Starting Document + Session + License. Leave the four Hive rows unticked so the home hive isn't replaced.</li>
-        <li><strong>Bring the AI lineup forward without overriding model picks</strong> — tick AI list, leave Model picks unticked. Useful when work and home use different Claude tiers (Sonnet vs Opus).</li>
-        <li><strong>Hand a project to a coworker who has their own license</strong> — tick Project info + Reference Material + Starting Document + Session + AI list + Builder. Untick Model picks, Keys, License.</li>
-        <li><strong>Public share-safe</strong> (forum, support ticket, archive without secrets) — tick Project info + Reference Material + Starting Document + Session only. No hive, no keys, no license — nothing sensitive leaves the file.</li>
-      </ul>
-      <p>When the file is restored, WaxFrame splices granularly: ticked sub-sections overwrite their local fields; everything else stays byte-for-byte. A toast on import lists exactly what was restored vs kept local. (Older format-v5 checkpoints from v3.63.130–226 are still importable — their 6-key scope maps onto the new 9-key model by inspecting which sub-fields the file actually carries. Format-v4 and earlier carry no scope; the diff modal shows what's present in the file and lets you pick row by row.)</p>
-      <p>Quick rule of thumb: <strong>save with everything ticked</strong> for your own offline copy (sensitive — keep private), <strong>untick Keys + License</strong> when sharing with anyone else, <strong>Diagnostic Bundle</strong> for sending to support only (export-only, cannot restore).</p>
-    </div>
+    <!-- v3.63.228 — The Checkpoints reference block here was retired when its
+         content was promoted to Step 7 (#step-checkpoint). All cross-references
+         to #checkpoint-scope now resolve to the anchor span on the Step 7
+         chapter container. -->
 
     <div class="wh-block">
       <div class="wh-block-title">Filing a bug report</div>
@@ -2102,13 +2144,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.227"></script>
-<script src="lib/docx.min.js?v=3.63.227"></script>
-<script src="js/docx-export.js?v=3.63.227"></script>
-<script src="js/nav-helper.js?v=3.63.227"></script>
-<script src="js/license-helper.js?v=3.63.227"></script>
-<script src="js/version.js?v=3.63.227"></script>
-<script src="js/docs-scrollspy.js?v=3.63.227"></script>
+<script src="js/theme.js?v=3.63.228"></script>
+<script src="lib/docx.min.js?v=3.63.228"></script>
+<script src="js/docx-export.js?v=3.63.228"></script>
+<script src="js/nav-helper.js?v=3.63.228"></script>
+<script src="js/license-helper.js?v=3.63.228"></script>
+<script src="js/version.js?v=3.63.228"></script>
+<script src="js/docs-scrollspy.js?v=3.63.228"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

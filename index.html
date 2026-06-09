@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260608-003
+     Build: 20260608-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-003">
+  <meta name="waxframe-build" content="20260608-004">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.227">
+  <link rel="stylesheet" href="style.css?v=3.63.228">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.227",
+    "softwareVersion": "3.63.228",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1221,10 +1221,9 @@
           </div>
 
           <!-- ──────────────── SAVE PANEL ──────────────── -->
-          <div class="checkpoint-panel" id="chkSavePanel">
-            <p class="checkpoint-panel-help">Pick which sections of your current local state go in the checkpoint file. Each row shows what's actually in your live state right now. Tick the sections you want included; untick what to leave out. <strong>License</strong> is included by default for self-portability (work → home on the same machine) &mdash; untick it when sharing the checkpoint with anyone else.</p>
+                    <div class="checkpoint-panel" id="chkSavePanel">
+            <p class="checkpoint-panel-help">Pick which sections of your current local state go in the checkpoint file. Each row describes what&rsquo;s in that section and shows what&rsquo;s in your live state right now. Tick the sections you want included; untick what to leave out. <strong>License</strong> is included by default for self-portability (work &rarr; home on the same machine) &mdash; untick it when sharing the checkpoint with anyone else.</p>
 
-            <!-- Project group: 3 rows — projectInfo, refMaterial, startingDoc -->
             <div class="checkpoint-row-group">
               <div class="checkpoint-row-group-label">Project</div>
               <label class="checkpoint-row">
@@ -1232,34 +1231,48 @@
                   <input type="checkbox" id="saveScopeProjectInfo">
                   <span class="checkpoint-row-text">
                     <span class="checkpoint-row-name">Project info</span>
-                    <span class="checkpoint-row-desc">Name &amp; version, goal fields (doc type, audience, outcome, scope, tone, notes), length settings (mode/limit/min/unit), export mask, doc tab.<br><span class="checkpoint-row-json">JSON: projectName, projectVersion, goalDocType, goalAudience, goalOutcome, goalScope, goalTone, goalNotes, exportMask, lengthMode, lengthLimit, lengthMin, lengthUnit, docTab</span></span>
+                    <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> project name, version number, document type, target audience, desired outcome, scope and constraints, tone, notes, length settings, and the file export name.</span>
                   </span>
                 </span>
-                <span class="checkpoint-row-cur" id="saveCurrentProjectInfo">&mdash;</span>
+                <span class="checkpoint-row-previews">
+                  <span class="checkpoint-row-preview">
+                    <span class="checkpoint-row-preview-label">In your current state</span>
+                    <span class="checkpoint-row-preview-value" id="saveCurrentProjectInfo">&mdash;</span>
+                  </span>
+                </span>
               </label>
               <label class="checkpoint-row">
                 <span class="checkpoint-row-pick">
                   <input type="checkbox" id="saveScopeRefMaterial">
                   <span class="checkpoint-row-text">
                     <span class="checkpoint-row-name">Reference Material</span>
-                    <span class="checkpoint-row-desc">Uploaded reference documents &mdash; the files attached on Setup 3 for the AIs to reference each round.<br><span class="checkpoint-row-json">JSON: referenceDocs (array of {name, text, type, &hellip;})</span></span>
+                    <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> the documents you uploaded on Setup 3 for the hive to reference each round &mdash; source materials the AIs read while working, but never edit.</span>
                   </span>
                 </span>
-                <span class="checkpoint-row-cur" id="saveCurrentRefMaterial">&mdash;</span>
+                <span class="checkpoint-row-previews">
+                  <span class="checkpoint-row-preview">
+                    <span class="checkpoint-row-preview-label">In your current state</span>
+                    <span class="checkpoint-row-preview-value" id="saveCurrentRefMaterial">&mdash;</span>
+                  </span>
+                </span>
               </label>
               <label class="checkpoint-row">
                 <span class="checkpoint-row-pick">
                   <input type="checkbox" id="saveScopeStartingDoc">
                   <span class="checkpoint-row-text">
                     <span class="checkpoint-row-name">Starting Document</span>
-                    <span class="checkpoint-row-desc">The pasted starting document &mdash; what the hive begins refining on Round 1. Empty if you started from scratch.<br><span class="checkpoint-row-json">JSON: pastedDocument (string)</span></span>
+                    <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> the document you pasted on Setup 4 (if you started from a draft rather than from scratch). The hive&rsquo;s Round 1 refinement begins from this text.</span>
                   </span>
                 </span>
-                <span class="checkpoint-row-cur" id="saveCurrentStartingDoc">&mdash;</span>
+                <span class="checkpoint-row-previews">
+                  <span class="checkpoint-row-preview">
+                    <span class="checkpoint-row-preview-label">In your current state</span>
+                    <span class="checkpoint-row-preview-value" id="saveCurrentStartingDoc">&mdash;</span>
+                  </span>
+                </span>
               </label>
             </div>
 
-            <!-- Session group: 1 row -->
             <div class="checkpoint-row-group">
               <div class="checkpoint-row-group-label">Session</div>
               <label class="checkpoint-row">
@@ -1267,14 +1280,18 @@
                   <input type="checkbox" id="saveScopeSession">
                   <span class="checkpoint-row-text">
                     <span class="checkpoint-row-name">Session in progress</span>
-                    <span class="checkpoint-row-desc">Round history, current working document, live console transcript, notes &amp; standing notes, debug ring buffer.<br><span class="checkpoint-row-json">JSON: IDB_SESSION.{history, docText, consoleHTML, notes, standingNotes, ringBuffer, lastFailure} + LS_SESSION (legacy, usually null)</span></span>
+                    <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> your in-progress refinement &mdash; every round that&rsquo;s already run, the current working document, the live console transcript, your notes and standing notes, and the debug ring buffer. Include this if you want to resume the session later without losing progress.</span>
                   </span>
                 </span>
-                <span class="checkpoint-row-cur" id="saveCurrentSession">&mdash;</span>
+                <span class="checkpoint-row-previews">
+                  <span class="checkpoint-row-preview">
+                    <span class="checkpoint-row-preview-label">In your current state</span>
+                    <span class="checkpoint-row-preview-value" id="saveCurrentSession">&mdash;</span>
+                  </span>
+                </span>
               </label>
             </div>
 
-            <!-- Hive group: 4 rows — aiList, models, keys, builder. Each independently tickable. -->
             <div class="checkpoint-row-group">
               <div class="checkpoint-row-group-label">Hive</div>
               <label class="checkpoint-row">
@@ -1282,44 +1299,63 @@
                   <input type="checkbox" id="saveScopeAiList">
                   <span class="checkpoint-row-text">
                     <span class="checkpoint-row-name">AI list</span>
-                    <span class="checkpoint-row-desc">Which default AIs are active in your hive, custom-AI definitions &amp; their endpoint configs, plus the hive mode (internet vs server). Does NOT include the model picks or API keys &mdash; those are separate rows below.<br><span class="checkpoint-row-json">JSON: activeAIIds, knownDefaultIds, hiveMode, customAIs, customAIConfigs</span></span>
+                    <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> which default AIs are currently active in your hive, any custom AIs you&rsquo;ve added (with their endpoint configs), and the hive mode (Internet vs Server). Does <strong>not</strong> include the model picks or API keys &mdash; those are separate rows below.</span>
                   </span>
                 </span>
-                <span class="checkpoint-row-cur" id="saveCurrentAiList">&mdash;</span>
+                <span class="checkpoint-row-previews">
+                  <span class="checkpoint-row-preview">
+                    <span class="checkpoint-row-preview-label">In your current state</span>
+                    <span class="checkpoint-row-preview-value" id="saveCurrentAiList">&mdash;</span>
+                  </span>
+                </span>
               </label>
               <label class="checkpoint-row">
                 <span class="checkpoint-row-pick">
                   <input type="checkbox" id="saveScopeModels">
                   <span class="checkpoint-row-text">
                     <span class="checkpoint-row-name">Model picks</span>
-                    <span class="checkpoint-row-desc">Per-AI model selection (e.g. Claude &rarr; <code>claude-opus-4-5-20251101</code>). Save this when you want to share an exact-model recipe; <strong>leave it off</strong> if the receiving machine should pick its own current best model for each AI (work Sonnet vs home Opus).<br><span class="checkpoint-row-json">JSON: models (map of AI-id &rarr; model string)</span></span>
+                    <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> which specific model each AI is set to (e.g. Claude &rarr; Opus 4.5 vs Sonnet 4.6). Include this when sharing an exact-model recipe. <strong>Leave off</strong> when the receiving machine should pick its own best model per AI &mdash; useful when you have different access tiers at work vs home.</span>
                   </span>
                 </span>
-                <span class="checkpoint-row-cur" id="saveCurrentModels">&mdash;</span>
+                <span class="checkpoint-row-previews">
+                  <span class="checkpoint-row-preview">
+                    <span class="checkpoint-row-preview-label">In your current state</span>
+                    <span class="checkpoint-row-preview-value" id="saveCurrentModels">&mdash;</span>
+                  </span>
+                </span>
               </label>
               <label class="checkpoint-row">
                 <span class="checkpoint-row-pick">
                   <input type="checkbox" id="saveScopeKeys">
                   <span class="checkpoint-row-text">
                     <span class="checkpoint-row-name">API keys</span>
-                    <span class="checkpoint-row-desc">The API key string saved for each AI in your hive. Including these makes the file sensitive &mdash; <strong>untick when sharing with anyone else</strong>. Safe to include for your own backups.<br><span class="checkpoint-row-json">JSON: keys (map of AI-id &rarr; key string)</span></span>
+                    <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> the API key string saved for each AI in your hive. Sensitive &mdash; <strong>leave off when sharing the file with anyone else</strong>. Safe to include for your own private backups.</span>
                   </span>
                 </span>
-                <span class="checkpoint-row-cur" id="saveCurrentKeys">&mdash;</span>
+                <span class="checkpoint-row-previews">
+                  <span class="checkpoint-row-preview">
+                    <span class="checkpoint-row-preview-label">In your current state</span>
+                    <span class="checkpoint-row-preview-value" id="saveCurrentKeys">&mdash;</span>
+                  </span>
+                </span>
               </label>
               <label class="checkpoint-row">
                 <span class="checkpoint-row-pick">
                   <input type="checkbox" id="saveScopeBuilder">
                   <span class="checkpoint-row-text">
                     <span class="checkpoint-row-name">Builder selection</span>
-                    <span class="checkpoint-row-desc">Which AI is currently set as the Builder for refinement rounds. Just the AI id &mdash; not the model under it (that's the Model picks row).<br><span class="checkpoint-row-json">JSON: builder (AI-id string)</span></span>
+                    <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> which AI in your hive is currently set as the Builder for refinement rounds. Just the AI selection &mdash; not the specific model under it (that&rsquo;s the Model picks row above).</span>
                   </span>
                 </span>
-                <span class="checkpoint-row-cur" id="saveCurrentBuilder">&mdash;</span>
+                <span class="checkpoint-row-previews">
+                  <span class="checkpoint-row-preview">
+                    <span class="checkpoint-row-preview-label">In your current state</span>
+                    <span class="checkpoint-row-preview-value" id="saveCurrentBuilder">&mdash;</span>
+                  </span>
+                </span>
               </label>
             </div>
 
-            <!-- License group: 1 row -->
             <div class="checkpoint-row-group">
               <div class="checkpoint-row-group-label">License</div>
               <label class="checkpoint-row">
@@ -1327,10 +1363,15 @@
                   <input type="checkbox" id="saveScopeLicense">
                   <span class="checkpoint-row-text">
                     <span class="checkpoint-row-name">License key</span>
-                    <span class="checkpoint-row-desc">Your WaxFrame Pro license key. Defaults ON for self-portability between your own machines &mdash; <strong>untick when sharing with anyone else</strong>.<br><span class="checkpoint-row-json">JSON: LS_LICENSE (license blob)</span></span>
+                    <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> your WaxFrame Pro license key. Default on when saving for self-portability between your own machines; default off when restoring on a machine that already has its own license.</span>
                   </span>
                 </span>
-                <span class="checkpoint-row-cur" id="saveCurrentLicense">&mdash;</span>
+                <span class="checkpoint-row-previews">
+                  <span class="checkpoint-row-preview">
+                    <span class="checkpoint-row-preview-label">In your current state</span>
+                    <span class="checkpoint-row-preview-value" id="saveCurrentLicense">&mdash;</span>
+                  </span>
+                </span>
               </label>
             </div>
 
@@ -1341,15 +1382,14 @@
           </div>
 
           <!-- ──────────────── RESTORE PANEL ──────────────── -->
-          <div class="checkpoint-panel" id="chkRestorePanel" style="display:none">
+                    <div class="checkpoint-panel" id="chkRestorePanel" style="display:none">
 
-            <!-- Restore intro: shown before a file is picked. Includes the
-                 trust warning (used to be a wfConfirm modal before the
-                 promotion to a screen) and the file-picker CTA. -->
+            <!-- Restore intro: shown before a file is picked. Trust warning
+                 + file-picker CTA. -->
             <div id="chkRestoreIntro">
               <div class="checkpoint-trust-warning">
                 <h3 class="checkpoint-trust-title">&#x26A0;&#xFE0F; Restore replaces local state</h3>
-                <p>Only restore checkpoints you created or trust. A checkpoint file can replace your project, AI setup, API keys, license key, and session state. After picking the file you'll see a Current vs Checkpoint diff with a checkbox per section &mdash; tick only what you want to bring in. Unticked sections keep their current local values byte-for-byte.</p>
+                <p>Only restore checkpoints you created or trust. A checkpoint file can replace your project, AI setup, API keys, license key, and session state. After picking the file you&rsquo;ll see a side-by-side comparison &mdash; tick only the sections you want to bring in. Unticked sections keep their current local values byte-for-byte.</p>
               </div>
               <div class="checkpoint-actions">
                 <button class="btn" onclick="exitCheckpointScreen()" title="Cancel and go back">Cancel</button>
@@ -1357,141 +1397,196 @@
               </div>
             </div>
 
-            <!-- Restore diff: shown after a file is parsed. Three columns
-                 per row — pick (checkbox + name + JSON detail) | Current
-                 (live local state) | Checkpoint (what the file carries). -->
+            <!-- Restore diff: shown after a file is parsed. Each row shows
+                 what is in that section, your current local value, and the
+                 checkpoint file value. Tick what to apply. -->
             <div id="chkRestoreDiff" style="display:none">
               <p class="checkpoint-restore-file-meta" id="restoreCheckpointFileMeta"></p>
 
-              <!-- Restore-mode rows use a 3-column grid (pick / current / checkpoint). -->
               <div class="checkpoint-row-group">
-                <div class="checkpoint-row-group-label-diff">
-                  <span>Project</span>
-                  <span class="checkpoint-col-label">Current</span>
-                  <span class="checkpoint-col-label">Checkpoint</span>
-                </div>
-                <label class="checkpoint-row checkpoint-row-diff">
+                <div class="checkpoint-row-group-label">Project</div>
+                <label class="checkpoint-row">
                   <span class="checkpoint-row-pick">
                     <input type="checkbox" id="restoreScopeProjectInfo">
                     <span class="checkpoint-row-text">
                       <span class="checkpoint-row-name">Project info</span>
-                      <span class="checkpoint-row-desc">Name &amp; version, goal fields, length settings, export mask, doc tab.<br><span class="checkpoint-row-json">JSON: projectName, projectVersion, goalDocType, goalAudience, goalOutcome, goalScope, goalTone, goalNotes, exportMask, lengthMode, lengthLimit, lengthMin, lengthUnit, docTab</span></span>
+                      <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> project name, version number, document type, target audience, desired outcome, scope and constraints, tone, notes, length settings, and the file export name.</span>
                     </span>
                   </span>
-                  <span class="checkpoint-row-cur" id="restoreCurrentProjectInfo">&mdash;</span>
-                  <span class="checkpoint-row-ck"  id="restoreCheckpointProjectInfo">&mdash;</span>
+                  <span class="checkpoint-row-previews">
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In your current state</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCurrentProjectInfo">&mdash;</span>
+                    </span>
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In this checkpoint file</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCheckpointProjectInfo">&mdash;</span>
+                    </span>
+                  </span>
                 </label>
-                <label class="checkpoint-row checkpoint-row-diff">
+                <label class="checkpoint-row">
                   <span class="checkpoint-row-pick">
                     <input type="checkbox" id="restoreScopeRefMaterial">
                     <span class="checkpoint-row-text">
                       <span class="checkpoint-row-name">Reference Material</span>
-                      <span class="checkpoint-row-desc">Uploaded reference documents from Setup 3.<br><span class="checkpoint-row-json">JSON: referenceDocs (array)</span></span>
+                      <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> the documents you uploaded on Setup 3 for the hive to reference each round &mdash; source materials the AIs read while working, but never edit.</span>
                     </span>
                   </span>
-                  <span class="checkpoint-row-cur" id="restoreCurrentRefMaterial">&mdash;</span>
-                  <span class="checkpoint-row-ck"  id="restoreCheckpointRefMaterial">&mdash;</span>
+                  <span class="checkpoint-row-previews">
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In your current state</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCurrentRefMaterial">&mdash;</span>
+                    </span>
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In this checkpoint file</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCheckpointRefMaterial">&mdash;</span>
+                    </span>
+                  </span>
                 </label>
-                <label class="checkpoint-row checkpoint-row-diff">
+                <label class="checkpoint-row">
                   <span class="checkpoint-row-pick">
                     <input type="checkbox" id="restoreScopeStartingDoc">
                     <span class="checkpoint-row-text">
                       <span class="checkpoint-row-name">Starting Document</span>
-                      <span class="checkpoint-row-desc">The pasted starting document from Setup 4.<br><span class="checkpoint-row-json">JSON: pastedDocument (string)</span></span>
+                      <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> the document you pasted on Setup 4 (if you started from a draft rather than from scratch). The hive&rsquo;s Round 1 refinement begins from this text.</span>
                     </span>
                   </span>
-                  <span class="checkpoint-row-cur" id="restoreCurrentStartingDoc">&mdash;</span>
-                  <span class="checkpoint-row-ck"  id="restoreCheckpointStartingDoc">&mdash;</span>
+                  <span class="checkpoint-row-previews">
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In your current state</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCurrentStartingDoc">&mdash;</span>
+                    </span>
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In this checkpoint file</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCheckpointStartingDoc">&mdash;</span>
+                    </span>
+                  </span>
                 </label>
               </div>
 
               <div class="checkpoint-row-group">
-                <div class="checkpoint-row-group-label-diff">
-                  <span>Session</span>
-                  <span class="checkpoint-col-label">Current</span>
-                  <span class="checkpoint-col-label">Checkpoint</span>
-                </div>
-                <label class="checkpoint-row checkpoint-row-diff">
+                <div class="checkpoint-row-group-label">Session</div>
+                <label class="checkpoint-row">
                   <span class="checkpoint-row-pick">
                     <input type="checkbox" id="restoreScopeSession">
                     <span class="checkpoint-row-text">
                       <span class="checkpoint-row-name">Session in progress</span>
-                      <span class="checkpoint-row-desc">Round history, working document, console transcript, notes, debug ring buffer.<br><span class="checkpoint-row-json">JSON: IDB_SESSION.{history, docText, consoleHTML, notes, standingNotes, ringBuffer, lastFailure}</span></span>
+                      <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> your in-progress refinement &mdash; every round that&rsquo;s already run, the current working document, the live console transcript, your notes and standing notes, and the debug ring buffer. Include this if you want to resume the session later without losing progress.</span>
                     </span>
                   </span>
-                  <span class="checkpoint-row-cur" id="restoreCurrentSession">&mdash;</span>
-                  <span class="checkpoint-row-ck"  id="restoreCheckpointSession">&mdash;</span>
+                  <span class="checkpoint-row-previews">
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In your current state</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCurrentSession">&mdash;</span>
+                    </span>
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In this checkpoint file</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCheckpointSession">&mdash;</span>
+                    </span>
+                  </span>
                 </label>
               </div>
 
               <div class="checkpoint-row-group">
-                <div class="checkpoint-row-group-label-diff">
-                  <span>Hive</span>
-                  <span class="checkpoint-col-label">Current</span>
-                  <span class="checkpoint-col-label">Checkpoint</span>
-                </div>
-                <label class="checkpoint-row checkpoint-row-diff">
+                <div class="checkpoint-row-group-label">Hive</div>
+                <label class="checkpoint-row">
                   <span class="checkpoint-row-pick">
                     <input type="checkbox" id="restoreScopeAiList">
                     <span class="checkpoint-row-text">
                       <span class="checkpoint-row-name">AI list</span>
-                      <span class="checkpoint-row-desc">Active AIs, custom-AI configs, hive mode. Not the model picks or keys (those rows below).<br><span class="checkpoint-row-json">JSON: activeAIIds, knownDefaultIds, hiveMode, customAIs, customAIConfigs</span></span>
+                      <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> which default AIs are currently active in your hive, any custom AIs you&rsquo;ve added (with their endpoint configs), and the hive mode (Internet vs Server). Does <strong>not</strong> include the model picks or API keys &mdash; those are separate rows below.</span>
                     </span>
                   </span>
-                  <span class="checkpoint-row-cur" id="restoreCurrentAiList">&mdash;</span>
-                  <span class="checkpoint-row-ck"  id="restoreCheckpointAiList">&mdash;</span>
+                  <span class="checkpoint-row-previews">
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In your current state</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCurrentAiList">&mdash;</span>
+                    </span>
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In this checkpoint file</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCheckpointAiList">&mdash;</span>
+                    </span>
+                  </span>
                 </label>
-                <label class="checkpoint-row checkpoint-row-diff">
+                <label class="checkpoint-row">
                   <span class="checkpoint-row-pick">
                     <input type="checkbox" id="restoreScopeModels">
                     <span class="checkpoint-row-text">
                       <span class="checkpoint-row-name">Model picks</span>
-                      <span class="checkpoint-row-desc">Per-AI model overrides. <strong>Leave OFF</strong> when restoring on a different machine that should use its own current model picks (e.g. work Sonnet vs home Opus on Claude).<br><span class="checkpoint-row-json">JSON: models (map of AI-id &rarr; model string)</span></span>
+                      <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> which specific model each AI is set to (e.g. Claude &rarr; Opus 4.5 vs Sonnet 4.6). Include this when sharing an exact-model recipe. <strong>Leave off</strong> when the receiving machine should pick its own best model per AI &mdash; useful when you have different access tiers at work vs home.</span>
                     </span>
                   </span>
-                  <span class="checkpoint-row-cur" id="restoreCurrentModels">&mdash;</span>
-                  <span class="checkpoint-row-ck"  id="restoreCheckpointModels">&mdash;</span>
+                  <span class="checkpoint-row-previews">
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In your current state</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCurrentModels">&mdash;</span>
+                    </span>
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In this checkpoint file</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCheckpointModels">&mdash;</span>
+                    </span>
+                  </span>
                 </label>
-                <label class="checkpoint-row checkpoint-row-diff">
+                <label class="checkpoint-row">
                   <span class="checkpoint-row-pick">
                     <input type="checkbox" id="restoreScopeKeys">
                     <span class="checkpoint-row-text">
                       <span class="checkpoint-row-name">API keys</span>
-                      <span class="checkpoint-row-desc">Per-AI API keys. Off by default &mdash; usually you keep your local keys.<br><span class="checkpoint-row-json">JSON: keys (map of AI-id &rarr; key string)</span></span>
+                      <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> the API key string saved for each AI in your hive. Sensitive &mdash; <strong>leave off when sharing the file with anyone else</strong>. Safe to include for your own private backups.</span>
                     </span>
                   </span>
-                  <span class="checkpoint-row-cur" id="restoreCurrentKeys">&mdash;</span>
-                  <span class="checkpoint-row-ck"  id="restoreCheckpointKeys">&mdash;</span>
+                  <span class="checkpoint-row-previews">
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In your current state</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCurrentKeys">&mdash;</span>
+                    </span>
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In this checkpoint file</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCheckpointKeys">&mdash;</span>
+                    </span>
+                  </span>
                 </label>
-                <label class="checkpoint-row checkpoint-row-diff">
+                <label class="checkpoint-row">
                   <span class="checkpoint-row-pick">
                     <input type="checkbox" id="restoreScopeBuilder">
                     <span class="checkpoint-row-text">
                       <span class="checkpoint-row-name">Builder selection</span>
-                      <span class="checkpoint-row-desc">Which AI is the Builder.<br><span class="checkpoint-row-json">JSON: builder (AI-id string)</span></span>
+                      <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> which AI in your hive is currently set as the Builder for refinement rounds. Just the AI selection &mdash; not the specific model under it (that&rsquo;s the Model picks row above).</span>
                     </span>
                   </span>
-                  <span class="checkpoint-row-cur" id="restoreCurrentBuilder">&mdash;</span>
-                  <span class="checkpoint-row-ck"  id="restoreCheckpointBuilder">&mdash;</span>
+                  <span class="checkpoint-row-previews">
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In your current state</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCurrentBuilder">&mdash;</span>
+                    </span>
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In this checkpoint file</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCheckpointBuilder">&mdash;</span>
+                    </span>
+                  </span>
                 </label>
               </div>
 
               <div class="checkpoint-row-group">
-                <div class="checkpoint-row-group-label-diff">
-                  <span>License</span>
-                  <span class="checkpoint-col-label">Current</span>
-                  <span class="checkpoint-col-label">Checkpoint</span>
-                </div>
-                <label class="checkpoint-row checkpoint-row-diff">
+                <div class="checkpoint-row-group-label">License</div>
+                <label class="checkpoint-row">
                   <span class="checkpoint-row-pick">
                     <input type="checkbox" id="restoreScopeLicense">
                     <span class="checkpoint-row-text">
                       <span class="checkpoint-row-name">License key</span>
-                      <span class="checkpoint-row-desc">Off by default &mdash; if you already have a license locally, you don't need to re-import it.<br><span class="checkpoint-row-json">JSON: LS_LICENSE (license blob)</span></span>
+                      <span class="checkpoint-row-desc"><strong>What&rsquo;s in here:</strong> your WaxFrame Pro license key. Default on when saving for self-portability between your own machines; default off when restoring on a machine that already has its own license.</span>
                     </span>
                   </span>
-                  <span class="checkpoint-row-cur" id="restoreCurrentLicense">&mdash;</span>
-                  <span class="checkpoint-row-ck"  id="restoreCheckpointLicense">&mdash;</span>
+                  <span class="checkpoint-row-previews">
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In your current state</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCurrentLicense">&mdash;</span>
+                    </span>
+                    <span class="checkpoint-row-preview">
+                      <span class="checkpoint-row-preview-label">In this checkpoint file</span>
+                      <span class="checkpoint-row-preview-value" id="restoreCheckpointLicense">&mdash;</span>
+                    </span>
+                  </span>
                 </label>
               </div>
 
@@ -3239,23 +3334,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.227';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.228';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.227"></script>
-<script src="lib/jszip.min.js?v=3.63.227"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.227"></script>
-<script src="js/version.js?v=3.63.227"></script>
-<script src="js/storage.js?v=3.63.227"></script>
-<script src="js/theme.js?v=3.63.227"></script>
-<script src="js/audio.js?v=3.63.227"></script>
-<script src="js/scenes.js?v=3.63.227"></script>
-<script src="js/wf-debug.js?v=3.63.227"></script>
-<script src="js/provider-models.js?v=3.63.227"></script>
-<script src="js/api.js?v=3.63.227"></script>
-<script src="js/templates.js?v=3.63.227"></script>
-<script src="js/api-links.js?v=3.63.227"></script>
-<script src="js/app.js?v=3.63.227"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.228"></script>
+<script src="lib/jszip.min.js?v=3.63.228"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.228"></script>
+<script src="js/version.js?v=3.63.228"></script>
+<script src="js/storage.js?v=3.63.228"></script>
+<script src="js/theme.js?v=3.63.228"></script>
+<script src="js/audio.js?v=3.63.228"></script>
+<script src="js/scenes.js?v=3.63.228"></script>
+<script src="js/wf-debug.js?v=3.63.228"></script>
+<script src="js/provider-models.js?v=3.63.228"></script>
+<script src="js/api.js?v=3.63.228"></script>
+<script src="js/templates.js?v=3.63.228"></script>
+<script src="js/api-links.js?v=3.63.228"></script>
+<script src="js/app.js?v=3.63.228"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -3280,7 +3375,7 @@ function wfMobileShareToast(msg) {
           <p class="about-modal-tagline">Many minds, one refined result.</p>
           <div class="about-version-row">
             <span class="about-version-pill"><span id="aboutVersion">v3.63.224 Pro</span></span>
-            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-003</strong></span>
+            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-004</strong></span>
           </div>
         </div>
       </div>
@@ -3289,7 +3384,7 @@ function wfMobileShareToast(msg) {
     <div class="about-modal-body">
       <p class="about-modal-intro">Browser-native document refinement powered by your own AI keys, your hive configuration, and a local-first workspace.</p>
       <div class="about-info-stack">
-        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-003</strong></div></div>
+        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-004</strong></div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Stack</h3><div class="wf-card-body">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">License</h3><div class="wf-card-body">AGPL-3.0 — open source, free to use and modify with attribution.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Legal</h3><div class="wf-card-body"><a href="privacy.html" target="_blank" rel="noopener noreferrer" class="link-accent">Privacy Policy</a> · <a href="terms.html" target="_blank" rel="noopener noreferrer" class="link-accent">Terms of Use</a></div></div>

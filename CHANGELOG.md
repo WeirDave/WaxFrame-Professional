@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.228
+
+**Checkpoints screen — human-friendly redesign + promoted to Step 7 in the manual**
+
+Build: `20260608-004`<br>
+Released: `2026-06-08`
+
+### Changed — row layout rewritten for non-developers
+
+The Save / Restore rows on the Checkpoints screen have been redesigned. Three concrete problems with the v3.63.227 design got fixed:
+
+- **No more "JSON:" jargon.** The exact-field-name lists in code-font are gone. Each row now opens with **"What's in here:"** in plain language — what the section is for, not what its underlying schema fields are. People making documents don't need to see `projectName, projectVersion, goalDocType, goalAudience...` they need to see "project name, version number, document type, target audience..."
+- **No more imbalanced 2-column grid.** Each row is now a single vertical card: checkbox + name + description on top, then a labeled preview block below with a clear "In your current state" label (Save mode) plus "In this checkpoint file" label (Restore mode). Every value has an explicit prefix so its meaning is unambiguous — no more floating right column that looks like (none) / (empty) / (unnamed) with no header context.
+- **Wider screen.** The container width cap on the Checkpoints screen goes from 1200px to 1500px so the labeled blocks have room to breathe.
+
+### Changed — Checkpoints promoted to Step 7 in the user manual
+
+The Checkpoints content was sitting under **Reference → Checkpoint - Save scope** in the user manual, buried after API Costs and Help & Support. That was the wrong altitude — saving a checkpoint is part of the workflow, not a reference topic, and the app explicitly nudges the user to do it on first reach of the Work screen. It now lives at **Step 7 — Save Your First Checkpoint** in the main flow, between Step 6 (The Work Screen) and what is now Step 8 (Run Your First Round). Existing downstream steps renumbered accordingly (8 → 9, 9 → 10, 10 → 11). The original `#checkpoint-scope` anchor is preserved on the new chapter container so any existing in-app deep links still resolve.
+
+### Files Changed
+
+- Updated: `index.html` — rewrote `#chkSavePanel` and the `#chkRestoreDiff` body inside `#chkRestorePanel` with new row markup (no more `.checkpoint-row-cur` / `.checkpoint-row-ck` / `.checkpoint-row-diff` / `.checkpoint-row-json`; added `.checkpoint-row-previews`, `.checkpoint-row-preview`, `.checkpoint-row-preview-label`, `.checkpoint-row-preview-value`); plain-language descriptions for each of the 9 sections
+- Updated: `style.css` — replaced grid-based row CSS with flex-column stack; added labeled preview block styles; widened `#screen-checkpoint .hp-section` to 1500px
+- Updated: `waxframe-user-manual.html` — new Step 7 chapter `#step-checkpoint` between #step7 (Work Screen) and #step8 (Run Your First Round); renumbered the displayed step titles for #step8/9/10/11 from 7/8/9/10 to 8/9/10/11; sidebar TOC adds the new Step 7 entry and renumbers the rest; removed the old Reference block whose content is now Step 7 (its `#checkpoint-scope` anchor preserved on the new chapter)
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.228 / 20260608-004 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.227
 
 **Checkpoints screen — 9-section granular Save & Restore, promoted from modal to full screen**

@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260608-003
+   Build: 20260608-004
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10901,11 +10901,19 @@ kbd {
 .finish-modal-title-goal   { margin-bottom: var(--space-6); }
 .finish-modal-cancel-accent { border-color: var(--accent); color: var(--accent); }
 
-/* ── Checkpoints screen (v3.63.227 — promoted from modal to screen) ──
-   Mode toggle pills, per-mode panels, 9 scope rows organized into 4 visual
-   groups (Project / Session / Hive / License). Save mode uses a 2-column
-   row layout (pick + Current). Restore mode uses a 3-column layout (pick +
-   Current + Checkpoint), enabled via the .checkpoint-row-diff modifier. */
+/* ── Checkpoints screen (v3.63.227 — promoted from modal to screen,
+       v3.63.228 — rows restructured: plain-language descriptions, stacked
+       labeled preview blocks, no JSON jargon, wider screen container) ──
+   Mode toggle pills + per-mode panels + 9 scope rows organized into 4
+   visual groups (Project / Session / Hive / License). Both modes share
+   one row layout: pick (checkbox + name + plain-English description) on
+   top, labeled preview block(s) below — Save has one ("In your current
+   state"), Restore has two ("In your current state" + "In this checkpoint
+   file"). No grid columns; the row reads top-to-bottom as one record. */
+
+/* Widen the Checkpoints screen — 9 sections + plain-language descriptions
+   need more horizontal room than the default 1200px hp-section cap. */
+#screen-checkpoint .hp-section { max-width: 1500px; }
 
 .checkpoint-mode-toggle {
   display: flex; gap: var(--space-8);
@@ -10989,33 +10997,14 @@ kbd {
   border-bottom: 1px solid var(--border2);
   margin-bottom: var(--space-6);
 }
-/* Diff-mode group header — 3-column layout to align with the rows below. */
-.checkpoint-row-group-label-diff {
-  display: grid;
-  grid-template-columns: minmax(260px, 1.6fr) 1fr 1fr;
-  gap: var(--space-10);
-  align-items: end;
-  font-size: var(--fs-12);
-  color: var(--text-dim);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: var(--space-4) var(--space-4) var(--space-8);
-  border-bottom: 1px solid var(--border2);
-  margin-bottom: var(--space-6);
-}
-.checkpoint-row-group-label-diff .checkpoint-col-label {
-  font-size: var(--fs-11);
-  letter-spacing: 0.05em;
-}
 
-/* Scope row — Save mode (2 columns: pick + Current). */
+/* Scope row — vertical stack: pick (checkbox + name + desc + JSON) on top,
+   preview line(s) below. Same shape for Save and Restore — Restore just
+   has a second labeled preview line for the checkpoint value. */
 .checkpoint-row {
-  display: grid;
-  grid-template-columns: minmax(260px, 1.6fr) 1fr;
-  gap: var(--space-10);
-  align-items: start;
-  padding: var(--space-10) var(--space-6);
+  display: flex; flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-12) var(--space-10);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: background .12s;
@@ -11029,11 +11018,6 @@ kbd {
 }
 .checkpoint-row input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .4; }
 .checkpoint-row:has(input:disabled) { cursor: not-allowed; opacity: .55; }
-
-/* Restore mode: switch to 3 columns. */
-.checkpoint-row.checkpoint-row-diff {
-  grid-template-columns: minmax(260px, 1.6fr) 1fr 1fr;
-}
 
 .checkpoint-row-pick {
   display: flex; align-items: flex-start; gap: var(--space-10);
@@ -11062,14 +11046,38 @@ kbd {
   color: var(--text-dim);
   word-break: break-all;
 }
-.checkpoint-row-cur,
-.checkpoint-row-ck {
+
+/* Preview lines — labeled values stacked below the description. The label
+   is dim/uppercase, the value is normal text. Same indent as the desc so
+   the row reads as one block. */
+.checkpoint-row-previews {
+  display: flex; flex-direction: column;
+  gap: 4px;
+  margin-left: 26px;          /* align with text under checkbox */
+  padding: var(--space-8) var(--space-10);
+  background: var(--surface2);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+}
+.checkpoint-row-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
   font-size: var(--fs-13);
-  color: var(--text);
-  padding: 4px var(--space-6);
-  word-break: break-word;
   line-height: 1.45;
-  align-self: center;
+}
+.checkpoint-row-preview-label {
+  color: var(--text-dim);
+  font-size: var(--fs-12);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  min-width: 200px;
+  flex: none;
+}
+.checkpoint-row-preview-value {
+  color: var(--text);
+  word-break: break-word;
+  flex: 1;
 }
 
 /* Action button row at the bottom of each panel. */
