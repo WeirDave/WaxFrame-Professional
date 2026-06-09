@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.238
+
+**First-run Save Checkpoint nudge closes on click — no more floating modal over the Checkpoints screen**
+
+Build: `20260608-014`<br>
+Released: `2026-06-08`
+
+### Fixed — first-run nudge stayed open after picking Save a Checkpoint, obstructing the screen it navigated to
+
+The post-setup nudge (`firstRunOfferModal`) offers two buttons: 💾 Save a checkpoint and ⭐ Save as a template. The original implementation kept the modal open after either click so the user could pick BOTH options back-to-back. That made sense when both buttons opened child modals over the work screen.
+
+In v3.63.227 Save Checkpoint was promoted from a modal to a dedicated full screen. Clicking 💾 Save a checkpoint now triggers `goToScreen('screen-checkpoint')` &mdash; the work screen disappears underneath the nudge, the Checkpoints screen appears, and the nudge floats on top, blocking interaction with the screen the user just navigated to.
+
+Fix: both nudge handlers (`firstRunDoBackup` and `firstRunDoTemplate`) now call `closeFirstRunOffer()` before triggering their action. Users who want to do both can still reach the other action via the Tools menu (Checkpoint - Save / Template - Save).
+
+### Files Changed
+
+- Updated: `js/app.js` &mdash; `firstRunDoBackup` and `firstRunDoTemplate` now close the nudge on click; obsolete-but-defensive comment in the post-template "also save a backup?" prompt updated to reflect the new flow
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.238 / 20260608-014 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.237
 
 **Audit pass: orphan CSS removed, manual nav cleanup, broken anchor fixed**
