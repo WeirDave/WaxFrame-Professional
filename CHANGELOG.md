@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.234
+
+**Template - Save & Save Hive Profile modals: chrome standardized to match the rest of the modal family**
+
+Build: `20260608-010`<br>
+Released: `2026-06-08`
+
+### Changed — message paragraph + footer buttons use the standard finish-modal classes
+
+Both modals were using bespoke `save-template-*` classes for the description text and the footer button row, which gave them a different look from every other modal in the app. The chrome now uses the canonical pattern:
+
+- Description: `<p class="finish-modal-msg">` (instead of `save-template-sub` + a separate `save-template-note`)
+- Footer: `<div class="finish-modal-footer-btns">` (instead of `save-template-actions`)
+- Action button: `<button class="finish-modal-cancel finish-modal-cancel-accent">` (instead of the oversized `finish-modal-btn finish-modal-btn-export`)
+
+The form inputs themselves keep their `save-template-*` classes — those are form-field styling, not modal chrome, and they're shared across both Save Template and Save Hive Profile cleanly.
+
+Also folded the "saved to your browser" note into the main description paragraph rather than living as a separate italic stub below.
+
+### Changed — Template - Update naming for the edit-mode title/button
+
+When you edit an existing custom template, the same modal opens in update mode. The title/button text was "Update Template"; renamed to "Template - Update" to match the new noun-first pattern used for "Template - Save" and the Checkpoint - X entries.
+
+### Files Changed
+
+- Updated: `index.html` — Save Template + Save Hive Profile modal chrome standardized
+- Updated: `js/app.js` — edit-mode title/button text → "Template - Update"
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.234 / 20260608-010 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.233
 
 **Template menu entries renamed to mirror the Checkpoint pattern**
