@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260608-012
+   Build: 20260608-013
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -15864,12 +15864,8 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 .save-template-col--category { flex: 1; }
 .save-template-col .save-template-label:first-child { margin-top: 0; }
 .save-template-col--category #saveTemplateCategoryCustom { margin-top: var(--space-8); }
-.save-template-sub {
-  font-size: var(--fs-sm);
-  color: var(--text-dim);
-  line-height: 1.5;
-  margin: 0 0 var(--space-20);
-}
+/* v3.63.234 — .save-template-sub retired: modal description now uses the
+   shared .finish-modal-msg rule (chrome standardization). */
 .save-template-label {
   display: block;
   font-size: var(--fs-12);
@@ -15916,26 +15912,17 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   margin: var(--space-20) 0 0;
   line-height: 1.4;
 }
-.save-template-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-12);
-  margin-top: var(--space-24);
-}
-.save-template-note {
-  font-size: var(--fs-12);
-  color: var(--text-dim);
-  margin: calc(var(--space-12) * -1) 0 0;
-  font-style: italic;
-}
+/* v3.63.234 — .save-template-actions and .save-template-note retired:
+   footer row now uses .finish-modal-footer-btns and the trailing italic
+   note folded into the main .finish-modal-msg description. */
+
 /* v3.63.192 — Small italic helper that sits below the Category dropdown
-   inside the Save-as-Template modal to disambiguate scope. David's read of
+   inside the Template - Save modal to disambiguate scope. David's read of
    the v3.63.188 dropdown was that picking "Business & Sales" would file the
    custom template INTO the built-in Business & Sales section, when it
    actually subdivides only within the ⭐ Custom Templates view. This line
-   makes that explicit. Uses positive top margin (not the negative one
-   .save-template-note has) because it sits naturally below an input, not
-   tight under a paragraph. */
+   makes that explicit. Uses positive top margin because it sits naturally
+   below an input, not tight under a paragraph. */
 .save-template-help {
   font-size: var(--fs-12);
   color: var(--text-dim);
