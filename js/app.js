@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260608-009
+// Build: 20260608-010
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260608-009';         // build stamp — update each session
+const BUILD       = '20260608-010';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4172,8 +4172,8 @@ function openSaveTemplateModal() {
         if (catCustomEl) { catCustomEl.style.display = ''; catCustomEl.value = editCat; }
       }
     }
-    if (titleEl) titleEl.textContent = '\u270f\ufe0f Update Template';
-    if (btnEl)   btnEl.textContent   = '\u270f\ufe0f Update Template';
+    if (titleEl) titleEl.textContent = '\u270f\ufe0f Template - Update';
+    if (btnEl)   btnEl.textContent   = '\u270f\ufe0f Template - Update';
   } else {
     // v3.63.195 \u2014 Prefill template name as "{projectName} \u2014 recipe" but
     // truncate so the result fits the 120-char cap. Assigning .value
