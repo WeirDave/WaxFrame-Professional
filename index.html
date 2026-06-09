@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260608-002
+     Build: 20260608-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-002">
+  <meta name="waxframe-build" content="20260608-003">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.226">
+  <link rel="stylesheet" href="style.css?v=3.63.227">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.226",
+    "softwareVersion": "3.63.227",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1069,7 +1069,7 @@
             <div class="settings-row settings-row-actions">
               <div class="settings-row-label">
                 <span class="settings-row-name">Reset suppressed prompts</span>
-                <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), per-project Checkpoint Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. (The Checkpoint - Restore warning is intentionally NOT dismissable — it's a security trust gate that fires every time. The Checkpoint - Save modal is the action surface, not a yes/no gate, so it has no suppression either.) Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
+                <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), per-project Checkpoint Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. (The Checkpoint - Restore trust warning on its dedicated screen is intentionally NOT dismissable — it's a security trust gate that fires every time. The Checkpoint - Save screen is the action surface, not a yes/no gate, so it has no suppression either.) Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
               </div>
               <button class="btn settings-reset-btn" onclick="resetSuppressedPrompts()" title="Bring back every dismissed confirmation modal">↺ Reset suppressed prompts</button>
             </div>
@@ -1150,6 +1150,360 @@
       <div class="fs-footer-spacer"></div>
       <div class="settings-saved-note">✓ Settings save automatically</div>
       <button class="btn btn-lg btn-cta" title="Return to where you were" onclick="closeSettings()">← Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CHECKPOINT SCREEN (v3.63.227 — promoted from modal to full screen)
+     ────────────────────────────────────────────────────────────
+     One screen, two modes: Save and Restore. Mode toggle pills at the
+     top swap the visible panel. Both modes share the same 9-row scope
+     model — projectInfo, refMaterial, startingDoc, session, aiList,
+     models, keys, builder, license — each row independently tickable,
+     each row annotated with the exact JSON field names so users (and
+     future maintainers) can verify the modal ↔ file mapping.
+
+     Save mode: 2 columns per row — pick column + Current state preview.
+     Restore mode: 3 columns per row — pick + Current + Checkpoint.
+     Restore mode starts in "intro" state with the trust warning and a
+     "Choose Checkpoint File" button; after the file is parsed it swaps
+     to the diff state with all 9 rows populated.
+
+     Entry points: backupSession() (Save mode) and importSession()
+     (Restore mode) — both wired from the nav-menu Tools section. The
+     first-run nudge also calls backupSession(), so the Quick-Start
+     "Save Backup" lands here in Save mode.
+
+     Storage logic in js/storage.js — switchCheckpointMode(),
+     chooseCheckpointFile(), _populateRestoreCheckpointDiff(),
+     confirmSaveCheckpoint(), confirmRestoreCheckpoint(),
+     exitCheckpointScreen(). ============================================ -->
+<div class="screen" id="screen-checkpoint">
+  <div class="fullscreen-layout">
+    <div class="fs-header">
+      <div class="fs-header-left">
+        <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+        <button class="btn" title="Go back to where you were" onclick="exitCheckpointScreen()">← Back</button>
+      </div>
+      <div class="fs-header-brand">
+        <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
+        <div>
+          <div class="fs-logo-name">WaxFrame</div>
+          <div class="fs-logo-tag">Many minds, one refined result.</div>
+          <span class="app-version-stamp"></span>
+        </div>
+      </div>
+      <div class="fs-header-right">
+        <div class="setup-step-badge">Checkpoints</div>
+        <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
+        <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
+        <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️</button>
+        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+      </div>
+    </div>
+
+    <div class="fs-body-single">
+      <div class="hp-section">
+        <div class="hp-section-header honeycomb-header">
+          <img src="images/WaxFrame_Worker_Bee_v2.png" class="hp-section-bee" alt="">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title">Checkpoints</h2>
+            <p class="hp-section-sub">A checkpoint is a single JSON file that captures whichever pieces of your WaxFrame state you choose &mdash; project setup, reference material, starting document, in-progress session, hive composition, model picks, API keys, Builder selection, license. Save one before a risky round, before clearing a project, or as a periodic safety net. Restore one to bring those pieces back &mdash; pick which sections to apply; the rest of your local state stays untouched.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+          <!-- Mode toggle: Save / Restore. Each pill calls switchCheckpointMode(). -->
+          <div class="checkpoint-mode-toggle">
+            <button class="checkpoint-mode-pill active" id="chkModeSavePill" onclick="switchCheckpointMode('save')" title="Save a checkpoint of your current state to a JSON file">💾 Save Checkpoint</button>
+            <button class="checkpoint-mode-pill" id="chkModeRestorePill" onclick="switchCheckpointMode('restore')" title="Restore selected sections from a previously-saved checkpoint file">📂 Restore Checkpoint</button>
+          </div>
+
+          <!-- ──────────────── SAVE PANEL ──────────────── -->
+          <div class="checkpoint-panel" id="chkSavePanel">
+            <p class="checkpoint-panel-help">Pick which sections of your current local state go in the checkpoint file. Each row shows what's actually in your live state right now. Tick the sections you want included; untick what to leave out. <strong>License</strong> is included by default for self-portability (work → home on the same machine) &mdash; untick it when sharing the checkpoint with anyone else.</p>
+
+            <!-- Project group: 3 rows — projectInfo, refMaterial, startingDoc -->
+            <div class="checkpoint-row-group">
+              <div class="checkpoint-row-group-label">Project</div>
+              <label class="checkpoint-row">
+                <span class="checkpoint-row-pick">
+                  <input type="checkbox" id="saveScopeProjectInfo">
+                  <span class="checkpoint-row-text">
+                    <span class="checkpoint-row-name">Project info</span>
+                    <span class="checkpoint-row-desc">Name &amp; version, goal fields (doc type, audience, outcome, scope, tone, notes), length settings (mode/limit/min/unit), export mask, doc tab.<br><span class="checkpoint-row-json">JSON: projectName, projectVersion, goalDocType, goalAudience, goalOutcome, goalScope, goalTone, goalNotes, exportMask, lengthMode, lengthLimit, lengthMin, lengthUnit, docTab</span></span>
+                  </span>
+                </span>
+                <span class="checkpoint-row-cur" id="saveCurrentProjectInfo">&mdash;</span>
+              </label>
+              <label class="checkpoint-row">
+                <span class="checkpoint-row-pick">
+                  <input type="checkbox" id="saveScopeRefMaterial">
+                  <span class="checkpoint-row-text">
+                    <span class="checkpoint-row-name">Reference Material</span>
+                    <span class="checkpoint-row-desc">Uploaded reference documents &mdash; the files attached on Setup 3 for the AIs to reference each round.<br><span class="checkpoint-row-json">JSON: referenceDocs (array of {name, text, type, &hellip;})</span></span>
+                  </span>
+                </span>
+                <span class="checkpoint-row-cur" id="saveCurrentRefMaterial">&mdash;</span>
+              </label>
+              <label class="checkpoint-row">
+                <span class="checkpoint-row-pick">
+                  <input type="checkbox" id="saveScopeStartingDoc">
+                  <span class="checkpoint-row-text">
+                    <span class="checkpoint-row-name">Starting Document</span>
+                    <span class="checkpoint-row-desc">The pasted starting document &mdash; what the hive begins refining on Round 1. Empty if you started from scratch.<br><span class="checkpoint-row-json">JSON: pastedDocument (string)</span></span>
+                  </span>
+                </span>
+                <span class="checkpoint-row-cur" id="saveCurrentStartingDoc">&mdash;</span>
+              </label>
+            </div>
+
+            <!-- Session group: 1 row -->
+            <div class="checkpoint-row-group">
+              <div class="checkpoint-row-group-label">Session</div>
+              <label class="checkpoint-row">
+                <span class="checkpoint-row-pick">
+                  <input type="checkbox" id="saveScopeSession">
+                  <span class="checkpoint-row-text">
+                    <span class="checkpoint-row-name">Session in progress</span>
+                    <span class="checkpoint-row-desc">Round history, current working document, live console transcript, notes &amp; standing notes, debug ring buffer.<br><span class="checkpoint-row-json">JSON: IDB_SESSION.{history, docText, consoleHTML, notes, standingNotes, ringBuffer, lastFailure} + LS_SESSION (legacy, usually null)</span></span>
+                  </span>
+                </span>
+                <span class="checkpoint-row-cur" id="saveCurrentSession">&mdash;</span>
+              </label>
+            </div>
+
+            <!-- Hive group: 4 rows — aiList, models, keys, builder. Each independently tickable. -->
+            <div class="checkpoint-row-group">
+              <div class="checkpoint-row-group-label">Hive</div>
+              <label class="checkpoint-row">
+                <span class="checkpoint-row-pick">
+                  <input type="checkbox" id="saveScopeAiList">
+                  <span class="checkpoint-row-text">
+                    <span class="checkpoint-row-name">AI list</span>
+                    <span class="checkpoint-row-desc">Which default AIs are active in your hive, custom-AI definitions &amp; their endpoint configs, plus the hive mode (internet vs server). Does NOT include the model picks or API keys &mdash; those are separate rows below.<br><span class="checkpoint-row-json">JSON: activeAIIds, knownDefaultIds, hiveMode, customAIs, customAIConfigs</span></span>
+                  </span>
+                </span>
+                <span class="checkpoint-row-cur" id="saveCurrentAiList">&mdash;</span>
+              </label>
+              <label class="checkpoint-row">
+                <span class="checkpoint-row-pick">
+                  <input type="checkbox" id="saveScopeModels">
+                  <span class="checkpoint-row-text">
+                    <span class="checkpoint-row-name">Model picks</span>
+                    <span class="checkpoint-row-desc">Per-AI model selection (e.g. Claude &rarr; <code>claude-opus-4-5-20251101</code>). Save this when you want to share an exact-model recipe; <strong>leave it off</strong> if the receiving machine should pick its own current best model for each AI (work Sonnet vs home Opus).<br><span class="checkpoint-row-json">JSON: models (map of AI-id &rarr; model string)</span></span>
+                  </span>
+                </span>
+                <span class="checkpoint-row-cur" id="saveCurrentModels">&mdash;</span>
+              </label>
+              <label class="checkpoint-row">
+                <span class="checkpoint-row-pick">
+                  <input type="checkbox" id="saveScopeKeys">
+                  <span class="checkpoint-row-text">
+                    <span class="checkpoint-row-name">API keys</span>
+                    <span class="checkpoint-row-desc">The API key string saved for each AI in your hive. Including these makes the file sensitive &mdash; <strong>untick when sharing with anyone else</strong>. Safe to include for your own backups.<br><span class="checkpoint-row-json">JSON: keys (map of AI-id &rarr; key string)</span></span>
+                  </span>
+                </span>
+                <span class="checkpoint-row-cur" id="saveCurrentKeys">&mdash;</span>
+              </label>
+              <label class="checkpoint-row">
+                <span class="checkpoint-row-pick">
+                  <input type="checkbox" id="saveScopeBuilder">
+                  <span class="checkpoint-row-text">
+                    <span class="checkpoint-row-name">Builder selection</span>
+                    <span class="checkpoint-row-desc">Which AI is currently set as the Builder for refinement rounds. Just the AI id &mdash; not the model under it (that's the Model picks row).<br><span class="checkpoint-row-json">JSON: builder (AI-id string)</span></span>
+                  </span>
+                </span>
+                <span class="checkpoint-row-cur" id="saveCurrentBuilder">&mdash;</span>
+              </label>
+            </div>
+
+            <!-- License group: 1 row -->
+            <div class="checkpoint-row-group">
+              <div class="checkpoint-row-group-label">License</div>
+              <label class="checkpoint-row">
+                <span class="checkpoint-row-pick">
+                  <input type="checkbox" id="saveScopeLicense">
+                  <span class="checkpoint-row-text">
+                    <span class="checkpoint-row-name">License key</span>
+                    <span class="checkpoint-row-desc">Your WaxFrame Pro license key. Defaults ON for self-portability between your own machines &mdash; <strong>untick when sharing with anyone else</strong>.<br><span class="checkpoint-row-json">JSON: LS_LICENSE (license blob)</span></span>
+                  </span>
+                </span>
+                <span class="checkpoint-row-cur" id="saveCurrentLicense">&mdash;</span>
+              </label>
+            </div>
+
+            <div class="checkpoint-actions">
+              <button class="btn" onclick="exitCheckpointScreen()" title="Cancel and return without saving">Cancel</button>
+              <button class="btn btn-cta" onclick="confirmSaveCheckpoint()" title="Save the ticked sections to a JSON file">&#x1F4BE; Save Checkpoint</button>
+            </div>
+          </div>
+
+          <!-- ──────────────── RESTORE PANEL ──────────────── -->
+          <div class="checkpoint-panel" id="chkRestorePanel" style="display:none">
+
+            <!-- Restore intro: shown before a file is picked. Includes the
+                 trust warning (used to be a wfConfirm modal before the
+                 promotion to a screen) and the file-picker CTA. -->
+            <div id="chkRestoreIntro">
+              <div class="checkpoint-trust-warning">
+                <h3 class="checkpoint-trust-title">&#x26A0;&#xFE0F; Restore replaces local state</h3>
+                <p>Only restore checkpoints you created or trust. A checkpoint file can replace your project, AI setup, API keys, license key, and session state. After picking the file you'll see a Current vs Checkpoint diff with a checkbox per section &mdash; tick only what you want to bring in. Unticked sections keep their current local values byte-for-byte.</p>
+              </div>
+              <div class="checkpoint-actions">
+                <button class="btn" onclick="exitCheckpointScreen()" title="Cancel and go back">Cancel</button>
+                <button class="btn btn-cta" onclick="chooseCheckpointFile()" title="Open a file picker to choose a checkpoint JSON file">&#x1F4C2; Choose Checkpoint File</button>
+              </div>
+            </div>
+
+            <!-- Restore diff: shown after a file is parsed. Three columns
+                 per row — pick (checkbox + name + JSON detail) | Current
+                 (live local state) | Checkpoint (what the file carries). -->
+            <div id="chkRestoreDiff" style="display:none">
+              <p class="checkpoint-restore-file-meta" id="restoreCheckpointFileMeta"></p>
+
+              <!-- Restore-mode rows use a 3-column grid (pick / current / checkpoint). -->
+              <div class="checkpoint-row-group">
+                <div class="checkpoint-row-group-label-diff">
+                  <span>Project</span>
+                  <span class="checkpoint-col-label">Current</span>
+                  <span class="checkpoint-col-label">Checkpoint</span>
+                </div>
+                <label class="checkpoint-row checkpoint-row-diff">
+                  <span class="checkpoint-row-pick">
+                    <input type="checkbox" id="restoreScopeProjectInfo">
+                    <span class="checkpoint-row-text">
+                      <span class="checkpoint-row-name">Project info</span>
+                      <span class="checkpoint-row-desc">Name &amp; version, goal fields, length settings, export mask, doc tab.<br><span class="checkpoint-row-json">JSON: projectName, projectVersion, goalDocType, goalAudience, goalOutcome, goalScope, goalTone, goalNotes, exportMask, lengthMode, lengthLimit, lengthMin, lengthUnit, docTab</span></span>
+                    </span>
+                  </span>
+                  <span class="checkpoint-row-cur" id="restoreCurrentProjectInfo">&mdash;</span>
+                  <span class="checkpoint-row-ck"  id="restoreCheckpointProjectInfo">&mdash;</span>
+                </label>
+                <label class="checkpoint-row checkpoint-row-diff">
+                  <span class="checkpoint-row-pick">
+                    <input type="checkbox" id="restoreScopeRefMaterial">
+                    <span class="checkpoint-row-text">
+                      <span class="checkpoint-row-name">Reference Material</span>
+                      <span class="checkpoint-row-desc">Uploaded reference documents from Setup 3.<br><span class="checkpoint-row-json">JSON: referenceDocs (array)</span></span>
+                    </span>
+                  </span>
+                  <span class="checkpoint-row-cur" id="restoreCurrentRefMaterial">&mdash;</span>
+                  <span class="checkpoint-row-ck"  id="restoreCheckpointRefMaterial">&mdash;</span>
+                </label>
+                <label class="checkpoint-row checkpoint-row-diff">
+                  <span class="checkpoint-row-pick">
+                    <input type="checkbox" id="restoreScopeStartingDoc">
+                    <span class="checkpoint-row-text">
+                      <span class="checkpoint-row-name">Starting Document</span>
+                      <span class="checkpoint-row-desc">The pasted starting document from Setup 4.<br><span class="checkpoint-row-json">JSON: pastedDocument (string)</span></span>
+                    </span>
+                  </span>
+                  <span class="checkpoint-row-cur" id="restoreCurrentStartingDoc">&mdash;</span>
+                  <span class="checkpoint-row-ck"  id="restoreCheckpointStartingDoc">&mdash;</span>
+                </label>
+              </div>
+
+              <div class="checkpoint-row-group">
+                <div class="checkpoint-row-group-label-diff">
+                  <span>Session</span>
+                  <span class="checkpoint-col-label">Current</span>
+                  <span class="checkpoint-col-label">Checkpoint</span>
+                </div>
+                <label class="checkpoint-row checkpoint-row-diff">
+                  <span class="checkpoint-row-pick">
+                    <input type="checkbox" id="restoreScopeSession">
+                    <span class="checkpoint-row-text">
+                      <span class="checkpoint-row-name">Session in progress</span>
+                      <span class="checkpoint-row-desc">Round history, working document, console transcript, notes, debug ring buffer.<br><span class="checkpoint-row-json">JSON: IDB_SESSION.{history, docText, consoleHTML, notes, standingNotes, ringBuffer, lastFailure}</span></span>
+                    </span>
+                  </span>
+                  <span class="checkpoint-row-cur" id="restoreCurrentSession">&mdash;</span>
+                  <span class="checkpoint-row-ck"  id="restoreCheckpointSession">&mdash;</span>
+                </label>
+              </div>
+
+              <div class="checkpoint-row-group">
+                <div class="checkpoint-row-group-label-diff">
+                  <span>Hive</span>
+                  <span class="checkpoint-col-label">Current</span>
+                  <span class="checkpoint-col-label">Checkpoint</span>
+                </div>
+                <label class="checkpoint-row checkpoint-row-diff">
+                  <span class="checkpoint-row-pick">
+                    <input type="checkbox" id="restoreScopeAiList">
+                    <span class="checkpoint-row-text">
+                      <span class="checkpoint-row-name">AI list</span>
+                      <span class="checkpoint-row-desc">Active AIs, custom-AI configs, hive mode. Not the model picks or keys (those rows below).<br><span class="checkpoint-row-json">JSON: activeAIIds, knownDefaultIds, hiveMode, customAIs, customAIConfigs</span></span>
+                    </span>
+                  </span>
+                  <span class="checkpoint-row-cur" id="restoreCurrentAiList">&mdash;</span>
+                  <span class="checkpoint-row-ck"  id="restoreCheckpointAiList">&mdash;</span>
+                </label>
+                <label class="checkpoint-row checkpoint-row-diff">
+                  <span class="checkpoint-row-pick">
+                    <input type="checkbox" id="restoreScopeModels">
+                    <span class="checkpoint-row-text">
+                      <span class="checkpoint-row-name">Model picks</span>
+                      <span class="checkpoint-row-desc">Per-AI model overrides. <strong>Leave OFF</strong> when restoring on a different machine that should use its own current model picks (e.g. work Sonnet vs home Opus on Claude).<br><span class="checkpoint-row-json">JSON: models (map of AI-id &rarr; model string)</span></span>
+                    </span>
+                  </span>
+                  <span class="checkpoint-row-cur" id="restoreCurrentModels">&mdash;</span>
+                  <span class="checkpoint-row-ck"  id="restoreCheckpointModels">&mdash;</span>
+                </label>
+                <label class="checkpoint-row checkpoint-row-diff">
+                  <span class="checkpoint-row-pick">
+                    <input type="checkbox" id="restoreScopeKeys">
+                    <span class="checkpoint-row-text">
+                      <span class="checkpoint-row-name">API keys</span>
+                      <span class="checkpoint-row-desc">Per-AI API keys. Off by default &mdash; usually you keep your local keys.<br><span class="checkpoint-row-json">JSON: keys (map of AI-id &rarr; key string)</span></span>
+                    </span>
+                  </span>
+                  <span class="checkpoint-row-cur" id="restoreCurrentKeys">&mdash;</span>
+                  <span class="checkpoint-row-ck"  id="restoreCheckpointKeys">&mdash;</span>
+                </label>
+                <label class="checkpoint-row checkpoint-row-diff">
+                  <span class="checkpoint-row-pick">
+                    <input type="checkbox" id="restoreScopeBuilder">
+                    <span class="checkpoint-row-text">
+                      <span class="checkpoint-row-name">Builder selection</span>
+                      <span class="checkpoint-row-desc">Which AI is the Builder.<br><span class="checkpoint-row-json">JSON: builder (AI-id string)</span></span>
+                    </span>
+                  </span>
+                  <span class="checkpoint-row-cur" id="restoreCurrentBuilder">&mdash;</span>
+                  <span class="checkpoint-row-ck"  id="restoreCheckpointBuilder">&mdash;</span>
+                </label>
+              </div>
+
+              <div class="checkpoint-row-group">
+                <div class="checkpoint-row-group-label-diff">
+                  <span>License</span>
+                  <span class="checkpoint-col-label">Current</span>
+                  <span class="checkpoint-col-label">Checkpoint</span>
+                </div>
+                <label class="checkpoint-row checkpoint-row-diff">
+                  <span class="checkpoint-row-pick">
+                    <input type="checkbox" id="restoreScopeLicense">
+                    <span class="checkpoint-row-text">
+                      <span class="checkpoint-row-name">License key</span>
+                      <span class="checkpoint-row-desc">Off by default &mdash; if you already have a license locally, you don't need to re-import it.<br><span class="checkpoint-row-json">JSON: LS_LICENSE (license blob)</span></span>
+                    </span>
+                  </span>
+                  <span class="checkpoint-row-cur" id="restoreCurrentLicense">&mdash;</span>
+                  <span class="checkpoint-row-ck"  id="restoreCheckpointLicense">&mdash;</span>
+                </label>
+              </div>
+
+              <div class="checkpoint-actions">
+                <button class="btn" onclick="chooseCheckpointFile()" title="Pick a different checkpoint file">&#x1F4C2; Choose Different File</button>
+                <button class="btn btn-cta" onclick="confirmRestoreCheckpoint()" title="Apply the ticked sections; unticked sections keep their current local values">&#x1F504; Restore Selected</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2056,162 +2410,10 @@
   </div>
 </div>
 
-<!-- SAVE CHECKPOINT MODAL (v3.63.130) — selective EXPORT, replaces the
-     pre-checkpoint sensitive-backup wfConfirm and the Checkpoint - Save
-     (Scrubbed) menu item. Checkboxes pick which sections go in the file.
-     Defaults reflect the most common portable-project case: take the
-     project + session, leave hive/keys/builder behind so the file restores
-     cleanly on a machine with a different hive. License defaults ON for
-     self-portability (work→home); untick when sharing with a different
-     user. To make a share-safe redacted file, untick Keys + License (same
-     outcome the old Scrubbed flow produced, now reachable from one modal). -->
-<div class="finish-modal-overlay" id="saveCheckpointModal" onclick="if(event.target===this)closeSaveCheckpointModal()">
-  <div class="finish-modal save-checkpoint-modal">
-    <h2 class="finish-modal-title">&#x1F4BE; Checkpoint - Save</h2>
-    <p class="finish-modal-msg">Pick what goes in this checkpoint. Stored locally &mdash; checkpoints may include your document text, AI responses, API keys, license key, and debug traces. Keep them somewhere private and only share with people you trust.</p>
-    <div class="checkpoint-scope-list">
-      <label class="checkpoint-scope-row">
-        <input type="checkbox" id="scopeProject" checked>
-        <span class="checkpoint-scope-text">
-          <span class="checkpoint-scope-name">Project</span>
-          <span class="checkpoint-scope-desc">Goal, reference material, length settings</span>
-        </span>
-      </label>
-      <label class="checkpoint-scope-row">
-        <input type="checkbox" id="scopeSession" checked>
-        <span class="checkpoint-scope-text">
-          <span class="checkpoint-scope-name">Session in progress</span>
-          <span class="checkpoint-scope-desc">Round history, working document, console transcript, notes</span>
-        </span>
-      </label>
-      <label class="checkpoint-scope-row">
-        <input type="checkbox" id="scopeHive" onchange="updateCheckpointScopeChildren()">
-        <span class="checkpoint-scope-text">
-          <span class="checkpoint-scope-name">Hive composition</span>
-          <span class="checkpoint-scope-desc">Which AIs are active, custom-AI configs, per-AI model selections</span>
-        </span>
-      </label>
-      <label class="checkpoint-scope-row checkpoint-scope-row-child">
-        <input type="checkbox" id="scopeKeys" disabled>
-        <span class="checkpoint-scope-text">
-          <span class="checkpoint-scope-name">API keys</span>
-          <span class="checkpoint-scope-desc">The API keys for each AI in your hive &mdash; requires Hive</span>
-        </span>
-      </label>
-      <label class="checkpoint-scope-row checkpoint-scope-row-child">
-        <input type="checkbox" id="scopeBuilder" disabled>
-        <span class="checkpoint-scope-text">
-          <span class="checkpoint-scope-name">Builder selection</span>
-          <span class="checkpoint-scope-desc">Which AI is currently set as Builder &mdash; requires Hive</span>
-        </span>
-      </label>
-      <label class="checkpoint-scope-row">
-        <input type="checkbox" id="scopeLicense" checked>
-        <span class="checkpoint-scope-text">
-          <span class="checkpoint-scope-name">License</span>
-          <span class="checkpoint-scope-desc">Your WaxFrame Pro license key &mdash; untick when sharing with someone else</span>
-        </span>
-      </label>
-    </div>
-    <div class="finish-modal-footer-btns">
-      <button class="finish-modal-cancel" onclick="closeSaveCheckpointModal()">Cancel</button>
-      <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="confirmSaveCheckpoint()">&#x1F4BE; Checkpoint - Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- RESTORE CHECKPOINT MODAL (v3.63.225 — diff-and-pick UI)
-     Shown after the user picks a checkpoint file (via the menu's "Restore
-     from Checkpoint" entry, which calls importSession()). For each of the
-     six envelope sections, displays Current vs Checkpoint side-by-side and
-     lets the user opt OUT of any section before applying. Defaults: every
-     available section pre-ticked. Sections the file doesn't carry are
-     disabled with a "(not in checkpoint)" hint so the user understands why
-     those rows aren't pickable. Confirm calls confirmRestoreCheckpoint();
-     Cancel calls closeRestoreCheckpointModal(). -->
-<div class="finish-modal-overlay" id="restoreCheckpointModal" onclick="if(event.target===this)closeRestoreCheckpointModal()">
-  <div class="finish-modal restore-checkpoint-modal">
-    <h2 class="finish-modal-title">&#x1F504; Checkpoint - Restore</h2>
-    <p class="finish-modal-msg" id="restoreCheckpointFileMeta">Reading checkpoint&hellip;</p>
-    <div class="restore-diff-table">
-      <div class="restore-diff-hdr">
-        <div class="restore-diff-hdr-cell">Section</div>
-        <div class="restore-diff-hdr-cell">Current</div>
-        <div class="restore-diff-hdr-cell">Checkpoint</div>
-      </div>
-      <label class="restore-diff-row">
-        <span class="restore-diff-pick">
-          <input type="checkbox" id="restoreScopeProject">
-          <span class="checkpoint-scope-text">
-            <span class="checkpoint-scope-name">Project</span>
-            <span class="checkpoint-scope-desc">Goal, reference material, length settings</span>
-          </span>
-        </span>
-        <span class="restore-diff-cell" id="restoreCurrentProject"></span>
-        <span class="restore-diff-cell" id="restoreCheckpointProject"></span>
-      </label>
-      <label class="restore-diff-row">
-        <span class="restore-diff-pick">
-          <input type="checkbox" id="restoreScopeSession">
-          <span class="checkpoint-scope-text">
-            <span class="checkpoint-scope-name">Session in progress</span>
-            <span class="checkpoint-scope-desc">Round history, working document, console, notes</span>
-          </span>
-        </span>
-        <span class="restore-diff-cell" id="restoreCurrentSession"></span>
-        <span class="restore-diff-cell" id="restoreCheckpointSession"></span>
-      </label>
-      <label class="restore-diff-row">
-        <span class="restore-diff-pick">
-          <input type="checkbox" id="restoreScopeHive" onchange="updateRestoreCheckpointScopeChildren()">
-          <span class="checkpoint-scope-text">
-            <span class="checkpoint-scope-name">Hive composition</span>
-            <span class="checkpoint-scope-desc">Active AIs, custom-AI configs, per-AI model selections</span>
-          </span>
-        </span>
-        <span class="restore-diff-cell" id="restoreCurrentHive"></span>
-        <span class="restore-diff-cell" id="restoreCheckpointHive"></span>
-      </label>
-      <label class="restore-diff-row restore-diff-row-child">
-        <span class="restore-diff-pick">
-          <input type="checkbox" id="restoreScopeKeys">
-          <span class="checkpoint-scope-text">
-            <span class="checkpoint-scope-name">API keys</span>
-            <span class="checkpoint-scope-desc">Merges into your local hive if Hive is unticked</span>
-          </span>
-        </span>
-        <span class="restore-diff-cell" id="restoreCurrentKeys"></span>
-        <span class="restore-diff-cell" id="restoreCheckpointKeys"></span>
-      </label>
-      <label class="restore-diff-row restore-diff-row-child">
-        <span class="restore-diff-pick">
-          <input type="checkbox" id="restoreScopeBuilder">
-          <span class="checkpoint-scope-text">
-            <span class="checkpoint-scope-name">Builder selection</span>
-            <span class="checkpoint-scope-desc">Merges into your local hive if Hive is unticked</span>
-          </span>
-        </span>
-        <span class="restore-diff-cell" id="restoreCurrentBuilder"></span>
-        <span class="restore-diff-cell" id="restoreCheckpointBuilder"></span>
-      </label>
-      <label class="restore-diff-row">
-        <span class="restore-diff-pick">
-          <input type="checkbox" id="restoreScopeLicense">
-          <span class="checkpoint-scope-text">
-            <span class="checkpoint-scope-name">License</span>
-            <span class="checkpoint-scope-desc">Your WaxFrame Pro license key</span>
-          </span>
-        </span>
-        <span class="restore-diff-cell" id="restoreCurrentLicense"></span>
-        <span class="restore-diff-cell" id="restoreCheckpointLicense"></span>
-      </label>
-    </div>
-    <div class="finish-modal-footer-btns">
-      <button class="finish-modal-cancel" onclick="closeRestoreCheckpointModal()">Cancel</button>
-      <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="confirmRestoreCheckpoint()">&#x1F504; Restore Selected</button>
-    </div>
-  </div>
-</div>
+<!-- v3.63.227 — Save Checkpoint and Restore Checkpoint modals retired.
+     Both flows now live on the dedicated Checkpoints screen (#screen-checkpoint
+     above), promoted from modal to full screen so 9 scope rows + per-row
+     JSON-field detail have proper room to breathe. -->
 
 <!-- Toast -->
 <div id="toast"></div>
@@ -2450,11 +2652,11 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">💾 Checkpoint - Save</span>
-        <span class="goal-info-desc">Save a checkpoint of your full current state — hive, project, reference material, round history, work-in-progress document — to a single JSON file you can restore from later. Recommended before any risky operation or experimental round, and as a periodic safety net on long projects.</span>
+        <span class="goal-info-desc">Opens the Checkpoints screen in Save mode. Nine independent checkboxes pick which sections go in the file — Project info, Reference Material, Starting Document, Session in progress, AI list, Model picks, API keys, Builder selection, License. Each row shows what's actually in your live state right now and lists the exact JSON fields included. Recommended before any risky operation or experimental round, and as a periodic safety net on long projects.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">📂 Checkpoint - Restore</span>
-        <span class="goal-info-desc">Restore from a previously-saved checkpoint JSON. After picking the file you'll see a Current vs Checkpoint diff with a checkbox per section (project, session, hive, keys, builder, license) — tick only what you want to bring forward. Unticked sections keep their current local values, so you can pull yesterday's project setup while keeping today's API keys.</span>
+        <span class="goal-info-desc">Opens the Checkpoints screen in Restore mode. After choosing a checkpoint file you'll see a Current vs Checkpoint diff with a checkbox per section (Project info, Reference Material, Starting Document, Session, AI list, Model picks, API keys, Builder, License). Tick only what you want to bring forward; unticked sections keep their current local values byte-for-byte. Pull yesterday's project setup without overwriting today's keys, or bring a checkpoint's AI list across machines while keeping local model picks intact.</span>
       </div>
       <p><strong>Settings</strong></p>
       <div class="goal-info-row">
@@ -3037,23 +3239,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.226';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.227';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.226"></script>
-<script src="lib/jszip.min.js?v=3.63.226"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.226"></script>
-<script src="js/version.js?v=3.63.226"></script>
-<script src="js/storage.js?v=3.63.226"></script>
-<script src="js/theme.js?v=3.63.226"></script>
-<script src="js/audio.js?v=3.63.226"></script>
-<script src="js/scenes.js?v=3.63.226"></script>
-<script src="js/wf-debug.js?v=3.63.226"></script>
-<script src="js/provider-models.js?v=3.63.226"></script>
-<script src="js/api.js?v=3.63.226"></script>
-<script src="js/templates.js?v=3.63.226"></script>
-<script src="js/api-links.js?v=3.63.226"></script>
-<script src="js/app.js?v=3.63.226"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.227"></script>
+<script src="lib/jszip.min.js?v=3.63.227"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.227"></script>
+<script src="js/version.js?v=3.63.227"></script>
+<script src="js/storage.js?v=3.63.227"></script>
+<script src="js/theme.js?v=3.63.227"></script>
+<script src="js/audio.js?v=3.63.227"></script>
+<script src="js/scenes.js?v=3.63.227"></script>
+<script src="js/wf-debug.js?v=3.63.227"></script>
+<script src="js/provider-models.js?v=3.63.227"></script>
+<script src="js/api.js?v=3.63.227"></script>
+<script src="js/templates.js?v=3.63.227"></script>
+<script src="js/api-links.js?v=3.63.227"></script>
+<script src="js/app.js?v=3.63.227"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -3078,7 +3280,7 @@ function wfMobileShareToast(msg) {
           <p class="about-modal-tagline">Many minds, one refined result.</p>
           <div class="about-version-row">
             <span class="about-version-pill"><span id="aboutVersion">v3.63.224 Pro</span></span>
-            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-002</strong></span>
+            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-003</strong></span>
           </div>
         </div>
       </div>
@@ -3087,7 +3289,7 @@ function wfMobileShareToast(msg) {
     <div class="about-modal-body">
       <p class="about-modal-intro">Browser-native document refinement powered by your own AI keys, your hive configuration, and a local-first workspace.</p>
       <div class="about-info-stack">
-        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-002</strong></div></div>
+        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-003</strong></div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Stack</h3><div class="wf-card-body">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">License</h3><div class="wf-card-body">AGPL-3.0 — open source, free to use and modify with attribution.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Legal</h3><div class="wf-card-body"><a href="privacy.html" target="_blank" rel="noopener noreferrer" class="link-accent">Privacy Policy</a> · <a href="terms.html" target="_blank" rel="noopener noreferrer" class="link-accent">Terms of Use</a></div></div>
@@ -3138,9 +3340,9 @@ function wfMobileShareToast(msg) {
     <details class="nav-section">
       <summary class="nav-section-label">Tools</summary>
       <button title="Restore from a previously-saved WaxFrame checkpoint file — diff-and-pick which sections to bring forward" class="nav-item" onclick="importSession()">📂 Checkpoint - Restore</button>
+      <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Checkpoint - Save</button>
       <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>
       <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
-      <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Checkpoint - Save</button>
       <!-- v3.63.172 — Templates entry. Until this release the template gallery
            was reachable ONLY via the 📋 Use Template button on Setup 2 (Project),
            which meant the welcome screen's pitch wording (which name-checks the

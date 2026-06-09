@@ -2,6 +2,60 @@
 
 ---
 
+## v3.63.227
+
+**Checkpoints screen — 9-section granular Save & Restore, promoted from modal to full screen**
+
+Build: `20260608-003`<br>
+Released: `2026-06-08`
+
+### Added — Checkpoints screen with 9 independent scope checkboxes
+
+Save and Restore now live on a dedicated **Checkpoints** screen reached from the nav menu (`💾 Checkpoint - Save` / `📂 Checkpoint - Restore`, both adjacent in the Tools section). A mode toggle at the top swaps the screen between Save and Restore. The big move: scope granularity expanded from 6 sections to **9**, each independently tickable, each annotated inline with the exact JSON fields it maps to so the modal ↔ file mapping is verifiable at a glance.
+
+The nine sections:
+
+- **Project info** — `projectName, projectVersion, goalDocType, goalAudience, goalOutcome, goalScope, goalTone, goalNotes, exportMask, lengthMode, lengthLimit, lengthMin, lengthUnit, docTab`
+- **Reference Material** — `referenceDocs` (uploaded reference docs from Setup 3)
+- **Starting Document** — `pastedDocument` (the pasted starting doc from Setup 4)
+- **Session in progress** — `IDB_SESSION.{history, docText, consoleHTML, notes, standingNotes, ringBuffer, lastFailure}` + legacy `LS_SESSION`
+- **AI list** — `activeAIIds, knownDefaultIds, hiveMode, customAIs, customAIConfigs`
+- **Model picks** — `models` (per-AI model overrides — split from AI list so you can bring an AI lineup forward without overriding the receiver's local model picks)
+- **API keys** — `keys`
+- **Builder selection** — `builder`
+- **License key** — `LS_LICENSE`
+
+### Why the split
+
+Real-world cases the prior 6-section design couldn't express cleanly:
+
+- **Work Claude (Sonnet) vs home Claude (Opus)** — bring the AI lineup across machines without overriding model picks. Tick AI list, leave Model picks unticked.
+- **Yesterday's project goal, today's reference material** — bring Project info forward, leave Reference Material untouched.
+- **Restore the starting document but keep my current goal** — granular sub-section control across the project blob.
+
+### File format v6
+
+The save side now splices the `LS_PROJECT` and `LS_HIVE` blobs at write time — the file contains only the field subsets the user ticked. Importer detects v6 by the `_waxframe_backup_version` field and applies the 9-key scope directly. Format-v5 checkpoints (from v3.63.130 through v3.63.226) are still importable — their 6-key scope is mapped onto the 9-key model by inspecting which sub-fields the file actually carries. Format-v4 and earlier checkpoints carry no scope; the diff view shows what's present and lets you pick row by row.
+
+### Other changes in this release
+
+- **Defaults updated**: License defaults OFF on Restore (you don't re-import a license you already have locally) and ON on Save (self-portability). Hive sub-sections (AI list, Model picks, API keys, Builder) default OFF on both, so checkpoints don't clobber the local hive by accident.
+- **Save Checkpoint warning modal retired**: the pre-save confirmation modal is gone — the screen IS the action surface, so a separate "are you sure" gate is redundant. Suppression flag for it removed from the Settings panel and user manual.
+- **Per-row JSON-field labels**: every row in both modes spells out the JSON keys it covers, so you can open a saved checkpoint file in any text editor and verify the UI matches the bytes.
+- **Tools nav order**: `📂 Checkpoint - Restore` and `💾 Checkpoint - Save` now sit adjacent at the top of the Tools section (was split between R and S alphabetically).
+- **User manual rewritten** for the granular model — `#checkpoint-scope` anchor preserved.
+
+### Files Changed
+
+- Updated: `js/storage.js` — refactored `backupSession()`/`importSession()` to navigate to the screen; added `switchCheckpointMode`, `chooseCheckpointFile`, `exitCheckpointScreen`, `_populateRestoreCheckpointDiff`, `_setSaveCheckpointDefaults`, `_refreshSaveCheckpointCurrentSummaries`; rewrote `_writeCheckpoint` to emit format v6 with granular splicing; rewrote `_applyCheckpoint` for granular merging; added six new summary helpers (`_restoreSummarizeProjectInfo`, `_restoreSummarizeRefMaterial`, `_restoreSummarizeStartingDoc`, `_restoreSummarizeAIList`, `_restoreSummarizeModels`)
+- Updated: `index.html` — added `#screen-checkpoint` (Save panel + Restore panel + intro + diff states); removed `#saveCheckpointModal` and `#restoreCheckpointModal`; updated help-modal info-labels; updated settings suppression-row description; reordered Tools nav entries
+- Updated: `style.css` — replaced modal styles with screen styles (`.checkpoint-mode-toggle`, `.checkpoint-mode-pill`, `.checkpoint-panel`, `.checkpoint-trust-warning`, `.checkpoint-restore-file-meta`, `.checkpoint-row-group`, `.checkpoint-row-group-label`, `.checkpoint-row-group-label-diff`, `.checkpoint-row`, `.checkpoint-row-diff`, `.checkpoint-row-pick`, `.checkpoint-row-text`, `.checkpoint-row-name`, `.checkpoint-row-desc`, `.checkpoint-row-json`, `.checkpoint-row-cur`, `.checkpoint-row-ck`, `.checkpoint-actions`)
+- Updated: `waxframe-user-manual.html` — rewrote the `#checkpoint-scope` block for 9 sections + 5 use-case recipes; retired the "Save Checkpoint warning" suppression-flag entry; updated nudge-modal description
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.227 / 20260608-003 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.226
 
 **Checkpoint menu items grouped alphabetically**
