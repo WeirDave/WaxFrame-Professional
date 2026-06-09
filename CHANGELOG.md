@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.231
+
+**Checkpoints: gold hover stays gold, full-width on wider monitors, inline error for wrong files**
+
+Build: `20260608-007`<br>
+Released: `2026-06-08`
+
+### Fixed — gold preview row no longer washes out on hover
+
+The "In this checkpoint file" preview row was using a translucent gold background (10% opacity gold). When the row-wide hover state layered a gray over it, the translucent gold mixed with the gray and looked washed-out / muddy gray-gold. Two fixes: (1) the file preview now uses a **solid** gold-tinted background via `color-mix()` so the tone stays stable no matter what's underneath, and (2) the hover state is **localized to the pick area** (the checkbox + name + description block) instead of the whole row, so the preview cards keep their colors fully intact.
+
+### Changed — Checkpoints screen uses full available width
+
+The 1500px width cap is gone. On wider monitors the screen now fills the viewport (minus standard padding); on a 1368px laptop the layout already reached the viewport edges so there's no change there. Result: no more wasted screen real estate on big monitors.
+
+### Added — inline error banner when the wrong file is picked
+
+When a user picks a JSON file that isn't a checkpoint (an unrelated JSON, a Diagnostic Bundle, or a malformed file), they now see a **red error banner inside the Restore intro panel** — right above the Choose File button where they're already looking. The prior implementation only fired a toast at the bottom of the page, which was off-screen behind the long Checkpoints screen content. Three specific error messages cover the three failure modes:
+
+- **Diagnostic Bundle**: explains it's export-only and tells the user to pick the Checkpoint file instead.
+- **Not a checkpoint**: explains the file is missing the checkpoint marker and tells the user to look for "Checkpoint" in the filename.
+- **Could not parse**: explains the file isn't valid JSON and suggests checking for truncation.
+
+The error clears automatically on the next file-pick attempt and when switching between Save/Restore modes.
+
+### Files Changed
+
+- Updated: `js/storage.js` — added `_showRestoreError(title, body)` and `_clearRestoreError()` helpers; rewired `chooseCheckpointFile()` to surface failures inline; clear stale errors on mode-switch
+- Updated: `index.html` — added `#chkRestoreError` banner with title/body spans in the Restore intro panel
+- Updated: `style.css` — removed the 1500px max-width cap on `#screen-checkpoint .hp-section`; localized row hover to `.checkpoint-row-pick`; made `.checkpoint-row-preview-file` background solid via `color-mix(in srgb, var(--accent) 14%, var(--surface2))`; added `.checkpoint-restore-error` and `.checkpoint-restore-error-title` styles using `--red` / `--red`-tinted background
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.231 / 20260608-007 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.230
 
 **Checkpoints screen uses the Project Bee**

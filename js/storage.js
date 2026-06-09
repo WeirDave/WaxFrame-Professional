@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260608-006
+// Build: 20260608-007
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1112,9 +1112,11 @@ function switchCheckpointMode(mode) {
     if (restoreIntro) restoreIntro.style.display = '';
     if (restoreDiff)  restoreDiff.style.display  = 'none';
     // Clear any prior stash so a Save → Restore toggle never leaks parsed
-    // data from a previous session.
+    // data from a previous session. Also clear any stale error banner
+    // from a previous bad-file pick.
     window._pendingRestoreData = null;
     window._pendingRestoreHas  = null;
+    _clearRestoreError();
   } else {
     if (savePill)    savePill.classList.add('active');
     if (restorePill) restorePill.classList.remove('active');
@@ -1195,11 +1197,31 @@ function exitCheckpointScreen() {
   }
 }
 
+// v3.63.231 — Show/hide the inline error banner in the Restore intro
+// panel. The banner sits between the trust warning and the Choose File
+// button so the user sees it where they're actually looking; the prior
+// toast at page bottom was getting lost below the fold behind the long
+// Checkpoints screen content.
+function _showRestoreError(title, body) {
+  const wrap = document.getElementById('chkRestoreError');
+  const t    = document.getElementById('chkRestoreErrorTitle');
+  const b    = document.getElementById('chkRestoreErrorBody');
+  if (t) t.textContent = title;
+  if (b) b.textContent = body;
+  if (wrap) wrap.classList.add('active');
+}
+function _clearRestoreError() {
+  document.getElementById('chkRestoreError')?.classList.remove('active');
+}
+
 // v3.63.227 — File picker for Restore mode. Opens the system file picker;
 // on selection, parses the JSON, validates the envelope magic flag, then
 // hands off to _populateRestoreCheckpointDiff() which fills the 9 rows of
 // the diff view and swaps the Restore panel from intro state to diff state.
+// v3.63.231 — Failures now surface as an inline error banner in the intro
+// panel. Each new pick clears the prior error first.
 function chooseCheckpointFile() {
+  _clearRestoreError();
   const input    = document.createElement('input');
   input.type     = 'file';
   input.accept   = '.json';
@@ -1210,15 +1232,29 @@ function chooseCheckpointFile() {
     reader.onload  = async ev => {
       try {
         const data = JSON.parse(ev.target.result);
-        // v3.54.0 — friendly rejection for diagnostic bundles.
+        // Diagnostic bundles are export-only (carry _waxframe_diagnostic but
+        // not _waxframe_backup) — friendly callout so the user knows why
+        // their support-bundle file can't restore.
         if (data._waxframe_diagnostic && !data._waxframe_backup) {
-          toast('⚠️ This is a Diagnostic Bundle (export-only, for sending to support). It can\'t restore a session — use a Checkpoint file for that.', 9000);
+          _showRestoreError(
+            'That\'s a Diagnostic Bundle, not a checkpoint',
+            'Diagnostic Bundles are export-only — they strip your keys for sending to support. They can\'t restore a session. Pick a Checkpoint file instead (the one with "Checkpoint" in the filename).'
+          );
           return;
         }
-        if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame checkpoint file'); return; }
+        if (!data._waxframe_backup) {
+          _showRestoreError(
+            'Not a WaxFrame checkpoint',
+            'That JSON file doesn\'t look like a WaxFrame checkpoint. Checkpoints have "Checkpoint" in the filename and are produced by Checkpoint - Save in this app. Try a different file.'
+          );
+          return;
+        }
         await _populateRestoreCheckpointDiff(data);
       } catch(e) {
-        toast('⚠️ Could not read file — is it a WaxFrame checkpoint?');
+        _showRestoreError(
+          'Could not read that file',
+          'The file isn\'t valid JSON. Make sure you picked the .json file produced by Checkpoint - Save (not a renamed or truncated copy), then try again.'
+        );
       }
     };
     reader.readAsText(file);
