@@ -2,6 +2,58 @@
 
 ---
 
+## v3.63.255
+
+**Round now pauses BEFORE the Builder phase when a bee-fatal error fires**
+
+Build: `20260610-031`<br>
+Released: `2026-06-10`
+
+### Why
+
+v3.63.254 wired up the Auto-cancel, the model quarantine, and the surgical Resend button. But David's Round 12 test of v3.63.254 surfaced that the surgical retry was only saving HALF the spend it should have:
+
+```
+04:48:52 PM ❌ Perplexity — HTTP 400: sonar-reasoning deprecated
+04:48:52 PM ⛔ Model quarantined ✅
+04:48:52 PM 🤖 Auto Mode cancelled ✅
+... 17 seconds pass while the user reads the card ...
+04:49:09 PM 🔨 Gemini (Builder) — compiling from 9 reviews (degraded)
+04:49:09 PM 📤 Gemini (Builder) — sending request (16,561 chars)
+04:49:45 PM ✅ Round 12 complete — document updated (with the failing bee missing)
+```
+
+The reviewer-phase `Promise.all` continued through the surviving 9 bees (correct), but then runRound went straight into the Builder phase — sending a 16,561-char prompt to Gemini Pro for 36s of compute. By the time the user could click *Re-send Perplexity's prompt only*, the degraded Builder call had already burned. The Resend then re-fired Perplexity and ran the Builder a SECOND time with the complete set. Net: 2 Builder calls per round with one failing bee.
+
+David's original ask was specifically "instead of restarting the entire round just resend that particular AI's prompts back to that AI **to finalize that round**" — i.e. the Builder should fire ONCE, after the Resend, not twice.
+
+### What changed
+
+`WF_DEBUG.showCard` now sets `window._beeFatalInRound = true` whenever it shows a card whose code is in `_BEE_FATAL_CODES`. `runRound` clears the flag at the top of every fresh (non-resumed) round, then checks it right after `Promise.all(reviewerPromises)` resolves:
+
+- If `_beeFatalInRound` is set, runRound **halts**: skips slow-responder + convergence + Builder + history.push + Auto chain, resets the UI to idle, logs `🛑 Round N halted — Builder phase skipped to save the degraded call`, sets status `⏸ Round N paused — fix the flagged bee and Re-send to finalize`, leaves `window._partialRound` intact, returns.
+- Resumed retries (`resumedFromPartial: true` from `retrySingleAIInPartialRound`) explicitly bypass both the flag-reset AND the halt check, so the user's Re-send click finalizes the round through the Builder phase exactly once.
+
+Non-bee-fatal failures (NETWORK_ERROR, TIMEOUT, slow responder) keep the existing "continue degraded" behavior — those are transient and Auto should keep chaining.
+
+### Net cost on a 10-bee hive with one bee-fatal failure
+
+| Path | Reviewer calls | Builder calls |
+|---|---|---|
+| Legacy *Retry round* button | 20 | 2 |
+| v3.63.252–v3.63.254 *Re-send* | 11 | 2 |
+| **v3.63.255 *Re-send*** | **11** | **1** |
+
+The remaining Builder call is the one that actually produces useful output (it has the complete reviewer set including the previously-failing bee's contribution). The skipped Builder call would have been the degraded one — wasted compute against a known-incomplete reviewer set.
+
+### Files touched
+
+- [js/wf-debug.js](js/wf-debug.js) — `WF_DEBUG.showCard` sets `window._beeFatalInRound` alongside `_beeFatalCardActive`
+- [js/app.js](js/app.js) — `runRound` clears `_beeFatalInRound` at the top of non-resumed rounds; new halt block after `Promise.all` that returns early when the flag is set
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps across all HTML
+
+---
+
 ## v3.63.254
 
 **Deprecated-model errors now route to the surgical retry flow**

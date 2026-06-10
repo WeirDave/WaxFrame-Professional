@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260610-030
+// Build: 20260610-031
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -16601,6 +16601,15 @@ async function runRound(opts) {
   // v3.56.15 — A round is firing; clear any pending churn hold and re-arm the
   // detector (it self-disables while _churnPending is true).
   window._churnPending = false;
+  // v3.63.255 — Clear the bee-fatal-in-round flag so a stale value from a
+  // prior round can't trigger the new "halt before Builder" path on a clean
+  // round. The flag is set by WF_DEBUG.showCard when a bee-fatal card fires
+  // mid-reviewer-phase; the check after Promise.all reads it and bails out
+  // before the Builder phase (saves the degraded Builder call). Resumed
+  // retries (resumedFromPartial:true) skip this reset so a halt that's
+  // mid-recovery isn't accidentally cleared between the original round and
+  // the retry continuation.
+  if (!_resumedFromPartial) window._beeFatalInRound = false;
 
   // P1.3 #9 (v3.56.3) — the reroll count is intentionally NOT reset here. A full
   // round is now part of the length-correction cycle (one Builder nudge, then
@@ -16834,6 +16843,45 @@ async function runRound(opts) {
 
   await Promise.all(reviewerPromises);
   } // end if (!_resumedFromPartial) — close the reviewer-phase skip wrapper (v3.63.252)
+
+  // ── HALT BEFORE BUILDER ON BEE-FATAL (v3.63.255) ──
+  // A bee-fatal card fired during the reviewer phase (set by
+  // WF_DEBUG.showCard). Skip the Builder phase entirely so the user isn't
+  // billed for a degraded Builder call against an incomplete reviewer set.
+  // The card is already on screen with Re-send wired up; clicking it will
+  // re-fire just the failing bee and resume runRound through the Builder
+  // phase ONCE with the complete set. Net cost on a 10-bee hive with one
+  // bee-fatal failure: 11 reviewer calls + 1 Builder call (vs the prior
+  // implementation's 11 + 2). The reviewer-phase calls already ran in
+  // parallel, so the savings are entirely on the Builder side — which is
+  // usually the biggest single API spend in the round (a Gemini Pro builder
+  // sends a 16k+ char prompt and runs 30s+ of compute).
+  //
+  // Resumed retries (resumedFromPartial:true) DO NOT consult this flag —
+  // the retry is the user's explicit "finalize this round" signal, so the
+  // Builder phase must run. The flag-reset at the top of runRound is gated
+  // on !_resumedFromPartial precisely so a halt that's mid-recovery isn't
+  // accidentally cleared.
+  if (window._beeFatalInRound && !_resumedFromPartial) {
+    consoleLog(`🛑 Round ${round} halted — bee-fatal failure detected. Builder phase skipped to save the degraded call. Fix the flagged bee and click "Re-send" on the card to finalize.`, 'warn');
+    setStatus(`⏸ Round ${round} paused — fix the flagged bee and Re-send to finalize`);
+    if (btn) {
+      btn.classList.remove('running');
+      const lbl = btn.querySelector('.shake-wide-label');
+      if (lbl) lbl.textContent = 'Smoke the Hive';
+    }
+    if (typeof stopRoundTimer === 'function') stopRoundTimer();
+    if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
+    if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
+    window._roundUiState = 'idle';
+    if (typeof updateRoundBadge === 'function') updateRoundBadge();
+    // Leave _partialRound intact (the resumedFromPartial retry path reads
+    // reviewerResponses from it), do NOT write to history (the round didn't
+    // succeed or fail — it's paused), do NOT increment `round`, do NOT
+    // advance phase. The next runRound() (whether from Re-send or from a
+    // fresh Smoke click) re-evaluates state cleanly.
+    return;
+  }
 
   // ── SLOW RESPONDER CHECK ──
   const _timings = window._roundTimings || {};

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260610-030
+// Build: 20260610-031
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -173,6 +173,14 @@ window.WF_DEBUG = {
     // only" to finalize the round at one-bee cost instead of a full round.
     if (entry && WF_DEBUG._BEE_FATAL_CODES.has(entry.code)) {
       window._beeFatalCardActive = true;
+      // v3.63.255 — Signal runRound that a bee-fatal failure happened in this
+      // round so it can halt before the Builder phase fires (saves the
+      // degraded Builder call, often the most expensive call in the round —
+      // a Gemini Pro builder on a 10-bee hive is a 16k-char prompt + 30s+ of
+      // compute that would otherwise be re-spent the moment the user clicks
+      // Re-send to finalize). runRound clears this flag at every round
+      // start, so a stale value from a prior round can't bleed forward.
+      window._beeFatalInRound = true;
       if (window._autoMode) {
         window._autoMode = false;
         window._autoChainDeferred = null;
