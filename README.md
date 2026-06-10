@@ -21,10 +21,7 @@ Multi-AI document refinement in your browser. No server, no account, no install.
 </div>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_welcome_light.png">
-    <img src="screenshots/screenshot_welcome_dark.png" width="820" alt="WaxFrame welcome screen">
-  </picture>
+  <img src="images/WaxFrame_Worker_Bee_v2.png" width="320" alt="WaxFrame Worker Bee — the mascot for the AI reviewers in your hive">
 </p>
 
 ---
