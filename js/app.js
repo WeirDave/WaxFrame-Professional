@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260608-024
+// Build: 20260608-025
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260608-024';         // build stamp — update each session
+const BUILD       = '20260608-025';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4555,7 +4555,7 @@ function setCustomTemplateSort(mode) {
 // David's case from 2026-06-06: three "Amazon reviews" templates that
 // should just be "Reviews" — editing each one would be a mess. This
 // fires once, updates all matching templates, re-renders.
-function renameCustomCategory(oldName) {
+async function renameCustomCategory(oldName) {
   oldName = (oldName || '').trim();
   if (!oldName) return;
   const all = loadCustomTemplates();
@@ -4564,17 +4564,22 @@ function renameCustomCategory(oldName) {
     toast(`⚠️ No templates found under "${oldName}"`);
     return;
   }
-  const input = window.prompt(
-    `Rename category "${oldName}" (${affected.length} template${affected.length === 1 ? '' : 's'}).\n\n` +
-    `Type the new category name. Type "My Templates" or leave blank to drop this bucket and move the templates to the default. ` +
-    `Type the name of an existing category to merge into it.`,
-    oldName
+  // v3.63.249 — Replaced window.prompt() with wfPrompt() so the rename
+  // input renders in the app's chrome instead of the OS-styled native
+  // dialog. Backlog #7 closed. The 40-char cap moves from a post-trim
+  // .slice() to the input's maxlength attribute so the user sees the
+  // limit during typing instead of finding out after submit.
+  const input = await wfPrompt(
+    `Rename category "${oldName}"`,
+    `${affected.length} template${affected.length === 1 ? '' : 's'} sit in this category. ` +
+    `Type a new name to rename the category; type the name of an existing category to merge into it; ` +
+    `leave blank or type "My Templates" to drop the bucket and move everything to the default.`,
+    { initialValue: oldName, maxLength: 40, okText: 'Rename', cancelText: 'Cancel' }
   );
   if (input === null) return; // user hit Cancel
   const newName = (input || '').trim() || 'My Templates';
   if (newName === oldName) return; // no-op
-  // 40-char cap matches the save-as-template modal's free-form input.
-  const finalName = newName.slice(0, 40);
+  const finalName = newName.slice(0, 40); // defense-in-depth — maxlength is the primary cap
   affected.forEach(t => { t.category = finalName; });
   saveCustomTemplates(all);
   if (typeof renderTemplateGalleryBody === 'function') renderTemplateGalleryBody();
@@ -7873,6 +7878,80 @@ function wfConfirmCancel() {
   }
   _wfConfirmCheckboxMode = false;
   _wfConfirmSuppressKey  = null;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// v3.63.249 — wfPrompt: styled in-app replacement for window.prompt()
+// ────────────────────────────────────────────────────────────────────
+// Promise-based text-input modal. Same chrome and lifecycle as wfConfirm
+// (overlay click = cancel, ESC = cancel, Enter = ok). Backlog #7 from
+// docs/WaxFrame_Backlog_Master_v241.txt — final step in retiring native
+// browser dialog primitives from the app.
+//
+//   wfPrompt(title, message, opts) -> Promise<string|null>
+//
+// Returns the trimmed string the user typed (empty string allowed), or
+// null on cancel / overlay click / Escape. Options:
+//   • initialValue (string)  — value pre-populated in the input
+//   • placeholder  (string)  — placeholder when empty
+//   • maxLength    (number)  — hard cap on input length (HTML attribute)
+//   • okText       (string)  — Save/OK button label (default "OK")
+//   • cancelText   (string)  — Cancel button label (default "Cancel")
+//
+// Defensive: if the modal isn't in the DOM, falls back to native
+// window.prompt() so the app still functions on a stripped-down build.
+let _wfPromptResolve = null;
+
+function wfPrompt(title, message, opts = {}) {
+  return new Promise(resolve => {
+    _wfPromptResolve = resolve;
+    const modal     = document.getElementById('wfPromptModal');
+    const titleEl   = document.getElementById('wfPromptTitle');
+    const msgEl     = document.getElementById('wfPromptMsg');
+    const inputEl   = document.getElementById('wfPromptInput');
+    const okBtn     = document.getElementById('wfPromptOkBtn');
+    const cancelBtn = document.getElementById('wfPromptCancelBtn');
+    if (!modal || !inputEl) {
+      // No styled modal in this DOM — fall back to native prompt so
+      // headless builds and air-gapped fork-jobs still work.
+      const v = window.prompt(message || title || '', opts.initialValue || '');
+      resolve(v == null ? null : String(v));
+      return;
+    }
+    if (titleEl) titleEl.textContent = title || 'Enter value';
+    if (msgEl)   msgEl.textContent   = message || '';
+    inputEl.value = opts.initialValue != null ? String(opts.initialValue) : '';
+    if (opts.placeholder != null) inputEl.placeholder = String(opts.placeholder);
+    else inputEl.removeAttribute('placeholder');
+    if (opts.maxLength) inputEl.setAttribute('maxlength', String(opts.maxLength));
+    else inputEl.removeAttribute('maxlength');
+    if (okBtn)     okBtn.textContent     = opts.okText     || 'OK';
+    if (cancelBtn) cancelBtn.textContent = opts.cancelText || 'Cancel';
+    modal.classList.add('active');
+    // Focus + select after the modal paints so the user can immediately
+    // type a replacement or press Enter to accept the prefilled value.
+    setTimeout(() => { try { inputEl.focus(); inputEl.select(); } catch (_) {} }, 30);
+  });
+}
+
+function wfPromptOk() {
+  const modal   = document.getElementById('wfPromptModal');
+  const inputEl = document.getElementById('wfPromptInput');
+  if (modal) modal.classList.remove('active');
+  if (_wfPromptResolve) {
+    const v = inputEl ? String(inputEl.value || '') : '';
+    _wfPromptResolve(v);
+    _wfPromptResolve = null;
+  }
+}
+
+function wfPromptCancel() {
+  const modal = document.getElementById('wfPromptModal');
+  if (modal) modal.classList.remove('active');
+  if (_wfPromptResolve) {
+    _wfPromptResolve(null);
+    _wfPromptResolve = null;
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════

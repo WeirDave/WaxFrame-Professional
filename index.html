@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260608-024
+     Build: 20260608-025
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-024">
+  <meta name="waxframe-build" content="20260608-025">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.248">
+  <link rel="stylesheet" href="style.css?v=3.63.249">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.248",
+    "softwareVersion": "3.63.249",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2183,6 +2183,25 @@
   </div>
 </div>
 
+<!-- v3.63.249 — wfPrompt modal: styled in-app replacement for native
+     window.prompt(). Same chrome as wfConfirm; adds a text input between
+     the message and the action row. Enter submits, Escape cancels (via
+     overlay-click on this modal's overlay, or the Cancel button). Caller
+     resolves to the entered string on OK, or null on Cancel. Backlog #7
+     from docs/WaxFrame_Backlog_Master_v241.txt — replaces the last
+     remaining native prompt in renameCustomCategory(). -->
+<div class="finish-modal-overlay" id="wfPromptModal" onclick="if(event.target===this)wfPromptCancel()">
+  <div class="finish-modal wf-confirm-modal">
+    <h2 class="finish-modal-title" id="wfPromptTitle">Enter value</h2>
+    <p class="finish-modal-msg" id="wfPromptMsg"></p>
+    <input type="text" id="wfPromptInput" class="wf-prompt-input" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')wfPromptOk(); else if(event.key==='Escape')wfPromptCancel()">
+    <div class="wf-confirm-actions">
+      <button title="Cancel" class="finish-modal-cancel" id="wfPromptCancelBtn" onclick="wfPromptCancel()">Cancel</button>
+      <button title="Save the entered value" class="btn btn-lg" id="wfPromptOkBtn" onclick="wfPromptOk()">OK</button>
+    </div>
+  </div>
+</div>
+
 <!-- v3.35.0 — AUTO MODE HALT MODAL. Shown when an Auto-mode guardrail
      trips: round-ceiling reached, satisfied-count stalled for 3 rounds,
      2+ consecutive builder failures, USER DECISION block with no clear
@@ -3386,23 +3405,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.248';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.249';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.248"></script>
-<script src="lib/jszip.min.js?v=3.63.248"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.248"></script>
-<script src="js/version.js?v=3.63.248"></script>
-<script src="js/storage.js?v=3.63.248"></script>
-<script src="js/theme.js?v=3.63.248"></script>
-<script src="js/audio.js?v=3.63.248"></script>
-<script src="js/scenes.js?v=3.63.248"></script>
-<script src="js/wf-debug.js?v=3.63.248"></script>
-<script src="js/provider-models.js?v=3.63.248"></script>
-<script src="js/api.js?v=3.63.248"></script>
-<script src="js/templates.js?v=3.63.248"></script>
-<script src="js/api-links.js?v=3.63.248"></script>
-<script src="js/app.js?v=3.63.248"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.249"></script>
+<script src="lib/jszip.min.js?v=3.63.249"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.249"></script>
+<script src="js/version.js?v=3.63.249"></script>
+<script src="js/storage.js?v=3.63.249"></script>
+<script src="js/theme.js?v=3.63.249"></script>
+<script src="js/audio.js?v=3.63.249"></script>
+<script src="js/scenes.js?v=3.63.249"></script>
+<script src="js/wf-debug.js?v=3.63.249"></script>
+<script src="js/provider-models.js?v=3.63.249"></script>
+<script src="js/api.js?v=3.63.249"></script>
+<script src="js/templates.js?v=3.63.249"></script>
+<script src="js/api-links.js?v=3.63.249"></script>
+<script src="js/app.js?v=3.63.249"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -3427,7 +3446,7 @@ function wfMobileShareToast(msg) {
           <p class="about-modal-tagline">Many minds, one refined result.</p>
           <div class="about-version-row">
             <span class="about-version-pill"><span id="aboutVersion">v3.63.224 Pro</span></span>
-            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-024</strong></span>
+            <span class="about-build-pill">Build <strong id="aboutBuild" class="app-build-stamp">20260608-025</strong></span>
           </div>
         </div>
       </div>
@@ -3436,7 +3455,7 @@ function wfMobileShareToast(msg) {
     <div class="about-modal-body">
       <p class="about-modal-intro">Browser-native document refinement powered by your own AI keys, your hive configuration, and a local-first workspace.</p>
       <div class="about-info-stack">
-        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-024</strong></div></div>
+        <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span class="about-version-inline app-version-stamp">v3.63.224 Pro</span> · Build <strong class="app-build-stamp">20260608-025</strong></div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Stack</h3><div class="wf-card-body">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">License</h3><div class="wf-card-body">AGPL-3.0 — open source, free to use and modify with attribution.</div></div>
         <div class="wf-card is-accent"><h3 class="wf-card-title">Legal</h3><div class="wf-card-body"><a href="privacy.html" target="_blank" rel="noopener noreferrer" class="link-accent">Privacy Policy</a> · <a href="terms.html" target="_blank" rel="noopener noreferrer" class="link-accent">Terms of Use</a></div></div>
