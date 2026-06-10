@@ -295,6 +295,70 @@ OPEN FEATURES
            matches wfConfirm's modal chrome.
 
 
+8. Deep orphan-function audit on app.js (AST tooling required)
+   ─────────────────────────────────────────────────────────
+   WHAT:   The v3.63.241 audit pass scoped onclick handlers,
+           CSS classes, and obvious orphan functions in
+           storage.js. It did NOT do an exhaustive
+           function-definition-vs-usage audit across app.js
+           (~20k lines). That class of audit needs AST tooling
+           to be reliable — grep-only is noisy and misses
+           method calls, dynamic dispatch, and inline string
+           references.
+   WHY:    Years of feature work and retirements have left
+           the codebase with an unknown number of orphan
+           functions. They cost no runtime (never called) but
+           they clutter the file, confuse future audits, and
+           occasionally point at retired features whose
+           existence misleads new readers. A clean app.js
+           is easier to evolve.
+   STATE:  OPEN — needs tooling decision. Candidates: a
+           one-off AST script using @babel/parser or
+           acorn, or running through Knip / unimported /
+           ts-unused-exports against a lightweight TS
+           wrapper. None of these are heavy installs.
+   WHERE:  js/app.js (the 20k+ line monolith).
+   DONE:   A list of confirmed-orphan top-level function
+           declarations exists, each verified by both static
+           and dynamic checks (smoke-test in browser);
+           low-risk orphans deleted; high-risk-but-orphan
+           items documented in code comments as "kept for
+           cache compatibility" with a target removal date.
+
+
+9. localStorage migration audit
+   ─────────────────────────────────────────────────────────
+   WHAT:   Every localStorage key the app reads/writes is
+           subject to format drift over time. The v3.63.241
+           audit pass enumerated current keys (waxframe_v2_*
+           + others) but did not exhaustively verify that
+           each one's read path handles all the historical
+           shapes it might encounter on long-lived browsers.
+           Format-version branches in storage.js (currently
+           v6 with v5/v4 import compatibility) are the most
+           important; key-value primitives in app.js are the
+           long tail.
+   WHY:    A user who's been running WaxFrame since v3.21
+           has localStorage entries written by every
+           intermediate version. A single un-migrated key
+           can silently corrupt state on a project a year
+           into use. The audit category 5 (state recovery)
+           in WaxFrame_Audit_Methodology_v1.txt covers this
+           explicitly.
+   STATE:  OPEN — needs runtime testing for full coverage.
+           A static enumeration of every setItem/getItem
+           pair is a useful first pass.
+   WHERE:  js/storage.js (envelope migrations), js/app.js
+           (per-feature keys: waxframe_dev, waxframe_hive_profile,
+           waxframe_conflict_ledger, etc.).
+   DONE:   Each localStorage key has a documented schema
+           (current shape + earlier shapes encountered in
+           the wild); the read path for each handles legacy
+           shapes or migrates them on read; a manual test
+           plan exists for forwarding a v3.21-era profile
+           through every release boundary.
+
+
 ════════════════════════════════════════════════════════════
 NOTES ON FORMAT
 ════════════════════════════════════════════════════════════
