@@ -62,14 +62,28 @@ const SESSION_SEED = {"round": 2, "phase": "refine", "history": [{"round": 1, "p
 // bees → project → reference → document. The screen-builder entry was failing
 // every run with "no-screen-element"; removed. Subsequent screens renumbered
 // so the file names match the visible step numbers in the live app.
+// v3.63.245 — Added two new scenes: checkpoint-save and template-gallery.
+//   • checkpoint-save uses the full-session seed so the Current column has
+//     non-empty values to display (otherwise every row reads "(none)" /
+//     "(empty)" and the screenshot looks broken). After arrival, the
+//     `postReady` expression switches the screen into Save mode explicitly
+//     so the capture is deterministic regardless of last-state.
+//   • template-gallery navigates to screen-project, then fires
+//     showTemplateGallery() as the post-ready step. The capture shows the
+//     gallery modal sitting on top of the Project screen — same view a
+//     user gets when clicking "📋 Use Template" on Setup 2.
 const SHOTS = [
-  { id: 'screen-welcome',   base: 'welcome',  seed: null            },
-  { id: 'screen-bees',      base: 'setup1',   seed: null            },
-  { id: 'screen-project',   base: 'setup2',   seed: null            },
-  { id: 'screen-reference', base: 'setup3',   seed: null            },
-  { id: 'screen-document',  base: 'setup4',   seed: null            },
-  { id: 'screen-settings',  base: 'settings', seed: null            },
-  { id: 'screen-work',      base: 'work',     seed: 'full-session'  }
+  { id: 'screen-welcome',    base: 'welcome',          seed: null,           postReady: null },
+  { id: 'screen-bees',       base: 'setup1',           seed: null,           postReady: null },
+  { id: 'screen-project',    base: 'setup2',           seed: null,           postReady: null },
+  { id: 'screen-reference',  base: 'setup3',           seed: null,           postReady: null },
+  { id: 'screen-document',   base: 'setup4',           seed: null,           postReady: null },
+  { id: 'screen-settings',   base: 'settings',         seed: null,           postReady: null },
+  { id: 'screen-work',       base: 'work',             seed: 'full-session', postReady: null },
+  { id: 'screen-checkpoint', base: 'checkpoint-save',  seed: 'full-session',
+    postReady: "try { if (typeof switchCheckpointMode === 'function') switchCheckpointMode('save'); } catch(e){}" },
+  { id: 'screen-project',    base: 'template-gallery', seed: null,
+    postReady: "try { if (typeof showTemplateGallery === 'function') showTemplateGallery(); } catch(e){}" }
 ];
 
 const shots = ONLY_WORK ? SHOTS.filter(s => s.base === 'work') : SHOTS;
@@ -351,6 +365,18 @@ for (const s of shots) {
         console.log(`FAILED (not-ready: ${lastReason})`);
         fail++;
         continue;
+      }
+
+      // v3.63.245 — Optional post-ready step. Lets scenes do extra setup
+      // after the base screen is rendered — e.g. open the Templates modal
+      // on top of screen-project, or switch the Checkpoints screen into a
+      // specific mode. The expression is evaluated in the page context;
+      // a brief settle follows so any modal animation / mode-swap paint
+      // completes before the screenshot.
+      if (s.postReady) {
+        try { await cdp('Runtime.evaluate', { expression: s.postReady, awaitPromise: false }); }
+        catch (_) { /* postReady is best-effort; don't fail the shot */ }
+        await sleep(300);
       }
 
       // Tiny settle for any final paint, then capture.
