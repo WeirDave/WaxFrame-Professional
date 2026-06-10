@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.252
+
+**Bad-model card no longer burns a full round to re-test the fix**
+
+Build: `20260610-028`<br>
+Released: `2026-06-10`
+
+### What changed
+
+Two coupled fixes to the bad-model troubleshooting card flow. Before this release, a single bee with an unusable model could chew through API spend on every retry:
+
+1. **Auto Mode is now cancelled the moment a bee-fatal card fires.** When `MODEL_NEEDS_DIFFERENT_ENDPOINT`, `MODEL_REJECTS_INSTRUCTIONS`, `AUTH_FAILED`, or `CREDIT_LOW` pops the troubleshooting card, Auto Mode flips off instantly and any deferred chain is wiped. Previously the card sat on top while Auto's deferred-chain hook waited for dismissal — meaning the moment the user closed the card to investigate, Auto re-fired the whole round into the same broken bee, billing every other bee for the wasted round.
+
+2. **New "Re-send {ai}'s prompt only" card action.** Previously the only fix path was the "Retry round" button, which re-billed every bee in the hive for work they already did right. The new action re-sends just the one offending bee's prompt and re-runs the Builder against the now-complete reviewer set. On a hive of 10 bees, the surgical retry costs 1 reviewer + 1 Builder call instead of 10 reviewers + 1 Builder.
+
+### How the surgical retry works
+
+`runRound` now stashes the live round state on `window._partialRound` — reviewer responses, builder id, frozen notes, the failed/degraded history entry. When the user clicks **Re-send {ai}'s prompt only**, the `retrySingleAIInPartialRound` helper:
+
+- Pops the prior history entry for this round (identity-checked so unrelated pushes aren't clobbered)
+- Re-fires just the failing bee's prompt (or skips straight to Builder if the Builder itself was the bad bee)
+- Re-enters `runRound` with `resumedFromPartial: true`, skipping the reviewer fan-out and going straight to the Builder phase with the complete cached reviewer set
+- The post-Builder gates (length, conflicts, convergence, history, Auto chain) all run unchanged — the resumed round converges, fails, or continues exactly as a fresh round would
+
+### Files touched
+
+- [js/wf-debug.js](js/wf-debug.js) — `WF_DEBUG.showCard` bee-fatal detection + Auto cancel; new `resend-ai` action kind in renderer; `_BEE_FATAL_CODES` set; resend action wired into both bad-model catalog entries
+- [js/app.js](js/app.js) — `runRound(opts)` accepts `resumedFromPartial`/`cachedReviewerResponses`; partial-round capture at round start; failure path tags `_partialRound.lastPushedEntry`; success-continuing path tags `lastPushedEntry`; both convergence exits + `clearProject` + `_abandonInFlightRoundUI` null `_partialRound`; new `retrySingleAIInPartialRound` helper exposed on `window`
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md)
+
+### What's the same
+
+- The legacy "Retry round" button still exists on every error card — surgical retry is additive, not a replacement. When the bee-fatal context isn't available (e.g. card fired from a path that didn't capture `_partialRound`), the resend button auto-hides and "Retry round" remains the safe fallback.
+- The reviewer-phase Promise.all ordering, Builder failover logic, convergence math, and history shapes are unchanged.
+
+---
+
 ## v3.63.251
 
 **Default models refreshed — providers have moved on since April**
