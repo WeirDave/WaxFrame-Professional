@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.249
+
+**Last native browser dialog retired — `wfPrompt()` replaces `window.prompt()` in the template-category rename flow**
+
+Build: `20260608-025`<br>
+Released: `2026-06-08`
+
+### Added — `wfPrompt(title, message, opts)` helper
+
+A Promise-based text-input modal styled with the same chrome as `wfConfirm()`. Returns the string the user typed on OK, or `null` on cancel / overlay click / Escape. Options: `initialValue`, `placeholder`, `maxLength`, `okText`, `cancelText`. Defensive fallback to native `window.prompt()` if the modal isn't in the DOM (covers headless / stripped-down builds).
+
+The new modal lives at `#wfPromptModal` in `index.html`, the helper at `wfPrompt()` in `js/app.js` (next to `wfConfirm()`), and the input field at `.wf-prompt-input` in `style.css` (matches the existing in-app form-input look).
+
+### Changed — `renameCustomCategory()` now uses `wfPrompt()` instead of `window.prompt()`
+
+Clicking the ✏️ next to a custom-template category name no longer pops an OS-styled gray dialog — it opens a WaxFrame modal that matches the rest of the app. The 40-character cap also moves from a post-trim `slice()` to the input's `maxlength` attribute, so the user sees the limit while typing instead of finding out post-submit.
+
+### Closed — backlog item #7
+
+Filed as backlog item #7 by the v3.63.241 audit pass; closed here. Renumbered the two audit follow-ups that were #8 and #9 to #7 and #8.
+
+### Files Changed
+
+- Updated: `js/app.js` &mdash; added `wfPrompt`, `wfPromptOk`, `wfPromptCancel`, and module-scope `_wfPromptResolve`; swapped `renameCustomCategory()` to `await wfPrompt(...)`
+- Updated: `index.html` &mdash; added `#wfPromptModal` next to `#wfConfirmModal`
+- Updated: `style.css` &mdash; added `.wf-prompt-input` rule
+- Updated: `docs/WaxFrame_Backlog_Master_v241.txt` &mdash; closed item #7, renumbered #8 → #7 (orphan-function audit) and #9 → #8 (storage migration audit)
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.249 / 20260608-025 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.248
 
 **User manual workflow audit — pass 3**
