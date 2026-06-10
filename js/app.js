@@ -2820,6 +2820,10 @@ function _abandonInFlightRoundUI() {
   if (typeof stopRoundTimer === 'function') stopRoundTimer();
   if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
   if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
+  // v3.63.252 — Abandonment also voids any retry-eligible partial round; the
+  // history entry and reviewer responses belong to a project that's been
+  // cleared, so resending one bee's prompt into it would write phantom data.
+  window._partialRound = null;
   // v3.35.0 — Round abandonment also disengages Auto. The user discarded
   // the project or it failed in a way that requires intervention; chaining
   // another round automatically would either write phantom history into
@@ -3654,6 +3658,11 @@ async function clearProject() {
   window._autoLengthRerollActive = false;
   window._autoLengthDirective    = '';
   window._manualLengthReroll     = false;
+  // v3.63.252 — _partialRound is project-scoped (holds reviewer responses,
+  // history-entry refs, builder id from the prior project). A retry click
+  // after Start-New would otherwise splice into the wrong project's history.
+  window._partialRound = null;
+  window._beeFatalCardActive = false;
   // v3.56.15 — Churn detector state is project-scoped. _churnPending gates the
   // Auto chain; _churnDismissed suppresses re-nag after "apply without locking".
   // Both must reset so a new project starts clean.
@@ -16433,11 +16442,161 @@ async function runBuilderOnly() {
   if (smokeBtn) smokeBtn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
 }
 
+// ── SINGLE-AI RETRY (v3.63.252) ──
+// Called from the troubleshooting card's "Re-send {ai}'s prompt only" action.
+// The card fires when one bee's model/key/etc. blocks it from finishing the
+// round; the prior runRound call already completed (either degraded-success
+// with the failing bee absent, or hard-failed if the Builder itself was the
+// failing bee). Re-firing the entire round via the legacy "Retry round" button
+// re-bills every healthy bee for work it already did right. This path re-bills
+// only the just-fixed bee (plus one Builder pass when the failing bee was a
+// reviewer) and splices the result into the existing round.
+//
+// Flow:
+//   1. Validate _partialRound is the SAME round the card came from (not stale
+//      from a prior round / a new project / a clearProject in-flight).
+//   2. Pop the last history entry written by that round (success-degraded OR
+//      round_failed) so the spliced result replaces it instead of stacking.
+//   3. If the failing bee was a reviewer: re-fire its callAPI, push the
+//      response into the cached reviewerResponses array.
+//      If the failing bee was the Builder: nothing to do here — the reviewer
+//      set is already complete; the Builder re-fires inside runRound.
+//   4. Re-enter runRound({ resumedFromPartial:true, cachedReviewerResponses })
+//      which skips the reviewer fan-out and runs the Builder phase + every
+//      post-Builder gate (length, conflicts, convergence, history.push,
+//      Auto-chain) exactly as a normal round would. So the resumed round
+//      converges, fails, or continues with no special-case handling downstream.
+async function retrySingleAIInPartialRound(aiId) {
+  const pr = window._partialRound;
+  if (!pr) {
+    if (typeof toast === 'function') toast('⚠️ No round to retry — run a fresh round');
+    return;
+  }
+  if (pr.runGen !== (window._projectGen || 0)) {
+    window._partialRound = null;
+    if (typeof toast === 'function') toast('⚠️ Project changed — retry no longer valid');
+    return;
+  }
+  if (pr.round !== round) {
+    if (typeof toast === 'function') toast('⚠️ A new round has already started — retry no longer valid');
+    return;
+  }
+  const ai = (Array.isArray(activeAIs) ? activeAIs : []).find(a => a.id === aiId);
+  if (!ai) {
+    if (typeof toast === 'function') toast('⚠️ AI no longer in the hive');
+    return;
+  }
+  const cfg = API_CONFIGS[ai.provider];
+  if (!cfg?._key) {
+    if (typeof toast === 'function') toast(`⚠️ No API key for ${ai.name} — set it first`);
+    return;
+  }
+  const btn = document.getElementById('runRoundBtn');
+  if (btn?.classList.contains('running')) {
+    if (typeof toast === 'function') toast('⚠️ A round is already running');
+    return;
+  }
+
+  // In WaxFrame, every active bee runs as a reviewer first, and the Builder
+  // uses the same model + key for its Builder call. So if a bee-fatal error
+  // fired (bad model, bad key, etc.), that bee failed in the reviewer phase
+  // — even when the bee is the Builder. The retry path therefore always
+  // re-fires the reviewer call; the Builder phase then runs inside runRound's
+  // resumed entry path using the now-complete reviewer set, and the Builder
+  // role gets its own self-review included.
+  const isBuilderBee = (aiId === pr.builderId);
+
+  // Pop the last history entry IF it's the one this round wrote. Defensive
+  // identity check (not index-based) so an unrelated async push can't get
+  // clobbered; if it doesn't match, leave history alone — the next runRound
+  // call will push fresh anyway and the prior entry stays as an audit record.
+  if (pr.lastPushedEntry && history.length > 0 && history[history.length - 1] === pr.lastPushedEntry) {
+    history.pop();
+    pr.lastPushedEntry = null;
+    if (typeof renderRoundHistory === 'function') renderRoundHistory();
+  }
+
+  consoleLog(`🔁 Single-AI retry: ${ai.name}${isBuilderBee ? ' (Builder)' : ''} — Round ${pr.round}`, 'info');
+  if (typeof showSmokerOverlay === 'function') showSmokerOverlay("Smokin' the Hive…");
+  if (btn) {
+    btn.classList.add('running');
+    const lbl = btn.querySelector('.shake-wide-label');
+    if (lbl) lbl.textContent = 'Re-sending…';
+  }
+  startRoundTimer(btn, 'Re-sending…');
+  setStatus(`🔁 Resending ${ai.name}'s prompt for Round ${pr.round}…`);
+  setBeeStatus(ai.id, 'sending', 'Reviewing…');
+  window._roundUiState = 'running';
+  if (typeof updateRoundBadge === 'function') updateRoundBadge();
+
+  try {
+    const prompt = buildPromptForAI(ai, []);
+    const keyHint = cfg?._key?.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
+    consoleLog(`📤 ${ai.name} (single-AI retry) — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint})`, 'send');
+    const response = await callAPI(ai, prompt, '', 'worker');
+    const noChanges = /^no changes needed/i.test(response.trim());
+    const summary = noChanges ? 'No changes needed ✓' : extractSummary(response);
+    setBeeStatus(ai.id, noChanges ? 'done-clean' : 'done', summary);
+    const reviewerEntry = { id: ai.id, name: ai.name, response, noChanges };
+    const existingIdx = pr.reviewerResponses.findIndex(r => r.id === ai.id);
+    if (existingIdx >= 0) {
+      pr.reviewerResponses[existingIdx] = reviewerEntry;
+    } else {
+      pr.reviewerResponses.push(reviewerEntry);
+    }
+    consoleLog(`✅ ${ai.name} — single-AI retry succeeded; reviewer set now ${pr.reviewerResponses.length} of ${pr.allReviewers.length}`, 'success');
+  } catch (e) {
+    // Retry's reviewer call ALSO failed. callAPI already fired its own
+    // troubleshooting card with the new error context — let it stand. Reset
+    // round UI so the user can act again; partial round state stays so a
+    // follow-up retry can fire.
+    setBeeStatus(ai.id, 'error', e.message);
+    consoleLog(`❌ ${ai.name} — single-AI retry failed: ${e.message}`, 'error');
+    if (btn) {
+      btn.classList.remove('running');
+      const lbl = btn.querySelector('.shake-wide-label');
+      if (lbl) lbl.textContent = 'Smoke the Hive';
+    }
+    if (typeof stopRoundTimer === 'function') stopRoundTimer();
+    if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
+    setStatus(`⚠️ Retry failed: ${e.message}`);
+    window._roundUiState = 'idle';
+    if (typeof updateRoundBadge === 'function') updateRoundBadge();
+    return;
+  }
+
+  // Re-enter runRound — skips reviewer fan-out, runs Builder phase against the
+  // cached (now-complete) reviewer set, replaces the popped history entry with
+  // the new round outcome. runRound clears btn.running state on the way out.
+  await runRound({
+    resumedFromPartial:        true,
+    cachedReviewerResponses:   pr.reviewerResponses,
+    retryLabel:                isBuilderBee ? `Builder retry: ${ai.name}` : `Single-AI retry: ${ai.name}`
+  });
+}
+window.retrySingleAIInPartialRound = retrySingleAIInPartialRound;
+
 // ── RUN ROUND ──
-async function runRound() {
+async function runRound(opts) {
+  opts = opts || {};
+  // v3.63.252 — Single-AI retry path. When the troubleshooting card's
+  // "Re-send {ai}'s prompt only" button fires retrySingleAIInPartialRound,
+  // it pre-builds the reviewer-response set (with the just-retried AI's
+  // response spliced back in) and re-enters runRound here. We then skip
+  // the reviewer fan-out (saves N-1 reviewer API calls vs a full retry)
+  // and let the Builder phase + post-builder gates run against the cached
+  // set. opts.resumedFromPartial is the marker; opts.cachedReviewerResponses
+  // carries the array. opts.retryLabel is a console label for the resume.
+  const _cachedReviewerResponses = Array.isArray(opts.cachedReviewerResponses) ? opts.cachedReviewerResponses : null;
+  const _resumedFromPartial = !!opts.resumedFromPartial && _cachedReviewerResponses;
   const btn = document.getElementById('runRoundBtn');
 
-  if (btn?.classList.contains('running')) return;
+  // v3.63.252 — Resumed retries enter while btn.running is true (set by
+  // retrySingleAIInPartialRound to render the smoker overlay during the
+  // single-AI reviewer call). The double-fire guard would otherwise bail
+  // before the Builder phase ever fires. Resumed retries are programmatic,
+  // not user-initiated double-clicks, so the guard doesn't apply.
+  if (btn?.classList.contains('running') && !_resumedFromPartial) return;
 
   // v3.56.15 — A round is firing; clear any pending churn hold and re-arm the
   // detector (it self-disables while _churnPending is true).
@@ -16516,13 +16675,23 @@ async function runRound() {
   }
 
   // Set running state
-  btn?.classList.add('running');
-  if (btn) btn.querySelector('.shake-wide-label').textContent = 'Smoking…';
-  showSmokerOverlay("Smokin' the Hive…");
-  startRoundTimer(btn, 'Smoking…');
-  projectClockStart(); // start/resume project clock on every round
-  setStatus(`⚡ Round ${round} in progress — WaxFrame is thinking…`);
-  consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
+  // v3.63.252 — On resumed retries the running state is already armed by
+  // retrySingleAIInPartialRound. The smoker overlay + startRoundTimer also
+  // already fired there. Re-firing them here would reset the timer clock to 0
+  // mid-retry and flicker the overlay. Skip the visual setup; the Builder
+  // overlay swap below still runs.
+  if (!_resumedFromPartial) {
+    btn?.classList.add('running');
+    if (btn) btn.querySelector('.shake-wide-label').textContent = 'Smoking…';
+    showSmokerOverlay("Smokin' the Hive…");
+    startRoundTimer(btn, 'Smoking…');
+    projectClockStart(); // start/resume project clock on every round
+    setStatus(`⚡ Round ${round} in progress — WaxFrame is thinking…`);
+    consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
+  } else {
+    // Project clock is already running from the original round; do not start
+    // a second timer. Status/console divider already set by the retry caller.
+  }
   // v3.36.15 — Round-counter state machine entry. Same pattern as
   // runBuilderOnly above. Live "Round N — Phase" stays through the
   // run; round-end sites flip back to 'idle' with a labeled suffix.
@@ -16541,11 +16710,19 @@ async function runRound() {
   // wipe below isn't undone by the universal re-derive in setBeeStatus.
   // Without this ordering, every card that was satisfied in the prior
   // round would keep its star through the new round's pre-flight reset.
-  if (window._cleanThisRound) window._cleanThisRound.clear();
-  // 'idle' is the canonical pre-round state. Was 'waiting' historically;
-  // both fell through the same else branch in setBeeStatus and behaved
-  // identically. Consolidated to 'idle' alongside the dead-branch trim.
-  activeAIs.forEach(ai => setBeeStatus(ai.id, 'idle', ''));
+  // v3.63.252 — On a resumed retry the reviewer phase already happened
+  // (in the original runRound and the single-AI splice). Wiping bee status
+  // to 'idle' here would erase the done/done-clean state we just set, which
+  // would visually contradict "no, actually those bees are fine". Skip on
+  // resume; the cached responses' done/done-clean state has already been
+  // applied via the resume branch above.
+  if (!_resumedFromPartial) {
+    if (window._cleanThisRound) window._cleanThisRound.clear();
+    // 'idle' is the canonical pre-round state. Was 'waiting' historically;
+    // both fell through the same else branch in setBeeStatus and behaved
+    // identically. Consolidated to 'idle' alongside the dead-branch trim.
+    activeAIs.forEach(ai => setBeeStatus(ai.id, 'idle', ''));
+  }
 
   let builderAI = activeAIs.find(ai => ai.id === builder);
   let builderHadError = false;
@@ -16562,8 +16739,47 @@ async function runRound() {
   const allReviewers = activeAIs.filter(ai =>
     ai.id === builder || (window.sessionAIs && window.sessionAIs.has(ai.id))
   ); // Builder always runs; others only if toggled on
-  const reviewerResponses = [];
+  // v3.63.252 — On a single-AI retry resume, reuse the cached reviewer-response
+  // array verbatim (it already contains the just-retried AI's response). The
+  // post-builder gates iterate `reviewerResponses` extensively, so this MUST be
+  // the same array shape — list of { id, name, response, noChanges } objects.
+  const reviewerResponses = _resumedFromPartial ? _cachedReviewerResponses.slice() : [];
 
+  // v3.63.252 — Capture this round's live state to window._partialRound so the
+  // troubleshooting-card "Re-send {ai}'s prompt only" action has something to
+  // splice into. Holds a LIVE reference to reviewerResponses (the Promise.all
+  // below mutates it) so a card popping mid-fan-out still sees the latest set.
+  // Cleared at every terminal exit (convergence success, success-continuing,
+  // failure-with-card, abandonment) to keep state honest — _partialRound only
+  // exists when a single-AI retry can meaningfully recover the round.
+  window._partialRound = {
+    docText,
+    allReviewers,
+    reviewerResponses,
+    builderId:           builder,
+    phase,
+    round,
+    runGen:              _runGen,
+    notesAtBuilderCall:  '',
+    standingAtBuilderCall: '',
+    builderRan:          false,
+    failedHistoryEntry:  null
+  };
+
+  if (_resumedFromPartial) {
+    const _retryLabel = opts.retryLabel || 'partial-round-resume';
+    consoleLog(`🔁 ${_retryLabel} — skipping reviewer fan-out (${reviewerResponses.length} cached response${reviewerResponses.length === 1 ? '' : 's'})`, 'info');
+    setStatus(`🔁 Resumed Round ${round} — Builder rebuilding with the corrected set…`);
+    // Restore the bee status display from cached responses so the work screen
+    // doesn't show stale "idle" pips during the Builder phase. The just-retried
+    // AI's status was already set to done/done-clean by retrySingleAIInPartialRound.
+    reviewerResponses.forEach(r => {
+      const ai = activeAIs.find(a => a.id === r.id);
+      if (!ai) return;
+      const summary = r.noChanges ? 'No changes needed ✓' : extractSummary(r.response);
+      setBeeStatus(r.id, r.noChanges ? 'done-clean' : 'done', summary);
+    });
+  } else {
   consoleLog(`🐝 ${allReviewers.length} AIs reviewing simultaneously (including Builder)`, 'info');
   setStatus(`⚡ Round ${round} — all ${allReviewers.length} AIs reviewing…`);
   // _cleanThisRound was cleared above in the round-reset block (v3.32.14).
@@ -16617,6 +16833,7 @@ async function runRound() {
   });
 
   await Promise.all(reviewerPromises);
+  } // end if (!_resumedFromPartial) — close the reviewer-phase skip wrapper (v3.63.252)
 
   // ── SLOW RESPONDER CHECK ──
   const _timings = window._roundTimings || {};
@@ -16864,6 +17081,10 @@ async function runRound() {
     // overlay element instead of the work-screen buttons underneath,
     // making the Finish modal export buttons appear unclickable until
     // a full reload. Reproduced by David in the v3.35.0 test session.
+    // v3.63.252 — Project converged. No more rounds expected; void the retry
+    // handle so a stale card click can't write a phantom retry into a closed
+    // project. (Same rationale at the majority and continuing exits below.)
+    window._partialRound = null;
     setTimeout(() => {
       _autoMaybeChainNextRound({ outcome: 'unanimous', satisfied: noChangesCount, total: successfulReviews.length });
     }, 3500);
@@ -17016,6 +17237,9 @@ async function runRound() {
     // scene's overlay element instead of the work-screen buttons underneath,
     // making the Finish modal export buttons appear unclickable until a full
     // reload (reproduced by David in the v3.35.0 test session).
+    // v3.63.252 — Same as the unanimous exit: convergence reached, no retry
+    // for this round makes sense anymore.
+    window._partialRound = null;
     setTimeout(() => {
       _autoMaybeChainNextRound({ outcome: 'majority', satisfied: noChangesCount, total: successfulReviews.length });
       showFinishModal();
@@ -17045,6 +17269,16 @@ async function runRound() {
     //     the Builder ingested user-injected text.
     _notesAtBuilderCall    = document.getElementById('workNotes')?.value.trim()         || '';
     _standingAtBuilderCall = document.getElementById('workStandingNotes')?.value.trim() || '';
+    // v3.63.252 — Freeze the same notes into _partialRound so a single-AI retry
+    // (which re-enters runRound with cached reviewers and skips the reviewer
+    // phase) replays the Builder phase with the same notes context the original
+    // attempt used. Without this freeze, a Builder retry would pull whatever's
+    // in the drawer at retry time, which may have been cleared by the post-round
+    // wipe of workNotes — silently losing this-round directives.
+    if (window._partialRound) {
+      window._partialRound.notesAtBuilderCall    = _notesAtBuilderCall;
+      window._partialRound.standingAtBuilderCall = _standingAtBuilderCall;
+    }
     if (_standingAtBuilderCall) {
       const _sp = _standingAtBuilderCall.length > 200
         ? _standingAtBuilderCall.slice(0, 200) + '…'
@@ -17063,6 +17297,13 @@ async function runRound() {
       builderAI = builderCall.ai;
       builderPrompt = builderCall.prompt;
       _builderUsedThisRoundId = builderAI.id;
+      // v3.63.252 — Builder phase reached extractable output (post-failover if
+      // needed). Mark _partialRound.builderRan so retrySingleAIInPartialRound
+      // knows whether to re-fire Builder against a still-pending phase or to
+      // replace an already-saved degraded entry. Even if the gates below
+      // (length, missing-conflicts, delimiters) reject the result, we treat
+      // the Builder call itself as having run — money was spent on it.
+      if (window._partialRound) window._partialRound.builderRan = true;
       const builderResponse = builderCall.response;
       if (builderCall.isFailover && builderCall.failoverFrom) {
         consoleLog(`✅ Builder failover succeeded — ${builderAI.name} built this round; saved Builder remains ${builderCall.failoverFrom.name}.`, 'success');
@@ -17336,7 +17577,7 @@ async function runRound() {
     return;
   }
   // Save to history — full document + all responses + conflicts + notes
-  history.push({
+  const _continuingEntry = {
     round, phase,
     projectName:    document.getElementById('projectName')?.value.trim()    || '',
     projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
@@ -17352,7 +17593,13 @@ async function runRound() {
     builderId:      _builderUsedThisRoundId || builder,
     resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
     referenceMaterialAtRound: snapshotReferenceDocs()
-  });
+  };
+  history.push(_continuingEntry);
+  // v3.63.252 — Capture this entry on _partialRound so a follow-up single-AI
+  // retry (e.g. user fixed a reviewer's bad model AFTER the degraded round
+  // succeeded) can pop the degraded entry and replace it with a re-built one
+  // that includes the previously-failed reviewer's response.
+  if (window._partialRound) window._partialRound.lastPushedEntry = _continuingEntry;
   window._lastConflicts = null;
   window._lastAppliedChanges = null;
 
@@ -17428,7 +17675,7 @@ async function runRound() {
       : '';
     consoleLog(`❌ Round ${round} failed — ${_failedRoundReason || 'unknown'}${_failDetailsPreview ? ': ' + _failDetailsPreview : ''}`, 'error');
     // Save failed round to history for accurate records and export transcript
-    history.push({
+    const _failedEntry = {
       round, phase,
       projectName:    document.getElementById('projectName')?.value.trim()    || '',
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
@@ -17447,7 +17694,12 @@ async function runRound() {
       failReason:     _failedRoundReason || 'unknown',
       failDetails:    _failedRoundDetails || '',
       referenceMaterialAtRound: snapshotReferenceDocs()
-    });
+    };
+    history.push(_failedEntry);
+    // v3.63.252 — Hand the failed entry to _partialRound so a follow-up
+    // single-AI retry can pop it cleanly (instead of guessing-by-index that
+    // could mispop if some other async path wrote to history in between).
+    if (window._partialRound) window._partialRound.lastPushedEntry = _failedEntry;
     renderRoundHistory();
     saveSession();
     // v3.36.15 — Round-counter state: failed runRound does not bump
