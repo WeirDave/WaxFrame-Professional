@@ -2,6 +2,58 @@
 
 ---
 
+## v3.63.251
+
+**Default models refreshed — providers have moved on since April**
+
+Build: `20260610-027`<br>
+Released: `2026-06-10`
+
+### Fixed — stale default model IDs across four providers
+
+The defaults shipped in api.js were getting old. Four providers have rolled forward enough that the previous picks were either retired, deprecated, or no longer the right tier for WaxFrame's reviewer-role / medium-volume use case. Refreshed:
+
+| Provider | Was | Now | Why |
+|---|---|---|---|
+| OpenAI (ChatGPT) | `gpt-4.1` | `gpt-5.5` | gpt-4.1 was retired from ChatGPT on Feb 13, 2026; gpt-5.5 is the current production default |
+| Google (Gemini) | `gemini-2.5-flash` | `gemini-3.5-flash` | Gemini 2.0 Flash shut down June 1, 2026; 3.5-flash is the GA flagship per Google I/O 2026 |
+| xAI (Grok) | `grok-4-fast-non-reasoning` | `grok-4.1-fast` | 4.1-fast is explicitly positioned as "production workflows that need lower latency" — right fit for reviewer role |
+| DeepSeek | `deepseek-chat` | `deepseek-v4-flash` | `deepseek-chat` deprecates July 24, 2026; v4-flash is the explicit successor (Flash tier, fast/cost-efficient) |
+
+Anthropic Claude (`claude-sonnet-4-6`), Mistral (`mistral-large-latest` — moving alias), and Perplexity (`sonar-pro`) were verified current and left alone.
+
+### Where the changes landed
+
+Not just the api.js `API_CONFIGS` defaults — every place these IDs appeared had to move in lockstep so users see one consistent picture:
+
+- `js/api.js` — `API_CONFIGS` model defaults (4 providers) + the hardcoded gemini endpoint URL
+- `js/provider-models.js` — `MODEL_FALLBACKS` arrays (used when `/v1/models` fetch fails)
+- `js/app.js` — `VISION_DEFAULTS` (PDF/image OCR fallback) + `customAIPresets.deepseek.defaultModel`
+- `README.md` — Supported AI Providers table
+- `waxframe-user-manual.html` — default models table + model-selector example
+- `api-details.html` — provider cards and Know-Your-Hive cards
+- `ai-api-pricing.html` — pricing data per provider
+- `help.html` — `BUILT_IN_MODEL_PROVIDERS` endpoint URL for gemini
+- `what-are-tokens.html` — Gemini billing-tier explainer
+- `tools/capture.mjs` — `HIVE_SEED_BASE` for screenshot generation
+- `tools/pricing-worker/data/pricing-seed.json` — pricing seed for the Worker
+
+### DeepSeek pricing also corrected
+
+Since deepseek-v4-flash is a different tier, its pricing in the table and seed JSON moved with it: $0.14 input / $0.28 output per million tokens (down from $0.27 / $1.10 on the old deepseek-chat), 1M context window (up from 64K), 384K max output (up from 8K).
+
+### Why these picks specifically
+
+The default-model role in WaxFrame is "one of several reviewers, medium token volume" — not the heaviest workload, not the cheapest possible. The selections favor:
+
+- **Current production tier**, not preview/experimental
+- **Fast/Flash tier where available** (Gemini Flash, Grok Fast, DeepSeek Flash) — appropriate for parallel fan-out where latency-per-reviewer matters
+- **Flagship where there's no separate fast tier** (gpt-5.5, claude-sonnet-4-6)
+
+Users can always change any AI's model from the Set up your hive screen, and `Recommend Models for All` will pick whatever the provider currently advertises as best at recommendation time.
+
+---
+
 ## v3.63.250
 
 **Hive fan-out RPS-awareness — per-provider concurrency limiter**

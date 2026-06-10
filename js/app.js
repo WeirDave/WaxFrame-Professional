@@ -2528,10 +2528,10 @@ const REFINE_GOAL_MAX_CHARS = 800;
 // place rather than scattered inline. Each provider's OCR call uses
 // `visionCfg.model || VISION_DEFAULTS[provider]` so a user-set model always wins.
 const VISION_DEFAULTS = {
-  chatgpt: 'gpt-4o',
+  chatgpt: 'gpt-5.5',
   claude:  'claude-sonnet-4-6',
-  gemini:  'gemini-2.5-flash',
-  grok:    'grok-4-fast-non-reasoning',
+  gemini:  'gemini-3.5-flash',
+  grok:    'grok-4.1-fast',
 };
 
 // v3.33.0 — Length mode overhaul (#8). Replaced the implicit
@@ -7449,7 +7449,7 @@ const QUICK_ADD_PROVIDERS = {
     format: 'openai',
     keyLink: 'https://platform.deepseek.com/api_keys',
     keyLinkLabel: 'Get your DeepSeek API key →',
-    defaultModel: 'deepseek-chat',
+    defaultModel: 'deepseek-v4-flash',
     chooseModelLink: 'https://api-docs.deepseek.com/quick_start/pricing'
   },
   together: {

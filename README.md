@@ -202,9 +202,9 @@ WaxFrame ships with default configurations for these providers:
 | Provider | Default Model |
 |---|---|
 | Anthropic (Claude) | `claude-sonnet-4-6` |
-| OpenAI (ChatGPT) | `gpt-4.1` |
-| Google (Gemini) | `gemini-2.5-flash` |
-| xAI (Grok) | `grok-4-fast-non-reasoning` |
+| OpenAI (ChatGPT) | `gpt-5.5` |
+| Google (Gemini) | `gemini-3.5-flash` |
+| xAI (Grok) | `grok-4.1-fast` |
 | Mistral | `mistral-large-latest` |
 | Perplexity | `sonar-pro` |
 
