@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260608-022
+     Build: 20260608-023
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-022">
+  <meta name="waxframe-build" content="20260608-023">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.246">
+  <link rel="stylesheet" href="style.css?v=3.63.247">
 </head>
 <body class="helper-body">
 
@@ -262,10 +262,7 @@
         <tbody>
           <tr><td><code>index.html</code></td><td>The main application. Double-click this to open WaxFrame in your browser. This is the only file you interact with directly.</td></tr>
           <tr><td><code>style.css</code></td><td>Visual styling for the application. Do not edit.</td></tr>
-          <tr><td><code>app.js</code></td><td>All application logic. Do not edit.</td></tr>
-          <tr><td><code>version.js</code></td><td>Application version number. Do not edit.</td></tr>
-          <tr><td><code>api-links.js</code></td><td>API console links used by helper pages. Do not edit.</td></tr>
-          <tr><td><code>theme.js</code></td><td>Light/dark theme logic for helper pages. Do not edit.</td></tr>
+          <tr><td><code>js/</code></td><td>All application logic, split across modules: <code>app.js</code> (main app), <code>storage.js</code> (state persistence + checkpoints), <code>api.js</code> (provider HTTP), <code>provider-models.js</code> (model lists), <code>theme.js</code> (light/dark), <code>version.js</code> (build stamp), plus several smaller helpers. Do not edit.</td></tr>
           <tr><td><code>api-details.html</code></td><td>The API Key Guide — a separate page with step-by-step instructions for getting an API key from each supported provider, including direct links to each provider's signup page and key console.</td></tr>
           <tr><td><code>waxframe-user-manual.html</code></td><td>This document.</td></tr>
           <tr><td><code>document-playbooks.html</code></td><td>A library of ready-made project goals for common document types — résumés, business proposals, blog posts, RFPs, cover letters, and more. Open this when you are not sure what to write for your project goal.</td></tr>
@@ -304,8 +301,8 @@
       <div class="hp-section">
         <div class="hp-section-header is-bare">
           <div class="hp-section-title-block">
-            <h2 class="hp-section-title">Setup — The 5 Setup Screens</h2>
-            <p class="hp-section-sub">Worker Bees, Builder, Project, Reference Material, and Starting Document. These screens collect everything WaxFrame needs to start running rounds.</p>
+            <h2 class="hp-section-title">Setup — The 4 Setup Screens</h2>
+            <p class="hp-section-sub">Worker Bees (Builder is picked here too), Project, Reference Material, and Starting Document. These screens collect everything WaxFrame needs to start running rounds.</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -788,7 +785,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Adding reference documents</div>
-      <p>Setup 4 is built around a list of <strong>reference document cards</strong>. You can add as many as you need — RFP requirements alongside scoring rubrics, style guides alongside brand voice references, prior decisions alongside vendor claims. Each card is independently named, reorderable (▲ ▼ arrows on the card), removable, and editable. <strong>Order matters: the first card reads as most authoritative to the hive</strong>, and the hive sees them with labeled section headers in the prompt envelope so AIs can cite specific documents by name.</p>
+      <p>Setup 3 is built around a list of <strong>reference document cards</strong>. You can add as many as you need — RFP requirements alongside scoring rubrics, style guides alongside brand voice references, prior decisions alongside vendor claims. Each card is independently named, reorderable (▲ ▼ arrows on the card), removable, and editable. <strong>Order matters: the first card reads as most authoritative to the hive</strong>, and the hive sees them with labeled section headers in the prompt envelope so AIs can cite specific documents by name.</p>
       <p>Two action panels above the reference list let you add new ones:</p>
       <ul>
         <li><strong>Paste Text</strong> — clicking this panel (it has a clipboard icon) adds a new editable reference with an empty textarea below. Paste your text in and it becomes the reference's content. The reference name defaults to <em>Reference N</em> — rename it to something meaningful (e.g. <em>RFP Requirements</em>, <em>Style Guide</em>, <em>Job Description</em>) so the hive can cite it by name.</li>
@@ -1955,7 +1952,7 @@
         <tbody>
           <tr><td>Tone is wrong throughout</td><td>Open Notes before the next round and write explicitly: <em>"The tone throughout the entire document must be [formal / conversational / technical / plain-English]. Rewrite any passages that do not match this."</em> Be specific about what you want.</td></tr>
           <tr><td>AIs keep adding content you do not want</td><td>Edit your project goal to explicitly exclude it. Add a Note reinforcing the exclusion. If one specific AI keeps doing it, use Edit Hive (laptop) or toggle the AI card directly (desktop) to remove that AI for a round or two.</td></tr>
-          <tr><td>The document has drifted badly from where you want it</td><td>Open the <strong>Menu</strong> and click <strong>📖 Round History</strong> to restore an earlier version. Add a Note explaining the direction the next round should take. If your goal was too vague, edit it on the Project screen before running another round — click the project name in the top bar to open the goal viewer without leaving the Work screen.</td></tr>
+          <tr><td>The document has drifted badly from where you want it</td><td>Open the <strong>Menu</strong> and click <strong>⏱ Round History</strong> to restore an earlier version. Add a Note explaining the direction the next round should take. If your goal was too vague, edit it on the Project screen before running another round — click the project name in the top bar to open the goal viewer without leaving the Work screen.</td></tr>
           <tr><td>It would be faster to start over</td><td>Click <strong>🏁 Finish → Start New Project</strong>. This clears the document and history but keeps your API keys. Return to the Project screen, rewrite your goal with tighter scope, and begin again.</td></tr>
         </tbody>
       </table>
@@ -2155,13 +2152,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.246"></script>
-<script src="lib/docx.min.js?v=3.63.246"></script>
-<script src="js/docx-export.js?v=3.63.246"></script>
-<script src="js/nav-helper.js?v=3.63.246"></script>
-<script src="js/license-helper.js?v=3.63.246"></script>
-<script src="js/version.js?v=3.63.246"></script>
-<script src="js/docs-scrollspy.js?v=3.63.246"></script>
+<script src="js/theme.js?v=3.63.247"></script>
+<script src="lib/docx.min.js?v=3.63.247"></script>
+<script src="js/docx-export.js?v=3.63.247"></script>
+<script src="js/nav-helper.js?v=3.63.247"></script>
+<script src="js/license-helper.js?v=3.63.247"></script>
+<script src="js/version.js?v=3.63.247"></script>
+<script src="js/docs-scrollspy.js?v=3.63.247"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
