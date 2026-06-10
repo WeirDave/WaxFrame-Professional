@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.253
+
+**Dev toolbar gets a one-click test trigger for the surgical retry**
+
+Build: `20260610-029`<br>
+Released: `2026-06-10`
+
+### Why
+
+The v3.63.252 test path asked the user to corrupt an API key via DevTools console and trigger an AUTH_FAILED card with the real round flow. That works for some providers but not for OpenAI: OpenAI returns 401 without an `Access-Control-Allow-Origin` header on bad keys, so the browser blocks the response body and the JS classifier sees a `NETWORK_ERROR` instead of `AUTH_FAILED`. `NETWORK_ERROR` is intentionally out of `_BEE_FATAL_CODES` (a dropped wifi shouldn't cancel Auto), so Auto stayed on and no Resend button appeared.
+
+### What changed
+
+New `🧪 Test Resend` button in the dev toolbar, between *Clear Buffer* and the *Diff: Words* separator. Click it after running at least one round and it:
+
+- Reads `window._partialRound` to pick the first cached reviewer from the most recent round (a bee with a known-working key)
+- Fires the `AUTH_FAILED` card directly with the bee's full `ctx` (aiName, aiId, provider, console/docs URLs)
+- Triggers everything the real flow would: `_BEE_FATAL_CODES` auto-cancel fires (Auto pill flips to Manual), the resend-ai action renders on the card
+
+When the user then clicks **Re-send {ai}'s prompt only**, `retrySingleAIInPartialRound` fires a real `callAPI` against the bee's real working key, splices the response into the cached reviewer set, and runRound resumes through the Builder phase. Net cost: one extra reviewer call + one extra Builder call to verify the whole pipeline end-to-end.
+
+### Files touched
+
+- [js/wf-debug.js](js/wf-debug.js) — new `testResendFlow` method on `WF_DEBUG`
+- [index.html](index.html) — new `🧪 Test Resend` button in the dev toolbar
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md)
+
+---
+
 ## v3.63.252
 
 **Bad-model card no longer burns a full round to re-test the fix**
