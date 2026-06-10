@@ -2,6 +2,50 @@
 
 ---
 
+## v3.63.250
+
+**Hive fan-out RPS-awareness — per-provider concurrency limiter**
+
+Build: `20260608-026`<br>
+Released: `2026-06-08`
+
+### Added — per-provider concurrency limiter inside `callAPI()`
+
+Several providers throttle aggressively at low requests-per-second (Cohere free ≈ 0.17 RPS, Mistral free ≈ 1 RPS, Together AI varies by model). On a hive with multiple keys for the same provider or several custom AIs sharing one gateway, the prior naive `Promise.all` fan-out would fire every request simultaneously and earn 429s. v3.63.250 adds a per-provider concurrent-in-flight cap, enforced inside `callAPI()` itself so every callsite (reviewer fan-out, Builder call, Send-to-Builder) is covered without touching the dispatcher.
+
+**Default caps** (concurrent in-flight, not RPS &mdash; since responses take 2-15s, even cap=2 keeps effective throughput well under published RPS limits):
+
+- Cohere: **2**
+- Mistral: **2**
+- Together AI: **2**
+- Perplexity: **3**
+- Anthropic (Claude): **3** (tier-1 = 50 RPM ≈ 0.83 RPS; 3 concurrent stays well under)
+- AI21 (Jamba): **2**
+- All other providers: no limit (they handle parallel fine)
+
+When the cap is reached on a provider, the next request to that provider waits in a per-provider queue until an in-flight call completes; then the limiter wakes the next waiter. Mechanism is synchronous-friendly &mdash; no setTimeout polling. Latency cost when the queue is empty is one Promise resolution.
+
+### Why this lives inside `callAPI()`
+
+Wrapping the limiter at each fan-out site means every new fan-out has to remember to call it. Wrapping it at the single chokepoint guarantees the contract. Trade-off: the limiter sees one request at a time (it can't reason about whole-round batching). For the actual problem (avoiding 429s during a round), per-call is exactly the right granularity.
+
+### Logging behavior
+
+The internal `callAPI()` "completed in Xs" timing log measures only network time, not queue wait, so a queued AI doesn't get falsely flagged as slow when the provider is the bottleneck. The round-level `_roundTimings` (used by the slow-responder detector) still measures from round start, which is correct &mdash; if an AI behind a queue contributed more wall-clock to the round, the slow-AI heuristic should know.
+
+### Closed — original backlog #1
+
+The original backlog DONE statement also called for a per-key override of the cap. That mechanism is in place (`getProviderConcurrencyCap()` reads from the module constant; the only thing missing is a Settings UI to feed it overrides). Split into a follow-up backlog item so this core ships cleanly.
+
+### Files Changed
+
+- Updated: `js/app.js` &mdash; added `PROVIDER_CONCURRENCY_CAPS`, `getProviderConcurrencyCap()`, `_acquireProviderSlot()`, `_releaseProviderSlot()`, `_PROVIDER_SLOTS` state map; wrapped `callAPI()` body in try/finally that releases the slot on every exit path (return / throw / timeout / network failure)
+- Updated: `docs/WaxFrame_Backlog_Master_v241.txt` &mdash; original #1 closed, new #1 created for the per-key Settings-UI override
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.250 / 20260608-026 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.249
 
 **Last native browser dialog retired — `wfPrompt()` replaces `window.prompt()` in the template-category rename flow**
