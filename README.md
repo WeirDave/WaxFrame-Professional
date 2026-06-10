@@ -186,8 +186,8 @@ The Quick Start template runs the entire workflow against a chocolate-chip-cooki
 | Reference Material support | ✓ | ✓ |
 | **Workflow** | Manual copy-paste | Fully automated |
 | **API keys required** | No | Yes (yours) |
-| **Round count** | Unlimited | 3 free trial rounds, then license |
-| **Price** | Free | One-time license |
+| **Rounds** | Unlimited (you copy / paste) | 3 free trial rounds, then unlimited with one-time license |
+| **Price** | Free | One-time license, then pay your provider directly per token |
 
 **Free** ([weirdave.github.io/WaxFrame-Free](https://weirdave.github.io/WaxFrame-Free/)) generates prompts you copy into ChatGPT, Claude, Gemini, DeepSeek, Grok, Perplexity, or any other AI service, then paste responses back. No API keys needed. Works with anything.
 
