@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260608-025
+// Build: 20260608-026
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260608-025';         // build stamp — update each session
+const BUILD       = '20260608-026';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -17576,9 +17576,87 @@ function _maybeWarnMistralRateLimit(ai, response) {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// v3.63.250 — Per-provider concurrency limiter (backlog #1 — Hive
+// parallel fan-out RPS-awareness)
+// ────────────────────────────────────────────────────────────────────
+// Several providers throttle aggressively at low requests-per-second:
+// Cohere free tier ≈ 0.17 RPS, Mistral free tier ≈ 1 RPS, Together AI
+// varies by model. On a hive with two Cohere keys + two Together AI
+// models running, the naive Promise.all fan-out would fire all four
+// requests simultaneously and earn 429s. This limiter queues callAPI
+// invocations PER PROVIDER so no provider receives more than its
+// configured concurrent-in-flight ceiling at once.
+//
+// Lives inside callAPI() rather than at each callsite — every reviewer
+// fan-out, every Builder call, every Send-to-Builder goes through
+// callAPI, so wrapping the fetch here gives us one place to enforce
+// the contract without touching the dispatcher logic.
+//
+// Default per-provider caps. Providers not listed default to Infinity
+// (no concurrency limit — they handle parallel fine). Numbers are
+// conservative concurrent-in-flight caps, NOT requests-per-second:
+// since reviewer responses take 2-15s, even a cap of 2 keeps effective
+// throughput well under the providers' published RPS limits.
+//
+// Future: per-key override + Settings UI to tune these without a
+// code change. Today the constants are the only knobs.
+const PROVIDER_CONCURRENCY_CAPS = {
+  cohere:     2,
+  mistral:    2,
+  together:   2,
+  perplexity: 3,
+  claude:     3,  // tier-1 Anthropic = 50 RPM ≈ 0.83 RPS; 3 concurrent stays well under
+  jamba:      2,
+};
+function getProviderConcurrencyCap(provider) {
+  const cap = PROVIDER_CONCURRENCY_CAPS[provider];
+  return (typeof cap === 'number' && cap > 0) ? cap : Infinity;
+}
+
+// Per-provider queue state. Each entry: { inFlight, waiters }.
+// Acquire grants a slot; the returned release() decrements and wakes
+// the next waiter. The whole thing is synchronous-friendly — no event
+// loop spin, no setTimeout polling — so latency cost when the queue
+// is empty is one Promise resolution.
+const _PROVIDER_SLOTS = {};
+function _acquireProviderSlot(provider) {
+  const cap = getProviderConcurrencyCap(provider);
+  if (cap === Infinity) return Promise.resolve(_noopRelease);
+  const q = _PROVIDER_SLOTS[provider] || (_PROVIDER_SLOTS[provider] = { inFlight: 0, waiters: [] });
+  if (q.inFlight < cap) {
+    q.inFlight++;
+    return Promise.resolve(() => _releaseProviderSlot(provider));
+  }
+  return new Promise(resolve => {
+    q.waiters.push(() => {
+      q.inFlight++;
+      resolve(() => _releaseProviderSlot(provider));
+    });
+  });
+}
+function _releaseProviderSlot(provider) {
+  const q = _PROVIDER_SLOTS[provider];
+  if (!q) return;
+  q.inFlight = Math.max(0, q.inFlight - 1);
+  const next = q.waiters.shift();
+  if (next) next();
+}
+function _noopRelease() { /* no-op for uncapped providers */ }
+
 async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
   const cfg = API_CONFIGS[ai.provider];
   if (!cfg || !cfg._key) throw new Error('No API key');
+
+  // v3.63.250 — Acquire a per-provider concurrency slot BEFORE timing
+  // starts. The internal "completed in Xs" log measures only actual
+  // network time, not queue-wait, so a queued AI doesn't get flagged
+  // as slow when the provider is the bottleneck. _roundTimings in the
+  // caller still includes queue-wait, which is correct for the
+  // round-level slow-responder check (an AI behind a queue did cost
+  // the round more wall-clock time, and the user does want to know).
+  const _slotRelease = await _acquireProviderSlot(ai.provider);
+  try {
 
   const keyHint = cfg._key.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
   const t0 = Date.now();
@@ -17806,6 +17884,13 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
   });
 
   return text;
+  } finally {
+    // v3.63.250 — Always release the per-provider slot, no matter how
+    // the function exits (return, throw, timeout, network failure).
+    // Without this, an unreleased slot would permanently subtract from
+    // the provider's effective cap until a page reload.
+    _slotRelease();
+  }
 }
 
 // ── HELPERS ──
