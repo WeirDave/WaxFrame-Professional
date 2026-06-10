@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260608-021
+     Build: 20260608-022
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260608-021">
+  <meta name="waxframe-build" content="20260608-022">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.245">
+  <link rel="stylesheet" href="style.css?v=3.63.246">
 </head>
 <body class="helper-body">
 
@@ -122,7 +122,7 @@
     <aside class="doc-sidebar">
       <div class="doc-sidebar-inner">
         <div class="doc-sidebar-category">Before You Start</div>
-        <a href="#what-is-it" class="doc-sidebar-link">🐝 What WaxFrame Does</a>
+        <a href="#what-is-it" class="doc-sidebar-link">What WaxFrame Does</a>
         <a href="#licensing"  class="doc-sidebar-link">🎟️ Free Trial &amp; Licensing</a>
         <a href="#your-files" class="doc-sidebar-link">📁 What's in the Folder</a>
 
@@ -190,7 +190,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The setup flow</div>
-      <p>WaxFrame walks you through five setup screens in order before you reach the Work screen. Each screen is dedicated to one task, and you can move forward or back freely using the navigation buttons at the top of each screen.</p>
+      <p>WaxFrame walks you through four setup screens in order before you reach the Work screen. Each screen is dedicated to one task, and you can move forward or back freely using the navigation buttons at the top of each screen.</p>
       <table class="wh-table">
         <thead><tr><th>Screen</th><th>What you do there</th></tr></thead>
         <tbody>
@@ -1218,7 +1218,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Reading the updated document</div>
-      <p>After a round completes, the centre column shows the updated document. Read it carefully before running another round. Each version is saved automatically to the Round History — open the <strong>Menu</strong> and click <strong>📖 Round History</strong> to access any previous version and restore it if needed.</p>
+      <p>After a round completes, the centre column shows the updated document. Read it carefully before running another round. Each version is saved automatically to the Round History — open the <strong>Menu</strong> and click <strong>⏱ Round History</strong> to access any previous version and restore it if needed.</p>
     </div>
 
     <div class="wh-block">
@@ -1365,11 +1365,11 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Opening the Finish panel</div>
-      <p>Click the <strong>🏁 Finish</strong> button in the top right of the Work screen to open the Finish panel. A modal dialog appears titled <strong>🏁 Project Complete!</strong> with three buttons and two secondary options at the bottom.</p>
+      <p>Click the <strong>🏁 Finish</strong> button in the top right of the Work screen to open the Finish panel. A modal dialog appears titled <strong>🏁 Project Complete!</strong> with four buttons and two secondary options at the bottom.</p>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">The three export and finish options</div>
+      <div class="wh-block-title">The four export and finish options</div>
       <div class="goal-info-row">
         <span class="info-label">💾 Export Document</span>
         <span class="goal-info-desc">Downloads your working document as a plain text (.txt) file using the export filename you configured on the Project screen. The file contains only the document text. Use this when you need the final text to paste into another application, submit somewhere, or keep as a clean finished copy.</span>
@@ -1377,6 +1377,10 @@
       <div class="goal-info-row">
         <span class="info-label">📋 Export Full Transcript</span>
         <span class="goal-info-desc">Downloads a complete record of your entire session as a single text file. This includes every round, every AI's full reviewer response, all conflicts and the decisions you made, and the final document. Use this for a full audit trail, to review what each AI contributed, or to share the session record with a colleague.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">⭐ Template - Save</span>
+        <span class="goal-info-desc">Opens the Template - Save modal preset to capture this project's setup recipe (goal fields, reference scaffold, length guard, and the hive that ran it &mdash; AI lineup + Builder). The round history is <strong>not</strong> saved. Use this when you've landed on a configuration that produced a good result and want to apply it to future projects in one click via the Template - Use gallery. See <a href="#step3" class="link-accent">Setup 2 — Project Templates</a> for how templates apply.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Start New Project</span>
@@ -1618,14 +1622,14 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Checkpoint Nudge</div>
-      <p>The first time you reach the work screen for a project — right after finishing the 5 setup screens and clicking <strong>Smoke the Hive</strong> — WaxFrame nudges you to save a checkpoint before you burn any tokens. The checkpoint captures your hive setup, project goal, reference material, and starting document, so if anything goes sideways during the run (a credit hiccup, an unexpected drift in the document, or a new direction you want to try without losing this one) you can restore the exact starting state.</p>
-      <p>This modal carries a <em>Don't ask again for this project</em> checkbox, but the semantics are a little different from the four informational confirms above:</p>
+      <p>The first time you reach the work screen for a project — right after finishing the 4 setup screens and clicking <strong>Smoke the Hive</strong> — WaxFrame nudges you to save a checkpoint before you burn any tokens. The checkpoint captures your hive setup, project goal, reference material, and starting document, so if anything goes sideways during the run (a credit hiccup, an unexpected drift in the document, or a new direction you want to try without losing this one) you can restore the exact starting state.</p>
+      <p>This modal carries a <em>Don't ask again for this project</em> checkbox, but the semantics are a little different from the informational confirms above:</p>
       <ul>
         <li><strong>💾 Checkpoint - Save</strong> — opens the Checkpoints screen in Save mode with the nine scope checkboxes (Project info, Reference Material, Starting Document, Session, AI list, Model picks, API keys, Builder, License) so you can pick which sections go in the file.</li>
         <li><strong>Not now</strong> (checkbox <em>unchecked</em>) — silent for the current session. If you launch into the same project again in a future browser session, you will see the nudge again.</li>
         <li><strong>Don't ask again</strong> (checkbox <em>checked</em>, then either button) — persists a per-project suppression. The nudge will not fire again for this project on this browser, regardless of which button you clicked. Both <em>Checkpoint - Save with checked</em> and <em>Not now with checked</em> persist the dismissal.</li>
       </ul>
-      <p>The per-project key is derived from your project name and version. Renaming the project resets the suppression — treat that as a feature rather than a bug. Clicking ↺ Reset suppressed prompts in the Settings panel also clears all checkpoint-nudge dismissals along with the four informational confirms.</p>
+      <p>The per-project key is derived from your project name and version. Renaming the project resets the suppression — treat that as a feature rather than a bug. Clicking ↺ Reset suppressed prompts in the Settings panel also clears all checkpoint-nudge dismissals along with the other informational confirms.</p>
     </div>
 
     <a href="#top" class="wh-back-top">↑ Back to top</a>
@@ -2151,13 +2155,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.245"></script>
-<script src="lib/docx.min.js?v=3.63.245"></script>
-<script src="js/docx-export.js?v=3.63.245"></script>
-<script src="js/nav-helper.js?v=3.63.245"></script>
-<script src="js/license-helper.js?v=3.63.245"></script>
-<script src="js/version.js?v=3.63.245"></script>
-<script src="js/docs-scrollspy.js?v=3.63.245"></script>
+<script src="js/theme.js?v=3.63.246"></script>
+<script src="lib/docx.min.js?v=3.63.246"></script>
+<script src="js/docx-export.js?v=3.63.246"></script>
+<script src="js/nav-helper.js?v=3.63.246"></script>
+<script src="js/license-helper.js?v=3.63.246"></script>
+<script src="js/version.js?v=3.63.246"></script>
+<script src="js/docs-scrollspy.js?v=3.63.246"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

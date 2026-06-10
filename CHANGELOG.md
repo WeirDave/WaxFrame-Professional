@@ -2,6 +2,51 @@
 
 ---
 
+## v3.63.246
+
+**User manual workflow audit — pass 1**
+
+Build: `20260608-022`<br>
+Released: `2026-06-08`
+
+### Changed — sidebar TOC drops decorative bee from "What WaxFrame Does"
+
+David flagged the 🐝 emoji on the first sidebar link as out of place. Removed; the link now reads plain "What WaxFrame Does" to match the visual weight of the other section entries.
+
+### Fixed — Step 11 (Export and Finish) docs were missing the Template - Save option
+
+The Finish panel modal actually has **four** action buttons (💾 Export Document, 📋 Export Full Transcript, ⭐ Template - Save, Start New Project), but the user manual chapter only listed three. Updated the count and added a Template - Save row that explains what gets captured, what doesn't (round history), and links back to Setup 2's Project Templates section for how applying a template works.
+
+### Fixed — Step 9 (Review Results and Resolve Conflicts) icon mismatch
+
+The "open the Menu and click 📖 Round History" sentence used a book emoji, but the actual nav-menu entry uses ⏱. Corrected.
+
+### Fixed — "5 setup screens" / "5 setups" references corrected to 4
+
+The Builder selection screen was folded into Setup 1 ages ago (v3.63.147 / v3.63.161), making the setup flow four screens — but two prose references still said "five." Updated both: the Step-by-Step Guide intro paragraph and the Checkpoint Nudge block in Settings.
+
+### Fixed — "four informational confirms" count no longer hardcoded
+
+The Settings section's Checkpoint Nudge block twice referred back to "the four informational confirms above," but the suppression list has grown to eight entries over time. Replaced the hardcoded count with "the/other informational confirms" so the prose stays accurate as the list evolves.
+
+### Added — audit backlog items #8 and #9
+
+Filed two follow-up audit items into `docs/WaxFrame_Backlog_Master_v241.txt`:
+
+- **#8** — Deep orphan-function audit on `app.js` (~20k lines, needs AST tooling)
+- **#9** — localStorage migration audit (state-recovery category from `WaxFrame_Audit_Methodology_v1.txt`)
+
+These are scopes too large for the inline audit pass that landed v3.63.241; tracked so they don't drop off.
+
+### Files Changed
+
+- Updated: `waxframe-user-manual.html` &mdash; TOC bee removed; Step 9, Step 11, Settings (Checkpoint Nudge) prose corrections
+- Updated: `docs/WaxFrame_Backlog_Master_v241.txt` &mdash; audit items #8 and #9 added
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.246 / 20260608-022 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.245
 
 **User manual: new screenshots for Template gallery + Checkpoints (Save mode)**
