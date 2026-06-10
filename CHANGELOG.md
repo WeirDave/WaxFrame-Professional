@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.245
+
+**User manual: new screenshots for Template gallery + Checkpoints (Save mode)**
+
+Build: `20260608-021`<br>
+Released: `2026-06-08`
+
+### Added — Template gallery screenshot on Setup 2 chapter
+
+The "📋 Project Templates — pre-fill the Goal fields" block on Setup 2 in the user manual now shows the gallery the user is about to open, right above the existing prose. Helps new readers see what to expect before they read the table of categories.
+
+### Added — Checkpoints (Save mode) screenshot on Step 7 chapter
+
+The "Checkpoints screen — Save mode" block on Step 7 now leads with a screenshot of the actual screen, so the reader has a visual anchor before walking through the nine-section breakdown.
+
+### Files Changed
+
+- Updated: `waxframe-user-manual.html` &mdash; two new `<figure class="ss-shot">` blocks
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.245 / 20260608-021 across HTML, JS, CSS, and `package.json`
+
+The screenshot PNGs (`screenshot_template-gallery_{dark,light}.png`, `screenshot_checkpoint-save_{dark,light}.png`) landed in commit `223adfbc` after David ran `tools/capture-screenshots.ps1` against the v3.63.245-extended capture pipeline.
+
+---
+
 ## v3.63.244
 
 **Edit-template toast aligned with the Template - X naming pattern**
