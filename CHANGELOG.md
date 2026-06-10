@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.254
+
+**Deprecated-model errors now route to the surgical retry flow**
+
+Build: `20260610-030`<br>
+Released: `2026-06-10`
+
+### What broke (in real-world testing)
+
+While verifying v3.63.253's `🧪 Test Resend` button, a Perplexity round actually surfaced the underlying bug: the saved `sonar-reasoning` model was deprecated by Perplexity, the provider returned `The 'sonar-reasoning' model has been deprecated and is no longer available`, and the WaxFrame classifier had no matcher for that phrase. The card fell through to the generic `Something went wrong` fallback — which has `fix-bee` (the inline model picker rendered correctly) but no `resend-ai`, no Auto-cancel hook, and no quarantine.
+
+So the user got an inline picker to fix the model, but their only retry path was the legacy *Retry round* button that re-bills every other bee. The exact scenario the surgical retry was built for, and it was missing.
+
+### What changed
+
+**New `MODEL_DEPRECATED` catalog entry**, placed before `MODEL_NEEDS_DIFFERENT_ENDPOINT` so deprecation messages with 4xx statuses don't get mislabeled as "wrong URL". Matches the common provider phrasings:
+
+- `<model> has been deprecated` / `is deprecated` (Perplexity, Anthropic, OpenAI)
+- `has been retired` / `has been sunset` (xAI, future)
+- `decommissioned`
+- `no longer available` and `no longer supported` (when paired with `model`)
+
+The entry's actions are *Pick a different model* (inline dropdown) + ***Re-send {ai}'s prompt only*** + *Open provider docs* + *Retry round*. Added to `_BEE_FATAL_CODES` so Auto cancels the moment the card appears. The `showCard` quarantine hook now extracts the deprecated model id from the Perplexity-style `'sonar-reasoning' model has been deprecated` body (single/double-quoted name preceding the deprecation phrase) in addition to the existing `models/<id>` path Gemini uses — so the dead model is filtered from every future recommendation.
+
+**Generic fallback entry gains `resend-ai`**. `WF_GENERIC_ENTRY` now includes the resend action between the meaning and the retry button. The renderer's guard (`!window._partialRound || !ctx?.aiId`) hides it when the error has no bee context, so it's a no-op for non-bee errors and a real out when a future provider's not-yet-cataloged phrasing slips through the matcher grid.
+
+### Files touched
+
+- [js/wf-debug.js](js/wf-debug.js) — new `MODEL_DEPRECATED` catalog entry; `_BEE_FATAL_CODES` includes the new code; `showCard` quarantine hook extracts quoted model ids from deprecation phrases; `WF_GENERIC_ENTRY` gains `resend-ai`
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md)
+
+---
+
 ## v3.63.253
 
 **Dev toolbar gets a one-click test trigger for the surgical retry**

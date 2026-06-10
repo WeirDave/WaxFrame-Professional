@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260608-026
+// Build: 20260610-030
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -150,10 +150,17 @@ window.WF_DEBUG = {
     // from every future list + recommendation (api.js quarantineModel). The
     // provider usually names the model in the error ("models/<id>"); fall back
     // to the AI's configured model.
-    if (entry && (entry.code === 'MODEL_REJECTS_INSTRUCTIONS' || entry.code === 'MODEL_NEEDS_DIFFERENT_ENDPOINT')) {
+    if (entry && (entry.code === 'MODEL_REJECTS_INSTRUCTIONS' || entry.code === 'MODEL_NEEDS_DIFFERENT_ENDPOINT' || entry.code === 'MODEL_DEPRECATED')) {
       let bad = null;
+      // v3.63.254 — Match Perplexity-style "'sonar-reasoning' model has been
+      // deprecated" (single-quoted model id) in addition to the
+      // Gemini-style "models/<id>" path. Either yields a quarantinable id.
       const mm = (ctx.message || '').match(/models\/([^\s"')]+)/i);
       if (mm) bad = mm[1];
+      if (!bad) {
+        const qm = (ctx.message || '').match(/['"]([^'"]+)['"]\s+(?:model\s+)?has been (?:deprecated|retired|sunset|decommissioned)/i);
+        if (qm) bad = qm[1];
+      }
       if (!bad && ctx.model) bad = ctx.model;
       if (!bad && typeof API_CONFIGS !== 'undefined' && ctx.provider && API_CONFIGS[ctx.provider]) bad = API_CONFIGS[ctx.provider].model;
       if (bad && typeof quarantineModel === 'function') quarantineModel(bad, entry.code);
@@ -194,6 +201,7 @@ window.WF_DEBUG = {
   _BEE_FATAL_CODES: new Set([
     'MODEL_NEEDS_DIFFERENT_ENDPOINT',
     'MODEL_REJECTS_INSTRUCTIONS',
+    'MODEL_DEPRECATED',
     'AUTH_FAILED',
     'CREDIT_LOW'
   ]),
@@ -487,6 +495,37 @@ window.WF_ERROR_CATALOG = [
     meaning: 'Your custom endpoint did not whitelist this WaxFrame origin. The request reached the server, but the browser refused to read the response as a security measure. Most common with self-hosted endpoints (Open WebUI, Ollama, internal gateways).',
     actions: [
       { label: 'Read CORS troubleshooting', kind: 'link', href: 'api-details.html' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    // v3.63.254 — Provider explicitly says the saved model has been
+    // deprecated / retired / sunset / decommissioned. The bee will keep
+    // failing on every retry until the user picks a live model, so this is
+    // bee-fatal — Auto cancels (via _BEE_FATAL_CODES in showCard), the
+    // failing model id gets quarantined (via the showCard hook), and the
+    // user gets the inline model picker + Resend-only action to recover
+    // surgically. Surfaced by David's Perplexity sonar-reasoning run on
+    // 2026-06-10 where the legacy classifier dropped this case into the
+    // generic "Something went wrong" card with no resend path.
+    //
+    // Match BEFORE MODEL_NEEDS_DIFFERENT_ENDPOINT and ENDPOINT_NOT_FOUND
+    // since some providers return 4xx with the deprecation body — the
+    // status-only matchers below would otherwise mislabel.
+    code: 'MODEL_DEPRECATED',
+    matches: (err, ctx, msg) =>
+      (msg.includes('deprecated') && (msg.includes('no longer') || msg.includes('model'))) ||
+      msg.includes('has been retired') ||
+      msg.includes('has been sunset') ||
+      msg.includes('decommissioned') ||
+      (msg.includes('no longer available') && msg.includes('model')) ||
+      (msg.includes('no longer supported') && msg.includes('model')),
+    title: '{ai} — Saved model has been deprecated by the provider',
+    meaning: 'The provider says this model is no longer available — it has been deprecated, retired, sunset, or decommissioned. The bee will keep failing on this model on every round until you pick a live one. WaxFrame has automatically removed it from your future recommendations so it will not be suggested again. Pick a replacement from the dropdown (✨ marks the recommended Reviewer model), then click "Re-send {ai}\'s prompt only" to finalize this round without re-billing every other bee.',
+    actions: [
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Open provider docs', kind: 'docs-link' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -828,6 +867,12 @@ const WF_GENERIC_ENTRY = {
   title: 'Something went wrong',
   meaning: 'WaxFrame ran into an error it does not have a specific explanation for. The technical details below may help diagnose. Use "Report on GitHub" to send them — it opens a pre-filled issue.',
   actions: [
+    // v3.63.254 — Resend slot for unmatched bee errors. Auto-hides via the
+    // resend-ai renderer guard when window._partialRound or ctx.aiId is
+    // missing, so it stays invisible on non-bee errors and shows up as a
+    // real out when a bee-attributable error slips through the matcher
+    // grid (e.g. a future provider's not-yet-cataloged deprecation phrase).
+    { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
     { label: 'Retry round', kind: 'retry' },
     { label: '🛠 Fix Worker Bee', kind: 'fix-bee' },
     { label: '🌐 Open provider site', kind: 'console-link' },
