@@ -33,11 +33,11 @@
   'use strict';
 
   var MODEL_FALLBACKS = {
-    chatgpt:    ['gpt-4.1', 'gpt-4.1-mini', 'gpt-5.4', 'gpt-5.4-mini'],
-    claude:     ['claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5'],
-    gemini:     ['gemini-2.5-flash', 'gemini-2.5-pro'],
-    grok:       ['grok-4-fast-non-reasoning', 'grok-4-fast-reasoning', 'grok-4', 'grok-4.20-0309-non-reasoning', 'grok-4.20-0309-reasoning', 'grok-3', 'grok-3-mini'],
-    deepseek:   ['deepseek-chat'],
+    chatgpt:    ['gpt-5.5', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano'],
+    claude:     ['claude-sonnet-4-6', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-opus-4-6', 'claude-haiku-4-5'],
+    gemini:     ['gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3.1-flash-lite'],
+    grok:       ['grok-4.1-fast', 'grok-4.3', 'grok-4.20-reasoning'],
+    deepseek:   ['deepseek-v4-flash', 'deepseek-v4-pro'],
     mistral:    ['mistral-large-latest', 'mistral-small-latest', 'ministral-8b-latest'],
     together:   ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Qwen/Qwen2.5-72B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1'],
     cohere:     ['command-r-plus', 'command-r', 'command-a-03-2025'],
