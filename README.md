@@ -4,9 +4,9 @@
 
 # WaxFrame Professional
 
-**Many minds. One refined result.**
+**Many minds, one refined result.**
 
-Multi-AI document refinement in your browser. No server, no account, no install.
+Multi-AI document refinement in your browser. The Builder rewrites; the rest of your hive reviews in parallel and surfaces specific suggestions. You resolve disagreements your way, then run another round. No server, no account, no install.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/WeirDave/WaxFrame-Professional?label=Latest&color=orange)](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
