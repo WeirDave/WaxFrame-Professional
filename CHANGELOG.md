@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.248
+
+**User manual workflow audit — pass 3**
+
+Build: `20260608-024`<br>
+Released: `2026-06-08`
+
+### Fixed — Setup 1 docs referenced a stale "Continue — Choose Builder →" button
+
+The Setup 1 chapter said *"The Continue — Choose Builder → button at the bottom right of the screen remains inactive until the keys indicator is green."* That label dates back to when Builder selection was its own separate screen (Step 2). The standalone Builder screen was retired in v3.63.147 and the button has read **Continue — Your Project →** ever since. Updated the manual to match the actual label, and corrected the gating wording from *"the keys indicator"* (singular) to *"both indicators"* (plural) since the status bar shows two: at-least-2-AIs and Builder-selected.
+
+### Files Changed
+
+- Updated: `waxframe-user-manual.html` &mdash; Setup 1 status bar block button label corrected
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.248 / 20260608-024 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.247
 
 **User manual workflow audit — pass 2**
