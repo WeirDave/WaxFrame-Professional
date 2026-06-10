@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.247
+
+**User manual workflow audit — pass 2**
+
+Build: `20260608-023`<br>
+Released: `2026-06-08`
+
+### Fixed — "Setup — The 5 Setup Screens" header and sub corrected to 4
+
+The Setup section header in the user manual still announced "5 Setup Screens" (with sub-text listing Worker Bees, Builder, Project, Reference Material, Starting Document). Updated to "4 Setup Screens" and rewrote the sub-text to reflect that Builder selection is part of Setup 1 ("Worker Bees (Builder is picked here too)") — same correction applied to the chapter intro paragraph in v3.63.246.
+
+### Fixed — Setup 3 chapter referred to itself as "Setup 4"
+
+The "Adding reference documents" block on the Setup 3 — Reference Material chapter started with "Setup 4 is built around a list of reference document cards." Typo from a prior reshuffle; should be "Setup 3."
+
+### Fixed — "📖 Round History" → "⏱ Round History" (second instance)
+
+Another stale icon reference in the When Things Go Wrong → "document has drifted badly" troubleshooting row. The first instance was fixed in v3.63.246.
+
+### Changed — "What's in the Folder" table now reflects the js/ subfolder
+
+The file-listing table in Before You Start was still showing JS files at the root (`app.js`, `version.js`, `api-links.js`, `theme.js`), but all JS lives under `js/` since the file-organization refactor. Collapsed the four separate rows into a single `js/` row that names the modules inside (`app.js`, `storage.js`, `api.js`, `provider-models.js`, `theme.js`, `version.js`, plus smaller helpers).
+
+### Files Changed
+
+- Updated: `waxframe-user-manual.html` &mdash; Setup section header / sub corrected, Setup 3 typo fixed, second Round-History icon fixed, file table updated for `js/` layout
+- Updated: `CHANGELOG.md`
+- Version/build stamps to v3.63.247 / 20260608-023 across HTML, JS, CSS, and `package.json`
+
+---
+
 ## v3.63.246
 
 **User manual workflow audit — pass 1**
