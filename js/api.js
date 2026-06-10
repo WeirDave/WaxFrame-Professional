@@ -61,7 +61,7 @@ window.API_CONFIGS = {
     extractFn: d => d?.content?.[0]?.text || ''
   },
   chatgpt: {
-    label: 'OpenAI (ChatGPT)', model: 'gpt-4.1',
+    label: 'OpenAI (ChatGPT)', model: 'gpt-5.5',
     endpoint: 'https://api.openai.com/v1/chat/completions',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
@@ -113,8 +113,8 @@ window.API_CONFIGS = {
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   },
   gemini: {
-    label: 'Google (Gemini)', model: 'gemini-2.5-flash',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+    label: 'Google (Gemini)', model: 'gemini-3.5-flash',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
     endpointFn: (model) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k }),
@@ -138,7 +138,7 @@ window.API_CONFIGS = {
     extractFn: d => d?.candidates?.[0]?.content?.parts?.[0]?.text || ''
   },
   grok: {
-    label: 'xAI (Grok)', model: 'grok-4-fast-non-reasoning',
+    label: 'xAI (Grok)', model: 'grok-4.1-fast',
     endpoint: 'https://api.x.ai/v1/chat/completions',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
@@ -216,7 +216,7 @@ window.API_CONFIGS = {
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   },
   deepseek: {
-    label: 'DeepSeek', model: 'deepseek-chat',
+    label: 'DeepSeek', model: 'deepseek-v4-flash',
     endpoint: 'https://api.deepseek.com/v1/chat/completions',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
