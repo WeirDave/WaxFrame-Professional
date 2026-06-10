@@ -66,34 +66,37 @@ OPEN BUGS
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
 
-1. Hive parallel fan-out RPS-awareness
+1. Per-key concurrency override for RPS-awareness (Settings UI)
    ─────────────────────────────────────────────────────────
-   WHAT:   Every refinement round, WaxFrame fires the
-           reviewer-prompt API call to all participating AI
-           providers in parallel (fan-out). Today the
-           fan-out is naive: all requests go out essentially
-           at once. Several providers cap RPS (Requests Per
-           Second) at low numbers — Cohere, Mistral,
-           Together AI and some Anthropic tiers — and will
-           return 429 (Too Many Requests) or silently slow
-           down when hit with simultaneous calls.
-   WHY:    A single user with multiple keys and a 10-AI hive
-           can saturate a low-RPS provider on round 1 and
-           start eating retries. Total wall-clock goes up,
-           and worst case a provider drops out of the round.
-           RPS-awareness would stagger requests per-provider
-           so we stay under each provider's cap while still
-           parallelizing across providers.
-   STATE:  OPEN — not started.
-   WHERE:  The fan-out dispatcher in app.js (the function
-           that builds and Promise.all-s the per-provider
-           request promises for a refinement round).
-   DONE:   Each provider has a configurable RPS ceiling
-           (default per-family value, override per-key);
-           the dispatcher queues requests so no provider
-           receives more than N concurrent in-flight calls;
-           no functional change to round semantics —
-           reviewers still all return before Builder runs.
+   WHAT:   v3.63.250 shipped the per-PROVIDER concurrency
+           limiter that closed the core of the original
+           RPS-awareness ask (queuing requests so no provider
+           receives more than N concurrent in-flight calls).
+           One piece of the original DONE statement was not
+           shipped: a per-KEY override that lets a power
+           user lift the cap for a paid-tier key on a
+           provider whose default is conservative for the
+           free tier.
+   WHY:    Conservative defaults serve free-tier users well
+           but penalize someone paying for a higher tier.
+           A Cohere enterprise customer with 100+ RPS
+           headroom shouldn't be capped at 2 concurrent.
+           The override lets them lift it without a code
+           change.
+   STATE:  OPEN — not started. Mechanism is in place
+           (getProviderConcurrencyCap reads from the module
+           constant). The remaining work is the Settings UI
+           + persistence + the lookup change to consult an
+           override map before falling back to the default.
+   WHERE:  app.js: getProviderConcurrencyCap() at the top
+           of the v3.63.250 limiter block. Settings panel
+           in index.html.
+   DONE:   A new Settings row lets a user enter a
+           concurrency override per saved API key;
+           getProviderConcurrencyCap() consults the
+           per-key override before the per-provider default;
+           overrides persist in localStorage and survive
+           reload.
 
 
 2. Builder-incapable family list expansion
