@@ -369,6 +369,66 @@ window.WF_DEBUG = {
   },
 
   // ════════════════════════════════════════════════════════════
+  // v3.63.252 — Test trigger for the surgical retry / bee-fatal flow
+  // ────────────────────────────────────────────────────────────
+  // Real-world AUTH_FAILED testing against built-in providers is messy
+  // because some providers (OpenAI in particular) return 401 without
+  // CORS headers, so the JS classifier sees it as NETWORK_ERROR — not
+  // AUTH_FAILED — and the surgical-retry hooks don't engage.
+  //
+  // This trigger sidesteps the CORS quirk by firing the AUTH_FAILED
+  // card directly with proper ctx, using a real bee from the most
+  // recent round's captured _partialRound. So:
+  //   • _BEE_FATAL_CODES auto-cancel fires (verify Auto pill flips)
+  //   • resend-ai action renders (verify button appears)
+  //   • Clicking Re-send fires a REAL callAPI against the bee's real
+  //     working key, splices the response into the cached set, and
+  //     runRound resumes through the Builder phase — end-to-end real
+  //     exercise of the surgical path with one bee's worth of spend.
+  //
+  // Requires a prior completed round so _partialRound has reviewer
+  // responses to splice into. Bails with a toast if no round has run.
+  // ════════════════════════════════════════════════════════════
+  testResendFlow() {
+    if (!window._partialRound) {
+      if (typeof toast === 'function') toast('🧪 Run a round first — test needs a captured _partialRound');
+      return;
+    }
+    const pr = window._partialRound;
+    const targetReviewer = pr.reviewerResponses && pr.reviewerResponses[0];
+    if (!targetReviewer) {
+      if (typeof toast === 'function') toast('🧪 No cached reviewers — run a round that gathers responses first');
+      return;
+    }
+    const ai = (typeof activeAIs !== 'undefined' && Array.isArray(activeAIs))
+      ? activeAIs.find(a => a.id === targetReviewer.id)
+      : null;
+    if (!ai) {
+      if (typeof toast === 'function') toast('🧪 Cached reviewer no longer in active hive');
+      return;
+    }
+    const entry = WF_ERROR_CATALOG.find(e => e.code === 'AUTH_FAILED');
+    if (!entry) {
+      if (typeof toast === 'function') toast('🧪 AUTH_FAILED catalog entry missing — check wf-debug.js');
+      return;
+    }
+    this.showCard(entry, {
+      aiName:           ai.name,
+      aiId:             ai.id,
+      provider:         ai.provider,
+      aiConsoleUrl:     ai.apiConsole || null,
+      aiDocsUrl:        ai.apiDocs    || null,
+      isCustomEndpoint: !!ai.isCustom,
+      status:           401,
+      message:          'TEST MODE — simulated AUTH_FAILED to exercise the surgical retry path. Click Re-send to fire a real call with your real key.',
+      raw:              JSON.stringify({ test: true, ai: ai.name, round: pr.round, partialRound: { builderRan: pr.builderRan, reviewers: pr.reviewerResponses.length } }, null, 2)
+    });
+    if (typeof toast === 'function') {
+      toast(`🧪 Test card fired for ${ai.name} — verify Auto cancelled + Resend visible`, 6000);
+    }
+  },
+
+  // ════════════════════════════════════════════════════════════
   // v3.63.139 — Hive Profiles tier classifier dev-toolbar entry
   // ────────────────────────────────────────────────────────────
   // The actual classifier logic lives in app.js
