@@ -158,10 +158,45 @@ window.WF_DEBUG = {
       if (!bad && typeof API_CONFIGS !== 'undefined' && ctx.provider && API_CONFIGS[ctx.provider]) bad = API_CONFIGS[ctx.provider].model;
       if (bad && typeof quarantineModel === 'function') quarantineModel(bad, entry.code);
     }
+    // v3.63.252 — Bee-fatal card → cancel Auto Mode immediately and block the
+    // auto-chain-resume hook in closeTroubleshootingCard. Without this, Auto
+    // would re-fire the round (re-billing every other bee) the moment the user
+    // dismissed the card, even though the offending bee's model still can't
+    // succeed. The user must pick a new model and use "Re-send {ai}'s prompt
+    // only" to finalize the round at one-bee cost instead of a full round.
+    if (entry && WF_DEBUG._BEE_FATAL_CODES.has(entry.code)) {
+      window._beeFatalCardActive = true;
+      if (window._autoMode) {
+        window._autoMode = false;
+        window._autoChainDeferred = null;
+        window._autoCeilingTarget = null;
+        window._autoSatisfiedHist = [];
+        window._autoFailureStreak = 0;
+        if (typeof updateAutoToggleUI === 'function') updateAutoToggleUI();
+        if (typeof consoleLog === 'function') {
+          consoleLog(`🤖 Auto Mode cancelled — ${ctx.aiName || 'a bee'} needs a model/key fix before the round can finalize`, 'warn');
+        }
+        if (typeof toast === 'function') {
+          toast(`🤖 Auto Mode off — fix ${ctx.aiName || 'the bee'} and use Re-send to finalize`, 5000);
+        }
+      }
+    }
     if (typeof renderTroubleshootingCard === 'function') {
       renderTroubleshootingCard(entry, ctx);
     }
   },
+
+  // v3.63.252 — Codes where the failure is rooted at one specific bee
+  // (its model, its key, its content filter) and the round can only succeed
+  // by either fixing that bee or finishing without it. Auto-cancel fires
+  // for these; the round-wide retry button alone would just re-bill every
+  // other bee on a round that still can't succeed.
+  _BEE_FATAL_CODES: new Set([
+    'MODEL_NEEDS_DIFFERENT_ENDPOINT',
+    'MODEL_REJECTS_INSTRUCTIONS',
+    'AUTH_FAILED',
+    'CREDIT_LOW'
+  ]),
 
   // ════════════════════════════════════════════════════════════
   // v3.63.139 — "Bundle for Scout" replaces the Deep Dive Viewer.
@@ -414,6 +449,11 @@ window.WF_ERROR_CATALOG = [
       // uses fix-bee which the renderer swaps for an inline model dropdown
       // when ctx.aiId/provider are available.
       { label: 'Pick a different model', kind: 'fix-bee' },
+      // v3.63.252 — Single-AI retry. When a partial round is available, this
+      // re-sends only THIS bee's prompt (instead of re-billing every other
+      // bee via "Retry round"). Auto-hides when there's no partial round to
+      // splice into. See retrySingleAIInPartialRound in app.js.
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -435,6 +475,8 @@ window.WF_ERROR_CATALOG = [
     meaning: 'The provider rejected this model because it does not accept the developer/system instructions every WaxFrame prompt relies on (some preview and special-purpose models disable them). A round can never succeed on this model. Pick a different one from the dropdown — WaxFrame has automatically removed this model from your lists and recommendations so it will not be suggested again.',
     actions: [
       { label: 'Pick a different model', kind: 'fix-bee' },
+      // v3.63.252 — see comment on MODEL_NEEDS_DIFFERENT_ENDPOINT above.
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -503,6 +545,10 @@ window.WF_ERROR_CATALOG = [
     actions: [
       { label: 'Open provider console', kind: 'console-link' },
       { label: 'Open provider docs', kind: 'docs-link' },
+      // v3.63.252 — Auth fix is bee-specific (rotate one key, not the whole
+      // hive). Resend lets the user fix the key and re-fire just this bee's
+      // prompt without re-billing every other bee via Retry round.
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -936,9 +982,16 @@ function renderTroubleshootingCard(entry, ctx) {
       // above already covers the same need. Keeps a single, surgical
       // affordance on the card instead of two ways to do the same thing.
       if (a.kind === 'fix-bee' && canShowModelPicker) return;
+      // v3.63.252 — resend-ai only renders when we have a partial round to
+      // splice into AND a specific aiId in context. No partial round → the
+      // round either never started or already cleanly finished, so a
+      // "re-send this bee only" action has nothing to operate on.
+      if (a.kind === 'resend-ai' && (!window._partialRound || !ctx?.aiId)) return;
       const btn = document.createElement('button');
       btn.className = 'tc-action-btn';
-      btn.textContent = a.label;
+      // v3.63.252 — action labels honor the same {ai} substitution as title/
+      // meaning. Backwards-compatible: actions without placeholders pass through.
+      btn.textContent = subst(a.label);
       if (a.kind === 'link' && a.href) {
         // v3.52.8 — noopener feature added (audit follow-up)
         btn.onclick = () => { window.open(a.href, '_blank', 'noopener,noreferrer'); };
@@ -969,6 +1022,21 @@ function renderTroubleshootingCard(entry, ctx) {
         // clicked Retry Round and nothing happened. Actual round entry
         // is runRound() in app.js.
         btn.onclick = () => { closeTroubleshootingCard(); if (typeof runRound === 'function') runRound(); };
+      } else if (a.kind === 'resend-ai') {
+        // v3.63.252 — Single-AI surgical retry. Closes the card and hands off
+        // to retrySingleAIInPartialRound, which re-fires THIS bee's prompt
+        // only, splices the response into the cached reviewer set, and
+        // re-enters the Builder phase via runRound's resumedFromPartial path.
+        // Saves N-1 reviewer calls (and possibly the prior Builder call) vs
+        // the legacy "Retry round" button that re-fires every bee.
+        btn.onclick = () => {
+          closeTroubleshootingCard();
+          if (typeof window.retrySingleAIInPartialRound === 'function') {
+            window.retrySingleAIInPartialRound(ctx.aiId);
+          } else if (typeof toast === 'function') {
+            toast('⚠️ Re-send unavailable — single-AI retry helper not loaded');
+          }
+        };
       } else if (a.kind === 'open-modal' && a.handler && typeof window[a.handler] === 'function') {
         btn.onclick = () => { closeTroubleshootingCard(); window[a.handler](); };
       } else if (a.kind === 'github-issue') {
@@ -1091,6 +1159,12 @@ function renderTroubleshootingCard(entry, ctx) {
 function closeTroubleshootingCard() {
   const modal = document.getElementById('troubleshootingCard');
   if (modal) modal.classList.remove('active');
+  // v3.63.252 — Clear the bee-fatal marker the card set on open. The
+  // _autoMode flip + _autoChainDeferred wipe in WF_DEBUG.showCard already
+  // ensures the resume hook below short-circuits, but the flag is
+  // informational for any other listeners that want to know whether the
+  // current card requires a bee-specific fix.
+  window._beeFatalCardActive = false;
   // v3.35.1 — If Auto deferred a chain because this card was up,
   // resume it now that the user has dismissed the card. The helper
   // re-checks every gate (Auto on, work screen, no in-flight round)
