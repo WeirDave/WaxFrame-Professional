@@ -2,6 +2,28 @@
 
 ---
 
+## v3.63.273
+
+**Chevron lower · arrow centered on column · match-green gated on selection**
+
+Build: `20260610-049`<br>
+Released: `2026-06-10`
+
+### Three fixes
+
+**1. Chevron dropped a wee bit further down.** Was `margin-bottom: var(--space-12)`; now `var(--space-4)`. Sits 4px from the cards' bottom edges instead of 12px, leaving more room above for the arrow.
+
+**2. Arrow/`=` centered horizontally on the chevron column.** Was anchored 16px left of the file preview, which landed it inside the chevron column but visually offset. Now `width: 32px; text-align: center; left: calc(-1 * var(--space-10) - 32px);` so the pseudo-element box spans the full 32px chevron column and the glyph centers on the chevron's vertical axis. `bottom: 40px` keeps the 4px gap above the chevron's new lower position.
+
+**3. Match-row green only shows when the row is selected.** David: "those cards should not be green until they are selected. When they're not selected they should be Gray." The v3.63.262 `.is-match` treatment lit up both preview cards (and detail cards, label, chevron, arrow) in green whenever current and file summaries agreed — regardless of whether the user had ticked the section for restore. That conflated "this would be a no-op restore" with "I've chosen to restore this", which read as a visual bug. All `.is-match` green rules now require `:has(input:checked)` — match still gets detected and the `=` arrow still appears when checked, but the green wash is reserved for "this is genuinely selected to restore."
+
+### Files touched
+
+- [style.css](style.css) — chevron `margin-bottom` reduced 12→4; arrow pseudo-element gets `width: 32px; text-align: center` + repositioned left/bottom; every `.checkpoint-row.is-match` selector (dark base, light theme override, OS-follow auto-mode, detail-cols, label, chevron, arrow) tightened to `.checkpoint-row.is-match:has(input:checked)`
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.272
 
 **Preview cards align with detail cards · chevron drops to bottom of column · arrow tight above it**
