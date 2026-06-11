@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-042
+   Build: 20260610-043
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11288,17 +11288,19 @@ kbd {
    the bee-card .ai-setup-row.is-expanded pattern: chevron rotates,
    panel slides down with a dashed top border. */
 .checkpoint-row-expand-btn {
-  /* v3.63.266 — Switched from absolute positioning to normal flow.
-     v3.63.264's absolute + bottom:10px left:12px landed the chevron
-     overlapping the preview cards because the row's bottom padding
-     (14px) was shorter than the chevron's 32px height. David: "it is
-     jammed right up next to the card". Normal-flow flex child sits
-     below the previews with the row's own gap (--space-10) providing
-     clean clearance — no overlap math, no z-index gymnastics. The
-     row is display:flex flex-direction:column so this button just
-     becomes the third stacked child, naturally left-aligned via
-     align-self:flex-start (not stretched across the row's width). */
-  align-self: flex-start;
+  /* v3.63.267 — Now lives inside .checkpoint-row-previews as its third
+     flex child (JS appends there now). At laptop widths the previews
+     container is flex-direction:column, so the chevron stacks below
+     the preview cards as before. At desktop widths (≥1200px) the
+     previews container becomes flex-direction:row, so the chevron
+     sits inline to the right of both preview cards — David: "shrink
+     down the cards and move the Chevron up to the same row that
+     they're in". The previews lose 32px + gap to the chevron at
+     desktop, which is the "slight bit narrower" he mentioned.
+     flex: 0 0 auto so it never grows or shrinks; align-self: center
+     vertically centers it against the previews' equal heights. */
+  flex: 0 0 auto;
+  align-self: center;
   background: var(--surface2);
   border: 1px solid var(--border2);
   color: var(--text);
@@ -11338,6 +11340,12 @@ kbd {
   font-size: var(--fs-13);
   line-height: 1.55;
   color: var(--text);
+  /* v3.63.267 — Slight horizontal inset so the detail cards read as
+     a "child" of the row, slightly narrower than the preview cards
+     above. David: "this should match up with the cards above and just
+     be a slight bit narrower". */
+  padding-left: var(--space-12);
+  padding-right: var(--space-12);
 }
 .checkpoint-row.is-expanded .checkpoint-row-detail { display: block; }
 
@@ -11429,6 +11437,12 @@ kbd {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+/* v3.63.267 — Colon after every field label inside the detail DL.
+   David: "Please use colons after the field names like this: 'NAMES:'."
+   Done via pseudo-element instead of editing the renderer strings so
+   the colon stays consistent everywhere a checkpoint-detail-dl renders
+   (project info, session, license, future additions). */
+.checkpoint-detail-dl dt::after { content: ":"; }
 .checkpoint-detail-dl dd {
   margin: 0;
   color: var(--text);
