@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.257
+
+**Checkpoints page visual redesign — hover overlap fixed, two-column diff at desktop**
+
+Build: `20260610-033`<br>
+Released: `2026-06-10`
+
+### What changed
+
+CSS-only redesign of the Checkpoints save/restore screen. No HTML or JS changes — the existing markup already had the right structure, it just needed better presentation.
+
+**Hover overlap bug — fixed.** Each section row's amber hover outline used to get clipped by the gold "checkpoint file" preview card below it. Root cause: `.checkpoint-row-pick` used `outline: 2px` with `outline-offset: 2px` and negative top/bottom margins, extending the visual outline beyond the pick block's box into the next sibling's paint area. Because the preview card came later in DOM order, natural paint order drew it on top of the outline. Fix: `position: relative` + `z-index: 1` on the pick block so it establishes its own stacking context and the outline floats above following siblings.
+
+**Each row is now a discrete card.** Replaced the dashed-separator-between-rows look with proper inset cards: every section gets its own bordered container with internal padding. Reads as "this is the thing you're toggling" instead of a loose list item.
+
+**Selected state is now visible at a glance.** When the checkbox is ticked, the whole row picks up a subtle accent-tinted background and border, so scanning down a column of sections you can see exactly which ones are in/out without reading every checkbox. Uses `:has(input:checked)` so no JS state-sync needed.
+
+**Two-column diff at desktop (≥1200px).** The "current state" vs "checkpoint file" preview cards used to stack vertically. At desktop they now reflow side-by-side with a small `→` chevron between them, so the comparison reads left-to-right (where you are → what's coming in). Single-column structure remains the laptop fallback.
+
+**Gold tone toned down.** The previous design painted the entire "checkpoint file" card in solid gold which competed with everything else on screen. Now it gets a subtle gold wash (8% accent over surface) plus an accent-tinted border — clearly differentiated as "the new thing" without dominating the row visually.
+
+**Wide-desktop layout cap.** Added `@media (min-width: 1600px)` constraint that caps `#screen-checkpoint .hp-section` to a centered 1200px max-width. The page used to sprawl edge-to-edge on 1920px+ monitors, scattering the Save/Restore pills, Choose-File button, and per-row diffs across the whole screen with the user's mouse traveling across the full width to hit them. Capping the section keeps everything within reasonable mouse range. Laptop widths (<1600px) unchanged.
+
+**Typography tightened.** Group labels ("PROJECT", "SESSION") got tighter letter-spacing (0.08em) and a smaller (`--fs-11`) size for a more refined section-header read. Row names bumped to `--fs-15` with -0.005em letter-spacing. Preview values bumped to `--fs-14` so the actual content reads at a comfortable size while the supporting labels stay quiet at `--fs-11`.
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row` redesigned as a card; `.checkpoint-row-pick` z-index fix for hover overlap; `.checkpoint-row-previews` reflows to flex-row at ≥1200px with chevron pseudo-element; `#screen-checkpoint .hp-section` max-width cap at ≥1600px
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+### What's the same
+
+- HTML structure unchanged — the redesign is purely CSS, so the JS that populates preview values keeps working byte-for-byte.
+- Checkpoint save/restore flow is unchanged.
+- Laptop widths (<1200px for the diff, <1600px for the page cap) keep their existing single-column behavior — the new two-column diff only kicks in where there's actually room for it.
+
+---
+
 ## v3.63.256
 
 **Smoke/Auto auto-routes to surgical retry after a halt — no more card-button hunting**
