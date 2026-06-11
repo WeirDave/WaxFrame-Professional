@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.279
+
+**Architecture cleanup — duplication retired, catalog actually consumed**
+
+Build: `20260611-006`<br>
+Released: `2026-06-11`
+
+### What changed
+
+Four duplication / drift hazards from the audit's architecture pass, collapsed into helpers or sourced from the catalog.
+
+**1. Convergence-path length-guard collapsed into a helper (`js/app.js`).** Pre-v3.63.279 the 35-line length-guard block appeared twice inside `runRound` (unanimous path and majority path), differing only in a local button-variable name (`runBtnB` vs `runBtnBM`). Both built the same `lengthGuardPrompt` call, both handled `builder_fix` / `discard` / `continue_anyway` / `keep` identically, both did the same 6-line button-reset cleanup. Extracted into `_handleConvergenceLengthGate(cstat, builderName)` returning `'proceed'` or `'aborted'`; both sites now collapse to two lines each. ~70 lines gone from `runRound`.
+
+**2. Smoke-the-Hive label reset centralized.** Pre-v3.63.279 the pattern `getElementById('runRoundBtn') → classList.remove('running') → querySelector('.shake-wide-label').textContent = 'Smoke the Hive'` repeated 8 times across `runRound`, `runBuilderOnly`, and the convergence cleanup paths — each with a slightly different local variable name (`btn`, `runBtn`, `runBtnU`, `_runBtn`, `smokeBtn`, etc.) which made grep across the cluster noisy. New `_setRunBtnLabel(label, clearRunning = true)` helper centralizes the null-guarded DOM probe + class management. Two call sites pass `clearRunning: false` for the entering-running cases (`'Building…'`, `'Smoking…'`).
+
+**3. Icon-keyword catalog lifted out of "KEEP IN SYNC" purgatory.** The 11-row keyword → bundled-icon table existed twice inside `app.js` — once as `wfIconUpload._CATALOG`, once as `const known` inside the icon-render walk ~500 lines later. The second site had a literal `// KEEP IN SYNC with wfIconUpload._CATALOG above` comment as the synchronization mechanism. New module-level `WF_AI_ICON_KEYWORD_CATALOG` const; both consumers read it. Either site no longer drifts on the next provider add.
+
+**4. `WFProviderCatalog` actually consumed from `app.js`.** Pre-v3.63.279 the catalog refactor (v3.63.274) shipped the foundation but `app.js` still hardcoded its own provider lists for the vision path and the format-from-provider switches. `VISION_PROVIDERS = ['chatgpt', 'claude', 'gemini', 'grok']` is now derived from `WFProviderCatalog.CATALOG.filter(p => p.vision).map(p => p.id)` (with a literal fallback for code paths that load `app.js` without the catalog), and the four catalog entries gained `vision: true`. The two `provider === 'claude' ? 'anthropic' : provider === 'gemini' ? 'google' : 'openai'` ternaries in `app.js:8535` and `app.js:8872-8874` collapse to `cfg.format || 'openai'` because every built-in `cfg.format` is now populated by `buildApiConfigs()`. Adding a vision-capable provider is now a one-line catalog edit.
+
+### Why this matters
+
+The catalog refactor's value compounded only when consumers actually read it. #4 closes that loop — every "hardcoded provider list, KEEP IN SYNC" instance the audit found is now gone or pointed at the catalog. #1 + #2 + #3 are pure duplication retirement — every silent-drift hazard the audit flagged in `app.js` is reduced to a single source of truth. The line count drops modestly (~110 lines net), but every retired drift surface is a class of bug that can no longer happen.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `WF_AI_ICON_KEYWORD_CATALOG` module const + two sites point at it; `_setRunBtnLabel` helper + 8 call sites swept; `_handleConvergenceLengthGate` helper + two call sites swept; `VISION_PROVIDERS` derived from catalog; two `format` ternaries collapsed to `cfg.format || 'openai'`
+- [js/provider-catalog.js](js/provider-catalog.js) — `vision: true` flag added to claude/chatgpt/gemini/grok catalog entries
+
+---
+
 ## v3.63.278
 
 **Prompt-injection guard parity + checkpoint share-safety + cross-page parity**

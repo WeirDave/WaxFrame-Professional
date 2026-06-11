@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260611-005
+// Build: 20260611-006
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -203,6 +203,7 @@
       endpoint: 'https://waxframe-claude-proxy.weirdave.workers.dev',
       format: 'anthropic',
       discovery: 'anthropic-via-proxy',
+      vision: true, // v3.63.279 — supports image input via the vision fallback path
       fallback: MODEL_FALLBACKS.claude
     },
     {
@@ -211,6 +212,7 @@
       endpoint: 'https://api.openai.com/v1/chat/completions',
       format: 'openai',
       discovery: 'openai-models',
+      vision: true,
       // -pro / -codex are Responses-API-only; dated snapshots clutter.
       filterExtras: [CHATGPT_RESPONSES_ONLY_RE, DATED_SNAPSHOT_RE],
       fallback: MODEL_FALLBACKS.chatgpt
@@ -233,6 +235,7 @@
       },
       format: 'google',
       discovery: 'gemini-list',
+      vision: true,
       fallback: MODEL_FALLBACKS.gemini
     },
     {
@@ -241,6 +244,7 @@
       endpoint: 'https://api.x.ai/v1/chat/completions',
       format: 'openai',
       discovery: 'openai-models',
+      vision: true,
       fallback: MODEL_FALLBACKS.grok
     },
     {
