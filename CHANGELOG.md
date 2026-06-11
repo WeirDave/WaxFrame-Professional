@@ -2,6 +2,32 @@
 
 ---
 
+## v3.63.259
+
+**Checkpoints selected-row pops brighter instead of dimmer — matches the user-manual card aesthetic**
+
+Build: `20260610-035`<br>
+Released: `2026-06-10`
+
+### What David flagged
+
+v3.63.258 fixed the muddy brown tone but the selected row still went to `--surface3` — which in light mode is the *darker* neutral (`#e4e7f4`, vs default `#f0f2f8`). So selecting a row visually *sank* it into the page instead of lifting it forward. David's words: "instead of going dark gray when we already have that checked in… I think it should go like the other direction and maybe go white. so it matches the user manual for both light and dark modes." Liked the inset accent stripe ("the edge card block"), just wanted the surface to pop UP not down.
+
+### The fix
+
+Three coordinated changes so both themes treat "selected" and "preview-file" as *brighter, popping forward*:
+
+1. **Selected row background lifts toward white.** Base rule (dark mode) uses `--surface3` which in dark mode is `#1e2130` — *lighter* than the row's default `--surface2` (`#181b24`). Light-mode override uses `--surface` (`#ffffff`, true white) — also lifting toward white. Both themes now do the same thing visually: the checked row pops upward off the page.
+2. **Hover lost its color-mix background.** It was producing competing tones in light mode and undermining the checked-state lift. Now hover only changes the border color (subtle accent-mix) and keeps the row's base surface. Reads as "you're touching this" without changing the surface tone.
+3. **"In this checkpoint file" preview panel got the same edge-card-block treatment** as the selected row: brighter background (`--surface3` dark / `--surface` light), neutral border, 4px inset accent stripe on the left edge. So the comparison panel and the selected-row state use the same visual language — both signal "this is the new/incoming state" via the same edge stripe rather than a tinted background. Replaces the previous gold-wash mix that produced muddy beige in light mode.
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row:has(input:checked)` base rule uses `--surface3` + accent border + inset stripe; `.checkpoint-row:hover` strips its background color-mix; `.checkpoint-row-preview-file` uses the same edge-stripe pattern as the selected row; combined light-mode override flips both checked-row and preview-file to `--surface` white
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.258
 
 **Checkpoints light-mode polish — muddy brown highlight replaced with clean border treatment**
