@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260610-049">
+  <meta name="waxframe-build" content="20260611-001">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
   <link rel="canonical" href="https://waxframe.com/help.html">
@@ -371,9 +371,10 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.273"></script>
-  <script src="js/storage.js?v=3.63.273"></script>
-  <script src="js/provider-models.js?v=3.63.273"></script>
+  <script src="js/version.js?v=3.63.274"></script>
+  <script src="js/storage.js?v=3.63.274"></script>
+  <script src="js/provider-models.js?v=3.63.274"></script>
+  <script src="js/provider-catalog.js?v=3.63.274"></script>
   <script>
   (function () {
     'use strict';
@@ -495,17 +496,19 @@
     var baseProviderId            = _WFPM.baseProviderId;
     var dedup                     = _WFPM.dedup;
     var PERPLEXITY_SONAR_MODELS   = (MODEL_FALLBACKS && MODEL_FALLBACKS.perplexity) || ['sonar', 'sonar-pro', 'sonar-deep-research', 'sonar-reasoning-pro'];
-    // v3.63.76 — DEFAULT 6 only, matching DEFAULT_AIS in app.js. DeepSeek,
-    // Together, Cohere, etc. are ADDITIONAL providers discovered from
-    // hive.customAIConfigs by getProviderEntries (with their own ids).
-    var BUILT_IN_MODEL_PROVIDERS = {
-      claude:     { label: 'Anthropic (Claude)', endpoint: 'https://waxframe-claude-proxy.weirdave.workers.dev', format: 'anthropic' },
-      chatgpt:    { label: 'OpenAI (ChatGPT)', endpoint: 'https://api.openai.com/v1/chat/completions', format: 'openai' },
-      gemini:     { label: 'Google (Gemini)', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent', format: 'google' },
-      grok:       { label: 'xAI (Grok)', endpoint: 'https://api.x.ai/v1/chat/completions', format: 'openai' },
-      perplexity: { label: 'Perplexity', endpoint: 'https://api.perplexity.ai/chat/completions', format: 'openai' },
-      mistral:    { label: 'Mistral', endpoint: 'https://api.mistral.ai/v1/chat/completions', format: 'openai' }
-    };
+    // v3.63.274 — Built-in providers come from the catalog (one source of
+    // truth lives in js/provider-catalog.js). Pre-catalog, this table was
+    // hand-maintained AND drifted vs api.js — adding a provider meant
+    // editing five places; missing one silently broke this diagnostic dump.
+    // Now: adding a CATALOG entry shows up here automatically.
+    var BUILT_IN_MODEL_PROVIDERS = (function () {
+      var out = {};
+      var cat = (window.WFProviderCatalog && window.WFProviderCatalog.CATALOG) || [];
+      cat.forEach(function (e) {
+        out[e.id] = { label: e.label, endpoint: e.endpoint, format: e.format };
+      });
+      return out;
+    })();
     var _lastCachedDump = null;
     var _lastLiveDump = null;
     var _lastAllDump = null;
@@ -638,11 +641,20 @@
       return { onlyCached: onlyCached, onlyLive: onlyLive, same: !onlyCached.length && !onlyLive.length };
     }
 
+    // v3.63.274 — Built-in providers route through the catalog's
+    // diagnosticModelsUrl helper so the per-provider URL rules live in
+    // ONE place. Custom AIs still honor their explicit modelsEndpoint
+    // override; if a custom AI has no override (legacy entries) we
+    // derive `${base}/v1/models` the same way the pre-catalog fallback
+    // did, with the Together-AI serverless carve-out preserved.
     function deriveModelsEndpoint(entry) {
       if (entry.modelsEndpoint) return entry.modelsEndpoint;
-      if (entry.id === 'claude') return entry.endpoint.replace(/\/$/, '') + '/v1/models';
-      if (entry.id === 'gemini' || entry.format === 'google') return 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=100';
-      if (/^(chatgpt|grok|deepseek|perplexity|mistral)$/i.test(entry.id)) return new URL(entry.endpoint).origin + '/v1/models';
+      var cat = window.WFProviderCatalog;
+      if (cat) {
+        var catEntry = cat.getEntry(entry.id);
+        if (catEntry) return cat.diagnosticModelsUrl(catEntry);
+      }
+      // Custom-AI fallback (legacy entries with no explicit modelsEndpoint).
       var base = entry.endpoint.replace(/\/$/, '').replace(/\/v1\/.*$/, '');
       var url = base + '/v1/models';
       if (/api\.together\.xyz/i.test(url)) url += '?serverless=true';
@@ -658,14 +670,18 @@
       var keyRequired = !entry.modelsEndpoint || entry.format === 'anthropic' || entry.format === 'google' || entry.id === 'claude' || entry.id === 'gemini';
       if (!entry.key && keyRequired) throw new Error('No API key saved for this provider in this browser.');
       var endpoint = deriveModelsEndpoint(entry);
-      var headers = {};
-      if (entry.format === 'anthropic' || entry.id === 'claude') {
-        headers = { 'x-api-key': entry.key, 'anthropic-version': '2023-06-01' };
-      } else if (entry.format === 'google' || entry.id === 'gemini') {
-        headers = { 'x-goog-api-key': entry.key };
-      } else {
-        if (entry.key) headers = { 'Authorization': 'Bearer ' + entry.key };
-      }
+      // v3.63.274 — header building routes through the catalog so the
+      // per-format auth rule (Anthropic x-api-key+version / Google
+      // x-goog-api-key / Bearer for OpenAI-shape) lives in ONE place. The
+      // catalog accepts a synthetic entry-shaped object so custom-AI
+      // entries (which aren't in CATALOG) still flow through it.
+      var headers = (window.WFProviderCatalog
+        ? window.WFProviderCatalog.diagnosticModelsHeaders(entry, entry.key)
+        : (entry.format === 'anthropic'
+            ? { 'x-api-key': entry.key, 'anthropic-version': '2023-06-01' }
+            : entry.format === 'google'
+              ? { 'x-goog-api-key': entry.key }
+              : (entry.key ? { 'Authorization': 'Bearer ' + entry.key } : {})));
       var started = Date.now();
       var resp = await fetch(endpoint, { headers: headers });
       var elapsedMs = Date.now() - started;
