@@ -2,6 +2,58 @@
 
 ---
 
+## v3.63.274
+
+**Provider Catalog foundation · one data record per provider instead of patching five places**
+
+Build: `20260611-001`<br>
+Released: `2026-06-11`
+
+### What changed
+
+Adding a new AI provider used to mean patching five separate places that drifted as they went:
+
+1. `js/api.js` — a new `API_CONFIGS` entry with copy-pasted `bodyFn` / `headersFn` / `extractFn` blocks (~25 lines per provider — 8 of the 10 entries were byte-identical)
+2. `js/api.js` — a new branch in `fetchModelsForProvider`'s if/else chain
+3. `js/api.js` — the exact same branch duplicated in `fetchModelsForProviderLive`
+4. `js/provider-models.js` — entries in `MODEL_FALLBACKS` and `MODEL_FILTERS`
+5. `help.html` — entries in `BUILT_IN_MODEL_PROVIDERS` + a regex branch in `deriveModelsEndpoint` (the `/^(chatgpt|grok|deepseek|perplexity|mistral)$/i` test that silently fell behind every time a new built-in shipped)
+
+Now every one of those is derived from a single data record in [js/provider-catalog.js](js/provider-catalog.js). Adding a provider = drop one entry like:
+
+```js
+{ id: 'newco', label: 'NewCo', format: 'openai', model: 'newco-latest',
+  endpoint: 'https://api.newco.ai/v1/chat/completions',
+  discovery: 'openai-models', fallback: ['newco-latest', 'newco-mini'] }
+```
+
+…and it shows up in the chat path, the model-list path, the recommender, the deprecation watchdog, and the help-page diagnostic dump. No drift surfaces, because the catalog is the only place that knows.
+
+### Why this matters now
+
+David: "PARKED — turn each provider's auth/endpoint/schema/etc. into a data record so adding a provider is 'drop in a JSON entry' instead of patching 5 functions." Frontier AI providers ship faster than WaxFrame can chase them, and every drift incident (v3.63.143 Mistral + Perplexity, v3.63.144 Perplexity-self parse, v3.63.145 transport retry) was traceable to the same root: one place got updated, the duplicates didn't. The catalog kills that whole class of incident.
+
+### Shape
+
+Three formats — `openai`, `anthropic`, `google` — each binds a `{auth, body, extract}` triple. 8 of 10 providers share the openai shape. Each entry says how its model list is **discovered**: `openai-models` (origin + /v1/models), `anthropic-via-proxy` (CF Worker), `gemini-list` (v1beta listing), `perplexity-self` (the v3.63.143 chat-completion self-report), or `null` (rides the custom-AI path). Optional `filterExtras` / `filterRequire` per entry compose on top of the shared structural filter — that's how ChatGPT hides `-pro`/`-codex` and dated snapshots and how Perplexity restricts to `^sonar`, declaratively rather than in code branches.
+
+### What you'd notice
+
+Nothing. This is a value-identical refactor — same provider chat behavior, same model-list payloads, same cache TTLs, same retry semantics, same deprecation watchdog. The win is structural:
+
+- `js/api.js` went from 866 lines to 392 (the 240-line literal collapsed to one `buildApiConfigs()` call; the two near-duplicate `fetchModelsForProvider` / `fetchModelsForProviderLive` if-chains collapsed to a shared `_fetchModelsViaCatalog` wrapper).
+- `help.html`'s hand-maintained `BUILT_IN_MODEL_PROVIDERS` table and the `chatgpt|grok|deepseek|perplexity|mistral` regex inside `deriveModelsEndpoint` are gone — it reads from the catalog instead. The diagnostic dump panel now lists all 10 built-in providers (was 6) because Together / Cohere / DeepSeek / Copilot are catalog entries too.
+
+### Files touched
+
+- [js/provider-catalog.js](js/provider-catalog.js) — NEW. Owns the `CATALOG` array, the format → `{auth, body, extract}` triples, `buildApiConfigs()`, `fetchModelsList()`, and the `diagnosticModelsUrl` / `diagnosticModelsHeaders` helpers that the help page consumes
+- [js/api.js](js/api.js) — `window.API_CONFIGS = WFProviderCatalog.buildApiConfigs()`; the two fetchers become thin caching / retry / error-capture wrappers around the catalog dispatcher; `_originalModel` snapshot now baked into `buildApiConfigs()` so the post-load forEach is gone
+- [help.html](help.html) — `BUILT_IN_MODEL_PROVIDERS` derived from `WFProviderCatalog.CATALOG`; `deriveModelsEndpoint` and the inline header logic in `fetchLiveModelsNoCache` route through the catalog's diagnostic helpers
+- [index.html](index.html), [help.html](help.html) — `<script>` tag for `js/provider-catalog.js` added between `provider-models.js` and `api.js` / before the inline help dump script
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.273
 
 **Chevron lower · arrow centered on column · match-green gated on selection**
