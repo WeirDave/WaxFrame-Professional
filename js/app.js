@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260611-002
+// Build: 20260611-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260611-002';         // build stamp — update each session
+const BUILD       = '20260611-003';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -15957,6 +15957,14 @@ async function runBuilderOnly() {
   if (smokeBtn?.classList.contains('running')) return;
   if (btn?.disabled) return;
 
+  // v3.63.276 — Same persistence-broken halt as runRound. See storage.js's
+  // _showPersistenceBrokenBanner / runRound entry for context.
+  if (window._persistenceBroken) {
+    if (typeof _showPersistenceBrokenBanner === 'function') _showPersistenceBrokenBanner();
+    toast('⚠️ Storage full — Builder blocked. Export your transcript first.', 6000);
+    return;
+  }
+
   // v3.56.15 — A round is firing; clear any pending churn hold and re-arm the
   // detector (it self-disables while _churnPending is true).
   window._churnPending = false;
@@ -16579,6 +16587,16 @@ window.retrySingleAIInPartialRound = retrySingleAIInPartialRound;
 // ── RUN ROUND ──
 async function runRound(opts) {
   opts = opts || {};
+  // v3.63.276 — Halt if persistence is broken. Set by the LS-fallback path
+  // in storage.js when both IDB and localStorage are full; without this the
+  // user could keep clicking Smoke the Hive and see a green "round complete"
+  // UI while nothing was being saved. The sticky banner stays visible until
+  // a successful save clears it.
+  if (window._persistenceBroken) {
+    if (typeof _showPersistenceBrokenBanner === 'function') _showPersistenceBrokenBanner();
+    toast('⚠️ Storage full — round blocked. Export your transcript first.', 6000);
+    return;
+  }
   // v3.63.252 — Single-AI retry path. When the troubleshooting card's
   // "Re-send {ai}'s prompt only" button fires retrySingleAIInPartialRound,
   // it pre-builds the reviewer-response set (with the just-retried AI's

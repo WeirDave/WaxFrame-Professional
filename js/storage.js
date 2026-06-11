@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260611-002
+// Build: 20260611-003
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -292,12 +292,21 @@ function saveSession(opts = {}) {
   const session = { round, phase, history, docText, consoleHTML, notes, standingNotes, projClockSeconds: _projClockSeconds, lengthGuardOverride, cleanThisRound, sessionAIs, ringBuffer, lastFailure };
 
   // Chain through previous save so writes serialize and never overlap.
+  // v3.63.276 — Return the chain so external callers can await it. The
+  // pre-v3.63.276 function returned undefined, which meant `await saveSession()`
+  // resolved instantly while the actual write was still in flight; callers
+  // that needed to read the persisted state immediately afterwards (e.g.
+  // _writeCheckpoint's `await saveSession(); await idbGet()` pattern) read
+  // the previous snapshot.
   _saveSessionChain = _saveSessionChain.then(async () => {
     // ── Primary: IndexedDB (no size limit) ──
     try {
       await idbSet(session);
       try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(e) {}
       checkStorageQuota();
+      // v3.63.276 — Clear the persistence-broken banner on a successful write,
+      // in case it had been raised by a prior fallback failure.
+      _clearPersistenceBrokenBanner();
 
       // Persistent-storage retry every 3 rounds if not yet granted.
       if (history.length > 0 && history.length % 3 === 0 &&
@@ -317,21 +326,18 @@ function saveSession(opts = {}) {
         try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(ee) {}
       } catch(lsErr) {
         if (lsErr.name === 'QuotaExceededError') {
-          consoleLog(`❌ Storage full — session could not be saved. Export your session now to avoid losing work.`, 'error', {
+          // v3.63.276 — Pin a persistent banner and HALT rounds until the
+          // user exports. Pre-v3.63.276 only logged to the live console,
+          // which meant the user could keep clicking Smoke the Hive and
+          // see a green "round complete" UI while nothing was being saved.
+          // The flag at window._persistenceBroken is checked by runRound
+          // and runBuilderOnly before they spend any new API budget.
+          window._persistenceBroken = true;
+          consoleLog(`❌ Storage full — session could not be saved. Rounds halted until you export and clear browser storage.`, 'error', {
             status:  'QUOTA_EXCEEDED',
             rawJson: `Browser storage quota exceeded.\n\nAction: click "Export Transcript Now" below, then clear browser storage for this site, then reload.\n\nOriginal error: ${lsErr.message}`
           });
-          const el = document.getElementById('liveConsole');
-          if (el) {
-            const existing = el.querySelector('.quota-warn-btn');
-            if (!existing) {
-              const btn = document.createElement('button');
-              btn.className = 'btn quota-warn-btn';
-              btn.textContent = '💾 Export Transcript Now';
-              btn.onclick = exportTranscript;
-              el.prepend(btn);
-            }
-          }
+          _showPersistenceBrokenBanner();
         } else {
           consoleLog(`❌ Session save failed: ${lsErr.message}`, 'error', {
             status:  'STORAGE_FAIL',
@@ -343,6 +349,38 @@ function saveSession(opts = {}) {
   });
 
   saveProject(); // keep project fields in sync (synchronous, doesn't need to be in the chain)
+  // v3.63.276 — Expose the chain so awaitable callers (e.g. _writeCheckpoint)
+  // see the actual write complete, not return immediately on undefined.
+  return _saveSessionChain;
+}
+
+// v3.63.276 — Persistence-broken sticky banner. Raised when the LS-fallback
+// after IDB quota failure ALSO fails (5MB cap hit). Stays visible until either
+// a successful save clears it or the user reloads after exporting + clearing
+// browser storage. Without this, the UI lied: rounds kept appearing to save
+// while nothing was actually being persisted, and the loss became visible
+// only on reload.
+function _showPersistenceBrokenBanner() {
+  let banner = document.getElementById('wfPersistenceBrokenBanner');
+  if (banner) { banner.style.display = ''; return; }
+  banner = document.createElement('div');
+  banner.id = 'wfPersistenceBrokenBanner';
+  banner.className = 'persistence-broken-banner';
+  banner.setAttribute('role', 'alert');
+  banner.innerHTML =
+    '<strong>⚠ Storage full — your work is no longer being saved.</strong>' +
+    ' <span>Rounds are halted to prevent silent loss. Export your transcript, then clear browser storage for this site, then reload.</span>' +
+    ' <button type="button" class="btn persistence-broken-export">💾 Export Transcript Now</button>';
+  document.body.insertBefore(banner, document.body.firstChild);
+  const btn = banner.querySelector('.persistence-broken-export');
+  if (btn && typeof exportTranscript === 'function') btn.onclick = exportTranscript;
+}
+
+function _clearPersistenceBrokenBanner() {
+  if (!window._persistenceBroken) return;
+  window._persistenceBroken = false;
+  const banner = document.getElementById('wfPersistenceBrokenBanner');
+  if (banner) banner.remove();
 }
 
 /* =============================================================
@@ -730,7 +768,32 @@ function loadSettings() {
     // ── Load hive (AI list + keys) ──
     const hiveData = localStorage.getItem(LS_HIVE);
     if (!hiveData) return false;
-    const h = JSON.parse(hiveData);
+    // v3.63.276 — Narrow the JSON.parse try/catch and stash the bad blob
+    // before re-throwing. Pre-v3.63.276 the broad function-level catch
+    // swallowed the parse error AFTER `aiList = DEFAULT_AIS` had already
+    // been assigned, so loadSettings returned false with aiList silently
+    // wiped to defaults — and the next saveHive() (any setup-grid render)
+    // overwrote the recoverable blob with the defaults. Permanent silent
+    // hive loss from one corrupt byte. Now: any parse failure stashes the
+    // raw bytes to LS_HIVE_RECOVERY, raises a toast, and bails BEFORE
+    // aiList is touched.
+    let h;
+    try {
+      h = JSON.parse(hiveData);
+    } catch (parseErr) {
+      try { localStorage.setItem('waxframe_v2_hive_recovery', hiveData); } catch (e) {}
+      if (typeof consoleLog === 'function') {
+        consoleLog(`❌ Hive blob failed to parse — original stashed to localStorage["waxframe_v2_hive_recovery"]. Do NOT click Save Settings before inspecting.`, 'error', {
+          status:  'HIVE_PARSE_FAILED',
+          rawJson: parseErr.stack || parseErr.message || String(parseErr)
+        });
+      }
+      if (typeof toast === 'function') {
+        toast('⚠️ Saved AI list could not be loaded. Original stashed under waxframe_v2_hive_recovery. Do NOT click Save Settings until you check it.', 18000);
+      }
+      console.error('[loadSettings] LS_HIVE parse failed; stashed original to LS_HIVE_RECOVERY:', parseErr);
+      return false;
+    }
 
     aiList = JSON.parse(JSON.stringify(DEFAULT_AIS));
     // v3.31.0 — hiddenDefaultIds removed. Migrate any existing hidden
@@ -1380,14 +1443,28 @@ async function _writeCheckpoint(scope) {
   }
 
   if (scope.license && licenseRaw) outLicense = licenseRaw;
+  // v3.63.276 — Round-state localStorage keys carry the conflict-resolution
+  // state machine and per-AI warnings that survive across rounds in the same
+  // session. Pre-v3.63.276 these were not in any scope, so Save Checkpoint →
+  // Restore silently lost decision history and the Builder re-raised
+  // already-resolved questions. Now bundled into the `session` scope (same
+  // toggle covers the IDB session blob + these per-key blobs — they're
+  // semantically the same scope: "what the user has decided so far").
+  let outRoundState = null;
   if (scope.session) {
     outSessionLS  = sessionLS;
     outSessionIDB = sessionIDB;
+    const rs = {
+      resolvedDecisions: localStorage.getItem('waxframe_resolved_decisions') || null,
+      conflictLedger:    localStorage.getItem('waxframe_conflict_ledger')    || null,
+      aiWarnings:        localStorage.getItem('waxframe_ai_warnings')        || null,
+    };
+    if (rs.resolvedDecisions || rs.conflictLedger || rs.aiWarnings) outRoundState = rs;
   }
 
   // Need at least ONE section to contain something. Otherwise the file
   // would be an empty envelope — bail with a hint about what to do.
-  const captured = !!(outHive || outProject || outLicense || outSessionLS || outSessionIDB);
+  const captured = !!(outHive || outProject || outLicense || outSessionLS || outSessionIDB || outRoundState);
   if (!captured) {
     toast('⚠️ Nothing to checkpoint — tick at least one section that has data');
     return;
@@ -1395,7 +1472,7 @@ async function _writeCheckpoint(scope) {
 
   const checkpoint = {
     _waxframe_backup:         true,
-    _waxframe_backup_version: 6,
+    _waxframe_backup_version: 7,
     _waxframe_backup_scope:   { ...scope },
     _waxframe_app_version:    typeof APP_VERSION === 'string' ? APP_VERSION : '',
     _waxframe_backup_ts:      Date.now(),
@@ -1404,6 +1481,11 @@ async function _writeCheckpoint(scope) {
     LS_LICENSE: outLicense,
     LS_SESSION: outSessionLS,
     IDB_SESSION: outSessionIDB,
+    // v3.63.276 — Optional round-state block. Older importers ignore unknown
+    // top-level keys, so a v7 file restores cleanly on a v6 importer (without
+    // the round-state restoration, which only matters if the user was mid-
+    // conflict-resolution at save time).
+    LS_ROUND_STATE: outRoundState,
   };
 
   // Filename: legacy `{name}-{version}-WaxFrame-Checkpoint-{stamp}.json`
@@ -2330,6 +2412,19 @@ async function _applyCheckpoint(data, scope) {
     let restoredFromIDB = false;
     let wipedToScratch  = false;
     if (scope.session) {
+      // v3.63.276 — Restore the round-state localStorage keys before the
+      // session blob so the in-memory mirrors that loadSession or app.js's
+      // boot path read pick up the restored values. Old (v6) checkpoints
+      // have no LS_ROUND_STATE — `if (rs)` skips silently in that case.
+      const rs = data.LS_ROUND_STATE;
+      if (rs && typeof rs === 'object') {
+        if (rs.resolvedDecisions) localStorage.setItem('waxframe_resolved_decisions', rs.resolvedDecisions);
+        else localStorage.removeItem('waxframe_resolved_decisions');
+        if (rs.conflictLedger)    localStorage.setItem('waxframe_conflict_ledger',    rs.conflictLedger);
+        else localStorage.removeItem('waxframe_conflict_ledger');
+        if (rs.aiWarnings)        localStorage.setItem('waxframe_ai_warnings',        rs.aiWarnings);
+        else localStorage.removeItem('waxframe_ai_warnings');
+      }
       if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
       if (data.IDB_SESSION) {
         try {

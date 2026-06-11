@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260611-002
+   Build: 20260611-003
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1556,6 +1556,28 @@ body.helper-body .page-main {
 .ref-batch-banner-reviews:not(:empty) { margin-top: var(--space-10); }
 .quota-warn-btn        { margin: 4px 0 4px 90px; font-size: 11px; }
 .file-clear-row        { margin-top: var(--space-6); }
+
+/* v3.63.276 — Persistence-broken sticky banner. Surfaces when the IDB→LS
+   fallback chain in storage.js fully fails (both quotas hit). Pinned to
+   the top of the viewport, full-width, high-contrast red so the user
+   can't miss it. Inline button triggers exportTranscript. */
+.persistence-broken-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+  padding: var(--space-10) var(--space-14);
+  background: #b91c1c; color: #fff;
+  border-bottom: 2px solid #7f1d1d;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  font-size: 14px; line-height: 1.4;
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-10);
+}
+.persistence-broken-banner strong { font-weight: 700; }
+.persistence-broken-banner span   { flex: 1 1 auto; min-width: 200px; }
+.persistence-broken-export {
+  background: #fff; color: #b91c1c; border: none;
+  padding: var(--space-6) var(--space-12);
+  border-radius: 4px; font-weight: 600; cursor: pointer;
+}
+.persistence-broken-export:hover { background: #fee2e2; }
 
 /* ══════════════════════════════════════
    SCREEN 4 — WORK SCREEN

