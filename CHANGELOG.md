@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.265
+
+**Chevron visibility pass — always-on border, bolder glyph, green on hover/expand**
+
+Build: `20260610-041`<br>
+Released: `2026-06-10`
+
+### What David flagged
+
+> "Oh man it's so tiny I mean it's cool that you outline it when you hover over it but you should probably leave the outline there and then just like I don't know I'm not sure what to do maybe change the highlight to or change the border to be green or something when we click it or when we hover over it rather because you can't even really tell that the Chevron is there initially."
+
+v3.63.264 fixed the chevron's position (anchored to the row, parked bottom-left) but the visual at rest was a transparent border with a `--text-dim` icon on a transparent background — effectively invisible until hover. Reasonable design call in a more clinical theme; wrong call in WaxFrame's warmer palette where it just disappeared into the surface tone.
+
+### What changed
+
+`.checkpoint-row-expand-btn`:
+- **Always-visible border** (`1px solid var(--border2)`) instead of transparent until hover.
+- **Subtle fill at rest** (`background: var(--surface2)`) so the button has its own surface tone vs the row's slightly-different surface.
+- **Brighter icon** (`color: var(--text)` instead of `--text-dim`) — readable at rest.
+- **Bigger** — 32×32px (was 28×28), `font-size: var(--fs-15)` (was `--fs-14)`.
+- **Bolder glyph** — `▼` (BLACK DOWN-POINTING TRIANGLE) instead of `▾` (SMALL TRIANGLE). The small variant was visibly anemic at this size.
+- **Hover and expanded state use green** (`--green` for color + border, `--green-dim` for fill) instead of the prior amber. Matches the semantic family of the rest of the green "incoming/comparison" accents on the Checkpoints page (file-panel border, chevron arrow, label color).
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row-expand-btn` rest/hover/expanded states updated; focus outline switched to green for the same hover-color family
+- [js/storage.js](js/storage.js) — chevron icon swapped from `▾` to `▼`
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.264
 
 **Hotfix: Phase B chevrons were invisible + repositioned to bottom-left per David's drawing**
