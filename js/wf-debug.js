@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260611-002
+// Build: 20260611-003
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -975,16 +975,25 @@ function renderTroubleshootingCard(entry, ctx) {
     // Strip leading classification prefix like "RATE_LIMITED:" or "AUTH_FAILED:"
     const stripped = raw.replace(/^[A-Z_]+:\s*/, '').trim();
     if (stripped) {
-      // Linkify URLs so users can click straight to the fix
+      // v3.63.276 — Full HTML-attribute-safe escape (was `& < >` only). The
+      // URL regex below permits `"` inside its match (the [^\s<] character
+      // class doesn't exclude quotes), and an attacker-controlled provider
+      // error like `see https://x.com" onerror="fetch(...)` would otherwise
+      // break out of the href attribute. Escaping `"` and `'` at the source
+      // closes that path even if the link-builder regex misbehaves.
       const escaped = stripped
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
       // Linkify URLs so users can click straight to the fix. Trailing
       // sentence punctuation (period, comma, semicolon, etc.) is not
       // part of the URL — split it off so the visible link doesn't end
       // with a stray period when the URL appears at the end of a sentence.
-      const linkified = escaped.replace(/(https?:\/\/[^\s<]+)/g, (m) => {
+      // After escape, the URL text never contains `"` or `<`, so the regex
+      // matches a quote-safe substring and the href interpolation is safe.
+      const linkified = escaped.replace(/(https?:\/\/[^\s<"]+)/g, (m) => {
         const tailMatch = m.match(/[.,;!?)]+$/);
         const url       = tailMatch ? m.slice(0, -tailMatch[0].length) : m;
         const tail      = tailMatch ? tailMatch[0] : '';
