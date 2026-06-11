@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-043
+   Build: 20260610-044
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11331,6 +11331,17 @@ kbd {
   border-color: var(--green);
   background: var(--green-dim);
 }
+/* v3.63.268 — Match-state chevron treatment. v3.63.268 hid the
+   "= / →" pseudo-element arrow when the previews became a grid (the
+   chevron now occupies that slot). Re-route the match semantic onto
+   the chevron's own styling: a row whose current and file summaries
+   agree (.is-match) gets a green-bordered, green-tinted chevron so
+   the user still sees the "no-op restore" signal at a glance. */
+.checkpoint-row.is-match .checkpoint-row-expand-btn {
+  color: var(--green);
+  border-color: var(--green);
+  background: var(--green-dim);
+}
 
 .checkpoint-row-detail {
   display: none;
@@ -11389,7 +11400,23 @@ kbd {
   gap: var(--space-14);
 }
 @media (min-width: 1200px) {
-  .checkpoint-detail-cols { grid-template-columns: 1fr 1fr; }
+  /* v3.63.268 — Same 3-column grid as .checkpoint-row-previews above
+     (card | chevron-slot | card). The middle column is empty in detail
+     cols since the chevron lives in the previews row, but matching the
+     column template means the detail cards are byte-for-byte the same
+     width as the preview cards above them — they line up perfectly
+     top-to-bottom. David: "the in your current state and the in this
+     checkpoint file pieces should be as large and the same size as
+     the current state and the checkpoint file details cards below". */
+  .checkpoint-detail-cols {
+    grid-template-columns: 1fr 32px 1fr;
+    gap: var(--space-10);
+  }
+  /* The two .checkpoint-detail-col children render in document order
+     (local first, file second) but need to land in columns 1 and 3 so
+     the middle column stays empty. Explicit placement via class. */
+  .checkpoint-detail-col:not(.checkpoint-detail-col-file) { grid-column: 1; }
+  .checkpoint-detail-col-file { grid-column: 3; }
 }
 /* Match-row override: when current === file, both detail columns go
    green (same logic as .checkpoint-row.is-match on the preview cards
@@ -11538,46 +11565,43 @@ kbd {
   }
 }
 
-/* v3.63.257 — Desktop reflow. At ≥1200px the two preview cards sit
-   side-by-side with a small chevron between them so the comparison
-   reads left-to-right (where you are → what's coming in) instead of
-   top-to-bottom. Single-column structure is the laptop fallback. */
+/* v3.63.257 / v3.63.268 — Desktop reflow. At ≥1200px the two preview
+   cards sit side-by-side. v3.63.268 switched from a flex row + absolute
+   chevron-arrow pseudo-element to a real 3-column grid (card | chevron |
+   card) so the expand-chevron button can live in the middle column AND
+   the detail-cols grid below can use the same column template — both
+   rows align byte-for-byte top-to-bottom. The `→` / `=` arrow indicator
+   the pseudo-element used to provide is now redundant with the chevron
+   button occupying the same slot; match-state is conveyed by the row's
+   green tint + the chevron's match-state styling further down. */
 @media (min-width: 1200px) {
   .checkpoint-row-previews {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 1fr 32px 1fr;
     align-items: stretch;
     gap: var(--space-10);
   }
+  /* The local preview card → column 1; the chevron (appended as the
+     last DOM child by JS) → column 2; the file preview → column 3.
+     Explicit grid-column on each so DOM order doesn't matter. */
+  .checkpoint-row-preview-local { grid-column: 1; }
+  .checkpoint-row-preview-file { grid-column: 3; }
+  .checkpoint-row-previews .checkpoint-row-expand-btn {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: center;
+  }
   .checkpoint-row-preview {
-    flex: 1 1 0;
+    flex: unset;
     min-width: 0;
   }
-  /* Chevron between the two previews. Only rendered when a file
-     preview follows a local preview (i.e. Restore-mode rows). Position
-     absolute relative to the gap so it doesn't take layout space. */
+  /* Hide the laptop-era arrow pseudo-element — the chevron now occupies
+     the same visual slot and the match/checked semantic moves onto the
+     chevron's own styling (see is-match override on
+     .checkpoint-row-expand-btn below). */
   .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
-    content: "→";
-    position: absolute;
-    left: calc(-1 * var(--space-10) - 6px);
-    top: 50%;
-    transform: translateY(-50%);
-    /* v3.63.261 — Default chevron is neutral. Only goes green when
-       the row is checked (see the :has(input:checked) override below)
-       — matches the file-panel green being conditional on selection. */
-    color: var(--text-dim);
-    font-size: var(--fs-16);
-    font-weight: 700;
-    pointer-events: none;
-  }
-  .checkpoint-row:has(input:checked) .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
-    color: var(--green);
-  }
-  /* v3.63.262 — Match-row chevron becomes "=" in green. The semantic is
-     "current === incoming, no-op restore" so the directional arrow is
-     misleading — equals reads correctly at a glance. */
-  .checkpoint-row.is-match .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
-    content: "=";
-    color: var(--green);
+    display: none;
   }
 }
 

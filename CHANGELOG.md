@@ -2,6 +2,48 @@
 
 ---
 
+## v3.63.268
+
+**Preview cards + detail cards align byte-for-byte — chevron sits in the column gap as a divider**
+
+Build: `20260610-044`<br>
+Released: `2026-06-10`
+
+### What David proposed
+
+> "What about if you make the margin between the two columns a little wider put the Chevron in there and then line the top and the bottom up"
+
+Spot on. The asymmetric "two cards + chevron at the end" layout from v3.63.267 made the preview cards narrower than the detail cards below them, since the chevron stole horizontal space from the previews row but not from the detail row.
+
+### How it works
+
+Both `.checkpoint-row-previews` and `.checkpoint-detail-cols` at desktop (≥1200px) now use the **same** 3-column grid:
+
+```css
+grid-template-columns: 1fr 32px 1fr;
+gap: var(--space-10);
+```
+
+That means:
+- Column 1: left card (`1fr`)
+- Column 2: 32px slot — chevron lives here in the previews row, empty in the detail-cols row
+- Column 3: right card (`1fr`)
+
+Explicit `grid-column` placement on each child so DOM order doesn't matter (chevron is appended last by JS but lives in column 2; file preview is second in DOM but lives in column 3).
+
+Result: the local card's left edge, the file card's left edge, the local detail card's left edge, and the file detail card's left edge all line up vertically — same widths top to bottom. The chevron sits centered in the gap between the two columns, acting as the column-divider David's drawing suggested.
+
+### What happened to the `→` / `=` arrow indicator
+
+It used to be a `::before` pseudo-element on the file preview that lived in the inter-column gap. The chevron now occupies that exact slot, so the arrow would visually conflict. Hid the pseudo-element at desktop and moved the match semantic onto the chevron's own styling — a `.is-match` row now gets a green-bordered, green-tinted chevron, so the "no-op restore" signal is still there at a glance. The match-row's green-on-both-panels treatment also still applies.
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row-previews` at desktop switched from `flex-direction:row` to `display:grid` with `1fr 32px 1fr`; explicit `grid-column` placement on `.checkpoint-row-preview-local`, `-file`, and `.checkpoint-row-expand-btn`; arrow pseudo-element hidden at desktop; `.checkpoint-detail-cols` at desktop uses the same grid template with column 1 / column 3 placement on the two detail cards; new `.checkpoint-row.is-match .checkpoint-row-expand-btn` styling so the match indicator survives the arrow removal
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.267
 
 **Chevron joins the previews row · detail cards inset slightly · colons after field labels**
