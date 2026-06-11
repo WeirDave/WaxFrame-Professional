@@ -1,6 +1,6 @@
 {
   "name": "waxframe-professional",
-  "version": "3.63.258",
+  "version": "3.63.259",
   "private": true,
   "description": "WaxFrame Professional — manifest of vendored front-end library versions, declared ONLY so GitHub Dependabot can watch them for security advisories. WaxFrame is a vanilla HTML/CSS/JS app with NO build step and NO npm install in its workflow; the libraries in lib/ are self-hosted minified files. This file installs and bundles nothing. Do not add a build pipeline on the strength of its existence.",
   "license": "AGPL-3.0",
