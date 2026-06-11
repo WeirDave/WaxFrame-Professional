@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-048
+   Build: 20260610-049
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11234,13 +11234,13 @@ kbd {
    at a glance which sections would be no-op restores. Semantic: "no
    change needed, both sides already agree". Mismatching rows fall
    through to the v3.63.261 conditional-green-on-check behavior. */
-.checkpoint-row.is-match .checkpoint-row-preview-local,
-.checkpoint-row.is-match .checkpoint-row-preview-file {
+.checkpoint-row.is-match:has(input:checked) .checkpoint-row-preview-local,
+.checkpoint-row.is-match:has(input:checked) .checkpoint-row-preview-file {
   background: var(--bg);
   border-color: color-mix(in srgb, var(--green) 50%, var(--border2));
   box-shadow: inset 4px 0 0 var(--green);
 }
-.checkpoint-row.is-match .checkpoint-row-preview-label {
+.checkpoint-row.is-match:has(input:checked) .checkpoint-row-preview-label {
   color: var(--green);
 }
 .checkpoint-row-preview-value {
@@ -11354,7 +11354,7 @@ kbd {
    the chevron's own styling: a row whose current and file summaries
    agree (.is-match) gets a green-bordered, green-tinted chevron so
    the user still sees the "no-op restore" signal at a glance. */
-.checkpoint-row.is-match .checkpoint-row-expand-btn {
+.checkpoint-row.is-match:has(input:checked) .checkpoint-row-expand-btn {
   color: var(--green);
   border-color: var(--green);
   background: var(--green-dim);
@@ -11438,12 +11438,12 @@ kbd {
 /* Match-row override: when current === file, both detail columns go
    green (same logic as .checkpoint-row.is-match on the preview cards
    above), and the label colors flip to green. */
-.checkpoint-row.is-match .checkpoint-detail-col {
+.checkpoint-row.is-match:has(input:checked) .checkpoint-detail-col {
   background: var(--bg);
   border-color: color-mix(in srgb, var(--green) 50%, var(--border2));
   box-shadow: inset 4px 0 0 var(--green);
 }
-.checkpoint-row.is-match .checkpoint-detail-col-label { color: var(--green); }
+.checkpoint-row.is-match:has(input:checked) .checkpoint-detail-col-label { color: var(--green); }
 
 .checkpoint-detail-empty {
   color: var(--text-dim);
@@ -11540,8 +11540,8 @@ kbd {
   background: color-mix(in srgb, var(--green) 8%, var(--surface));
 }
 /* v3.63.262 — Light-mode match treatment: same subtle green wash both sides. */
-[data-theme="light"] .checkpoint-row.is-match .checkpoint-row-preview-local,
-[data-theme="light"] .checkpoint-row.is-match .checkpoint-row-preview-file {
+[data-theme="light"] .checkpoint-row.is-match:has(input:checked) .checkpoint-row-preview-local,
+[data-theme="light"] .checkpoint-row.is-match:has(input:checked) .checkpoint-row-preview-file {
   background: color-mix(in srgb, var(--green) 8%, var(--surface));
 }
 /* v3.63.266 — Light-mode for the detail-panel cards. Mirrors the
@@ -11553,7 +11553,7 @@ kbd {
 [data-theme="light"] .checkpoint-row:has(input:checked) .checkpoint-detail-col-file {
   background: color-mix(in srgb, var(--green) 8%, var(--surface));
 }
-[data-theme="light"] .checkpoint-row.is-match .checkpoint-detail-col {
+[data-theme="light"] .checkpoint-row.is-match:has(input:checked) .checkpoint-detail-col {
   background: color-mix(in srgb, var(--green) 8%, var(--surface));
 }
 @media (prefers-color-scheme: light) {
@@ -11567,8 +11567,8 @@ kbd {
   [data-theme="auto"] .checkpoint-row:has(input:checked) .checkpoint-row-preview-file {
     background: color-mix(in srgb, var(--green) 8%, var(--surface));
   }
-  [data-theme="auto"] .checkpoint-row.is-match .checkpoint-row-preview-local,
-  [data-theme="auto"] .checkpoint-row.is-match .checkpoint-row-preview-file {
+  [data-theme="auto"] .checkpoint-row.is-match:has(input:checked) .checkpoint-row-preview-local,
+  [data-theme="auto"] .checkpoint-row.is-match:has(input:checked) .checkpoint-row-preview-file {
     background: color-mix(in srgb, var(--green) 8%, var(--surface));
   }
   [data-theme="auto"] .checkpoint-detail-col {
@@ -11577,7 +11577,7 @@ kbd {
   [data-theme="auto"] .checkpoint-row:has(input:checked) .checkpoint-detail-col-file {
     background: color-mix(in srgb, var(--green) 8%, var(--surface));
   }
-  [data-theme="auto"] .checkpoint-row.is-match .checkpoint-detail-col {
+  [data-theme="auto"] .checkpoint-row.is-match:has(input:checked) .checkpoint-detail-col {
     background: color-mix(in srgb, var(--green) 8%, var(--surface));
   }
 }
@@ -11616,7 +11616,11 @@ kbd {
        matching bottom offset. */
     align-self: end;
     justify-self: center;
-    margin-bottom: var(--space-12);
+    /* v3.63.273 — Drop the chevron a wee bit lower per David's review.
+       Was var(--space-12) — now var(--space-4) so the chevron sits
+       4px from the cards' bottom edges instead of 12px, leaving more
+       room above for the arrow/equals indicator to stack tightly. */
+    margin-bottom: var(--space-4);
   }
   .checkpoint-row-preview {
     flex: unset;
@@ -11633,14 +11637,20 @@ kbd {
   .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
     content: "→";
     position: absolute;
-    left: calc(-1 * var(--space-10) - 6px);
-    /* v3.63.272 — Anchor to BOTTOM so it sits just above the chevron.
-       Math: chevron has margin-bottom var(--space-12) (12px) and is
-       32px tall, so its top edge is at 12 + 32 = 44px from the file
-       preview's bottom. The arrow at bottom: 48px sits 4px above the
-       chevron's top — tight visual stack David asked for ("on top of
-       it the arrow or the = can live"). */
-    bottom: 48px;
+    /* v3.63.273 — Center the arrow horizontally on the chevron column.
+       David: "put the narrow and equals signs in the center". The
+       chevron column is 32px wide, sitting between file preview's
+       left edge and 42px to the left (gap 10 + width 32). Setting the
+       pseudo-element's left to span exactly that column and using
+       text-align:center inside the 32px box centers the arrow's glyph
+       on the chevron's vertical axis. */
+    left: calc(-1 * var(--space-10) - 32px);
+    width: 32px;
+    text-align: center;
+    /* Chevron now has margin-bottom var(--space-4) (4px) and is 32px
+       tall — top edge at 4+32=36px from card bottom. Arrow at
+       bottom: 40px sits 4px above. */
+    bottom: 40px;
     z-index: 2;
     color: var(--text-dim);
     font-size: var(--fs-15);
@@ -11650,7 +11660,7 @@ kbd {
   .checkpoint-row:has(input:checked) .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
     color: var(--green);
   }
-  .checkpoint-row.is-match .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
+  .checkpoint-row.is-match:has(input:checked) .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
     content: "=";
     color: var(--green);
   }
