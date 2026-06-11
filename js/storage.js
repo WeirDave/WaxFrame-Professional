@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260610-036
+// Build: 20260610-037
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1122,10 +1122,21 @@ function switchCheckpointMode(mode) {
     if (restorePill) restorePill.classList.remove('active');
     savePanel.style.display    = '';
     restorePanel.style.display = 'none';
+    // v3.63.261 — Save mode now defaults to ALL sections ticked. The
+    // user-can-just-click-through default produces a *complete* checkpoint
+    // (everything in one file) rather than the prior "safe partial" that
+    // omitted hive/models/keys/builder. Rationale: if the user doesn't
+    // read the descriptions, the worst outcome should be "I have a
+    // larger-than-necessary backup" — not "I made a backup but forgot
+    // half the things I needed to restore." The API-keys row's
+    // description already warns "Sensitive — leave off when sharing the
+    // file with anyone else" — users who care will see it and untick;
+    // users who don't read are usually saving for themselves and benefit
+    // from getting the keys in the file.
     _setSaveCheckpointDefaults({
       projectInfo:true, refMaterial:true, startingDoc:true,
       session:true,
-      aiList:false, models:false, keys:false, builder:false,
+      aiList:true, models:true, keys:true, builder:true,
       license:true
     });
     _refreshSaveCheckpointCurrentSummaries();
@@ -1165,7 +1176,11 @@ async function _refreshSaveCheckpointCurrentSummaries() {
   for (const key of _CHECKPOINT_SCOPE_KEYS) {
     const cap = key[0].toUpperCase() + key.slice(1);
     const el = document.getElementById('saveCurrent' + cap);
-    if (el) el.textContent = summaries[key];
+    // v3.63.261 — Sensitive rows (license) return an HTML string
+    // with a masked value + reveal button. The helper detects HTML and
+    // sets innerHTML; plain summaries still use textContent. See
+    // _checkpointSecretHTML / _setCheckpointPreviewValue.
+    _setCheckpointPreviewValue(el, summaries[key]);
   }
 }
 
@@ -1648,10 +1663,62 @@ function _restoreSummarizeBuilder(hive) {
 
 function _restoreSummarizeLicense(raw) {
   if (!raw) return '(not set)';
-  // The license blob shape varies (string or JSON wrapper). Don't show the
-  // key value — just say it's present, so the modal stays safe to screenshot.
-  return 'Set';
+  // v3.63.261 — Extract the actual key string and render it masked with
+  // an inline 👁 reveal button. Was a hardcoded 'Set' that gave the user
+  // no signal that a real value lived there and no way to inspect it.
+  // The license blob may be a JSON wrapper ({valid, key, ...}) or, on
+  // legacy installs, the raw key string itself.
+  let key = '';
+  try {
+    const j = JSON.parse(raw);
+    if (j && typeof j.key === 'string' && j.key.trim()) key = j.key.trim();
+  } catch(_) {
+    if (typeof raw === 'string' && raw.trim()) key = raw.trim();
+  }
+  if (!key) return 'Set';   // present but unreadable — safe fallback
+  return _checkpointSecretHTML(key);
 }
+
+/* v3.63.261 — Render a sensitive value (license key, API key) as a
+   masked string with an inline 👁 reveal button. Returns an HTML
+   string (the preview-value setter checks for a leading '<' and
+   switches to innerHTML when present). Click toggles the
+   .is-revealed class on the wrapper to swap the masked span for the
+   real span. The button absorbs click + calls stopPropagation so
+   toggling visibility doesn't also toggle the row's checkbox (each
+   row is a <label> that targets the checkbox on click). */
+function _checkpointSecretHTML(rawValue) {
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  const v = String(rawValue || '');
+  const tail = v.length > 4 ? v.slice(-4) : v;
+  const maskLen = Math.min(12, Math.max(4, v.length - 4));
+  const mask = '•'.repeat(maskLen) + esc(tail);
+  return `<span class="checkpoint-secret"><span class="checkpoint-secret-mask">${mask}</span><span class="checkpoint-secret-real">${esc(v)}</span><button type="button" class="checkpoint-secret-reveal" onclick="toggleCheckpointSecret(event)" title="Show or hide the full value" aria-label="Show or hide the full value">👁</button></span>`;
+}
+
+/* v3.63.261 — Set a preview-value element from a summarizer's return.
+   Most summarizers return plain text — use textContent for safety.
+   The license (and future sensitive rows) return an HTML string with
+   masked value + reveal button — detect via leading '<' and switch
+   to innerHTML. Defense-in-depth: summarizers are the only source of
+   HTML strings here, and they generate their HTML internally with
+   escaped values, so we're not handing user-supplied HTML to innerHTML. */
+function _setCheckpointPreviewValue(el, val) {
+  if (!el) return;
+  const s = String(val == null ? '' : val);
+  if (s.length > 0 && s.charCodeAt(0) === 60 /* < */) {
+    el.innerHTML = s;
+  } else {
+    el.textContent = s;
+  }
+}
+
+window.toggleCheckpointSecret = function(ev) {
+  ev.preventDefault();
+  ev.stopPropagation();
+  const wrap = ev.currentTarget.closest('.checkpoint-secret');
+  if (wrap) wrap.classList.toggle('is-revealed');
+};
 
 // v3.63.227 — Populate the Restore screen's diff view with 9-section
 // granularity. Reads live state, parses the checkpoint's sections, detects
@@ -1792,8 +1859,11 @@ async function _populateRestoreCheckpointDiff(data) {
       cb.checked  = !!has[key] && !!restoreDefaults[key];
       cb.disabled = !has[key];
     }
-    if (curEl) curEl.textContent = cur[key];
-    if (ckEl)  ckEl.textContent  = has[key] ? ck[key] : '(not in checkpoint)';
+    // v3.63.261 — Use the secret-aware setter so license/key rows
+    // get their masked-value + 👁 reveal markup, while plain summary
+    // rows still go through textContent.
+    _setCheckpointPreviewValue(curEl, cur[key]);
+    _setCheckpointPreviewValue(ckEl,  has[key] ? ck[key] : '(not in checkpoint)');
   };
   for (const key of _CHECKPOINT_SCOPE_KEYS) setRow(key);
 
