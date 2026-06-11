@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ============================================================
-// WaxFrame — release-check.mjs (v3.63.190)
+// WaxFrame — release-check.mjs (v3.63.275)
 //
 // Pre-flight checks that run as a GitHub Action on every push to main,
 // and can also be run locally (`node tools/release-check.mjs`). Catches
@@ -130,6 +130,9 @@ if (!buildStamp) {
 }
 
 // Every HTML file should have matching ?v= cache-bust AND waxframe-build meta
+// AND the comment-header `Build:` line (lines 3-4 of every HTML — was the
+// silent drift surface that bit v3.63.275; comments don't fail tests so they
+// rotted while the meta tag stayed current).
 const htmlFiles = walk(ROOT, p => p.endsWith('.html') && !p.includes('node_modules') && !p.includes('.git'));
 for (const file of htmlFiles) {
   const content = read(file);
@@ -150,6 +153,14 @@ for (const file of htmlFiles) {
       const lineNum = findLine(content, metaMatch[0]);
       fail(rel(file), `stale waxframe-build meta "${metaMatch[1]}" (expected ${buildStamp})`, lineNum);
     }
+    // HTML comment-header `Build:` line — bare "Build: YYYYMMDD-NNN" inside
+    // an HTML comment block at the top of the file. The existing JS-file
+    // check uses `// Build:` so this one needs its own pattern.
+    const commentMatch = content.match(/<!--[\s\S]*?Build:\s*(\d{8}-\d{3})[\s\S]*?-->/);
+    if (commentMatch && commentMatch[1] !== buildStamp) {
+      const lineNum = findLine(content, `Build: ${commentMatch[1]}`);
+      fail(rel(file), `stale comment-header Build: ${commentMatch[1]} (expected ${buildStamp})`, lineNum);
+    }
   }
 }
 
@@ -161,6 +172,20 @@ for (const file of jsFiles) {
   if (m && m[1] !== buildStamp) {
     const lineNum = findLine(content, m[0]);
     fail(rel(file), `stale // Build: ${m[1]} (expected ${buildStamp})`, lineNum);
+  }
+}
+
+// js/app.js has a runtime BUILD const at the top — also ships into the
+// Scout/diagnostic bundle envelope (wf-debug.js:337). Was a separate stamp
+// from the `// Build:` comment pattern and silently rotted until v3.63.275.
+if (buildStamp) {
+  const appJs = read(join(ROOT, 'js/app.js'));
+  const m = appJs.match(/const\s+BUILD\s*=\s*['"](\d{8}-\d{3})['"]/);
+  if (m && m[1] !== buildStamp) {
+    const lineNum = findLine(appJs, m[0]);
+    fail('js/app.js', `stale const BUILD = '${m[1]}' (expected ${buildStamp})`, lineNum);
+  } else if (m) {
+    ok(`js/app.js const BUILD = ${m[1]}`);
   }
 }
 

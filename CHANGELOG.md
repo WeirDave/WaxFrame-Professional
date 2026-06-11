@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.275
+
+**Audit cleanup pass — three CRITICAL findings patched, release-check guard tightened**
+
+Build: `20260611-002`<br>
+Released: `2026-06-11`
+
+### What changed
+
+Three independent CRITICAL items surfaced by a deep audit, plus the CI guard that should have caught two of them.
+
+**1. `api-details.html` was silently broken since v3.63.274.** The Provider Catalog refactor moved `window.API_CONFIGS` construction from an inline literal in `js/api.js` to `WFProviderCatalog.buildApiConfigs()` — but `api-details.html` loads `js/api.js` without first loading `js/provider-models.js` or `js/provider-catalog.js`. As of v3.63.274, every visit to `api-details.html` threw `TypeError: Cannot read properties of undefined (reading 'buildApiConfigs')` on load, then fell back to hardcoded HTML model names. The v3.57.0 "this guide can never drift from the running app" guarantee was quietly dead. Two missing script tags added before `js/api.js`.
+
+**2. Scout / diagnostic bundles shipped an empty session block.** `js/wf-debug.js` was reading `localStorage.getItem('waxframe_v2_session_mirror')` for the `LS_SESSION` field of every Scout bundle. That localStorage mirror was retired in v3.21.12 — the real session has lived in IndexedDB ever since. Every bug-report bundle since then has advertised an empty session while the actual state sat fully populated in IDB, wasting triage cycles. `bundleForScout()` is now `async` and awaits `idbGet()`; the field is renamed `IDB_SESSION` to reflect where it actually comes from.
+
+**3. Build-stamp drift across the repo.** Five different version stamps disagreed pairwise: `package.json` lagged at `3.63.273`, the `BUILD` const in `app.js:586` was stuck at `20260608-026` (three days stale), and the comment-header `Build:` line in 15 HTML files was at the same stale value while the `<meta name="waxframe-build">` tag immediately below it had moved on. `tools/release-check.mjs` already enforced `// Build:` comments in JS files and the meta tag in HTML — but the bare `Build:` inside HTML comments and the runtime `BUILD` const in `app.js` were checked by no one. Two new sub-checks added; the comment-header `Build:` and the `BUILD` const both fail the build now if they drift.
+
+### Why this matters
+
+Items 1 and 3 were behind the same hole in CI: there are more build stamps than the v3.63.190 check knew about. Tightening the check is the durable fix — manual sweeps will keep missing them. Item 2 is the quiet kind of bug that costs nothing in the moment and a lot at bug-triage time, because every report you receive is missing the most important block.
+
+### Files touched
+
+- [api-details.html](api-details.html) — `<script src="js/provider-models.js">` + `<script src="js/provider-catalog.js">` added before `<script src="js/api.js">` (with a one-line comment explaining the load-order constraint)
+- [js/wf-debug.js](js/wf-debug.js) — `bundleForScout()` → `async bundleForScout()`; `LS_SESSION: localStorage.getItem(...)` → `IDB_SESSION: await idbGet()`; field renamed to match its source
+- [js/app.js](js/app.js) — `BUILD` const bumped from `20260608-026` → `20260611-002`
+- [js/version.js](js/version.js), [package.json](package.json), [index.html](index.html) — `APP_VERSION` / `version` / `softwareVersion` → `3.63.275`
+- 15 HTML files, all js/*.js, [style.css](style.css) — `Build:` headers swept to `20260611-002`; `?v=` cache-bust swept to `3.63.275`
+- [js/provider-catalog.js](js/provider-catalog.js) — file was created in v3.63.274 without a `Build:` header comment; added now for parity with every other file in `js/`
+- [tools/release-check.mjs](tools/release-check.mjs) — version-stamp check now also enforces the `BUILD` const in `app.js` and the HTML comment-header `Build:` line
+
+### Note on v3.63.274's tag
+
+v3.63.274's commit (`8a6c0963`) landed on main but the git tag / GitHub Release was never cut, which means the release-check `Cache-bust drift since last tag` step in this run compared HEAD against `v3.63.273` rather than `v3.63.274`. Not something to silently retro-fix — flagging here so the gap is visible in the timeline.
+
+---
+
 ## v3.63.274
 
 **Provider Catalog foundation · one data record per provider instead of patching five places**
