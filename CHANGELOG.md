@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.269
+
+**Detail-card inset removed (perfect alignment) + → / = arrow restored above the chevron**
+
+Build: `20260610-045`<br>
+Released: `2026-06-10`
+
+### Two coordinated fixes
+
+**1. Removed the horizontal inset on `.checkpoint-row-detail`.** v3.63.267 added `padding-left/right: var(--space-12)` to inset the detail cards "slightly narrower than the preview cards" — but v3.63.268's matching 3-column grid (`1fr 32px 1fr`) is built to make the detail cards align byte-for-byte with the preview cards by design, and the inset broke that. David: "almost got it!" with the v3.63.268 layout — the inset was the remaining gap. Now the preview cards and detail cards have identical left/right edges, pixel-perfect.
+
+**2. Restored the `→` / `=` arrow indicator.** v3.63.268 hid the `::before` pseudo-element on the file preview because the chevron now occupied that gap. David: "don't forget the = or the -> in between the cards please". The arrow now anchors to the TOP of the file preview's bounds (`top: var(--space-8)`) instead of vertical-center, so it sits above the centered chevron — both indicators stay visible without overlapping. The arrow keeps the existing semantics: neutral `→` by default, green `→` when the row is checked, green `=` when the row is a match. The match-state styling on the chevron itself (from v3.63.268) stays — both the chevron and the arrow signal a match-row now, defense in depth.
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row-detail` horizontal padding removed; the desktop `::before` arrow pseudo-element restored with top-anchored position so it sits above the centered chevron
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.268
 
 **Preview cards + detail cards align byte-for-byte — chevron sits in the column gap as a divider**

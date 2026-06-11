@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-044
+   Build: 20260610-045
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11351,12 +11351,12 @@ kbd {
   font-size: var(--fs-13);
   line-height: 1.55;
   color: var(--text);
-  /* v3.63.267 — Slight horizontal inset so the detail cards read as
-     a "child" of the row, slightly narrower than the preview cards
-     above. David: "this should match up with the cards above and just
-     be a slight bit narrower". */
-  padding-left: var(--space-12);
-  padding-right: var(--space-12);
+  /* v3.63.269 — Horizontal padding removed. v3.63.267 added it to inset
+     the detail cards "slightly narrower than the preview cards" — but
+     v3.63.268's matching 3-column grid (1fr 32px 1fr) is built to make
+     the detail cards align byte-for-byte with the preview cards, and
+     the inset broke that. David: "almost got it!" once the cards
+     lined up — the inset was the remaining gap. */
 }
 .checkpoint-row.is-expanded .checkpoint-row-detail { display: block; }
 
@@ -11596,12 +11596,29 @@ kbd {
     flex: unset;
     min-width: 0;
   }
-  /* Hide the laptop-era arrow pseudo-element — the chevron now occupies
-     the same visual slot and the match/checked semantic moves onto the
-     chevron's own styling (see is-match override on
-     .checkpoint-row-expand-btn below). */
+  /* v3.63.269 — Restore the → / = arrow indicator above the chevron.
+     David: "don't forget the = or the -> in between the cards please".
+     The chevron is centered in the column 2 cell; the arrow now
+     anchors to the TOP of the file preview's bounds so both sit in
+     the gap between the cards without overlapping. The arrow keeps
+     the existing semantics: neutral → by default, green → when the
+     row is checked, green = when the row is a match. */
   .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
-    display: none;
+    content: "→";
+    position: absolute;
+    left: calc(-1 * var(--space-10) - 6px);
+    top: var(--space-8);
+    color: var(--text-dim);
+    font-size: var(--fs-15);
+    font-weight: 700;
+    pointer-events: none;
+  }
+  .checkpoint-row:has(input:checked) .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
+    color: var(--green);
+  }
+  .checkpoint-row.is-match .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
+    content: "=";
+    color: var(--green);
   }
 }
 
