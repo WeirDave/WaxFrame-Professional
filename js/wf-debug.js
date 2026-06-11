@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260611-001
+// Build: 20260611-002
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -256,7 +256,7 @@ window.WF_DEBUG = {
   // project, and a wipe between projects would force a fresh
   // classifier call every run.
   // ════════════════════════════════════════════════════════════
-  bundleForScout() {
+  async bundleForScout() {
     const _ad = new Date();
     const _pad = n => String(n).padStart(2, '0');
     const _stamp = `${_ad.getFullYear()}${_pad(_ad.getMonth()+1)}${_pad(_ad.getDate())}-${_pad(_ad.getHours())}${_pad(_ad.getMinutes())}`;
@@ -322,12 +322,21 @@ window.WF_DEBUG = {
         return '[parse failed — block omitted for safety]';
       }
     };
+    // v3.63.275 — LS_SESSION was a stale read of `waxframe_v2_session_mirror`,
+    // a key retired in v3.21.12. Every Scout bundle since then shipped an empty
+    // session block while the real state sat in IndexedDB. Pull it from IDB
+    // (the SoT per storage.js) and rename the field so the schema reflects
+    // where it actually comes from.
     let checkpoint = null;
+    let idbSession = null;
+    try {
+      if (typeof idbGet === 'function') idbSession = await idbGet();
+    } catch (e) { /* defensive — IDB read failure leaves IDB_SESSION null */ }
     try {
       checkpoint = {
-        LS_PROJECT: localStorage.getItem('waxframe_v2_project'),
-        LS_HIVE:    _redactKeysIn(localStorage.getItem('waxframe_v2_hive')),
-        LS_SESSION: localStorage.getItem('waxframe_v2_session_mirror')
+        LS_PROJECT:  localStorage.getItem('waxframe_v2_project'),
+        LS_HIVE:     _redactKeysIn(localStorage.getItem('waxframe_v2_hive')),
+        IDB_SESSION: idbSession
       };
     } catch (e) { /* defensive */ }
 
