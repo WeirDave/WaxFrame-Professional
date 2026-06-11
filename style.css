@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-039
+   Build: 20260610-040
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11057,6 +11057,13 @@ kbd {
   border: 1px solid transparent;
   margin: 0 0 var(--space-10) 0;
   transition: background .12s, border-color .12s, box-shadow .12s;
+  /* v3.63.264 — Anchor the absolutely-positioned .checkpoint-row-expand-btn
+     (Phase B chevron). Without this the chevron's `top:10px; right:10px`
+     resolves against the nearest positioned ancestor (the body), so it
+     gets painted far out of view and the row never appears to have one.
+     v3.63.257 added position:relative to .checkpoint-row-pick but missed
+     the row itself. */
+  position: relative;
 }
 .checkpoint-row:last-child { margin-bottom: 0; }
 .checkpoint-row input[type="checkbox"] {
@@ -11282,8 +11289,16 @@ kbd {
    panel slides down with a dashed top border. */
 .checkpoint-row-expand-btn {
   position: absolute;
-  top: var(--space-10);
-  right: var(--space-10);
+  /* v3.63.264 — Bottom-left placement per David's drawing. The top half
+     of the row is the .checkpoint-row-pick area, which is the label
+     click target for the checkbox; even though the chevron is a real
+     <button> and absorbs its own clicks, putting it up there visually
+     competes with the checkbox affordance. Bottom-left sits in the
+     row's bottom padding below the preview cards, well away from the
+     checkbox area and pointing naturally at where the detail panel
+     will slide open below. */
+  bottom: var(--space-10);
+  left: var(--space-12);
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-dim);
