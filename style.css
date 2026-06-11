@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-041
+   Build: 20260610-042
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11288,24 +11288,17 @@ kbd {
    the bee-card .ai-setup-row.is-expanded pattern: chevron rotates,
    panel slides down with a dashed top border. */
 .checkpoint-row-expand-btn {
-  position: absolute;
-  /* v3.63.264 — Bottom-left placement per David's drawing. The top half
-     of the row is the .checkpoint-row-pick area, which is the label
-     click target for the checkbox; even though the chevron is a real
-     <button> and absorbs its own clicks, putting it up there visually
-     competes with the checkbox affordance. Bottom-left sits in the
-     row's bottom padding below the preview cards, well away from the
-     checkbox area and pointing naturally at where the detail panel
-     will slide open below. */
-  bottom: var(--space-10);
-  left: var(--space-12);
-  /* v3.63.265 — Always-visible border + brighter rest state. v3.63.264's
-     transparent-border / text-dim icon was effectively invisible until
-     hover — David: "you can't even really tell that the Chevron is
-     there initially". Now the button reads as a real button at rest
-     (visible border, neutral-text icon, subtle surface fill); hover
-     swaps to green to signal interactivity in the same semantic family
-     as the rest of the green "incoming" accents on the page. */
+  /* v3.63.266 — Switched from absolute positioning to normal flow.
+     v3.63.264's absolute + bottom:10px left:12px landed the chevron
+     overlapping the preview cards because the row's bottom padding
+     (14px) was shorter than the chevron's 32px height. David: "it is
+     jammed right up next to the card". Normal-flow flex child sits
+     below the previews with the row's own gap (--space-10) providing
+     clean clearance — no overlap math, no z-index gymnastics. The
+     row is display:flex flex-direction:column so this button just
+     becomes the third stacked child, naturally left-aligned via
+     align-self:flex-start (not stretched across the row's width). */
+  align-self: flex-start;
   background: var(--surface2);
   border: 1px solid var(--border2);
   color: var(--text);
@@ -11319,7 +11312,6 @@ kbd {
   border-radius: var(--radius-sm);
   cursor: pointer;
   user-select: none;
-  z-index: 2;
   transition: color .12s, background .12s, border-color .12s, transform .15s;
 }
 .checkpoint-row-expand-btn:hover {
@@ -11349,16 +11341,40 @@ kbd {
 }
 .checkpoint-row.is-expanded .checkpoint-row-detail { display: block; }
 
-.checkpoint-detail-col { min-width: 0; }
+/* v3.63.266 — Each detail column is now its own card, matching the
+   visual treatment of the preview cards above. Without the card
+   borders + backgrounds, a 2-column layout with long text in either
+   side blurred into a single block — David: "there's no dividing
+   line between the two columns which looks a little messy". Now the
+   current-side column sits in the same neutral --surface3 card as
+   the .checkpoint-row-preview-local above; the file-side column gets
+   the green inset-stripe treatment when the row's checkbox is ticked,
+   matching .checkpoint-row-preview-file. The same conditional-green
+   pattern as v3.63.261 so unticked / placeholder file content stays
+   visually neutral. */
+.checkpoint-detail-col {
+  min-width: 0;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-12);
+}
+.checkpoint-row:has(input:checked) .checkpoint-detail-col-file {
+  background: var(--bg);
+  border-color: color-mix(in srgb, var(--green) 50%, var(--border2));
+  box-shadow: inset 4px 0 0 var(--green);
+}
 .checkpoint-detail-col-label {
   font-size: var(--fs-11);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-dim);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-8);
 }
-.checkpoint-detail-col-file .checkpoint-detail-col-label { color: var(--green); }
+.checkpoint-row:has(input:checked) .checkpoint-detail-col-file .checkpoint-detail-col-label {
+  color: var(--green);
+}
 .checkpoint-detail-cols {
   display: grid;
   grid-template-columns: 1fr;
@@ -11367,6 +11383,15 @@ kbd {
 @media (min-width: 1200px) {
   .checkpoint-detail-cols { grid-template-columns: 1fr 1fr; }
 }
+/* Match-row override: when current === file, both detail columns go
+   green (same logic as .checkpoint-row.is-match on the preview cards
+   above), and the label colors flip to green. */
+.checkpoint-row.is-match .checkpoint-detail-col {
+  background: var(--bg);
+  border-color: color-mix(in srgb, var(--green) 50%, var(--border2));
+  box-shadow: inset 4px 0 0 var(--green);
+}
+.checkpoint-row.is-match .checkpoint-detail-col-label { color: var(--green); }
 
 .checkpoint-detail-empty {
   color: var(--text-dim);
@@ -11461,6 +11486,18 @@ kbd {
 [data-theme="light"] .checkpoint-row.is-match .checkpoint-row-preview-file {
   background: color-mix(in srgb, var(--green) 8%, var(--surface));
 }
+/* v3.63.266 — Light-mode for the detail-panel cards. Mirrors the
+   preview-card treatment above so the expanded detail panel reads
+   as a continuation of the comparison visual, not a different style. */
+[data-theme="light"] .checkpoint-detail-col {
+  background: var(--surface2);
+}
+[data-theme="light"] .checkpoint-row:has(input:checked) .checkpoint-detail-col-file {
+  background: color-mix(in srgb, var(--green) 8%, var(--surface));
+}
+[data-theme="light"] .checkpoint-row.is-match .checkpoint-detail-col {
+  background: color-mix(in srgb, var(--green) 8%, var(--surface));
+}
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .checkpoint-row:has(input:checked) {
     background: var(--surface);
@@ -11474,6 +11511,15 @@ kbd {
   }
   [data-theme="auto"] .checkpoint-row.is-match .checkpoint-row-preview-local,
   [data-theme="auto"] .checkpoint-row.is-match .checkpoint-row-preview-file {
+    background: color-mix(in srgb, var(--green) 8%, var(--surface));
+  }
+  [data-theme="auto"] .checkpoint-detail-col {
+    background: var(--surface2);
+  }
+  [data-theme="auto"] .checkpoint-row:has(input:checked) .checkpoint-detail-col-file {
+    background: color-mix(in srgb, var(--green) 8%, var(--surface));
+  }
+  [data-theme="auto"] .checkpoint-row.is-match .checkpoint-detail-col {
     background: color-mix(in srgb, var(--green) 8%, var(--surface));
   }
 }
