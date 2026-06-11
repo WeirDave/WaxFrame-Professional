@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.266
+
+**Chevron breathing room + detail columns as cards**
+
+Build: `20260610-042`<br>
+Released: `2026-06-10`
+
+### Two fixes from David's feedback
+
+**1. Chevron was jammed against the preview cards.** v3.63.264 used `position: absolute; bottom: var(--space-10); left: var(--space-12);` to park the chevron in the row's bottom-left corner. Trouble: the row's bottom padding is 14px but the chevron is 32px tall, so the chevron's box extended 28px UP into the preview cards' painting area. Visually it looked stuck to the cards above with no gap. Fix: ditched absolute positioning entirely. The row is `display: flex; flex-direction: column;` with `gap: var(--space-10)`, so just letting the chevron flow as a normal third flex child (with `align-self: flex-start` to keep it left-aligned at its natural 32px width) gives it the row's own gap as automatic clearance from the previews above. No overlap math, no z-index gymnastics.
+
+**2. Expanded detail columns had no card separation.** With a 2-column grid and long text in either side, the columns blurred into one block — David: "there's no dividing line between the two columns which looks a little messy". Fix: each `.checkpoint-detail-col` is now its own card matching the visual treatment of the `.checkpoint-row-preview-local` / `.checkpoint-row-preview-file` pair above. Same surface (`--surface3` dark / `--surface2` light), same border, same border-radius, same internal padding. And the same conditional-green logic — file-side column gets the green inset stripe + green border + green label color only when the row's checkbox is ticked, matching the preview-card behavior. Also handles the `.is-match` case (both columns green when the row's current and file summaries agree).
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row-expand-btn` dropped `position`/`bottom`/`left`/`z-index`, gained `align-self: flex-start`; `.checkpoint-detail-col` got the card treatment (background, border, border-radius, padding); checked + match overrides for the file-side column; light-mode + OS-follow auto-mode parallel rules
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.265
 
 **Chevron visibility pass — always-on border, bolder glyph, green on hover/expand**
