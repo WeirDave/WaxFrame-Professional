@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260611-003
+// Build: 20260611-004
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -71,8 +71,25 @@ function idbOpen() {
     const req = indexedDB.open(IDB_NAME, IDB_VERSION);
     req.onupgradeneeded = e => {
       const db = e.target.result;
-      if (!db.objectStoreNames.contains(IDB_STORE)) {
-        db.createObjectStore(IDB_STORE);
+      // v3.63.277 — Migration scaffold. e.oldVersion is the user's existing
+      // schema (0 for a brand-new install); e.newVersion is IDB_VERSION above.
+      // Every case ladders into the next, so when IDB_VERSION bumps to 2 the
+      // existing user's old-version-1 db falls through case 1 → case 2 and
+      // gets every intermediate migration. Today every case after the bootstrap
+      // is a no-op — they exist so the next schema change is a one-line
+      // addition, not a "should we add migration plumbing?" discussion.
+      switch (e.oldVersion) {
+        case 0:
+          // Bootstrap: create the session store.
+          if (!db.objectStoreNames.contains(IDB_STORE)) {
+            db.createObjectStore(IDB_STORE);
+          }
+          // fallthrough to future bumps
+        // case 1:
+        //   // Reserved for IDB_VERSION = 2.
+        //   break;
+        default:
+          break;
       }
     };
     req.onsuccess = e => {
@@ -87,6 +104,67 @@ function idbOpen() {
     };
     req.onerror   = e => reject(e.target.error);
   });
+}
+
+// ── CROSS-TAB COORDINATION ──
+// v3.63.277 — Without this, two tabs open on the same session were a
+// last-write-wins corruption hazard: Tab A finishes Round 5, writes IDB
+// state; Tab B was still on Round 3, writes its IDB state ~later → Tab A's
+// two completed rounds get clobbered. BroadcastChannel lets the tabs talk
+// to each other directly (browser-native, no polling). On every successful
+// IDB write we broadcast {tabId, round, ts}. When another tab's broadcast
+// arrives with a HIGHER round than ours, we pin a sticky banner telling the
+// user to reload — clobbering would otherwise happen on this tab's next save.
+const _wfTabId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+  ? crypto.randomUUID()
+  : 'tab-' + Math.floor(Date.now() + Math.random() * 1e9).toString(36);
+let _wfBroadcastChannel = null;
+try {
+  if (typeof BroadcastChannel !== 'undefined') {
+    _wfBroadcastChannel = new BroadcastChannel('waxframe-session');
+    _wfBroadcastChannel.onmessage = (e) => {
+      const m = e && e.data;
+      if (!m || m.tabId === _wfTabId || m.type !== 'session-write') return;
+      const myRound = (typeof window.round === 'number') ? window.round : 0;
+      if (typeof m.round === 'number' && m.round > myRound) {
+        // Another tab is ahead. Pin the banner so this tab doesn't clobber.
+        _showCrossTabConflictBanner(m.round, myRound);
+      }
+    };
+  }
+} catch (e) {
+  // BroadcastChannel can throw in private-mode browsers or strict iframe
+  // contexts — fall back to single-tab semantics silently.
+  _wfBroadcastChannel = null;
+}
+
+function _broadcastSessionWrite(roundValue) {
+  if (!_wfBroadcastChannel) return;
+  try {
+    _wfBroadcastChannel.postMessage({
+      type: 'session-write',
+      tabId: _wfTabId,
+      round: roundValue,
+      ts:    Date.now()
+    });
+  } catch (e) { /* defensive — channel may have closed */ }
+}
+
+function _showCrossTabConflictBanner(otherRound, myRound) {
+  let banner = document.getElementById('wfCrossTabBanner');
+  if (banner) { banner.style.display = ''; return; }
+  banner = document.createElement('div');
+  banner.id = 'wfCrossTabBanner';
+  banner.className = 'cross-tab-banner';
+  banner.setAttribute('role', 'alert');
+  banner.innerHTML =
+    '<strong>⚠ Another tab is editing this session.</strong>' +
+    ` <span>This tab is at round ${myRound}; the other tab is at round ${otherRound}. Reload here to load their state, or your next save will overwrite theirs.</span>` +
+    ' <button type="button" class="btn cross-tab-reload">↻ Reload this tab</button>' +
+    ' <button type="button" class="btn cross-tab-dismiss" aria-label="Dismiss">✕</button>';
+  document.body.insertBefore(banner, document.body.firstChild);
+  banner.querySelector('.cross-tab-reload').onclick  = () => location.reload();
+  banner.querySelector('.cross-tab-dismiss').onclick = () => banner.remove();
 }
 
 async function idbSet(value) {
@@ -307,6 +385,11 @@ function saveSession(opts = {}) {
       // v3.63.276 — Clear the persistence-broken banner on a successful write,
       // in case it had been raised by a prior fallback failure.
       _clearPersistenceBrokenBanner();
+      // v3.63.277 — Tell every other tab on this origin that we just advanced
+      // the session's round. They'll pin a banner if they're behind. Single-
+      // tab use is unaffected (no other listeners means the broadcast is a
+      // no-op from the user's perspective).
+      _broadcastSessionWrite(session.round);
 
       // Persistent-storage retry every 3 rounds if not yet granted.
       if (history.length > 0 && history.length % 3 === 0 &&

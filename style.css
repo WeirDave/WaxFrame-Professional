@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260611-003
+   Build: 20260611-004
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1578,6 +1578,28 @@ body.helper-body .page-main {
   border-radius: 4px; font-weight: 600; cursor: pointer;
 }
 .persistence-broken-export:hover { background: #fee2e2; }
+
+/* v3.63.277 — Cross-tab conflict banner. Pinned to the top, amber (warning,
+   not fatal) to distinguish from the persistence-broken red banner. Two
+   buttons: Reload (the safe action) and ✕ (dismiss, accept the risk). */
+.cross-tab-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 99998;
+  padding: var(--space-10) var(--space-14);
+  background: #b45309; color: #fff;
+  border-bottom: 2px solid #78350f;
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  font-size: 14px; line-height: 1.4;
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-10);
+}
+.cross-tab-banner strong { font-weight: 700; }
+.cross-tab-banner span   { flex: 1 1 auto; min-width: 200px; }
+.cross-tab-reload, .cross-tab-dismiss {
+  background: #fff; color: #b45309; border: none;
+  padding: var(--space-6) var(--space-12);
+  border-radius: 4px; font-weight: 600; cursor: pointer;
+}
+.cross-tab-reload:hover, .cross-tab-dismiss:hover { background: #fef3c7; }
+.cross-tab-dismiss { padding: var(--space-6) var(--space-10); }
 
 /* ══════════════════════════════════════
    SCREEN 4 — WORK SCREEN

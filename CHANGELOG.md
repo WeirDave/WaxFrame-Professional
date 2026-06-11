@@ -2,6 +2,32 @@
 
 ---
 
+## v3.63.277
+
+**Cross-tab coordination + IDB migration scaffold**
+
+Build: `20260611-004`<br>
+Released: `2026-06-11`
+
+### What changed
+
+Two state-layer fixes from the audit — one closes a real corruption hazard, the other is preventive plumbing for the next schema change.
+
+**1. BroadcastChannel cross-tab coordination (`js/storage.js`).** Two tabs open on the same session were a last-write-wins corruption hazard: Tab A finishes Round 5, writes IDB; Tab B was still on Round 3, finishes its round seconds later and writes its IDB state → Tab A's two completed rounds get clobbered with no warning. The existing `onversionchange` handler protected against dead-connection errors but did nothing about concurrent writes from different tabs. Fix: each tab gets a `crypto.randomUUID()` id at load. After every successful IDB write we broadcast `{tabId, round, ts}` over a `BroadcastChannel('waxframe-session')`. When another tab's broadcast arrives with a round higher than ours, we pin an amber sticky banner across the top of the viewport — "This tab is at round N; the other tab is at round M. Reload here to load their state, or your next save will overwrite theirs." Two buttons: ↻ Reload (safe action) and ✕ Dismiss (accept the risk). Single-tab use is unaffected — no listeners means the broadcast is a no-op. Graceful degradation in private-mode browsers and strict iframe contexts where BroadcastChannel constructs throw.
+
+**2. IndexedDB migration scaffold (`js/storage.js`).** `onupgradeneeded` was a single `if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE)` call with no version-switch structure. `IDB_VERSION = 1`, locked there forever — the next time the session payload shape changed incompatibly, there was no place for migration code to live. Fix: convert to a `switch (e.oldVersion)` ladder with the bootstrap as case 0 and a commented `case 1:` ready for the next schema bump. Today every case after the bootstrap is a no-op; they exist so a future schema change is a one-line addition, not a "should we add migration plumbing?" discussion. No behavior change for any existing user.
+
+### Why this matters
+
+#1 is the kind of bug that doesn't bite until it does, then bites hard — a user opens two tabs by accident (or by routine, e.g. opening Help in a new tab and returning to the work tab), and silently loses rounds with no signal. Cheap to fix, expensive to discover after the fact. #2 is pure prevention — the audit noted IDB schema versioning as a latent risk; the cost to scaffold it now while the file is open and quiet is much lower than the cost of bolting it in under pressure during a future schema change.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — `idbOpen()` switch-ladder; module-level `_wfTabId` + `_wfBroadcastChannel` + `_broadcastSessionWrite()` + `_showCrossTabConflictBanner()`; `saveSession()` IDB-success path calls `_broadcastSessionWrite(session.round)`
+- [style.css](style.css) — new `.cross-tab-banner` rules (fixed-position amber banner with Reload + Dismiss buttons)
+
+---
+
 ## v3.63.276
 
 **CRITICAL correctness sweep — five storage- and security-layer fixes from the deep audit**
