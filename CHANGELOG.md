@@ -2,6 +2,32 @@
 
 ---
 
+## v3.63.270
+
+**Hotfix: → / = arrow was hidden behind the chevron (z-index lift)**
+
+Build: `20260610-046`<br>
+Released: `2026-06-10`
+
+### What broke
+
+v3.63.269 restored the `→` / `=` arrow indicator pseudo-element above the chevron, but in the live render the arrow was nowhere visible — David's screenshot of the AI list row's gap shows the chevron alone, no arrow above it.
+
+Root cause: the arrow is a `::before` pseudo-element on the file preview, positioned absolutely at `left: calc(-1 * var(--space-10) - 6px)` (i.e. 16px LEFT of the file preview's left edge). With v3.63.268's grid layout, the file preview is in column 3 and the chevron in column 2 — so `left: -16px` from the file preview puts the arrow 6px INSIDE the chevron's right side, horizontally overlapping the chevron button.
+
+The vertical positions don't actually overlap (arrow at `top: 8px`, chevron centered around `top: ~30px` for a typical card height), but the chevron is LATER in DOM order than the file preview, so its opaque `--surface2` background painted *over* the arrow's area.
+
+### Fix
+
+`z-index: 2` on the pseudo-element so it paints above the chevron regardless of DOM order. The chevron stays at its default stacking level; the arrow now sits on top.
+
+### Files touched
+
+- [style.css](style.css) — `z-index: 2` added to the desktop arrow pseudo-element
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.269
 
 **Detail-card inset removed (perfect alignment) + → / = arrow restored above the chevron**
