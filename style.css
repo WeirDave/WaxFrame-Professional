@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-037
+   Build: 20260610-038
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11201,6 +11201,24 @@ kbd {
 .checkpoint-row:has(input:checked) .checkpoint-row-preview-file .checkpoint-row-preview-label {
   color: var(--green);
 }
+
+/* v3.63.262 — Match detection. Restore mode flags rows whose
+   current-state and checkpoint-file summaries compare equal — both
+   panels go green-tinted (same treatment the file panel gets when
+   ticked) regardless of tick state, the labels both go green, and
+   the chevron between them flips from "→" to "=" so the user can see
+   at a glance which sections would be no-op restores. Semantic: "no
+   change needed, both sides already agree". Mismatching rows fall
+   through to the v3.63.261 conditional-green-on-check behavior. */
+.checkpoint-row.is-match .checkpoint-row-preview-local,
+.checkpoint-row.is-match .checkpoint-row-preview-file {
+  background: var(--bg);
+  border-color: color-mix(in srgb, var(--green) 50%, var(--border2));
+  box-shadow: inset 4px 0 0 var(--green);
+}
+.checkpoint-row.is-match .checkpoint-row-preview-label {
+  color: var(--green);
+}
 .checkpoint-row-preview-value {
   color: var(--text);
   font-size: var(--fs-14);
@@ -11276,6 +11294,11 @@ kbd {
 [data-theme="light"] .checkpoint-row:has(input:checked) .checkpoint-row-preview-file {
   background: color-mix(in srgb, var(--green) 8%, var(--surface));
 }
+/* v3.63.262 — Light-mode match treatment: same subtle green wash both sides. */
+[data-theme="light"] .checkpoint-row.is-match .checkpoint-row-preview-local,
+[data-theme="light"] .checkpoint-row.is-match .checkpoint-row-preview-file {
+  background: color-mix(in srgb, var(--green) 8%, var(--surface));
+}
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .checkpoint-row:has(input:checked) {
     background: var(--surface);
@@ -11285,6 +11308,10 @@ kbd {
     background: var(--surface2);
   }
   [data-theme="auto"] .checkpoint-row:has(input:checked) .checkpoint-row-preview-file {
+    background: color-mix(in srgb, var(--green) 8%, var(--surface));
+  }
+  [data-theme="auto"] .checkpoint-row.is-match .checkpoint-row-preview-local,
+  [data-theme="auto"] .checkpoint-row.is-match .checkpoint-row-preview-file {
     background: color-mix(in srgb, var(--green) 8%, var(--surface));
   }
 }
@@ -11321,6 +11348,13 @@ kbd {
     pointer-events: none;
   }
   .checkpoint-row:has(input:checked) .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
+    color: var(--green);
+  }
+  /* v3.63.262 — Match-row chevron becomes "=" in green. The semantic is
+     "current === incoming, no-op restore" so the directional arrow is
+     misleading — equals reads correctly at a glance. */
+  .checkpoint-row.is-match .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
+    content: "=";
     color: var(--green);
   }
 }

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260610-037
+// Build: 20260610-038
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1668,6 +1668,13 @@ function _restoreSummarizeLicense(raw) {
   // no signal that a real value lived there and no way to inspect it.
   // The license blob may be a JSON wrapper ({valid, key, ...}) or, on
   // legacy installs, the raw key string itself.
+  // v3.63.262 — Now returns { html, compareKey } so the match-detector
+  // (Restore mode setRow) can compare RAW values across the two columns
+  // and light up matching rows green-on-both-sides. Without compareKey
+  // the comparison would run against the masked display string, which
+  // would falsely match any two keys that happen to share their last 4
+  // characters. Plain-string summaries keep their old shape — the
+  // _checkpointCompareKey helper handles both forms.
   let key = '';
   try {
     const j = JSON.parse(raw);
@@ -1676,7 +1683,7 @@ function _restoreSummarizeLicense(raw) {
     if (typeof raw === 'string' && raw.trim()) key = raw.trim();
   }
   if (!key) return 'Set';   // present but unreadable — safe fallback
-  return _checkpointSecretHTML(key);
+  return { html: _checkpointSecretHTML(key), compareKey: key };
 }
 
 /* v3.63.261 — Render a sensitive value (license key, API key) as a
@@ -1702,15 +1709,56 @@ function _checkpointSecretHTML(rawValue) {
    masked value + reveal button — detect via leading '<' and switch
    to innerHTML. Defense-in-depth: summarizers are the only source of
    HTML strings here, and they generate their HTML internally with
-   escaped values, so we're not handing user-supplied HTML to innerHTML. */
+   escaped values, so we're not handing user-supplied HTML to innerHTML.
+   v3.63.262 — Now also accepts the { html, compareKey } object shape
+   used by sensitive-row summarizers; the html field renders, the
+   compareKey is read separately by the match-detector. */
 function _setCheckpointPreviewValue(el, val) {
   if (!el) return;
+  // Object form: { html, compareKey } — render the html branch.
+  if (val && typeof val === 'object' && typeof val.html === 'string') {
+    el.innerHTML = val.html;
+    return;
+  }
   const s = String(val == null ? '' : val);
   if (s.length > 0 && s.charCodeAt(0) === 60 /* < */) {
     el.innerHTML = s;
   } else {
     el.textContent = s;
   }
+}
+
+/* v3.63.262 — Extract a stable comparison string from a summarizer's
+   return value. For sensitive rows the displayed HTML is masked
+   (••••••••XXXX) — comparing those would falsely match any two keys
+   sharing their last 4 chars. The summarizer's compareKey field
+   carries the raw value for an accurate compare. Plain-string
+   summaries (the common case) compare against themselves. */
+function _checkpointCompareKey(summary) {
+  if (summary == null) return '';
+  if (typeof summary === 'object' && typeof summary.compareKey === 'string') {
+    return summary.compareKey;
+  }
+  return String(summary);
+}
+
+/* v3.63.262 — Decide whether a Restore-mode row's two sides agree.
+   Same-summary rows light up green on BOTH panels (instead of just
+   the file panel on check) and the chevron becomes "=" — so the user
+   sees at a glance which sections would be no-op restores. Skips the
+   placeholder summaries ("(none)", "(empty)", "(not set)") so empty-
+   on-both-sides rows don't get a misleading green match. */
+function _checkpointRowsMatch(curSummary, ckSummary, hasInFile) {
+  if (!hasInFile) return false;
+  const cur = _checkpointCompareKey(curSummary);
+  const ck  = _checkpointCompareKey(ckSummary);
+  if (!cur || !ck) return false;
+  if (cur !== ck) return false;
+  // Don't treat (none)/(empty) on both sides as a meaningful match —
+  // those are placeholders, not real shared data.
+  const placeholder = /^\((?:none|empty|not set|unnamed project|no AIs)\)$/i;
+  if (placeholder.test(cur)) return false;
+  return true;
 }
 
 window.toggleCheckpointSecret = function(ev) {
@@ -1864,6 +1912,15 @@ async function _populateRestoreCheckpointDiff(data) {
     // rows still go through textContent.
     _setCheckpointPreviewValue(curEl, cur[key]);
     _setCheckpointPreviewValue(ckEl,  has[key] ? ck[key] : '(not in checkpoint)');
+    // v3.63.262 — Match-detection. Toggle .is-match on the row when
+    // the current and checkpoint-file summaries compare equal — both
+    // panels then light up green and the chevron between them flips
+    // to "=" so the user can see at a glance which rows would be a
+    // no-op restore.
+    const rowEl = cb ? cb.closest('.checkpoint-row') : null;
+    if (rowEl) {
+      rowEl.classList.toggle('is-match', _checkpointRowsMatch(cur[key], ck[key], !!has[key]));
+    }
   };
   for (const key of _CHECKPOINT_SCOPE_KEYS) setRow(key);
 

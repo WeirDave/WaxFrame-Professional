@@ -2,6 +2,56 @@
 
 ---
 
+## v3.63.262
+
+**Restore mode shows match detection — both sides green + "=" arrow when current and incoming agree**
+
+Build: `20260610-038`<br>
+Released: `2026-06-10`
+
+### What David asked for
+
+After v3.63.261 landed, David: "if the information that's being imported is the same as the information that currently exists then we should light up both sides with green … so if the checkpoint file has the same license as what we currently have you light them green … maybe change the arrow in the middle to equals and then make both sides be green … just trying to make it a little bit more visually obvious."
+
+Spot-on UX call: a Restore comparison's most useful signal is which sections are *already in sync* (would be no-op restores) versus which would actually change something. The asymmetric green-on-file-when-checked treatment from v3.63.261 doesn't surface that distinction at all.
+
+### How it works
+
+In Restore mode, after the summarizers run for each row, the new `_checkpointRowsMatch(curSummary, ckSummary, hasInFile)` helper compares the current-state and checkpoint-file values. If they agree (and aren't both placeholder values like `(none)` or `(empty)`), the row gets a `.is-match` class.
+
+`.is-match` rows render with:
+- **Both panels** green-tinted (the same `--bg` near-black wash in dark mode, 8% green over white in light mode) + green inset stripe + green border + green label color.
+- **The chevron between them** flips from `→` to `=` — directional arrow is misleading when nothing's flowing in.
+
+Mismatching rows keep the v3.63.261 conditional-green-on-check behavior unchanged.
+
+### Sensitive-row compare-key plumbing
+
+The license summarizer now returns `{ html, compareKey }` instead of a raw HTML string:
+- `html` carries the masked-display + 👁 reveal-button markup (rendered via innerHTML).
+- `compareKey` carries the RAW key value for the match-detector.
+
+Without the split, the match check would run against the masked display strings — two different keys that happen to share their last 4 chars would falsely match (or any two keys with different lengths would mismatch because the dot-count differs). The compare-key is the actual ground truth.
+
+New helpers:
+- `_checkpointCompareKey(summary)` — extracts the comparable string from either the plain summary or the `{html, compareKey}` object form.
+- `_checkpointRowsMatch(cur, ck, hasInFile)` — full match decision including placeholder filtering.
+- `_setCheckpointPreviewValue(el, val)` — now handles the object form alongside the v3.63.261 plain/HTML detection.
+
+The same plumbing extends to API keys when Phase B lands — each per-AI masked key carries its own compareKey for the same accurate comparison.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — `_restoreSummarizeLicense` returns `{html, compareKey}`; new helpers `_checkpointCompareKey`, `_checkpointRowsMatch`; `_setCheckpointPreviewValue` handles object form; Restore `setRow` toggles `.is-match` after populating both sides
+- [style.css](style.css) — new `.checkpoint-row.is-match` rules for both panels + chevron `=` swap; light-mode override matches; dark-mode and OS-follow auto-mode variants covered
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+### Coming in Phase B (next release)
+
+Expand-on-click detail panels matching the bee-card `.ai-setup-row.is-expanded` pattern. Each row gets a chevron toggle that opens an inline panel showing the actual data behind the summary line — AI list, model picks, masked API keys with per-AI 👁 reveal, reference doc filenames, etc. Both Save and Restore modes get the affordance.
+
+---
+
 ## v3.63.261
 
 **Checkpoints page polish — three coordinated fixes**
