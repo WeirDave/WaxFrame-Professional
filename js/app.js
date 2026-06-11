@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260611-005
+// Build: 20260611-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260611-005';         // build stamp — update each session
+const BUILD       = '20260611-006';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -678,6 +678,22 @@ function toast(msg, ms = 2800) {
 function setStatus(msg) {
   const el = document.getElementById('statusText');
   if (el) el.textContent = msg;
+}
+
+// v3.63.279 — Centralized Smoke-the-Hive label reset. Pre-v3.63.279 this
+// pattern repeated 8 times across runRound + runBuilderOnly:
+//   const btn = document.getElementById('runRoundBtn');
+//   btn?.classList.remove('running');
+//   if (btn) btn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
+// Each instance probed DOM nodes that may not exist; each instance picked
+// a slightly different local variable name (runBtnB, runBtnBM, runBtn, etc.)
+// which made grep across the cluster noisy. One helper, null-guarded once.
+function _setRunBtnLabel(label, clearRunning = true) {
+  const btn = document.getElementById('runRoundBtn');
+  if (!btn) return;
+  if (clearRunning) btn.classList.remove('running');
+  const labelEl = btn.querySelector('.shake-wide-label');
+  if (labelEl) labelEl.textContent = label;
 }
 function setFileStatusState(el, state) {
   el.classList.remove('file-status--loading', 'file-status--success', 'file-status--warn', 'file-status--error');
@@ -2931,9 +2947,7 @@ function _autoBuildLengthDirective(cstat) {
 // branch took over the flow); callers must return immediately afterward.
 function _autoConvergenceLengthReroll(cstat) {
   // Stop the in-flight round's UI before we reroll or halt.
-  const _runBtn = document.getElementById('runRoundBtn');
-  _runBtn?.classList.remove('running');
-  if (_runBtn) { const _l = _runBtn.querySelector('.shake-wide-label'); if (_l) _l.textContent = 'Smoke the Hive'; }
+  _setRunBtnLabel('Smoke the Hive');
   if (typeof stopRoundTimer === 'function') stopRoundTimer();
   if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
   if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
@@ -2964,9 +2978,7 @@ function _autoConvergenceLengthReroll(cstat) {
 // accept — a trim -> recheck -> trim/accept loop, fully under user control.
 async function _manualLengthFix(cstat) {
   // Stop the in-flight (just-converged) round's UI before handing to the Builder.
-  const _runBtn = document.getElementById('runRoundBtn');
-  _runBtn?.classList.remove('running');
-  if (_runBtn) { const _l = _runBtn.querySelector('.shake-wide-label'); if (_l) _l.textContent = 'Smoke the Hive'; }
+  _setRunBtnLabel('Smoke the Hive');
   if (typeof stopRoundTimer === 'function') stopRoundTimer();
   if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
   if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
@@ -8520,7 +8532,10 @@ async function classifyTiersForProvider(provider, opts) {
     || stableFallback
     || (cfg.model && filtered.includes(cfg.model) ? cfg.model : null)
     || models[0];
-  const format = cfg.format || (provider === 'claude' ? 'anthropic' : provider === 'gemini' ? 'google' : 'openai');
+  // v3.63.279 — cfg.format is always populated by WFProviderCatalog.buildApiConfigs()
+  // for built-in providers; custom AIs default to 'openai' (the historical
+  // fallback). The provider-string ternary that used to live here is gone.
+  const format = cfg.format || 'openai';
   const prompt = MODEL_TIER_CLASSIFICATION_PROMPT.replace(
     '{MODEL_LIST}',
     filtered.map((m, i) => `${i + 1}. ${m}`).join('\n')
@@ -8857,9 +8872,9 @@ async function recommendForDefault(provider) {
     || (cfg.model && models.includes(cfg.model) ? cfg.model : null)
     || models[0];
 
-  let format = 'openai';
-  if (provider === 'claude') format = 'anthropic';
-  else if (provider === 'gemini') format = 'google';
+  // v3.63.279 — Same simplification as the tier-classifier above: cfg.format
+  // is the source of truth; custom AIs without a format default to 'openai'.
+  const format = cfg.format || 'openai';
 
   // v3.32.10 — fire BOTH role recommendations in parallel. Reviewer pick uses
   // the soft-preference prompt (allows reasoning models if genuinely best);
@@ -10874,7 +10889,13 @@ function copySourceToReferenceMaterial() {
 
 // Provider keys whose underlying models support vision input.
 // Each provider has its own request shape — see runVisionTranscription.
-const VISION_PROVIDERS = ['chatgpt', 'claude', 'gemini', 'grok'];
+// v3.63.279 — Derived from WFProviderCatalog.CATALOG's `vision: true` flag
+// so adding a vision-capable provider is a one-line catalog edit instead of
+// remembering to update this hardcoded list. The fallback literal is the
+// pre-v3.63.279 baseline in case the catalog isn't loaded (test pages, etc.).
+const VISION_PROVIDERS = (window.WFProviderCatalog && Array.isArray(window.WFProviderCatalog.CATALOG))
+  ? window.WFProviderCatalog.CATALOG.filter(p => p.vision).map(p => p.id)
+  : ['chatgpt', 'claude', 'gemini', 'grok'];
 
 // v3.56.12 — Which AI handles vision/OCR (re-extract + sparse-page pass on
 // scanned/garbled PDFs). '' = Automatic: the first keyed vision provider, in
@@ -14424,6 +14445,27 @@ function renderBeeStatusGrid() {
 //   wfIconUpload.read(opts) — returns the current data URL or null
 //   wfIconUpload.set(opts, dataURL) — pre-populate (for Edit flows)
 //   wfIconUpload.clear(opts) — reset to empty state
+// v3.63.279 — Single source of truth for the keyword → bundled-icon table.
+// Pre-v3.63.279 this exact 11-row table existed twice inside app.js (once
+// as `wfIconUpload._CATALOG`, once as `const known` inside the icon-render
+// function ~500 lines later) with a `KEEP IN SYNC` comment as the only
+// synchronization mechanism. Either site could drift; either site silently
+// would have shipped the wrong icon on a new provider. Lifted to module
+// scope. Used as a const array — both consumers iterate it read-only.
+const WF_AI_ICON_KEYWORD_CATALOG = [
+  { keys: ['claude', 'anthropic'],            src: 'images/icon-claude.png' },
+  { keys: ['chatgpt', 'openai', 'gpt'],       src: 'images/icon-chatgpt.png' },
+  { keys: ['gemini', 'google'],               src: 'images/icon-gemini.png' },
+  { keys: ['grok', 'x.ai', 'xai'],            src: 'images/icon-grok.png' },
+  { keys: ['deepseek'],                       src: 'images/icon-deepseek.png' },
+  { keys: ['perplexity'],                     src: 'images/icon-perplexity.png' },
+  { keys: ['mistral', 'mixtral', 'codestral', 'ministral'], src: 'images/icon-mistral.png' },
+  { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
+  { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
+  { keys: ['together', 'togetherai'],         src: 'images/icon-together.png' },
+  { keys: ['jamba', 'ai21'],                  src: 'images/icon-jamba.png' },
+];
+
 const wfIconUpload = (() => {
   const TARGET_SIZE = 256;             // output dimension (square)
   const HARD_INPUT_CAP = 8 * 1024 * 1024; // refuse files > 8 MB even pre-resize
@@ -14599,19 +14641,7 @@ const wfIconUpload = (() => {
   // as choices in the Bundled tab of the manage-AI icon picker. Llama
   // stays here because it IS a real model brand (Meta's series), even
   // though the name overlaps with llama.cpp runtimes.
-  const _CATALOG = [
-    { keys: ['claude', 'anthropic'],            src: 'images/icon-claude.png' },
-    { keys: ['chatgpt', 'openai', 'gpt'],       src: 'images/icon-chatgpt.png' },
-    { keys: ['gemini', 'google'],               src: 'images/icon-gemini.png' },
-    { keys: ['grok', 'x.ai', 'xai'],            src: 'images/icon-grok.png' },
-    { keys: ['deepseek'],                       src: 'images/icon-deepseek.png' },
-    { keys: ['perplexity'],                     src: 'images/icon-perplexity.png' },
-    { keys: ['mistral', 'mixtral', 'codestral', 'ministral'], src: 'images/icon-mistral.png' },
-    { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
-    { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
-    { keys: ['together', 'togetherai'],       src: 'images/icon-together.png' },
-    { keys: ['jamba', 'ai21'],                  src: 'images/icon-jamba.png' },
-  ];
+  const _CATALOG = WF_AI_ICON_KEYWORD_CATALOG;
   const GENERIC_ICON = 'images/icon-generic.png';
 
   // Show the icon that WILL be used after Add to Hive given the current
@@ -15138,21 +15168,10 @@ function resolveAiIcon(ai, cssClass, size) {
   // other models, not model brands. Auto-detecting them off a model name
   // is a category error — the model name almost never contains the
   // runtime name. They're still available as one-click presets in the
-  // Import Server modal and as choices in the bundled icon picker. KEEP
-  // IN SYNC with wfIconUpload._CATALOG above.
-  const known = [
-    { keys: ['claude', 'anthropic'],            src: 'images/icon-claude.png' },
-    { keys: ['chatgpt', 'openai', 'gpt'],       src: 'images/icon-chatgpt.png' },
-    { keys: ['gemini', 'google'],               src: 'images/icon-gemini.png' },
-    { keys: ['grok', 'x.ai', 'xai'],            src: 'images/icon-grok.png' },
-    { keys: ['deepseek'],                       src: 'images/icon-deepseek.png' },
-    { keys: ['perplexity'],                     src: 'images/icon-perplexity.png' },
-    { keys: ['mistral', 'mixtral', 'codestral', 'ministral'], src: 'images/icon-mistral.png' },
-    { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
-    { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
-    { keys: ['together', 'togetherai'],       src: 'images/icon-together.png' },
-    { keys: ['jamba', 'ai21'],                  src: 'images/icon-jamba.png' },
-  ];
+  // Import Server modal and as choices in the bundled icon picker.
+  // v3.63.279 — Reads from module-level WF_AI_ICON_KEYWORD_CATALOG; the
+  // duplicate inline copy + "KEEP IN SYNC" comment retired.
+  const known = WF_AI_ICON_KEYWORD_CATALOG;
 
   // Shared builder for the safe <img> tag. `src` is the only call-site
   // input — internal callers pass hardcoded entry.src; the user-icon
@@ -15950,6 +15969,55 @@ function footerSmokeOrBuilder() {
 }
 
 // ── SEND TO BUILDER ONLY ──
+// v3.63.279 — Convergence-path length-guard helper. Pre-v3.63.279 this
+// 35-line block appeared twice inside runRound (unanimous path ~17075 and
+// majority path ~17225), differing only in local button-variable name.
+// Returns 'proceed' if the celebration should continue, 'aborted' if the
+// caller should `return` immediately. 'builder_fix' awaits _manualLengthFix
+// in here (preserving the original semantics where the fix flow takes over).
+async function _handleConvergenceLengthGate(cstat, builderName) {
+  const choice = await lengthGuardPrompt({
+    kind: cstat.status === 'over' ? 'convergence_over' : 'convergence_under',
+    actual: cstat.actual,
+    prevActual: cstat.actual,
+    limitNum: cstat.status === 'over'
+      ? cstat.limitNum
+      : (cstat.mode === 'target' ? cstat.limitNum : cstat.floorNum),
+    unitName: cstat.unitName,
+    limitName: cstat.status === 'over'
+      ? cstat.limitName
+      : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode, cstat.limitNum),
+    builderName: builderName
+  });
+  if (choice === 'builder_fix') {
+    // v3.56.9 — Manual "Trim/Expand with Builder": send the converged
+    // document back to the Builder to bring it into range. _manualLengthFix
+    // fires the builder-only round; its post-build re-check re-surfaces
+    // the guard if still out. Skip the celebration — the fix flow takes
+    // over from here.
+    await _manualLengthFix(cstat);
+    return 'aborted';
+  }
+  if (choice === 'discard') {
+    consoleLog(`📏 Convergence blocked — document is ${cstat.status} the length ${cstat.status === 'over' ? 'target' : 'floor'} (${cstat.actual} ${cstat.unitName} vs ${cstat.status === 'over' ? cstat.limitName : cstat.floorNum + ' ' + cstat.unitName + ' floor'}). Edit the document and re-run.`, 'warn');
+    toast(`📏 Convergence blocked — adjust document length and re-run`, 5000);
+    _setRunBtnLabel('Smoke the Hive');
+    stopRoundTimer();
+    hideSmokerOverlay();
+    setStatus(`📏 Convergence blocked — document is ${cstat.status === 'over' ? 'over' : 'under'} length ${cstat.status === 'over' ? 'target' : 'floor'}`);
+    return 'aborted';
+  }
+  if (choice === 'continue_anyway') {
+    window._lengthGuardOverride = true;
+    updateLengthGuardIndicator();
+    consoleLog(`📏 Length guard disabled for this project — convergence accepted`, 'warn');
+    toast('📏 Length guard disabled — convergence accepted', 4500);
+  }
+  // 'keep' or 'continue_anyway' both fall through to the celebration with
+  // (respectively) the guard still armed or the override flag now set.
+  return 'proceed';
+}
+
 async function runBuilderOnly() {
   const btn = document.getElementById('builderOnlyBtn');
   const smokeBtn = document.getElementById('runRoundBtn');
@@ -16008,7 +16076,7 @@ async function runBuilderOnly() {
 
   btn.disabled = true;
   smokeBtn?.classList.add('running');
-  if (smokeBtn) smokeBtn.querySelector('.shake-wide-label').textContent = 'Building…';
+  _setRunBtnLabel('Building…', /* clearRunning */ false);
   showBuilderOverlay();
   startRoundTimer(smokeBtn, 'Building…');
   projectClockStart(); // v3.36.32 — parity with runRound() at L12387. Without
@@ -16444,10 +16512,9 @@ async function runBuilderOnly() {
   }
 
   btn.disabled = false;
-  smokeBtn?.classList.remove('running');
   stopRoundTimer();
   hideBuilderOverlay();
-  if (smokeBtn) smokeBtn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
+  _setRunBtnLabel('Smoke the Hive');
 }
 
 // ── SINGLE-AI RETRY (v3.63.252) ──
@@ -16743,7 +16810,7 @@ async function runRound(opts) {
   // overlay swap below still runs.
   if (!_resumedFromPartial) {
     btn?.classList.add('running');
-    if (btn) btn.querySelector('.shake-wide-label').textContent = 'Smoking…';
+    _setRunBtnLabel('Smoking…', /* clearRunning */ false);
     showSmokerOverlay("Smokin' the Hive…");
     startRoundTimer(btn, 'Smoking…');
     projectClockStart(); // start/resume project clock on every round
@@ -17080,47 +17147,11 @@ async function runRound(opts) {
       if (cstat && cstat.status !== 'ok') {
         // P1.3 #9 (v3.56.1) — Auto: don't prompt. Send the converged document
         // back to the Builder to trim/expand (builder-only), up to
-        // getAutoRerollAttempts() times, then auto-halt. Interactive mode keeps
-        // the modal below untouched.
+        // getAutoRerollAttempts() times, then auto-halt. Interactive mode goes
+        // through the shared helper. v3.63.279 — Helper extracted out of two
+        // byte-identical sites (unanimous + majority paths).
         if (window._autoMode) { _autoConvergenceLengthReroll(cstat); return; }
-        const choice = await lengthGuardPrompt({
-          kind: cstat.status === 'over' ? 'convergence_over' : 'convergence_under',
-          actual: cstat.actual,
-          prevActual: cstat.actual,
-          limitNum: cstat.status === 'over'
-            ? cstat.limitNum
-            : (cstat.mode === 'target' ? cstat.limitNum : cstat.floorNum),
-          unitName: cstat.unitName,
-          limitName: cstat.status === 'over'
-            ? cstat.limitName
-            : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode, cstat.limitNum),
-          builderName: 'The Hive'
-        });
-        if (choice === 'builder_fix') {
-          // v3.56.9 — Manual "Trim/Expand with Builder": send the converged
-          // document back to the Builder to bring it into range. _manualLengthFix
-          // fires the builder-only round; its post-build re-check re-surfaces the
-          // guard if still out. Skip the celebration — the fix flow takes over.
-          await _manualLengthFix(cstat);
-          return;
-        }
-        if (choice === 'discard') {
-          consoleLog(`📏 Convergence blocked — document is ${cstat.status} the length ${cstat.status === 'over' ? 'target' : 'floor'} (${cstat.actual} ${cstat.unitName} vs ${cstat.status === 'over' ? cstat.limitName : cstat.floorNum + ' ' + cstat.unitName + ' floor'}). Edit the document and re-run.`, 'warn');
-          toast(`📏 Convergence blocked — adjust document length and re-run`, 5000);
-          const runBtnB = document.getElementById('runRoundBtn');
-          runBtnB?.classList.remove('running');
-          if (runBtnB) runBtnB.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
-          stopRoundTimer();
-          hideSmokerOverlay();
-          setStatus(`📏 Convergence blocked — document is ${cstat.status === 'over' ? 'over' : 'under'} length ${cstat.status === 'over' ? 'target' : 'floor'}`);
-          return;
-        } else if (choice === 'continue_anyway') {
-          window._lengthGuardOverride = true;
-          updateLengthGuardIndicator();
-          consoleLog(`📏 Length guard disabled for this project — convergence accepted`, 'warn');
-          toast('📏 Length guard disabled — convergence accepted', 4500);
-        }
-        // 'keep' falls through to the celebration with the guard still armed
+        if (await _handleConvergenceLengthGate(cstat, 'The Hive') === 'aborted') return;
       }
     }
 
@@ -17171,9 +17202,7 @@ async function runRound(opts) {
     // state intact. _cleanThisRound is the source of truth and stays
     // populated until the next round's 'sending' wave clears it.
     setStatus(`🏁 Unanimous — all AIs agree the document is ready`);
-    const runBtnU = document.getElementById('runRoundBtn');
-    runBtnU?.classList.remove('running');
-    if (runBtnU) runBtnU.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
+    _setRunBtnLabel('Smoke the Hive');
     stopRoundTimer();
     projectClockPause(); // pause project clock at convergence — user can resume manually if they keep iterating
     hideSmokerOverlay();
@@ -17225,51 +17254,12 @@ async function runRound(opts) {
     }
 
     // v3.32.28 — #6b convergence-path length check (majority path).
-    // Same semantics as the unanimous path above. See that block for
-    // the full rationale.
+    // v3.63.279 — Routes through shared _handleConvergenceLengthGate.
     if (!window._lengthGuardOverride) {
       const cstat = getLengthStatus(docText);
       if (cstat && cstat.status !== 'ok') {
-        // P1.3 #9 (v3.56.1) — Auto: send back to the Builder to trim/expand
-        // (builder-only) instead of prompting. See unanimous path above.
         if (window._autoMode) { _autoConvergenceLengthReroll(cstat); return; }
-        const choice = await lengthGuardPrompt({
-          kind: cstat.status === 'over' ? 'convergence_over' : 'convergence_under',
-          actual: cstat.actual,
-          prevActual: cstat.actual,
-          limitNum: cstat.status === 'over'
-            ? cstat.limitNum
-            : (cstat.mode === 'target' ? cstat.limitNum : cstat.floorNum),
-          unitName: cstat.unitName,
-          limitName: cstat.status === 'over'
-            ? cstat.limitName
-            : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode, cstat.limitNum),
-          builderName: 'The Hive'
-        });
-        if (choice === 'builder_fix') {
-          // v3.56.9 — Manual "Trim/Expand with Builder": send the converged
-          // document back to the Builder to bring it into range. _manualLengthFix
-          // fires the builder-only round; its post-build re-check re-surfaces the
-          // guard if still out. Skip the celebration — the fix flow takes over.
-          await _manualLengthFix(cstat);
-          return;
-        }
-        if (choice === 'discard') {
-          consoleLog(`📏 Convergence blocked — document is ${cstat.status} the length ${cstat.status === 'over' ? 'target' : 'floor'} (${cstat.actual} ${cstat.unitName} vs ${cstat.status === 'over' ? cstat.limitName : cstat.floorNum + ' ' + cstat.unitName + ' floor'}). Edit the document and re-run.`, 'warn');
-          toast(`📏 Convergence blocked — adjust document length and re-run`, 5000);
-          const runBtnBM = document.getElementById('runRoundBtn');
-          runBtnBM?.classList.remove('running');
-          if (runBtnBM) runBtnBM.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
-          stopRoundTimer();
-          hideSmokerOverlay();
-          setStatus(`📏 Convergence blocked — document is ${cstat.status === 'over' ? 'over' : 'under'} length ${cstat.status === 'over' ? 'target' : 'floor'}`);
-          return;
-        } else if (choice === 'continue_anyway') {
-          window._lengthGuardOverride = true;
-          updateLengthGuardIndicator();
-          consoleLog(`📏 Length guard disabled for this project — convergence accepted`, 'warn');
-          toast('📏 Length guard disabled — convergence accepted', 4500);
-        }
+        if (await _handleConvergenceLengthGate(cstat, 'The Hive') === 'aborted') return;
       }
     }
 
@@ -17319,9 +17309,7 @@ async function runRound(opts) {
     // the most useful signal at this moment for deciding whether to apply
     // their suggestions or finish.
     setStatus(`🏁 Hive converged — review holdout suggestions or finish the project`);
-    const runBtn = document.getElementById('runRoundBtn');
-    runBtn?.classList.remove('running');
-    if (runBtn) runBtn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
+    _setRunBtnLabel('Smoke the Hive');
     stopRoundTimer();
     projectClockPause(); // pause project clock at convergence — user can resume manually if they keep iterating
     hideSmokerOverlay();
@@ -17757,11 +17745,10 @@ async function runRound(opts) {
 
   // Reset button
   if (btn) {
-    btn.classList.remove('running');
     stopRoundTimer();
     hideSmokerOverlay();
     hideBuilderOverlay();
-    btn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
+    _setRunBtnLabel('Smoke the Hive');
   }
   if (builderHadError) {
     // v3.32.17 — Abandonment check (failed-round path in runRound).
