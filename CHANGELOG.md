@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.263
+
+**Phase B — expand-on-click detail panels (the bee-card pattern, applied to Checkpoints)**
+
+Build: `20260610-039`<br>
+Released: `2026-06-10`
+
+### What David asked for
+
+> "I wonder if we couldn't do a thing where we select the in the current state thing and it sort of does that cool thing that you've done before where you kind of expand the selection briefly and then show actually what the details are of the saving you know sort of above behind the scenes thing because right now we're basically give summaries…"
+
+He referenced the bee-card `.ai-setup-row.is-expanded` pattern. So each Checkpoints row now gets the same affordance: a chevron at the top-right corner, click to slide open an inline detail panel that surfaces the actual data behind the summary line.
+
+### How it works
+
+`_initCheckpointExpandUI()` runs after each panel populate (both Save and Restore modes) and injects a small chevron button into each `.checkpoint-row` that doesn't already have one. The button is a real `<button>` so the browser doesn't forward its click to the parent `<label>` and toggle the checkbox. Click → `_toggleCheckpointRowExpand(row)` flips `.is-expanded` on the row, which slides open `.checkpoint-row-detail` below the previews (matches `.ai-setup-row.is-expanded`'s visual pattern: dashed-top border, chevron rotates).
+
+Detail content renders lazily on first expand from `window._checkpointDataCache` (stashed at populate time so the renderers don't need to re-await IDB or re-parse localStorage). Save mode shows one column (current state); Restore mode shows two columns (current | file) so the user can compare specifics, not just summaries.
+
+### Per-row renderers
+
+- **Project info** — DL of name, version, document type, audience, outcome, scope, tone, notes, length constraint, export filename
+- **Reference Material** — UL of `{name}` — `{charCount} chars · {source}` per uploaded doc
+- **Starting Document** — char count + first 400 chars in a `<pre>` preview (scrollable, max-height 220px)
+- **Session in progress** — DL of round count, working-doc char count, notes/standing-notes char counts
+- **AI list** — UL of active AIs with `custom` tags + 🔨 marker for the current Builder; header line with active count + hive mode + custom count
+- **Model picks** — UL of `{AI id}` → `<code>{model id}</code>` mappings
+- **API keys** — UL of `{AI id}` + masked key + per-key 👁 reveal (reuses the v3.63.261 `.checkpoint-secret` pattern)
+- **Builder selection** — current Builder name
+- **License key** — DL with masked key + 👁 reveal + validated flag + activation timestamp + email/purchase-id if present
+
+The keys-row renderer is the high-value one — it gives users a way to confirm which keys are present and reveal individual ones without dumping everything to the screen at once.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — `_checkpointDataCache` stashed in both Save (`_refreshSaveCheckpointCurrentSummaries`) and Restore (`_populateRestoreCheckpointDiff`) flows; new `_initCheckpointExpandUI` / `_toggleCheckpointRowExpand` / `_populateCheckpointDetail` infrastructure; `_renderCheckpointDetailContent` dispatcher; nine `_detailXxx` renderers; `_detailDL` / `_detailUL` / `_esc` formatting helpers; `_detectCheckpointRowKey` / `_detectCheckpointRowMode` derive context from each row's existing checkbox id
+- [style.css](style.css) — `.checkpoint-row-expand-btn` chevron (positioned top-right, rotates 180° on expand); `.checkpoint-row-detail` slide-down panel with dashed-top border; `.checkpoint-detail-cols` 2-column grid at ≥1200px, single column below; `.checkpoint-detail-dl` / `.checkpoint-detail-ul` / `.checkpoint-detail-pre` / `.checkpoint-detail-tag` content styles
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+### What's the same
+
+- HTML markup unchanged — the chevron button and detail panel are injected via JS so index.html stays stable.
+- Existing summary lines unchanged — the detail panels add depth without replacing the summary view.
+- Match-detection (`.is-match`) from v3.63.262 still applies; expand state is orthogonal.
+
+---
+
 ## v3.63.262
 
 **Restore mode shows match detection — both sides green + "=" arrow when current and incoming agree**
