@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260610-031
+// Build: 20260610-032
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -181,6 +181,21 @@ window.WF_DEBUG = {
       // Re-send to finalize). runRound clears this flag at every round
       // start, so a stale value from a prior round can't bleed forward.
       window._beeFatalInRound = true;
+      // v3.63.256 — Track the failing bee id on _partialRound so the next
+      // runRound entry can auto-route to a surgical retry instead of firing
+      // a fresh round. Without this, dismissing the card stranded the user
+      // — there was no surfaced way to invoke Re-send once the card was
+      // gone, and the only remaining actions (Smoke / Auto-toggle) fired
+      // fresh rounds that re-billed every healthy bee. Now the natural
+      // action after fixing the bee does the right thing automatically.
+      if (window._partialRound && ctx.aiId) {
+        if (!Array.isArray(window._partialRound.failedAIIds)) {
+          window._partialRound.failedAIIds = [];
+        }
+        if (!window._partialRound.failedAIIds.includes(ctx.aiId)) {
+          window._partialRound.failedAIIds.push(ctx.aiId);
+        }
+      }
       if (window._autoMode) {
         window._autoMode = false;
         window._autoChainDeferred = null;
@@ -192,7 +207,7 @@ window.WF_DEBUG = {
           consoleLog(`🤖 Auto Mode cancelled — ${ctx.aiName || 'a bee'} needs a model/key fix before the round can finalize`, 'warn');
         }
         if (typeof toast === 'function') {
-          toast(`🤖 Auto Mode off — fix ${ctx.aiName || 'the bee'} and use Re-send to finalize`, 5000);
+          toast(`🤖 Auto Mode off — fix ${ctx.aiName || 'the bee'} and click Smoke to finalize`, 5000);
         }
       }
     }
