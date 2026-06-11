@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.264
+
+**Hotfix: Phase B chevrons were invisible + repositioned to bottom-left per David's drawing**
+
+Build: `20260610-040`<br>
+Released: `2026-06-10`
+
+### Two fixes
+
+**1. Chevrons were invisible.** v3.63.263 shipped the Phase B expand-on-click feature but the chevrons never appeared on screen. The chevron button is `position: absolute` with offsets meant to anchor against its row, but `.checkpoint-row` itself had no `position: relative`. v3.63.257 added `position: relative` to `.checkpoint-row-pick` (the inner pick-block) for the hover-overlap z-index fix, but missed the row container. Without that anchor, the chevron resolved its position against the nearest positioned ancestor (the body), painting it far off-screen. The JS was wiring the chevrons up correctly all along — they were just rendered out of view. Fix: added `position: relative` to the base `.checkpoint-row` rule.
+
+**2. Chevrons moved from top-right to bottom-left per David's drawing.** Even with the position fix, the top-right placement competed visually with the checkbox area (the top half of each row is the `.checkpoint-row-pick` block, which is the label click target for the checkbox). David: "the whole top row when you highlight for that card selects the check box so depending on where you're going to put this Chevron to it expand I honestly think it should go in a spot over here" — drew yellow markers at the bottom-left of each row. The chevron now lives there, in the row's bottom padding below the preview cards, well away from the checkbox area and pointing naturally at where the detail panel slides open below.
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row { position: relative; }`; `.checkpoint-row-expand-btn` `top:right:` swapped for `bottom: var(--space-10); left: var(--space-12);`
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.263
 
 **Phase B — expand-on-click detail panels (the bee-card pattern, applied to Checkpoints)**
