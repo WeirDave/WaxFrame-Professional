@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-032
+   Build: 20260610-033
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10940,6 +10940,20 @@ kbd {
    monitors get the full available real estate; at 1368px laptop width
    the .fs-body-single padding already produces sensible margins. */
 #screen-checkpoint .hp-section { max-width: none; width: 100%; }
+/* v3.63.257 — Wide-desktop layout cap. Without this the Checkpoints
+   panel sprawled edge-to-edge on 1920px+ monitors, scattering the
+   Save/Restore pills, Choose-File button, and per-row diffs across
+   the whole screen. Capping the section to a centered 1200px band
+   keeps the controls within reasonable mouse range and lets the new
+   two-column diff (.checkpoint-row-previews flex-row at ≥1200px)
+   read cleanly side-by-side. Laptop widths (<1600px) are unchanged. */
+@media (min-width: 1600px) {
+  #screen-checkpoint .hp-section {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
 
 .checkpoint-mode-toggle {
   display: flex; gap: var(--space-8);
@@ -11005,51 +11019,70 @@ kbd {
   line-height: 1.5;
 }
 
-/* Scope row groups — visual grouping under a section heading. */
+/* Scope row groups — visual grouping under a section heading.
+   v3.63.257 — Tighter padding so the inner row cards (which now have
+   their own border + padding) don't feel double-bordered. The group
+   acts as a quiet bin around its label + rows. */
 .checkpoint-row-group {
-  background: var(--surface2);
+  background: transparent;
   border: 1px solid var(--border2);
   border-radius: var(--radius-md, 10px);
-  margin: 0 0 var(--space-14) 0;
-  padding: var(--space-10) var(--space-12);
+  margin: 0 0 var(--space-16) 0;
+  padding: var(--space-10) var(--space-12) var(--space-12);
 }
 .checkpoint-row-group-label {
-  font-size: var(--fs-12);
+  font-size: var(--fs-11);
   color: var(--text-dim);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: var(--space-4) var(--space-4) var(--space-8);
   border-bottom: 1px solid var(--border2);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-10);
 }
 
 /* Scope row — vertical stack: pick (checkbox + name + desc + JSON) on top,
    preview line(s) below. Same shape for Save and Restore — Restore just
    has a second labeled preview line for the checkpoint value.
-   Hover localized to the pick block so the gold-tinted file preview
-   keeps its color stable; previously the row-wide hover bg was washing
-   out the file preview's translucent gold into a gray-gold mush. */
+   v3.63.257 — Each row gets its own surface card with proper inset
+   spacing instead of dashed separators. Reads as a discrete "what this
+   section is" container rather than a loose list item. */
 .checkpoint-row {
   display: flex; flex-direction: column;
-  gap: var(--space-8);
-  padding: var(--space-12) var(--space-10);
-  border-radius: var(--radius-sm);
+  gap: var(--space-10);
+  padding: var(--space-14) var(--space-14);
+  border-radius: var(--radius-md, 10px);
   cursor: pointer;
-  border-bottom: 1px dashed var(--border2);
+  background: var(--surface2);
+  border: 1px solid transparent;
+  margin: 0 0 var(--space-10) 0;
+  transition: background .12s, border-color .12s, box-shadow .12s;
 }
-.checkpoint-row:last-child { border-bottom: none; }
+.checkpoint-row:last-child { margin-bottom: 0; }
 .checkpoint-row input[type="checkbox"] {
   margin-top: 3px; flex: none; cursor: pointer;
-  width: 16px; height: 16px;
+  width: 18px; height: 18px;
 }
 .checkpoint-row input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .4; }
 .checkpoint-row:has(input:disabled) { cursor: not-allowed; opacity: .55; }
 
+/* v3.63.257 — Selected state. When the checkbox is ticked, the whole
+   row gets an accent left-border + subtle accent-dim background so the
+   user can see which sections will be saved/restored at a glance. */
+.checkpoint-row:has(input:checked) {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface2));
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
 .checkpoint-row-pick {
   display: flex; align-items: flex-start; gap: var(--space-10);
-  padding: var(--space-6) var(--space-8);
-  margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-8));
+  /* v3.63.257 — Establish stacking context so the hover outline floats
+     above the row's own preview cards below it. Without this the gold
+     preview card painted on top of the pick block's outline and clipped
+     the amber hover ring at the bottom edge. */
+  position: relative;
+  z-index: 1;
+  padding: var(--space-4) var(--space-4);
   border-radius: var(--radius-sm);
   transition: background .12s, outline-color .12s;
   outline: 2px solid transparent;
@@ -11057,24 +11090,31 @@ kbd {
 }
 /* v3.63.232 — amber outline on hover instead of gray fill. Matches the
    "selectable thing" language used elsewhere in the app (active mode
-   pills, focused controls). The accent-dim tint is subtle enough not
-   to compete with the solid gold of the file preview below. */
+   pills, focused controls).
+   v3.63.257 — Hover now applies to the whole row (subtle background
+   shift) AND outlines the pick block, so the entire selectable region
+   reads as one piece — closer to how Linear/Stripe-style row pickers
+   behave. */
+.checkpoint-row:hover {
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface2));
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+}
 .checkpoint-row:hover .checkpoint-row-pick {
   outline-color: var(--accent);
-  background: var(--accent-dim);
 }
 .checkpoint-row-text {
-  display: flex; flex-direction: column; gap: 3px;
+  display: flex; flex-direction: column; gap: 4px;
 }
 .checkpoint-row-name {
-  font-size: var(--fs-14);
+  font-size: var(--fs-15, var(--fs-14));
   color: var(--text);
   font-weight: 600;
+  letter-spacing: -0.005em;
 }
 .checkpoint-row-desc {
   font-size: var(--fs-12);
   color: var(--text-dim);
-  line-height: 1.45;
+  line-height: 1.5;
 }
 .checkpoint-row-json {
   display: inline-block;
@@ -11088,47 +11128,52 @@ kbd {
   word-break: break-all;
 }
 
-/* Preview lines — labeled values stacked below the description. Each
-   preview is its own card with a colored left border so the eye can
-   distinguish "where you are" from "what's coming in" without reading
-   the labels. Local state stays muted (text-dim border + label); the
-   checkpoint file value gets the accent gold treatment so it pops as
-   the "new thing" being considered for restore. */
+/* Preview lines — labeled values stacked below the description.
+   v3.63.257 — At laptop widths these still stack vertically; at desktop
+   widths (≥1200px) they reflow to two side-by-side columns with a small
+   chevron between them (current → incoming). The new visual hierarchy:
+     • Both panels share the same neutral surface so the eye doesn't see
+       "two different cards" — it sees one comparison.
+     • A single accent border at the bottom of the file preview marks
+       "this is what's coming in" without screaming gold across the
+       whole panel.
+     • Tiny uppercase label at the top of each panel (CURRENT / FROM
+       CHECKPOINT) so the user can scan a column of these rows at a
+       glance and know which side is which. */
 .checkpoint-row-previews {
   display: flex; flex-direction: column;
-  gap: var(--space-6);
-  margin-left: 26px;          /* align with text under checkbox */
+  gap: var(--space-8);
+  margin-left: 28px;          /* align with text under checkbox */
 }
 .checkpoint-row-preview {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
+  flex-direction: column;
+  gap: 4px;
   font-size: var(--fs-13);
-  line-height: 1.45;
-  padding: var(--space-8) var(--space-12);
+  line-height: 1.5;
+  padding: var(--space-10) var(--space-12);
   background: var(--surface2);
-  border-left: 3px solid var(--text-dim);
+  border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
+  position: relative;
 }
 .checkpoint-row-preview-local {
-  border-left-color: var(--text-dim);
+  /* Muted — "where you are now". */
+  border-color: var(--border2);
 }
 .checkpoint-row-preview-file {
-  border-left-color: var(--accent);
-  /* Solid gold-tinted background via color-mix so the gold tone stays
-     stable when ancestors change background (e.g. row hover). The
-     transparent --accent-dim used previously was washing out into
-     gray-gold mush whenever a hover/focus state layered something
-     underneath. */
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface2));
+  /* "What's coming in" — accent-tinted left edge, subtle gold wash
+     instead of the full-card gold of the prior design. Reads as a
+     destination state without dominating the row visually. */
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface2));
 }
 .checkpoint-row-preview-label {
   color: var(--text-dim);
-  font-size: var(--fs-12);
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: var(--fs-11);
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  min-width: 200px;
   flex: none;
 }
 .checkpoint-row-preview-file .checkpoint-row-preview-label {
@@ -11136,8 +11181,40 @@ kbd {
 }
 .checkpoint-row-preview-value {
   color: var(--text);
+  font-size: var(--fs-14);
   word-break: break-word;
   flex: 1;
+  line-height: 1.45;
+}
+
+/* v3.63.257 — Desktop reflow. At ≥1200px the two preview cards sit
+   side-by-side with a small chevron between them so the comparison
+   reads left-to-right (where you are → what's coming in) instead of
+   top-to-bottom. Single-column structure is the laptop fallback. */
+@media (min-width: 1200px) {
+  .checkpoint-row-previews {
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--space-10);
+  }
+  .checkpoint-row-preview {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  /* Chevron between the two previews. Only rendered when a file
+     preview follows a local preview (i.e. Restore-mode rows). Position
+     absolute relative to the gap so it doesn't take layout space. */
+  .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
+    content: "→";
+    position: absolute;
+    left: calc(-1 * var(--space-10) - 6px);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    font-size: var(--fs-16);
+    font-weight: 700;
+    pointer-events: none;
+  }
 }
 
 /* Inline error banner shown in the Restore intro panel when the picked
