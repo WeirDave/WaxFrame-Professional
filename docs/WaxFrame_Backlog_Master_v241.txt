@@ -62,6 +62,70 @@ OPEN BUGS
         bailed without re-rendering.
 
 
+2. Checkpoints page — desktop layout wastes space + hover
+   overlap on the diff card
+   ─────────────────────────────────────────────────────────
+   WHAT:   Two issues on the Checkpoints restore flow,
+           both desktop-only (laptop ≤ ~1366px renders fine):
+           (a) Hover state on the per-section checkbox row
+               (API keys row in David's repro) is overlapped
+               by the next card below it. Visual layering bug
+               — checkbox row's hover highlight clips behind
+               the following card instead of staying on top.
+           (b) Three-step layout for kicking off a restore
+               is mouse-marathon on a wide monitor:
+                 1) Click Restore Checkpoint (full-width
+                    button across the page)
+                 2) Move mouse all the way right to click
+                    Choose Checkpoint File (small button,
+                    far-right of screen)
+                 3) After file picked, every section's
+                    "in your current state" vs "in this
+                    checkpoint file" diff stretches the full
+                    page width when it would read better as
+                    two compact columns (current state on
+                    the left, checkpoint file on the right).
+   WHY:    Reset-before-test is a common ceremony — David
+           hit this trying to reset before running the
+           v3.63.256 surgical-retry test. A
+           commonly-touched page shouldn't make the user
+           drag their cursor diagonally across an ultra-wide
+           monitor for a 3-click flow. The hover overlap is
+           also disorienting — it reads as a layout bug
+           even before you realize it's purely visual.
+   STATE:  OPEN
+   WHERE:  Checkpoints screen markup + CSS — exact
+           selectors not yet located. Start with the
+           Checkpoints screen container (search index.html
+           for "CHECKPOINTS" header text), and grep style.css
+           for the section-row + diff-row rules. The hover
+           overlap is likely a z-index / position:relative
+           gap on the section row vs the next card's
+           stacking context.
+   DONE:   Desktop (≥ ~1600px):
+             • Hover state on a section checkbox row stays
+               above all following cards — no clipping.
+             • The two-button Save/Restore strip at the top
+               doesn't span the full page; constrained to a
+               centered ~720px max-width band so Save and
+               Restore live close together.
+             • Choose Checkpoint File button moves closer
+               to where the user's mouse already is (next to
+               the Cancel button or stacked vertically with
+               Cancel under a compact instruction block).
+             • Section diff rows render in two columns at
+               desktop widths (current state | checkpoint
+               file); collapses back to single-column at
+               laptop widths.
+           Laptop (≤ ~1366px):
+             • Unchanged from current behavior. Layout is
+               OK there; the fix is desktop-only.
+   NOTES:  Logged 2026-06-10 during v3.63.256 testing
+           after David tried to reset state to re-test the
+           surgical-retry flow. Not blocking the feature
+           under test.
+
+
 ════════════════════════════════════════════════════════════
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
