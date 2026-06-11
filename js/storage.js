@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260610-040
+// Build: 20260610-041
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1805,7 +1805,10 @@ function _initCheckpointExpandUI() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'checkpoint-row-expand-btn';
-    btn.innerHTML = '▾';
+    // v3.63.265 — Bolder glyph (▼ instead of ▾) so the chevron reads
+    // more clearly inside the 32px button. The small-triangle ▾ was
+    // visibly anemic at this size.
+    btn.innerHTML = '▼';
     btn.title = 'Show details';
     btn.setAttribute('aria-label', 'Show details');
     btn.setAttribute('aria-expanded', 'false');

@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-040
+   Build: 20260610-041
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11299,13 +11299,20 @@ kbd {
      will slide open below. */
   bottom: var(--space-10);
   left: var(--space-12);
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-dim);
-  font-size: var(--fs-14);
+  /* v3.63.265 — Always-visible border + brighter rest state. v3.63.264's
+     transparent-border / text-dim icon was effectively invisible until
+     hover — David: "you can't even really tell that the Chevron is
+     there initially". Now the button reads as a real button at rest
+     (visible border, neutral-text icon, subtle surface fill); hover
+     swaps to green to signal interactivity in the same semantic family
+     as the rest of the green "incoming" accents on the page. */
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-size: var(--fs-15);
   line-height: 1;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -11316,17 +11323,19 @@ kbd {
   transition: color .12s, background .12s, border-color .12s, transform .15s;
 }
 .checkpoint-row-expand-btn:hover {
-  color: var(--accent);
-  border-color: var(--border2);
-  background: var(--surface2);
+  color: var(--green);
+  border-color: var(--green);
+  background: var(--green-dim);
 }
 .checkpoint-row-expand-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
 }
 .checkpoint-row.is-expanded .checkpoint-row-expand-btn {
   transform: rotate(180deg);
-  color: var(--accent);
+  color: var(--green);
+  border-color: var(--green);
+  background: var(--green-dim);
 }
 
 .checkpoint-row-detail {
