@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-034
+   Build: 20260610-035
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11066,12 +11066,16 @@ kbd {
 .checkpoint-row input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .4; }
 .checkpoint-row:has(input:disabled) { cursor: not-allowed; opacity: .55; }
 
-/* v3.63.257 — Selected state. When the checkbox is ticked, the whole
-   row gets an accent left-border + subtle accent-dim background so the
-   user can see which sections will be saved/restored at a glance. */
+/* v3.63.259 — Selected state. Row "pops" brighter instead of dimmer
+   — surface lifts a step toward white (--surface3 in dark mode is
+   #1e2130, lighter than --surface2; --surface in light mode is true
+   white, lighter than --surface2). Accent treatment lives on the
+   border + the 4px inset stripe on the left edge. Same shape in both
+   themes: the "edge card block" David asked to preserve. */
 .checkpoint-row:has(input:checked) {
-  background: color-mix(in srgb, var(--accent) 6%, var(--surface2));
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--surface3);
+  border-color: var(--accent);
+  box-shadow: inset 4px 0 0 var(--accent);
 }
 
 .checkpoint-row-pick {
@@ -11095,9 +11099,13 @@ kbd {
    shift) AND outlines the pick block, so the entire selectable region
    reads as one piece — closer to how Linear/Stripe-style row pickers
    behave. */
+/* v3.63.259 — Hover keeps the row's base background and lifts only the
+   border + the pick block's outline. No background color-mix — that was
+   producing muddy tones in light mode and competed with the checked
+   state's lighter background. Border-only hover reads as "touchable"
+   without changing the surface tone. */
 .checkpoint-row:hover {
-  background: color-mix(in srgb, var(--accent) 4%, var(--surface2));
-  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border2));
 }
 .checkpoint-row:hover .checkpoint-row-pick {
   outline-color: var(--accent);
@@ -11162,11 +11170,16 @@ kbd {
   border-color: var(--border2);
 }
 .checkpoint-row-preview-file {
-  /* "What's coming in" — accent-tinted left edge, subtle gold wash
-     instead of the full-card gold of the prior design. Reads as a
-     destination state without dominating the row visually. */
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface2));
+  /* v3.63.259 — "What's coming in" panel uses the same edge-card-block
+     treatment David approved on the selected-row state: brighter
+     background (--surface3 in dark = lighter; light mode override below
+     swaps to --surface = white), neutral border, 4px accent stripe down
+     the left edge. Matches the user-manual section-card aesthetic in
+     both themes. Was a gold-wash mix before, which produced a muddy
+     beige in light mode (#c97c06 mixed into off-white reads tan). */
+  background: var(--surface3);
+  border-color: var(--border2);
+  box-shadow: inset 4px 0 0 var(--accent);
 }
 .checkpoint-row-preview-label {
   color: var(--text-dim);
@@ -11187,44 +11200,26 @@ kbd {
   line-height: 1.45;
 }
 
-/* v3.63.258 — Light-mode overrides for the highlighted states. The
-   dark-mode color-mix approach (subtle accent wash over dark surface)
-   doesn't translate to light mode because --accent in light is a deep
-   burnt-orange (#c97c06); mixing it with an off-white surface that has
-   its own warm undertones produces a muddy tan/beige. The fix is to
-   drop the background-mix entirely and let crisp border + inset accent
-   stripe carry the "selected" / "incoming" signals. Reads clean on
-   white the way Linear/Stripe-style row pickers do.
-   Both [data-theme="light"] (explicit) and prefers-color-scheme: light
-   + [data-theme="auto"] (OS-following) variants get the override. */
-[data-theme="light"] .checkpoint-row:hover {
-  background: var(--surface3);
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border2));
-}
-[data-theme="light"] .checkpoint-row:has(input:checked) {
-  background: var(--surface3);
-  border-color: var(--accent);
-  box-shadow: inset 4px 0 0 var(--accent);
-}
+/* v3.63.259 — Light-mode override for the selected-row background only.
+   In dark mode --surface3 (#1e2130) is LIGHTER than --surface2 (the
+   row default), so the base rule above lifts the checked row toward
+   white as intended. In light mode --surface3 (#e4e7f4) is DARKER than
+   --surface2 (#f0f2f8) — that produced a "row gets darker on select"
+   feel that David specifically rejected ("should go like the other
+   direction and maybe go white"). Override to var(--surface) (true
+   white #ffffff) so the selected row visibly pops UPWARD instead of
+   sinking, matching the user-manual card aesthetic in both themes.
+   Border + inset stripe + hover treatment from the base rules already
+   apply correctly to both themes; only the selected-row background
+   needs the per-theme correction. */
+[data-theme="light"] .checkpoint-row:has(input:checked),
 [data-theme="light"] .checkpoint-row-preview-file {
   background: var(--surface);
-  border-color: var(--border2);
-  box-shadow: inset 4px 0 0 var(--accent);
 }
 @media (prefers-color-scheme: light) {
-  [data-theme="auto"] .checkpoint-row:hover {
-    background: var(--surface3);
-    border-color: color-mix(in srgb, var(--accent) 55%, var(--border2));
-  }
-  [data-theme="auto"] .checkpoint-row:has(input:checked) {
-    background: var(--surface3);
-    border-color: var(--accent);
-    box-shadow: inset 4px 0 0 var(--accent);
-  }
+  [data-theme="auto"] .checkpoint-row:has(input:checked),
   [data-theme="auto"] .checkpoint-row-preview-file {
     background: var(--surface);
-    border-color: var(--border2);
-    box-shadow: inset 4px 0 0 var(--accent);
   }
 }
 
