@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.267
+
+**Chevron joins the previews row · detail cards inset slightly · colons after field labels**
+
+Build: `20260610-043`<br>
+Released: `2026-06-10`
+
+### Three changes from David's review of v3.63.266
+
+**1. Chevron now sits inline with the preview cards instead of taking its own row.** v3.63.266 moved the chevron to a separate flex child below the previews, which added a whole row of mostly-empty vertical space below each row. Fix: append the chevron INSIDE `.checkpoint-row-previews` instead of the row. At laptop widths the previews container is `flex-direction: column` so the chevron stacks below as before; at desktop (≥1200px) the previews are `flex-direction: row` so the chevron sits inline to the right of both preview cards. `flex: 0 0 auto` keeps it from growing/shrinking; `align-self: center` vertically centers it against the previews' equal heights. The previews shrink by 32px + gap to make room — which is also the "slight bit narrower" David wanted for the cards.
+
+**2. Detail cards inset slightly so they read as "child" of the row.** Added `padding-left: var(--space-12); padding-right: var(--space-12);` to `.checkpoint-row-detail` so the expanded detail cards sit slightly inside the preview cards' edges instead of full-width-flush. David: "this should match up with the cards above and just be a slight bit narrower". Subtle visual indentation that signals "this is the expanded detail of the row above" without changing the column shape or grid.
+
+**3. Field labels in the detail DL get a trailing colon.** Added `.checkpoint-detail-dl dt::after { content: ":"; }` so `NAME` reads as `NAME:`, `VERSION` reads as `VERSION:`, etc. Done as a pseudo-element instead of editing the renderer strings so the colon stays consistent across every detail DL (project info, session, license, future additions) without per-renderer string churn.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — `_initCheckpointExpandUI` appends chevron to `.checkpoint-row-previews` (falls back to row if container missing)
+- [style.css](style.css) — `.checkpoint-row-expand-btn` swapped `align-self: flex-start` for `flex: 0 0 auto; align-self: center` to behave as a row-flex item; `.checkpoint-row-detail` gained horizontal padding for the inset; `.checkpoint-detail-dl dt::after` colon rule
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.266
 
 **Chevron breathing room + detail columns as cards**
