@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.261
+
+**Checkpoints page polish — three coordinated fixes**
+
+Build: `20260610-037`<br>
+Released: `2026-06-10`
+
+### Three changes from David's feedback on the Checkpoints redesign
+
+**1. Green now means "you picked this", not "this panel exists".** v3.63.260 unconditionally green-tinted every `.checkpoint-row-preview-file` panel, which made disabled rows (Starting Document with no data in the file) and not-yet-ticked rows light up green for no semantic reason. David: "stuff that's not selectable should not be green … the whole thing should be totally Gray." Fix: gate the green treatment on `.checkpoint-row:has(input:checked) .checkpoint-row-preview-file` — default state is neutral (matches the local panel), green only kicks in when the row's checkbox is ticked. Same change applied to the chevron arrow color and the panel label color. Disabled rows naturally never trigger this since they can't be checked.
+
+**2. Save mode defaults to ALL sections ticked.** Was `aiList:false, models:false, keys:false, builder:false` — a "safe partial" that omitted half the things needed to fully restore a project. David's call: optimize for the user who doesn't read the row descriptions and just clicks Save. If they don't tick anything specific, they should get a *complete* backup, not a partial one. The keys row's description already warns "Sensitive — leave off when sharing the file with anyone else" so users who care will see it and untick; users who don't read are usually saving for themselves and benefit from getting the keys in the file. New default: all 9 sections ticked.
+
+**3. License key value is now masked with an inline 👁 reveal button.** The "In your current state" row for License used to render the literal word `Set` — gave the user no signal that a real value was stored, no way to inspect it, and looked nothing like the password-field UX a pro app uses for sensitive data. Now renders as `••••••••XXXX` (last 4 chars exposed) with a small 👁 button next to it; click toggles to reveal the full value, click again to re-mask. The button stops click propagation so it doesn't also toggle the row's checkbox (each row is a `<label>` that would otherwise fire its checkbox on any inner click). Treatment applies to both Save mode and Restore mode previews so the comparison feels consistent.
+
+Foundation for Phase B (next release): the same `_setCheckpointPreviewValue` helper + `.checkpoint-secret` markup pattern will get reused inside expandable detail panels for API keys — each per-AI key gets its own masked-value + reveal-button row.
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row-preview-file` green styling moved under `.checkpoint-row:has(input:checked)` scope; default chevron color changed to `--text-dim` with `:has(input:checked)` override to `--green`; new `.checkpoint-secret` / `.checkpoint-secret-mask` / `.checkpoint-secret-real` / `.checkpoint-secret-reveal` rules for the masked sensitive-value display
+- [js/storage.js](js/storage.js) — `_restoreSummarizeLicense` now extracts the real key from the license blob and returns masked-value HTML; new `_checkpointSecretHTML` and `_setCheckpointPreviewValue` helpers; `toggleCheckpointSecret` exposed on `window`; both Save and Restore render paths switched to the secret-aware setter; Save mode default-checkbox map flipped to all-true
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.260
 
 **Checkpoints semantic color split — gold = "you picked this", green = "this is what's incoming"**

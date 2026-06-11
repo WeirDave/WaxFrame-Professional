@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-036
+   Build: 20260610-037
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11165,26 +11165,19 @@ kbd {
   border-radius: var(--radius-sm);
   position: relative;
 }
-.checkpoint-row-preview-local {
-  /* v3.63.260 — "Where you are now" panel uses --surface3 (which in
-     dark mode is the LIGHTER dark gray, #1e2130 — pops up against the
-     near-black selected-row background; in light mode is the darker
-     neutral, sits one step below the white selected-row background).
-     Neutral border, no inset stripe — this is the comparison baseline,
-     not the highlighted action. */
+/* v3.63.261 — Default state: both preview panels read as identical
+   neutral comparison surfaces. The green "incoming, good-to-go" signal
+   on the file panel is *conditional* — it kicks in only when the
+   parent row's checkbox is checked. Without that gating, disabled
+   rows (Starting Document with no data in the file) and not-yet-
+   picked rows lit up green for no semantic reason, which David
+   flagged as misleading: green should mean "you picked this section
+   and it's ready to apply", not "there happens to be a file panel
+   here". Same color in both panels until you tick the row. */
+.checkpoint-row-preview-local,
+.checkpoint-row-preview-file {
   background: var(--surface3);
   border-color: var(--border2);
-}
-.checkpoint-row-preview-file {
-  /* v3.63.260 — Semantic green treatment: "ready to go, this is what's
-     incoming". Distinct from the gold-stripe of the selected row (which
-     marks "user picked this"). Dark mode uses near-black --bg so the
-     panel reads as the deepest layer; light mode override below swaps
-     to a subtle green wash over white. Green inset stripe + green
-     border carry the signal in both. */
-  background: var(--bg);
-  border-color: color-mix(in srgb, var(--green) 50%, var(--border2));
-  box-shadow: inset 4px 0 0 var(--green);
 }
 .checkpoint-row-preview-label {
   color: var(--text-dim);
@@ -11194,8 +11187,18 @@ kbd {
   text-transform: uppercase;
   flex: none;
 }
-.checkpoint-row-preview-file .checkpoint-row-preview-label {
-  /* v3.63.260 — Label color matches the semantic green of the panel. */
+
+/* v3.63.261 — Checked-only green treatment for the file panel.
+   Applies the "incoming" semantics (near-black/green-wash background +
+   green border + green inset stripe + green label) only when the
+   parent row's checkbox is ticked. Disabled rows naturally never
+   trigger this since they can't be checked. */
+.checkpoint-row:has(input:checked) .checkpoint-row-preview-file {
+  background: var(--bg);
+  border-color: color-mix(in srgb, var(--green) 50%, var(--border2));
+  box-shadow: inset 4px 0 0 var(--green);
+}
+.checkpoint-row:has(input:checked) .checkpoint-row-preview-file .checkpoint-row-preview-label {
   color: var(--green);
 }
 .checkpoint-row-preview-value {
@@ -11206,40 +11209,82 @@ kbd {
   line-height: 1.45;
 }
 
-/* v3.63.260 — Light-mode overrides. The base rules above use --bg
-   (near-black) for both the selected-row and the file-preview
-   backgrounds — that's the dark-mode "go to the extreme" treatment
-   David asked for. In light mode --bg is #f2f4f8 (the page background,
-   not black), so the base rules would produce a near-invisible row.
-   Override each to its semantic light-mode equivalent:
+/* v3.63.261 — Masked sensitive-value display with an inline 👁 reveal
+   button. Used for the License row (and future API keys row) so the
+   user sees that a real value is stored without it being readable on
+   screen by default. Clicking the eyeball toggles .is-revealed which
+   swaps the masked span for the real one. The button absorbs the click
+   (its onclick stopPropagation prevents the row's <label> from
+   toggling the checkbox at the same time). */
+.checkpoint-secret {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+  letter-spacing: 0.02em;
+  word-break: break-all;
+  max-width: 100%;
+}
+.checkpoint-secret-mask,
+.checkpoint-secret-real {
+  word-break: break-all;
+}
+.checkpoint-secret-real { display: none; }
+.checkpoint-secret.is-revealed .checkpoint-secret-mask { display: none; }
+.checkpoint-secret.is-revealed .checkpoint-secret-real { display: inline; }
+.checkpoint-secret-reveal {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  font-size: var(--fs-13);
+  line-height: 1.2;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition: color .12s, border-color .12s, background .12s;
+}
+.checkpoint-secret-reveal:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.checkpoint-secret-reveal:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* v3.63.261 — Light-mode overrides.
      • Selected row: pure white (--surface). Pops UP off the lighter
        gray default row, mirroring the dark-mode near-black pop DOWN.
-     • File preview panel: subtle green wash (8% --green over white).
-       Same "incoming, good-to-go" signal as dark mode, but a tint
-       suitable for a light surface — solid green would be aggressive
-       on white; a wash plus the green border + inset stripe carry the
-       signal without overwhelming.
-     • Local preview panel: keep at --surface2 (light gray) which in
-       light mode reads as one step UNDER white. The dark-mode base
-       rule uses --surface3 which in light mode is too dark and would
-       darken the comparison baseline more than the redesign wants. */
+     • Both preview panels (default state): --surface2 light gray.
+       Dark-mode --surface3 is too dark in light mode for the
+       comparison baseline, so override to the lighter neutral.
+     • Checked-only file panel: subtle green wash (8% --green over
+       white) instead of the dark-mode near-black. Same green border
+       + inset stripe semantics; just the right background tone for a
+       light surface. */
 [data-theme="light"] .checkpoint-row:has(input:checked) {
   background: var(--surface);
 }
-[data-theme="light"] .checkpoint-row-preview-local {
+[data-theme="light"] .checkpoint-row-preview-local,
+[data-theme="light"] .checkpoint-row-preview-file {
   background: var(--surface2);
 }
-[data-theme="light"] .checkpoint-row-preview-file {
+[data-theme="light"] .checkpoint-row:has(input:checked) .checkpoint-row-preview-file {
   background: color-mix(in srgb, var(--green) 8%, var(--surface));
 }
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .checkpoint-row:has(input:checked) {
     background: var(--surface);
   }
-  [data-theme="auto"] .checkpoint-row-preview-local {
+  [data-theme="auto"] .checkpoint-row-preview-local,
+  [data-theme="auto"] .checkpoint-row-preview-file {
     background: var(--surface2);
   }
-  [data-theme="auto"] .checkpoint-row-preview-file {
+  [data-theme="auto"] .checkpoint-row:has(input:checked) .checkpoint-row-preview-file {
     background: color-mix(in srgb, var(--green) 8%, var(--surface));
   }
 }
@@ -11267,12 +11312,16 @@ kbd {
     left: calc(-1 * var(--space-10) - 6px);
     top: 50%;
     transform: translateY(-50%);
-    /* v3.63.260 — Arrow matches the green semantic of the file panel
-       (incoming, good-to-go) rather than the gold of user-selection. */
-    color: var(--green);
+    /* v3.63.261 — Default chevron is neutral. Only goes green when
+       the row is checked (see the :has(input:checked) override below)
+       — matches the file-panel green being conditional on selection. */
+    color: var(--text-dim);
     font-size: var(--fs-16);
     font-weight: 700;
     pointer-events: none;
+  }
+  .checkpoint-row:has(input:checked) .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
+    color: var(--green);
   }
 }
 
