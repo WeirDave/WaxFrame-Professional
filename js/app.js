@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260610-031
+// Build: 20260610-032
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -16598,6 +16598,40 @@ async function runRound(opts) {
   // not user-initiated double-clicks, so the guard doesn't apply.
   if (btn?.classList.contains('running') && !_resumedFromPartial) return;
 
+  // v3.63.256 — Auto-route to surgical retry when the prior round was halted
+  // by a bee-fatal failure. Without this, the user's natural action after
+  // fixing the bee (clicking Smoke or toggling Auto on) fires a fresh
+  // runRound that overwrites _partialRound and re-bills every healthy bee —
+  // the exact scenario the v3.63.252-255 work was supposed to prevent. The
+  // troubleshooting card's "Re-send" button still works, but it only helps
+  // if the card is still on screen; once dismissed, this auto-route is the
+  // only surfaced recovery path. Guarded by:
+  //   • !_resumedFromPartial — don't recurse into ourselves
+  //   • _partialRound.pausedHalted — set in the halt block below; ensures
+  //     this routes only when the prior round was paused (not after a
+  //     normal degraded-success continue)
+  //   • failedAIIds[0] still in activeAIs — bee wasn't removed from hive
+  //   • retrySingleAIInPartialRound is defined
+  if (!_resumedFromPartial && window._partialRound &&
+      window._partialRound.pausedHalted &&
+      Array.isArray(window._partialRound.failedAIIds) &&
+      window._partialRound.failedAIIds.length > 0 &&
+      typeof retrySingleAIInPartialRound === 'function') {
+    const _resumeAIId = window._partialRound.failedAIIds[0];
+    const _resumeAI = (Array.isArray(activeAIs) ? activeAIs : []).find(a => a.id === _resumeAIId);
+    if (_resumeAI) {
+      consoleLog(`🔁 Resuming halted Round ${window._partialRound.round} surgically — re-sending ${_resumeAI.name} (fix-then-Smoke routes here automatically, instead of re-billing every healthy bee).`, 'info');
+      await retrySingleAIInPartialRound(_resumeAIId);
+      return;
+    }
+    // Bee was removed from the hive between halt and retry. Clear the
+    // paused state and fall through to a fresh round — that's the
+    // honest behavior since the cached set's set of reviewers no longer
+    // matches the active hive shape.
+    window._partialRound = null;
+    consoleLog(`🔁 Halted round's failed bee no longer in the hive — clearing paused state, firing a fresh round.`, 'warn');
+  }
+
   // v3.56.15 — A round is firing; clear any pending churn hold and re-arm the
   // detector (it self-disables while _churnPending is true).
   window._churnPending = false;
@@ -16863,8 +16897,14 @@ async function runRound(opts) {
   // on !_resumedFromPartial precisely so a halt that's mid-recovery isn't
   // accidentally cleared.
   if (window._beeFatalInRound && !_resumedFromPartial) {
-    consoleLog(`🛑 Round ${round} halted — bee-fatal failure detected. Builder phase skipped to save the degraded call. Fix the flagged bee and click "Re-send" on the card to finalize.`, 'warn');
-    setStatus(`⏸ Round ${round} paused — fix the flagged bee and Re-send to finalize`);
+    // v3.63.256 — Mark the partial round as paused so the next runRound
+    // entry auto-routes to retrySingleAIInPartialRound instead of firing
+    // fresh. Without this flag, dismissing the troubleshooting card left
+    // the user with no surfaced recovery — Smoke and Auto-toggle both
+    // re-billed every healthy bee.
+    if (window._partialRound) window._partialRound.pausedHalted = true;
+    consoleLog(`🛑 Round ${round} halted — bee-fatal failure detected. Builder phase skipped to save the degraded call. Fix the flagged bee, then click Smoke (or toggle Auto) to finalize — it'll auto-route to a surgical retry instead of re-billing every bee.`, 'warn');
+    setStatus(`⏸ Round ${round} paused — fix the flagged bee, then click Smoke to finalize`);
     if (btn) {
       btn.classList.remove('running');
       const lbl = btn.querySelector('.shake-wide-label');

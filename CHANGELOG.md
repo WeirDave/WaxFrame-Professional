@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.256
+
+**Smoke/Auto auto-routes to surgical retry after a halt — no more card-button hunting**
+
+Build: `20260610-032`<br>
+Released: `2026-06-10`
+
+### The UX gap David hit
+
+v3.63.255 halted Round 14 correctly when Claude's key was bogus, but after fixing the key the user dismissed the troubleshooting card (or it auto-closed) and clicked Smoke / toggled Auto — both of which fired a fresh `runRound()` that overwrote the cached partial state and re-billed all 10 reviewers. The Re-send button only existed on the card; once the card was gone, the surgical retry was unreachable. So the v3.63.252–255 savings only materialized if the user remembered to click Re-send *before* dismissing the card, which is fragile.
+
+### What changed
+
+`runRound` now intercepts at the entry: if the prior round is in a paused/halted state (`window._partialRound.pausedHalted === true`) and there's a recorded failing bee id, it routes to `retrySingleAIInPartialRound` for that bee instead of firing a fresh round. So:
+
+- The card's **Re-send {ai}'s prompt only** button still works (unchanged).
+- Now ALSO: dismissing the card and clicking **Smoke the Hive** (or toggling Auto back on) does the same thing — re-fires only the failed bee, splices the response into the cached set, runs the Builder once with the complete set.
+- Console line: `🔁 Resuming halted Round N surgically — re-sending {ai} (fix-then-Smoke routes here automatically, instead of re-billing every healthy bee).`
+
+`WF_DEBUG.showCard` now also records the failing bee's `ctx.aiId` to `window._partialRound.failedAIIds` when a bee-fatal card fires, so the auto-route has the bee id to target. The halt block sets `_partialRound.pausedHalted = true`. Both flags clear naturally when the surgical retry succeeds (the resumed runRound writes a fresh `_partialRound` on its next start) or when the user starts a fresh project (`clearProject` nulls `_partialRound` entirely).
+
+Edge case: if the failing bee was removed from the hive between halt and retry (user disabled it, switched profile, etc.), the auto-route clears `_partialRound` and falls through to a fresh round — that's the honest behavior since the cached reviewer set no longer matches the active hive shape.
+
+### Status message updates
+
+- Console: `🛑 Round N halted — bee-fatal failure detected. Builder phase skipped to save the degraded call. Fix the flagged bee, then click Smoke (or toggle Auto) to finalize — it'll auto-route to a surgical retry instead of re-billing every bee.`
+- Status bar: `⏸ Round N paused — fix the flagged bee, then click Smoke to finalize`
+- Toast on auto-cancel: `🤖 Auto Mode off — fix {ai} and click Smoke to finalize` (was `…use Re-send…`)
+
+### Files touched
+
+- [js/wf-debug.js](js/wf-debug.js) — `showCard` records failing bee to `_partialRound.failedAIIds`; toast text updated to "click Smoke"
+- [js/app.js](js/app.js) — `runRound` entry auto-routes to `retrySingleAIInPartialRound` when paused-halt state is detected; halt block sets `pausedHalted` flag and updates the console + status message
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.255
 
 **Round now pauses BEFORE the Builder phase when a bee-fatal error fires**
