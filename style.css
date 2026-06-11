@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-045
+   Build: 20260610-046
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11596,18 +11596,20 @@ kbd {
     flex: unset;
     min-width: 0;
   }
-  /* v3.63.269 — Restore the → / = arrow indicator above the chevron.
+  /* v3.63.269 / v3.63.270 — → / = arrow indicator above the chevron.
      David: "don't forget the = or the -> in between the cards please".
-     The chevron is centered in the column 2 cell; the arrow now
-     anchors to the TOP of the file preview's bounds so both sit in
-     the gap between the cards without overlapping. The arrow keeps
-     the existing semantics: neutral → by default, green → when the
-     row is checked, green = when the row is a match. */
+     Anchored to the TOP of the file preview (top: --space-8) so it sits
+     above the centered chevron; horizontally positioned 16px LEFT of
+     the file preview's left edge so it lands in the gap between cards.
+     v3.63.270 adds z-index:2 so the arrow paints ABOVE the chevron —
+     without it the chevron's opaque background covered the arrow
+     because the chevron is later in DOM order. */
   .checkpoint-row-preview-local + .checkpoint-row-preview-file::before {
     content: "→";
     position: absolute;
     left: calc(-1 * var(--space-10) - 6px);
     top: var(--space-8);
+    z-index: 2;
     color: var(--text-dim);
     font-size: var(--fs-15);
     font-weight: 700;
