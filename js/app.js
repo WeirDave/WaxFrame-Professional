@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260611-004
+// Build: 20260611-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260611-004';         // build stamp — update each session
+const BUILD       = '20260611-005';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -20183,21 +20183,33 @@ function renderRoundHistory() {
     el.innerHTML = '<div class="round-history-empty">No completed rounds yet. Each round is saved here automatically.</div>';
     return;
   }
+  // v3.63.278 — All fields read off `h` (history entry) are user-controllable
+  // via checkpoint restore: SECURITY.md scopes "crafted backups" as an
+  // in-scope threat. Pre-v3.63.278 these landed in innerHTML unescaped, so
+  // a malicious checkpoint with `history[0].label = '<img src=x onerror=…>'`
+  // would XSS at next render of the Round History panel. Escape every field
+  // pulled from `h` before interpolation; `phaseLabel` derives from the
+  // PHASES constant via a lookup so it stays code-controlled, but we still
+  // pipe it through esc() for defense-in-depth in case the lookup ever
+  // falls back to `h.phase` (already escaped) or future PHASES entries.
   el.innerHTML = history.slice().reverse().map((h, ri) => {
     const idx = history.length - 1 - ri;
     const phaseLabel = PHASES.find(p => p.id === h.phase)?.label || h.phase || '';
     const wordCount = h.doc ? h.doc.trim().split(/\s+/).length : 0;
     const responseCount = Object.values(h.responses || {}).filter(Boolean).length;
+    const safeLabel    = esc(h.label || phaseLabel);
+    const safeTime     = esc(h.timestamp || '');
+    const safeRound    = Number.isFinite(h.round) ? h.round : 0;
 
     if (h.failed) {
       const failLabels = { bloat: 'Output too long', conflicts: 'Missing conflicts block', delimiters: 'Malformed output', api: 'API error', unknown: 'Unknown error' };
-      const failLabel = failLabels[h.failReason] || 'Rejected';
+      const failLabel = failLabels[h.failReason] || 'Rejected'; // safe — lookup against literal map
       return `
       <div class="round-hist-item round-hist-item--failed">
         <div class="round-hist-hdr">
           <div class="round-hist-hdr-left">
-            <span class="round-hist-badge round-hist-badge--failed">⚠️ Round ${h.round} — Failed</span>
-            <span class="round-hist-meta">${h.label || phaseLabel} · ${h.timestamp}</span>
+            <span class="round-hist-badge round-hist-badge--failed">⚠️ Round ${safeRound} — Failed</span>
+            <span class="round-hist-meta">${safeLabel} · ${safeTime}</span>
             <span class="round-hist-stats round-hist-stats--failed">${failLabel} · Document unchanged · API tokens consumed</span>
           </div>
         </div>
@@ -20208,8 +20220,8 @@ function renderRoundHistory() {
     <div class="round-hist-item">
       <div class="round-hist-hdr">
         <div class="round-hist-hdr-left">
-          <span class="round-hist-badge">${h.round === 0 ? 'Original' : 'Round ' + h.round}</span>
-          <span class="round-hist-meta">${h.label || phaseLabel} · ${h.timestamp}</span>
+          <span class="round-hist-badge">${safeRound === 0 ? 'Original' : 'Round ' + safeRound}</span>
+          <span class="round-hist-meta">${safeLabel} · ${safeTime}</span>
           <span class="round-hist-stats">${wordCount} words · ${responseCount} response${responseCount!==1?'s':''}</span>
         </div>
         <div class="round-hist-hdr-right">
