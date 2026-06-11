@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.271
+
+**Preview card content centered + tighter padding so short content reads balanced**
+
+Build: `20260610-047`<br>
+Released: `2026-06-10`
+
+### What David flagged
+
+> "you have too much of an indent on the top card 'in Your Current State'"
+
+Root cause: the previews container has `align-items: stretch` so the local preview card gets pulled to match the file preview's height. When the local has short content (e.g. AI list summary: "10 active · 4 custom · internet mode") and the file has the same — or even when the file panel has longer text and pulls the row taller — the local card's 2-line content (label + value) sat at the TOP with a large empty gap at the bottom. With the chevron centered in the same row right next to it, the asymmetry read as "the top card has too much indent" — content high in the card, lots of dead space below.
+
+### Fix
+
+Two coordinated tweaks to `.checkpoint-row-preview`:
+
+1. **`justify-content: center`** — the card's flex children (label + value) now vertically center inside the stretched card height. Short content sits at the visual center, balanced against the centered chevron beside it. Tall content fills naturally.
+2. **`padding: var(--space-8) var(--space-12)`** — reduced top/bottom padding from `--space-10` to `--space-8` so short cards don't feel padded out. Horizontal padding unchanged.
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row-preview` adds `justify-content: center`; vertical padding tightened from 10 to 8
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.270
 
 **Hotfix: → / = arrow was hidden behind the chevron (z-index lift)**
