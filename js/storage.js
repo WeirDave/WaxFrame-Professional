@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260610-042
+// Build: 20260610-043
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1817,7 +1817,14 @@ function _initCheckpointExpandUI() {
       ev.stopPropagation();
       _toggleCheckpointRowExpand(row);
     };
-    row.appendChild(btn);
+    // v3.63.267 — Append inside .checkpoint-row-previews instead of the
+    // row itself. At desktop widths the previews flex-row, so the chevron
+    // becomes a third inline item beside the two preview cards (David:
+    // "shrink down the cards and move the Chevron up to the same row").
+    // At laptop widths the previews stack vertically, so the chevron
+    // naturally falls below them — same visual as before.
+    const previewsEl = row.querySelector('.checkpoint-row-previews');
+    (previewsEl || row).appendChild(btn);
   });
 }
 
