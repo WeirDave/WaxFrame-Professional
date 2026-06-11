@@ -2,6 +2,28 @@
 
 ---
 
+## v3.63.272
+
+**Preview cards align with detail cards · chevron drops to bottom of column · arrow tight above it**
+
+Build: `20260610-048`<br>
+Released: `2026-06-10`
+
+### Three coordinated fixes per David's annotated screenshot
+
+**1. Preview cards now align with detail cards below.** v3.63.271 left the `.checkpoint-row-previews` container with `margin-left: 28px` (a holdover from when the previews aligned with the description text under the checkbox). The detail-cols container below has no such margin, so the preview cards floated 28px to the right of the detail cards — column edges never lined up. David: "the in your current state card needs to move over to the left". Removed the margin. Both rows now start at the row's content edge, byte-for-byte aligned top-to-bottom. The description text under the checkbox is slightly to the right of them now, which is fine — it's interpretive text, not a card.
+
+**2. Chevron drops to the bottom of its column.** Was `align-self: center` so the chevron centered vertically in the row. David: "the chevron can be in the middle but further down so that on top of it the arrow or the = can live". Now `align-self: end` + `margin-bottom: var(--space-12)` so it sits near the bottom of the middle column with a small gap from the card edge.
+
+**3. Arrow indicator stacks tight above the chevron.** Was anchored to `top: var(--space-8)` (top of the file preview) — far above the chevron at the bottom. Now anchored to `bottom: 48px` so it sits 4px above the chevron's top edge. Tight visual stack: arrow on top, chevron right below, both in the column gap between the two preview cards.
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row-previews` `margin-left: 28px` removed; chevron in desktop grid uses `align-self: end` + `margin-bottom: var(--space-12)`; arrow pseudo-element repositioned to `bottom: 48px` for a tight stack above the chevron
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.271
 
 **Preview card content centered + tighter padding so short content reads balanced**

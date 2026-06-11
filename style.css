@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-047
+   Build: 20260610-048
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11158,7 +11158,15 @@ kbd {
 .checkpoint-row-previews {
   display: flex; flex-direction: column;
   gap: var(--space-8);
-  margin-left: 28px;          /* align with text under checkbox */
+  /* v3.63.272 — `margin-left: 28px` removed. It was added in an earlier
+     iteration to align the previews with the description text under the
+     checkbox, but with v3.63.263's expand-on-click detail panel the
+     detail cards below have no such margin, so the preview cards floated
+     28px to the right of the detail cards and the column edges never
+     lined up. David: "the in your current state card needs to move
+     over to the left". Both rows now start at the row's content edge,
+     and the description text being slightly to the right of them is
+     fine — it's interpreted text, not a card. */
 }
 .checkpoint-row-preview {
   display: flex;
@@ -11598,8 +11606,17 @@ kbd {
   .checkpoint-row-previews .checkpoint-row-expand-btn {
     grid-column: 2;
     grid-row: 1;
-    align-self: center;
+    /* v3.63.272 — Drop the chevron toward the bottom of the middle
+       column instead of vertical-center. David: "the chevron can be
+       in the middle but further down so that on top of it the arrow
+       or the = can live". align-self: end pins it to the bottom of
+       the stretched cell; margin-bottom keeps it visually inside the
+       card area rather than flush with the bottom edge. The arrow
+       pseudo-element (above) repositions above the chevron via the
+       matching bottom offset. */
+    align-self: end;
     justify-self: center;
+    margin-bottom: var(--space-12);
   }
   .checkpoint-row-preview {
     flex: unset;
@@ -11617,7 +11634,13 @@ kbd {
     content: "→";
     position: absolute;
     left: calc(-1 * var(--space-10) - 6px);
-    top: var(--space-8);
+    /* v3.63.272 — Anchor to BOTTOM so it sits just above the chevron.
+       Math: chevron has margin-bottom var(--space-12) (12px) and is
+       32px tall, so its top edge is at 12 + 32 = 44px from the file
+       preview's bottom. The arrow at bottom: 48px sits 4px above the
+       chevron's top — tight visual stack David asked for ("on top of
+       it the arrow or the = can live"). */
+    bottom: 48px;
     z-index: 2;
     color: var(--text-dim);
     font-size: var(--fs-15);
