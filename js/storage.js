@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260611-004
+// Build: 20260611-005
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1279,11 +1279,20 @@ function switchCheckpointMode(mode) {
     // file with anyone else" — users who care will see it and untick;
     // users who don't read are usually saving for themselves and benefit
     // from getting the keys in the file.
+    // v3.63.278 — keys + license default OFF. Pre-v3.63.278 every row
+    // pre-ticked, including the API-keys row. A user who clicked Save
+    // without reading the row's "Sensitive — leave off when sharing"
+    // warning shipped their API keys inside the JSON file, with no
+    // recoverable safety once the file was attached to an email / posted
+    // in chat / shared with a colleague. Two clicks now ("API keys" then
+    // "License key") is the explicit opt-in path for personal backups;
+    // the "Select All" pill at the top of the panel restores the prior
+    // one-click "full restore" behavior for users who want it.
     _setSaveCheckpointDefaults({
       projectInfo:true, refMaterial:true, startingDoc:true,
       session:true,
-      aiList:true, models:true, keys:true, builder:true,
-      license:true
+      aiList:true, models:true, keys:false, builder:true,
+      license:false
     });
     _refreshSaveCheckpointCurrentSummaries();
   }
