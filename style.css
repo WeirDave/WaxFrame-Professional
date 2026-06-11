@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-046
+   Build: 20260610-047
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11166,7 +11166,16 @@ kbd {
   gap: 4px;
   font-size: var(--fs-13);
   line-height: 1.5;
-  padding: var(--space-10) var(--space-12);
+  /* v3.63.271 — Tighter top/bottom padding + center content vertically.
+     The previews container is `align-items: stretch` so the local card
+     gets pulled to match the file card's height; the local's content
+     (2 lines: label + value) then sat at the top with a large empty
+     gap at the bottom, which David called "too much of an indent on
+     the top card". Centering the column flex children + slightly
+     reducing top/bottom padding keeps short content visually
+     balanced against the chevron centered in the same row. */
+  padding: var(--space-8) var(--space-12);
+  justify-content: center;
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
