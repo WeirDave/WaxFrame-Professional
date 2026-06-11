@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.260
+
+**Checkpoints semantic color split — gold = "you picked this", green = "this is what's incoming"**
+
+Build: `20260610-036`<br>
+Released: `2026-06-10`
+
+### What David asked for
+
+After v3.63.259's lighter-direction pop landed cleanly, David wanted to push further on the semantic separation:
+
+> "The in this checkpoint file color of card should be like green — meaning you know like we're good to go, this is what's coming in kind of thing. Then on the dark mode the selected cards should be black background and the in this checkpoint ones should be black and the in the current state should be the color gray that you currently have the in this checkpoint files set to. So we're basically going from white to black in light to dark mode, and I also feel like the green color should be there too so that should be the same."
+
+The visual story:
+- **Gold** stays on the selected-row stripe — semantic: "user picked this section to save/restore".
+- **Green** moves onto the "in this checkpoint file" panel — semantic: "this is what's incoming, ready to go".
+- **Surface lightness** moves to the theme extreme — pure white in light mode, near-black in dark mode — so the comparison reads against the cleanest possible canvas.
+
+### What changed
+
+Three coordinated palette swaps in [style.css](style.css):
+
+1. **Selected row background goes to the theme extreme.** Light mode: `var(--surface)` (`#ffffff`, pure white — unchanged from v3.63.259). Dark mode: `var(--bg)` (`#0a0c12`, near-black) — was `var(--surface3)` (lighter dark gray). The row now sits at the cleanest possible canvas in each theme.
+
+2. **"In your current state" panel uses `var(--surface3)`.** In dark mode that's `#1e2130` — the lighter dark gray that the file panel used to use (David: "the in the current state should be the color gray that you currently have the in this checkpoint files set to"). In light mode the override pins it to `var(--surface2)` instead, which is the right light-mode equivalent (`#f0f2f8`, one step under white). Neutral border, no inset stripe — this is the comparison baseline.
+
+3. **"In this checkpoint file" panel gets the green semantic treatment.** Dark mode: `var(--bg)` background (near-black, sits at the same depth as the selected row) + `var(--green)` border-mix and inset stripe. Light mode override: `color-mix(in srgb, var(--green) 8%, var(--surface))` background — subtle green wash over white — + the same green border-mix and inset stripe. Label color switched from gold to green; chevron arrow between panels switched from gold to green. The whole "incoming" half of the comparison now reads as green-coded.
+
+### Files touched
+
+- [style.css](style.css) — `.checkpoint-row:has(input:checked)` base background → `--bg`; `.checkpoint-row-preview-local` background → `--surface3`; `.checkpoint-row-preview-file` background → `--bg`, border-color/box-shadow → green-mix variants; `.checkpoint-row-preview-file .checkpoint-row-preview-label` color → `--green`; chevron `::before` color → `--green`; light-mode override block expanded to handle the three per-theme exceptions (selected row → white, local → surface2, file → 8% green wash over white)
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.259
 
 **Checkpoints selected-row pops brighter instead of dimmer — matches the user-manual card aesthetic**

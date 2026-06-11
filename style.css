@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-035
+   Build: 20260610-036
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11066,14 +11066,14 @@ kbd {
 .checkpoint-row input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .4; }
 .checkpoint-row:has(input:disabled) { cursor: not-allowed; opacity: .55; }
 
-/* v3.63.259 — Selected state. Row "pops" brighter instead of dimmer
-   — surface lifts a step toward white (--surface3 in dark mode is
-   #1e2130, lighter than --surface2; --surface in light mode is true
-   white, lighter than --surface2). Accent treatment lives on the
-   border + the 4px inset stripe on the left edge. Same shape in both
-   themes: the "edge card block" David asked to preserve. */
+/* v3.63.260 — Selected state goes to the theme's extreme background
+   — true white in light mode, near-black --bg in dark mode. Visually
+   David's "going from white to black in light to dark mode". The
+   surfaces inside the row (local-state gray panel, incoming-file green
+   panel) then read against that extreme as their own card layers.
+   Gold accent stripe + border still mark "user picked this". */
 .checkpoint-row:has(input:checked) {
-  background: var(--surface3);
+  background: var(--bg);
   border-color: var(--accent);
   box-shadow: inset 4px 0 0 var(--accent);
 }
@@ -11166,20 +11166,25 @@ kbd {
   position: relative;
 }
 .checkpoint-row-preview-local {
-  /* Muted — "where you are now". */
+  /* v3.63.260 — "Where you are now" panel uses --surface3 (which in
+     dark mode is the LIGHTER dark gray, #1e2130 — pops up against the
+     near-black selected-row background; in light mode is the darker
+     neutral, sits one step below the white selected-row background).
+     Neutral border, no inset stripe — this is the comparison baseline,
+     not the highlighted action. */
+  background: var(--surface3);
   border-color: var(--border2);
 }
 .checkpoint-row-preview-file {
-  /* v3.63.259 — "What's coming in" panel uses the same edge-card-block
-     treatment David approved on the selected-row state: brighter
-     background (--surface3 in dark = lighter; light mode override below
-     swaps to --surface = white), neutral border, 4px accent stripe down
-     the left edge. Matches the user-manual section-card aesthetic in
-     both themes. Was a gold-wash mix before, which produced a muddy
-     beige in light mode (#c97c06 mixed into off-white reads tan). */
-  background: var(--surface3);
-  border-color: var(--border2);
-  box-shadow: inset 4px 0 0 var(--accent);
+  /* v3.63.260 — Semantic green treatment: "ready to go, this is what's
+     incoming". Distinct from the gold-stripe of the selected row (which
+     marks "user picked this"). Dark mode uses near-black --bg so the
+     panel reads as the deepest layer; light mode override below swaps
+     to a subtle green wash over white. Green inset stripe + green
+     border carry the signal in both. */
+  background: var(--bg);
+  border-color: color-mix(in srgb, var(--green) 50%, var(--border2));
+  box-shadow: inset 4px 0 0 var(--green);
 }
 .checkpoint-row-preview-label {
   color: var(--text-dim);
@@ -11190,7 +11195,8 @@ kbd {
   flex: none;
 }
 .checkpoint-row-preview-file .checkpoint-row-preview-label {
-  color: var(--accent);
+  /* v3.63.260 — Label color matches the semantic green of the panel. */
+  color: var(--green);
 }
 .checkpoint-row-preview-value {
   color: var(--text);
@@ -11200,26 +11206,41 @@ kbd {
   line-height: 1.45;
 }
 
-/* v3.63.259 — Light-mode override for the selected-row background only.
-   In dark mode --surface3 (#1e2130) is LIGHTER than --surface2 (the
-   row default), so the base rule above lifts the checked row toward
-   white as intended. In light mode --surface3 (#e4e7f4) is DARKER than
-   --surface2 (#f0f2f8) — that produced a "row gets darker on select"
-   feel that David specifically rejected ("should go like the other
-   direction and maybe go white"). Override to var(--surface) (true
-   white #ffffff) so the selected row visibly pops UPWARD instead of
-   sinking, matching the user-manual card aesthetic in both themes.
-   Border + inset stripe + hover treatment from the base rules already
-   apply correctly to both themes; only the selected-row background
-   needs the per-theme correction. */
-[data-theme="light"] .checkpoint-row:has(input:checked),
-[data-theme="light"] .checkpoint-row-preview-file {
+/* v3.63.260 — Light-mode overrides. The base rules above use --bg
+   (near-black) for both the selected-row and the file-preview
+   backgrounds — that's the dark-mode "go to the extreme" treatment
+   David asked for. In light mode --bg is #f2f4f8 (the page background,
+   not black), so the base rules would produce a near-invisible row.
+   Override each to its semantic light-mode equivalent:
+     • Selected row: pure white (--surface). Pops UP off the lighter
+       gray default row, mirroring the dark-mode near-black pop DOWN.
+     • File preview panel: subtle green wash (8% --green over white).
+       Same "incoming, good-to-go" signal as dark mode, but a tint
+       suitable for a light surface — solid green would be aggressive
+       on white; a wash plus the green border + inset stripe carry the
+       signal without overwhelming.
+     • Local preview panel: keep at --surface2 (light gray) which in
+       light mode reads as one step UNDER white. The dark-mode base
+       rule uses --surface3 which in light mode is too dark and would
+       darken the comparison baseline more than the redesign wants. */
+[data-theme="light"] .checkpoint-row:has(input:checked) {
   background: var(--surface);
 }
+[data-theme="light"] .checkpoint-row-preview-local {
+  background: var(--surface2);
+}
+[data-theme="light"] .checkpoint-row-preview-file {
+  background: color-mix(in srgb, var(--green) 8%, var(--surface));
+}
 @media (prefers-color-scheme: light) {
-  [data-theme="auto"] .checkpoint-row:has(input:checked),
-  [data-theme="auto"] .checkpoint-row-preview-file {
+  [data-theme="auto"] .checkpoint-row:has(input:checked) {
     background: var(--surface);
+  }
+  [data-theme="auto"] .checkpoint-row-preview-local {
+    background: var(--surface2);
+  }
+  [data-theme="auto"] .checkpoint-row-preview-file {
+    background: color-mix(in srgb, var(--green) 8%, var(--surface));
   }
 }
 
@@ -11246,7 +11267,9 @@ kbd {
     left: calc(-1 * var(--space-10) - 6px);
     top: 50%;
     transform: translateY(-50%);
-    color: var(--accent);
+    /* v3.63.260 — Arrow matches the green semantic of the file panel
+       (incoming, good-to-go) rather than the gold of user-selection. */
+    color: var(--green);
     font-size: var(--fs-16);
     font-weight: 700;
     pointer-events: none;
