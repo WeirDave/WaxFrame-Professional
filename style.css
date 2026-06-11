@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260610-033
+   Build: 20260610-034
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -11185,6 +11185,47 @@ kbd {
   word-break: break-word;
   flex: 1;
   line-height: 1.45;
+}
+
+/* v3.63.258 — Light-mode overrides for the highlighted states. The
+   dark-mode color-mix approach (subtle accent wash over dark surface)
+   doesn't translate to light mode because --accent in light is a deep
+   burnt-orange (#c97c06); mixing it with an off-white surface that has
+   its own warm undertones produces a muddy tan/beige. The fix is to
+   drop the background-mix entirely and let crisp border + inset accent
+   stripe carry the "selected" / "incoming" signals. Reads clean on
+   white the way Linear/Stripe-style row pickers do.
+   Both [data-theme="light"] (explicit) and prefers-color-scheme: light
+   + [data-theme="auto"] (OS-following) variants get the override. */
+[data-theme="light"] .checkpoint-row:hover {
+  background: var(--surface3);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border2));
+}
+[data-theme="light"] .checkpoint-row:has(input:checked) {
+  background: var(--surface3);
+  border-color: var(--accent);
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+[data-theme="light"] .checkpoint-row-preview-file {
+  background: var(--surface);
+  border-color: var(--border2);
+  box-shadow: inset 4px 0 0 var(--accent);
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .checkpoint-row:hover {
+    background: var(--surface3);
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border2));
+  }
+  [data-theme="auto"] .checkpoint-row:has(input:checked) {
+    background: var(--surface3);
+    border-color: var(--accent);
+    box-shadow: inset 4px 0 0 var(--accent);
+  }
+  [data-theme="auto"] .checkpoint-row-preview-file {
+    background: var(--surface);
+    border-color: var(--border2);
+    box-shadow: inset 4px 0 0 var(--accent);
+  }
 }
 
 /* v3.63.257 — Desktop reflow. At ≥1200px the two preview cards sit

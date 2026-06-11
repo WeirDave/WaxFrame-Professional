@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.258
+
+**Checkpoints light-mode polish — muddy brown highlight replaced with clean border treatment**
+
+Build: `20260610-034`<br>
+Released: `2026-06-10`
+
+### What David flagged
+
+v3.63.257's row hover and selected-state styles used `color-mix(in srgb, var(--accent) N%, var(--surface2))`. This works beautifully in dark mode because the burnt-orange accent (`#c97c06`) over a dark blue-gray surface (`#181b24`) produces a subtle warm amber wash — on-brand and visible without dominating. In light mode, however, the same formula mixes a deep saturated orange with off-white blue-gray surface tones to produce a **muddy beige/tan** that reads as unkempt rather than accent-tinted. Reference Material row's checked state was the most visible offender — looked like a coffee stain instead of a "this is selected" signal.
+
+### The fix
+
+Light-mode overrides that drop the background color-mix entirely and let crisp border + inset accent stripe carry the signal — the same approach Linear and Stripe use for selected rows on white. Three states get the treatment, gated on both `[data-theme="light"]` (explicit user pick) and `@media (prefers-color-scheme: light) [data-theme="auto"]` (OS-following):
+
+1. **Row hover** — `background: var(--surface3)` (neutral darker tint, no gold mix) + `border-color: color-mix(accent 55%, border2)` (visible amber border at the edge, but mixed against a neutral so it stays crisp).
+2. **Row selected** (`:has(input:checked)`) — `background: var(--surface3)` + `border-color: var(--accent)` (full accent, no mix) + `box-shadow: inset 4px 0 0 var(--accent)` (a 4px accent stripe down the left edge that gives the "actively selected" emphasis without expanding the row's footprint or shifting layout).
+3. **"In this checkpoint file" preview panel** — `background: var(--surface)` (clean white) + `border-color: var(--border2)` (neutral) + `box-shadow: inset 4px 0 0 var(--accent)` (same left-edge stripe pattern, ties visually to the selected-row treatment).
+
+Dark mode is unchanged — its color-mix wash still reads beautifully.
+
+### Files touched
+
+- [style.css](style.css) — three `[data-theme="light"]` overrides + matching `@media (prefers-color-scheme: light) [data-theme="auto"]` block for the same three rules
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.257
 
 **Checkpoints page visual redesign — hover overlap fixed, two-column diff at desktop**
