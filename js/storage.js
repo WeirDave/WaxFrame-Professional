@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260610-038
+// Build: 20260610-039
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1182,6 +1182,19 @@ async function _refreshSaveCheckpointCurrentSummaries() {
     // _checkpointSecretHTML / _setCheckpointPreviewValue.
     _setCheckpointPreviewValue(el, summaries[key]);
   }
+  // v3.63.263 — Stash the live state so the expand-on-click detail
+  // panels (Phase B) can read fresh data on first expand without
+  // re-awaiting IDB or re-parsing localStorage. Reset on every refresh
+  // so the cache never lags behind the panel's rendered summary.
+  window._checkpointDataCache = window._checkpointDataCache || {};
+  window._checkpointDataCache.live = {
+    project:    liveProject,
+    hive:       liveHive,
+    sessionIdb: liveSessionIDB,
+    licenseRaw: licenseRaw,
+  };
+  // Re-init the expand UI in case markup was just (re-)mounted.
+  _initCheckpointExpandUI();
 }
 
 // v3.63.229 — Bulk select-all / select-none for the active panel. Skips
@@ -1768,6 +1781,263 @@ window.toggleCheckpointSecret = function(ev) {
   if (wrap) wrap.classList.toggle('is-revealed');
 };
 
+/* ════════════════════════════════════════════════════════════
+   v3.63.263 — Expand-on-click detail panels (Phase B)
+   ────────────────────────────────────────────────────────────
+   Matches the bee-card .ai-setup-row.is-expanded pattern. Each
+   .checkpoint-row gets an absolutely-positioned chevron button at
+   its top-right corner. Clicking the chevron toggles a slide-down
+   detail panel below the previews; the panel content is rendered
+   lazily on first expand from the data cached at populate time.
+
+   The chevron is a <button> so the browser doesn't forward its click
+   to the parent <label>'s checkbox. The detail panel's own click
+   handler additionally stopPropagation's so users can read/select
+   inside the panel without toggling the row's checkbox.
+
+   Per-row detail content comes from _renderCheckpointDetailContent()
+   which dispatches to a renderer per scope key. Restore mode renders
+   two columns (current | file); Save mode renders one (current only).
+   ════════════════════════════════════════════════════════════ */
+function _initCheckpointExpandUI() {
+  document.querySelectorAll('.checkpoint-row').forEach(row => {
+    if (row.querySelector('.checkpoint-row-expand-btn')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'checkpoint-row-expand-btn';
+    btn.innerHTML = '▾';
+    btn.title = 'Show details';
+    btn.setAttribute('aria-label', 'Show details');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.onclick = (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      _toggleCheckpointRowExpand(row);
+    };
+    row.appendChild(btn);
+  });
+}
+
+function _toggleCheckpointRowExpand(row) {
+  const wasExpanded = row.classList.contains('is-expanded');
+  row.classList.toggle('is-expanded');
+  const btn = row.querySelector('.checkpoint-row-expand-btn');
+  if (btn) btn.setAttribute('aria-expanded', wasExpanded ? 'false' : 'true');
+  if (!wasExpanded) _populateCheckpointDetail(row);
+}
+
+function _populateCheckpointDetail(row) {
+  const key  = _detectCheckpointRowKey(row);
+  const mode = _detectCheckpointRowMode(row);
+  if (!key) return;
+  let detailEl = row.querySelector('.checkpoint-row-detail');
+  if (!detailEl) {
+    detailEl = document.createElement('div');
+    detailEl.className = 'checkpoint-row-detail';
+    // Stop click bubbling so reading inside the panel doesn't toggle the
+    // row's checkbox via the parent <label>.
+    detailEl.addEventListener('click', (ev) => ev.stopPropagation());
+    row.appendChild(detailEl);
+  }
+  detailEl.innerHTML = _renderCheckpointDetailContent(key, mode);
+}
+
+function _detectCheckpointRowKey(row) {
+  const cb = row.querySelector('input[type="checkbox"]');
+  if (!cb) return null;
+  const m = cb.id.match(/^(?:save|restore)Scope(.+)$/);
+  if (!m) return null;
+  return m[1][0].toLowerCase() + m[1].slice(1);
+}
+function _detectCheckpointRowMode(row) {
+  const cb = row.querySelector('input[type="checkbox"]');
+  if (!cb) return 'save';
+  return cb.id.startsWith('restore') ? 'restore' : 'save';
+}
+
+function _renderCheckpointDetailContent(key, mode) {
+  const cache = window._checkpointDataCache || {};
+  const live  = cache.live || {};
+  const file  = cache.file || null;
+  const hasInFile = file && file.hasFlags && file.hasFlags[key];
+
+  const liveHTML = _detailRender(key, live, false);
+  const fileHTML = (mode === 'restore')
+    ? (hasInFile ? _detailRender(key, file, true) : '<p class="checkpoint-detail-empty">Not in this checkpoint file.</p>')
+    : null;
+
+  const labelLive = 'Current state — details';
+  const labelFile = 'Checkpoint file — details';
+
+  if (mode === 'save') {
+    return `<div class="checkpoint-detail-col"><div class="checkpoint-detail-col-label">${labelLive}</div>${liveHTML}</div>`;
+  }
+  return `<div class="checkpoint-detail-cols">
+    <div class="checkpoint-detail-col"><div class="checkpoint-detail-col-label">${labelLive}</div>${liveHTML}</div>
+    <div class="checkpoint-detail-col checkpoint-detail-col-file"><div class="checkpoint-detail-col-label">${labelFile}</div>${fileHTML}</div>
+  </div>`;
+}
+
+/* ── Per-key detail renderers ──
+   Each takes the data cache slot ({project, hive, sessionIdb, licenseRaw})
+   and a `fromFile` flag (for context in renderers that care). Return an
+   HTML string. Keep these defensive — the data may be missing/malformed
+   from older checkpoint formats. */
+function _detailRender(key, data, fromFile) {
+  switch (key) {
+    case 'projectInfo': return _detailProjectInfo(data.project);
+    case 'refMaterial': return _detailRefMaterial(data.project);
+    case 'startingDoc': return _detailStartingDoc(data.project);
+    case 'session':     return _detailSession(data.sessionIdb);
+    case 'aiList':      return _detailAIList(data.hive);
+    case 'models':      return _detailModels(data.hive);
+    case 'keys':        return _detailKeys(data.hive);
+    case 'builder':     return _detailBuilder(data.hive);
+    case 'license':     return _detailLicense(data.licenseRaw);
+    default:            return '<p class="checkpoint-detail-empty">No details available.</p>';
+  }
+}
+
+function _esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+function _detailDL(rows) {
+  if (!rows.length) return '<p class="checkpoint-detail-empty">(none)</p>';
+  return '<dl class="checkpoint-detail-dl">' + rows.map(([k, v]) =>
+    `<dt>${_esc(k)}</dt><dd>${typeof v === 'string' && v.startsWith('<') ? v : _esc(v)}</dd>`
+  ).join('') + '</dl>';
+}
+function _detailUL(items) {
+  if (!items.length) return '<p class="checkpoint-detail-empty">(none)</p>';
+  return '<ul class="checkpoint-detail-ul">' + items.map(it =>
+    `<li>${typeof it === 'string' && it.startsWith('<') ? it : _esc(it)}</li>`
+  ).join('') + '</ul>';
+}
+
+function _detailProjectInfo(p) {
+  if (!p || typeof p !== 'object') return '<p class="checkpoint-detail-empty">No project loaded.</p>';
+  const rows = [];
+  if (p.projectName)    rows.push(['Name',        p.projectName]);
+  if (p.projectVersion) rows.push(['Version',     p.projectVersion]);
+  if (p.goalDocType)    rows.push(['Document',    p.goalDocType]);
+  if (p.goalAudience)   rows.push(['Audience',    p.goalAudience]);
+  if (p.goalOutcome)    rows.push(['Outcome',     p.goalOutcome]);
+  if (p.goalScope)      rows.push(['Scope',       p.goalScope]);
+  if (p.goalTone)       rows.push(['Tone',        p.goalTone]);
+  if (p.goalNotes)      rows.push(['Notes',       p.goalNotes]);
+  if (p.lengthConstraint && typeof p.lengthConstraint === 'object') {
+    const lc = p.lengthConstraint;
+    let s = '';
+    if (lc.mode) s += lc.mode + ' · ';
+    if (lc.limit) s += lc.limit;
+    if (lc.unit) s += ' ' + lc.unit;
+    if (lc.min)  s += ' (min ' + lc.min + ')';
+    if (s.trim()) rows.push(['Length', s.trim()]);
+  }
+  if (p.exportFileName)  rows.push(['Export filename', p.exportFileName]);
+  return _detailDL(rows);
+}
+
+function _detailRefMaterial(p) {
+  const docs = (p && Array.isArray(p.referenceDocs)) ? p.referenceDocs : [];
+  if (!docs.length) return '<p class="checkpoint-detail-empty">No reference docs.</p>';
+  return _detailUL(docs.map(d => {
+    const name = d?.name || d?.filename || '(unnamed)';
+    const text = (typeof d?.text === 'string') ? d.text
+                : (typeof d?.content === 'string') ? d.content : '';
+    const src = d?.source ? ` · ${d.source}` : '';
+    return `<strong>${_esc(name)}</strong> — ${text.length.toLocaleString()} chars${_esc(src)}`;
+  }));
+}
+
+function _detailStartingDoc(p) {
+  const s = (p && typeof p.pastedDocument === 'string') ? p.pastedDocument : '';
+  if (!s.trim()) return '<p class="checkpoint-detail-empty">No starting document.</p>';
+  const preview = s.length > 400 ? s.slice(0, 400) + '…' : s;
+  return `<p class="checkpoint-detail-meta">${s.length.toLocaleString()} chars</p><pre class="checkpoint-detail-pre">${_esc(preview)}</pre>`;
+}
+
+function _detailSession(idb) {
+  if (!idb || typeof idb !== 'object') return '<p class="checkpoint-detail-empty">Session empty.</p>';
+  const rounds = Array.isArray(idb.history) ? idb.history.length : 0;
+  const doc    = typeof idb.docText === 'string' ? idb.docText : '';
+  const notes  = typeof idb.notes === 'string' ? idb.notes : '';
+  const standing = typeof idb.standingNotes === 'string' ? idb.standingNotes : '';
+  const rows = [
+    ['Rounds in history', rounds],
+    ['Working document', doc ? `${doc.length.toLocaleString()} chars` : '(empty)'],
+  ];
+  if (notes.trim())    rows.push(['Notes', `${notes.length.toLocaleString()} chars`]);
+  if (standing.trim()) rows.push(['Standing notes', `${standing.length.toLocaleString()} chars`]);
+  return _detailDL(rows);
+}
+
+function _detailAIList(hive) {
+  if (!hive || typeof hive !== 'object') return '<p class="checkpoint-detail-empty">No hive.</p>';
+  const active = Array.isArray(hive.activeAIIds) ? hive.activeAIIds : [];
+  const customs = Array.isArray(hive.customAIs) ? hive.customAIs : [];
+  const builder = typeof hive.builder === 'string' ? hive.builder : '';
+  const mode = hive.hiveMode || '';
+  const customById = new Map(customs.map(c => [c.id, c]));
+  // Display-name resolution: prefer custom AI label, fall back to id capitalized.
+  const items = active.map(id => {
+    const c = customById.get(id);
+    const name = c ? (c.label || c.name || id) : id;
+    const star = (id === builder) ? ' 🔨' : '';
+    const isCustom = !!c;
+    return `<strong>${_esc(name)}</strong>${isCustom ? ' <span class="checkpoint-detail-tag">custom</span>' : ''}${star}`;
+  });
+  const head = `<p class="checkpoint-detail-meta">${active.length} active${mode ? ' · ' + _esc(mode) + ' mode' : ''}${customs.length ? ' · ' + customs.length + ' custom defined' : ''}</p>`;
+  return head + _detailUL(items);
+}
+
+function _detailModels(hive) {
+  if (!hive || typeof hive !== 'object' || !hive.models) return '<p class="checkpoint-detail-empty">No model picks.</p>';
+  const entries = Object.entries(hive.models).filter(([, v]) => typeof v === 'string' && v.trim());
+  if (!entries.length) return '<p class="checkpoint-detail-empty">No model picks set.</p>';
+  return _detailUL(entries.map(([id, model]) => `<strong>${_esc(id)}</strong> → <code>${_esc(model)}</code>`));
+}
+
+function _detailKeys(hive) {
+  if (!hive || typeof hive !== 'object' || !hive.keys) return '<p class="checkpoint-detail-empty">No keys stored.</p>';
+  const entries = Object.entries(hive.keys).filter(([, v]) => typeof v === 'string' && v.trim());
+  if (!entries.length) return '<p class="checkpoint-detail-empty">No keys stored.</p>';
+  // Each key gets a masked-display + 👁 reveal — reuses the v3.63.261
+  // .checkpoint-secret pattern. Per-AI rows are read-only inline list items.
+  return _detailUL(entries.map(([id, val]) =>
+    `<strong>${_esc(id)}</strong> ${_checkpointSecretHTML(val)}`
+  ));
+}
+
+function _detailBuilder(hive) {
+  if (!hive || typeof hive !== 'object') return '<p class="checkpoint-detail-empty">No builder set.</p>';
+  const b = typeof hive.builder === 'string' ? hive.builder.trim() : '';
+  if (!b) return '<p class="checkpoint-detail-empty">No builder set.</p>';
+  return `<p class="checkpoint-detail-meta">Selected Builder: <strong>${_esc(b)}</strong></p>`;
+}
+
+function _detailLicense(raw) {
+  if (!raw) return '<p class="checkpoint-detail-empty">No license stored.</p>';
+  let key = '';
+  let extras = {};
+  try {
+    const j = JSON.parse(raw);
+    if (j && typeof j === 'object') {
+      if (typeof j.key === 'string') key = j.key.trim();
+      extras = j;
+    }
+  } catch(_) {
+    if (typeof raw === 'string') key = raw.trim();
+  }
+  const rows = [];
+  rows.push(['Key', key ? _checkpointSecretHTML(key) : '(not readable)']);
+  if (extras.valid != null) rows.push(['Validated', extras.valid ? 'Yes' : 'No']);
+  if (extras.purchaseId)    rows.push(['Purchase ID', extras.purchaseId]);
+  if (extras.email)         rows.push(['Email', extras.email]);
+  if (extras.activatedAt)   rows.push(['Activated', new Date(extras.activatedAt).toLocaleString()]);
+  return _detailDL(rows);
+}
+
 // v3.63.227 — Populate the Restore screen's diff view with 9-section
 // granularity. Reads live state, parses the checkpoint's sections, detects
 // the file format (v6 has 9-key scope directly; v5's 6-key scope is mapped
@@ -1941,6 +2211,25 @@ async function _populateRestoreCheckpointDiff(data) {
   const diffEl  = document.getElementById('chkRestoreDiff');
   if (introEl) introEl.style.display = 'none';
   if (diffEl)  diffEl.style.display  = '';
+
+  // v3.63.263 — Stash live + checkpoint state for the expand-on-click
+  // detail panels. Both sides need their full data accessible
+  // synchronously when a row's chevron is clicked.
+  window._checkpointDataCache = window._checkpointDataCache || {};
+  window._checkpointDataCache.live = {
+    project:    liveProject,
+    hive:       liveHive,
+    sessionIdb: liveSessionIDB,
+    licenseRaw: liveLicenseRaw,
+  };
+  window._checkpointDataCache.file = {
+    project:    parsedCkProj,
+    hive:       parsedCkHive,
+    sessionIdb: data.IDB_SESSION,
+    licenseRaw: data.LS_LICENSE,
+    hasFlags:   has,
+  };
+  _initCheckpointExpandUI();
 }
 
 async function confirmRestoreCheckpoint() {
