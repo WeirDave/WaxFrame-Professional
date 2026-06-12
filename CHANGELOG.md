@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.284
+
+**Back-burner cleanup — every deferred audit item shipped or formally retired**
+
+Build: `20260611-011`<br>
+Released: `2026-06-11`
+
+### What changed
+
+David asked for a sweep of everything I'd put on the back burner during the v3.63.275–v3.63.283 audit-shipping pass. Four items shipped, one item retroactively tagged.
+
+**1. `_originalModel` scaffold retired.** Captured at 3 sites (`js/app.js:9703`, `js/app.js:10456`, `js/provider-catalog.js:330` via `buildApiConfigs()`) for a never-shipped audit-trail UI. The ↺ Reset button that originally consumed it was removed in v3.31.0 — 53 releases ago. `ensureOriginalModelBaseline()` also retired (was firing one `saveHive()` write per cold start to migrate the field for users who'd never get an audit-trail UI). Removed from: the 3 capture sites, the migration function and its 25-line preamble comment, the boot-time call inside the `DOMContentLoaded` listener, the catalog's `_originalModel: e.model` line in `buildApiConfigs()`, and the related comments in `js/api.js` + `js/provider-catalog.js` headers. The methodology audit's "either commit to the audit-trail feature or delete" call gets answered: delete.
+
+**2. Dead Anthropic `/v1/models` direct path removed.** `js/app.js:fetchModelsFromEndpoint` had a hard-coded `if (format === 'anthropic') modelsEndpoint = 'https://api.anthropic.com/v1/models'` branch. That request CORS-fails from every browser origin, so the branch had never produced a successful result on a real user. Removed. Built-in Claude continues to use the catalog's `anthropic-via-proxy` discovery (`waxframe-claude-proxy.weirdave.workers.dev`); custom AIs with format='anthropic' now fall through to the OpenAI-shape branch and must supply an explicit `modelsEndpoint` pointing at a CORS-enabled proxy of their own. Pre-existing inline comment documents the new contract.
+
+**3. `WFProviderCatalog` public surface narrowed.** Pre-v3.63.284 the module exported 14 names; only 5 had external consumers (`CATALOG`, `getEntry`, `buildApiConfigs`, `fetchModelsList`, `diagnosticModelsUrl`, `diagnosticModelsHeaders` — verified via `grep WFProviderCatalog\\. across js/*.js *.html`). The other 9 (`FORMATS`, `BODY_BUILDERS`, `EXTRACTORS`, `AUTH_HEADERS`, `authFor`, `bodyBuilderFor`, `extractorFor`, `buildModelFilters`, `buildModelFallbacks`) are module-internals only. The latter two still run as side effects at module-eval time, populating `WFProviderModels.MODEL_FILTERS` / `.MODEL_FALLBACKS` for help.html — the side effect lives on; only the external reachability is gone. New header comment on the export block enumerates what each surviving name is used for, so the next maintainer can see the surface area without a `grep` pass.
+
+**4. Methodology doc — lessons-learned section added.** Two specific lessons from this turn that the v1 methodology missed:
+- **Category 1 (Cross-Page Parity)** — parity findings need a visual smoke-test against a reference page, not just a presence check. v3.63.281 satisfied the literal grep ("hive-profiles.html has no licenseBadge element") by injecting the badge into the slide-out nav-panel — but every other helper page surfaces it in the sticky page-footer at the bottom of the viewport. David caught the gap on a single side-by-side comparison against `terms.html`, which is exactly the check the methodology should have prescribed.
+- **Bulk-edit anchors must be unique-per-file before write.** Two bugs traced to the same root cause: a multi-line anchor that matched more than once per file, and `.NET String.Replace` replaces every occurrence. v3.63.282 shipped a duplicate `navBuyFooter` on every helper page (anchor matched both nav-panel close AND page-header close). v3.63.283 hit a PowerShell single-element array-unwrap that turned `Replace($r[0], $r[1])` into `Replace('t', 'o')` — caught via `git diff --stat` showing equal insertion/deletion counts before commit, reverted via `git checkout HEAD`. New procedure: search for the anchor before writing and confirm exactly one match per file, prefer `IndexOf` + `Substring` over `String.Replace` when you mean "first occurrence."
+
+A four-line checklist sits at the end of the doc for the next quarterly audit.
+
+**5. v3.63.274 retroactively tagged + Released.** The original v3.63.274 commit (`8a6c0963`) landed on main but the git tag was never cut. Called out in the v3.63.275 changelog at the time as a known gap, never addressed. Tag and GitHub Release now created against the original commit hash so the timeline is complete.
+
+### Deliberately NOT addressed (defer per audit recommendation)
+
+- Orphan-sentinel sweep at `app.js:20951-...` — audit said "defer 6 months." That's still the right answer.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `_originalModel` removed from 2 capture sites; `ensureOriginalModelBaseline()` + its boot-time call + its preamble comment removed; Anthropic `/v1/models` direct branch in `fetchModelsFromEndpoint` removed
+- [js/provider-catalog.js](js/provider-catalog.js) — `_originalModel` removed from `buildApiConfigs()`'s emitted shape; export surface narrowed from 14 names to 5 with new comment enumerating each
+- [js/api.js](js/api.js) — header comments updated to drop `_originalModel` from the documented `API_CONFIGS` entry shape
+- [docs/WaxFrame_Audit_Methodology_v1.txt](docs/WaxFrame_Audit_Methodology_v1.txt) — lessons-learned section + pre-ship checklist added
+
+---
+
 ## v3.63.283
 
 **Help & Support nav re-sort + worker bee everywhere (bee emoji retired) + v3.63.282 duplicate-navBuyFooter cleanup**

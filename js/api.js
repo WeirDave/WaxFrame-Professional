@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260611-010
+// Build: 20260611-011
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -25,9 +25,8 @@
 //                                 mistral, deepseek, together, cohere).
 //                                 Built from WFProviderCatalog.CATALOG.
 //                                 Each entry: endpoint, default model,
-//                                 headersFn, bodyFn, extractFn, format,
-//                                 _originalModel. Referenced 80+ times
-//                                 across app.js.
+//                                 headersFn, bodyFn, extractFn, format.
+//                                 Referenced 80+ times across app.js.
 //    window.MODEL_FALLBACKS     — per-provider fallback model lists used
 //                                 only when /v1/models is unreachable.
 //                                 Derived from the catalog.
@@ -68,7 +67,7 @@
 // ══════════════════════════════════════
 // API CONFIGS — built from the provider catalog.
 // Each entry shape: { label, model, endpoint, note, format, headersFn,
-//                     bodyFn, extractFn, endpointFn?, _originalModel }.
+//                     bodyFn, extractFn, endpointFn? }.
 // To add or modify a provider, edit js/provider-catalog.js — NOT this file.
 // ══════════════════════════════════════
 window.API_CONFIGS = window.WFProviderCatalog.buildApiConfigs();
