@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260612-001
+  Build: 20260612-002
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260612-001">
+  <meta name="waxframe-build" content="20260612-002">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
   <link rel="canonical" href="https://waxframe.com/help.html">
@@ -76,7 +76,7 @@
 
     .hdr { text-align: center; margin-bottom: 8px; }
     .logo {
-      height: 88px; width: auto; display: block; margin: 0 auto 12px;
+      height: 140px; width: auto; display: block; margin: 0 auto 12px;
     }
     h1 { font-size: 26px; margin: 0 0 4px; color: var(--text); }
     .tagline { color: var(--text-dim); font-size: 15px; margin: 0 0 6px; }
@@ -97,6 +97,24 @@
       display: flex; align-items: center; gap: 8px;
     }
     section > .sub { color: var(--text-dim); font-size: 13.5px; margin: 0 0 14px; }
+
+    /* v3.63.287 — Bee-mascot inline icon classes. help.html does NOT load
+       style.css (see design contract at top of file), so these classes had
+       to be duplicated here. Pre-v3.63.287 the <img class="label-bee"> in
+       "Report a bug" (introduced in v3.63.280 when the 🐝 emoji was
+       retired) rendered at the source PNG's native 850×850 because the
+       class was referenced but never defined, dwarfing the heading and
+       pushing content below off-screen. Same sizing as style.css. */
+    .nav-bee-icon, .label-bee, .inline-bee {
+      display: inline-block;
+      vertical-align: -0.25em;
+      margin-right: 0.35em;
+      object-fit: contain;
+    }
+    .nav-bee-icon { width: 1.25em; height: 1.25em; }
+    .label-bee    { width: 1.4em;  height: 1.4em; }
+    .inline-bee   { width: 1.1em;  height: 1.1em; margin-right: 0.25em; }
+
     .step-num {
       display: inline-flex; align-items: center; justify-content: center;
       width: 22px; height: 22px; border-radius: 50%;
@@ -399,10 +417,10 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.286"></script>
-  <script src="js/storage.js?v=3.63.286"></script>
-  <script src="js/provider-models.js?v=3.63.286"></script>
-  <script src="js/provider-catalog.js?v=3.63.286"></script>
+  <script src="js/version.js?v=3.63.287"></script>
+  <script src="js/storage.js?v=3.63.287"></script>
+  <script src="js/provider-models.js?v=3.63.287"></script>
+  <script src="js/provider-catalog.js?v=3.63.287"></script>
   <script>
   (function () {
     'use strict';
@@ -698,7 +716,7 @@
       var keyRequired = !entry.modelsEndpoint || entry.format === 'anthropic' || entry.format === 'google' || entry.id === 'claude' || entry.id === 'gemini';
       if (!entry.key && keyRequired) throw new Error('No API key saved for this provider in this browser.');
       var endpoint = deriveModelsEndpoint(entry);
-      // v3.63.274 — header building routes through the catalog so the
+      // v3.63.275 — header building routes through the catalog so the
       // per-format auth rule (Anthropic x-api-key+version / Google
       // x-goog-api-key / Bearer for OpenAI-shape) lives in ONE place. The
       // catalog accepts a synthetic entry-shaped object so custom-AI
