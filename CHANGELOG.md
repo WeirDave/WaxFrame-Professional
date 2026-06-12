@@ -2,6 +2,62 @@
 
 ---
 
+## v3.63.294
+
+**localStorage migration audit — static-enumeration first pass on backlog #7**
+
+Build: `20260612-009`<br>
+Released: `2026-06-12`
+
+### What changed
+
+Picked up backlog #7 (localStorage migration audit), which asked for "static enumeration of every setItem/getItem pair" as a useful first pass before the runtime migration testing. Shipped that pass plus the schema documentation it makes possible.
+
+**The audit script** (`.claude/scratch/ls-audit.js`, gitignored alongside the other audit tooling). AST scan of every `js/*.js` file PLUS every inline `<script>` block in the helper HTML pages, picking up:
+
+- `localStorage.setItem(KEY, ...)`, `getItem(KEY)`, `removeItem(KEY)` calls
+- Key arguments resolved from string literals, template literals, AND named constants — including the `window.LS_HIVE = '...'` declaration style used in storage.js for the canonical keys
+- A bugfix shaken out of the first run: don't pollute the constant-resolution map with single-letter names (a `const k = '__wf_probe__'` in help.html was making every loop-variable `localStorage.removeItem(k)` in app.js attribute back to the probe key)
+
+**The numbers:** 224 operations across 4 JS files + 2 HTML files, normalized to 42 unique keys (29 static + 13 dynamic-name patterns).
+
+**The findings:** zero orphan keys at the static layer. Two patterns initially look orphan to a static scan but are intentional and documented in code:
+
+1. **`waxframe_v2_hive_recovery` — WRITE-ONLY.** When `loadSettings()` can't parse `LS_HIVE`, the raw blob is stashed here and a toast warns the user not to click Save Settings. Read by a human via DevTools, not by code. Per the v3.63.276 comment block, this prevents the silent-hive-loss that the broad function-level catch used to cause.
+2. **`waxframe_v2_settings` — READ-ONCE, REMOVED-ONCE.** The pre-v3.45 single-blob settings key, kept readable so a long-cold browser profile from before v3.45 migrates cleanly. The migration block at storage.js:840-855 reads it, rebuilds the `LS_HIVE` shape from it, writes `LS_HIVE`, removes the legacy key.
+
+**Two patterns flagged for runtime verification:** `waxframe_models_${providerId}` looks WRITE-ONLY at the static layer — the per-provider model-list cache is set on every fetch but no static read site is visible. The in-memory copy could be the real source of truth. And the `waxframe_recommend_*` family shows odd attribution counts because the SET sites use a single template (`waxframe_recommend_${kind}-${aiId}` with role chosen at runtime) while the REM sites use 6 separate literal templates for cleanliness. Neither is orphan — both want a runtime trace to confirm.
+
+### The shipped artifact
+
+[docs/WaxFrame_Storage_Schema_v1.txt](docs/WaxFrame_Storage_Schema_v1.txt) — schema documentation for every localStorage key, grouped by category:
+
+- **Canonical LS_\* keys** — `LS_HIVE` / `LS_PROJECT` / `LS_SESSION` / `LS_SETTINGS` / `LS_LICENSE` / `LS_PROMPTS` with purpose, shape, read/write sites, and migration notes (the LS_SESSION envelope's v6/v5/v4 ladder, LS_HIVE's parse-failure recovery path, LS_SETTINGS's one-shot legacy migration).
+- **Session + project ephemera** — the `waxframe_v2_*` filename / source-type / pdf-page / session-exists / conflict-ledger / resolved-decisions keys with lifecycle notes.
+- **Hive Profiles + custom templates + AI warnings** — `waxframe_hive_profile`, `waxframe_custom_*`, `waxframe_ai_warnings`, `waxframe_incapable_models`.
+- **Provider + model caches** — the dynamic `waxframe_models_*`, `waxframe_tiers_*`, `waxframe_recommend_*` families.
+- **UI preferences** — theme, mute, dev toolbar, decision-diff mode, slow-responder enable, auto-update toggles, vision provider.
+- **Suppress prompts** — the dynamic `waxframe_suppress_*` family + the bulk-clear pattern.
+- **Diagnostic probe** — `__wf_probe__`.
+
+### Why this is PARTIAL on backlog #7
+
+The DONE statement asks for three things: a documented schema (shipped), read paths that handle legacy shapes (covered for the canonical envelopes; the long-tail per-feature keys are mostly write-with-defaults so a missing key falls back to the default, not the legacy shape), and a manual test plan for forwarding a v3.21-era profile through every release boundary (the runtime piece — not shippable from this CLI session). Item #7 stays on the backlog as PARTIAL with the schema doc referenced.
+
+### Bonus tooling fix
+
+The cache-bust sweep script (`.claude/scratch/sweep.js`) now excludes the `docs/` directory. Twice this session the sweep accidentally rewrote a historical `v3.63.291` → `v3.63.292` reference in the backlog's PARTIAL note. The fix is a one-line exclusion list update. Future ceremonies won't need the manual revert.
+
+### Files touched
+
+- [docs/WaxFrame_Storage_Schema_v1.txt](docs/WaxFrame_Storage_Schema_v1.txt) — new; full inventory + per-key schema notes + findings summary + remaining-work list
+- [docs/WaxFrame_Backlog_Master_v245.txt](docs/WaxFrame_Backlog_Master_v245.txt) — new; item #7 (localStorage migration audit) marked PARTIAL with the v3.63.294 deliverable noted and the schema-doc cross-reference added
+- Removed: `docs/WaxFrame_Backlog_Master_v242.txt` (keeps the three-version backlog window: v243 / v244 / v245)
+- Cache-bust + build stamps swept to `3.63.294` / `20260612-009` everywhere (sweep script now excludes `docs/` to avoid the historical-reference corruption from prior releases)
+- No source code changes
+
+---
+
 ## v3.63.293
 
 **Backlog #7 closed — AST sweep confirms zero remaining orphan functions**

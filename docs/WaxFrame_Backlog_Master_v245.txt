@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v242
+WaxFrame Backlog Master v245
 2026-06-12
 
 ABOUT THIS DOCUMENT
@@ -268,38 +268,7 @@ OPEN FEATURES
            can point at these modules without parsing app.js.
 
 
-7. Deep orphan-function audit on app.js (AST tooling required)
-   ─────────────────────────────────────────────────────────
-   WHAT:   The v3.63.241 audit pass scoped onclick handlers,
-           CSS classes, and obvious orphan functions in
-           storage.js. It did NOT do an exhaustive
-           function-definition-vs-usage audit across app.js
-           (~20k lines). That class of audit needs AST tooling
-           to be reliable — grep-only is noisy and misses
-           method calls, dynamic dispatch, and inline string
-           references.
-   WHY:    Years of feature work and retirements have left
-           the codebase with an unknown number of orphan
-           functions. They cost no runtime (never called) but
-           they clutter the file, confuse future audits, and
-           occasionally point at retired features whose
-           existence misleads new readers. A clean app.js
-           is easier to evolve.
-   STATE:  OPEN — needs tooling decision. Candidates: a
-           one-off AST script using @babel/parser or
-           acorn, or running through Knip / unimported /
-           ts-unused-exports against a lightweight TS
-           wrapper. None of these are heavy installs.
-   WHERE:  js/app.js (the 20k+ line monolith).
-   DONE:   A list of confirmed-orphan top-level function
-           declarations exists, each verified by both static
-           and dynamic checks (smoke-test in browser);
-           low-risk orphans deleted; high-risk-but-orphan
-           items documented in code comments as "kept for
-           cache compatibility" with a target removal date.
-
-
-8. localStorage migration audit
+7. localStorage migration audit
    ─────────────────────────────────────────────────────────
    WHAT:   Every localStorage key the app reads/writes is
            subject to format drift over time. The v3.63.241
@@ -318,12 +287,32 @@ OPEN FEATURES
            into use. The audit category 5 (state recovery)
            in WaxFrame_Audit_Methodology_v1.txt covers this
            explicitly.
-   STATE:  OPEN — needs runtime testing for full coverage.
-           A static enumeration of every setItem/getItem
-           pair is a useful first pass.
+   STATE:  PARTIAL — v3.63.294 shipped the static-enumeration
+           first pass: AST scan of every js/*.js + every
+           HTML inline <script>, 224 operations normalized
+           to 42 unique keys (29 static + 13 dynamic-name
+           patterns), schema documented for each key in
+           docs/WaxFrame_Storage_Schema_v1.txt. Zero orphan
+           keys found at the static layer; two flagged
+           patterns explained as intentional
+           (waxframe_v2_hive_recovery is a write-only safety
+           net read by the user via DevTools after a parse
+           failure; waxframe_v2_settings is the retired
+           pre-v3.45 legacy key kept readable for one-shot
+           migration). Two patterns flagged for runtime
+           verification (waxframe_models_${providerId}
+           appears WRITE-ONLY; the waxframe_recommend_*
+           family shows odd attribution counts due to
+           dynamic-key SET vs literal-template REM).
+           Remaining work: the runtime forward-compat test
+           plan and the two flagged-for-verification
+           pattern checks.
    WHERE:  js/storage.js (envelope migrations), js/app.js
-           (per-feature keys: waxframe_dev, waxframe_hive_profile,
-           waxframe_conflict_ledger, etc.).
+           (per-feature keys: waxframe_dev,
+           waxframe_hive_profile, waxframe_conflict_ledger,
+           etc.). Schema doc:
+           docs/WaxFrame_Storage_Schema_v1.txt. Audit
+           script: .claude/scratch/ls-audit.js (gitignored).
    DONE:   Each localStorage key has a documented schema
            (current shape + earlier shapes encountered in
            the wild); the read path for each handles legacy
