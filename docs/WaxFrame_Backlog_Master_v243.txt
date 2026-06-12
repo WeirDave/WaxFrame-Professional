@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v240
-2026-06-07
+WaxFrame Backlog Master v243
+2026-06-12
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -66,65 +66,40 @@ OPEN BUGS
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
 
-1. Restore-from-Checkpoint diff-and-pick UI
+1. Per-key concurrency override for RPS-awareness (Settings UI)
    ─────────────────────────────────────────────────────────
-   WHAT:   When the user restores a WaxFrame checkpoint file
-           (.json export of project + session + hive + keys
-           + builder + license), the current behavior is
-           wholesale replacement of the loaded state.
-           This feature would add a comparison UI showing
-           what's IN the checkpoint vs what's CURRENTLY
-           LOADED, with checkboxes per section so the user
-           can pick which pieces to restore.
-   WHY:    Real-world example: David wants the project setup
-           from yesterday's checkpoint but wants to keep
-           today's API keys and hive configuration. Today he
-           either accepts overwriting everything or doesn't
-           restore at all. A diff-and-pick UI fills that gap.
-   STATE:  PARKED — design understood, implementation not
-           started. Not on a near-term release path.
-   WHERE:  Restore flow lives in the import-checkpoint code
-           path in app.js (search for envelope parsing /
-           scope flags introduced in v3.63.130).
-   DONE:   Restore modal shows two columns (Current vs
-           Checkpoint) for each of the 6 envelope sections
-           (Project, Session, Hive, Keys, Builder, License),
-           each with a checkbox; only checked sections get
-           applied; unchecked sections stay untouched in
-           memory and storage.
+   WHAT:   v3.63.250 shipped the per-PROVIDER concurrency
+           limiter that closed the core of the original
+           RPS-awareness ask (queuing requests so no provider
+           receives more than N concurrent in-flight calls).
+           One piece of the original DONE statement was not
+           shipped: a per-KEY override that lets a power
+           user lift the cap for a paid-tier key on a
+           provider whose default is conservative for the
+           free tier.
+   WHY:    Conservative defaults serve free-tier users well
+           but penalize someone paying for a higher tier.
+           A Cohere enterprise customer with 100+ RPS
+           headroom shouldn't be capped at 2 concurrent.
+           The override lets them lift it without a code
+           change.
+   STATE:  OPEN — not started. Mechanism is in place
+           (getProviderConcurrencyCap reads from the module
+           constant). The remaining work is the Settings UI
+           + persistence + the lookup change to consult an
+           override map before falling back to the default.
+   WHERE:  app.js: getProviderConcurrencyCap() at the top
+           of the v3.63.250 limiter block. Settings panel
+           in index.html.
+   DONE:   A new Settings row lets a user enter a
+           concurrency override per saved API key;
+           getProviderConcurrencyCap() consults the
+           per-key override before the per-provider default;
+           overrides persist in localStorage and survive
+           reload.
 
 
-2. Hive parallel fan-out RPS-awareness
-   ─────────────────────────────────────────────────────────
-   WHAT:   Every refinement round, WaxFrame fires the
-           reviewer-prompt API call to all participating AI
-           providers in parallel (fan-out). Today the
-           fan-out is naive: all requests go out essentially
-           at once. Several providers cap RPS (Requests Per
-           Second) at low numbers — Cohere, Mistral,
-           Together AI and some Anthropic tiers — and will
-           return 429 (Too Many Requests) or silently slow
-           down when hit with simultaneous calls.
-   WHY:    A single user with multiple keys and a 10-AI hive
-           can saturate a low-RPS provider on round 1 and
-           start eating retries. Total wall-clock goes up,
-           and worst case a provider drops out of the round.
-           RPS-awareness would stagger requests per-provider
-           so we stay under each provider's cap while still
-           parallelizing across providers.
-   STATE:  OPEN — not started.
-   WHERE:  The fan-out dispatcher in app.js (the function
-           that builds and Promise.all-s the per-provider
-           request promises for a refinement round).
-   DONE:   Each provider has a configurable RPS ceiling
-           (default per-family value, override per-key);
-           the dispatcher queues requests so no provider
-           receives more than N concurrent in-flight calls;
-           no functional change to round semantics —
-           reviewers still all return before Builder runs.
-
-
-3. Builder-incapable family list expansion
+2. Builder-incapable family list expansion
    ─────────────────────────────────────────────────────────
    WHAT:   Some AI model families can't reliably act as
            Builder — they break the %%CONFLICTS_START%%
@@ -151,7 +126,7 @@ OPEN FEATURES
            hides it or shows it disabled with a tooltip.
 
 
-4. Pause/Resume at reviewer seam
+3. Pause/Resume at reviewer seam
    ─────────────────────────────────────────────────────────
    WHAT:   A refinement round has natural phases:
              (1) reviewers analyze the working document,
@@ -185,7 +160,7 @@ OPEN FEATURES
            a reload via localStorage).
 
 
-5. File System Access API exploration
+4. File System Access API exploration
    ─────────────────────────────────────────────────────────
    WHAT:   The File System Access API is a modern browser
            API (Chrome, Edge, Opera; not Firefox or Safari)
@@ -216,7 +191,7 @@ OPEN FEATURES
            written up; go/no-go decision on shipping.
 
 
-6. Provider Catalog foundation
+5. Provider Catalog foundation
    ─────────────────────────────────────────────────────────
    WHAT:   Today each AI provider (OpenAI, Anthropic,
            Google, Cohere, DeepSeek, Mistral, Grok,
@@ -254,46 +229,118 @@ OPEN FEATURES
            changes needed.
 
 
-7. CSS rule consolidation sweep — PARTIAL
+6. Prompt instruction modularization
    ─────────────────────────────────────────────────────────
-   WHAT:   style.css has accumulated duplicate CSS rules
-           over many releases — the same selector defined
-           two or three times with slightly different
-           property sets. v3.63.190 folded the modal base
-           classes together (.modal / -hdr / -close / -body).
-           Several duplicate groups remain.
-   WHY:    Duplicates make every CSS change risky — you fix
-           one definition, miss the second, and the bug
-           comes back in dark mode or on a specific screen.
-           Consolidation makes style.css predictable and
-           halves the surface area for theme bugs.
-   STATE:  PARTIAL — modal base done in v3.63.190.
-           Remaining duplicate groups listed below.
-   WHERE:  Remaining duplicate selector groups:
-             • .template-gallery-sidebar /
-               .template-gallery-sidebar-label /
-               .template-gallery-sidebar-link
-             • .template-path-card
-             • .template-card /
-               .template-card.is-recommended /
-               .template-card-name /
-               .template-card-desc
-             • .template-gallery-section /
-               .template-gallery-section-title
-             • .template-card-edit / -dup / -export / -del /
-               -wrap   (edit-action button block at
-               style.css:14765+)
-           Critical interaction: dark theme specialization
-           at style.css:14220+ — naive deletions can
-           silently break dark mode. Per-selector tracing
-           required.
-   DONE:   Each remaining duplicate group is merged into a
-           single canonical block; dark-theme overrides
-           still render correctly (verified in browser,
-           both light and dark mode, on the Templates
-           gallery + Custom Templates pages); style.css
-           line count drops noticeably with no visual
-           regression.
+   WHAT:   The instructions WaxFrame sends to each AI are
+           still largely assembled inline in app.js. Reviewer
+           instructions, Builder instructions, project goal
+           fields, reference material, current document,
+           resolved decisions, warnings, notes, and required
+           response formats all flow through the same prompt
+           assembly paths. This feature would break the
+           role-specific instruction blocks out into explicit
+           prompt modules so Reviewer and Builder instructions
+           can be inspected, edited, tested, and versioned
+           separately from the per-round data envelope.
+   WHY:    Prompt changes are now core product changes. When
+           instructions are embedded inside long assembly
+           functions, it is too easy to accidentally nest
+           instructions inside examples, blur Reviewer vs
+           Builder roles, or change the data envelope while
+           trying to tune behavior. Separate instruction
+           modules reduce prompt regression risk and make the
+           Prompt Editor path more realistic later.
+   STATE:  OPEN — design direction understood; not started.
+   WHERE:  Reviewer prompt assembly:
+             buildPromptForAI(ai, []) in app.js
+           Builder instruction source:
+             BUILDER_INSTRUCTIONS in app.js
+           Builder send paths:
+             runBuilderOnly() and applyDecisions() in app.js
+           Full-round fan-out:
+             runRound() reviewer phase in app.js
+   DONE:   Reviewer and Builder instructions live in separate
+           named prompt modules/objects; the project/reference/
+           document/history envelope is assembled independently;
+           generated prompts are byte-for-byte equivalent where
+           no intentional wording change is made; Deep Dive still
+           captures the final prompt sent to each AI; a future UI
+           can point at these modules without parsing app.js.
+
+
+7. Deep orphan-function audit on app.js (AST tooling required)
+   ─────────────────────────────────────────────────────────
+   WHAT:   The v3.63.241 audit pass scoped onclick handlers,
+           CSS classes, and obvious orphan functions in
+           storage.js. It did NOT do an exhaustive
+           function-definition-vs-usage audit across app.js
+           (~20k lines). That class of audit needs AST tooling
+           to be reliable — grep-only is noisy and misses
+           method calls, dynamic dispatch, and inline string
+           references.
+   WHY:    Years of feature work and retirements have left
+           the codebase with an unknown number of orphan
+           functions. They cost no runtime (never called) but
+           they clutter the file, confuse future audits, and
+           occasionally point at retired features whose
+           existence misleads new readers. A clean app.js
+           is easier to evolve.
+   STATE:  PARTIAL — v3.63.291 shipped a regex+verification
+           pass over top-level function declarations only
+           (536 examined, 5 confirmed orphan and removed:
+           selectBuilderCandidate, confirmBuilderFromModal,
+           rearmLengthGuard, estimateTokens,
+           stopAutoUpdateHeartbeat). The remaining work is
+           the AST-level sweep that catches methods on
+           objects, helpers nested inside IIFEs, and
+           string-dispatched handlers (setTimeout/
+           addEventListener strings) — none of which the
+           top-level regex pass can see.
+   WHERE:  js/app.js (the 20k+ line monolith).
+           v3.63.291 audit script archived at
+           .claude/scratch/audit.js (local-only, gitignored)
+           — useful starting point for future passes; runs
+           in vanilla Node with no install.
+   DONE:   A list of confirmed-orphan function declarations
+           (top-level AND nested AND object-method) exists,
+           each verified by both static and dynamic checks
+           (smoke-test in browser); low-risk orphans deleted;
+           high-risk-but-orphan items documented in code
+           comments as "kept for cache compatibility" with a
+           target removal date.
+
+
+8. localStorage migration audit
+   ─────────────────────────────────────────────────────────
+   WHAT:   Every localStorage key the app reads/writes is
+           subject to format drift over time. The v3.63.241
+           audit pass enumerated current keys (waxframe_v2_*
+           + others) but did not exhaustively verify that
+           each one's read path handles all the historical
+           shapes it might encounter on long-lived browsers.
+           Format-version branches in storage.js (currently
+           v6 with v5/v4 import compatibility) are the most
+           important; key-value primitives in app.js are the
+           long tail.
+   WHY:    A user who's been running WaxFrame since v3.21
+           has localStorage entries written by every
+           intermediate version. A single un-migrated key
+           can silently corrupt state on a project a year
+           into use. The audit category 5 (state recovery)
+           in WaxFrame_Audit_Methodology_v1.txt covers this
+           explicitly.
+   STATE:  OPEN — needs runtime testing for full coverage.
+           A static enumeration of every setItem/getItem
+           pair is a useful first pass.
+   WHERE:  js/storage.js (envelope migrations), js/app.js
+           (per-feature keys: waxframe_dev, waxframe_hive_profile,
+           waxframe_conflict_ledger, etc.).
+   DONE:   Each localStorage key has a documented schema
+           (current shape + earlier shapes encountered in
+           the wild); the read path for each handles legacy
+           shapes or migrates them on read; a manual test
+           plan exists for forwarding a v3.21-era profile
+           through every release boundary.
 
 
 ════════════════════════════════════════════════════════════
