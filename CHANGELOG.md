@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.290
+
+**help.html responsive hero sizing — proper release of the three docs-fix commits**
+
+Build: `20260612-005`<br>
+Released: `2026-06-12`
+
+### What changed
+
+Rollup of three docs-fix commits that landed on `main` after v3.63.289 without their own version tag — the original plan was to ship them as v3.63.290 individually, but Dropbox locked the entire worktree mid-sweep and blocked the stamp bump. This release wraps them properly now that the locks cleared.
+
+**1. Hero logo halves on laptop viewports** (commit [`f8c89ed5`](https://github.com/WeirDave/WaxFrame-Professional/commit/f8c89ed5)). The 720px hero logo that anchored a big desktop monitor in v3.63.289 was eating most of the fold on 1366×768 laptops. Added a `@media (max-width: 1599px)` rule that drops `.logo` to 360px on anything narrower than a large desktop monitor.
+
+**2. Worker Bee hero follows the same responsive rule** (commit [`73a096e1`](https://github.com/WeirDave/WaxFrame-Professional/commit/73a096e1)). The `.bug-hero-bee` was added to the same `@media` block so it also halves to 360px on laptops, keeping visual parity with the logo across breakpoints.
+
+**3. Bee cascade-ordering bug fix** (commit [`84b15198`](https://github.com/WeirDave/WaxFrame-Professional/commit/84b15198)). #2 didn't actually work in practice: the `.bug-hero-bee` base rule was defined LATER in the source than the `@media` block that overrode it, so CSS source-order resolved every render back to 720px. The `.logo` worked because its base rule was above the `@media` block. Reordered the source so `.bug-hero-bee` base sits next to `.logo` base, BEFORE the shared `@media` block. Both heroes now halve correctly at <1600px wide. David caught the visual mismatch — methodology-doc lesson worth noting: when a responsive CSS rule looks selector-correct but doesn't render, check source order before doubting the selector.
+
+### Files touched
+
+- [help.html](help.html) — added `@media (max-width: 1599px)` block; `.bug-hero-bee` base rule reordered to precede the media query; both heroes now scale to 360px on viewports under 1600px wide
+- Cache-bust + build stamps swept to `3.63.290` / `20260612-005` everywhere (the sweep that v3.63.290 was supposed to do at the time, finally completed)
+
+---
+
 ## v3.63.289
 
 **help.html — logo doubled, Worker Bee promoted to a Report-a-bug hero**
