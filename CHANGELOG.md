@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.282
+
+**Helper-page nav: small inline "Buy" → wide trial-only CTA, matching index.html**
+
+Build: `20260611-009`<br>
+Released: `2026-06-11`
+
+### What changed
+
+David caught a UX gap I'd missed: every helper page (api-details, ai-api-pricing, ai-business-proposal, ai-cover-letter-editor, ai-resume-review, document-playbooks, hive-profiles, privacy, prompt-editor, templates, terms, waxframe-user-manual, what-are-tokens) carried a small `nav-item nav-item-accent` "🛒 Buy WaxFrame Pro" link inside the slide-out nav menu. Two problems with that:
+
+1. **It showed unconditionally.** Even users with a valid Pro license saw the upsell every time they opened the nav menu — there was no `isLicensed()` check.
+2. **It was the wrong control.** The main app (`index.html`) has a much more prominent `navBuyFooter` pinned at the bottom of the nav panel — a wide button-style CTA with the 🛒 icon, a "Buy a License" title, and a "Unlock unlimited rounds" subtitle. The helper pages never got that pattern.
+
+Now every helper page matches `index.html`:
+- The inline `nav-item-accent` (and its preceding `<div class="nav-divider"></div>` plus optional `<div class="nav-section-label">Support</div>`) is removed from all 13 helper pages
+- The wide `<div class="nav-panel-footer" id="navBuyFooter">` block is added as a sibling of `.nav-body` inside `.nav-panel`, exactly matching the `index.html` markup
+- `js/license-helper.js#updateLicenseBadge()` now toggles `navBuyFooter.style.display` based on `isLicensed()`, same as `app.js#updateLicenseBadge()` does on the work screen
+
+Result: trial users see the prominent CTA at the bottom of the nav panel. Licensed users see nothing for upsell — the badge in the page-footer already says ✓ Licensed, and the slide-out nav is clean.
+
+### Why this matters
+
+This is the same class of bug as v3.63.281 — a static-analysis patch that satisfied the literal "license-helper.js loads, badge missing" grep but missed the visual intent. The audit framework's parity-check category needs a "compare visual placement to a reference page" step, not just "compare element presence to a reference page." Noting in the methodology pass for next quarter.
+
+### Files touched
+
+- [js/license-helper.js](js/license-helper.js) — `updateLicenseBadge()` now toggles `navBuyFooter.style.display` based on `isLicensed()`
+- 13 helper HTML files ([api-details.html](api-details.html), [ai-api-pricing.html](ai-api-pricing.html), [ai-business-proposal.html](ai-business-proposal.html), [ai-cover-letter-editor.html](ai-cover-letter-editor.html), [ai-resume-review.html](ai-resume-review.html), [document-playbooks.html](document-playbooks.html), [hive-profiles.html](hive-profiles.html), [privacy.html](privacy.html), [prompt-editor.html](prompt-editor.html), [templates.html](templates.html), [terms.html](terms.html), [waxframe-user-manual.html](waxframe-user-manual.html), [what-are-tokens.html](what-are-tokens.html)) — inline Buy entry removed; `navBuyFooter` block added between `.nav-body` close and `.nav-panel` close
+
+---
+
 ## v3.63.281
 
 **hive-profiles.html footer fix — actually-visible license badge, not the slide-out one**

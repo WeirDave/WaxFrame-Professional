@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — license-helper.js
-// Build: 20260611-008
+// Build: 20260611-009
 //  Self-contained license badge + modal logic for helper pages.
 //  Mirrors the in-app license functions in app.js, minus the
 //  trial-rounds tracking (helper pages don't run rounds, so the
@@ -63,6 +63,16 @@ function clearLicense() {
 
 // ── Badge rendering ──
 function updateLicenseBadge() {
+  // v3.63.282 — Keep the pinned Buy footer in sync with license state, same
+  // as app.js's updateLicenseBadge does on the work screen. Visible for
+  // non-licensed (trial) users, hidden once a valid license is present.
+  // Pre-v3.63.282 helper pages carried a "🛒 Buy WaxFrame Pro" inline
+  // nav-item that showed unconditionally — fired even for licensed users
+  // who shouldn't see an upsell at all. Now the wider pinned CTA shows
+  // only on trial, matching the canonical index.html pattern.
+  const buyFooter = document.getElementById('navBuyFooter');
+  if (buyFooter) buyFooter.style.display = isLicensed() ? 'none' : '';
+
   const badge = document.getElementById('licenseBadge');
   if (!badge) return;
   if (isLicensed()) {
