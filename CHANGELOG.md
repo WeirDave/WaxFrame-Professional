@@ -2,6 +2,32 @@
 
 ---
 
+## v3.63.287
+
+**help.html giant-bee fix + logo size + revert of stray version-number rewrites**
+
+Build: `20260612-002`<br>
+Released: `2026-06-12`
+
+### What changed
+
+Three follow-up fixes to v3.63.286's documentation refresh.
+
+**1. The Worker Bee on `help.html` no longer eats the page.** v3.63.280 retired the `🐝` emoji from the "Report a bug" `<h2>` and replaced it with `<img src="images/WaxFrame_Worker_Bee_v2.png" class="label-bee">`. The `.label-bee` class is defined in `style.css` — and `help.html` is the one helper page that **intentionally does not load `style.css`** (see the "break-glass" design contract at the top of the file: the help page must keep working even when the main app is broken, so its CSS is fully inline). The class was referenced but never defined, the `<img>` had no width or height rule, and the browser rendered it at the PNG's native **850×850 pixels** — a giant bee that dwarfed every heading and pushed "Report a bug" off the visible page. Fix: copy the three small bee-mascot icon rules (`.nav-bee-icon`, `.label-bee`, `.inline-bee`) into help.html's inline `<style>` block. Sizing matches `style.css` exactly so the bee on this page looks the same size as anywhere else in the app.
+
+**2. The header logo on `help.html` bumped from 88px → 140px.** At 88px the WaxFrame logo at the top of the support page looked like an afterthought next to the centered "Help" heading. 140px matches the welcome-screen logo treatment in `index.html` — the closest sibling context (main landing area with lots of breathing room around it).
+
+**3. Reverted a global `v3.63.274 → v3.63.275` search-replace from the v3.63.286 commit.** During Codex's v3.63.286 work an over-matched pass rewrote `v3.63.274` to `v3.63.275` in five places that were paper-trail references to the original Provider Catalog refactor commit. The rewrite would have made the code and changelog say the catalog shipped in v3.63.275 (the audit-cleanup release) instead of v3.63.274 (the actual catalog release). Reverted in: `CHANGELOG.md` (the v3.63.284 entry's paper-trail note about the catalog and the "Note on v3.63.274's tag" subsection), `js/api.js` (two header comments), `js/provider-catalog.js` (one header comment), and `help.html` (two inline-script comments). The historical attribution to v3.63.274 is correct and preserved.
+
+### Files touched
+
+- [help.html](help.html) — inline `.nav-bee-icon`/`.label-bee`/`.inline-bee` rules added to the page's `<style>` block; `.logo` height 88px → 140px; two stray `v3.63.275` references in the inline-script comments reverted to `v3.63.274`
+- [CHANGELOG.md](CHANGELOG.md) — three stray `v3.63.275` references inside the v3.63.284 entry reverted to `v3.63.274`
+- [js/api.js](js/api.js), [js/provider-catalog.js](js/provider-catalog.js) — three stray `v3.63.275` header-comment references reverted to `v3.63.274`
+- Cache-bust + build stamps swept to `3.63.287` / `20260612-002` everywhere
+
+---
+
 ## v3.63.286
 
 **Start Here path · documentation flow for document creators**
