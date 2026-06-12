@@ -1,0 +1,408 @@
+WaxFrame Storage Schema v1
+2026-06-12
+
+ABOUT THIS DOCUMENT
+────────────────────────────────────────────────────────────
+First-pass inventory of every localStorage key written or
+read by WaxFrame Professional. Produced for backlog item #7
+(localStorage migration audit). Built from an AST scan of
+every js/*.js file plus every inline <script> block in the
+HTML helper pages — 224 setItem/getItem/removeItem
+operations across 4 JS files and 2 HTML files, normalized
+to 42 unique keys (29 static + 13 dynamic-name patterns).
+
+The static enumeration found ZERO orphan keys. Two patterns
+look orphan to a static reference scan but are intentional:
+
+  • waxframe_v2_hive_recovery — write-only safety net.
+    When loadSettings() can't parse LS_HIVE, the raw blob
+    gets stashed here for the user to recover via DevTools.
+    Read by humans, not by code. See storage.js:874.
+
+  • waxframe_v2_settings — read-once, removed-once. The
+    pre-v3.45 single-blob settings key, kept around so a
+    long-cold browser profile from before that release
+    migrates cleanly on first load. See storage.js:839-855.
+
+What this document does NOT yet do (left as remaining work
+on backlog #7):
+  • Manual test plan for forwarding a v3.21-era profile
+    through every release boundary. Needs runtime testing
+    in a controlled browser; static enumeration is silent
+    on whether each read path actually tolerates every
+    historical shape it might encounter.
+
+Audit script: .claude/scratch/ls-audit.js (gitignored).
+Run with `node .claude/scratch/ls-audit.js <project-root>`
+after installing acorn + acorn-walk into .claude/scratch/.
+
+
+════════════════════════════════════════════════════════════
+CANONICAL KEYS — declared as LS_* on `window` in storage.js
+════════════════════════════════════════════════════════════
+
+LS_HIVE  =  'waxframe_v2_hive'
+   ─────────────────────────────────────────────────────────
+   PURPOSE: AI list + API keys + builder selection +
+            knownDefaultIds. Persists across projects.
+   SHAPE:   JSON.stringify({
+              activeAIIds: string[],
+              knownDefaultIds: string[],
+              builder: string,
+              keys: { [aiId: string]: string },     // API keys
+              customAIs: Array<{ id, name, url, ...}>
+            })
+   WRITTEN: storage.js:776 (saveHive), storage.js:854
+            (migration write from LS_SETTINGS), other
+            migration paths in saveHive's caller chain.
+   READ:    storage.js:835, storage.js:859, app.js:2267
+            (and 6 other call sites; all gated on parse-OK).
+   MIGRATION: storage.js:861-886 — JSON.parse wrapped in
+              narrow try/catch. On parse failure: raw blob
+              stashed to waxframe_v2_hive_recovery, toast
+              raised, loadSettings bails BEFORE aiList is
+              touched. See v3.63.276 comment block.
+
+LS_PROJECT  =  'waxframe_v2_project'
+   ─────────────────────────────────────────────────────────
+   PURPOSE: Project name/version/goal + docTab + per-project
+            UI state (referenceDocs, exportMask, hivePreset).
+            Per project.
+   SHAPE:   JSON.stringify({
+              name: string,
+              version: string,
+              goal: string,
+              docTab: string,                       // active doc-tab id
+              referenceDocs: Array<{...}>,
+              exportMask: string,
+              hivePreset: string,
+              ...
+            })
+   WRITTEN: storage.js:800 (saveProject), and one
+            migration-rewrite path.
+   READ:    11 sites across app.js + 1 in wf-debug.js.
+            All use JSON.parse(... || '{}') with the
+            empty-object fallback.
+   MIGRATION: tolerates an empty/missing key via the
+              '|| {}' fallback. No explicit version
+              branches — the schema accretes optional
+              fields and old shapes parse as a subset.
+
+LS_SESSION  =  'waxframe_v2_session'
+   ─────────────────────────────────────────────────────────
+   PURPOSE: Round state snapshot for resume-after-reload.
+            Lightweight envelope; the heavy session payload
+            (history, docText, consoleHTML) lives in
+            IndexedDB under IDB_KEY = 'current'.
+   SHAPE:   JSON envelope — see storage.js's saveSession
+            function. Includes round counter, current
+            phase, last-Builder timestamp.
+   WRITTEN: storage.js:324 (saveSession) + the IDB
+            mirror chain in _saveSessionChain.
+   READ:    storage.js (loadSession entry), app.js
+            resume-detection path.
+   MIGRATION: storage.js handles v6/v5/v4 envelope
+              versions on read — see the IDB
+              onupgradeneeded ladder at storage.js:72
+              and the loadSession version-branching code.
+
+LS_SETTINGS  =  'waxframe_v2_settings'
+   ─────────────────────────────────────────────────────────
+   PURPOSE: Pre-v3.45 single-blob settings key. RETIRED.
+            Kept readable so long-cold browsers from
+            before v3.45 migrate cleanly on first load.
+   SHAPE:   (legacy) JSON.stringify({
+              activeAIIds, knownDefaultIds, builder,
+              keys, customAIs
+            })
+   WRITTEN: never (RETIRED on write).
+   READ:    storage.js:839 only — inside loadSettings'
+            migration branch, gated on `!hiveRaw`.
+   MIGRATION: storage.js:840-855 reads legacy, rebuilds
+              the LS_HIVE shape from it, writes LS_HIVE,
+              REMOVES legacy. One-shot.
+
+LS_LICENSE  =  'waxframe_v2_license'
+   ─────────────────────────────────────────────────────────
+   PURPOSE: License key + activation metadata. Persistent.
+   SHAPE:   JSON.stringify({ key: string, ...activation }).
+   WRITTEN: 6 sites across license-helper.js + app.js.
+   READ:    16 sites — license-check is a hot path on
+            most user-facing actions.
+   MIGRATION: license-helper.js handles its own version
+              compat. No legacy keys observed.
+
+LS_PROMPTS  =  'waxframe_v2_prompts'
+   ─────────────────────────────────────────────────────────
+   PURPOSE: User overrides for the prompt blocks shipped
+            in app.js (draft_scratch, refine, etc.).
+            Edited via the Prompt Editor page.
+   SHAPE:   JSON.stringify({ [promptKey: string]: string })
+   WRITTEN: prompt-editor.html (inline <script>) — that's
+            the only writer.
+   READ:    app.js:7724 (recommend-model prompt loader,
+            for backwards-compat with pre-v3.32.10 saves)
+            and app.js:15771 (getPrompt — the canonical
+            prompt loader).
+   MIGRATION: getPrompt does an empty-object fallback,
+            so a missing key returns the in-app default.
+
+
+════════════════════════════════════════════════════════════
+SESSION + PROJECT EPHEMERA — per-session, per-project state
+════════════════════════════════════════════════════════════
+
+waxframe_v2_session_exists     boolean flag — "is there a
+                               resumable session?" Fast
+                               check so the resume banner
+                               can decide without parsing
+                               the full session envelope.
+                               4 writes / 1 read / 3 removes
+                               (the high write+remove count
+                               reflects the lifecycle: set
+                               on save, cleared on Open New
+                               Project / clear-all paths).
+
+waxframe_v2_filename           Last-uploaded source-doc
+                               filename. UI cue only.
+                               1 write / 1 read / 3 removes.
+
+waxframe_v2_has_pdf_pages      Boolean cue: was the source
+                               doc a PDF with per-page
+                               metadata? Used by the
+                               reference-doc renderer to
+                               show the PDF-page count.
+                               2 writes / 1 read / 2 removes.
+
+waxframe_v2_source_type        Source doc type
+                               ('pdf'/'docx'/'txt'/'paste').
+                               2 writes / 1 read / 3 removes.
+
+waxframe_v2_hive_recovery      WRITE-ONLY SAFETY NET. See
+                               the explanation at the top
+                               of this document.
+                               1 write only.
+
+waxframe_resolved_decisions    User-Decision conflict picks
+                               for the current session.
+                               7 writes / 2 reads / 2 removes.
+
+waxframe_conflict_ledger       Ledger of conflict pills
+                               raised this session.
+                               5 writes / 2 reads / 2 removes.
+
+
+════════════════════════════════════════════════════════════
+HIVE PROFILES + CUSTOM TEMPLATES + AI WARNINGS
+════════════════════════════════════════════════════════════
+
+waxframe_hive_profile          Active Hive Profile id
+                               (preset or user-saved).
+                               1 write / 1 read.
+
+waxframe_custom_hive_profiles  User-saved Hive Profile
+                               objects. Array of profiles.
+                               1 write / 1 read.
+
+waxframe_custom_templates      User-saved project Templates.
+                               1 write / 2 reads.
+
+waxframe_ai_warnings           Per-AI warning bookkeeping
+                               (slow-responder, throttle,
+                               etc.). 6 writes / 2 reads
+                               / 2 removes.
+
+waxframe_incapable_models      Manually marked as
+                               Builder-incapable.
+                               1 write / 2 reads.
+
+
+════════════════════════════════════════════════════════════
+PROVIDER + MODEL CACHES (dynamic keys per provider/AI id)
+════════════════════════════════════════════════════════════
+
+waxframe_models_${providerId}            Model list cache
+                                         per provider. Set
+                                         on every fetch;
+                                         no reads — the
+                                         provider catalog
+                                         module reads from
+                                         its own runtime
+                                         shape, and this
+                                         key is a side-effect
+                                         persistence for
+                                         post-mortem only.
+                                         FLAGGED [WRITE-ONLY]
+                                         — would be a clean
+                                         pickup if the
+                                         persistence isn't
+                                         used by anything;
+                                         needs runtime
+                                         verification before
+                                         removing.
+
+waxframe_tiers_${providerId}             Per-provider tier
+                                         classification
+                                         (CHEAP / BALANCED
+                                         / THINKER / FAST).
+                                         Written by the
+                                         classifier; read by
+                                         Hive Profiles to
+                                         resolve tier picks.
+
+waxframe_recommend_default-${aiId}                Recommender
+waxframe_recommend_default-${aiId}-builder        result cache
+waxframe_recommend_default-${aiId}-reviewer       per AI id +
+waxframe_recommend_custom-${aiId}                 role.
+waxframe_recommend_custom-${aiId}-builder         Removed when
+waxframe_recommend_custom-${aiId}-reviewer        user clears
+                                                  the cache or
+                                                  changes the
+                                                  prompt version.
+                                                  All 6 patterns
+                                                  show set=0
+                                                  get=0 rem=3
+                                                  here because
+                                                  the SET sites
+                                                  use a fully
+                                                  dynamic key
+                                                  built from
+                                                  template strings
+                                                  that include
+                                                  the role at
+                                                  call time; the
+                                                  REM sites use
+                                                  separate
+                                                  literal templates
+                                                  for each role
+                                                  for cleanliness.
+                                                  Not orphan —
+                                                  audit-script
+                                                  attribution
+                                                  artifact.
+
+waxframe_recommend_promptver             'v2' marker. If
+                                         missing or
+                                         non-'v2', the
+                                         IIFE at
+                                         app.js:7586-7595
+                                         removes every
+                                         waxframe_recommend_*
+                                         key (the cache
+                                         is keyed on
+                                         prompt content
+                                         that changed in
+                                         v3.32.10).
+                                         1 write / 1 read.
+
+
+════════════════════════════════════════════════════════════
+UI PREFERENCES + USER TOGGLES
+════════════════════════════════════════════════════════════
+
+waxframe_v2_theme              'light' / 'dark' / 'auto'.
+waxframe_muted                 'true' / 'false'.
+waxframe_dev                   'true' / 'false' — dev toolbar.
+waxframe_dev_toolbar_pos       JSON {x, y} for dev toolbar
+                               drag-persist.
+waxframe_bee_expanded_rows     Set<aiId> serialized — which
+                               rows are expanded.
+waxframe_decision_diff_mode    'side-by-side' / 'inline' etc.
+waxframe_deepdive              Deep Dive UI open/closed
+                               and last filter pick.
+waxframe_slow_responder_enabled  user toggle for
+                               slow-responder detection.
+waxframe_auto_update_interval    minutes between heartbeats.
+waxframe_auto_update_last_run    timestamp.
+waxframe_auto_update_models      'true' / 'false'.
+waxframe_import_server_defaults  remembered Import Server
+                                 form defaults.
+waxframe_vision_provider         which provider runs vision
+                                 (per-user fallback ranking).
+
+
+════════════════════════════════════════════════════════════
+SUPPRESS PROMPTS (dynamic keys; managed in bulk)
+════════════════════════════════════════════════════════════
+
+Pattern: waxframe_suppress_${promptKey}
+   ─────────────────────────────────────────────────────────
+   PURPOSE: User has clicked "Don't show this again" on a
+            confirmation prompt. Boolean presence (existence
+            of the key = suppressed).
+   WRITTEN: Per-prompt callers via wfConfirm + per-prompt
+            suppressKey.
+   READ:    Same wfConfirm path.
+   BULK:    The "↺ Restore dismissed prompts" action in
+            Settings clears every waxframe_suppress_* key
+            in one pass via Object.keys+removeItem (see
+            app.js:1085-1090). That bulk-remove uses a
+            dynamic key, which is why the audit reports
+            it under [DYNAMIC] rather than per literal
+            prompt-key — the literal keys never appear
+            statically in the code.
+
+
+════════════════════════════════════════════════════════════
+PROBE / DIAGNOSTIC
+════════════════════════════════════════════════════════════
+
+__wf_probe__                   Write-then-immediate-remove
+                               probe to detect whether
+                               localStorage is writable in
+                               the current browser context
+                               (private mode, quota, etc.).
+                               Only the SET matters — if it
+                               throws, the surrounding code
+                               knows storage is unavailable.
+                               1 SET site in help.html's
+                               inline diagnostic script;
+                               REM follows on the same line.
+
+
+════════════════════════════════════════════════════════════
+FINDINGS SUMMARY
+════════════════════════════════════════════════════════════
+
+   Total operations:                224
+   Unique keys (static):            29
+   Dynamic-key patterns:            13
+   Orphan keys (written-never-read,
+     excluding intentional patterns):  0
+   Orphan keys (read-never-written,
+     excluding intentional patterns):  0
+
+   Notable patterns to keep in mind for future passes:
+
+   • waxframe_models_${providerId} flags WRITE-ONLY in the
+     audit. Needs runtime check: is the persisted cache
+     actually consumed on next boot, or is the in-memory
+     copy the only one ever read?
+   • The waxframe_recommend_* family shows odd set/get/rem
+     counts because the SETs use a single template that
+     includes the role at runtime while the REMs use 6
+     separate literal templates per role. Not orphan —
+     audit-script attribution artifact. Worth confirming
+     with a runtime trace.
+
+
+════════════════════════════════════════════════════════════
+REMAINING WORK ON BACKLOG #7
+════════════════════════════════════════════════════════════
+
+1. Manual test plan: forward a v3.21-era profile through
+   every release boundary, confirm each read path tolerates
+   the historical shape it encounters.
+
+2. Runtime verification of the two "audit-script
+   attribution artifact" patterns flagged above
+   (waxframe_models_* and waxframe_recommend_*) — confirm
+   the in-memory model is the source of truth and the
+   persisted forms are post-mortem-only OR re-consumed
+   on boot.
+
+3. Per-key schema versioning. Today the canonical keys
+   accrete optional fields and rely on empty-object
+   fallbacks. A first-class schema-version field on each
+   payload would make the next audit's "what shape am I
+   looking at?" question instant.
