@@ -78,12 +78,24 @@
     .logo {
       height: 720px; width: auto; display: block; margin: 0 auto 12px;
     }
-    /* v3.63.290 — Hero sizes scale down on laptop viewports. 720px hero
-       fills 2/3 of a 1080p screen and ~90% of a 768-tall laptop screen,
-       which is dominating. On anything narrower than 1600px wide (the
-       standard breakpoint between "laptop" and "large desktop monitor"
-       in WaxFrame's min-spec context), drop to half so the hero anchors
-       the page without eating the fold. */
+    /* v3.63.290 — "Report a bug" hero bee. The bee is no longer a tiny inline
+       label icon next to the h2 — it's its own centered hero illustration
+       above the section, sized to match the page logo. Same visual weight,
+       same vertical proof-of-life: "this is the bug-report area." Sized
+       BEFORE the responsive @media block below so the cascade can override
+       it correctly — defining it LATER in the file (the pre-fix bug) meant
+       its base 720px rule clobbered the media query's 360px override every
+       time the page rendered at <1600px wide. */
+    .bug-hero-bee {
+      height: 720px; width: auto; display: block;
+      margin: 0 auto 16px;
+    }
+    /* Hero sizes scale down on laptop viewports. 720px hero fills 2/3 of a
+       1080p screen and ~90% of a 768-tall laptop screen, which is
+       dominating. On anything narrower than 1600px wide (the standard
+       breakpoint between "laptop" and "large desktop monitor" in
+       WaxFrame's min-spec context), drop to half so the hero anchors the
+       page without eating the fold. */
     @media (max-width: 1599px) {
       .logo { height: 360px; }
       .bug-hero-bee { height: 360px; }
@@ -124,15 +136,6 @@
     .nav-bee-icon { width: 1.25em; height: 1.25em; }
     .label-bee    { width: 1.4em;  height: 1.4em; }
     .inline-bee   { width: 1.1em;  height: 1.1em; margin-right: 0.25em; }
-
-    /* v3.63.289 — "Report a bug" hero bee. The bee is no longer a tiny inline
-       label icon next to the h2 — it's its own centered hero illustration
-       above the section, sized to match the page logo. Same visual weight,
-       same vertical proof-of-life: "this is the bug-report area." */
-    .bug-hero-bee {
-      height: 720px; width: auto; display: block;
-      margin: 0 auto 16px;
-    }
 
     .step-num {
       display: inline-flex; align-items: center; justify-content: center;
