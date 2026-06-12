@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.285
+
+**Orphan-sentinel sweep retired — code that cleaned up code that was already cleaned up**
+
+Build: `20260611-012`<br>
+Released: `2026-06-11`
+
+### What changed
+
+`js/app.js` carried a six-line `try`/`catch` block in its DOMContentLoaded handler that called `localStorage.removeItem(...)` four times to delete migration-sentinel keys that had been stranded in returning users' browsers since v3.63.18:
+
+- `waxframe_v330_baseline_migrated`
+- `waxframe_v33210_recommend_migrated`
+- `waxframe_v3605_together_models_migrated`
+- `waxframe_v3607_together_models_migrated`
+
+Those keys had been the "did I run this one-time migration?" breadcrumbs for four upgrade migrations whose actual migration functions were removed in v3.63.18. The sweep existed only to clean the breadcrumbs out of users' localStorage; it had been firing on every page load since v3.63.18 for that single purpose.
+
+The deep audit ranked the sweep itself as cosmetic-defer, suggesting we wait six months before deleting it so that any long-cold returning browser profile had a chance to roll through one cleanup pass. David's note today: WaxFrame Professional has one paying customer (plus the developer's own browsers), and he confirms that customer has been rolling forward with every release since shipping. Every active profile in the entire user population has run this sweep many times. The "deferred 6 months for safety" argument was sized for an unknown returning-user base that doesn't exist for this project right now.
+
+The sweep block is now gone. A paper-trail comment replaces it explaining what it was, when it was retired, and that four extra dead bytes in localStorage on a hypothetical long-cold returning profile is harmless.
+
+### What this saves
+
+Effectively nothing measurable per page load — four `removeItem` calls on absent keys are nanoseconds each. The real win is cosmetic: a future audit looking at "what does the boot sequence do?" no longer has to read through and dismiss this stale-by-design block. Same logic as the `_originalModel` retirement in v3.63.284 — code that does nothing useful but takes audit attention every cycle.
+
+### Files touched
+
+- [js/app.js](js/app.js) — six-line try/catch block + nine-line explanatory comment retired; eleven-line paper-trail comment left in its place noting what was removed and why
+
+---
+
 ## v3.63.284
 
 **Back-burner cleanup — every deferred audit item shipped or formally retired**
