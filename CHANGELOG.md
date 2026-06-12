@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.289
+
+**help.html — logo doubled, Worker Bee promoted to a Report-a-bug hero**
+
+Build: `20260612-004`<br>
+Released: `2026-06-12`
+
+### What changed
+
+David wanted bigger across the board on the break-glass support page:
+- The hero logo went from 360px → **720px**. Twice the size, mirroring David's "the logo should be twice the size it is now."
+- The Worker Bee mascot that lived as a small inline icon next to the **Report a bug** `<h2>` is now a centered hero illustration at **720px** — the same visual weight as the page logo, sitting above the heading as the section's own visual anchor.
+
+The `.label-bee` class is unchanged for any future small-inline uses (none on this page anymore); the new `.bug-hero-bee` class drives the standalone hero treatment. Markup changed from `<h2><img class="label-bee">Report a bug</h2>` to `<img class="bug-hero-bee">` followed by `<h2>Report a bug</h2>`.
+
+### Files touched
+
+- [help.html](help.html) — `.logo` height 360px → 720px; new `.bug-hero-bee` rule at 720px; bug-report markup restructured so the bee is its own centered hero element above the heading
+
+---
+
 ## v3.63.288
 
 **help.html logo — pushed to hero size (360px)**
