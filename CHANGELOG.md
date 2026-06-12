@@ -25,7 +25,7 @@ David asked for a sweep of everything I'd put on the back burner during the v3.6
 
 A four-line checklist sits at the end of the doc for the next quarterly audit.
 
-**5. v3.63.274 retroactively tagged + Released.** The original v3.63.274 commit (`8a6c0963`) landed on main but the git tag was never cut. Called out in the v3.63.275 changelog at the time as a known gap, never addressed. Tag and GitHub Release now created against the original commit hash so the timeline is complete.
+**5. v3.63.274 "missing tag" turned out to be a local-clone artifact.** The v3.63.275 changelog flagged "v3.63.274 was never tagged" based on `git tag -l 'v3.63.274'` returning empty locally. Investigating now: the tag and the GitHub Release for v3.63.274 had existed on the remote since 2026-06-11T13:56:27Z all along — the local worktree just hadn't fetched the tag, and `release-check.mjs`'s diff-against-tag check was therefore comparing HEAD against v3.63.273 (the most recent locally-known tag) the entire time, not against v3.63.274. No code action needed; the paper-trail "gap" was a false positive. Local tag fetched via `git tag v3.63.274 8a6c0963 && git push origin v3.63.274` (no-op on remote: "Everything up-to-date") so future local diff-against-tag checks see the right baseline.
 
 ### Deliberately NOT addressed (defer per audit recommendation)
 
