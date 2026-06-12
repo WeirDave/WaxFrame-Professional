@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260611-012
+     Build: 20260612-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260611-012">
+  <meta name="waxframe-build" content="20260612-001">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.285">
+  <link rel="stylesheet" href="style.css?v=3.63.286">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.285",
+    "softwareVersion": "3.63.286",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -157,7 +157,7 @@
       </div>
     </div>
 
-    <p class="welcome-menu-hint">New here? Open the <strong>Menu</strong> for the User Manual, API setup guide, and more. <button class="goal-info-btn welcome-info-inline" onclick="document.getElementById('infoMenuModal').classList.add('active')" title="What's in the Menu?"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></p>
+    <p class="welcome-menu-hint">New here? Start with the <a href="start-here.html" target="_blank" rel="noopener noreferrer" class="link-accent"><strong>Start Here guide</strong></a>, or open the <strong>Menu</strong> for the User Manual, API setup guide, and more. <button class="goal-info-btn welcome-info-inline" onclick="document.getElementById('infoMenuModal').classList.add('active')" title="What's in the Menu?"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></p>
 
     <button title="Begin first-time setup — set up your hive" class="btn btn-lg btn-accent btn-cta" onclick="goToScreen('screen-bees')">
       <img src="images/WaxFrame_Worker_Bee_v2.png" class="bee-btn-img">
@@ -535,7 +535,7 @@
 
 
 <!-- ============================================================
-     SCREEN 6 — DOCUMENT  (Step 5 of 5)
+     SCREEN 6 — DOCUMENT  (Step 4 of 4)
      ============================================================ -->
 <div class="screen" id="screen-document">
   <div class="fullscreen-layout">
@@ -3418,24 +3418,24 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.285';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.286';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.285"></script>
-<script src="lib/jszip.min.js?v=3.63.285"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.285"></script>
-<script src="js/version.js?v=3.63.285"></script>
-<script src="js/storage.js?v=3.63.285"></script>
-<script src="js/theme.js?v=3.63.285"></script>
-<script src="js/audio.js?v=3.63.285"></script>
-<script src="js/scenes.js?v=3.63.285"></script>
-<script src="js/wf-debug.js?v=3.63.285"></script>
-<script src="js/provider-models.js?v=3.63.285"></script>
-<script src="js/provider-catalog.js?v=3.63.285"></script>
-<script src="js/api.js?v=3.63.285"></script>
-<script src="js/templates.js?v=3.63.285"></script>
-<script src="js/api-links.js?v=3.63.285"></script>
-<script src="js/app.js?v=3.63.285"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.286"></script>
+<script src="lib/jszip.min.js?v=3.63.286"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.286"></script>
+<script src="js/version.js?v=3.63.286"></script>
+<script src="js/storage.js?v=3.63.286"></script>
+<script src="js/theme.js?v=3.63.286"></script>
+<script src="js/audio.js?v=3.63.286"></script>
+<script src="js/scenes.js?v=3.63.286"></script>
+<script src="js/wf-debug.js?v=3.63.286"></script>
+<script src="js/provider-models.js?v=3.63.286"></script>
+<script src="js/provider-catalog.js?v=3.63.286"></script>
+<script src="js/api.js?v=3.63.286"></script>
+<script src="js/templates.js?v=3.63.286"></script>
+<script src="js/api-links.js?v=3.63.286"></script>
+<script src="js/app.js?v=3.63.286"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -3536,6 +3536,7 @@ function wfMobileShareToast(msg) {
     <div class="nav-divider"></div>
     <details class="nav-section">
       <summary class="nav-section-label">Help & Support</summary>
+      <a class="nav-item" href="start-here.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⭐ Start Here</a>
       <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
       <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
       <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
