@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260611-011
+// Build: 20260611-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -548,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260611-011';         // build stamp — update each session
+const BUILD       = '20260611-012';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -20904,21 +20904,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // v3.63.284 — ensureOriginalModelBaseline() call removed alongside the
   // _originalModel scaffold itself. Saved one saveHive() write per cold
   // start that was firing for a field no UI consumed.
-  // v3.63.18 — One-time orphan-sentinel sweep. The three migration functions
-  // these sentinels controlled (V33210 recommend-cache reshuffle, V3605/V3607
-  // Together model-list filter + URL changes, and the v3.30.2 baseline
-  // upgrade toast) were all removed in v3.63.18. The sentinels themselves
-  // would otherwise sit inert in every user's localStorage forever. removeItem
-  // is idempotent — running on already-absent keys is a no-op, so we can run
-  // this unconditionally on every load without tracking a new sentinel of our
-  // own (which would just become the next generation of cruft). Costs four
-  // removeItem calls per page load: negligible.
-  try {
-    localStorage.removeItem('waxframe_v330_baseline_migrated');
-    localStorage.removeItem('waxframe_v33210_recommend_migrated');
-    localStorage.removeItem('waxframe_v3605_together_models_migrated');
-    localStorage.removeItem('waxframe_v3607_together_models_migrated');
-  } catch (e) { /* quota / privacy mode — harmless to skip */ }
+  // v3.63.285 — Orphan-sentinel sweep removed. It had been running on every
+  // page load since v3.63.18 to delete four dead localStorage keys
+  // (waxframe_v330_baseline_migrated, waxframe_v33210_recommend_migrated,
+  // waxframe_v3605_together_models_migrated, waxframe_v3607_together_models_migrated).
+  // Their migration functions had already been removed in v3.63.18; the sweep
+  // existed only to clean the keys out of returning users' localStorage. The
+  // audit recommended deferring deletion 6 months to give returning users
+  // time to roll through a clean-up pass, but the actual user population is
+  // small and known — every active browser profile has run the sweep many
+  // times by now. If a long-cold profile ever returns with the keys still
+  // present, four extra dead bytes in localStorage is harmless.
   // v3.41.0 — initMuteBtn() removed. theme.js auto-fires _updateMuteBtn
   // on DOMContentLoaded; since theme.js loads before app.js, theme.js's
   // listener fires first when DOMContentLoaded triggers.
