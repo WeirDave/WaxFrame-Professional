@@ -285,22 +285,30 @@ OPEN FEATURES
            occasionally point at retired features whose
            existence misleads new readers. A clean app.js
            is easier to evolve.
-   STATE:  PARTIAL — v3.63.291 shipped a regex+verification
-           pass over top-level function declarations only
-           (536 examined, 5 confirmed orphan and removed:
-           selectBuilderCandidate, confirmBuilderFromModal,
-           rearmLengthGuard, estimateTokens,
-           stopAutoUpdateHeartbeat). The remaining work is
-           the AST-level sweep that catches methods on
-           objects, helpers nested inside IIFEs, and
+   STATE:  PARTIAL — two regex+verification passes shipped:
+           v3.63.291 cleared top-level declarations in app.js
+           (536 examined, 5 removed: selectBuilderCandidate,
+           confirmBuilderFromModal, rearmLengthGuard,
+           estimateTokens, stopAutoUpdateHeartbeat); v3.63.292
+           extended the scan to every js/*.js file (657 total
+           declarations across 16 files) and cleared two
+           retired-but-never-deleted helpers in theme.js
+           (initMuteBtn, initTheme — both replaced by the
+           auto-init IIFE + DOMContentLoaded listener at the
+           bottom of theme.js back in v3.41.0). The remaining
+           work is the AST-level sweep that catches methods
+           on objects, helpers nested inside IIFEs, and
            string-dispatched handlers (setTimeout/
            addEventListener strings) — none of which the
            top-level regex pass can see.
-   WHERE:  js/app.js (the 20k+ line monolith).
-           v3.63.291 audit script archived at
-           .claude/scratch/audit.js (local-only, gitignored)
-           — useful starting point for future passes; runs
-           in vanilla Node with no install.
+   WHERE:  js/app.js (the 20k+ line monolith), plus all 16
+           js/*.js files for the cross-file extension.
+           Audit scripts archived at
+           .claude/scratch/audit.js (round 1: top-level
+           app.js only) and .claude/scratch/audit3.js
+           (round 3: every js/*.js file). Both local-only
+           and gitignored; both run in vanilla Node with no
+           install.
    DONE:   A list of confirmed-orphan function declarations
            (top-level AND nested AND object-method) exists,
            each verified by both static and dynamic checks
