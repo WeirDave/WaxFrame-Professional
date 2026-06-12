@@ -1,0 +1,281 @@
+<!-- ============================================================
+     WaxFrame — start-here.html
+     Audience-first onboarding guide for people creating documents.
+     ============================================================ -->
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="waxframe-build" content="20260612-001">
+  <title>Start Here — Make Your First Document with WaxFrame</title>
+  <meta name="description" content="A plain-English first-run guide for creating or improving a document with WaxFrame.">
+  <link rel="canonical" href="https://waxframe.com/start-here.html">
+  <meta property="og:title" content="Start Here — Make Your First Document with WaxFrame">
+  <meta property="og:description" content="A plain-English first-run guide for creating or improving a document with WaxFrame.">
+  <meta property="og:url" content="https://waxframe.com/start-here.html">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Start Here — Make Your First Document with WaxFrame">
+  <meta name="twitter:description" content="A plain-English first-run guide for creating or improving a document with WaxFrame.">
+  <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
+  <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
+  <link rel="stylesheet" href="style.css?v=3.63.286">
+</head>
+<body class="helper-body">
+
+<div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+
+<div class="nav-panel" id="navPanel">
+  <div class="nav-panel-header">
+    <div class="nav-panel-brand">
+      <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="nav-panel-logo">
+      <div class="nav-panel-brand-text">
+        <span class="nav-panel-title">WaxFrame</span>
+        <span class="nav-panel-tagline">Many minds, one refined result.</span>
+        <span class="app-version-stamp nav-panel-version"></span>
+        <button class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+      </div>
+    </div>
+    <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
+  </div>
+
+  <div class="nav-body">
+    <div class="nav-section-label">Help & Support</div>
+    <a class="nav-item" href="start-here.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⭐ Start Here</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="templates.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📄 Choose a Template</a>
+    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
+    <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
+    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">WaxFrame App</div>
+    <a class="nav-item" href="index.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
+    <a class="nav-item" href="index.html#settings" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⚙ Settings</a>
+
+    <div class="nav-divider"></div>
+    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Legal</div>
+    <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
+    <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
+  </div>
+</div>
+
+<div class="page-header">
+  <div class="page-header-left">
+    <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+  </div>
+  <div class="page-header-brand">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
+    <div class="page-header-brand-text">
+      <div class="page-header-name">WaxFrame</div>
+      <div class="page-header-tag">Many minds, one refined result.</div>
+      <span class="app-version-stamp helper-version-stamp"></span>
+    </div>
+  </div>
+  <div class="page-header-controls">
+    <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
+    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
+    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
+    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+  </div>
+</div>
+
+<div class="page-main" id="top">
+
+  <div class="hp-section">
+    <div class="hp-section-header">
+      <img src="images/WaxFrame_Starting_Bee_v1.png" alt="" class="hp-section-bee">
+      <div class="hp-section-title-block">
+        <h1 class="hp-section-title">Start Here</h1>
+        <p class="hp-section-sub">If you came here because you need a better document, this is the short path. WaxFrame asks a few AIs to review the same draft, then one Builder AI rewrites it using the strongest suggestions. You stay in charge of the final wording.</p>
+        <p class="hp-section-sub">You do not need to understand AI models, tokens, or prompt engineering to begin. Start with the kind of document you want, give WaxFrame a clear goal, and run one round.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-layout">
+    <aside class="doc-sidebar">
+      <div class="doc-sidebar-inner">
+        <div class="doc-sidebar-category">First Run</div>
+        <a href="#quick-start" class="doc-sidebar-link">⭐ Try Quick Start</a>
+        <a href="#real-document" class="doc-sidebar-link">📄 Choose your document</a>
+        <a href="#keys" class="doc-sidebar-link">🔑 Set up keys</a>
+        <a href="#first-round" class="doc-sidebar-link">🚀 Run the first round</a>
+        <a href="#after" class="doc-sidebar-link">✅ Know what to do next</a>
+
+        <div class="doc-sidebar-category">When You Need More</div>
+        <a href="document-playbooks.html" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">📋 Document Playbooks ↗</a>
+        <a href="templates.html" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">📄 Choose a Template ↗</a>
+        <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">🔑 API Key Guide ↗</a>
+        <a href="help.html" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">🛟 Help ↗</a>
+      </div>
+    </aside>
+
+    <div class="doc-main">
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="quick-start">1. Try the Quick Start first</h2>
+            <p class="hp-section-sub">The fastest way to learn WaxFrame is to run the small Chocolate Chip Cookies demo. It uses the same workflow as a proposal, cover letter, or review, but nothing important is at stake.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+          <div class="wf-card is-accent">
+            <p>Open WaxFrame, go to the Project screen, click <strong>📋 Use Template</strong>, then choose the gold <strong>Quick Start</strong> template. Leave the starting document blank and click <strong>Smoke the Hive</strong> when you reach the work screen.</p>
+            <p>What you are looking for: one round creates the first draft, another round usually confirms that the reviewers are mostly satisfied. That is the shape of a normal WaxFrame session.</p>
+            <p><a href="index.html" class="link-accent">Open WaxFrame →</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="real-document">2. Choose the real document you want to make</h2>
+            <p class="hp-section-sub">Do not start from a blank idea if a template already matches your job. Templates fill in the project fields for you, and playbooks explain why those fields work.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+          <div class="two-col">
+            <div class="wf-card">
+              <h3 class="wf-card-title">Browse by document type</h3>
+              <p>Use this when you know the outcome: cover letter, resume, business proposal, RFP response, restaurant review, product review, blog post, and more.</p>
+              <p><a href="templates.html" target="_blank" rel="noopener noreferrer" class="link-accent">Choose a template ↗</a></p>
+            </div>
+            <div class="wf-card">
+              <h3 class="wf-card-title">Read the full playbook</h3>
+              <p>Use this when the document matters and you want the exact field text, setup advice, and what to watch for during review rounds.</p>
+              <p><a href="document-playbooks.html" target="_blank" rel="noopener noreferrer" class="link-accent">Open document playbooks ↗</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="keys">3. Set up enough AIs to run</h2>
+            <p class="hp-section-sub">WaxFrame needs at least two AIs with working keys. Three or more is better, but two is enough to learn the flow.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+          <div class="wf-card is-green">
+            <p>An API key is just the private code that lets WaxFrame use an AI on your behalf. The step-by-step key guide shows exactly where to click for each provider.</p>
+            <p>Simple first setup: add one paid provider such as Claude, ChatGPT, or DeepSeek, then add Gemini while Google AI Studio billing is disabled if you want a low-cost Builder option.</p>
+            <p><a href="api-details.html" target="_blank" rel="noopener noreferrer" class="link-accent">Open the API Key Guide ↗</a></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="first-round">4. Run one round, then read like an editor</h2>
+            <p class="hp-section-sub">Click <strong>Smoke the Hive</strong>. WaxFrame sends the document to your reviewers, asks the Builder to rewrite it, then shows you the new version.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+          <table class="wh-table">
+            <thead><tr><th>What you see</th><th>What it means</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Updated document</strong></td><td>Read it as the next draft, not as final truth. Edit anything you dislike.</td></tr>
+              <tr><td><strong>Conflict cards</strong></td><td>The AIs disagreed. Pick the option you prefer, or type your own decision.</td></tr>
+              <tr><td><strong>Notes</strong></td><td>Use this when you want the Builder to do something specific next round, such as "make the opening warmer" or "do not change the prices."</td></tr>
+              <tr><td><strong>Converged</strong></td><td>The reviewers mostly stopped asking for changes. You can still keep editing if your own eye sees something better.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="after">5. Stop when the document sounds right</h2>
+            <p class="hp-section-sub">WaxFrame is a writing workflow, not a magic finish button. The goal is a document you trust and can use.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+          <div class="wf-card">
+            <p>Run another round when the draft is improving. Use <strong>Send to Builder</strong> when you want one targeted change without calling every reviewer. Export when the document reads the way you want it to read.</p>
+            <p>If something goes wrong, open the Help page. It starts with plain fixes and has support tools only when you need them.</p>
+            <p><a href="help.html" target="_blank" rel="noopener noreferrer" class="link-accent">Get help ↗</a></p>
+          </div>
+          <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="page-footer page-footer-unified">
+  <div class="page-footer-actions"></div>
+  <div class="page-footer-center"></div>
+  <div class="page-footer-right">
+    <span class="license-badge" id="licenseBadge" title="License status"></span>
+    <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+  </div>
+</div>
+
+<div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="about-modal-logo">
+    <h2 class="finish-modal-title">WaxFrame</h2>
+    <p class="about-modal-subtitle">About</p>
+    <div class="goal-info-body">
+      <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span class="app-version-stamp"></span></span></div>
+      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" class="link-accent">Read license →</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">WaxFrame Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">Manage License</h2>
+    <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
+    <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
+    <div class="license-modal-actions">
+      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+  </div>
+</div>
+
+<script src="js/version.js?v=3.63.286"></script>
+<script src="js/theme.js?v=3.63.286"></script>
+<script src="js/audio.js?v=3.63.286"></script>
+<script src="js/docx-export.js?v=3.63.286"></script>
+<script src="js/nav-helper.js?v=3.63.286"></script>
+<script src="js/license-helper.js?v=3.63.286"></script>
+<script>
+  document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
+</script>
+
+</body>
+</html>
