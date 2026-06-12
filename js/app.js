@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260611-006
+// Build: 20260611-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260611-006';         // build stamp — update each session
+const BUILD       = '20260611-007';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -640,9 +640,11 @@ const FREE_TRIAL_ROUNDS  = 3;
 // TEXT CONTENT (between tags like <div>${esc(x)}</div>) but UNSAFE for HTML
 // ATTRIBUTE CONTEXTS (inside onclick="...", title="...", value="...", etc.)
 // because it does NOT escape `"` or `'`. For attribute contexts use
-// `escapeHtml()` (defined ~line 9407) which also escapes quotes. CodeQL
-// flagged five attribute-context misuses in this file (lines 11331, 7037,
-// 4462, and 3426 ×2); all were swapped to `escapeHtml()` in v3.63.15.
+// `escapeHtml()` which also escapes quotes. CodeQL flagged five
+// attribute-context misuses in this file in v3.63.15; all were swapped to
+// `escapeHtml()` at that release. (v3.63.280 — line numbers in the original
+// comment had rotted since the file grew ~10k lines; they're now stripped
+// in favor of grep-by-symbol if the audit-trail is needed again.)
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -1842,6 +1844,10 @@ function closeChangeBuilder() {
   if (_pendingBuilderDisable) {
     const name = activeAIs.find(a => a.id === _pendingBuilderDisable)?.name || 'AI';
     _pendingBuilderDisable = null;
+    // v3.63.280 — Canonical verb for action-not-taken: "cancelled". Pre-fix
+    // this site said "disable cancelled" while adjacent sites used "disabled"
+    // and "removed" — the audit flagged the divergence on identical user
+    // intent (undo / abort).
     if (typeof toast === 'function') toast(`${name} is still your Builder — disable cancelled`);
   }
   // v3.51.0 — Resume deferred auto chain. Mirrors the resume hook in
