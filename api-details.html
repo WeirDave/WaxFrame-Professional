@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260611-008
+     Build: 20260611-009
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260611-008">
+  <meta name="waxframe-build" content="20260611-009">
   <title>API Key Guide for AI Providers — WaxFrame</title>
   <meta name="description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <link rel="canonical" href="https://waxframe.com/api-details.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.281">
+  <link rel="stylesheet" href="style.css?v=3.63.282">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -162,14 +162,24 @@
     <a class="nav-item" href="index.html#settings" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⚙ Settings</a>
 
     <div class="nav-divider"></div>
-    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
-
-    <div class="nav-divider"></div>
     <div class="nav-section-label">Legal</div>
     <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
     <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
   </div>
-</div>
+  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
+       only to non-licensed (trial) users; license-helper.js's
+       updateLicenseBadge() hides it once a valid license is present. Its
+       own distinct slot — outside .nav-body so it sticks to the bottom of
+       the panel like the work-screen version. -->
+  <div class="nav-panel-footer" id="navBuyFooter">
+    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
+      <span class="nav-buy-cta-icon">🛒</span>
+      <span class="nav-buy-cta-text">
+        <span class="nav-buy-cta-title">Buy a License</span>
+        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
+      </span>
+    </a>
+  </div></div>
 
 <!-- ========================================================
      UNIFIED HELPER-PAGE HEADER (v3.22.5)
@@ -990,7 +1000,20 @@
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
   </div>
-</div>
+  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
+       only to non-licensed (trial) users; license-helper.js's
+       updateLicenseBadge() hides it once a valid license is present. Its
+       own distinct slot — outside .nav-body so it sticks to the bottom of
+       the panel like the work-screen version. -->
+  <div class="nav-panel-footer" id="navBuyFooter">
+    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
+      <span class="nav-buy-cta-icon">🛒</span>
+      <span class="nav-buy-cta-text">
+        <span class="nav-buy-cta-title">Buy a License</span>
+        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
+      </span>
+    </a>
+  </div></div>
 
 <!-- ========================================================
      UNIFIED HELPER-PAGE FOOTER (v3.22.5) — sticky bottom.
@@ -1007,7 +1030,20 @@
     <span class="license-badge" id="licenseBadge" title="License status"></span>
     <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
   </div>
-</div>
+  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
+       only to non-licensed (trial) users; license-helper.js's
+       updateLicenseBadge() hides it once a valid license is present. Its
+       own distinct slot — outside .nav-body so it sticks to the bottom of
+       the panel like the work-screen version. -->
+  <div class="nav-panel-footer" id="navBuyFooter">
+    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
+      <span class="nav-buy-cta-icon">🛒</span>
+      <span class="nav-buy-cta-text">
+        <span class="nav-buy-cta-title">Buy a License</span>
+        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
+      </span>
+    </a>
+  </div></div>
 
 <!-- ========================================================
      ABOUT MODAL — helper-page version. Metadata only.
@@ -1063,18 +1099,18 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.281"></script>
-<script src="lib/docx.min.js?v=3.63.281"></script>
-<script src="js/docx-export.js?v=3.63.281"></script>
-<script src="js/nav-helper.js?v=3.63.281"></script>
-<script src="js/license-helper.js?v=3.63.281"></script>
-<script src="js/api-links.js?v=3.63.281"></script>
-<script src="js/version.js?v=3.63.281"></script>
-<script src="js/docs-scrollspy.js?v=3.63.281"></script>
+<script src="js/theme.js?v=3.63.282"></script>
+<script src="lib/docx.min.js?v=3.63.282"></script>
+<script src="js/docx-export.js?v=3.63.282"></script>
+<script src="js/nav-helper.js?v=3.63.282"></script>
+<script src="js/license-helper.js?v=3.63.282"></script>
+<script src="js/api-links.js?v=3.63.282"></script>
+<script src="js/version.js?v=3.63.282"></script>
+<script src="js/docs-scrollspy.js?v=3.63.282"></script>
 <!-- v3.63.275 — api.js calls WFProviderCatalog.buildApiConfigs() at module eval; provider-models.js + provider-catalog.js must load first. -->
-<script src="js/provider-models.js?v=3.63.281"></script>
-<script src="js/provider-catalog.js?v=3.63.281"></script>
-<script src="js/api.js?v=3.63.281"></script>
+<script src="js/provider-models.js?v=3.63.282"></script>
+<script src="js/provider-catalog.js?v=3.63.282"></script>
+<script src="js/api.js?v=3.63.282"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
   // v3.57.0 — derive displayed model names from the live API_CONFIGS seeds
