@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — hive-profiles.html
-     Build: 20260611-007
+     Build: 20260611-008
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260611-007">
+  <meta name="waxframe-build" content="20260611-008">
   <title>Hive Profiles — WaxFrame Reference</title>
   <meta name="description" content="Hive Profiles let you swap every AI's model pick across the whole hive with one click — Cheap, Balanced, Thinker, Fast, or your own saved configuration.">
   <link rel="canonical" href="https://waxframe.com/hive-profiles.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Hive Profiles let you swap every AI's model pick across the whole hive with one click — Cheap, Balanced, Thinker, Fast, or your own saved configuration.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.280">
+  <link rel="stylesheet" href="style.css?v=3.63.281">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -88,12 +88,6 @@
         <span class="nav-panel-title">WaxFrame</span>
         <span class="nav-panel-tagline">Many minds, one refined result.</span>
         <span class="app-version-stamp nav-panel-version"></span>
-        <!-- v3.63.278 — Parity with every other helper page. license-helper.js is
-             already loaded for the licenseManageModal flow; the badge call
-             populates this element with the user's current Trial / Pro status.
-             Pre-v3.63.278 the script ran with no badge target and silently
-             no-op'd updateLicenseBadge(). -->
-        <span class="license-badge nav-panel-license-badge" id="licenseBadge" title="License status"></span>
         <button class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
       </div>
     </div>
@@ -296,6 +290,28 @@
 </div>
 
 <!-- ========================================================
+     UNIFIED HELPER-PAGE FOOTER (v3.22.5) — sticky bottom.
+     v3.63.281 — Added here for parity with every other helper
+     page. Pre-v3.63.281, hive-profiles.html loaded license-helper.js
+     for the licenseManageModal flow but had no #licenseBadge target,
+     so updateLicenseBadge() silently no-op'd. v3.63.278 had landed
+     the badge in the slide-out nav-panel — visible only after
+     opening the menu, which is NOT where every other helper page
+     surfaces it. This is the always-visible sticky-footer version
+     that matches user-manual / terms / privacy / etc.
+     ======================================================== -->
+<div class="page-footer page-footer-unified">
+  <div class="page-footer-actions">
+    <button class="btn" onclick="downloadPageAsDocx()" title="Download this page as a Word document (.docx) with images — opens in Word, Google Docs, or LibreOffice">⬇ Download as Word</button>
+  </div>
+  <div class="page-footer-center"></div>
+  <div class="page-footer-right">
+    <span class="license-badge" id="licenseBadge" title="License status"></span>
+    <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+  </div>
+</div>
+
+<!-- ========================================================
      SHARED HELPER MODALS (About + License — v3.22.5)
      ======================================================== -->
 <div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)document.getElementById('aboutModalHelper').classList.remove('active')">
@@ -344,12 +360,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.280"></script>
-<script src="lib/docx.min.js?v=3.63.280"></script>
-<script src="js/docx-export.js?v=3.63.280"></script>
-<script src="js/nav-helper.js?v=3.63.280"></script>
-<script src="js/license-helper.js?v=3.63.280"></script>
-<script src="js/version.js?v=3.63.280"></script>
+<script src="js/theme.js?v=3.63.281"></script>
+<script src="lib/docx.min.js?v=3.63.281"></script>
+<script src="js/docx-export.js?v=3.63.281"></script>
+<script src="js/nav-helper.js?v=3.63.281"></script>
+<script src="js/license-helper.js?v=3.63.281"></script>
+<script src="js/version.js?v=3.63.281"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
