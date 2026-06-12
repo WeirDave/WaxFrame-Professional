@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.286
+
+**Start Here path · documentation flow for document creators**
+
+Build: `20260612-001`<br>
+Released: `2026-06-12`
+
+### What changed
+
+WaxFrame's documentation now has a user-first front door for people who want to make a document rather than learn the internals first.
+
+The new [Start Here](start-here.html) guide walks a first-time user through the shortest successful path:
+
+1. Try the low-stakes Quick Start project.
+2. Choose the real document type.
+3. Set up enough AIs to run.
+4. Run the first round and read the result like an editor.
+5. Stop when the document sounds right.
+
+The app welcome screen and helper-page navigation now put **Start Here** ahead of the deeper references, so new users get a clear path before they see pricing tables, token explanations, provider diagnostics, or advanced template internals.
+
+### Documentation flow cleanup
+
+- [templates.html](templates.html) is now framed as **Choose a Document Template** instead of a technical catalog. The JSON/template-file details remain available, but they live under an advanced section for the rare user editing exported template files by hand.
+- Template deep links like `templates.html#tpl-quick-start` now scroll after the JavaScript-rendered template cards exist, so playbook links land on the intended card instead of the top of the page.
+- [document-playbooks.html](document-playbooks.html) now uses the current 4-step app setup labels (`Setup 2 of 4 — Your Project`, `Setup 4 of 4 — Starting Document`) instead of the retired 5-step language.
+- [help.html](help.html) now starts with human triage: cannot get into the app, AI key not working, or document going in the wrong direction. Technical diagnostics still exist, but they are no longer the first thing a worried writer sees.
+
+### Release ceremony
+
+This release also updates the public sitemap, package/version metadata, CSS build stamp, helper-page nav links, and documentation screenshots so the release validator reads one consistent version/build across the tree.
+
+### Files touched
+
+- [start-here.html](start-here.html) — new plain-English onboarding guide
+- [index.html](index.html) — welcome copy and in-app Help & Support menu now point to Start Here
+- Helper pages — Start Here added to helper-page navigation
+- [templates.html](templates.html) — user-facing template chooser framing, advanced template-file section, rendered-anchor scroll fix
+- [document-playbooks.html](document-playbooks.html) — setup step labels aligned with the app
+- [help.html](help.html) — human-first triage before support diagnostics
+- [sitemap.xml](sitemap.xml) — Start Here added
+- [screenshots/](screenshots/) — regenerated the 18 documentation screenshots after the welcome/menu documentation changes
+- [docs/WaxFrame_Backlog_Master_v242.txt](docs/WaxFrame_Backlog_Master_v242.txt) — release backlog bump
+- [package.json](package.json), [style.css](style.css), [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust/build stamps
+
+---
+
 ## v3.63.285
 
 **Orphan-sentinel sweep retired — code that cleaned up code that was already cleaned up**

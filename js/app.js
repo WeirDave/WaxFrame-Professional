@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260611-012
+// Build: 20260612-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -548,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260611-012';         // build stamp — update each session
+const BUILD       = '20260612-001';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -20904,7 +20904,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // v3.63.284 — ensureOriginalModelBaseline() call removed alongside the
   // _originalModel scaffold itself. Saved one saveHive() write per cold
   // start that was firing for a field no UI consumed.
-  // v3.63.285 — Orphan-sentinel sweep removed. It had been running on every
+  // v3.63.286 — Orphan-sentinel sweep removed. It had been running on every
   // page load since v3.63.18 to delete four dead localStorage keys
   // (waxframe_v330_baseline_migrated, waxframe_v33210_recommend_migrated,
   // waxframe_v3605_together_models_migrated, waxframe_v3607_together_models_migrated).

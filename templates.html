@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20260611-012
+     Build: 20260612-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
@@ -15,21 +15,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260611-012">
-  <title>Document Templates Catalog — WaxFrame</title>
-  <meta name="description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
+  <meta name="waxframe-build" content="20260612-001">
+  <title>Choose a Document Template — WaxFrame</title>
+  <meta name="description" content="Choose a WaxFrame document template for cover letters, résumés, business proposals, RFP responses, product reviews, and more.">
   <link rel="canonical" href="https://waxframe.com/templates.html">
-  <meta property="og:title" content="Document Templates Catalog — WaxFrame">
-  <meta property="og:description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
+  <meta property="og:title" content="Choose a Document Template — WaxFrame">
+  <meta property="og:description" content="Choose a WaxFrame document template for cover letters, résumés, business proposals, RFP responses, product reviews, and more.">
   <meta property="og:url" content="https://waxframe.com/templates.html">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Document Templates Catalog — WaxFrame">
-  <meta name="twitter:description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
+  <meta name="twitter:title" content="Choose a Document Template — WaxFrame">
+  <meta name="twitter:description" content="Choose a WaxFrame document template for cover letters, résumés, business proposals, RFP responses, product reviews, and more.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.285">
+  <link rel="stylesheet" href="style.css?v=3.63.286">
 </head>
 <body class="helper-body">
 
@@ -55,6 +55,7 @@
 
   <div class="nav-body">
     <div class="nav-section-label">Help & Support</div>
+    <a class="nav-item" href="start-here.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⭐ Start Here</a>
     <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
@@ -121,7 +122,7 @@
 <div class="page-main" id="top">
 
   <div class="print-header">
-    <div class="print-header-title">WaxFrame Document Templates Catalog</div>
+    <div class="print-header-title">WaxFrame Document Templates</div>
     <div class="print-header-sub">waxframe.com — Many minds, one refined result.</div>
   </div>
 
@@ -130,9 +131,9 @@
     <div class="hp-section-header">
       <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="hp-section-bee">
       <div class="hp-section-title-block">
-        <h1 class="hp-section-title">Document Templates Catalog</h1>
-        <p class="hp-section-sub">WaxFrame ships with curated templates for the documents people actually write — cover letters, résumés, business proposals, RFP responses, product reviews, blog posts, and more. Each template is a project scaffold: the document type, the audience, the outcome the document should achieve, the tone, the scope, and a reference structure the multi-AI hive uses to write or refine the document.</p>
-        <p class="hp-section-sub">This page is a <strong>reference catalog</strong> of what WaxFrame ships with. Templates are applied <em>inside the WaxFrame app</em> from the Project setup screen, not from this page. Use this catalog to see what's available before you start.</p>
+        <h1 class="hp-section-title">Choose a Document Template</h1>
+        <p class="hp-section-sub">Start with the kind of document you need: a cover letter, résumé, business proposal, RFP response, product review, blog post, or something more everyday. Each template fills in the project fields WaxFrame uses to understand the audience, outcome, tone, and boundaries of the document.</p>
+        <p class="hp-section-sub">Templates are applied <em>inside the WaxFrame app</em> from the Project setup screen. Use this page to choose the closest match, then open WaxFrame and click <strong>📋 Use Template</strong>.</p>
       </div>
     </div>
   </div>
@@ -153,8 +154,8 @@
         <div class="doc-sidebar-category" id="sbCustomCategory" style="display:none">Your Templates</div>
         <a href="#cat-custom" class="doc-sidebar-link" id="sbCustomLink" style="display:none">⭐ Saved Templates</a>
 
-        <div class="doc-sidebar-category">Reference</div>
-        <a href="#data-model" class="doc-sidebar-link">📐 Template Data Model</a>
+        <div class="doc-sidebar-category">Advanced</div>
+        <a href="#data-model" class="doc-sidebar-link">📐 Editing template files</a>
 
         <div class="doc-sidebar-category">Related Guides</div>
         <a href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">📖 User Manual ↗</a>
@@ -191,8 +192,8 @@
       <div class="hp-section">
         <div class="hp-section-header is-bare">
           <div class="hp-section-title-block">
-            <h2 class="hp-section-title" id="data-model">Template Data Model</h2>
-            <p class="hp-section-sub">For power users editing exported <code>.json</code> template files — every template is a JSON object with these fields.</p>
+            <h2 class="hp-section-title" id="data-model">Advanced: editing template files</h2>
+            <p class="hp-section-sub">Most people never need this section. It is here for power users editing exported <code>.json</code> template files by hand.</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -292,14 +293,14 @@
 <!-- ============================================================
      SCRIPT IMPORTS — same set as other helper pages
      ============================================================ -->
-<script src="js/theme.js?v=3.63.285"></script>
-<script src="js/nav-helper.js?v=3.63.285"></script>
-<script src="js/license-helper.js?v=3.63.285"></script>
-<script src="js/version.js?v=3.63.285"></script>
-<script src="js/templates.js?v=3.63.285"></script>
-<script src="js/docs-scrollspy.js?v=3.63.285"></script>
+<script src="js/theme.js?v=3.63.286"></script>
+<script src="js/nav-helper.js?v=3.63.286"></script>
+<script src="js/license-helper.js?v=3.63.286"></script>
+<script src="js/version.js?v=3.63.286"></script>
+<script src="js/templates.js?v=3.63.286"></script>
+<script src="js/docs-scrollspy.js?v=3.63.286"></script>
 <!-- v3.63.138 — JSZip powers the bulk Export All customs button -->
-<script src="lib/jszip.min.js?v=3.63.285"></script>
+<script src="lib/jszip.min.js?v=3.63.286"></script>
 
 <script>
 // ============================================================
@@ -694,6 +695,13 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCustom();
   wireUpSearch();
   injectJsonLd();
+  const targetId = window.location.hash ? window.location.hash.slice(1) : '';
+  if (targetId) {
+    setTimeout(() => {
+      const target = document.getElementById(targetId);
+      if (target) target.scrollIntoView({ block: 'start' });
+    }, 0);
+  }
 });
 
 // ============================================================
@@ -741,7 +749,7 @@ function injectJsonLd() {
           url: `https://waxframe.com/templates.html#tpl-${t.id}`,
           isPartOf: {
             '@type': 'WebPage',
-            name: 'Document Templates Catalog',
+            name: 'WaxFrame Document Templates',
             url: 'https://waxframe.com/templates.html'
           }
         }
@@ -752,8 +760,8 @@ function injectJsonLd() {
   const ld = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'WaxFrame Document Templates Catalog',
-    description: 'Curated document templates shipped with WaxFrame Professional for cover letters, résumés, business proposals, RFP responses, product reviews, and more.',
+    name: 'WaxFrame Document Templates',
+    description: 'Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more.',
     numberOfItems: items.length,
     itemListOrder: 'https://schema.org/ItemListOrderAscending',
     itemListElement: items

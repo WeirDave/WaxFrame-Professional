@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260611-012
+  Build: 20260612-001
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260611-012">
+  <meta name="waxframe-build" content="20260612-001">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
   <link rel="canonical" href="https://waxframe.com/help.html">
@@ -235,10 +235,37 @@
       <p class="verline" id="verline">WaxFrame · loading version…</p>
     </div>
 
+    <!-- 0. Human-first triage --------------------------------------------- -->
+    <section>
+      <h2>Start with what you were trying to do</h2>
+      <p class="sub">Most WaxFrame problems fit one of these plain-English situations. Pick the closest one first; the technical tools below are only there if support needs more detail.</p>
+      <div class="step">
+        <div class="step-head"><span class="step-num">1</span><span class="t">I cannot get into the app</span></div>
+        <div class="step-body">
+          <p>Try a hard refresh first: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> on Windows/Linux or <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> on Mac. WaxFrame is desktop-only, so make sure your browser window is at least <strong>1366×768</strong>.</p>
+          <p><a href="index.html">Open WaxFrame again →</a></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-head"><span class="step-num">2</span><span class="t">An AI key is not working</span></div>
+        <div class="step-body">
+          <p>That usually means the provider rejected the key, billing is not enabled, or the provider is temporarily refusing requests. Open the API Key Guide and check the provider-specific steps before changing your document setup.</p>
+          <p><a href="api-details.html">Open the API Key Guide →</a></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-head"><span class="step-num">3</span><span class="t">The document went in the wrong direction</span></div>
+        <div class="step-body">
+          <p>That is fixable. Add a direct instruction in Notes, edit the Project fields if the goal was vague, or restore an earlier round from Round History. The User Manual explains those choices without requiring technical background.</p>
+          <p><a href="waxframe-user-manual.html#problems">Open document troubleshooting →</a></p>
+        </div>
+      </div>
+    </section>
+
     <!-- 1. Environment ------------------------------------------------------ -->
     <section>
-      <h2>📋 Your environment</h2>
-      <p class="sub">This is gathered automatically — no personal data, no document text. Copy it into your bug report so support knows what you're running.</p>
+      <h2>📋 Support info</h2>
+      <p class="sub">If you need to report a bug, this is gathered automatically — no personal data, no document text. Copy it into your bug report so support knows what you're running.</p>
       <pre class="env" id="envBlock">Gathering…</pre>
       <button class="btn-ghost" id="copyEnvBtn" type="button">⧉ Copy environment</button>
       <p class="status" id="copyStatus"></p>
@@ -285,8 +312,8 @@
 
     <!-- 3. Provider model dump --------------------------------------------- -->
     <section>
-      <h2>🧪 Dump Provider Models</h2>
-      <p class="sub">Compare WaxFrame's cached model list against a fresh provider fetch. The live fetch does not write to your cache.</p>
+      <h2>Advanced support tool: compare provider models</h2>
+      <p class="sub">Use this only when support asks you to compare WaxFrame's saved model list against a fresh provider fetch. The live fetch does not write to your cache.</p>
       <div class="model-dump-controls">
         <div class="field">
           <label for="modelDumpProvider">Provider</label>
@@ -329,14 +356,14 @@
         <li><b>Hard refresh.</b> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Windows/Linux) or <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Mac). Clears a stale cached file after an update.</li>
         <li><b>Check your window size.</b> WaxFrame is desktop-only and needs at least <b>1366×768</b>. A narrow or zoomed window triggers the minimum-size overlay.</li>
         <li><b>Try another browser.</b> A recent Chrome, Edge, or Firefox. Private/incognito windows can block the storage WaxFrame needs.</li>
-        <li><b>Last resort — reset local data.</b> If the app is stuck in a bad state, see the <b>Wipe local data</b> section below for a one-click reset.</li>
+        <li><b>Last resort — reset local data.</b> If the app is stuck in a bad state, see the <b>Advanced reset</b> section below for a one-click reset.</li>
       </ul>
     </section>
 
     <!-- 4b. Wipe local data ------------------------------------------------ -->
     <section>
-      <h2>🧹 Wipe local data</h2>
-      <p class="sub">An escape hatch — for users uninstalling, or for fixing a wedged state from accumulated stale data.</p>
+      <h2>Advanced reset: wipe local data</h2>
+      <p class="sub">Use this only when you are uninstalling, starting completely over, or support tells you the app is stuck because old saved browser data is in the way.</p>
       <p>WaxFrame stores everything locally in your browser across three storage layers. <b>Nothing leaves your machine.</b> The buttons below are stacked in storage-layer order — the first three each wipe one layer, and the last wipes everything. After any wipe the page reloads so the app starts fresh.</p>
       <p><b>What each layer holds:</b></p>
       <ul class="fixes">
@@ -360,6 +387,7 @@
       <h2>↩ Get back to it</h2>
       <div class="links">
         <a class="btn-ghost" href="index.html">← Back to WaxFrame</a>
+        <a class="btn-ghost" href="start-here.html">⭐ Start Here</a>
         <a class="btn-ghost" href="waxframe-user-manual.html">📖 User Manual</a>
       </div>
     </section>
@@ -371,10 +399,10 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.285"></script>
-  <script src="js/storage.js?v=3.63.285"></script>
-  <script src="js/provider-models.js?v=3.63.285"></script>
-  <script src="js/provider-catalog.js?v=3.63.285"></script>
+  <script src="js/version.js?v=3.63.286"></script>
+  <script src="js/storage.js?v=3.63.286"></script>
+  <script src="js/provider-models.js?v=3.63.286"></script>
+  <script src="js/provider-catalog.js?v=3.63.286"></script>
   <script>
   (function () {
     'use strict';

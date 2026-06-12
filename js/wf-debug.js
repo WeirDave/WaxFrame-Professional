@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260611-012
+// Build: 20260612-001
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -322,7 +322,7 @@ window.WF_DEBUG = {
         return '[parse failed — block omitted for safety]';
       }
     };
-    // v3.63.275 — LS_SESSION was a stale read of `waxframe_v2_session_mirror`,
+    // v3.63.286 — LS_SESSION was a stale read of `waxframe_v2_session_mirror`,
     // a key retired in v3.21.12. Every Scout bundle since then shipped an empty
     // session block while the real state sat in IndexedDB. Pull it from IDB
     // (the SoT per storage.js) and rename the field so the schema reflects
