@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260611-006
+// Build: 20260611-007
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -285,7 +285,13 @@ async function checkStorageQuota() {
     const { usage, quota } = await navigator.storage.estimate();
     const pct = Math.round((usage / quota) * 100);
     if (pct >= 80) {
-      consoleLog(`⚠️ Storage is ${pct}% full (${Math.round(usage/1024/1024)}MB of ${Math.round(quota/1024/1024)}MB used). Consider exporting your session to avoid data loss.`, 'warn');
+      // v3.63.280 — Defensive typeof guard: storage.js loads BEFORE app.js
+      // (see load-order comment at the top of this file). If app.js fails
+      // to parse (CDN hiccup, bad release, dev typo), every save error in
+      // here calls an undefined consoleLog and the surrounding catch
+      // swallows it. The guard lets the toast / banner fallbacks still
+      // surface even when the live-console pane never mounted.
+      if (typeof consoleLog === 'function') consoleLog(`⚠️ Storage is ${pct}% full (${Math.round(usage/1024/1024)}MB of ${Math.round(quota/1024/1024)}MB used). Consider exporting your session to avoid data loss.`, 'warn');
       // Inject an inline export button into the console
       const el = document.getElementById('liveConsole');
       if (el) {
@@ -400,7 +406,8 @@ function saveSession(opts = {}) {
       }
     } catch(e) {
       // IDB failed — fall back to localStorage.
-      consoleLog(`❌ Session save failed (IndexedDB error: ${e.message}). Trying localStorage fallback…`, 'error', {
+      // v3.63.280 — typeof guard (see checkStorageQuota for rationale).
+      if (typeof consoleLog === 'function') consoleLog(`❌ Session save failed (IndexedDB error: ${e.message}). Trying localStorage fallback…`, 'error', {
         status:  'IDB_ERROR',
         rawJson: e.stack || e.message || String(e)
       });
@@ -416,13 +423,13 @@ function saveSession(opts = {}) {
           // The flag at window._persistenceBroken is checked by runRound
           // and runBuilderOnly before they spend any new API budget.
           window._persistenceBroken = true;
-          consoleLog(`❌ Storage full — session could not be saved. Rounds halted until you export and clear browser storage.`, 'error', {
+          if (typeof consoleLog === 'function') consoleLog(`❌ Storage full — session could not be saved. Rounds halted until you export and clear browser storage.`, 'error', {
             status:  'QUOTA_EXCEEDED',
             rawJson: `Browser storage quota exceeded.\n\nAction: click "Export Transcript Now" below, then clear browser storage for this site, then reload.\n\nOriginal error: ${lsErr.message}`
           });
           _showPersistenceBrokenBanner();
         } else {
-          consoleLog(`❌ Session save failed: ${lsErr.message}`, 'error', {
+          if (typeof consoleLog === 'function') consoleLog(`❌ Session save failed: ${lsErr.message}`, 'error', {
             status:  'STORAGE_FAIL',
             rawJson: lsErr.stack || lsErr.message || String(lsErr)
           });

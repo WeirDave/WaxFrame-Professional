@@ -2,7 +2,8 @@
 WAXFRAME — CODE AUDIT METHODOLOGY (v1)
 ════════════════════════════════════════════════════════════
 Created:             2026-05-16
-WaxFrame version:    v3.40.0 Pro
+Last reviewed:       2026-06-11 against v3.63.280 Pro
+WaxFrame version:    v3.63.280 Pro
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Audit_Methodology_v1.txt
 
@@ -232,10 +233,10 @@ future audits.
     regressions.
   • Inline style="--sx:Xpx;--fall:Ypx" snowflake seeds.
     CSS-variable injections, intentional.
-  • MODEL_LABELS dictionary in app.js. Vestigial from
-    pre-v3.26.0 architecture. One dead read at line
-    ~15669 (returns undefined, no impact). Removal is a
-    cosmetic cleanup, not urgent.
+  • [REMOVED v3.63.280] MODEL_LABELS was retired in
+    v3.52.7; the audit-skip entry is itself now a dead
+    reference. Kept this comment as a paper-trail of why
+    the bullet existed, then disappeared.
   • The "estimated, not measured" wording on
     document-playbooks.html for T10 business-review and
     T11 multi-platform-review — these are accurate;

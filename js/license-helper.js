@@ -1,12 +1,15 @@
 // ============================================================
 //  WaxFrame — license-helper.js
-// Build: 20260611-006
+// Build: 20260611-007
 //  Self-contained license badge + modal logic for helper pages.
 //  Mirrors the in-app license functions in app.js, minus the
 //  trial-rounds tracking (helper pages don't run rounds, so the
 //  trial counter is read-only — display only).
-//  Loaded by all five helper pages alongside theme.js and
-//  nav-helper.js. No app.js dependency.
+//  Loaded by every helper page that renders a license badge or hosts
+//  the license-manage modal (~13 pages today; the badge lives in the
+//  page-header on the standard helper-page footer, and on
+//  hive-profiles.html alongside the version stamp). No app.js
+//  dependency.
 // ============================================================
 
 const LS_LICENSE_HELPER     = 'waxframe_v2_license';

@@ -1,10 +1,15 @@
 // ============================================================
 //  WaxFrame — shared theme + mute utility
-// Build: 20260611-006
+// Build: 20260611-007
 //  Single source of truth for theme + mute behavior. Loaded by:
 //    • index.html (main app) — BEFORE app.js
-//    • All 5 helper pages (api-details, document-playbooks,
-//      prompt-editor, what-are-tokens, waxframe-user-manual)
+//    • Every helper page that ships a theme/mute control in its
+//      page-header. Today that's 13 pages (api-details,
+//      ai-api-pricing, ai-business-proposal, ai-cover-letter-editor,
+//      ai-resume-review, document-playbooks, hive-profiles, privacy,
+//      prompt-editor, templates, terms, waxframe-user-manual,
+//      what-are-tokens). help.html intentionally omits it — see the
+//      "break-glass design contract" comment at the top of that file.
 //
 //  v3.41.0 — Promoted to canonical source. Pre-v3.41 these
 //  functions were duplicated in app.js; that duplication was
