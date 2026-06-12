@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260611-009
+   Build: 20260611-010
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12589,6 +12589,23 @@ kbd {
 .nav-buy-cta:hover .nav-buy-cta-sub {
   color: #0a0c12;
 }
+
+/* v3.63.283 — Worker bee mascot used inline where the 🐝 emoji used to sit.
+   The mascot is a full-color illustration; sized to roughly match the text
+   x-height with a touch of vertical bleed so it reads as an icon rather than
+   a thumbnail. Three sizes for the three contexts we hit:
+     .nav-bee-icon  — slim nav-item rows ("🐝 Hive Profiles" link)
+     .label-bee     — section labels / modal titles / dev toolbar buttons
+     .inline-bee    — running body text / convergence badges */
+.nav-bee-icon, .label-bee, .inline-bee {
+  display: inline-block;
+  vertical-align: -0.25em;
+  margin-right: 0.35em;
+  object-fit: contain;
+}
+.nav-bee-icon { width: 1.25em; height: 1.25em; }
+.label-bee    { width: 1.4em;  height: 1.4em; }
+.inline-bee   { width: 1.1em;  height: 1.1em; margin-right: 0.25em; }
 .nav-item-exit-dev {
   color: var(--err);
   opacity: 0.6;

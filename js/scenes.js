@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — scenes.js
-// Build: 20260611-009
+// Build: 20260611-010
 //
 //  Celebration scene orchestrators — three multi-step UI sequences
 //  that combine DOM animation + timing + canvas rendering + audio
@@ -844,7 +844,7 @@ function spawnUnanimousFireworks(canvas) {
 // user-facing flow.
 function devTestFlyInOnly() {
   // Bee fly-in overlay with no audio — for previewing the animation in silence.
-  toast('🐝 Dev: fly-in only (no sound)');
+  toast('Dev: fly-in only (no sound)');
   showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: 4, total: 6 });
 }
 

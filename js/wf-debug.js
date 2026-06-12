@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260611-009
+// Build: 20260611-010
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -473,8 +473,8 @@ window.WF_DEBUG = {
   // ────────────────────────────────────────────────────────────
   // The actual classifier logic lives in app.js
   // (classifyTiersForAllKeyed / classifyTiersForProvider /
-  // getCachedTiers). This is the thin front-end the 🐝 Classify
-  // Tiers button on the dev toolbar invokes: runs across every
+  // getCachedTiers). This is the thin front-end the worker-bee
+  // Classify Tiers button on the dev toolbar invokes: runs across every
   // keyed provider sequentially, logs each raw response to the
   // browser console for prompt iteration, toasts a summary.
   // No viewer modal — results land in the next 📦 Bundle for
@@ -497,18 +497,18 @@ window.WF_DEBUG = {
     const btn = document.getElementById('wfClassifyTiersBtn');
     const origLabel = btn ? btn.innerHTML : null;
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Classifying…'; }
-    if (typeof toast === 'function') toast('🐝 Re-classifying every keyed provider…', 4000);
+    if (typeof toast === 'function') toast('Re-classifying every keyed provider…', 4000);
     try {
       const results = await classifyTiersForAllKeyed({ force });
       const ok   = Object.values(results).filter(r => r && (r.cheap || r.balanced || r.thinker || r.fast)).length;
       const fail = Object.values(results).filter(r => !r).length;
-      console.log('🐝 Tier classifications — full result map:', results);
-      if (typeof toast === 'function') toast(`🐝 ${ok} provider${ok === 1 ? '' : 's'} classified${fail ? ` · ${fail} failed (see console)` : ''} — bundle to send to Scout`, 6000);
+      console.log('Tier classifications — full result map:', results);
+      if (typeof toast === 'function') toast(`${ok} provider${ok === 1 ? '' : 's'} classified${fail ? ` · ${fail} failed (see console)` : ''} — bundle to send to Scout`, 6000);
     } catch (e) {
       console.warn('[WF_DEBUG.classifyTiers] failed:', e);
       if (typeof toast === 'function') toast(`⚠️ Tier classification failed: ${e.message || 'unknown'}`, 6000);
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = origLabel || '🐝 Classify Tiers'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = origLabel || '<img src="images/WaxFrame_Worker_Bee_v2.png" class="label-bee" alt="">Classify Tiers'; }
     }
   }
 };
