@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260611-009
+// Build: 20260611-010
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -583,7 +583,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260611-009';         // build stamp — update each session
+const BUILD       = '20260611-010';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -2805,7 +2805,7 @@ function isRoundInFlight() {
 async function confirmInterruptIfRunning() {
   if (!isRoundInFlight()) return true;
   return await wfConfirm(
-    '🐝 Round in progress',
+    'Round in progress',
     'A round is currently running. Continuing will discard the in-flight round — any responses received so far will not be saved. Continue anyway?',
     { okText: 'Discard round and continue', destructive: true }
   );
@@ -9740,7 +9740,7 @@ function addCustomAI() {
 
   renderAISetupGrid();
   saveHive();
-  toast(`🐝 ${name} added to the hive`);
+  toast(`${name} added to the hive`);
 
   // v3.63.88 — Persist the recommend work under the AI's real id, so the
   // Bee page row immediately shows ✨ Reviewer / 🔨 Builder marks without
@@ -10506,7 +10506,7 @@ function addImportServerModels() {
   closeImportServerModal();
   renderAISetupGrid();
   saveHive();
-  toast(`🐝 ${added} model${added !== 1 ? 's' : ''} added to the hive`);
+  toast(`${added} model${added !== 1 ? 's' : ''} added to the hive`);
 }
 
 function continueFromBees() {
@@ -16914,7 +16914,7 @@ async function runRound(opts) {
       setBeeStatus(r.id, r.noChanges ? 'done-clean' : 'done', summary);
     });
   } else {
-  consoleLog(`🐝 ${allReviewers.length} AIs reviewing simultaneously (including Builder)`, 'info');
+  consoleLog(`${allReviewers.length} AIs reviewing simultaneously (including Builder)`, 'info');
   setStatus(`⚡ Round ${round} — all ${allReviewers.length} AIs reviewing…`);
   // _cleanThisRound was cleared above in the round-reset block (v3.32.14).
   // Per-AI entries also clear individually on each 'sending' state below
@@ -19373,7 +19373,7 @@ function renderConflicts() {
         if (ctx) window._holdoutAnchors[i] = ctx.anchor;
         html += `<div class="decision-card convergence-card" id="hcard-${i}">
           <div class="decision-card-header">
-            <span class="convergence-ai-badge">🐝 ${esc(s.name)}</span>
+            <span class="convergence-ai-badge"><img src="images/WaxFrame_Worker_Bee_v2.png" class="inline-bee" alt="">${esc(s.name)}</span>
             <span class="decision-badge convergence-count-badge">Suggestion ${i + 1} of ${total}</span>
           </div>
           ${ctx ? `<div class="decision-current decision-current-clickable" title="Click to scroll document to this text" onclick="scrollToCurrentText(window._holdoutAnchors[${i}])"><span class="decision-label">Current:</span> "${esc(ctx.preview)}"</div>` : ''}

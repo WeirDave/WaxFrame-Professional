@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-cover-letter-editor.html
-     Build: 20260611-009
+     Build: 20260611-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
@@ -15,7 +15,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260611-009">
+  <meta name="waxframe-build" content="20260611-010">
   <title>AI Cover Letter Editor — Multi-AI Refinement — WaxFrame</title>
   <meta name="description" content="Humans don't read cover letters first — AI does. WaxFrame runs a hive of AIs (ChatGPT, Claude, Gemini, and more) on your cover letter so it lands when the bots screen it. Free trial, $19 lifetime.">
   <link rel="canonical" href="https://waxframe.com/ai-cover-letter-editor.html">
@@ -29,7 +29,7 @@
   <meta name="twitter:description" content="Humans don't read cover letters first — AI does. Refine yours with a hive of AIs so it lands when the bots screen it.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.282">
+  <link rel="stylesheet" href="style.css?v=3.63.283">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -70,9 +70,9 @@
     <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
     <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
+    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Hive Profiles</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
-    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🐝 Hive Profiles</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">WaxFrame App</div>
@@ -84,11 +84,11 @@
     <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
     <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
   </div>
-  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
+  <!-- v3.63.283 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
        only to non-licensed (trial) users; license-helper.js's
        updateLicenseBadge() hides it once a valid license is present. Its
-       own distinct slot — outside .nav-body so it sticks to the bottom of
-       the panel like the work-screen version. -->
+       own distinct slot — inside .nav-panel but outside .nav-body so it
+       sticks to the bottom of the panel like the work-screen version. -->
   <div class="nav-panel-footer" id="navBuyFooter">
     <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
       <span class="nav-buy-cta-icon">🛒</span>
@@ -97,7 +97,8 @@
         <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
       </span>
     </a>
-  </div></div>
+  </div>
+</div>
 
 <!-- ========================================================
      UNIFIED HELPER-PAGE HEADER (v3.22.5)
@@ -231,20 +232,6 @@
       <p class="goal-info-tip">💡 Your API keys go directly from your browser to each AI provider. WaxFrame never sees them. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">Read the source on GitHub →</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
-  </div>
-  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
-       only to non-licensed (trial) users; license-helper.js's
-       updateLicenseBadge() hides it once a valid license is present. Its
-       own distinct slot — outside .nav-body so it sticks to the bottom of
-       the panel like the work-screen version. -->
-  <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
-      <span class="nav-buy-cta-icon">🛒</span>
-      <span class="nav-buy-cta-text">
-        <span class="nav-buy-cta-title">Buy a License</span>
-        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
-      </span>
-    </a>
   </div></div>
 
 <!-- ========================================================
@@ -258,20 +245,6 @@
   <div class="page-footer-right">
     <span class="license-badge" id="licenseBadge" title="License status"></span>
     <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
-  </div>
-  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
-       only to non-licensed (trial) users; license-helper.js's
-       updateLicenseBadge() hides it once a valid license is present. Its
-       own distinct slot — outside .nav-body so it sticks to the bottom of
-       the panel like the work-screen version. -->
-  <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
-      <span class="nav-buy-cta-icon">🛒</span>
-      <span class="nav-buy-cta-text">
-        <span class="nav-buy-cta-title">Buy a License</span>
-        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
-      </span>
-    </a>
   </div></div>
 
 <!-- ========================================================
@@ -323,12 +296,12 @@
   </div>
 </div>
 
-<script src="js/theme.js?v=3.63.282"></script>
-<script src="lib/docx.min.js?v=3.63.282"></script>
-<script src="js/docx-export.js?v=3.63.282"></script>
-<script src="js/nav-helper.js?v=3.63.282"></script>
-<script src="js/license-helper.js?v=3.63.282"></script>
-<script src="js/version.js?v=3.63.282"></script>
+<script src="js/theme.js?v=3.63.283"></script>
+<script src="lib/docx.min.js?v=3.63.283"></script>
+<script src="js/docx-export.js?v=3.63.283"></script>
+<script src="js/nav-helper.js?v=3.63.283"></script>
+<script src="js/license-helper.js?v=3.63.283"></script>
+<script src="js/version.js?v=3.63.283"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
