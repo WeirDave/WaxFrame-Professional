@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260612-005
+// Build: 20260612-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -272,10 +272,10 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
 
 // v3.63.32 — Custom model-dropdown behavior (open/close, outside-click, pick,
 // keyboard). The trigger keeps id="modelsel-<aiId>" + data-value so the value
-// contract (confirmBuilderFromModal read; Fix-Worker-Bee flash/scroll) is
-// unchanged; selection writes data-value and calls saveModelForAI, matching the
-// old <select> onchange. Arrow-key option navigation is intentionally deferred
-// to a follow-up — click + Enter/Space/Esc cover v1.
+// contract (Fix-Worker-Bee flash/scroll) is unchanged; selection writes
+// data-value and calls saveModelForAI, matching the old <select> onchange.
+// Arrow-key option navigation is intentionally deferred to a follow-up —
+// click + Enter/Space/Esc cover v1.
 function wfModelSelectToggle(trigger, ev) {
   if (ev) ev.stopPropagation();
   const wasOpen = trigger.classList.contains('is-open');
@@ -548,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260612-005';         // build stamp — update each session
+const BUILD       = '20260612-006';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -1308,9 +1308,6 @@ function startAutoUpdateHeartbeat() {
     maybeRunAutoUpdateModels({ reason: 'heartbeat' });
   }, 15 * 60 * 1000);
 }
-function stopAutoUpdateHeartbeat() {
-  if (_autoUpdateHeartbeat) { clearInterval(_autoUpdateHeartbeat); _autoUpdateHeartbeat = null; }
-}
 
 // ── AUDIO ──
 // v3.41.0 — All play* audio functions extracted to js/audio.js. Loaded
@@ -1785,13 +1782,6 @@ if (typeof window !== 'undefined') {
   window._cbPickBuilder = _cbPickBuilder;
   window.openChangeBuilder = openChangeBuilder;
 }
-
-// v3.63.160 — selectBuilderCandidate + confirmBuilderFromModal retired.
-// The new Change Builder modal commits directly on Builder-button click
-// (see _cbPickBuilder above) — no separate select-then-confirm step.
-// Stubbed here as no-ops in case any cached page references them.
-function selectBuilderCandidate() { /* retired in v3.63.160 */ }
-function confirmBuilderFromModal() { /* retired in v3.63.160 */ }
 
 function closeChangeBuilder() {
   _cbPendingId = null;
@@ -8215,14 +8205,6 @@ async function _rearmLengthGuard() {
   saveSession();
 }
 
-// v3.36.15 — Backwards-compat alias. Older call sites and any inline
-// onclick that may have been cached will route through the toggle
-// dispatcher, which preserves the original "click to re-arm" behavior
-// when override is true.
-async function rearmLengthGuard() {
-  return toggleLengthGuard();
-}
-
 // ============================================================
 // v3.63.139 — Hive Profiles: dynamic tier classifier
 // ------------------------------------------------------------
@@ -13195,8 +13177,7 @@ function refCardMarkup(doc, index) {
 
 // Per-doc stats helper — chars, words, lines, paragraphs, estimated tokens.
 // Used by card render and by the grand-total computation. Token estimate
-// uses chars/4 rule of thumb (same as estimateTokens elsewhere) which is a
-// rough but consistent English-text approximation.
+// uses the chars/4 rule of thumb — rough but consistent for English text.
 // v3.29.1 — added lines (logical, split on \n) and paragraphs (blocks
 // separated by one or more blank lines). These are per-card metrics; they
 // don't sum meaningfully across multiple docs so they stay off the grand
@@ -13617,13 +13598,6 @@ function _finishRefBatch() {
   }
 }
 
-
-// chars/4 is the standard rule of thumb for English text in OpenAI-family tokenizers.
-// Real tokenizers vary by model; this is an estimate, not a contract.
-function estimateTokens(text) {
-  if (!text) return 0;
-  return Math.round(text.length / 4);
-}
 
 // ── Work-screen drawer handlers ──
 function openReferenceMaterialDrawer() {

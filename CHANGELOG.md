@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.291
+
+**app.js orphan-function sweep — first pass on backlog #7**
+
+Build: `20260612-006`<br>
+Released: `2026-06-12`
+
+### What changed
+
+Backlog item #7 ("Deep orphan-function audit on app.js") wanted a list of confirmed-orphan top-level function declarations identified and the low-risk ones deleted. This release ships the first pass: a regex-based enumeration of every top-level `function`/`const fn = ...`/arrow declaration in `app.js` (536 total), cross-referenced against every `.js` and `.html` file in the repo for any usage (call site, `oninput=`/`onclick=` inline handler, `window.X` assignment, comment-stripped to avoid false positives). Five came back genuinely unreferenced and got deleted.
+
+**1. `selectBuilderCandidate()` + `confirmBuilderFromModal()` — retired stubs from v3.63.160.** When the Change Builder modal was rewritten to commit-on-click in v3.63.160 (a hundred-and-thirty releases ago), the two pre-existing handler functions were left as `/* retired */` no-op stubs in case a cached page tried to call them. A cached page from v3.63.160 would have far bigger problems by now than two missing functions — these no longer pull their weight. Both gone, plus a stale `confirmBuilderFromModal read` mention in the v3.63.32 dropdown-trigger comment cleaned up.
+
+**2. `rearmLengthGuard()` — backwards-compat alias from v3.36.15.** When the length-guard handlers were refactored in v3.36.15 to a `toggle` / `_disable` / `_rearm` triplet, the old `rearmLengthGuard()` was kept as a no-arg alias that routed to `toggleLengthGuard()` — defensive for cached pages with the old onclick. Not referenced anywhere in current markup; deleted.
+
+**3. `estimateTokens(text)` — orphan helper.** Single-line `Math.round(text.length / 4)` token estimator that nothing calls. Per-card stats use their own inline `chars/4` calc in `computeRefStats()`. The comment above `computeRefStats` was claiming "same as `estimateTokens` elsewhere" — also corrected (no "elsewhere" anymore; the helper is just gone).
+
+**4. `stopAutoUpdateHeartbeat()` — never-invoked counterpart of `startAutoUpdateHeartbeat()`.** The start-side is called once during boot when auto-update is enabled; the stop-side never fires (the heartbeat runs for the page's lifetime). Removed; if a future feature ever needs to halt the heartbeat we can re-add it then.
+
+### Why this is partial, not closure
+
+Backlog #7 explicitly asked for AST-level tooling because grep is noisy and misses method calls, dynamic dispatch, and inline string references. The pass shipping here is regex+verification, not AST — solid for top-level declarations whose name is visible at column 0, but does not catch:
+- Methods on objects (`obj.foo = function...`)
+- Nested helpers inside IIFEs
+- Functions whose only caller is a string passed to `setTimeout`/`addEventListener`
+
+The remaining audit work stays on the backlog as item #7, now marked PARTIAL with the regex-pass result documented. The 5 functions removed today were the trivially-confirmable subset; the full sweep still wants AST tooling.
+
+### Files touched
+
+- [js/app.js](js/app.js) — removed `selectBuilderCandidate`, `confirmBuilderFromModal`, `rearmLengthGuard`, `estimateTokens`, `stopAutoUpdateHeartbeat`; cleaned up two stale documentary comments that mentioned the deleted helpers
+- [docs/WaxFrame_Backlog_Master_v243.txt](docs/WaxFrame_Backlog_Master_v243.txt) — new; item #7 marked PARTIAL with this release's deliverable noted
+- Removed: `docs/WaxFrame_Backlog_Master_v239.txt` and `docs/WaxFrame_Backlog_Master_v240.txt` (keeps the three-version backlog window: v241 / v242 / v243)
+- Cache-bust + build stamps swept to `3.63.291` / `20260612-006` everywhere
+
+---
+
 ## v3.63.290
 
 **help.html responsive hero sizing — proper release of the three docs-fix commits**
