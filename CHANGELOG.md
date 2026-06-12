@@ -2,6 +2,48 @@
 
 ---
 
+## v3.63.293
+
+**Backlog #7 closed — AST sweep confirms zero remaining orphan functions**
+
+Build: `20260612-008`<br>
+Released: `2026-06-12`
+
+### What changed
+
+Round 3 of the orphan-function audit went AST. v3.63.291 (top-level decls in app.js) and v3.63.292 (cross-file regex sweep) had cleaned up the easy surface. This pass installs `acorn` + `acorn-walk` into the local-only `.claude/scratch/` directory (gitignored — nothing about it ships) and walks every `js/*.js` file's AST to enumerate the broader definition surface:
+
+- Top-level `function` declarations (any indent — captures helpers nested inside IIFEs)
+- `var`/`let`/`const` assignments to functions or arrows (also any nesting)
+- `MemberExpression = FunctionExpression` / `MemberExpression = ArrowFunctionExpression` — picks up `window.foo = function`, `Obj.bar = () => …`, including dotted chains like `App.Hive.profile.save = …`
+
+**823 candidate definitions across 16 files.** After filtering DOM event-handler properties (`.onclick`, `.onload`, `.onmessage`, `.onupgradeneeded`, etc. — these get *called* by the browser/IndexedDB, not by JS, so they always look orphan to a static reference scan) and counting references across every `.js` + `.html` in the repo, **the orphan count came back as zero**.
+
+That makes the orphan-function audit closed on what static analysis can answer. Backlog #7 deleted from the open list. Item #8 (localStorage migration audit) promoted to position #7.
+
+### What the three rounds shipped in total
+
+| Round | Release   | Scope                                                      | Orphans removed |
+| ----- | --------- | ---------------------------------------------------------- | --------------- |
+| 1     | v3.63.291 | Top-level decls in app.js (regex)                          | 5               |
+| 2     | v3.63.292 | Top-level decls across every js/*.js (regex)               | 2               |
+| 3     | v3.63.293 | Full AST: top-level + nested + `Obj.x = fn` (across `js/`) | 0               |
+
+7 confirmed orphan functions removed total. AST confirmation that no more remain at the static layer.
+
+### Methodology note for future audits
+
+The AST script in `.claude/scratch/audit-ast.js` is the canonical tool for re-running this audit. It is intentionally NOT committed — `package.json` declares this repo is vanilla HTML/CSS/JS with no build step, and adding an `acorn` dependency to the production manifest would be the wrong precedent. Future runs install acorn fresh in `.claude/scratch/` (~1 second on a warm npm cache, zero project impact). The script handles the two gotchas this audit found the hard way: stripping `//` line-comments must not match `//` inside URL strings, and `on*` property assignments are DOM/Web-API wiring rather than JS-callable definitions.
+
+### Files touched
+
+- [docs/WaxFrame_Backlog_Master_v244.txt](docs/WaxFrame_Backlog_Master_v244.txt) — new; item #7 (orphan audit) deleted, item #8 (localStorage migration) promoted to #7
+- Removed: `docs/WaxFrame_Backlog_Master_v241.txt` (keeps the three-version backlog window: v242 / v243 / v244)
+- Cache-bust + build stamps swept to `3.63.293` / `20260612-008` everywhere
+- No source code changes — the AST sweep found no remaining orphans
+
+---
+
 ## v3.63.292
 
 **theme.js orphan sweep — `initMuteBtn` + `initTheme` retired (backlog #7 round 2)**
