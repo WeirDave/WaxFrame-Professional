@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20260611-009
+     Build: 20260611-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
@@ -15,7 +15,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260611-009">
+  <meta name="waxframe-build" content="20260611-010">
   <title>Document Templates Catalog — WaxFrame</title>
   <meta name="description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
   <link rel="canonical" href="https://waxframe.com/templates.html">
@@ -29,7 +29,7 @@
   <meta name="twitter:description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.282">
+  <link rel="stylesheet" href="style.css?v=3.63.283">
 </head>
 <body class="helper-body">
 
@@ -59,9 +59,9 @@
     <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
     <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
+    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Hive Profiles</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
-    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🐝 Hive Profiles</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">WaxFrame App</div>
@@ -73,11 +73,11 @@
     <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
     <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
   </div>
-  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
+  <!-- v3.63.283 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
        only to non-licensed (trial) users; license-helper.js's
        updateLicenseBadge() hides it once a valid license is present. Its
-       own distinct slot — outside .nav-body so it sticks to the bottom of
-       the panel like the work-screen version. -->
+       own distinct slot — inside .nav-panel but outside .nav-body so it
+       sticks to the bottom of the panel like the work-screen version. -->
   <div class="nav-panel-footer" id="navBuyFooter">
     <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
       <span class="nav-buy-cta-icon">🛒</span>
@@ -86,7 +86,8 @@
         <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
       </span>
     </a>
-  </div></div>
+  </div>
+</div>
 
 <!-- ============================================================
      PAGE HEADER — matches the helper-page pattern. License
@@ -110,20 +111,6 @@
     <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
     <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
     <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
-  </div>
-  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
-       only to non-licensed (trial) users; license-helper.js's
-       updateLicenseBadge() hides it once a valid license is present. Its
-       own distinct slot — outside .nav-body so it sticks to the bottom of
-       the panel like the work-screen version. -->
-  <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
-      <span class="nav-buy-cta-icon">🛒</span>
-      <span class="nav-buy-cta-text">
-        <span class="nav-buy-cta-title">Buy a License</span>
-        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
-      </span>
-    </a>
   </div></div>
 
 <!-- ============================================================
@@ -156,7 +143,7 @@
     <aside class="doc-sidebar">
       <div class="doc-sidebar-inner">
         <div class="doc-sidebar-category">Built-in Templates</div>
-        <a href="#cat-quick-start"          class="doc-sidebar-link">🐝 Quick Start</a>
+        <a href="#cat-quick-start"          class="doc-sidebar-link"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Quick Start</a>
         <a href="#cat-career-hiring"        class="doc-sidebar-link">💼 Career &amp; Hiring</a>
         <a href="#cat-business-sales"       class="doc-sidebar-link">📈 Business &amp; Sales</a>
         <a href="#cat-content-marketing"    class="doc-sidebar-link">✍️ Content &amp; Marketing</a>
@@ -251,20 +238,6 @@
   <div class="page-footer-right">
     <span class="license-badge" id="licenseBadge" title="License status"></span>
     <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
-  </div>
-  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
-       only to non-licensed (trial) users; license-helper.js's
-       updateLicenseBadge() hides it once a valid license is present. Its
-       own distinct slot — outside .nav-body so it sticks to the bottom of
-       the panel like the work-screen version. -->
-  <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
-      <span class="nav-buy-cta-icon">🛒</span>
-      <span class="nav-buy-cta-text">
-        <span class="nav-buy-cta-title">Buy a License</span>
-        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
-      </span>
-    </a>
   </div></div>
 
 <!-- ============================================================
@@ -285,20 +258,6 @@
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
-  </div>
-  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
-       only to non-licensed (trial) users; license-helper.js's
-       updateLicenseBadge() hides it once a valid license is present. Its
-       own distinct slot — outside .nav-body so it sticks to the bottom of
-       the panel like the work-screen version. -->
-  <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
-      <span class="nav-buy-cta-icon">🛒</span>
-      <span class="nav-buy-cta-text">
-        <span class="nav-buy-cta-title">Buy a License</span>
-        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
-      </span>
-    </a>
   </div></div>
 
 <!-- ============================================================
@@ -328,33 +287,19 @@
       <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
     </div>
     <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
-  </div>
-  <!-- v3.63.282 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
-       only to non-licensed (trial) users; license-helper.js's
-       updateLicenseBadge() hides it once a valid license is present. Its
-       own distinct slot — outside .nav-body so it sticks to the bottom of
-       the panel like the work-screen version. -->
-  <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
-      <span class="nav-buy-cta-icon">🛒</span>
-      <span class="nav-buy-cta-text">
-        <span class="nav-buy-cta-title">Buy a License</span>
-        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
-      </span>
-    </a>
   </div></div>
 
 <!-- ============================================================
      SCRIPT IMPORTS — same set as other helper pages
      ============================================================ -->
-<script src="js/theme.js?v=3.63.282"></script>
-<script src="js/nav-helper.js?v=3.63.282"></script>
-<script src="js/license-helper.js?v=3.63.282"></script>
-<script src="js/version.js?v=3.63.282"></script>
-<script src="js/templates.js?v=3.63.282"></script>
-<script src="js/docs-scrollspy.js?v=3.63.282"></script>
+<script src="js/theme.js?v=3.63.283"></script>
+<script src="js/nav-helper.js?v=3.63.283"></script>
+<script src="js/license-helper.js?v=3.63.283"></script>
+<script src="js/version.js?v=3.63.283"></script>
+<script src="js/templates.js?v=3.63.283"></script>
+<script src="js/docs-scrollspy.js?v=3.63.283"></script>
 <!-- v3.63.138 — JSZip powers the bulk Export All customs button -->
-<script src="lib/jszip.min.js?v=3.63.282"></script>
+<script src="lib/jszip.min.js?v=3.63.283"></script>
 
 <script>
 // ============================================================

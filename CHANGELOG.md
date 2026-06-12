@@ -2,6 +2,60 @@
 
 ---
 
+## v3.63.283
+
+**Help & Support nav re-sort + worker bee everywhere (bee emoji retired) + v3.63.282 duplicate-navBuyFooter cleanup**
+
+Build: `20260611-010`<br>
+Released: `2026-06-11`
+
+### What changed
+
+Two David-reported issues plus a self-found bug from v3.63.282.
+
+**1. Hive Profiles moved into alphabetical position in the Help & Support nav.** On every helper page, the order was:
+> API Key Guide · AI API Pricing · Document Playbooks · Help · User Manual · What Are Tokens? · **Hive Profiles**
+
+with "Hive Profiles" tacked on at the end. Hive starts with H, so it belongs between Help and User Manual alphabetically. New order on all 13 helper pages:
+> API Key Guide · AI API Pricing · Document Playbooks · Help · **Hive Profiles** · User Manual · What Are Tokens?
+
+**2. Bee emoji 🐝 retired everywhere; the actual worker bee mascot used instead.** The 🐝 emoji rendered inconsistently across browsers/OS combos (Apple emoji vs Twemoji vs Segoe UI Emoji) and is not the WaxFrame mascot — David has been pushing for the project's own `WaxFrame_Worker_Bee_v2.png` to be the only bee on the site. Three new CSS classes (`.nav-bee-icon`, `.label-bee`, `.inline-bee`) size the mascot to roughly the surrounding text's x-height with a touch of vertical bleed so it reads as an icon, not a thumbnail. Every 🐝 occurrence got swapped, audited via grep across `*.html` + `js/*.js`:
+- 14 nav-item rows ("🐝 Hive Profiles" link) — index + 13 helper pages
+- `index.html`: `🐝 Edit Hive` modal title, `🐝 Hive Profiles` info-label, `🐝 Classify Tiers` dev toolbar
+- `help.html`: `🐝 Report a bug` h2
+- `api-details.html`: `🐝 Know Your Hive` sidebar link, end-of-sentence decorative bee
+- `templates.html`: `🐝 Quick Start` sidebar link
+- `document-playbooks.html`: `alt="🐝"` on an existing mascot image (replaced with `alt=""`)
+- `waxframe-user-manual.html`: `🐝` section-icon glyph
+- `js/app.js`: 4 toast/consoleLog/innerHTML strings — text contexts stripped, innerHTML got the inline mascot
+- `js/scenes.js`: 1 toast — stripped
+- `js/wf-debug.js`: 4 strings — toasts and console.log stripped; the `Classify Tiers` button's `innerHTML` restoration got the inline mascot
+
+A final `grep -rE '🐝' *.html js/*.js` returns zero matches.
+
+**3. v3.63.282 duplicate-navBuyFooter cleanup.** The v3.63.282 PowerShell that injected the pinned Buy-License CTA on every helper page used an anchor (`</div>\n</div>\n\n<!-- ====`) that wasn't unique inside a typical helper page — it matched BOTH the close of `<div class="nav-panel">` (right place) AND the close of `<div class="page-header">` (wrong place). `.NET String.Replace` replaces every occurrence, so every helper page got TWO `navBuyFooter` blocks — same `id="navBuyFooter"` on both. Both rendered, both tried to toggle on the same `isLicensed()` check, and the always-visible one inside the page-header bar showed a "Buy a License" button at the top of every helper page even for licensed users.
+
+The cleanup: remove ALL `navBuyFooter` blocks across the 13 helper pages via a regex that matches the entire comment+block as a unit, then re-inject EXACTLY ONE per page with a uniquely-anchored pattern (the `📜 Terms of Use</a>` line — last nav-item in the menu — followed by the nav-body+nav-panel close pair). Cross-page count is now exactly 1 navBuyFooter per page. v3.63.282 lessons go into the methodology doc for the next audit cycle.
+
+### Why this matters
+
+(1) and (2) are the visible-on-every-page UX items David flagged. (3) was actively shipping a misplaced Buy button on every helper page since v3.63.282 — caught during this turn's static review while diff-ing the touched files, not by the user. The methodology doc gets a note: any PowerShell-style bulk edit anchored on common close-tag patterns must verify the anchor is uniquely-occurring per file before write-out, or use `IndexOf` + substring instead of `String.Replace` to limit to first occurrence.
+
+### Files touched
+
+- [style.css](style.css) — three new bee-mascot icon classes (`.nav-bee-icon`, `.label-bee`, `.inline-bee`)
+- 14 HTML files (index + 13 helper pages) — Hive Profiles nav-item moved into alphabetical position with the inline worker bee image replacing the 🐝 emoji
+- [index.html](index.html) — modal title, info-label, and dev-toolbar Classify Tiers button all swapped to the inline mascot
+- [help.html](help.html) — "Report a bug" h2 swapped
+- [api-details.html](api-details.html) — sidebar link + decorative bee swapped
+- [templates.html](templates.html) — sidebar Quick Start link swapped
+- [document-playbooks.html](document-playbooks.html) — fixed `alt="🐝"` on existing mascot image
+- [waxframe-user-manual.html](waxframe-user-manual.html) — section-icon glyph swapped
+- [js/app.js](js/app.js), [js/scenes.js](js/scenes.js), [js/wf-debug.js](js/wf-debug.js) — 9 user-facing strings; text contexts strip the emoji, innerHTML contexts get the inline mascot
+- All 13 helper HTML files — `navBuyFooter` duplicates removed, single anchored injection re-applied
+
+---
+
 ## v3.63.282
 
 **Helper-page nav: small inline "Buy" → wide trial-only CTA, matching index.html**

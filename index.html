@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260611-009
+     Build: 20260611-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260611-009">
+  <meta name="waxframe-build" content="20260611-010">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.282">
+  <link rel="stylesheet" href="style.css?v=3.63.283">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.282",
+    "softwareVersion": "3.63.283",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2281,7 +2281,7 @@
 <!-- EDIT HIVE MODAL -->
 <div class="finish-modal-overlay" id="editHiveModal" onclick="if(event.target===this)closeEditHive()">
   <div class="finish-modal edit-hive-modal">
-    <h2 class="finish-modal-title">🐝 Edit Hive</h2>
+    <h2 class="finish-modal-title"><img src="images/WaxFrame_Worker_Bee_v2.png" class="label-bee" alt="">Edit Hive</h2>
     <p class="finish-modal-msg">Toggle AIs on or off for this session. AIs without a saved API key are skipped automatically.</p>
     <div class="edit-hive-list" id="editHiveList"></div>
     <button title="Close the Edit Hive panel" class="finish-modal-cancel" onclick="closeEditHive()">← Done</button>
@@ -2826,7 +2826,7 @@
         <span class="goal-info-desc">Troubleshooting guide plus the one-click Diagnostic Bundle export — strips your API keys and license automatically, then gives you a pre-filled GitHub issue link so support has everything needed to reproduce a bug.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">🐝 Hive Profiles</span>
+        <span class="info-label"><img src="images/WaxFrame_Worker_Bee_v2.png" class="label-bee" alt="">Hive Profiles</span>
         <span class="goal-info-desc">Documentation for the per-AI model recipe system — save your tuned hive setup as a named profile, switch between profiles with one click, and understand the cheap/balanced/thinker/fast tiering each profile picks across.</span>
       </div>
       <div class="goal-info-row">
@@ -3150,7 +3150,7 @@
        for Scout download. The toggle remains for the Settings and
        help.html mirrors so non-dev users can still opt in/out. -->
   <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 200 rounds in memory). Auto-enabled when dev mode unlocks; toggle here to flip off temporarily.">🔬 Deep Dive</button>
-  <button id="wfClassifyTiersBtn" onclick="WF_DEBUG.classifyTiers()" title="Ask each keyed provider's own AI to classify its current models into Cheap / Balanced / Heavy thinkers / Fast slots — runs sequentially, logs every raw response to the browser console. Results land in the Bundle for Scout export.">🐝 Classify Tiers</button>
+  <button id="wfClassifyTiersBtn" onclick="WF_DEBUG.classifyTiers()" title="Ask each keyed provider's own AI to classify its current models into Cheap / Balanced / Heavy thinkers / Fast slots — runs sequentially, logs every raw response to the browser console. Results land in the Bundle for Scout export."><img src="images/WaxFrame_Worker_Bee_v2.png" class="label-bee" alt="">Classify Tiers</button>
   <button id="wfBundleForScoutBtn" onclick="WF_DEBUG.bundleForScout()" title="Download one JSON containing the Deep Dive ring buffer + cached tier classifications + current project checkpoint + version metadata. Everything Scout needs to analyze your run, in one file.">📦 Bundle for Scout</button>
   <button id="wfClearBundleBtn" onclick="WF_DEBUG.clearBundle()" title="Wipe the Deep Dive ring buffer (per-round captures from the prior project). Tier classifications survive — they're per-provider, not per-project.">🗑 Clear Buffer</button>
   <!-- v3.63.252 — Test trigger for the surgical retry / bee-fatal flow.
@@ -3418,24 +3418,24 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.282';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.283';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.282"></script>
-<script src="lib/jszip.min.js?v=3.63.282"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.282"></script>
-<script src="js/version.js?v=3.63.282"></script>
-<script src="js/storage.js?v=3.63.282"></script>
-<script src="js/theme.js?v=3.63.282"></script>
-<script src="js/audio.js?v=3.63.282"></script>
-<script src="js/scenes.js?v=3.63.282"></script>
-<script src="js/wf-debug.js?v=3.63.282"></script>
-<script src="js/provider-models.js?v=3.63.282"></script>
-<script src="js/provider-catalog.js?v=3.63.282"></script>
-<script src="js/api.js?v=3.63.282"></script>
-<script src="js/templates.js?v=3.63.282"></script>
-<script src="js/api-links.js?v=3.63.282"></script>
-<script src="js/app.js?v=3.63.282"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.283"></script>
+<script src="lib/jszip.min.js?v=3.63.283"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.283"></script>
+<script src="js/version.js?v=3.63.283"></script>
+<script src="js/storage.js?v=3.63.283"></script>
+<script src="js/theme.js?v=3.63.283"></script>
+<script src="js/audio.js?v=3.63.283"></script>
+<script src="js/scenes.js?v=3.63.283"></script>
+<script src="js/wf-debug.js?v=3.63.283"></script>
+<script src="js/provider-models.js?v=3.63.283"></script>
+<script src="js/provider-catalog.js?v=3.63.283"></script>
+<script src="js/api.js?v=3.63.283"></script>
+<script src="js/templates.js?v=3.63.283"></script>
+<script src="js/api-links.js?v=3.63.283"></script>
+<script src="js/app.js?v=3.63.283"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -3540,7 +3540,7 @@ function wfMobileShareToast(msg) {
       <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
       <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
       <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
-      <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🐝 Hive Profiles</a>
+    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Hive Profiles</a>
       <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
       <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
     </details>
