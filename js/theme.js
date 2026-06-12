@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — shared theme + mute utility
-// Build: 20260612-006
+// Build: 20260612-007
 //  Single source of truth for theme + mute behavior. Loaded by:
 //    • index.html (main app) — BEFORE app.js
 //    • Every helper page that ships a theme/mute control in its
@@ -47,15 +47,6 @@ function _updateMuteBtn() {
     btn.title       = window._isMuted ? 'Unmute sounds' : 'Mute sounds';
     btn.classList.toggle('is-muted', window._isMuted);
   });
-}
-
-function initMuteBtn() {
-  _updateMuteBtn();
-}
-
-function initTheme() {
-  const saved = localStorage.getItem('waxframe_v2_theme') || 'auto';
-  setTheme(saved);
 }
 
 // ── AUTO-INIT ──

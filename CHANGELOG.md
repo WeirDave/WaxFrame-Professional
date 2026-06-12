@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.292
+
+**theme.js orphan sweep — `initMuteBtn` + `initTheme` retired (backlog #7 round 2)**
+
+Build: `20260612-007`<br>
+Released: `2026-06-12`
+
+### What changed
+
+Round 2 of the backlog #7 orphan sweep. v3.63.291 was app.js-only; this release extends the regex+verification audit to every file in `js/` (16 files, 657 top-level declarations total) and cleans up two confirmed orphans found in `theme.js`.
+
+**`initMuteBtn()` and `initTheme()` — retired in v3.41.0 but never deleted.** Back when `theme.js` was promoted to canonical source for theme + mute behavior, an auto-init pattern was added at the bottom: an IIFE that calls `setTheme()` synchronously (so the theme attribute lands before the body parses) and a `DOMContentLoaded` listener that calls `_updateMuteBtn()` (after the mute buttons exist in the DOM). The `initTheme()` and `initMuteBtn()` wrapper functions that previously kicked these off from `app.js` were no longer needed — and `app.js`'s `DOMContentLoaded` handler dropped the calls, as the v3.41.0 comment block at the top of its INIT block documents ("`initTheme()` removed. theme.js auto-inits on load."). The wrappers in `theme.js` themselves were left in place — and stayed orphan for 250+ releases. Deleted now. Also corrected the stale comment at app.js:670-675 that still listed `initMuteBtn()` as one of the helpers "accessed as window globals from HTML onclick handlers" (no HTML onclick has ever called it — confirmed via the audit).
+
+### How the cross-file pass worked
+
+Same regex+verification approach as v3.63.291, generalized to every `js/*.js`. For each top-level function/const-arrow declaration, count references across every `.js` and `.html` in the repo, comment-stripped (with the `//`-in-URL bugfix from v3.63.291's post-mortem). 657 declarations examined across 16 files; 654 had at least one reference; the three reported by the audit narrowed to two true orphans after spot-check — the third was a DOM event-handler assignment (`input.onmousedown = (e) => ...`) that the regex caught as a "definition" but is actually live wiring.
+
+### Why this is still PARTIAL on backlog #7
+
+Same caveat as v3.63.291: the regex pass is solid for top-level declarations whose name is visible at column 0, but does not catch object-method assignments inside larger expressions, helpers nested inside IIFEs, or string-dispatched handlers. The deep AST-level sweep stays on the backlog. Item #7's STATE in the backlog now reflects both shipments and clarifies the remaining work.
+
+### Files touched
+
+- [js/theme.js](js/theme.js) — removed `initMuteBtn()` and `initTheme()` (7 lines + a blank). The auto-init IIFE + `DOMContentLoaded` listener at the bottom of the file are unchanged and remain the live mechanism.
+- [js/app.js](js/app.js) — comment at the top of the MUTE STATE block updated to drop the dead reference to `initMuteBtn()`. Comments documenting the v3.41.0 removal of the `initTheme()` / `initMuteBtn()` calls from the DOMContentLoaded handler (lines ~20876, ~20892) are preserved as historical context.
+- [docs/WaxFrame_Backlog_Master_v243.txt](docs/WaxFrame_Backlog_Master_v243.txt) — item #7 STATE updated to reflect both v3.63.291 and v3.63.292 shipments and the new total (657 declarations examined across 16 files).
+- Cache-bust + build stamps swept to `3.63.292` / `20260612-007` everywhere
+
+---
+
 ## v3.63.291
 
 **app.js orphan-function sweep — first pass on backlog #7**
