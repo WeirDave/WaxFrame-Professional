@@ -283,6 +283,92 @@ The most important tool is the audit DISCIPLINE — running
 the categories before shipping, not after.
 
 ═════════════════════════════════════════════════════════════
+LESSONS LEARNED (added 2026-06-11 during v3.63.275-v3.63.284
+audit-shipping pass)
+═════════════════════════════════════════════════════════════
+
+These came out of bugs the methodology DIDN'T catch but
+should have. Add to the pre-audit checklist for the next
+quarterly run.
+
+──────────────────────────────────────────────────────────
+1. PARITY FINDINGS NEED A VISUAL SMOKE-TEST, NOT JUST GREP
+──────────────────────────────────────────────────────────
+The v3.63.278 fix for "hive-profiles.html loads license-
+helper.js but has no licenseBadge element" satisfied the
+literal grep (badge element now present) by injecting it
+into the slide-out nav-panel. But every OTHER helper page
+surfaces the badge in the always-visible sticky
+page-footer-unified at the bottom of the viewport, and
+hive-profiles.html had no such footer at all. The fix
+matched the SHAPE the audit asked for, not the INTENT.
+
+David caught the gap immediately on a single visual
+comparison against terms.html, which is exactly the check
+the methodology should have prescribed.
+
+Updated procedure for Category 1 (Cross-Page Parity):
+  • For every parity finding, identify a REFERENCE PAGE
+    that is known-good for the element under audit.
+  • Open both pages side-by-side in the browser at the
+    same viewport. The fix lands only if the element
+    appears in the SAME visual region with the SAME
+    visual treatment.
+  • A presence check ("element X exists on page Y") is
+    necessary but not sufficient.
+
+──────────────────────────────────────────────────────────
+2. BULK-EDIT ANCHORS MUST BE UNIQUE-PER-FILE BEFORE WRITE
+──────────────────────────────────────────────────────────
+Two separate v3.63.282 / v3.63.283 bugs traced to the
+same root cause: a PowerShell sweep used a multi-line
+anchor that wasn't unique inside the target files, and
+.NET String.Replace replaces every occurrence.
+
+  • v3.63.282 anchor "  </div>\n</div>\n\n<!-- ===="
+    matched BOTH the close of <div class="nav-panel"> AND
+    the close of <div class="page-header"> — every helper
+    page shipped TWO elements with id="navBuyFooter", one
+    misplaced inside the page-header bar.
+  • v3.63.283 PowerShell sweep used $r[0]/$r[1] indexing
+    into a nested array. For replacement sets with only
+    ONE entry, PowerShell silently unwrapped the inner
+    array, so `Replace($r[0], $r[1])` became
+    `Replace('t', 'o')` — every lowercase 't' in scenes.js
+    got substituted with 'o'. Caught via `git diff --stat`
+    showing equal insertion/deletion counts, reverted
+    before commit.
+
+Updated procedure for bulk edits:
+  • Before running a multi-file sweep, search the target
+    files for the anchor and confirm exactly one match
+    per file (e.g. `grep -c "<anchor>" *.html | sort -t:
+    -k2 -n` — every count should be 1).
+  • Prefer IndexOf + Substring over String.Replace when
+    you mean "first occurrence only."
+  • For PowerShell hashtable values, use explicit
+    @( ,@(...) ) (with the trailing comma to force a
+    2D shape) when the value is a 1-element array of
+    arrays, or check `$pair.Value.Count -gt 0 -and
+    $pair.Value[0] -isnot [string]` before iterating.
+  • Use `git diff --stat <file>` post-write as a sanity
+    check — equal insertion/deletion counts plus a
+    diff size proportional to file length is the
+    signature of a global character substitution.
+
+──────────────────────────────────────────────────────────
+3. CHECKLIST FORMAT
+──────────────────────────────────────────────────────────
+Before shipping any audit finding:
+  ☐ Configuration-drift check passes (release-check.mjs)
+  ☐ Reference page identified for parity findings; visual
+    side-by-side opened
+  ☐ Anchor strings verified unique-per-file before bulk
+    sweep
+  ☐ Post-write git diff --stat sanity check on any file
+    larger than 100 lines
+
+═════════════════════════════════════════════════════════════
 END OF FILE
 ═════════════════════════════════════════════════════════════
 

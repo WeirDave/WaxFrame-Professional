@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260611-010
+// Build: 20260611-011
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -422,52 +422,17 @@ function saveModelForAI(aiId, modelId, opts) {
   if (!opts || !opts.silent) toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
 }
 
-// v3.30.2 — Revert an AI's model selection back to whatever was captured as
-// _originalModel at AI creation/import time. Triggered by the ↺ Reset button
-// that buildModelSelector renders only when current ≠ original. Re-renders
-// the bee grid so the reset button disappears once we're back at baseline.
-// Intentionally a hard reset with no confirmation modal — the action is
-// trivial to undo (pick a different model again) and the dialog noise would
-// outweigh the safety benefit.
-// resetModelToOriginal() removed in v3.31.0 — its UI button (the
-// "↺ Reset to {original}" button on the model selector row) was deleted
-// along with this function. In v3.31.0–v3.32.9 the Best/Fast/Budget
-// buttons in the expanded panel covered the "snap back to a sensible
-// model" use case. Those buttons are also removed in v3.32.10 — the
-// new dropdown surfaces ✨ Reviewer and 🔨 Builder picks directly,
-// so no separate quick-switch row is needed.
-// _originalModel field is still captured at AI add time but is no
-// longer surfaced in any UI; kept as forward-compatibility scaffold
-// for any future audit-trail feature.
-
-// v3.30.2 — One-shot migration that grandfathers in pre-v3.30.2 custom AIs
-// by snapshotting their CURRENT model as the _originalModel baseline. Defaults
-// already snapshot at module-eval time (see the loop right after API_CONFIGS).
-// This catches custom AIs that were imported/added under an earlier version
-// where _originalModel wasn't being captured at creation time.
-//
-// The honest UX caveat: if the user previously ran Recommend, "current" is the
-// recommended model — not their actual original pick. The toast tells them to
-// re-pick now to update the baseline. We keep a localStorage flag so the toast
-// shows once per upgrade, not on every load.
-function ensureOriginalModelBaseline() {
-  let migrated = 0;
-  aiList.forEach(ai => {
-    const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
-    if (!isCustom) return;
-    const cfg = API_CONFIGS[ai.provider];
-    if (cfg && cfg.model && !cfg._originalModel) {
-      cfg._originalModel = cfg.model;
-      migrated++;
-    }
-  });
-  if (!migrated) return;
-  saveHive();
-  // v3.63.18 — pre-v3.30.2 upgrade toast removed (33 releases ago, no
-  // returning users at that age would still benefit). The waxframe_v330
-  // _baseline_migrated localStorage sentinel is swept in the orphan-key
-  // cleanup at the top of DOMContentLoaded.
-}
+// v3.63.284 — _originalModel scaffold removed. Originally captured at AI
+// add/import time to support the ↺ Reset button; that button was removed
+// in v3.31.0 (replaced by Best/Fast/Budget buttons, themselves removed in
+// v3.32.10 in favor of the ✨ Reviewer / 🔨 Builder dropdown markers).
+// The field continued to be written and migrated for "forward-compatibility
+// scaffold for any future audit-trail feature" — 33+ releases later that
+// feature hasn't materialized, so the writes + the boot-time
+// ensureOriginalModelBaseline() migration + the saveHive() it triggered on
+// every cold start are all retired together. If an audit-trail UI is ever
+// added it can capture the baseline at that moment with no historical
+// data lost (nothing was reading the field anyway).
 
 // v3.63.18 — Three one-shot migrations removed (V33210 recommendation cache
 // reshuffle, V3605 Together model-list filter change, V3607 Together
@@ -583,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260611-010';         // build stamp — update each session
+const BUILD       = '20260611-011';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -9358,10 +9323,14 @@ function resetModelField() {
 // on any failure (caller handles UI feedback).
 async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint = null) {
   let modelsEndpoint, headers;
-  if (format === 'anthropic') {
-    modelsEndpoint = 'https://api.anthropic.com/v1/models';
-    headers = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
-  } else if (format === 'google') {
+  // v3.63.284 — Direct `api.anthropic.com/v1/models` branch removed. It
+  // CORS-fails from any browser origin, so it never produced a result on
+  // a real user. Built-in Claude uses the catalog's `anthropic-via-proxy`
+  // discovery path (waxframe-claude-proxy.weirdave.workers.dev); custom AIs
+  // with format='anthropic' must point at a CORS-enabled proxy of their
+  // own and provide an explicitModelsEndpoint. Falls through to the
+  // OpenAI-shape branch below.
+  if (format === 'google') {
     // v3.53.0 — API key moved from query string to header. Generate calls
     // already used 'x-goog-api-key' (see api.js headersFn); model-list path
     // was the outlier. Query-string secrets leak into browser history,
@@ -9695,12 +9664,6 @@ function addCustomAI() {
     } : {}),
     label: name,
     model,
-    // v3.30.2 — capture the originally-picked model. The Reset button
-    // that consumed this field was removed in v3.31.0 (Best/Fast/Budget
-    // buttons replaced it); _originalModel is still captured at add
-    // time as forward-compatibility scaffold for any future audit-trail
-    // feature, but no current UI surfaces it.
-    _originalModel: model,
     endpoint: url.replace(/\/$/, ''),
     note: `Format: ${formatLabels[format] || 'OpenAI compatible'} · Model: ${model}`,
     // v3.27.1: store format so recheckModelForAI can rebuild the recommend
@@ -10449,11 +10412,6 @@ function addImportServerModels() {
     API_CONFIGS[id] = {
       label:     name,
       model:     modelId,
-      // v3.30.2 — capture the original model id at import time. The
-      // Reset button that consumed this field was removed in v3.31.0
-      // (Best/Fast/Budget buttons replaced it); _originalModel is kept
-      // as forward-compatibility scaffold but no current UI surfaces it.
-      _originalModel: modelId,
       endpoint:  chatUrl,
       // v3.27.4: store the Models Endpoint URL so recheckModelForAI can
       // fetch the live model list later without trying to derive it from
@@ -20943,11 +20901,9 @@ async function clearDocument() {
 document.addEventListener('DOMContentLoaded', async () => {
   // v3.41.0 — initTheme() removed. theme.js auto-inits on load.
   loadSettings(); // always load hive (AI keys) silently
-  // v3.30.2 — grandfather in any pre-v3.30 custom AIs that don't have
-  // _originalModel captured. Must run AFTER loadSettings so the loaded
-  // hive is in memory. Defaults snapshot at module-eval time, so this
-  // call only catches user-added customs.
-  ensureOriginalModelBaseline();
+  // v3.63.284 — ensureOriginalModelBaseline() call removed alongside the
+  // _originalModel scaffold itself. Saved one saveHive() write per cold
+  // start that was firing for a field no UI consumed.
   // v3.63.18 — One-time orphan-sentinel sweep. The three migration functions
   // these sentinels controlled (V33210 recommend-cache reshuffle, V3605/V3607
   // Together model-list filter + URL changes, and the v3.30.2 baseline

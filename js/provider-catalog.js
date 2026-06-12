@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260611-010
+// Build: 20260611-011
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -35,8 +35,10 @@
 //     can restrict to ^sonar — declaratively, not in code branches.
 //   • buildApiConfigs() emits the EXACT shape the rest of app.js / api.js
 //     already references (cfg.label, cfg.endpoint, cfg.headersFn, cfg.bodyFn,
-//     cfg.extractFn, cfg.format, cfg.endpointFn, cfg._originalModel). 80+
-//     call sites in app.js are untouched.
+//     cfg.extractFn, cfg.format, cfg.endpointFn). 80+ call sites in app.js
+//     are untouched. (v3.63.284 — _originalModel dropped from the emitted
+//     shape; it was scaffold for an audit-trail UI that never shipped and
+//     had zero readers across the codebase.)
 //
 // LOADING: plain browser global script. Air-gap safe (no imports, no CDNs).
 // Load order: AFTER version.js + provider-models.js (catalog reads
@@ -311,7 +313,7 @@
   // ── buildApiConfigs ───────────────────────────────────────────────
   // Returns the legacy window.API_CONFIGS shape so the 80+ references in
   // app.js (cfg.model, cfg.headersFn, cfg.bodyFn, cfg.extractFn, cfg.format,
-  // cfg.endpoint, cfg.endpointFn, cfg._originalModel) keep working untouched.
+  // cfg.endpoint, cfg.endpointFn) keep working untouched.
   function buildApiConfigs() {
     var out = {};
     CATALOG.forEach(function (e) {
@@ -323,11 +325,10 @@
         format: e.format,
         headersFn: authFor(e),
         bodyFn:    bodyBuilderFor(e),
-        extractFn: extractorFor(e),
-        // v3.30.2 — snapshot the as-shipped model id so "↺ Reset" can revert
-        // post-Recommend changes. Was a separate forEach loop in api.js
-        // pre-catalog; folded into the build step now.
-        _originalModel: e.model
+        extractFn: extractorFor(e)
+        // v3.63.284 — _originalModel snapshot removed. Was scaffold for an
+        // audit-trail UI (the v3.30.2 ↺ Reset button) that never returned;
+        // the field had zero readers across the codebase.
       };
       if (e.endpointFn) cfg.endpointFn = e.endpointFn;
       out[e.id] = cfg;
@@ -513,19 +514,27 @@
     root.WFProviderModels.MODEL_FALLBACKS = buildModelFallbacks();
   }
 
+  // v3.63.284 — Public surface narrowed to the 5 names actually consumed
+  // externally (verified via grep across js/* and *.html):
+  //   • CATALOG                   — read by app.js (VISION_PROVIDERS filter)
+  //                                 and help.html (BUILT_IN_MODEL_PROVIDERS)
+  //   • getEntry                  — read by api.js (per-provider entry lookup)
+  //   • buildApiConfigs           — called by api.js at module-eval time
+  //                                 to build window.API_CONFIGS
+  //   • fetchModelsList           — called by api.js fetchers
+  //   • diagnosticModelsUrl,
+  //     diagnosticModelsHeaders   — called by help.html's diagnostic dump
+  // The other 9 helpers (FORMATS, BODY_BUILDERS, EXTRACTORS, AUTH_HEADERS,
+  // authFor, bodyBuilderFor, extractorFor, buildModelFilters,
+  // buildModelFallbacks) are module-internals — buildModelFilters and
+  // buildModelFallbacks still run at module eval as side effects that
+  // populate WFProviderModels.MODEL_FILTERS / .MODEL_FALLBACKS for help.html
+  // to read through the WFProviderModels global, so the side effect lives
+  // on; the names just no longer need to be reachable from outside.
   root.WFProviderCatalog = {
     CATALOG: CATALOG,
-    FORMATS: FORMATS,
-    BODY_BUILDERS: BODY_BUILDERS,
-    EXTRACTORS: EXTRACTORS,
-    AUTH_HEADERS: AUTH_HEADERS,
     getEntry: getEntry,
-    authFor: authFor,
-    bodyBuilderFor: bodyBuilderFor,
-    extractorFor: extractorFor,
     buildApiConfigs: buildApiConfigs,
-    buildModelFilters: buildModelFilters,
-    buildModelFallbacks: buildModelFallbacks,
     fetchModelsList: fetchModelsList,
     diagnosticModelsUrl: diagnosticModelsUrl,
     diagnosticModelsHeaders: diagnosticModelsHeaders
