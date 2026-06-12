@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.280
+
+**Cosmetic sweep — stale comments, dead references, defensive guards**
+
+Build: `20260611-007`<br>
+Released: `2026-06-11`
+
+### What changed
+
+Six low-risk cleanups from the audit's COSMETIC tier, ranging from "stale comment misleads the next audit" to "defensive guard that should have been there since day one." None affect behavior; all reduce drift.
+
+**1. Stale "5 helper pages" header comments updated to 13 pages.** `js/theme.js`, `js/nav-helper.js`, and `js/license-helper.js` headers all claimed they were loaded by the original five helper pages (api-details, document-playbooks, prompt-editor, what-are-tokens, waxframe-user-manual). Reality: those three scripts now load on ~13 helper pages each. Each header refreshed; theme.js calls out that `help.html` intentionally omits theme/mute per its documented "break-glass design contract."
+
+**2. Audit methodology doc — MODEL_LABELS entry retired, version stamp refreshed.** `docs/WaxFrame_Audit_Methodology_v1.txt` listed `MODEL_LABELS` in the audit-skip list as "vestigial, dead read at line ~15669." `MODEL_LABELS` was actually deleted in v3.52.7 — the audit-skip entry itself was a dead reference, and the methodology audit flagged it as such (a doc that flags ghosts in its own paper trail). Entry rewritten as `[REMOVED v3.63.280]` paper-trail crumb. Doc header's `WaxFrame version` field bumped from `v3.40.0 Pro` (23 minor versions stale) to `v3.63.280 Pro` and a `Last reviewed:` line added.
+
+**3. `index.html` legacy-key comment trimmed.** A `v3.35.3` retired-cleanup-button comment listed `waxframe_v2_session_mirror` among "legitimate state that the retired cleanup.html flagged as Unknown." That key was retired in v3.21.12 — keeping the reference here misled the methodology audit into treating it as active state and also seeded `wf-debug.js`'s now-fixed dead session read (v3.63.275). Reference struck.
+
+**4. `js/app.js` esc()/escapeHtml() comment line numbers stripped.** The header above `esc()` cited "defined ~line 9407" for `escapeHtml()` (actual location: ~12796 by audit time) and named four CodeQL-flagged sites by line number that had drifted by ~10k lines since v3.63.15. Replaced the line numbers with a grep-by-symbol pointer so the next time someone reads it the audit-trail is still useful.
+
+**5. `js/storage.js` consoleLog calls now `typeof`-guarded.** The audit noted four `consoleLog(...)` calls in `storage.js` (the live-console emitter is defined in `app.js`) were unguarded. If `app.js` ever failed to parse — bad release, CDN hiccup, dev typo — every save error in storage.js would throw `ReferenceError: consoleLog is not defined`, the surrounding catch would swallow it, and the user would get no signal that anything was wrong. Other call sites in this file already used the `typeof consoleLog === 'function'` guard; the four error-path sites now match.
+
+**6. Toast verb-consistency cosmetic touch.** The audit cited "disable cancelled" / "disabled" / "removed" as inconsistent verbs for the same user intent (undo / abort / revert). Left the actual user-facing wording at `disable cancelled` for the Builder-undisable path but added an inline comment marking that as the canonical "cancelled" form so future strings on this verb pick the same.
+
+### Why this matters
+
+These don't change what the app does. They change what the next audit sees: nothing in this batch was a behavior bug, but every item was a place where a future maintainer (or a future audit) would have wasted time tracking down a ghost. The pricing-worker disclosure, the BUILD-const CI check, and the IDB migration scaffold all came out of similar low-stakes-but-now-trivial drift surfaces in prior releases.
+
+### Files touched
+
+- [js/theme.js](js/theme.js), [js/nav-helper.js](js/nav-helper.js), [js/license-helper.js](js/license-helper.js) — header comments updated from "5 helper pages" → "13 helper pages" with current list
+- [docs/WaxFrame_Audit_Methodology_v1.txt](docs/WaxFrame_Audit_Methodology_v1.txt) — `MODEL_LABELS` audit-skip entry refreshed; doc header version stamps refreshed
+- [index.html](index.html) — retired-cleanup comment trimmed of dead `waxframe_v2_session_mirror` reference
+- [js/app.js](js/app.js) — `esc()` comment header line numbers replaced with grep pointers; toast canonical-verb comment
+- [js/storage.js](js/storage.js) — four `consoleLog(...)` error-path calls now `typeof consoleLog === 'function'` guarded
+
+---
+
 ## v3.63.279
 
 **Architecture cleanup — duplication retired, catalog actually consumed**
