@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.281
+
+**hive-profiles.html footer fix — actually-visible license badge, not the slide-out one**
+
+Build: `20260611-008`<br>
+Released: `2026-06-11`
+
+### What changed
+
+v3.63.278 added a `<span id="licenseBadge">` to `hive-profiles.html` — but inside the slide-out nav-panel, which is only visible after opening the hamburger menu. David caught it: every other helper page surfaces the badge in the always-visible sticky `page-footer-unified` at the bottom of the viewport, and `hive-profiles.html` didn't have that footer at all. Adding the badge to the hidden panel didn't fix the parity gap David was actually seeing.
+
+This release adds the full `page-footer-unified` block to `hive-profiles.html` — same markup as `terms.html`, `privacy.html`, `waxframe-user-manual.html`, etc. — with the `⬇ Download as Word` action on the left, the always-visible `licenseBadge` on the right, and the `ℹ️ About` button beside it. The misplaced nav-panel badge from v3.63.278 was removed in the same edit so there's only one source.
+
+### Why this matters
+
+This is exactly the kind of bug the audit framework is supposed to catch but didn't — the methodology agent flagged "loads `license-helper.js` but has no `licenseBadge` element" and the v3.63.278 fix satisfied the literal grep without satisfying the parity intent. A real visual smoke-test against `terms.html` would have caught the placement gap immediately. Noting for the next audit pass: parity findings need to be confirmed against a visual reference page, not just a presence check.
+
+### Files touched
+
+- [hive-profiles.html](hive-profiles.html) — `page-footer-unified` block added before the shared helper modals; the v3.63.278 nav-panel badge removed
+
+---
+
 ## v3.63.280
 
 **Cosmetic sweep — stale comments, dead references, defensive guards**
