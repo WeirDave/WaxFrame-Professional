@@ -78,6 +78,15 @@
     .logo {
       height: 720px; width: auto; display: block; margin: 0 auto 12px;
     }
+    /* v3.63.290 — Hero sizes scale down on laptop viewports. 720px hero
+       fills 2/3 of a 1080p screen and ~90% of a 768-tall laptop screen,
+       which is dominating. On anything narrower than 1600px wide (the
+       standard breakpoint between "laptop" and "large desktop monitor"
+       in WaxFrame's min-spec context), drop to half so the hero anchors
+       the page without eating the fold. */
+    @media (max-width: 1599px) {
+      .logo { height: 360px; }
+    }
     h1 { font-size: 26px; margin: 0 0 4px; color: var(--text); }
     .tagline { color: var(--text-dim); font-size: 15px; margin: 0 0 6px; }
     .verline {
