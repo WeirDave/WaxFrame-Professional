@@ -2,6 +2,23 @@
 
 ---
 
+## v3.63.288
+
+**help.html logo — pushed to hero size (360px)**
+
+Build: `20260612-003`<br>
+Released: `2026-06-12`
+
+### What changed
+
+David asked for the help.html hero logo to be more prominent. v3.63.287 took it from Codex's 88px to 140px; this release pushes it further to 360px so the WaxFrame mark anchors the centered "Help" hero the way the README's mascot anchors the project page. The PNG is 850×850 native, so there's plenty of resolution for the bigger size with no fuzz.
+
+### Files touched
+
+- [help.html](help.html) — `.logo` height 140px → 360px
+
+---
+
 ## v3.63.287
 
 **help.html giant-bee fix + logo size + revert of stray version-number rewrites**
