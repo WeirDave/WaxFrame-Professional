@@ -17843,6 +17843,100 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   font-weight: 600;
 }
 
+/* v3.63.307 — "+ Add variant" affordance on default-AI rows. Same pill
+   shape and fixed slot width as the Builder button so the column stays
+   locked across rows that have/don't have the variant button rendered.
+   Disabled state (.is-disabled) tints to dim and switches cursor; the
+   placeholder span reserves slot width on rows where the button is
+   suppressed (customs, variants themselves). */
+.ai-setup-add-variant-btn,
+.ai-setup-add-variant-placeholder {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 92px;
+  width: 92px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.ai-setup-add-variant-placeholder {
+  visibility: hidden;
+  border: 1px solid transparent;
+}
+.ai-setup-add-variant-btn:hover {
+  border-color: var(--accent, #f4b400);
+  color: var(--accent, #f4b400);
+  background: rgba(244, 180, 0, 0.04);
+}
+.ai-setup-add-variant-btn.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.ai-setup-add-variant-btn.is-disabled:hover {
+  border-color: var(--border);
+  color: var(--text-dim);
+  background: transparent;
+}
+
+/* v3.63.307 — Variant rows. Nested under their default parent in the
+   "Default providers" group. Subtle left-indent + dim-tinted left border
+   so the visual relationship reads at a glance without yelling. The
+   inline (variant) tag next to the name carries the literal label and
+   shows the parent name on hover. */
+.ai-setup-row.is-variant {
+  margin-left: 22px;
+  border-left: 2px solid rgba(244, 180, 0, 0.25);
+}
+.ai-setup-variant-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent, #f4b400);
+  opacity: 0.7;
+  margin-left: 6px;
+  cursor: help;
+}
+
+/* v3.63.307 — Per-variant "✕ Variant" remove button. Sits in the
+   summary-row action slot where customs would show the bulk-select
+   checkbox. Red on hover to signal a destructive action; otherwise
+   stays dim so it doesn't compete with the row's primary controls. */
+.ai-remove-variant-btn {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.ai-remove-variant-btn:hover {
+  border-color: var(--red, #e55a5a);
+  color: var(--red, #e55a5a);
+  background: rgba(229, 90, 90, 0.06);
+}
+
 /* v3.63.163 — .ai-builder-affordance hide-stub removed. The class is
  * no longer emitted by any code path and there's nothing to hide. */
 

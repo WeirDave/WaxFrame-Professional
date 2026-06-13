@@ -942,6 +942,18 @@ function _normalizeImportedAI(ai) {
   ai.name      = String(ai.name ?? ai.id).slice(0, 200);
   ai.url       = _safeImportUrl(ai.url);
   ai.apiConsole = _safeImportUrl(ai.apiConsole);
+  // v3.63.307 — Variants of default AIs ride sibling rows in the hive
+  // grid sharing one parent key (see addAIVariant() in app.js). Persist
+  // parentId + model on the way through normalize so reload survives.
+  // parentId gets the same id-slug treatment; bad/missing → drop the
+  // variant marker so the row degrades to a plain custom (won't render
+  // nested under any parent, but doesn't blow up).
+  if (ai.parentId != null) {
+    const slugged = slug(ai.parentId);
+    if (slugged) ai.parentId = slugged;
+    else delete ai.parentId;
+  }
+  if (ai.model != null) ai.model = String(ai.model).slice(0, 200);
   return ai;
 }
 
@@ -1090,6 +1102,21 @@ function loadSettings() {
           || (typeof QUICK_ADD_PROVIDERS !== 'undefined' && QUICK_ADD_PROVIDERS[id] && QUICK_ADD_PROVIDERS[id].keyLink) || ''
       });
       if (typeof consoleLog === 'function') consoleLog(`♻️ Restored "${(API_CONFIGS[id].label) || id}" — no longer a default, kept from your saved hive.`, 'info');
+    });
+
+    // v3.63.307 — Orphan-variant sweep. If a saved variant's parentId no
+    // longer resolves to an aiList entry (parent removed, demoted, or the
+    // hive blob got into a weird state), drop the variant. Without this,
+    // the row would render with a placeholder parent name AND still try
+    // to ride a provider key the user can't see — confusing.
+    const _knownIds = new Set(aiList.map(a => a.id));
+    aiList = aiList.filter(a => {
+      if (!a.parentId) return true;
+      if (_knownIds.has(a.parentId)) return true;
+      if (typeof consoleLog === 'function') {
+        consoleLog(`🧹 Dropped orphan variant "${a.name}" — parent "${a.parentId}" not in current hive.`, 'info');
+      }
+      return false;
     });
 
     if (h.keys) {

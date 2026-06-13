@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.307
+
+**"+ Add variant" on default AI cards · multiple Claudes / ChatGPTs in one hive sharing one key (backlog OPEN FEATURE #2 closed)**
+
+Build: `20260613-001`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Each default-AI card on the Worker Bees screen now carries a small `+ Variant` button next to the Manage link. Clicking it spawns a sibling row directly under the parent that shares the parent's saved API key but carries its own model. Result: a single Anthropic key can drive Claude Opus + Sonnet + Haiku in the SAME hive as three independent reviewer slots; one OpenAI key can run GPT-5.5 + GPT-4o + o4-mini side by side. Per-AI billing flows through one provider account; per-AI behavior splits across as many model picks as the user wants.
+
+This unlocks the per-provider concurrency override that shipped in **v3.63.299** for the default-AI population. Before today, a default-AI user could only hit the override's "1 → N concurrent calls" lift by going through the Add Custom AI flow with a matching preset — which works but reads as a hack (the result lands under Custom AIs instead of nesting under the default). With variants, the same hive shape is a first-class affordance.
+
+**How it works under the hood.** A variant is an `aiList` entry with a `parentId` field pointing at its default. Its `provider` is the parent's provider (so `API_CONFIGS[provider]` lookups — key, headers, body shape, concurrency slot — share with the parent transparently). The variant's model lives on `ai.model` rather than the shared `cfg.model`, so two siblings on the same provider can run different models without clobbering each other. A new top-level helper `getModelForAI(ai)` is the canonical resolver; `callAPI`, the row builders, the Builder spotlight, the hive-profile note, and the override badge all route through it. `saveModelForAI` writes to `ai.model` when `ai.parentId` is set and to `cfg.model` otherwise.
+
+**Render.** Variants render NESTED under their parent in the "Default providers" group with a left indent + dim gold left border — visual hierarchy makes the relationship obvious at a glance. The visible name carries a small `(VARIANT)` tag (hover shows the parent name). The Builder badge, the 6-card grid, the recommend pipeline, and the Manage link all work per-variant. The `Customized` profile-divergence badge correctly fires when a variant's model differs from the active hive-profile pick.
+
+**Remove.** Per-variant removal is an inline `✕ Variant` button in the row's action slot (where customs would show the bulk-select checkbox). The bulk-select toolbar's "Remove N" applies only to customs WITHOUT a parentId, so variants never accidentally get caught in a bulk wipe of unrelated customs. Removing the parent's KEY (defaults can't be deleted) takes all variants offline at once since they share the key — natural behavior, no separate dialog needed.
+
+**Persistence.** Variants land in `saveHive`'s `customAIs` array (they're not in `DEFAULT_AIS`) and survive reload through the existing `customAIs` loop. Their `customAIConfigs` entry is skipped because `API_CONFIGS[provider]` already exists from the parent. A new orphan-variant sweep at load time drops variants whose `parentId` no longer resolves (e.g. the parent default got demoted), so the hive never carries dangling rows.
+
+**Hive profiles + variants.** `applyHiveProfile` skips variants in tier-profile sweeps so the user's deliberate per-variant model picks don't get clobbered by a `⚖️ Balanced` apply across the whole hive. The "X of Y AIs match" tally on the profile bar also excludes variants. Saved custom profiles still work per-aiId (so a captured snapshot can include variants if the user wants), and the match check uses `getModelForAI(ai)` so a variant's `ai.model` counts properly.
+
+**Concurrency override.** No change needed — `_acquireProviderSlot(ai.provider)` already routes through the base provider (work landed in v3.63.301), so all variants of one provider share the slot. The Settings UI still shows one row per base.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `getModelForAI` helper (top of file); `saveModelForAI` writes `ai.model` for variants; `callAPI` resolves per-AI model into endpoint + body; `buildAISetupRowHTML` adds variant tag, `+ Variant` button, `✕ Variant` action, `is-variant` row class, and routes model-aware reads (override badge, Builder-incapable check, compact dropdown, 6-card grid) through `getModelForAI`; `_buildProfileOverrideBadgeHTML` compares per-AI model not shared `cfg.model`; `renderAISetupGrid` nests variants under their parent in the defaults group and excludes them from customs; `buildBulkSelectToolbarHTML` excludes variants from the eligible-customs set; new `addAIVariant`, `removeAIVariant`, `_nextVariantId`, `_parentNameForVariant`; `applyHiveProfile` and the profile-bar note skip variants in tier sweeps and use `getModelForAI` for picks; `renderBuilderScreenModel` reads per-AI model for variant-as-Builder
+- [js/storage.js](js/storage.js) — `_normalizeImportedAI` preserves `parentId` + `model`; orphan-variant sweep at load drops variants with no parent
+- [style.css](style.css) — `.ai-setup-add-variant-btn` + disabled + placeholder + hover; `.ai-setup-row.is-variant` indent + left-border; `.ai-setup-variant-tag` uppercase gold tag; `.ai-remove-variant-btn` with red-hover
+- [docs/WaxFrame_Backlog_Master_v249.txt](docs/WaxFrame_Backlog_Master_v249.txt) → [v250](docs/WaxFrame_Backlog_Master_v250.txt) — OPEN FEATURE #2 retired
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.306
 
 **External-link cleanup pass · stale → arrows stripped · gnu.org/Free-edition externals converted · section-header underline-at-rest removed**
