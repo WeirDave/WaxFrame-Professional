@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.300
+
+**localStorage migration audit runtime verification · forward-compat test plan · backlog v246 → v247**
+
+Build: `20260612-015`<br>
+Released: `2026-06-12`
+
+### Three cleanups bundled
+
+**1. Two flagged-pattern verifications closed.** [v3.63.294](https://github.com/WeirDave/WaxFrame-Professional/releases/tag/v3.63.294) shipped the static-AST first pass of the localStorage audit and left two patterns flagged for runtime check. v3.63.300 walks the actual call sites and writes the verification notes back into the schema doc.
+
+- **`waxframe_models_${providerId}`** was tagged FLAGGED [WRITE-ONLY] by the static scanner. Wrong call — the cache is ACTIVELY READ by `getModelsForProvider` (the model-dropdown hot path), `fetchModelsForProvider` (the 7-day cache hit path), `recheckModelForAI`, and help.html's diagnostic dump. The static scanner missed the reads because they all use a template-literal key (`` `waxframe_models_${provider}` ``) — the same template shape the SETs use. Schema entry corrected; the cache is load-bearing, NOT a candidate for removal. Pulling it would force a live `/v1/models` GET on every dropdown render.
+- **`waxframe_recommend_*` family** was flagged for odd `set=0 get=0 rem=3` attribution counts in the static scan. Confirmed: not an orphan, just an audit-script attribution artifact from asymmetric template shapes. The SET/GET sites use one generic template `` `waxframe_recommend_${cacheId}` `` where `cacheId` encodes `default-|custom-` + `aiId` + `role` at runtime; the REM sites use six fully-literal role-specific templates for cleanliness on per-AI cleanup. Runtime reconciles via `cacheId`; no code bug. Schema entry updated with the call-site map.
+
+**2. Forward-compat test plan written.** Backlog #6 (localStorage migration audit) DONE statement called for "a manual test plan exists for forwarding a v3.21-era profile through every release boundary." Now it does — appended to [docs/WaxFrame_Storage_Schema_v1.txt](docs/WaxFrame_Storage_Schema_v1.txt) under `FORWARD-COMPAT TEST PLAN`, with: snapshot capture procedure for a v3.21 profile, migration walkthrough for the v3.21 → v3.32 → v3.45 → v3.63 → current envelope boundaries with per-range expectations, per-key spot-checks for the canonical entries after the full walk, and a cadence guideline (run the plan on `envelope.version` bumps or non-additive per-key shape changes — not on additive field accretion, which the current empty-object fallbacks already handle).
+
+**3. Backlog v246 → v247.** OPEN FEATURE #1 (per-key concurrency override) shipped in [v3.63.299](https://github.com/WeirDave/WaxFrame-Professional/releases/tag/v3.63.299), so it's deleted per the ship-and-delete convention. Items #2-6 renumber to #1-5. The localStorage migration audit item (new #5) STATE is updated to reflect what v3.63.300 verified vs what's still PARTIAL (only the per-key schema versioning aspiration remains). [docs/WaxFrame_Backlog_Master_v244.txt](docs/WaxFrame_Backlog_Master_v244.txt) retired to maintain the 3-version margin (current: v245 / v246 / v247).
+
+### What this means in practice
+
+The schema doc is now a credible reference for "what shape does this localStorage key hold and which code reads/writes it" across the 42 keys WaxFrame manages. Pair it with the new forward-compat test plan and a long-running user reporting "my checkpoints went missing" has a tractable diagnosis path: snapshot their localStorage, run the test plan against a clean profile starting from the snapshot, find which release boundary their data fails at.
+
+### Files touched
+
+- [docs/WaxFrame_Storage_Schema_v1.txt](docs/WaxFrame_Storage_Schema_v1.txt) — schema entries corrected for both flagged patterns; REMAINING WORK section updated; new FORWARD-COMPAT TEST PLAN section appended
+- `docs/WaxFrame_Backlog_Master_v247.txt` — new backlog branched from v246; OPEN FEATURE #1 (per-key concurrency override) deleted; items renumbered; localStorage migration audit STATE expanded to reflect v3.63.300 progress
+- `docs/WaxFrame_Backlog_Master_v244.txt` — deleted (3-version margin)
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.299
 
 **Per-provider concurrency override · paid tiers can lift the cap without a code change**
