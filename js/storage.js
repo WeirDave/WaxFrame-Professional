@@ -1893,6 +1893,211 @@ async function _fsaWriteEnvelopeToFolder(env) {
     return null;
   }
 }
+// ── AUTO-BACKUP (v3.63.320) ──────────────────────────────────────────
+// Backlog FEATURE #3 Phase 2. Settings-driven loop that drops a fresh
+// checkpoint into the user's FSA sync folder after every Nth round.
+// Manual Save Checkpoint stays as the one-off escape hatch — auto-backup
+// is the background safety net.
+//
+// David's design call (v3.63.319 follow-up): "It should be a setting in
+// the settings to where Edge users and Chrome users pick your folder for
+// auto saving and then you pick it and then it lives in the setup menu
+// and then every time or then it just fires automatically for making
+// backups. You can manually go in and do a save checkpoint at any
+// point." Frequency as presets (every / every other / every 3rd round),
+// not a seconds-based timer. Section selection mirrors the manual
+// Checkpoint screen so users don't relearn it.
+const _AUTO_BACKUP_FREQ_KEY  = 'waxframe_auto_backup_freq';
+const _AUTO_BACKUP_SCOPE_KEY = 'waxframe_auto_backup_scope';
+// Default scope mirrors the manual Checkpoint screen's safe defaults
+// (v3.63.278): keys + license OFF, everything else ON. Self-portable
+// backup without leaking the API key file to wherever the user puts
+// their backup folder.
+const _AUTO_BACKUP_SCOPE_DEFAULTS = {
+  projectInfo: true,
+  refMaterial: true,
+  startingDoc: true,
+  session:     true,
+  aiList:      true,
+  models:      true,
+  keys:        false,
+  builder:     true,
+  license:     false,
+};
+function getAutoBackupFreq() {
+  try {
+    const raw = localStorage.getItem(_AUTO_BACKUP_FREQ_KEY);
+    const n = parseInt(raw, 10);
+    return isFinite(n) && n >= 0 && n <= 3 ? n : 0;
+  } catch (e) { return 0; }
+}
+function setAutoBackupFreq(value) {
+  const n = parseInt(value, 10);
+  if (!isFinite(n) || n < 0 || n > 3) return;
+  try { localStorage.setItem(_AUTO_BACKUP_FREQ_KEY, String(n)); } catch (e) {}
+}
+function getAutoBackupScope() {
+  try {
+    const raw = localStorage.getItem(_AUTO_BACKUP_SCOPE_KEY);
+    if (!raw) return { ..._AUTO_BACKUP_SCOPE_DEFAULTS };
+    const saved = JSON.parse(raw);
+    const out = {};
+    for (const k of _CHECKPOINT_SCOPE_KEYS) out[k] = !!saved[k];
+    return out;
+  } catch (e) { return { ..._AUTO_BACKUP_SCOPE_DEFAULTS }; }
+}
+function setAutoBackupScope(scope) {
+  if (!scope || typeof scope !== 'object') return;
+  const out = {};
+  for (const k of _CHECKPOINT_SCOPE_KEYS) out[k] = !!scope[k];
+  try { localStorage.setItem(_AUTO_BACKUP_SCOPE_KEY, JSON.stringify(out)); } catch (e) {}
+}
+
+// Auto-backup hook called by app.js's _logRoundBump after every round-
+// completion site (continuing, unanimous, majority, builder-only,
+// apply-decisions). Quietly no-ops on unsupported browsers, when freq=0,
+// when the round counter isn't on a save-cadence boundary, or when the
+// sync folder handle isn't reachable/permitted. Writes inline using the
+// already-permitted handle; no picker/permission re-prompt (those need
+// user activation, which we don't have inside a round-completion path).
+async function _autoBackupAfterRound() {
+  if (!_fsaSupported()) return;
+  const freq = getAutoBackupFreq();
+  if (!freq || freq < 1) return;
+  const r = (typeof window !== 'undefined' && typeof window.round === 'number') ? window.round : NaN;
+  if (!isFinite(r) || r < 1) return;
+  // Frequency math: fire when round is a multiple of freq.
+  //   freq=1 → every round (1, 2, 3, 4, …)
+  //   freq=2 → every other round (2, 4, 6, …)
+  //   freq=3 → every 3rd round (3, 6, 9, …)
+  if (r % freq !== 0) return;
+  // Folder handle must already exist + be currently permitted. We can't
+  // requestPermission here (no user gesture) so a permission lapse just
+  // skips this round's auto-backup silently. Next manual Save Checkpoint
+  // re-grants permission and resumes the loop.
+  let dir = null;
+  try { dir = await _fsaGetStoredHandle(); } catch (e) {}
+  if (!dir) return;
+  try {
+    const perm = await dir.queryPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') return;
+  } catch (e) { return; }
+
+  const scope = getAutoBackupScope();
+  const env = await _buildCheckpointEnvelope(scope);
+  if (!env) return;
+
+  try {
+    const fileHandle = await dir.getFileHandle(env.filename, { create: true });
+    const writable   = await fileHandle.createWritable();
+    await writable.write(env.json);
+    await writable.close();
+    if (typeof toast === 'function') {
+      toast(`📁 Auto-backup saved — round ${r}`, 2500);
+    }
+    console.info(`[auto-backup] round ${r} → ${env.filename}`);
+  } catch (e) {
+    console.warn('[auto-backup] write failed:', e);
+  }
+}
+// Expose under the canonical name so app.js can call it without a tight
+// cross-file binding. _logRoundBump checks typeof before calling.
+if (typeof window !== 'undefined') {
+  window._autoBackupAfterRound = _autoBackupAfterRound;
+}
+
+// ── SETTINGS HANDLERS ──
+// All wired to the Settings panel HTML in index.html v3.63.320. Each
+// handler persists immediately and updates UI state where needed.
+
+// Pick / re-pick the sync folder. Uses the same _fsaEnsureSyncDir
+// helper as manual Save Checkpoint — first call shows the OS picker;
+// subsequent calls reuse the stored handle (re-requesting permission
+// if needed, since this fires inside a user gesture).
+async function settingsPickBackupFolder() {
+  if (!_fsaSupported()) {
+    toast('⚠️ Backup folder selection needs Chrome, Edge, or Opera.', 5000);
+    return;
+  }
+  // forceRePick:true so the user always sees the picker when they click
+  // — otherwise they couldn't change folders without first calling
+  // fsaForgetSyncDir from the console.
+  const dir = await _fsaEnsureSyncDir(true);
+  if (!dir) return;   // user canceled — toast handled inside if it was a denial
+  _refreshBackupFolderLabel();
+  toast(`📁 Backup folder set — ${dir.name || '(unnamed)'}`, 4000);
+}
+async function _refreshBackupFolderLabel() {
+  const label = document.getElementById('setBackupFolderLabel');
+  if (!label) return;
+  if (!_fsaSupported()) {
+    label.textContent = '— Not supported in this browser —';
+    return;
+  }
+  try {
+    const handle = await _fsaGetStoredHandle();
+    label.textContent = handle?.name ? handle.name : '— Not set —';
+  } catch (e) {
+    label.textContent = '— Not set —';
+  }
+}
+
+function saveAutoBackupFreq(value) {
+  setAutoBackupFreq(value);
+}
+
+function saveAutoBackupScope() {
+  const out = {};
+  for (const key of _CHECKPOINT_SCOPE_KEYS) {
+    const el = document.getElementById('setBackupScope' + key[0].toUpperCase() + key.slice(1));
+    out[key] = !!el?.checked;
+  }
+  setAutoBackupScope(out);
+}
+
+// Jump to the Checkpoint Save screen from inside the Settings panel.
+// Used by the "See section details →" link next to the scope checkboxes.
+function openCheckpointFromSettings() {
+  if (typeof closeSettings === 'function') closeSettings();
+  if (typeof backupSession === 'function') backupSession();
+}
+
+// Initial render — populate the Settings UI from saved state. Called
+// by openSettings() before the section becomes visible.
+function initBackupSyncSettings() {
+  if (!_fsaSupported()) {
+    const row = document.getElementById('setBackupUnsupportedRow');
+    if (row) row.style.display = '';
+    const btn = document.getElementById('setBackupFolderBtn');
+    if (btn) { btn.disabled = true; btn.title = 'Requires Chrome, Edge, or Opera'; }
+    document.querySelectorAll('input[name="setBackupFreq"]').forEach(el => { el.disabled = true; });
+    _CHECKPOINT_SCOPE_KEYS.forEach(k => {
+      const el = document.getElementById('setBackupScope' + k[0].toUpperCase() + k.slice(1));
+      if (el) el.disabled = true;
+    });
+  }
+  // Frequency radio
+  const freq = String(getAutoBackupFreq());
+  document.querySelectorAll('input[name="setBackupFreq"]').forEach(el => {
+    el.checked = (el.value === freq);
+  });
+  // Scope checkboxes
+  const scope = getAutoBackupScope();
+  for (const k of _CHECKPOINT_SCOPE_KEYS) {
+    const el = document.getElementById('setBackupScope' + k[0].toUpperCase() + k.slice(1));
+    if (el) el.checked = !!scope[k];
+  }
+  // Folder label
+  _refreshBackupFolderLabel();
+}
+if (typeof window !== 'undefined') {
+  window.settingsPickBackupFolder  = settingsPickBackupFolder;
+  window.saveAutoBackupFreq        = saveAutoBackupFreq;
+  window.saveAutoBackupScope       = saveAutoBackupScope;
+  window.openCheckpointFromSettings = openCheckpointFromSettings;
+  window.initBackupSyncSettings    = initBackupSyncSettings;
+}
+
 // Forget the stored folder handle. Console-callable for users who want
 // to change their sync folder mid-session; Phase 2 will surface a UI
 // affordance ("Change sync folder…") in the checkpoint screen settings.

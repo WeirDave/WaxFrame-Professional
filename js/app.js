@@ -597,6 +597,21 @@ function _logRoundBump(siteTag) {
       if (WF_DEBUG.ringBuffer.length > 200) WF_DEBUG.ringBuffer.shift();
     }
   } catch (e) { /* never let instrumentation throw */ }
+  // v3.63.320 \u2014 Auto-backup hook. Single central trigger covers every
+  // round-completion site (continuing / unanimous / majority / builder-
+  // only / apply-decisions-all-bypassed) because they all call
+  // _logRoundBump right before incrementing `round`. The hook checks
+  // its own preconditions internally (FSA supported, freq>0, round
+  // matches cadence, folder handle reachable + permitted) \u2014 silent
+  // no-op when any fail. Fire-and-forget so a slow disk write doesn't
+  // block the round-counter bump or downstream chain. defined in
+  // storage.js; existence check keeps app.js loadable when storage.js
+  // hasn't parsed yet (e.g. dev reload mid-edit).
+  try {
+    if (typeof window !== 'undefined' && typeof window._autoBackupAfterRound === 'function') {
+      window._autoBackupAfterRound();
+    }
+  } catch (e) { /* never let auto-backup throw upward into the round-completion path */ }
 }
 
 // ── localStorage KEYS (extracted) ──
@@ -907,6 +922,12 @@ function renderSettings() {
       }).join('');
     vis.value = getVisionProviderPref();
   }
+
+  // v3.63.320 — Backup Sync section: folder + frequency + scope. Delegate
+  // to storage.js's initBackupSyncSettings so the FSA helpers stay
+  // colocated. Existence check keeps this loadable when storage.js
+  // hasn't parsed yet.
+  if (typeof initBackupSyncSettings === 'function') initBackupSyncSettings();
 
   // v3.62.0 — Workflow Toggles section: live mirrors for the two pill
   // toggles. v3.62.1 — Auto-Update Models toggle + interval radio added.
