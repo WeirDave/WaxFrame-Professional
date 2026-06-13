@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260612-018
+// Build: 20260612-019
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -548,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260612-018';         // build stamp — update each session
+const BUILD       = '20260612-019';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -978,7 +978,7 @@ function renderConcurrencyOverrides() {
     const usageUrl = usageUrls[base] || '';
     // v3.63.303 — external-link pill markup per Kai's spec.
     const limitsLink = usageUrl
-      ? ' <a class="settings-inline-link external-link" href="' + escapeHtml(usageUrl) + '" target="_blank" rel="noopener noreferrer" title="Open ' + escapeHtml(label) + ' usage / limits page in a new tab">Check your limits<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>'
+      ? ' <a class="settings-inline-link external-link" href="' + escapeHtml(usageUrl) + '" target="_blank" rel="noopener noreferrer" title="Open ' + escapeHtml(label) + ' usage / limits page in a new tab">Check your limits<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>'
       : '';
     return (
       '<div class="settings-row">' +
@@ -1674,17 +1674,26 @@ function consoleLog(msg, type = 'info', rawData = null, link = null) {
     linkEl.target = '_blank';
     linkEl.rel = 'noopener';
     linkEl.textContent = link.label;
-    // v3.63.303 — external-link pill markup per Kai's spec. DOM API used
-    // (not innerHTML) so the XSS-safety the rest of this function relies
-    // on stays intact — link.label is still text-content only.
-    const _pill = document.createElement('span');
-    _pill.className = 'external-pill';
-    _pill.setAttribute('aria-hidden', 'true');
-    _pill.textContent = 'External';
-    linkEl.appendChild(_pill);
+    // v3.63.304 — Inline boxed-arrow SVG (Kai spec v2). Built via
+    // createElementNS (SVG needs the http://www.w3.org/2000/svg namespace)
+    // so the function's v3.35.4 XSS safety stays intact — link.label is
+    // still text-content only; no string interpolation reaches innerHTML.
+    const _svgNs = 'http://www.w3.org/2000/svg';
+    const _svg = document.createElementNS(_svgNs, 'svg');
+    _svg.setAttribute('class', 'external-link-icon');
+    _svg.setAttribute('viewBox', '0 0 24 24');
+    _svg.setAttribute('aria-hidden', 'true');
+    _svg.setAttribute('focusable', 'false');
+    const _p1 = document.createElementNS(_svgNs, 'path');
+    _p1.setAttribute('d', 'M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z');
+    _svg.appendChild(_p1);
+    const _p2 = document.createElementNS(_svgNs, 'path');
+    _p2.setAttribute('d', 'M5 5h6v2H7v10h10v-4h2v6H5V5z');
+    _svg.appendChild(_p2);
+    linkEl.appendChild(_svg);
     const _srOnly = document.createElement('span');
     _srOnly.className = 'sr-only';
-    _srOnly.textContent = '(opens external site in a new tab)';
+    _srOnly.textContent = '(opens in a new tab)';
     linkEl.appendChild(_srOnly);
     const url = _safeLinkUrl;
     linkEl.onclick = (e) => {
@@ -5801,7 +5810,7 @@ function buildAISetupRowHTML(ai) {
     manageLinkHTML = `<a class="ai-setup-manage-link external-link${hasKey ? '' : ' is-getkey'}"
       href="${escapeHtml(safeUrl(consoleUrlNow))}" target="_blank" rel="noopener noreferrer"
       onclick="event.stopPropagation();"
-      title="${escapeHtml(title)}">${label}<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>`;
+      title="${escapeHtml(title)}">${label}<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>`;
   }
 
   // v3.63.209 (closes backlog "Per-row Manual override tag") — When a Hive

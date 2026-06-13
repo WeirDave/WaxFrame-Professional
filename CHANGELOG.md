@@ -2,6 +2,56 @@
 
 ---
 
+## v3.63.304
+
+**External-link affordance v2: "External" pill swapped for a small inline SVG icon (Kai spec v2)**
+
+Build: `20260612-019`<br>
+Released: `2026-06-12`
+
+### What changed
+
+[v3.63.303](https://github.com/WeirDave/WaxFrame-Professional/releases/tag/v3.63.303) shipped the "External" text pill per Kai's initial spec. After live review David wanted something more subtle than a bordered text chip — closer to the standard external-link icon you see on Wikipedia, MDN, GitHub, etc. (a small box with an arrow escaping its top-right corner). Kai delivered a revised spec; v3.63.304 implements it.
+
+The pill is gone. In its place: a small inline SVG icon — the standard boxed-arrow shape — that sits inline with the link text at `0.82em` height, fills with `currentColor` so it inherits the link's palette, and runs at `0.65` opacity by default with a brighten-to-`1` transition on hover and `:focus-visible`.
+
+### Markup pattern
+
+```html
+<a href="https://elsewhere.tld" class="external-link"
+   target="_blank" rel="noopener noreferrer">
+  Link text
+  <svg class="external-link-icon" viewBox="0 0 24 24"
+       aria-hidden="true" focusable="false">
+    <path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path>
+    <path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path>
+  </svg>
+  <span class="sr-only">(opens in a new tab)</span>
+</a>
+```
+
+### Scope
+
+- **228 instances of the v3.63.303 `<span class="external-pill">External</span>...` markup swapped to the new inline SVG** across `*.html` and `js/*.js` files. A single PowerShell `String.Replace` pass — the OLD markup is identical at every site, so the swap is mechanical and safe.
+- **`js/api-links.js` drawer template** — the pill markup was built by string concatenation rather than a single literal, so the bulk swap didn't catch it; updated by hand to emit the SVG instead.
+- **`js/app.js` `consoleLog()` DOM-API path** — the pill there was constructed via `createElement('span') + textContent` to preserve the function's v3.35.4 XSS safety (string-interpolated user input near `innerHTML` is a sink). Rewritten to use `createElementNS('http://www.w3.org/2000/svg', 'svg')` so the SVG is built node-by-node — no `innerHTML`, no template literal, same XSS posture.
+- **CSS** — `.external-pill` block deleted; new `.external-link-icon` block (0.82em, currentColor fill, 0.65 opacity, brightens to 1 on hover/focus); `.external-link` gap tightened from 0.35rem to 0.22em. `.sr-only` unchanged.
+- **Screen-reader text** updated from "(opens external site in a new tab)" → "(opens in a new tab)" per Kai's revised spec.
+
+### Behavior
+
+Visually subtle. The icon barely competes with the link text at rest, but is unmistakably present once the eye knows what it is. Hovering or keyboard-focusing the link brightens the icon, providing a click affordance signal. Accessibility unchanged from v3.63.303: icon is `aria-hidden`, the `.sr-only` span carries the announcement, `target="_blank" rel="noopener noreferrer"` on every converted link.
+
+### Files touched
+
+- [style.css](style.css) — `.external-pill` rule removed; `.external-link-icon` rule added; `.external-link` gap value updated; the `.settings-inline-link` docblock updated to mention the SVG approach
+- [js/app.js](js/app.js) — `consoleLog()` rewritten to use `createElementNS` for the SVG icon
+- [js/api-links.js](js/api-links.js) — drawer item template updated to emit the SVG
+- 15 HTML files + `js/app.js` template literals — 228 instances bulk-swapped from pill markup to SVG markup
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.303
 
 **External-link affordance: ⧉ glyph retired, "External" pill convention adopted (Kai spec)**

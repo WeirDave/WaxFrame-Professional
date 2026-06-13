@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260612-018
+     Build: 20260612-019
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260612-018">
+  <meta name="waxframe-build" content="20260612-019">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.303">
+  <link rel="stylesheet" href="style.css?v=3.63.304">
 </head>
 <body class="helper-body">
 
@@ -83,7 +83,7 @@
         <span class="nav-buy-cta-title">Buy a License</span>
         <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
       </span>
-    <span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>
+    <svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>
   </div>
 </div>
 
@@ -245,7 +245,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Purchasing a license</div>
-      <p>After your three free rounds, WaxFrame requires a license key to run additional rounds. Purchase one at <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" class="link-accent external-link">weirdave.gumroad.com/l/WaxFrame<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>. Your key arrives by email immediately after purchase. The license is a one-time purchase with no subscription or renewal fee.</p>
+      <p>After your three free rounds, WaxFrame requires a license key to run additional rounds. Purchase one at <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" class="link-accent external-link">weirdave.gumroad.com/l/WaxFrame<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>. Your key arrives by email immediately after purchase. The license is a one-time purchase with no subscription or renewal fee.</p>
     </div>
 
     <div class="wh-block">
@@ -348,7 +348,7 @@
       <div class="wh-block-title">On cost — APIs are not subscriptions</div>
       <p>WaxFrame talks to each AI through its <strong>API</strong>, not through the consumer chat product you might already pay a monthly fee for. This matters for cost: APIs charge per usage in one-time credits, not as a recurring subscription. You pay only for the tokens you actually send and receive — typically a fraction of a cent per round per reviewer.</p>
       <p><strong>Gemini's API is currently free</strong> within Google's published rate limits. This makes Gemini a useful free reviewer to anchor your hive, and it's why <strong>Gemini-as-Builder</strong> is a common starting configuration. The other five default providers — ChatGPT (OpenAI), Claude (Anthropic), Mistral, xAI (Grok), Perplexity — each require a one-time minimum API credit purchase, typically <strong>starting at $5</strong>. Once loaded, the credit stays in your account and only depletes as you actually use the API; an unused credit doesn't expire monthly the way an unused subscription month does.</p>
-      <p><strong>Gemini paid-tier caveat.</strong> Gemini's free tier applies only while your Google AI Studio account has <em>billing disabled</em>. The moment you add a credit card and enable billing — even if you intended to stay on the free tier — Gemini requests can route through paid-tier paths and charge per token. The Builder role amplifies this because it reads project setup, reference material, the full working document, and every reviewer's suggestions every round, then writes the document back out. A multi-round session with paid-tier Gemini as Builder on a long document with reference material attached can chew through a few dollars unexpectedly. For casual use, keep billing off on AI Studio. If billing is on, check the <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener noreferrer" class="external-link">AI Studio usage page<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> after longer runs, and consider keeping Gemini as a Reviewer (lighter token load) rather than the Builder.</p>
+      <p><strong>Gemini paid-tier caveat.</strong> Gemini's free tier applies only while your Google AI Studio account has <em>billing disabled</em>. The moment you add a credit card and enable billing — even if you intended to stay on the free tier — Gemini requests can route through paid-tier paths and charge per token. The Builder role amplifies this because it reads project setup, reference material, the full working document, and every reviewer's suggestions every round, then writes the document back out. A multi-round session with paid-tier Gemini as Builder on a long document with reference material attached can chew through a few dollars unexpectedly. For casual use, keep billing off on AI Studio. If billing is on, check the <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener noreferrer" class="external-link">AI Studio usage page<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> after longer runs, and consider keeping Gemini as a Reviewer (lighter token load) rather than the Builder.</p>
       <p>Practical cost ladder:</p>
       <ul>
         <li><strong>Cheapest entry point:</strong> Gemini (free) + one paid provider with the minimum $5 credit = 2-AI hive, about <strong>$5 in one-time credits</strong>. Meets the WaxFrame minimum to continue and runs an entire document refinement session.</li>
@@ -2026,7 +2026,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Perplexity — enable auto-billing before your first use</div>
-      <p>Perplexity requires you to explicitly enable auto-billing in your account settings before API calls will succeed. If Perplexity's Test button returns a billing-related error, log into your Perplexity account at <a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.perplexity.ai<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>, enable auto-billing, and retry the test.</p>
+      <p>Perplexity requires you to explicitly enable auto-billing in your account settings before API calls will succeed. If Perplexity's Test button returns a billing-related error, log into your Perplexity account at <a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.perplexity.ai<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>, enable auto-billing, and retry the test.</p>
     </div>
 
     <div class="wh-block">
@@ -2034,12 +2034,12 @@
       <table class="wh-table">
         <thead><tr><th>AI</th><th>Default model</th><th>Provider billing page</th></tr></thead>
         <tbody>
-          <tr><td><strong>ChatGPT</strong></td><td><code>gpt-5.5</code></td><td><a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.openai.com<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></td></tr>
-          <tr><td><strong>Claude</strong></td><td><code>claude-sonnet-4-6</code></td><td><a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.claude.com<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></td></tr>
-          <tr><td><strong>Gemini</strong></td><td><code>gemini-3.5-flash</code></td><td><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="link-accent external-link">aistudio.google.com<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></td></tr>
-          <tr><td><strong>Grok</strong></td><td><code>grok-4.1-fast</code></td><td><a href="https://console.x.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.x.ai<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></td></tr>
-          <tr><td><strong>Perplexity</strong></td><td><code>sonar-pro</code></td><td><a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.perplexity.ai<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></td></tr>
-          <tr><td><strong>DeepSeek</strong></td><td><code>deepseek-v4-flash</code></td><td><a href="https://platform.deepseek.com/top_up" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.deepseek.com<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></td></tr>
+          <tr><td><strong>ChatGPT</strong></td><td><code>gpt-5.5</code></td><td><a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.openai.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
+          <tr><td><strong>Claude</strong></td><td><code>claude-sonnet-4-6</code></td><td><a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.claude.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
+          <tr><td><strong>Gemini</strong></td><td><code>gemini-3.5-flash</code></td><td><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="link-accent external-link">aistudio.google.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
+          <tr><td><strong>Grok</strong></td><td><code>grok-4.1-fast</code></td><td><a href="https://console.x.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.x.ai<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
+          <tr><td><strong>Perplexity</strong></td><td><code>sonar-pro</code></td><td><a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.perplexity.ai<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
+          <tr><td><strong>DeepSeek</strong></td><td><code>deepseek-v4-flash</code></td><td><a href="https://platform.deepseek.com/top_up" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.deepseek.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
         </tbody>
       </table>
       <p>To change the model for any AI, go to the Setup screen and click the model name shown below that AI's key field. A dropdown appears with all models currently available on your account with that provider, fetched live at the time you open it.</p>
@@ -2073,7 +2073,7 @@
     <div class="wh-block">
       <div class="wh-block-title">Filing a bug report</div>
       <p>The Help page also has a one-click link that opens a pre-filled GitHub issue with your WaxFrame version, build number, browser, and operating system already in the body. You add what happened and how to reproduce it, drag the diagnostic bundle in if you grabbed one, and submit. Issues filed through this flow get auto-labeled <code>auto-reported</code> so they show up immediately in the project's triage queue.</p>
-      <p>If you would rather file an issue directly, go to <a href="https://github.com/WeirDave/WaxFrame-Professional/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer" class="link-accent external-link">github.com/WeirDave/WaxFrame-Professional/issues/new<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> — it uses the same template, just without the auto-filled environment block.</p>
+      <p>If you would rather file an issue directly, go to <a href="https://github.com/WeirDave/WaxFrame-Professional/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer" class="link-accent external-link">github.com/WeirDave/WaxFrame-Professional/issues/new<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> — it uses the same template, just without the auto-filled environment block.</p>
     </div>
 
     <div class="wh-block">
@@ -2121,8 +2121,8 @@
     <div class="goal-info-body">
       <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span class="app-version-stamp"></span></span></div>
       <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" class="link-accent">Read license →</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">github.com/WeirDave/WaxFrame-Professional<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></span></div>
-      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent external-link">weirdave.com<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></span></div>
+      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">github.com/WeirDave/WaxFrame-Professional<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent external-link">weirdave.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></span></div>
       <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
       <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
@@ -2143,7 +2143,7 @@
     <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
     <div class="license-modal-error" id="licenseKeyError"></div>
     <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
-    <a class="license-modal-buy external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>
+    <a class="license-modal-buy external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>
     <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
   </div>
 </div>
@@ -2163,13 +2163,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.303"></script>
-<script src="lib/docx.min.js?v=3.63.303"></script>
-<script src="js/docx-export.js?v=3.63.303"></script>
-<script src="js/nav-helper.js?v=3.63.303"></script>
-<script src="js/license-helper.js?v=3.63.303"></script>
-<script src="js/version.js?v=3.63.303"></script>
-<script src="js/docs-scrollspy.js?v=3.63.303"></script>
+<script src="js/theme.js?v=3.63.304"></script>
+<script src="lib/docx.min.js?v=3.63.304"></script>
+<script src="js/docx-export.js?v=3.63.304"></script>
+<script src="js/nav-helper.js?v=3.63.304"></script>
+<script src="js/license-helper.js?v=3.63.304"></script>
+<script src="js/version.js?v=3.63.304"></script>
+<script src="js/docs-scrollspy.js?v=3.63.304"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

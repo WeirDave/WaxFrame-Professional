@@ -1,5 +1,5 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260612-018
+// Build: 20260612-019
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that
@@ -143,16 +143,18 @@ function openConsolesDrawer(groups) {
     if (g.label) html += '<div class="consoles-group-label">' + _clEsc(g.label) + '</div>';
     html += valid.map(function (it) {
       var url = _clSafe(it.url);
-      // v3.63.303 — Drawer items are always external (provider consoles).
-      // The .consoles-link-arrow span used to carry the ⧉ glyph; replaced
-      // with the universal external-pill markup per Kai's spec. Pill is
-      // aria-hidden (decorative); .sr-only span announces "opens in a new
-      // tab" for screen readers.
+      // v3.63.304 — Drawer items are always external (provider consoles).
+      // Inline boxed-arrow SVG (Kai spec v2) replaces v3.63.303's "External"
+      // text pill. Icon is aria-hidden (decorative); .sr-only span carries
+      // the screen-reader announcement.
       return '<a class="consoles-link external-link" href="' + _clEsc(url) + '" target="_blank" rel="noopener noreferrer">' +
         '<span class="consoles-link-name">' + _clEsc(it.name) + '</span>' +
         '<span class="consoles-link-host">' + _clEsc(_clHost(url)) + '</span>' +
-        '<span class="external-pill" aria-hidden="true">External</span>' +
-        '<span class="sr-only">(opens external site in a new tab)</span>' +
+        '<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+          '<path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path>' +
+          '<path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path>' +
+        '</svg>' +
+        '<span class="sr-only">(opens in a new tab)</span>' +
       '</a>';
     }).join('');
   });
