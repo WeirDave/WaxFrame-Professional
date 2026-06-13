@@ -17843,85 +17843,95 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   font-weight: 600;
 }
 
-/* v3.63.307 — "+ Add variant" affordance on default-AI rows. Same pill
-   shape and fixed slot width as the Builder button so the column stays
-   locked across rows that have/don't have the variant button rendered.
-   Disabled state (.is-disabled) tints to dim and switches cursor; the
-   placeholder span reserves slot width on rows where the button is
-   suppressed (customs, variants themselves). */
-.ai-setup-add-variant-btn,
-.ai-setup-add-variant-placeholder {
-  font-size: 11px;
+/* v3.63.307 / v3.63.308 — Variant affordances.
+ *
+ * Inline collapsed-row "+ Variant" button retired in v3.63.308 — clicking
+ * the row summary toggles expand/collapse regardless of where you click,
+ * so the button fought the row click. Both "+ Add variant" (on default
+ * parents) and "✕ Remove this variant" (on variants) now live INSIDE
+ * the expanded panel, in a .ai-setup-expanded-actions row.
+ *
+ * Variants render with a rotating-color left edge (.v-color-0 through
+ * -4) so siblings of the same parent stay visually distinct even when
+ * their model picks read similar. v3.63.307 used a single faded gold
+ * 2px edge; David flagged the colors as "weird because the rest of it
+ * is gray" and asked for "different colors so you could have different
+ * variants designated that way." 4px solid with a tuned per-index hue
+ * achieves that without yelling at the rest of the grid.
+ */
+.ai-setup-row.is-variant {
+  margin-left: 22px;
+  border-left: 4px solid var(--variant-edge, var(--accent, #f4b400));
+}
+.ai-setup-row.is-variant.v-color-0 { --variant-edge: #f4b400; } /* gold     */
+.ai-setup-row.is-variant.v-color-1 { --variant-edge: #4dd0e1; } /* teal     */
+.ai-setup-row.is-variant.v-color-2 { --variant-edge: #b39ddb; } /* lavender */
+.ai-setup-row.is-variant.v-color-3 { --variant-edge: #ff8a65; } /* salmon   */
+.ai-setup-row.is-variant.v-color-4 { --variant-edge: #81c784; } /* green    */
+
+/* Expanded-panel action row — bottom of the expanded panel for both
+   "+ Add variant" (default-AI parents) and "✕ Remove this variant"
+   (variants). Quiet by default, the inline note explains what the
+   button does so the action doesn't read as a bare destructive icon. */
+.ai-setup-expanded-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+.ai-setup-expanded-action-note {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* "+ Add variant" button — pill shape matching .btn-sm pattern. Renders
+   only inside the expanded panel as of v3.63.308. */
+.ai-setup-add-variant-btn {
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  flex-shrink: 0;
-  min-width: 92px;
-  width: 92px;
-  height: 24px;
-  padding: 0 10px;
+  height: 28px;
+  padding: 0 14px;
   border-radius: 999px;
-  box-sizing: border-box;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px dashed var(--border);
-  color: var(--text-dim);
-  cursor: pointer;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
-}
-.ai-setup-add-variant-placeholder {
-  visibility: hidden;
-  border: 1px solid transparent;
 }
 .ai-setup-add-variant-btn:hover {
   border-color: var(--accent, #f4b400);
   color: var(--accent, #f4b400);
-  background: rgba(244, 180, 0, 0.04);
+  background: rgba(244, 180, 0, 0.06);
 }
-.ai-setup-add-variant-btn.is-disabled {
+.ai-setup-add-variant-btn.is-disabled,
+.ai-setup-add-variant-btn[disabled] {
   cursor: not-allowed;
   opacity: 0.45;
 }
-.ai-setup-add-variant-btn.is-disabled:hover {
+.ai-setup-add-variant-btn.is-disabled:hover,
+.ai-setup-add-variant-btn[disabled]:hover {
   border-color: var(--border);
-  color: var(--text-dim);
+  color: var(--text);
   background: transparent;
 }
 
-/* v3.63.307 — Variant rows. Nested under their default parent in the
-   "Default providers" group. Subtle left-indent + dim-tinted left border
-   so the visual relationship reads at a glance without yelling. The
-   inline (variant) tag next to the name carries the literal label and
-   shows the parent name on hover. */
-.ai-setup-row.is-variant {
-  margin-left: 22px;
-  border-left: 2px solid rgba(244, 180, 0, 0.25);
-}
-.ai-setup-variant-tag {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--accent, #f4b400);
-  opacity: 0.7;
-  margin-left: 6px;
-  cursor: help;
-}
-
-/* v3.63.307 — Per-variant "✕ Variant" remove button. Sits in the
-   summary-row action slot where customs would show the bulk-select
-   checkbox. Red on hover to signal a destructive action; otherwise
-   stays dim so it doesn't compete with the row's primary controls. */
+/* "✕ Remove this variant" — destructive action button, lives in the
+   expanded panel of variant rows only (v3.63.308). Red-on-hover signals
+   intent without yelling at rest. */
 .ai-remove-variant-btn {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  flex-shrink: 0;
-  height: 22px;
-  padding: 0 8px;
+  height: 28px;
+  padding: 0 14px;
   border-radius: 999px;
   background: transparent;
   border: 1px solid var(--border);
