@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260612-015
+     Build: 20260612-016
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260612-015">
+  <meta name="waxframe-build" content="20260612-016">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <link rel="canonical" href="https://waxframe.com/ai-api-pricing.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.300">
+  <link rel="stylesheet" href="style.css?v=3.63.301">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -215,7 +215,7 @@
       <p><strong>Per-WaxFrame-round cost</strong> assumes ~5,000 input tokens (project setup + reference material + working document + reviewer notes) and ~2,000 output tokens (the Builder's updated draft). That's an average — a 500-word résumé runs lighter; a 4,000-word RFP response with a 10,000-character reference scaffold runs much heavier. Use these numbers for ballpark sizing, not exact billing.</p>
       <p><strong>Worker Bee cost is roughly 10–20% of Builder cost</strong> because Worker Bees only return numbered suggestions, not full document rewrites. A 6-bee hive's reviewers cost less than the single Builder pass on the same round.</p>
       <p><strong>Free-tier caps:</strong> "Free tier" means rounds that cost nothing as long as you stay under the provider's daily request quota. Most free tiers also require <em>billing disabled</em> on your account — adding a credit card can silently flip the account to paid-tier routing even on the same model name.</p>
-      <p>For detailed setup steps on every provider, see the <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="link-accent">API Key Guide ↗</a>. For a deeper explanation of how tokens are counted and why the Builder needs more headroom than reviewers, see <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ↗</a>.</p>
+      <p>For detailed setup steps on every provider, see the <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="link-accent">API Key Guide ⧉</a>. For a deeper explanation of how tokens are counted and why the Builder needs more headroom than reviewers, see <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ⧉</a>.</p>
     </div>
 
     <hr class="wf-section-divider">
@@ -241,7 +241,7 @@
         </thead>
         <tbody id="pricingBody"></tbody>
       </table>
-      <p class="hp-section-sub"><em>* Gemini free tier only while billing is <strong>disabled</strong> on your Google AI Studio account. Adding a credit card flips routing to paid tier even on the same model name. See <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ↗</a> for the full caveat.</em></p>
+      <p class="hp-section-sub"><em>* Gemini free tier only while billing is <strong>disabled</strong> on your Google AI Studio account. Adding a credit card flips routing to paid tier even on the same model name. See <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ⧉</a> for the full caveat.</em></p>
     </div>
 
     <hr class="wf-section-divider">
@@ -330,9 +330,9 @@
 
     <h2 id="related">Related Guides</h2>
     <div class="wf-card is-accent">
-      <p><strong><a href="api-details.html" target="_blank" rel="noopener noreferrer" class="link-accent">API Key Guide ↗</a></strong> — step-by-step setup for every provider above, with direct links to each console and a "Start Here" walkthrough for first-time API users.</p>
-      <p><strong><a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ↗</a></strong> — how tokens are counted, why your Builder needs more headroom than reviewers, and how to size your costs before committing to a session.</p>
-      <p><strong><a href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" class="link-accent">User Manual ↗</a></strong> — full walkthrough of WaxFrame's setup screens, hive rounds, Builder configuration, and convergence detection.</p>
+      <p><strong><a href="api-details.html" target="_blank" rel="noopener noreferrer" class="link-accent">API Key Guide ⧉</a></strong> — step-by-step setup for every provider above, with direct links to each console and a "Start Here" walkthrough for first-time API users.</p>
+      <p><strong><a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ⧉</a></strong> — how tokens are counted, why your Builder needs more headroom than reviewers, and how to size your costs before committing to a session.</p>
+      <p><strong><a href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" class="link-accent">User Manual ⧉</a></strong> — full walkthrough of WaxFrame's setup screens, hive rounds, Builder configuration, and convergence detection.</p>
     </div>
 
     <a href="#top" class="wh-back-top">↑ Back to top</a>
@@ -429,12 +429,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.300"></script>
-<script src="lib/docx.min.js?v=3.63.300"></script>
-<script src="js/docx-export.js?v=3.63.300"></script>
-<script src="js/nav-helper.js?v=3.63.300"></script>
-<script src="js/license-helper.js?v=3.63.300"></script>
-<script src="js/version.js?v=3.63.300"></script>
+<script src="js/theme.js?v=3.63.301"></script>
+<script src="lib/docx.min.js?v=3.63.301"></script>
+<script src="js/docx-export.js?v=3.63.301"></script>
+<script src="js/nav-helper.js?v=3.63.301"></script>
+<script src="js/license-helper.js?v=3.63.301"></script>
+<script src="js/version.js?v=3.63.301"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

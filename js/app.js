@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260612-015
+// Build: 20260612-016
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -548,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260612-015';         // build stamp — update each session
+const BUILD       = '20260612-016';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -919,24 +919,49 @@ function renderSettings() {
 // rendered UI is always meaningful — no empty "🚦 Concurrency overrides"
 // header floating above nothing.
 //
-// Eligibility = listed in PROVIDER_CONCURRENCY_CAPS (has a finite default)
-// AND has API_CONFIGS[provider]._key set. Custom AIs aren't shown because
-// their generated ids (cohere_<ts>, together_ai_<ts>, …) aren't in
-// PROVIDER_CONCURRENCY_CAPS — they default to Infinity, so "lifting the
-// cap" is a no-op for them.
+// v3.63.301 — Walks activeAIs (not just built-in provider ids in
+// PROVIDER_CONCURRENCY_CAPS) so custom AIs added through "Add Custom AI"
+// with one of the throttled provider presets (cohere_<ts>, jamba_<ts>,
+// together_ai_<ts>, etc.) are eligible too. Each AI maps to its base
+// provider via WFProviderModels.baseProviderId, and the UI groups by
+// unique base: one row per base provider with at least one keyed AI in
+// the hive, regardless of whether that AI is a built-in default or a
+// custom variant. Plain-English copy + per-row "Check your limits ⧉"
+// link out to API_USAGE_URLS so the user can see what their actual tier
+// allows before deciding whether to lift the cap.
 function renderConcurrencyOverrides() {
   const section   = document.getElementById('settingsConcurrencySection');
   const container = document.getElementById('setConcurrencyOverridesContainer');
   if (!section || !container) return;
 
   const overrides = _loadConcurrencyOverrides();
-  const rows = Object.keys(PROVIDER_CONCURRENCY_CAPS)
-    .filter(p => API_CONFIGS[p] && API_CONFIGS[p]._key)
-    .sort((a, b) => {
-      const la = (API_CONFIGS[a]?.label || a).toLowerCase();
-      const lb = (API_CONFIGS[b]?.label || b).toLowerCase();
-      return la.localeCompare(lb);
-    });
+  const usageUrls = (typeof window !== 'undefined' && window.API_USAGE_URLS) || {};
+
+  // Walk activeAIs, find every keyed AI whose BASE provider has a finite
+  // default cap. Group by base so three Cohere variants surface as one
+  // Cohere row, not three.
+  const aiList = (typeof activeAIs !== 'undefined' && Array.isArray(activeAIs))
+    ? activeAIs
+    : (Array.isArray(window.activeAIs) ? window.activeAIs : []);
+  const basesWithKey = new Set();
+  aiList.forEach(ai => {
+    if (!ai || !ai.provider) return;
+    const cfg = API_CONFIGS[ai.provider];
+    if (!cfg || !cfg._key) return;
+    const base = _baseProviderId(ai.provider);
+    if (PROVIDER_CONCURRENCY_CAPS[base]) basesWithKey.add(base);
+  });
+
+  // Display labels: prefer the catalog's label for that base provider,
+  // fall back to a capitalized base id ("cohere" → "Cohere") if catalog
+  // not loaded.
+  const baseLabel = base => {
+    const cfg = API_CONFIGS[base];
+    if (cfg && cfg.label) return cfg.label;
+    return base.charAt(0).toUpperCase() + base.slice(1);
+  };
+  const rows = Array.from(basesWithKey).sort((a, b) =>
+    baseLabel(a).toLowerCase().localeCompare(baseLabel(b).toLowerCase()));
 
   if (!rows.length) {
     section.style.display = 'none';
@@ -945,18 +970,22 @@ function renderConcurrencyOverrides() {
   }
   section.style.display = '';
 
-  container.innerHTML = rows.map(p => {
-    const label    = API_CONFIGS[p]?.label || p;
-    const defCap   = PROVIDER_CONCURRENCY_CAPS[p];
-    const override = overrides[p];
+  container.innerHTML = rows.map(base => {
+    const label    = baseLabel(base);
+    const defCap   = PROVIDER_CONCURRENCY_CAPS[base];
+    const override = overrides[base];
     const value    = (typeof override === 'number' && isFinite(override) && override > 0) ? String(override) : '';
+    const usageUrl = usageUrls[base] || '';
+    const limitsLink = usageUrl
+      ? ' <a class="settings-inline-link" href="' + escapeHtml(usageUrl) + '" target="_blank" rel="noopener noreferrer" title="Open ' + escapeHtml(label) + ' usage / limits page in a new tab">Check your limits ⧉</a>'
+      : '';
     return (
       '<div class="settings-row">' +
         '<div class="settings-row-label">' +
           '<span class="settings-row-name">' + esc(label) + '</span>' +
-          '<span class="settings-row-help">Default: ' + defCap + ' concurrent. Lift this only if your tier on ' + esc(label) + ' actually allows more — overshooting earns 429s and slows the round down, not up.</span>' +
+          '<span class="settings-row-help">Default: ' + defCap + ' at a time (safe for free-tier accounts).' + limitsLink + '</span>' +
         '</div>' +
-        '<input type="number" min="1" max="100" step="1" placeholder="' + defCap + '" class="settings-number" value="' + value + '" onchange="onConcurrencyOverrideChange(\'' + p + '\', this.value)">' +
+        '<input type="number" min="1" max="100" step="1" placeholder="' + defCap + '" class="settings-number" value="' + value + '" onchange="onConcurrencyOverrideChange(\'' + base + '\', this.value)">' +
       '</div>'
     );
   }).join('');
@@ -967,14 +996,20 @@ function renderConcurrencyOverrides() {
 // value is empty / zero / non-numeric, so "clear the input" cleanly reverts
 // to the default). A light toast confirms the save the way other settings
 // rows do, so the change is visible without re-reading the page.
-function onConcurrencyOverrideChange(provider, value) {
-  _saveConcurrencyOverride(provider, value);
-  const label = API_CONFIGS[provider]?.label || provider;
+//
+// v3.63.301 — Argument is the BASE provider id (cohere / mistral / …), not
+// the literal API_CONFIGS key — the override is shared across all variants
+// of that base. The toast label comes from baseLabel() rather than directly
+// from API_CONFIGS so custom-only hives still get a clean name.
+function onConcurrencyOverrideChange(baseProvider, value) {
+  _saveConcurrencyOverride(baseProvider, value);
+  const cfg   = API_CONFIGS[baseProvider];
+  const label = (cfg && cfg.label) || (baseProvider.charAt(0).toUpperCase() + baseProvider.slice(1));
   const num   = Number(value);
   if (!value || !isFinite(num) || num <= 0) {
-    toast(`↺ ${label} concurrency: back to default (${PROVIDER_CONCURRENCY_CAPS[provider]})`, 2500);
+    toast(`↺ ${label} concurrency: back to default (${PROVIDER_CONCURRENCY_CAPS[baseProvider]})`, 2500);
   } else {
-    toast(`✓ ${label} concurrency cap → ${Math.floor(num)} concurrent`, 2500);
+    toast(`✓ ${label} concurrency cap → ${Math.floor(num)} at a time`, 2500);
   }
 }
 
@@ -5521,21 +5556,36 @@ function _buildRowStatusPill(ai, hasKey) {
 //     (background classifier will fill in via v3.63.208's auto-classify
 //     path; badge appears on the next render after tier data lands)
 function _buildProfileOverrideBadgeHTML(ai, cfg, hasKey) {
-  if (!hasKey || !cfg) return '';
+  // v3.63.301 — Empty-state returns a width-holding PLACEHOLDER, not a
+  // bare empty string. Pre-v3.63.301 the slot collapsed when there was no
+  // active override for the row — but since other rows in the same grid
+  // DID have the badge rendered, the post-override columns (Builder /
+  // Manage) drifted out of alignment across rows. The .ai-setup-override-
+  // badge-placeholder rule in style.css holds the same width as the real
+  // badge but with visibility:hidden, so columns stay locked.
+  const placeholder = `<span class="ai-setup-override-badge-placeholder" aria-hidden="true"></span>`;
+  if (!hasKey || !cfg) return placeholder;
   const activeProfile = (typeof getActiveHiveProfile === 'function') ? getActiveHiveProfile() : null;
-  if (!activeProfile || activeProfile === 'custom') return '';
+  if (!activeProfile || activeProfile === 'custom') return placeholder;
   const opt = (typeof HIVE_PROFILE_OPTIONS !== 'undefined')
     ? HIVE_PROFILE_OPTIONS.find(o => o.id === activeProfile)
     : null;
-  if (!opt?.tier) return '';
+  if (!opt?.tier) return placeholder;
   const tiersBlob = (typeof getCachedTiers === 'function') ? getCachedTiers(ai.provider) : null;
   const expected  = tiersBlob?.tiers?.[opt.tier] || null;
-  if (!expected) return '';        // no data yet — defer judgement
-  if (cfg.model === expected) return ''; // matches profile, no override
+  if (!expected) return placeholder;        // no data yet — defer judgement
+  if (cfg.model === expected) return placeholder; // matches profile, no override
   // Diverges — render the badge. Title carries the diagnostic context so a
   // hover reveals what the profile would pick vs what the row is on now.
+  //
+  // v3.63.301 — Renamed "✏️ override" → "Customized" and dropped the pencil.
+  // The pencil icon read as "click to edit" everywhere else in the UI, so
+  // users tried to click the badge and got nothing (it's status, not action
+  // — the cursor: help in style.css already hints at that on hover, but
+  // the pencil shouted louder). Plain text + the question-mark cursor =
+  // unambiguous "this is a tag explaining state, not a button."
   const profileName = opt.label.split(' — ')[0];
-  return `<span class="ai-setup-override-badge" title="${escapeHtml(ai.name)} is using ${escapeHtml(cfg.model)} — the active ${escapeHtml(profileName)} profile would pick ${escapeHtml(expected)} instead. Switch the model from the row above to bring it back into the profile.">✏️ override</span>`;
+  return `<span class="ai-setup-override-badge" title="${escapeHtml(ai.name)} is using ${escapeHtml(cfg.model)} — the active ${escapeHtml(profileName)} profile would pick ${escapeHtml(expected)} instead. Switch the model from the row above to bring it back into the profile.">Customized</span>`;
 }
 
 // v3.31.0 — Single-row template. Two visual states:
@@ -5611,7 +5661,7 @@ function buildAISetupRowHTML(ai) {
     // suppressed (nothing meaningful to link to).
     // v3.63.22 — Inline error message surfaced when validate-on-save
     // flips the _invalidKeys flag. Placed inside the manage-account
-    // banner so it sits on the same row as "Open {Provider} account ↗"
+    // banner so it sits on the same row as "Open {Provider} account ⧉"
     // — the user's natural next action when a key is bad is to open
     // the provider console and check / rotate the key, so the message
     // and the action live together. Pushed to the right via
@@ -5692,8 +5742,8 @@ function buildAISetupRowHTML(ai) {
   //
   // Manage link states:
   //   • no console URL (server-imported customs) → placeholder
-  //   • key + console URL → "Manage ↗"
-  //   • no key + console URL → "Get key ↗"
+  //   • key + console URL → "Manage ⧉"
+  //   • no key + console URL → "Get key ⧉"
   const _builderIncapableNow = isBuilderIncapableModel(cfg?.model || ai.provider || '');
   const _isCurrentBuilderNow = (typeof builder !== 'undefined' && builder === ai.id);
   const consoleUrlNow = ai.apiConsole || '';
@@ -5728,7 +5778,7 @@ function buildAISetupRowHTML(ai) {
   if (!consoleUrlNow) {
     manageLinkHTML = `<span class="ai-setup-manage-link-placeholder" aria-hidden="true"></span>`;
   } else {
-    const label = hasKey ? 'Manage ↗' : 'Get key ↗';
+    const label = hasKey ? 'Manage ⧉' : 'Get key ⧉';
     const title = hasKey
       ? `Manage your account at ${ai.name} (opens in a new tab)`
       : `Get an API key from ${ai.name} (opens in a new tab)`;
@@ -5944,11 +5994,19 @@ async function setHiveMode(newMode) {
 
 // ── Mode-aware toolbar ──
 // Internet mode (5 buttons): API Key Guide, Add Custom AI, Test All Keys,
-//   Recommend Models for All, Get API keys
+//   Recommend Models for All, Provider Sites
 // Server mode (3 buttons): Import from Model Server, Add Custom AI,
 //   Test All Keys
 // Both modes append the global Expand all / Collapse all controls so a
 // power user with a 40-bee hive can mass-toggle row state.
+//
+// v3.63.301 — "Get API keys" button renamed to "Provider Sites ⧉". The
+// old label implied first-time setup only; once a user has keys, they
+// still want to revisit those console pages to check billing, change
+// tiers, see usage. The per-card "Manage ⧉" link on every row handles
+// one-at-a-time deep links; this button is the bulk-browse entry point
+// (drawer of every provider in the hive). Both read from API_CONSOLE_URLS
+// in api-links.js so they can't drift apart.
 function renderWorkerBeeToolbar() {
   const row = document.getElementById('beeControlsRow');
   if (!row) return;
@@ -5960,7 +6018,7 @@ function renderWorkerBeeToolbar() {
       <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
       <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
       <button class="btn btn-lg" id="recommendAllBtn" onclick="recommendModelsForAll()" title="Ask every keyed AI to recommend its best model — runs sequentially">Recommend Models for All</button>
-      <button class="btn btn-lg" onclick="toggleHiveConsoles()">Get API keys</button>`;
+      <button class="btn btn-lg" onclick="toggleHiveConsoles()" title="Open the drawer with every provider's console in your hive">Provider Sites ⧉</button>`;
   } else {
     buttons = `
       <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
@@ -6338,8 +6396,8 @@ function renderHiveSidebar() {
 
       <div class="bees-sidebar-block">
         <div class="bees-sidebar-heading">Related</div>
-        <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="bees-sidebar-related">🔑 API Key Guide ↗</a>
-        <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="bees-sidebar-related">💰 AI API Pricing ↗</a>
+        <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="bees-sidebar-related">🔑 API Key Guide ⧉</a>
+        <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="bees-sidebar-related">💰 AI API Pricing ⧉</a>
       </div>
 
     </div>
@@ -7259,6 +7317,11 @@ function applyNotesTemplate(template) {
 // one. Each link in the drawer opens its own tab on click, so nothing is
 // blocked. The API guide page calls toggleGuideConsoles() (a fixed list)
 // instead, since it has no live hive.
+//
+// v3.63.301 — wired to the "Provider Sites ⧉" toolbar button (renamed from
+// "Get API keys" — the old label implied first-time setup only, but the
+// drawer is equally useful for returning users checking billing / tiers /
+// usage on each provider's console).
 function toggleHiveConsoles() {
   const src = (typeof aiList !== 'undefined' && Array.isArray(aiList)) ? aiList : [];
   const isDef   = a => !!DEFAULT_AIS.find(d => d.id === a.id);
@@ -9250,7 +9313,7 @@ function annotateCustomAIDropdown(labels, recommendedModel) {
 // ── v3.25.7 / v3.26.1: Custom AI decision aids (Recommend + Browse models) ──
 // Both aids only make sense AFTER Fetch Models has populated the dropdown:
 // - 🤖 Recommend has nothing to ask about until there's a model list
-// - ↗ Browse models is contextual — visible only for known Quick Add presets
+// - ⧉ Browse models is contextual — visible only for known Quick Add presets
 //   that declare a chooseModelLink
 // The aids row container is toggled when EITHER aid is showable, individual
 // aids are toggled by their own logic. v3.26.1 moved the aids out of the
@@ -17898,14 +17961,20 @@ const PROVIDER_CONCURRENCY_CAPS = {
 // v3.63.299 — Per-provider concurrency override (backlog OPEN FEATURE #1).
 // A power user on a paid tier can lift the conservative default cap
 // without us shipping code. The override map persists in localStorage at
-// waxframe_concurrency_overrides as { [providerId]: positive_integer }.
+// waxframe_concurrency_overrides as { [baseProviderId]: positive_integer }.
 // Empty / null / zero / non-numeric → "use default" (deleted from map).
 //
-// SCOPE: keyed by provider id, which is 1:1 with API key in WaxFrame's model
-// — built-in providers have one key per provider, custom AIs each get their
-// own unique provider id at add-time (cohere_<ts>, together_ai_<ts>, etc.).
-// So "per-key" and "per-provider" collapse to the same shape; one map,
-// keyed by provider id, covers both.
+// v3.63.301 — SCOPE corrected from "per-provider-id" to "per-BASE-provider":
+// a custom Cohere variant added via "Add Custom AI" gets a generated id
+// like cohere_1779456789, NOT 'cohere'. v3.63.299 keyed the cap lookup +
+// queue + override map on the literal provider id, so the custom-variant
+// hive — exactly the multi-AI-per-provider case the limiter was designed
+// for — silently bypassed all of it (each variant landed on its own
+// per-id queue with cap=Infinity, defeating the throttle). Now everything
+// routes through _baseProviderId() (delegates to WFProviderModels.base
+// ProviderId): one shared queue per base, one cap per base, one override
+// per base, one Settings row per base. Three Cohere variants now properly
+// share the cohere queue.
 //
 // CACHE: in-memory copy is read once per session and updated on every save
 // so getProviderConcurrencyCap() doesn't hit localStorage on every callAPI.
@@ -17920,51 +17989,74 @@ function _loadConcurrencyOverrides() {
   } catch (e) { _concurrencyOverrideCache = {}; }
   return _concurrencyOverrideCache;
 }
-function _saveConcurrencyOverride(provider, capValue) {
+function _saveConcurrencyOverride(baseProvider, capValue) {
   const overrides = _loadConcurrencyOverrides();
   const num = Number(capValue);
-  if (!provider || capValue == null || capValue === '' || !isFinite(num) || num <= 0) {
-    delete overrides[provider];
+  if (!baseProvider || capValue == null || capValue === '' || !isFinite(num) || num <= 0) {
+    delete overrides[baseProvider];
   } else {
-    overrides[provider] = Math.floor(num);
+    overrides[baseProvider] = Math.floor(num);
   }
   try { localStorage.setItem(_CONCURRENCY_OVERRIDE_KEY, JSON.stringify(overrides)); }
   catch (e) { console.warn('[concurrency-override] write failed:', e); }
   _concurrencyOverrideCache = overrides;
 }
 
+// v3.63.301 — Map any provider id (built-in like 'cohere' OR custom like
+// 'cohere_1779…') to its base. Delegates to WFProviderModels.baseProviderId
+// which already handles the (?:_ai)?_\d+ + prefix-match cases. Defensive
+// fallback returns the input unchanged if the shared module isn't loaded
+// — built-ins still work, customs lose their base mapping (cap = Infinity).
+function _baseProviderId(provider) {
+  if (!provider) return provider;
+  const WFPM = (typeof window !== 'undefined') ? window.WFProviderModels : null;
+  if (WFPM && typeof WFPM.baseProviderId === 'function') return WFPM.baseProviderId(provider);
+  return provider;
+}
+
 function getProviderConcurrencyCap(provider) {
-  // v3.63.299 — Settings UI override wins over the default. Only positive
-  // finite numbers count as a real override; anything else falls through.
-  const ovr = _loadConcurrencyOverrides()[provider];
+  // v3.63.301 — Route every cap lookup through the base provider id so a
+  // custom Cohere variant (cohere_<ts>) inherits 'cohere's default cap
+  // AND respects 'cohere's override.
+  const base = _baseProviderId(provider);
+  const ovr = _loadConcurrencyOverrides()[base];
   if (typeof ovr === 'number' && isFinite(ovr) && ovr > 0) return ovr;
-  const cap = PROVIDER_CONCURRENCY_CAPS[provider];
+  const cap = PROVIDER_CONCURRENCY_CAPS[base];
   return (typeof cap === 'number' && cap > 0) ? cap : Infinity;
 }
 
-// Per-provider queue state. Each entry: { inFlight, waiters }.
+// Per-base-provider queue state. Each entry: { inFlight, waiters }.
 // Acquire grants a slot; the returned release() decrements and wakes
 // the next waiter. The whole thing is synchronous-friendly — no event
 // loop spin, no setTimeout polling — so latency cost when the queue
 // is empty is one Promise resolution.
+//
+// v3.63.301 — Queue key is the BASE provider id, not the literal one passed
+// in by callAPI(ai.provider). So three Cohere variants (cohere_<ts_a>,
+// cohere_<ts_b>, cohere_<ts_c>) share the same 'cohere' queue and respect
+// the cohere cap collectively. Pre-v3.63.301 each variant got its own
+// per-id queue with cap=Infinity (no entry in PROVIDER_CONCURRENCY_CAPS),
+// which silently defeated the whole limiter for the exact case it was
+// designed to protect.
 const _PROVIDER_SLOTS = {};
 function _acquireProviderSlot(provider) {
+  const base = _baseProviderId(provider);
   const cap = getProviderConcurrencyCap(provider);
   if (cap === Infinity) return Promise.resolve(_noopRelease);
-  const q = _PROVIDER_SLOTS[provider] || (_PROVIDER_SLOTS[provider] = { inFlight: 0, waiters: [] });
+  const q = _PROVIDER_SLOTS[base] || (_PROVIDER_SLOTS[base] = { inFlight: 0, waiters: [] });
   if (q.inFlight < cap) {
     q.inFlight++;
-    return Promise.resolve(() => _releaseProviderSlot(provider));
+    return Promise.resolve(() => _releaseProviderSlot(base));
   }
   return new Promise(resolve => {
     q.waiters.push(() => {
       q.inFlight++;
-      resolve(() => _releaseProviderSlot(provider));
+      resolve(() => _releaseProviderSlot(base));
     });
   });
 }
-function _releaseProviderSlot(provider) {
-  const q = _PROVIDER_SLOTS[provider];
+function _releaseProviderSlot(base) {
+  const q = _PROVIDER_SLOTS[base];
   if (!q) return;
   q.inFlight = Math.max(0, q.inFlight - 1);
   const next = q.waiters.shift();
@@ -18100,7 +18192,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
       // showCard below), but the console link is the audit-trail
       // copy: it stays visible after the card is dismissed and
       // survives reload via consoleHTML serialization to IDB.
-      ai.apiConsole ? { url: ai.apiConsole, label: `Open ${ai.name} ↗` } : null
+      ai.apiConsole ? { url: ai.apiConsole, label: `Open ${ai.name} ⧉` } : null
     );
     const entry = WF_DEBUG.classify(new Error(msg), ctx);
     WF_DEBUG.showCard(entry, ctx);
