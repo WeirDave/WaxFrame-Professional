@@ -1,48 +1,51 @@
 // ============================================================
 //  WaxFrame — shared provider/model logic
-// Build: 20260612-009
+// Build: 20260612-010
 // ============================================================
-// provider-models.js — shared "brain" for provider model logic (v3.63.82)
+// provider-models.js — regex + parse primitives shared between api.js and
+// help.html. v3.63.82 introduced this file as the single source of truth;
+// v3.63.274 introduced the provider catalog and overrode MODEL_FALLBACKS /
+// MODEL_FILTERS at catalog init; v3.63.295 finishes the move — the curated
+// fallback lists and per-provider keep-predicates now live exclusively in
+// js/provider-catalog.js. This file owns only the primitives the catalog
+// can't author (regexes and OpenAI/Anthropic/Google response parsing).
 // ════════════════════════════════════════════════════════════════════════
-// Single source of truth for the boring, must-never-drift provider/model
-// utilities that BOTH the main app (js/api.js) and the standalone Help page
-// (help.html) depend on:
+// What lives here now:
+//   • STRUCTURAL_NON_CHAT_RE  — regex that blocks image/video/audio/TTS/
+//                               embedding/OCR/legacy-Completions models
+//   • CHATGPT_RESPONSES_ONLY_RE / DATED_SNAPSHOT_RE — ChatGPT-specific
+//                               keep-predicate extras (consumed by the
+//                               catalog's filterExtras for the chatgpt entry)
+//   • filterModelForProvider — generic keep-test; reads the catalog-
+//                              populated MODEL_FILTERS map at call time so
+//                              custom-AI ids that don't appear in the
+//                              catalog fall back to the structural filter
+//   • normalizePerplexityModels — Perplexity-specific provenance helper
+//   • parseModelsResponse     — turn a raw /v1/models response into a
+//                               filtered id list (+ provenance for Perplexity)
+//   • baseProviderId          — map an additional provider's generated id
+//                               (cohere_<ts>, together_ai_<ts>) to its base
+//   • dedup                   — tiny order-preserving uniqueness helper
 //
-//   • MODEL_FALLBACKS         — curated per-provider lists used when a live
-//                               /v1/models fetch yields nothing usable
-//   • STRUCTURAL_NON_CHAT_RE  — blocks image/video/audio/TTS/embedding/OCR
-//                               models that can't run a chat-completion round
-//   • CHATGPT_RESPONSES_ONLY_RE / DATED_SNAPSHOT_RE — ChatGPT-specific extras
-//   • MODEL_FILTERS           — per-provider keep predicate (structural + extras)
-//   • normalizePerplexityModels — strip perplexity/ prefix, filter, then expand
-//                               base Sonar to the documented family
-//   • parseModelsResponse     — turn a raw /v1/models response into a filtered
-//                               id list (+ provenance for Perplexity)
-//   • baseProviderId          — map an additional id (cohere_<ts>) to its base
+// What the CATALOG now owns (was here pre-v3.63.295):
+//   • MODEL_FALLBACKS  — curated per-provider fallback model lists
+//   • MODEL_FILTERS    — per-provider keep predicate composition
+//   Both still appear on `window.WFProviderModels` for backward compat,
+//   but they're written by js/provider-catalog.js's init code. Helpers in
+//   THIS file look them up via root.WFProviderModels.* at call time so the
+//   catalog's late-binding override is authoritative.
 //
-// WHY THIS EXISTS: these were previously hand-copied into help.html and kept in
-// sync by comment discipline, which drifts. Now there is one definition. The
-// Help page keeps its own UI, dump panels, copy buttons, and no-cache
-// diagnostic behavior — only this shared logic is centralized.
+// LOADING: plain browser global script (no modules) — assigns onto window
+// so it works identically whether loaded by index.html (before api.js) or
+// help.html. Air-gap safe: no imports, no CDNs.
 //
-// LOADING: plain browser global script (no modules) — assigns onto window so it
-// works identically whether loaded by index.html (before api.js) or help.html.
-// Air-gap safe: no imports, no CDNs.
+// LOAD ORDER: provider-models.js → provider-catalog.js → api.js → app.js
+// The catalog MUST load between this file and api.js because the catalog
+// populates WFProviderModels.MODEL_FILTERS and MODEL_FALLBACKS, and api.js
+// reads those at module-eval.
 // ════════════════════════════════════════════════════════════════════════
 (function (root) {
   'use strict';
-
-  var MODEL_FALLBACKS = {
-    chatgpt:    ['gpt-5.5', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano'],
-    claude:     ['claude-sonnet-4-6', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-opus-4-6', 'claude-haiku-4-5'],
-    gemini:     ['gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3.1-flash-lite'],
-    grok:       ['grok-4.1-fast', 'grok-4.3', 'grok-4.20-reasoning'],
-    deepseek:   ['deepseek-v4-flash', 'deepseek-v4-pro'],
-    mistral:    ['mistral-large-latest', 'mistral-small-latest', 'ministral-8b-latest'],
-    together:   ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Qwen/Qwen2.5-72B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1'],
-    cohere:     ['command-r-plus', 'command-r', 'command-a-03-2025'],
-    perplexity: ['sonar', 'sonar-pro', 'sonar-reasoning', 'sonar-reasoning-pro', 'sonar-deep-research']
-  };
 
   // Structural filter — blocks models whose API contract fundamentally differs
   // from chat-completion. See the full history in the changelog; the v3.63.81
@@ -69,33 +72,19 @@
   var CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;
   var DATED_SNAPSHOT_RE = /-\d{4}-\d{2}-\d{2}$/;
 
-  // Per-provider keep predicate. Everyone shares the structural filter; ChatGPT
-  // and Perplexity add extras. Providers not listed fall through to a plain
-  // structural check via filterModelForProvider below.
-  var MODEL_FILTERS = {
-    chatgpt:    function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id) && !CHATGPT_RESPONSES_ONLY_RE.test(id) && !DATED_SNAPSHOT_RE.test(id); },
-    claude:     function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id); },
-    gemini:     function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id); },
-    grok:       function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id); },
-    deepseek:   function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id); },
-    // v3.63.143 — Mistral has /v1/models with standard Bearer auth and the
-    // OpenAI response shape, but was missing from the FILTERS map (and from
-    // fetchModelsForProvider's switch), so live discovery was silently
-    // bypassed. Promoting it here lets the recommender and the tier
-    // classifier reason over Mistral's actual current lineup instead of
-    // falling back to the curated MODEL_FALLBACKS list every time.
-    mistral:    function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id); },
-    // Perplexity's /v1/models is a gateway reselling frontier models + embeds;
-    // its unique value is the Sonar line, so whitelist ^sonar only.
-    perplexity: function (id) { return !STRUCTURAL_NON_CHAT_RE.test(id) && /^sonar/i.test(id); }
-  };
+  // Late-binding accessors — the catalog populates WFProviderModels.MODEL_
+  // FILTERS and .MODEL_FALLBACKS during its init (after this file evaluates).
+  // Helpers below call these at request time, so they always see the
+  // catalog-authored maps, never a stale snapshot.
+  function _filters()   { return (root.WFProviderModels && root.WFProviderModels.MODEL_FILTERS)   || {}; }
+  function _fallbacks() { return (root.WFProviderModels && root.WFProviderModels.MODEL_FALLBACKS) || {}; }
 
-  // Generic keep test usable for ANY provider id (including additionals whose
-  // id isn't a base key). Applies the provider's specific filter when known,
-  // else the shared structural filter.
+  // Generic keep test usable for ANY provider id (including custom-AI ids
+  // whose id isn't a base key). Applies the provider's specific filter when
+  // known, else the shared structural filter.
   function filterModelForProvider(provider, id) {
     if (!id) return false;
-    var f = MODEL_FILTERS[provider];
+    var f = _filters()[provider];
     if (f) return f(id);
     return !STRUCTURAL_NON_CHAT_RE.test(id);
   }
@@ -110,9 +99,10 @@
   // to its base provider so the right fallback / filter applies.
   function baseProviderId(id) {
     if (!id) return id;
-    if (MODEL_FALLBACKS[id]) return id;
+    var fb = _fallbacks();
+    if (fb[id]) return id;
     var m = String(id).match(/^([a-z]+?)(?:_ai)?_\d+$/i);
-    if (m && MODEL_FALLBACKS[m[1]]) return m[1];
+    if (m && fb[m[1]]) return m[1];
     if (/^together/i.test(id)) return 'together';
     if (/^cohere/i.test(id)) return 'cohere';
     if (/^deepseek/i.test(id)) return 'deepseek';
@@ -127,8 +117,9 @@
       .map(function (id) { return String(id || '').replace(/^perplexity\//i, ''); })
       .filter(function (id) { return filterModelForProvider('perplexity', id); }));
     if (list.length === 1 && list[0] === 'sonar') {
+      var documented = (_fallbacks().perplexity || []).slice();
       return {
-        models: MODEL_FALLBACKS.perplexity.slice(),
+        models: documented,
         modelsSource: 'documented-sonar-fallback',
         sourceDetail: 'Raw Perplexity /v1/models returned only base Sonar; expanded using Perplexity Sonar API documented model enum.',
         rawLiveModels: dedup(models || [])
@@ -175,12 +166,20 @@
     };
   }
 
+  // WFProviderModels exposes the regex/parse primitives plus EMPTY maps for
+  // MODEL_FILTERS and MODEL_FALLBACKS. js/provider-catalog.js overwrites
+  // those two maps during its init — see the bottom of provider-catalog.js
+  // for where that assignment happens. The empty initial values are
+  // defensive: if the catalog ever fails to load (broken deploy), the
+  // helpers above degrade gracefully (filterModelForProvider falls back to
+  // the structural filter; baseProviderId can't map customs to their base
+  // but won't crash).
   root.WFProviderModels = {
-    MODEL_FALLBACKS: MODEL_FALLBACKS,
+    MODEL_FALLBACKS: {},
+    MODEL_FILTERS: {},
     STRUCTURAL_NON_CHAT_RE: STRUCTURAL_NON_CHAT_RE,
     CHATGPT_RESPONSES_ONLY_RE: CHATGPT_RESPONSES_ONLY_RE,
     DATED_SNAPSHOT_RE: DATED_SNAPSHOT_RE,
-    MODEL_FILTERS: MODEL_FILTERS,
     filterModelForProvider: filterModelForProvider,
     normalizePerplexityModels: normalizePerplexityModels,
     parseModelsResponse: parseModelsResponse,

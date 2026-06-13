@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.295
+
+**Provider Catalog phase 2 · catalog owns the curated fallback lists outright**
+
+Build: `20260612-010`<br>
+Released: `2026-06-12`
+
+### What changed
+
+v3.63.274 (the Provider Catalog foundation) put the data record in `js/provider-catalog.js` but kept the curated `MODEL_FALLBACKS` arrays back in `js/provider-models.js`, with each catalog entry doing `fallback: MODEL_FALLBACKS.claude` etc. to point back at them. The catalog also overrode `WFProviderModels.MODEL_FALLBACKS` and `MODEL_FILTERS` at init time, so the literals in `provider-models.js` were being read once at IIFE boot and then immediately replaced by catalog-built copies — confusing source-of-truth, no real second reader.
+
+Phase 2 finishes the move:
+
+- **Catalog entries now carry their fallback arrays inline.** `fallback: MODEL_FALLBACKS.claude` becomes `fallback: ['claude-sonnet-4-6', 'claude-opus-4-8', ...]`. Each provider's curated list is sat right next to the rest of its declaration — endpoint, format, discovery, fallback — and there's no second file to remember when you tweak it.
+- **`provider-models.js`'s `MODEL_FALLBACKS` literal is gone.** Same for the hardcoded `MODEL_FILTERS` map — the catalog has been overriding both for a release cycle without issue, so the dead-literal layer is removed outright.
+- **The file's helpers (`filterModelForProvider`, `baseProviderId`, `normalizePerplexityModels`) now read `root.WFProviderModels.MODEL_FILTERS` / `.MODEL_FALLBACKS` at call time.** Late-binding accessors let the catalog's late-init writes be authoritative; the helpers never see a stale closure-captured map.
+
+### Outcome
+
+Same external surface — `window.MODEL_FALLBACKS`, `WFProviderModels.MODEL_FILTERS`, every `MODEL_FALLBACKS[provider]` reference in `app.js` (7 of them) — works identically. The 80+ `cfg.*` reads in `app.js` still hit catalog-built configs. Help-page diagnostic dump still groups by provider id the same way.
+
+The win is structural narrative: `provider-models.js` now does exactly what its name says (provider response parsing + filter regexes), and `provider-catalog.js` is the single home of provider data (endpoint, model, format, discovery, fallback, filter extras). Adding a provider in v3.63.274 already meant "edit one catalog entry"; in v3.63.295 that entry is also the only place the curated fallback list lives.
+
+### Files touched
+
+- [js/provider-catalog.js](js/provider-catalog.js) — Each entry's `fallback: MODEL_FALLBACKS.foo` replaced with the inline array. Top-of-IIFE `var MODEL_FALLBACKS = WFPM.MODEL_FALLBACKS || {}` removed (no longer read). Docblock + opening comment updated to declare ownership.
+- [js/provider-models.js](js/provider-models.js) — `MODEL_FALLBACKS` literal removed, `MODEL_FILTERS` literal removed. New `_filters()` / `_fallbacks()` late-binding accessors. `WFProviderModels.{MODEL_FILTERS,MODEL_FALLBACKS}` now exported as empty `{}` stubs that the catalog fills at its init. Header docblock rewritten to match the file's new "regex + parse primitives only" scope.
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.294
 
 **localStorage migration audit — static-enumeration first pass on backlog #7**
