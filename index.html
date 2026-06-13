@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260612-013
+     Build: 20260612-014
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260612-013">
+  <meta name="waxframe-build" content="20260612-014">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.298">
+  <link rel="stylesheet" href="style.css?v=3.63.299">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.298",
+    "softwareVersion": "3.63.299",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -993,6 +993,25 @@
               </div>
               <button class="btn settings-reset-btn" onclick="resetAutoSettings()" title="Restore all Auto Mode settings to defaults">↺ Reset to defaults</button>
             </div>
+          </div>
+
+          <!-- v3.63.299 — Per-provider concurrency override (backlog OPEN
+               FEATURE #1). Defaults in PROVIDER_CONCURRENCY_CAPS (app.js)
+               are conservative for free-tier users — Cohere = 2, Mistral
+               = 2, Together = 2, Perplexity = 3, Claude = 3, Jamba = 2 —
+               so the naive Promise.all fan-out can't 429 anyone on a free
+               plan. Power users on paid tiers (Cohere enterprise, OpenAI
+               tier-5, etc.) have much higher RPS headroom and shouldn't
+               be capped by free-tier defaults. This section lets them
+               lift the cap per provider, without us shipping code. Rows
+               render dynamically (renderConcurrencyOverrides in app.js) —
+               only providers with a saved key AND a finite default cap
+               get a row; everyone else is uncapped already. Empty input
+               = use default. -->
+          <div class="settings-section" id="settingsConcurrencySection" style="display:none">
+            <h2 class="settings-section-title">🚦 Concurrency overrides</h2>
+            <p class="settings-section-desc">Defaults are conservative for free-tier users so the hive can't 429 anyone. If you're on a paid tier with higher RPS headroom, lift the cap for that provider here. Leave a row empty to use the default. Effect is immediate — the next round you start uses the new cap.</p>
+            <div id="setConcurrencyOverridesContainer"></div>
           </div>
 
           <div class="settings-section">
@@ -3418,24 +3437,24 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.298';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.299';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.298"></script>
-<script src="lib/jszip.min.js?v=3.63.298"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.298"></script>
-<script src="js/version.js?v=3.63.298"></script>
-<script src="js/storage.js?v=3.63.298"></script>
-<script src="js/theme.js?v=3.63.298"></script>
-<script src="js/audio.js?v=3.63.298"></script>
-<script src="js/scenes.js?v=3.63.298"></script>
-<script src="js/wf-debug.js?v=3.63.298"></script>
-<script src="js/provider-models.js?v=3.63.298"></script>
-<script src="js/provider-catalog.js?v=3.63.298"></script>
-<script src="js/api.js?v=3.63.298"></script>
-<script src="js/templates.js?v=3.63.298"></script>
-<script src="js/api-links.js?v=3.63.298"></script>
-<script src="js/app.js?v=3.63.298"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.299"></script>
+<script src="lib/jszip.min.js?v=3.63.299"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.299"></script>
+<script src="js/version.js?v=3.63.299"></script>
+<script src="js/storage.js?v=3.63.299"></script>
+<script src="js/theme.js?v=3.63.299"></script>
+<script src="js/audio.js?v=3.63.299"></script>
+<script src="js/scenes.js?v=3.63.299"></script>
+<script src="js/wf-debug.js?v=3.63.299"></script>
+<script src="js/provider-models.js?v=3.63.299"></script>
+<script src="js/provider-catalog.js?v=3.63.299"></script>
+<script src="js/api.js?v=3.63.299"></script>
+<script src="js/templates.js?v=3.63.299"></script>
+<script src="js/api-links.js?v=3.63.299"></script>
+<script src="js/app.js?v=3.63.299"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
