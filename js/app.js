@@ -674,14 +674,36 @@ function displayAiName(name) {
 }
 function toast(msg, ms = 2800) {
   const t = document.getElementById('toast');
+  if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toast._t);
   toast._t = setTimeout(() => t.classList.remove('show'), ms);
 }
+// v3.63.327 — setStatus writes to TWO elements now:
+//   1. #statusText — the work-screen footer status bar (only present on
+//      screen-work). Existing pattern — preserved so the work-screen
+//      footer keeps showing round-progress / convergence messages there.
+//   2. #globalStatus — a new bottom-left pinned status bar (added in
+//      index.html v3.63.327), present on every screen. This gives every
+//      page a place to show ongoing-state messages — previously the only
+//      option on non-work screens was toast(), which was wrong because
+//      toasts are for ephemeral notifications and ongoing-state messages
+//      need to stick around.
+// An empty/null msg hides the global bar (work footer always shows the
+// last text since it has its own resting state "Standing by…").
 function setStatus(msg) {
   const el = document.getElementById('statusText');
   if (el) el.textContent = msg;
+  const g = document.getElementById('globalStatus');
+  if (g) {
+    if (msg) {
+      g.textContent = msg;
+      g.classList.add('show');
+    } else {
+      g.classList.remove('show');
+    }
+  }
 }
 
 // v3.63.279 — Centralized Smoke-the-Hive label reset. Pre-v3.63.279 this
@@ -6587,18 +6609,29 @@ function applyHiveProfile(profileId) {
   });
 
   renderAISetupGrid();
-  if (typeof toast === 'function') {
-    if (applied === 0 && missingTierProviders.size > 0) {
-      toast(`${opt.icon} ${opt.label.split(' — ')[0]} — classifying ${missingTierProviders.size} provider${missingTierProviders.size === 1 ? '' : 's'} in the background, picks will fill in shortly…`);
-    } else if (applied === 0) {
-      toast(`${opt.icon} ${opt.label.split(' — ')[0]} — no AIs have ${opt.tier} picks cached yet. Click "Recommend Models for All" first.`);
-    } else if (skipped > 0 && missingTierProviders.size > 0) {
-      toast(`${opt.icon} Applied ${opt.label.split(' — ')[0]} to ${applied} of ${total} AIs — classifying ${missingTierProviders.size} more in the background…`);
-    } else if (skipped > 0) {
-      toast(`${opt.icon} Applied ${opt.label.split(' — ')[0]} to ${applied} of ${total} AIs (${skipped} have no ${opt.tier} pick cached).`);
-    } else {
-      toast(`${opt.icon} Applied ${opt.label.split(' — ')[0]} to ${applied} ${applied === 1 ? 'AI' : 'AIs'}.`);
-    }
+  // v3.63.327 — Routed to setStatus instead of toast. The two
+  // "classifying in the background" branches are ongoing-state
+  // messages that get re-fired when the auto-classifier replays
+  // applyHiveProfile recursively (around line 6618 below); under
+  // the v3.63.325 visible-toast regime that pinned the toast on
+  // screen indefinitely. setStatus writes to the global status
+  // bar at the bottom-left of the viewport (every screen) AND to
+  // the work-footer #statusText when present — the right place
+  // for "I'm working on something" messages. The terminal "no
+  // picks cached" branch is also routed to setStatus so the user
+  // sees the actionable hint in the persistent bar; pre-v3.63.327
+  // that was a toast that vanished after 2.8s.
+  const _profileLabel = opt.label.split(' — ')[0];
+  if (applied === 0 && missingTierProviders.size > 0) {
+    setStatus(`${opt.icon} ${_profileLabel} — classifying ${missingTierProviders.size} provider${missingTierProviders.size === 1 ? '' : 's'} in the background, picks will fill in shortly…`);
+  } else if (applied === 0) {
+    setStatus(`${opt.icon} ${_profileLabel} — no AIs have ${opt.tier} picks cached yet. Click "Recommend Models for All" first.`);
+  } else if (skipped > 0 && missingTierProviders.size > 0) {
+    setStatus(`${opt.icon} Applied ${_profileLabel} to ${applied} of ${total} AIs — classifying ${missingTierProviders.size} more in the background…`);
+  } else if (skipped > 0) {
+    setStatus(`${opt.icon} Applied ${_profileLabel} to ${applied} of ${total} AIs (${skipped} have no ${opt.tier} pick cached).`);
+  } else {
+    setStatus(`${opt.icon} Applied ${_profileLabel} to ${applied} ${applied === 1 ? 'AI' : 'AIs'}.`);
   }
 
   // v3.63.208 — Fire the background tier-classification for any providers

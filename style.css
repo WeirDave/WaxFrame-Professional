@@ -9945,6 +9945,35 @@ kbd {
   transform: translateX(-50%) translateY(-4px);
 }
 
+/* v3.63.327 — Global status bar. Pinned to bottom-left of the viewport.
+   Visible on every screen via the new #globalStatus div in index.html.
+   setStatus() in app.js writes here AND to the work-screen footer
+   #statusText when present. Hidden when empty (opacity 0); shows with
+   the .show class. Pointer-events:none so it never blocks input even
+   when hovered. */
+.global-status {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  max-width: min(50vw, 520px);
+  padding: 8px 14px;
+  background: var(--surface2, #1f1f1f);
+  border: 1px solid var(--border, #444);
+  color: var(--text-dim, #b0b0b0);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+  z-index: 9000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out;
+  white-space: pre-wrap;
+}
+.global-status.show {
+  opacity: 1;
+}
+
 /* ── Status toast (prompt editor) ── */
 .status-toast {
   display: none; align-items: center; gap: var(--space-8);
