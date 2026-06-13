@@ -6641,13 +6641,35 @@ function applyHiveProfile(profileId) {
   // with per-provider catch so one failure doesn't block the others.
   if (missingTierProviders.size > 0 && typeof classifyTiersForProvider === 'function') {
     Promise.all([...missingTierProviders].map(p =>
-      classifyTiersForProvider(p).catch(e => {
+      // v3.63.328 — Track per-provider success so the .then() can
+      // decide whether re-applying makes sense. classifyTiersForProvider
+      // returns truthy on success (cached tier blob) and null on failure
+      // (no key, no models returned, classifier API error). Pre-v3.63.328
+      // .catch returned null on rejection but .then re-applied
+      // unconditionally — a permanently-failing classifier (rate-limit,
+      // dead model, provider outage) sent us into an INFINITE LOOP:
+      // recursive applyHiveProfile re-fires the failing classifier,
+      // catches the failure, re-applies, re-fires the classifier,
+      // forever. David caught the symptom on Worker Bees: Recommend
+      // Models button became unclickable because the row DOM was being
+      // destroyed and recreated every iteration by renderAISetupGrid.
+      classifyTiersForProvider(p).then(r => ({ p, ok: !!r })).catch(e => {
         console.warn(`[hive-profile:auto-classify] ${p} failed:`, e);
-        return null;
+        return { p, ok: false };
       })
-    )).then(() => {
-      // Only re-apply if this is still the active profile (user might
-      // have flipped to Custom or a different tier while we were waiting).
+    )).then(results => {
+      const anySucceeded = results.some(r => r.ok);
+      if (!anySucceeded) {
+        // Nothing newly classified — re-applying would re-fire the same
+        // failing classifier(s) and loop. Surface the failure to the
+        // status bar so the user knows what to do next.
+        const failedNames = results.map(r => r.p).join(', ');
+        setStatus(`⚠️ Couldn't classify ${results.length} provider${results.length === 1 ? '' : 's'} (${failedNames}) for the ${opt.label.split(' — ')[0]} profile. Click "Recommend Models for All" to retry, or pick a different profile.`);
+        return;
+      }
+      // At least one succeeded → re-apply so the new picks land. Only
+      // do this if the profile is still active (user might have flipped
+      // to Custom or a different tier while we were waiting).
       if (getActiveHiveProfile() === profileId) {
         applyHiveProfile(profileId);
       }

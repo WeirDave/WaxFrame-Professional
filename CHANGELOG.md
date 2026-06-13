@@ -2,6 +2,57 @@
 
 ---
 
+## v3.63.328
+
+**applyHiveProfile no longer infinite-loops when tier classifier keeps failing for a provider — David's "Recommend Models button unclickable" bug**
+
+Build: `20260613-022`<br>
+Released: `2026-06-13`
+
+### What David caught
+
+After v3.63.327's status-bar migration worked, David hit a new symptom: the `Recommend Models` button on Claude's row was unclickable. The status bar kept saying `🐝 Applied 🪙 Balanced to 5 of 6 AIs — classifying 1 more in the background…` and never resolving.
+
+### Root cause
+
+`applyHiveProfile`'s auto-classify path had a permanent-failure infinite loop:
+
+1. 5/6 AIs have the Balanced tier picks; 1 doesn't (e.g. Mistral)
+2. `classifyTiersForProvider('mistral')` fires, fails (rate-limit / dead model / network blip)
+3. `.catch()` returns null
+4. `.then()` recursively calls `applyHiveProfile(profileId)` **regardless of success**
+5. Recursive call: Mistral STILL has no cached tier → `missingTierProviders.size` stays 1
+6. Fires classifier again → fails again → recurses again → **infinite loop**
+7. Each iteration calls `renderAISetupGrid()` which destroys + recreates the row DOM, eating any click attempts under the user's cursor
+
+Pre-v3.63.325 this loop existed but was invisible (toast had no CSS). v3.63.327 routed the message to setStatus which made it persistent — and the loop's CPU + re-render cost surfaced as the unclickable button.
+
+### Fix
+
+Track per-provider success in the `Promise.all` map. The `.then()` only recursively re-applies if **at least one classification succeeded**. If all failed, set a status message naming the failing provider(s) and tell the user how to retry — manual `Recommend Models for All` or pick a different profile.
+
+```js
+classifyTiersForProvider(p)
+  .then(r => ({ p, ok: !!r }))
+  .catch(e => { console.warn(...); return { p, ok: false }; })
+// …
+.then(results => {
+  const anySucceeded = results.some(r => r.ok);
+  if (!anySucceeded) {
+    setStatus(`⚠️ Couldn't classify N providers (names…) for the X profile. Click "Recommend Models for All" to retry, or pick a different profile.`);
+    return;
+  }
+  if (getActiveHiveProfile() === profileId) applyHiveProfile(profileId);
+});
+```
+
+### Files touched
+
+- [js/app.js](js/app.js) — `applyHiveProfile`'s auto-classify `Promise.all` now tracks `{p, ok}` per provider; `.then()` checks `anySucceeded` and bails out with an explanatory status message if every classification failed
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.327
 
 **Global status bar on every screen + hive-profile ongoing-progress migrated from toast() to setStatus() (audit + fix)**
