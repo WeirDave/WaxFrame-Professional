@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.321">
+  <link rel="stylesheet" href="style.css?v=3.63.322">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.321",
+    "softwareVersion": "3.63.322",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1093,7 +1093,7 @@
             </div>
           </div>
 
-          <!-- v3.63.321 — Backup Sync settings. Manual "Save Checkpoint"
+          <!-- v3.63.322 — Backup Sync settings. Manual "Save Checkpoint"
                (Checkpoint screen → Menu) stays as the one-off escape
                hatch. This section configures the auto-backup loop:
                folder choice, frequency presets (every / every other /
@@ -1132,7 +1132,7 @@
             <div class="settings-row">
               <div class="settings-row-label">
                 <span class="settings-row-name">Sections to include</span>
-                <span class="settings-row-help">Which pieces of WaxFrame state land in each backup file. Defaults match a self-portable backup &mdash; project + session + AI list + models + builder + license. <strong>API keys</strong> are off by default (sensitive). Same 9 sections as the manual Checkpoint screen, where each has a full description. <a href="javascript:void(0)" onclick="openCheckpointFromSettings()">See section details on the Checkpoint screen &rarr;</a></span>
+                <span class="settings-row-help">Which pieces of WaxFrame state land in each backup file. Defaults match a self-portable backup &mdash; project + session + AI list + models + builder + license. <strong>API keys</strong> are off by default (sensitive). Same 9 sections as the manual Checkpoint screen, where each has a full description. <a class="link-accent" href="javascript:void(0)" onclick="openCheckpointFromSettings()">See section details on the Checkpoint screen &rarr;</a></span>
               </div>
               <div class="settings-backup-scope-grid">
                 <label class="settings-backup-scope-row"><input type="checkbox" id="setBackupScopeProjectInfo" onchange="saveAutoBackupScope()"><span>Project info</span></label>
@@ -1461,7 +1461,7 @@
 
             <div class="checkpoint-actions">
               <button class="btn" onclick="exitCheckpointScreen()" title="Cancel and return without saving">Cancel</button>
-              <!-- v3.63.321 — Single Save Checkpoint button, smart-routed
+              <!-- v3.63.322 — Single Save Checkpoint button, smart-routed
                    based on browser support. Chrome/Edge/Opera: opens the
                    FSA folder picker (first time), then subsequent saves
                    write silently to the remembered folder. Firefox /
@@ -3507,24 +3507,24 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.321';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.322';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.321"></script>
-<script src="lib/jszip.min.js?v=3.63.321"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.321"></script>
-<script src="js/version.js?v=3.63.321"></script>
-<script src="js/storage.js?v=3.63.321"></script>
-<script src="js/theme.js?v=3.63.321"></script>
-<script src="js/audio.js?v=3.63.321"></script>
-<script src="js/scenes.js?v=3.63.321"></script>
-<script src="js/wf-debug.js?v=3.63.321"></script>
-<script src="js/provider-models.js?v=3.63.321"></script>
-<script src="js/provider-catalog.js?v=3.63.321"></script>
-<script src="js/api.js?v=3.63.321"></script>
-<script src="js/templates.js?v=3.63.321"></script>
-<script src="js/api-links.js?v=3.63.321"></script>
-<script src="js/app.js?v=3.63.321"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.322"></script>
+<script src="lib/jszip.min.js?v=3.63.322"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.322"></script>
+<script src="js/version.js?v=3.63.322"></script>
+<script src="js/storage.js?v=3.63.322"></script>
+<script src="js/theme.js?v=3.63.322"></script>
+<script src="js/audio.js?v=3.63.322"></script>
+<script src="js/scenes.js?v=3.63.322"></script>
+<script src="js/wf-debug.js?v=3.63.322"></script>
+<script src="js/provider-models.js?v=3.63.322"></script>
+<script src="js/provider-catalog.js?v=3.63.322"></script>
+<script src="js/api.js?v=3.63.322"></script>
+<script src="js/templates.js?v=3.63.322"></script>
+<script src="js/api-links.js?v=3.63.322"></script>
+<script src="js/app.js?v=3.63.322"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

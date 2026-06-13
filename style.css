@@ -9015,6 +9015,26 @@ kbd {
   outline: none;
 }
 
+/* v3.63.322 — "↑ Go to top" link appended to the end of every settings
+   section by _renderSettingsToc. Saves the user scrolling all the way
+   back to the chip strip after reading a long section (Diagnostics +
+   Storage are both substantial). Matches the .link-accent color +
+   hover-underline convention used elsewhere in the app, so it reads
+   as a normal navigation link, not an extra control. */
+.settings-goto-top {
+  display: inline-block;
+  margin: 14px 0 0 auto;
+  font-size: var(--fs-sm);
+  color: var(--accent);
+  text-decoration: none;
+  transition: text-decoration 0.12s;
+}
+.settings-goto-top:hover,
+.settings-goto-top:focus {
+  text-decoration: underline;
+  outline: none;
+}
+
 /* v3.63.320 — Backup Sync section. Folder label sits next to the Pick
    button; scope checkboxes lay out in a compact 3-column grid so all 9
    sections fit without scrolling the settings row. */
