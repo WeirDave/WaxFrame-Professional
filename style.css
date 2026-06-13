@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260612-015
+   Build: 20260612-016
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1148,24 +1148,41 @@ body.helper-body .page-main {
    diverges from the active Hive Profile's expected tier pick for that
    provider. Small amber pill matching the deprecation-flag size language
    but with the small-pill 3D shadow stack + "manual override" semantic. */
-.ai-setup-override-badge {
+.ai-setup-override-badge,
+.ai-setup-override-badge-placeholder {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   margin-left: var(--space-6);
   padding: 0 var(--space-8);
   height: 20px;
+  min-width: 88px;
+  width: 88px;
   border-radius: var(--radius-sm);
   font-size: var(--fs-11);
   font-weight: 700;
   letter-spacing: 0.02em;
+  user-select: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.ai-setup-override-badge {
   color: var(--accent);
   background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
   border: 1px solid var(--accent);
   cursor: help;
-  user-select: none;
-  white-space: nowrap;
   box-shadow: var(--shadow-3d-pill);
+}
+/* v3.63.301 — Width-holding placeholder for rows where the override badge
+   shouldn't show (no key, Custom profile, model matches profile, etc.).
+   Same width + margin + sizing as the real badge so column alignment
+   never drifts between rows; visibility:hidden so the slot is invisible
+   but the layout box is honored. */
+.ai-setup-override-badge-placeholder {
+  border: 1px solid transparent;
+  background: transparent;
+  visibility: hidden;
 }
 .ai-setup-deprecation-flag {
   display: inline-flex;
@@ -1216,7 +1233,7 @@ body.helper-body .page-main {
    the same time. Removing this rule prevents future regressions where a
    stale isActive gate could re-introduce the chicken-and-egg lock on
    the Worker Bees paste-key input. */
-/* .ai-info-btn rules removed in v3.31.0 — the small ↗ circle button
+/* .ai-info-btn rules removed in v3.31.0 — the small ⧉ circle button
    on every AI row was replaced by the .ai-getkey-link inside the
    expanded panel (only renders when the AI has no key yet). */
 
@@ -4345,7 +4362,7 @@ body.helper-body .page-main {
 
 /* v3.25.7 / v3.26.0 / v3.26.1 — Decision aids row (sits BELOW the model
    field, not inline with it). Holds the 🤖 Recommend button and the
-   ↗ Browse models link. Hidden by default; .is-visible toggled by JS only
+   ⧉ Browse models link. Hidden by default; .is-visible toggled by JS only
    AFTER Fetch Models has populated the dropdown — both aids need a fetched
    list of models to make sense. Putting them on their own row solves the
    squashed-dropdown layout bug from v3.26.0 where 4 elements competed for
@@ -8672,6 +8689,23 @@ kbd {
   font-size: var(--fs-sm);
   color: var(--text-dim);
   line-height: 1.5;
+}
+/* v3.63.301 — Inline link inside .settings-row-help. Used by the
+   Concurrency overrides section to deep-link each row to the provider's
+   usage / billing page ("Check your limits ⧉"). Subtle by default so it
+   reads as supplementary, brightens on hover for click affordance. */
+.settings-inline-link {
+  color: var(--honey);
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 2px;
+  cursor: pointer;
+  margin-left: var(--space-4);
+  white-space: nowrap;
+}
+.settings-inline-link:hover {
+  color: var(--accent);
+  text-decoration-color: var(--honey);
 }
 .settings-control,
 .settings-select,
@@ -15172,7 +15206,7 @@ kbd {
 }
 
 /* "Don't have a key? Get one from <provider>" link inside expanded
-   panel. v3.31.0 — replaces the small ↗ icon next to the AI name
+   panel. v3.31.0 — replaces the small ⧉ icon next to the AI name
    that was visible on every row in v3.30.x. Only renders when
    hasKey === false AND the AI has a known apiConsole URL. */
 .ai-getkey-link-wrap {
@@ -17661,8 +17695,8 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
  *   placeholder  — invisible width-holder for no-key rows
  *
  * Manage link:
- *   default      → "Manage ↗" (key saved)
- *   .is-getkey   → "Get key ↗" (no key yet)
+ *   default      → "Manage ⧉" (key saved)
+ *   .is-getkey   → "Get key ⧉" (no key yet)
  *   placeholder  → invisible width-holder for server-imported customs
  * ============================================================ */
 .ai-setup-builder-btn,

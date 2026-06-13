@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.301
+
+**UX polish · Customized badge · Provider Sites button · concurrency override fixes · uniform card alignment · ⧉ external-link glyph · backlog +"Add variant"**
+
+Build: `20260612-016`<br>
+Released: `2026-06-12`
+
+### What changed
+
+A polish pass on the v3.63.298–v3.63.299 surfaces — every item below traces back to a David observation while looking at the Setup screen.
+
+**1. Override badge renamed → Customized, pencil dropped.** The pencil ✏️ on the per-row override status badge reads as "click to edit" everywhere else in software, so users tried to click it. The badge is purely informational (it surfaces when your model differs from the active Hive Profile's pick), nothing clickable. Renamed text from `✏️ override` to `Customized` and removed the pencil — the question-mark cursor on hover now does the affordance work without a misleading icon.
+
+**2. Card columns aligned even when override badge is empty.** The override badge slot previously collapsed when no override was active for a row, so rows WITH a badge pushed the Builder + Manage columns 88px further right than rows without. Visible drift across the grid, and likely the source of the "DeepSeek Ready button doesn't line up" optical illusion. New `.ai-setup-override-badge-placeholder` rule holds the same 88px width invisibly so columns stay locked across every row regardless of profile state.
+
+**3. "Get API keys" button renamed → "Provider Sites ⧉".** Old label implied first-time setup only; the bulk drawer is equally useful for keyed users wanting to revisit billing or check tier limits. Renamed; per-card "Manage ⧉" links coexist (different scope — one provider at a time vs. all providers at once). Both surfaces read from the same `API_CONSOLE_URLS` source in [js/api-links.js](js/api-links.js); a new contract comment there documents the invariant so a future edit can't accidentally drift them.
+
+**4. Concurrency override: base-provider routing.** v3.63.299 keyed the limiter queue, cap lookup, and override map on the literal AI provider id. That broke for the exact case the feature was designed to protect: a user with three custom Cohere variants got three independent per-id queues at cap=Infinity (no entry in `PROVIDER_CONCURRENCY_CAPS` matched `cohere_<ts>`), silently bypassing the throttle. v3.63.301 routes all three through `WFProviderModels.baseProviderId()`: one shared queue per base provider, one cap, one override row, one Settings row per base.
+
+**5. Concurrency override: plain-English copy + "Check your limits ⧉" links.** The section blurb dropped the `429`/`RPS headroom` jargon. It now leads with "you probably don't need to touch anything here" so the default-user takeaway is unambiguous. Each rendered row has an inline `Check your limits ⧉` link that deep-links to the provider's usage/billing page via `API_USAGE_URLS`, so a user can see what their tier actually allows before deciding whether to lift anything.
+
+**6. External-link glyph standardized to `⧉` (Two Joined Squares) codebase-wide.** The `↗` (U+2197 North East Arrow) we'd been using rendered as a thin slash-like glyph in DM Sans's fallback chain — David: "they just look like tiny little lines almost like forward slashes." Audited every JS / HTML / CSS file; 144 instances swapped to `⧉` across 16 files (vendor min files excluded). The Two Joined Squares glyph is the OS-classic "open in new window" symbol — monochrome (matches WaxFrame's flat amber/dark aesthetic, no color clash from emoji), text-rendered (consistent with its surrounding label), already in use for the help.html dump panel. Reads cleanly at viewing distance.
+
+**7. Backlog v247 → v248. New OPEN FEATURE #2: "+ Add variant" UX on default AI cards.** First-class multi-version-of-one-provider support: each default card gets a "+ Add variant" button that spawns a sibling slot under that parent (same key, own model picker). So Claude Sonnet + Claude Opus + Claude Haiku can run as three independent reviewers in the same hive without faking it through the Add Custom AI flow. Unlocks the concurrency override feature for the default-AI population. v245 retired for the 3-version margin.
+
+### Files touched
+
+- [js/app.js](js/app.js) — Customized badge text + placeholder return path; `_baseProviderId()` helper; `getProviderConcurrencyCap` / `_acquireProviderSlot` / `_releaseProviderSlot` re-keyed on base provider; `renderConcurrencyOverrides` walks `activeAIs` and groups by base; "Provider Sites ⧉" toolbar button restored with the new label; `toggleHiveConsoles` docblock updated
+- [js/api-links.js](js/api-links.js) — Contract comment documenting the drawer + per-card Manage shared `apiConsole` invariant
+- [index.html](index.html) — Concurrency overrides section blurb in plain English; explicit "you probably don't need to touch this" framing
+- [style.css](style.css) — `.ai-setup-override-badge` shares its sizing with `.ai-setup-override-badge-placeholder` (88px width pinned for column alignment); new `.settings-inline-link` rule for the "Check your limits ⧉" deep link
+- 16 files — `↗` → `⧉` across `*.html` / `js/*.js` / `style.css`
+- `docs/WaxFrame_Backlog_Master_v248.txt` — new backlog branched from v247; "+ Add variant" item inserted as OPEN FEATURE #2; subsequent items renumbered
+- `docs/WaxFrame_Backlog_Master_v245.txt` — deleted (3-version margin)
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.300
 
 **localStorage migration audit runtime verification · forward-compat test plan · backlog v246 → v247**
