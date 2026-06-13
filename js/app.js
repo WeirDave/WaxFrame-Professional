@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260612-013
+// Build: 20260612-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -548,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260612-013';         // build stamp — update each session
+const BUILD       = '20260612-014';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -907,6 +907,75 @@ function renderSettings() {
   // still readable but visibly inert.
   const intervalRow = document.getElementById('setAutoUpdateIntervalRow');
   if (intervalRow) intervalRow.classList.toggle('settings-row-disabled', !getAutoUpdateModelsEnabled());
+
+  // v3.63.299 — Concurrency override rows (one per provider with a saved
+  // key AND a finite default cap; everyone else is uncapped already).
+  renderConcurrencyOverrides();
+}
+
+// v3.63.299 — Render the per-provider concurrency override rows into the
+// Settings panel container. Section is hidden when there are no eligible
+// providers (no keys yet, or only providers with no default cap), so the
+// rendered UI is always meaningful — no empty "🚦 Concurrency overrides"
+// header floating above nothing.
+//
+// Eligibility = listed in PROVIDER_CONCURRENCY_CAPS (has a finite default)
+// AND has API_CONFIGS[provider]._key set. Custom AIs aren't shown because
+// their generated ids (cohere_<ts>, together_ai_<ts>, …) aren't in
+// PROVIDER_CONCURRENCY_CAPS — they default to Infinity, so "lifting the
+// cap" is a no-op for them.
+function renderConcurrencyOverrides() {
+  const section   = document.getElementById('settingsConcurrencySection');
+  const container = document.getElementById('setConcurrencyOverridesContainer');
+  if (!section || !container) return;
+
+  const overrides = _loadConcurrencyOverrides();
+  const rows = Object.keys(PROVIDER_CONCURRENCY_CAPS)
+    .filter(p => API_CONFIGS[p] && API_CONFIGS[p]._key)
+    .sort((a, b) => {
+      const la = (API_CONFIGS[a]?.label || a).toLowerCase();
+      const lb = (API_CONFIGS[b]?.label || b).toLowerCase();
+      return la.localeCompare(lb);
+    });
+
+  if (!rows.length) {
+    section.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+  section.style.display = '';
+
+  container.innerHTML = rows.map(p => {
+    const label    = API_CONFIGS[p]?.label || p;
+    const defCap   = PROVIDER_CONCURRENCY_CAPS[p];
+    const override = overrides[p];
+    const value    = (typeof override === 'number' && isFinite(override) && override > 0) ? String(override) : '';
+    return (
+      '<div class="settings-row">' +
+        '<div class="settings-row-label">' +
+          '<span class="settings-row-name">' + esc(label) + '</span>' +
+          '<span class="settings-row-help">Default: ' + defCap + ' concurrent. Lift this only if your tier on ' + esc(label) + ' actually allows more — overshooting earns 429s and slows the round down, not up.</span>' +
+        '</div>' +
+        '<input type="number" min="1" max="100" step="1" placeholder="' + defCap + '" class="settings-number" value="' + value + '" onchange="onConcurrencyOverrideChange(\'' + p + '\', this.value)">' +
+      '</div>'
+    );
+  }).join('');
+}
+
+// v3.63.299 — Onchange handler for a single concurrency-override row.
+// Persists via _saveConcurrencyOverride (which deletes the entry when the
+// value is empty / zero / non-numeric, so "clear the input" cleanly reverts
+// to the default). A light toast confirms the save the way other settings
+// rows do, so the change is visible without re-reading the page.
+function onConcurrencyOverrideChange(provider, value) {
+  _saveConcurrencyOverride(provider, value);
+  const label = API_CONFIGS[provider]?.label || provider;
+  const num   = Number(value);
+  if (!value || !isFinite(num) || num <= 0) {
+    toast(`↺ ${label} concurrency: back to default (${PROVIDER_CONCURRENCY_CAPS[provider]})`, 2500);
+  } else {
+    toast(`✓ ${label} concurrency cap → ${Math.floor(num)} concurrent`, 2500);
+  }
 }
 
 // Save handlers — each fires on the control's change event, persists to
@@ -17813,8 +17882,10 @@ function _maybeWarnMistralRateLimit(ai, response) {
 // since reviewer responses take 2-15s, even a cap of 2 keeps effective
 // throughput well under the providers' published RPS limits.
 //
-// Future: per-key override + Settings UI to tune these without a
-// code change. Today the constants are the only knobs.
+// v3.63.299 — Per-provider override shipped (Settings → 🚦 Concurrency
+// overrides). The user-set values live in localStorage and win over the
+// defaults below. The defaults stay as the conservative free-tier safety
+// net for any provider the user hasn't explicitly tuned.
 const PROVIDER_CONCURRENCY_CAPS = {
   cohere:     2,
   mistral:    2,
@@ -17823,7 +17894,50 @@ const PROVIDER_CONCURRENCY_CAPS = {
   claude:     3,  // tier-1 Anthropic = 50 RPM ≈ 0.83 RPS; 3 concurrent stays well under
   jamba:      2,
 };
+
+// v3.63.299 — Per-provider concurrency override (backlog OPEN FEATURE #1).
+// A power user on a paid tier can lift the conservative default cap
+// without us shipping code. The override map persists in localStorage at
+// waxframe_concurrency_overrides as { [providerId]: positive_integer }.
+// Empty / null / zero / non-numeric → "use default" (deleted from map).
+//
+// SCOPE: keyed by provider id, which is 1:1 with API key in WaxFrame's model
+// — built-in providers have one key per provider, custom AIs each get their
+// own unique provider id at add-time (cohere_<ts>, together_ai_<ts>, etc.).
+// So "per-key" and "per-provider" collapse to the same shape; one map,
+// keyed by provider id, covers both.
+//
+// CACHE: in-memory copy is read once per session and updated on every save
+// so getProviderConcurrencyCap() doesn't hit localStorage on every callAPI.
+// Invalidation happens at save time, not on storage events from other tabs
+// — multi-tab concurrency tuning is a non-goal.
+const _CONCURRENCY_OVERRIDE_KEY = 'waxframe_concurrency_overrides';
+let _concurrencyOverrideCache = null;
+function _loadConcurrencyOverrides() {
+  if (_concurrencyOverrideCache) return _concurrencyOverrideCache;
+  try {
+    _concurrencyOverrideCache = JSON.parse(localStorage.getItem(_CONCURRENCY_OVERRIDE_KEY) || '{}');
+  } catch (e) { _concurrencyOverrideCache = {}; }
+  return _concurrencyOverrideCache;
+}
+function _saveConcurrencyOverride(provider, capValue) {
+  const overrides = _loadConcurrencyOverrides();
+  const num = Number(capValue);
+  if (!provider || capValue == null || capValue === '' || !isFinite(num) || num <= 0) {
+    delete overrides[provider];
+  } else {
+    overrides[provider] = Math.floor(num);
+  }
+  try { localStorage.setItem(_CONCURRENCY_OVERRIDE_KEY, JSON.stringify(overrides)); }
+  catch (e) { console.warn('[concurrency-override] write failed:', e); }
+  _concurrencyOverrideCache = overrides;
+}
+
 function getProviderConcurrencyCap(provider) {
+  // v3.63.299 — Settings UI override wins over the default. Only positive
+  // finite numbers count as a real override; anything else falls through.
+  const ovr = _loadConcurrencyOverrides()[provider];
+  if (typeof ovr === 'number' && isFinite(ovr) && ovr > 0) return ovr;
   const cap = PROVIDER_CONCURRENCY_CAPS[provider];
   return (typeof cap === 'number' && cap > 0) ? cap : Infinity;
 }
