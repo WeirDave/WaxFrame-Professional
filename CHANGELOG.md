@@ -2,6 +2,28 @@
 
 ---
 
+## v3.63.309
+
+**Variant naming off-by-one fix · first variant now reads "Variant 1" instead of "Variant 2" · "Variant" capitalized**
+
+Build: `20260613-003`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Auto-generated variant names were off by one. David's report: "I only have one variant of ChatGPT and it is labeling it as variant 2 which is incorrect it's only the first variant."
+
+The v3.63.308 implementation derived the display number from the variant id's `-vN` suffix — and since the id generator reserves `v1` implicitly for the parent (first variant id = `chatgpt-v2`), the displayed name was always 1 ahead of the user's mental model. The id suffix is an internal collision-avoidance counter; it shouldn't surface in the UI.
+
+Display number now derives from the count of existing siblings at spawn time, so the first variant of any parent reads `(Variant 1)`, the second `(Variant 2)`, etc. The `-vN` id suffix stays as the internal id (still starts at v2 for collision avoidance with the parent's id), but the user never sees it. Also capitalized "Variant" to match every other action-label capitalization across the grid — Ready, Customized, Builder, Manage — instead of the lowercase odd-one-out.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `addAIVariant`: `displayNum = existingSiblingCount + 1` instead of `id.replace(/^.*-v/, '')`; "variant" → "Variant" in the auto-generated name template; comment block carries the rationale + David's report
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.308
 
 **Variant UX cleanup · action buttons moved into expanded panel · rotating-color edges per variant · uppercase tag retired**
