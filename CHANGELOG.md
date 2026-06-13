@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.299
+
+**Per-provider concurrency override · paid tiers can lift the cap without a code change**
+
+Build: `20260612-014`<br>
+Released: `2026-06-12`
+
+### What changed
+
+v3.63.250 shipped the per-provider concurrency limiter — Cohere capped at 2 in-flight calls, Mistral at 2, Together at 2, Perplexity at 3, Claude at 3, Jamba at 2. Those numbers are conservative free-tier defaults: with two Cohere keys + two Together AI models on a hive, the naive `Promise.all` fan-out earns 429s without them. The DONE statement on that feature included a per-key override + Settings UI; the override piece had not yet shipped.
+
+v3.63.299 ships it.
+
+A new section in Settings — **🚦 Concurrency overrides** — renders one row per provider you've configured a key for AND that has a finite default cap. (Custom AIs and providers with no default cap don't appear; they're uncapped already, so there's nothing to "lift.") Each row shows the provider name, the default cap in the help text, and a number input where you can enter your own ceiling. Empty input = use the default. Effect is immediate — the next round you start uses the new cap, no reload, no re-save.
+
+If you're on Cohere enterprise with 100+ RPS headroom, lift Cohere to 10 and the hive stops throttling itself on your behalf. Same for any tier-5 OpenAI account that's been getting the conservative free-tier treatment. The defaults still cover everyone who hasn't tuned anything.
+
+### Where the override lives
+
+- **Storage:** `localStorage` key `waxframe_concurrency_overrides` as `{ [providerId]: positive_integer }`. Survives reload, scoped to this browser like every other WaxFrame setting.
+- **Lookup:** `getProviderConcurrencyCap(provider)` now consults the override map first, falls back to `PROVIDER_CONCURRENCY_CAPS`, falls back to `Infinity`. Three-line change at [js/app.js:17878](js/app.js).
+- **UI:** Dynamic rows rendered by `renderConcurrencyOverrides()` on every Settings open. Section auto-hides when no provider is eligible (no keys yet) so the header never floats above nothing.
+
+Scoping note: in WaxFrame's model "per-key" and "per-provider" collapse to the same shape — built-in providers have one key per provider id, and custom AIs each get a unique generated id. One map keyed by provider id covers both, no plumbing change to the existing `_acquireProviderSlot(provider)` queue logic.
+
+### Files touched
+
+- [js/app.js](js/app.js) — override storage + lookup in the v3.63.250 limiter block; `renderConcurrencyOverrides()` + `onConcurrencyOverrideChange()` near the existing `renderSettings()`
+- [index.html](index.html) — new `🚦 Concurrency overrides` section in the Settings panel (display:none by default, shown by the renderer when eligible providers exist)
+- [docs/WaxFrame_Backlog_Master_v246.txt](docs/WaxFrame_Backlog_Master_v246.txt) — backlog OPEN FEATURE #1 retired in next backlog bump
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.298
 
 **Repo hygiene · CodeQL alert #28 closed + backlog retires the shipped Provider Catalog item**
