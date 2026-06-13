@@ -2,6 +2,68 @@
 
 ---
 
+## v3.63.303
+
+**External-link affordance: ⧉ glyph retired, "External" pill convention adopted (Kai spec)**
+
+Build: `20260612-018`<br>
+Released: `2026-06-12`
+
+### What changed
+
+[v3.63.301](https://github.com/WeirDave/WaxFrame-Professional/releases/tag/v3.63.301) swapped the thin `↗` arrow for `⧉` (Two Joined Squares) on every external link in the codebase. David spotted two problems looking at it live: the `⧉` still rendered ambiguously at viewing distance (read like a "tiny line" or "keyboard on a globe"), AND a bunch of links carrying the indicator were actually internal navigation between waxframe.com pages — misleading users about scope.
+
+Kai delivered a clean spec: drop the unicode glyph entirely; use a small text pill that literally says `External`; apply only to links that navigate AWAY from waxframe.com; accessible via `aria-hidden` on the pill + an `sr-only` span for screen readers. v3.63.303 implements that across the codebase.
+
+### Markup pattern
+
+```html
+<a href="https://elsewhere.tld" class="external-link"
+   target="_blank" rel="noopener noreferrer">
+  Link text
+  <span class="external-pill" aria-hidden="true">External</span>
+  <span class="sr-only">(opens external site in a new tab)</span>
+</a>
+```
+
+Three new CSS classes in [style.css](style.css):
+
+- `.external-link` — `inline-flex` for the link+pill grouping
+- `.external-pill` — small bordered text pill using `currentColor` so it inherits the link's palette (honey / accent / text-dim contexts all work without overrides)
+- `.sr-only` — the standard accessibility hide-but-readable rule for the screen-reader announcement
+
+### Scope
+
+**144 instances of `⧉`** swept across `js/*.js`, `*.html`, and `style.css`:
+
+- **125 stripped silently** — every cross-reference between waxframe.com pages (api-details.html, waxframe-user-manual.html, what-are-tokens.html, ai-api-pricing.html, etc., the sidebar nav between docs, and the in-app contextual help links). These are internal navigation and SHOULDN'T have carried an external indicator. Done.
+- **19 converted to the new pill markup** — the actual externals: per-card Manage / Get key links to provider consoles, the Concurrency override row's Check-your-limits link, the Provider Sites drawer items, the troubleshooting card's Open-provider-console label, the user manual's billing-page table, the GitHub bug-report link.
+
+**Plus a separate audit caught 109 more external `<a>` tags across the HTML pages** that previously had NO external indicator at all (Gumroad license, GitHub repo, provider key/billing URLs scattered through the API guide and what-are-tokens pages, etc.). Bulk-converted to the new pill markup via a careful regex pass that injects `external-link` into the existing `class=` attribute and inserts the pill+sr-only span before `</a>`.
+
+Total: 228 anchor tags either stripped or converted. Every external link in the codebase now uses the pill convention; every internal cross-reference is back to bare link text.
+
+### Behavior changes you'll notice
+
+- **No more `⧉` anywhere.** Anywhere you'd been seeing the two-joined-squares glyph, you'll now either see no indicator (internal links) or a compact `External` pill (external links).
+- **The Worker Bee setup grid:** per-card `Manage` / `Get key` links carry the new pill. The toolbar's `Provider Sites` button doesn't (it opens an in-page drawer, doesn't navigate). The drawer's contents DO each carry the pill (every link there goes external).
+- **Settings → Concurrency overrides:** per-row `Check your limits` link carries the pill. Section blurb wording cleaned of stale glyph references.
+- **All doc pages:** sidebar cross-references no longer carry an external indicator (because they aren't external). Provider links inside the doc body all carry the pill.
+
+### Accessibility
+
+The pill itself is `aria-hidden="true"` — screen readers skip the decorative text. The `.sr-only` span carries "(opens external site in a new tab)" so screen-reader users get an unambiguous announcement when the link is read. `target="_blank" rel="noopener noreferrer"` is on every converted external link (where it wasn't already).
+
+### Files touched
+
+- [style.css](style.css) — new `.external-link` / `.external-pill` / `.sr-only` rules; the `.settings-inline-link` rule's docblock updated to reflect the new pill convention
+- [js/app.js](js/app.js) — per-card Manage/Get key link template, Concurrency override row's Check-your-limits link template, `consoleLog()` link rendering (uses DOM API to preserve XSS safety) all updated; stale `⧉` references in comments and descriptive UI strings stripped
+- [js/api-links.js](js/api-links.js) — drawer item template updated; the `.consoles-link-arrow` span retired (replaced by `.external-pill`)
+- 15 HTML files — `⧉` stripped from internal links (one PowerShell pass); external links bulk-converted to pill markup (one PowerShell pass; 109 anchors)
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.302
 
 **Per-key schema versioning convention · backlog #6 (localStorage migration audit) retired**

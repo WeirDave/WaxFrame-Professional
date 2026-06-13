@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260612-017
+   Build: 20260612-018
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -8692,8 +8692,12 @@ kbd {
 }
 /* v3.63.301 — Inline link inside .settings-row-help. Used by the
    Concurrency overrides section to deep-link each row to the provider's
-   usage / billing page ("Check your limits ⧉"). Subtle by default so it
-   reads as supplementary, brightens on hover for click affordance. */
+   usage / billing page ("Check your limits"). Subtle by default so it
+   reads as supplementary, brightens on hover for click affordance.
+   v3.63.303 — The row's "Check your limits" link now also carries the
+   external-link pill (defined further down in this file) so it reads as
+   an out-of-app destination. Pill semantics live in .external-link /
+   .external-pill — this rule only tunes the inline-link color treatment. */
 .settings-inline-link {
   color: var(--honey);
   text-decoration: underline;
@@ -8707,6 +8711,58 @@ kbd {
   color: var(--accent);
   text-decoration-color: var(--honey);
 }
+
+/* ============================================================
+   v3.63.303 — Universal external-link affordance (Kai spec).
+   Replaces the previous ⧉ glyph approach. A small "External"
+   text pill follows the link text on links that point OFF
+   waxframe.com. Internal links (same-domain navigation
+   between waxframe-user-manual.html, api-details.html, etc.)
+   carry no indicator — only the actual externals do.
+
+   Markup pattern:
+     <a href="https://elsewhere.tld" class="external-link"
+        target="_blank" rel="noopener noreferrer">
+       Link text
+       <span class="external-pill" aria-hidden="true">External</span>
+       <span class="sr-only">(opens external site in a new tab)</span>
+     </a>
+
+   The pill borders with currentColor so it inherits the link's
+   palette (honey / accent / text-dim) without needing per-context
+   overrides. Subtle opacity keeps it from competing with the link
+   text itself. .sr-only is the standard a11y hide-but-readable
+   rule so screen readers announce the open-in-new-tab behavior.
+   ============================================================ */
+.external-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.external-pill {
+  font-size: 0.68rem;
+  line-height: 1;
+  padding: 0.15rem 0.35rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  opacity: 0.7;
+  white-space: nowrap;
+  text-transform: none;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .settings-control,
 .settings-select,
 .settings-number {

@@ -1,5 +1,5 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260612-017
+// Build: 20260612-018
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that
@@ -11,9 +11,9 @@
 //
 // CONTRACT (v3.63.301): These URLs are the SINGLE SOURCE OF TRUTH for both
 // surfaces that link out to a default provider's console:
-//   • The per-card "Manage ⧉" / "Get key ⧉" link on every AI row in the
+//   • The per-card "Manage" / "Get key" link on every AI row in the
 //     Worker Bee setup grid (app.js renderAISetupGrid, reads ai.apiConsole).
-//   • The "Provider Sites ⧉" drawer opened from the Worker Bee toolbar
+//   • The "Provider Sites" drawer opened from the Worker Bee toolbar
 //     and the API guide page (app.js toggleHiveConsoles + api-links.js
 //     toggleGuideConsoles, both read ai.apiConsole).
 // Both consumers read ai.apiConsole, which is hydrated from this map at
@@ -143,10 +143,16 @@ function openConsolesDrawer(groups) {
     if (g.label) html += '<div class="consoles-group-label">' + _clEsc(g.label) + '</div>';
     html += valid.map(function (it) {
       var url = _clSafe(it.url);
-      return '<a class="consoles-link" href="' + _clEsc(url) + '" target="_blank" rel="noopener noreferrer">' +
+      // v3.63.303 — Drawer items are always external (provider consoles).
+      // The .consoles-link-arrow span used to carry the ⧉ glyph; replaced
+      // with the universal external-pill markup per Kai's spec. Pill is
+      // aria-hidden (decorative); .sr-only span announces "opens in a new
+      // tab" for screen readers.
+      return '<a class="consoles-link external-link" href="' + _clEsc(url) + '" target="_blank" rel="noopener noreferrer">' +
         '<span class="consoles-link-name">' + _clEsc(it.name) + '</span>' +
         '<span class="consoles-link-host">' + _clEsc(_clHost(url)) + '</span>' +
-        '<span class="consoles-link-arrow">⧉</span>' +
+        '<span class="external-pill" aria-hidden="true">External</span>' +
+        '<span class="sr-only">(opens external site in a new tab)</span>' +
       '</a>';
     }).join('');
   });

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260612-017
+  Build: 20260612-018
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260612-017">
+  <meta name="waxframe-build" content="20260612-018">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
   <link rel="canonical" href="https://waxframe.com/help.html">
@@ -307,7 +307,7 @@
       <h2>📋 Support info</h2>
       <p class="sub">If you need to report a bug, this is gathered automatically — no personal data, no document text. Copy it into your bug report so support knows what you're running.</p>
       <pre class="env" id="envBlock">Gathering…</pre>
-      <button class="btn-ghost" id="copyEnvBtn" type="button">⧉ Copy environment</button>
+      <button class="btn-ghost" id="copyEnvBtn" type="button">Copy environment</button>
       <p class="status" id="copyStatus"></p>
     </section>
 
@@ -321,7 +321,7 @@
         <div class="step-head"><span class="step-num">1</span><span class="t">Open a pre-filled bug report</span></div>
         <div class="step-body">
           <p>Opens a new GitHub issue with your environment already filled in. Add what happened and the steps to reproduce it.</p>
-          <button id="openIssueBtn" type="button">⧉ Open bug report on GitHub</button>
+          <button id="openIssueBtn" type="button">Open bug report on GitHub</button>
         </div>
       </div>
 
@@ -361,7 +361,7 @@
           <select id="modelDumpProvider"></select>
         </div>
         <button id="modelDumpBtn" type="button">Dump models</button>
-        <button id="modelDumpAllBtn" class="btn-ghost" type="button" title="Fetch live models for every provider with a saved key into one JSON">⧉ Dump ALL (live) → JSON</button>
+        <button id="modelDumpAllBtn" class="btn-ghost" type="button" title="Fetch live models for every provider with a saved key into one JSON">Dump ALL (live) → JSON</button>
       </div>
       <p class="status" id="modelDumpStatus"></p>
       <div class="dump-diff" id="modelDumpDiff"></div>
@@ -372,7 +372,7 @@
               <div class="dump-title">Cached</div>
               <div class="dump-meta" id="cachedDumpMeta">No dump yet</div>
             </div>
-            <button class="btn-ghost dump-copy" id="copyCachedDump" type="button">⧉ Copy JSON</button>
+            <button class="btn-ghost dump-copy" id="copyCachedDump" type="button">Copy JSON</button>
           </div>
           <pre class="dump-list" id="cachedDumpList">Pick a provider, then dump models.</pre>
         </div>
@@ -382,7 +382,7 @@
               <div class="dump-title">Live</div>
               <div class="dump-meta" id="liveDumpMeta">No dump yet</div>
             </div>
-            <button class="btn-ghost dump-copy" id="copyLiveDump" type="button">⧉ Copy JSON</button>
+            <button class="btn-ghost dump-copy" id="copyLiveDump" type="button">Copy JSON</button>
           </div>
           <pre class="dump-list" id="liveDumpList">Live fetch waits until you click Dump models.</pre>
         </div>
@@ -440,10 +440,10 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.302"></script>
-  <script src="js/storage.js?v=3.63.302"></script>
-  <script src="js/provider-models.js?v=3.63.302"></script>
-  <script src="js/provider-catalog.js?v=3.63.302"></script>
+  <script src="js/version.js?v=3.63.303"></script>
+  <script src="js/storage.js?v=3.63.303"></script>
+  <script src="js/provider-models.js?v=3.63.303"></script>
+  <script src="js/provider-catalog.js?v=3.63.303"></script>
   <script>
   (function () {
     'use strict';
