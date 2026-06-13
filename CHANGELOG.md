@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.298
+
+**Repo hygiene · CodeQL alert #28 closed + backlog retires the shipped Provider Catalog item**
+
+Build: `20260612-013`<br>
+Released: `2026-06-12`
+
+### Two cleanups bundled
+
+**1. CodeQL `actions/missing-workflow-permissions` (#28) — fixed.** GitHub Code Scanning flagged [.github/workflows/release-check.yml](.github/workflows/release-check.yml) for not declaring an explicit `permissions:` block, so jobs ran with whatever the repository default `GITHUB_TOKEN` scope happened to be. Repos created before February 2023 default to read-write across the board; even on newer defaults, the recommendation is to declare intent so the workflow stays restricted if the default ever changes (or the workflow gets forked into a looser org). The validator just runs `node tools/release-check.mjs` against the checked-out tree — read-only over files, no PR comments, no issue creation, no tag pushes. Added the minimum-needed scope:
+
+```yaml
+permissions:
+  contents: read
+```
+
+No behavior change — the workflow was already only reading files. The alert closes on next CodeQL pass.
+
+**2. Backlog v245 → v246 — Provider Catalog foundation retired.** The "What ships goes to the changelog, gets DELETED from the backlog" convention at the bottom of every Backlog Master document means item #5 (Provider Catalog foundation, parked since long before v3.63.270) needed to come out — all three of its DONE phases shipped this week (foundation [v3.63.274](https://github.com/WeirDave/WaxFrame-Professional/releases/tag/v3.63.274) → fallback inlining [v3.63.295](https://github.com/WeirDave/WaxFrame-Professional/releases/tag/v3.63.295) → unified dispatcher [v3.63.296](https://github.com/WeirDave/WaxFrame-Professional/releases/tag/v3.63.296)). Done. Subsequent items renumbered: Prompt instruction modularization moves to #5, localStorage migration audit to #6. The retired v243 file leaves the repo to keep the 3-version backlog margin (current = v244 / v245 / v246).
+
+### Files touched
+
+- [.github/workflows/release-check.yml](.github/workflows/release-check.yml) — `permissions: contents: read` block added at workflow root
+- `docs/WaxFrame_Backlog_Master_v246.txt` — new backlog, branched from v245; item #5 (Provider Catalog) deleted, #6 / #7 renumbered to #5 / #6
+- `docs/WaxFrame_Backlog_Master_v243.txt` — deleted (3-version margin)
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps across `*.html` / `js/*.js` / [package.json](package.json) / [style.css](style.css) — and yes, the four locations the v3.63.295/296 sweeps missed are all caught this time
+
+---
+
 ## v3.63.297
 
 **Release-ceremony hygiene · package.json + style.css stamps the v3.63.295/296 sweeps missed**
