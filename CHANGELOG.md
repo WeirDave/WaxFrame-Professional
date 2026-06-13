@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.297
+
+**Release-ceremony hygiene · package.json + style.css stamps the v3.63.295/296 sweeps missed**
+
+Build: `20260612-012`<br>
+Released: `2026-06-12`
+
+### What happened
+
+The `Release-ceremony validation` workflow turned red on both v3.63.295 and v3.63.296 with the same complaint:
+
+```
+package.json — version "3.63.294" != APP_VERSION "3.63.296"
+style.css:3 — stale Build: 20260612-009 (expected 20260612-011)
+```
+
+The PowerShell sweep that bumps cache-busters and build stamps walked `*.html` + `js/*.js` — and missed two top-level files: `package.json` (`.json`, not `.html`) and `style.css` (`.css`, not `.html` either). Phase 2 (v3.63.295) was the first release with the gap; phase 3 (v3.63.296) carried it forward unchanged.
+
+### What changed
+
+- [package.json](package.json) — `version` field bumped from `3.63.294` to `3.63.297` (skipping intermediate values is fine — the field tracks current state, not history)
+- [style.css](style.css) — header build stamp bumped from `20260612-009` to `20260612-012`
+- The PowerShell sweep is now in muscle memory to include `package.json` and `style.css` — next phase will widen the glob so neither file gets skipped again
+
+### Why this matters
+
+It doesn't, behaviorally. `package.json` exists only so Dependabot can watch the vendored libraries in `lib/` for advisories; the app has no build step that reads its `version`. `style.css`'s `Build:` comment is documentation, not runtime state. So the red X on v3.63.296 was hygiene drift, not a real bug — the deployed app at that release shipped phase 3 correctly. But green checks on `main` are worth keeping green, and the validator is doing exactly the job it's supposed to do.
+
+### Files touched
+
+- [package.json](package.json) — `version` field
+- [style.css](style.css) — header `Build:` comment
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps across `*.html` / `js/*.js`
+
+---
+
 ## v3.63.296
 
 **Provider Catalog phase 3 · all three model-list discovery paths share one dispatcher**
