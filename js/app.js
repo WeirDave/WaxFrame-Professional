@@ -929,6 +929,17 @@ function renderSettings() {
   // hasn't parsed yet.
   if (typeof initBackupSyncSettings === 'function') initBackupSyncSettings();
 
+  // v3.63.321 — Settings TOC + alphabetical section order. David's call:
+  // "the settings menu should have two things — one, alphabetical
+  // listings; two, like a table of contents at the top that you can
+  // jump to, especially as much info as we've crammed in this thing."
+  // Both rendered dynamically: scan all .settings-section elements,
+  // assign auto-ids if missing, build the TOC at the top of the inner
+  // scroll area, and re-append each section in alpha order (appendChild
+  // on an in-DOM node moves it). Idempotent — calling this again
+  // produces the same alpha order.
+  _renderSettingsToc();
+
   // v3.62.0 — Workflow Toggles section: live mirrors for the two pill
   // toggles. v3.62.1 — Auto-Update Models toggle + interval radio added.
   // (Checkpoint Backup lands in v3.63.0.)
@@ -954,6 +965,65 @@ function renderSettings() {
   // v3.63.299 — Concurrency override rows (one per provider with a saved
   // key AND a finite default cap; everyone else is uncapped already).
   renderConcurrencyOverrides();
+}
+
+// v3.63.321 — Settings TOC + alphabetical section order. Pure render-
+// time pass — no HTML reshuffle in index.html, no per-section IDs to
+// hand-maintain. Walks every .settings-section in the page, assigns an
+// auto-id when missing (derived from the section title slug), sorts by
+// the title text (with leading emoji stripped so e.g. "🔑 Account &
+// License" sorts as "Account & License" → A, not as the emoji code
+// point), reorders via appendChild (which MOVES nodes already in the
+// DOM, idempotent on repeat calls), and rebuilds the TOC chip strip at
+// the top.
+//
+// David's call after v3.63.320 landed: "the settings menu should have
+// two things — one, alphabetical listings; two, like a table of
+// contents at the top that you can jump to, especially as much info
+// as we've crammed in this thing."
+function _renderSettingsToc() {
+  const parent = document.querySelector('#screen-settings .hp-section-body');
+  if (!parent) return;
+  const sections = Array.from(parent.querySelectorAll(':scope > .settings-section'));
+  if (!sections.length) return;
+  // Helper: alphabetical title (emoji prefix stripped, whitespace trimmed).
+  const _alphaTitle = (s) => {
+    const raw = s.querySelector('.settings-section-title')?.textContent || s.id || '';
+    return raw.replace(/^[^A-Za-z0-9]+/, '').trim().toLowerCase();
+  };
+  // Ensure each section has an id so the TOC anchors can target it.
+  // Slug from the alpha-title so the id is stable across reloads.
+  sections.forEach(s => {
+    if (s.id) return;
+    const slug = _alphaTitle(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'section';
+    s.id = 'settings-' + slug;
+  });
+  // Alphabetical sort. Use the title text (emoji-stripped) as the key.
+  sections.sort((a, b) => _alphaTitle(a).localeCompare(_alphaTitle(b)));
+  // Build or rebuild the TOC. Re-creating it each open keeps it in sync
+  // with whatever sections happen to be in the DOM right now (e.g. if a
+  // future release adds or removes one).
+  let toc = parent.querySelector(':scope > .settings-toc');
+  if (!toc) {
+    toc = document.createElement('div');
+    toc.className = 'settings-toc';
+    parent.insertBefore(toc, parent.firstChild);
+  }
+  toc.innerHTML =
+    '<span class="settings-toc-label">Jump to:</span>' +
+    sections.map(s => {
+      const title = s.querySelector('.settings-section-title')?.textContent.trim() || s.id;
+      // Inline onclick so the scroll behavior is identical across all
+      // browsers without a router hash change (which could trigger
+      // back-button state in some SPAs).
+      const safeId = s.id.replace(/'/g, "\\'");
+      return `<a class="settings-toc-link" href="#${escapeHtml(s.id)}" onclick="document.getElementById('${safeId}').scrollIntoView({behavior:'smooth',block:'start'}); return false;">${escapeHtml(title)}</a>`;
+    }).join('');
+  // Reorder sections alphabetically by moving each one to the end of
+  // the parent (appendChild on an already-DOM node MOVES it). TOC stays
+  // at position 0 because we re-inserted it as firstChild above; the
+  // sections trail after in alpha order.
+  sections.forEach(s => parent.appendChild(s));
 }
 
 // v3.63.299 — Render the per-provider concurrency override rows into the

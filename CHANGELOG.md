@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.321
+
+**Settings: alphabetical section order + jump-to TOC at the top (David's "we crammed a lot in here" follow-up)**
+
+Build: `20260613-015`<br>
+Released: `2026-06-13`
+
+### What changed
+
+After v3.63.320 added a 6th settings section (Backup Sync), David: "the settings menu should have two things — one, alphabetical listings; two, like a table of contents at the top that you can jump to, especially as much info as we've crammed in this thing."
+
+Both shipped. **Eight sections now sit in alphabetical order** (Account & License → Auto Mode → Backup Sync → Concurrency overrides → Diagnostics → Storage → Vision / OCR → Workflow & Updates). A **chip-strip TOC sits at the top** of the inner scroll area — click any chip to smooth-scroll to that section.
+
+Implementation is pure JS at settings-render time, no HTML reshuffle:
+
+- `_renderSettingsToc` walks every `.settings-section` element in the Settings screen
+- Assigns auto-ids to any section that lacked one (slugged from the title so the id is stable across reloads)
+- Sorts by the title text with leading emoji stripped (`🔑 Account & License` sorts as `account & license` → A, not as the emoji code point)
+- Reorders via `appendChild` (which MOVES nodes already in the DOM — idempotent on repeat calls)
+- Rebuilds the TOC chip strip from the same sorted list, so future releases that add/remove sections get reflected automatically without code changes here
+
+Each TOC chip is a small pill with the section title (icon + name). Hover/focus brightens with the gold accent; click calls `scrollIntoView({behavior:'smooth', block:'start'})`. No URL hash change — chosen so SPA routers and browser history aren't affected.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `_renderSettingsToc` added next to `renderSettings`; called from the end of `renderSettings` so it runs on every settings open
+- [style.css](style.css) — `.settings-toc` flex chip strip + `.settings-toc-label` label + `.settings-toc-link` pill styling with hover/focus accent
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.320
 
 **Auto-backup as a Settings panel — pick folder + frequency preset + sections, then forget about it (FSA spike Phase 2)**
