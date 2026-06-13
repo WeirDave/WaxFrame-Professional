@@ -9909,6 +9909,42 @@ kbd {
 }
 .modified-badge.show { display: inline-block; }
 
+/* v3.63.325 — #toast CSS. THE TOAST WAS INVISIBLE. The toast() function
+   in app.js writes text into <div id="toast"> + adds .show class, but
+   the element had NO STYLES — it was a 0×0 unstyled div. Every toast
+   call in the entire app (FSA failures, model swaps, settings saves,
+   round completions, hundreds of them) was being written into the void.
+   David caught this debugging the Edge Save Checkpoint silent failure:
+   "I didn't get any toast... you thought we were doing toasts at one
+   point and then it turned out that you were sending them into void."
+   Floating bottom-center, fade in/out, never blocks input. */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface2, #1f1f1f);
+  border: 1px solid var(--border, #444);
+  color: var(--text, #eee);
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  max-width: min(80vw, 640px);
+  text-align: center;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
 /* ── Status toast (prompt editor) ── */
 .status-toast {
   display: none; align-items: center; gap: var(--space-8);
