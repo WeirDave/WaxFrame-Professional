@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — privacy.html
-     Build: 20260612-017
+     Build: 20260612-018
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260612-017">
+  <meta name="waxframe-build" content="20260612-018">
   <title>Privacy Policy — WaxFrame</title>
   <meta name="description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
   <link rel="canonical" href="https://waxframe.com/privacy.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.302">
+  <link rel="stylesheet" href="style.css?v=3.63.303">
 </head>
 <body class="helper-body">
 
@@ -70,13 +70,13 @@
        own distinct slot — inside .nav-panel but outside .nav-body so it
        sticks to the bottom of the panel like the work-screen version. -->
   <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
+    <a class="nav-buy-cta external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
       <span class="nav-buy-cta-icon">🛒</span>
       <span class="nav-buy-cta-text">
         <span class="nav-buy-cta-title">Buy a License</span>
         <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
       </span>
-    </a>
+    <span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>
   </div>
 </div>
 
@@ -141,13 +141,13 @@
 
     <div class="wf-card is-amber">
       <h3 class="wf-card-title">The one exception — Claude</h3>
-      <p>Anthropic's API does not currently allow direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent"><code>waxframe-claude-proxy.weirdave.workers.dev</code></a>. The Worker forwards your request straight to Anthropic and <strong>does not log or persist your API key or prompt content</strong> — but it necessarily sees them in transit while forwarding. This relay exists only to satisfy the browser's CORS requirement; it adds no storage and no analytics.</p>
+      <p>Anthropic's API does not currently allow direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent external-link"><code>waxframe-claude-proxy.weirdave.workers.dev</code><span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>. The Worker forwards your request straight to Anthropic and <strong>does not log or persist your API key or prompt content</strong> — but it necessarily sees them in transit while forwarding. This relay exists only to satisfy the browser's CORS requirement; it adds no storage and no analytics.</p>
       <p>Every other provider connects directly browser-to-provider with no WaxFrame intermediary.</p>
     </div>
 
     <div class="wf-card is-accent">
       <h3 class="wf-card-title">The AI API Pricing page fetches a small data blob</h3>
-      <p>When you visit the <a href="ai-api-pricing.html" class="link-accent">AI API Pricing</a> page on <code>waxframe.com</code>, your browser fetches the latest pricing data from a small Cloudflare Worker at <a href="https://waxframe-pricing.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent"><code>waxframe-pricing.weirdave.workers.dev</code></a>. The Worker returns a JSON blob of provider/model pricing and <strong>logs nothing</strong> — its source is in the WaxFrame repo at <code>tools/pricing-worker/</code> if you want to verify. If the Worker is unreachable (you're offline, on an air-gapped network, or visiting from a portable ZIP build) the page falls back to the embedded snapshot that ships with the page and surfaces a banner letting you know.</p>
+      <p>When you visit the <a href="ai-api-pricing.html" class="link-accent">AI API Pricing</a> page on <code>waxframe.com</code>, your browser fetches the latest pricing data from a small Cloudflare Worker at <a href="https://waxframe-pricing.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent external-link"><code>waxframe-pricing.weirdave.workers.dev</code><span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>. The Worker returns a JSON blob of provider/model pricing and <strong>logs nothing</strong> — its source is in the WaxFrame repo at <code>tools/pricing-worker/</code> if you want to verify. If the Worker is unreachable (you're offline, on an air-gapped network, or visiting from a portable ZIP build) the page falls back to the embedded snapshot that ships with the page and surfaces a banner letting you know.</p>
       <p>This is the only page that makes any automatic outbound request on load. Every other helper page is fully static.</p>
     </div>
 
@@ -181,7 +181,7 @@
     <h2>Changes &amp; contact</h2>
 
     <div class="wf-card is-accent">
-      <p>If this policy changes, the effective date above will be updated and the change will appear in the public repository history. Questions or concerns? Open an issue on <a href="https://github.com/WeirDave/WaxFrame-Professional/issues" target="_blank" rel="noopener noreferrer" class="link-accent">GitHub</a> — that is the contact channel for WaxFrame.</p>
+      <p>If this policy changes, the effective date above will be updated and the change will appear in the public repository history. Questions or concerns? Open an issue on <a href="https://github.com/WeirDave/WaxFrame-Professional/issues" target="_blank" rel="noopener noreferrer" class="link-accent external-link">GitHub<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> — that is the contact channel for WaxFrame.</p>
     </div>
 
     <div class="wf-tip">
@@ -215,7 +215,7 @@
         <span class="goal-info-phase refine">No Tracking</span>
         <span class="goal-info-desc">No analytics, no telemetry, no cookies, no accounts. Nothing is tracked.</span>
       </div>
-      <p class="goal-info-tip">Read the full <a href="privacy.html" class="link-accent">Privacy Policy</a> and <a href="terms.html" class="link-accent">Terms of Use</a>, or <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">read the source on GitHub →</a></p>
+      <p class="goal-info-tip">Read the full <a href="privacy.html" class="link-accent">Privacy Policy</a> and <a href="terms.html" class="link-accent">Terms of Use</a>, or <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">read the source on GitHub →<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
   </div></div>
@@ -244,8 +244,8 @@
     <div class="goal-info-body">
       <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span class="app-version-stamp"></span></span></div>
       <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" class="link-accent">Read license →</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">github.com/WeirDave/WaxFrame-Professional<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent external-link">weirdave.com<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></span></div>
       <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
       <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
@@ -264,7 +264,7 @@
     <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
     <div class="license-modal-error" id="licenseKeyError"></div>
     <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
-    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →</a>
+    <a class="license-modal-buy external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>
     <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
   </div>
 </div>
@@ -284,12 +284,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.302"></script>
-<script src="lib/docx.min.js?v=3.63.302"></script>
-<script src="js/docx-export.js?v=3.63.302"></script>
-<script src="js/nav-helper.js?v=3.63.302"></script>
-<script src="js/license-helper.js?v=3.63.302"></script>
-<script src="js/version.js?v=3.63.302"></script>
+<script src="js/theme.js?v=3.63.303"></script>
+<script src="lib/docx.min.js?v=3.63.303"></script>
+<script src="js/docx-export.js?v=3.63.303"></script>
+<script src="js/nav-helper.js?v=3.63.303"></script>
+<script src="js/license-helper.js?v=3.63.303"></script>
+<script src="js/version.js?v=3.63.303"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
