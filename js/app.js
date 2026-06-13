@@ -1024,6 +1024,25 @@ function _renderSettingsToc() {
   // at position 0 because we re-inserted it as firstChild above; the
   // sections trail after in alpha order.
   sections.forEach(s => parent.appendChild(s));
+  // v3.63.322 — Append an "↑ Go to top" link to the end of every
+  // section. Saves the user from scrolling all the way back to use
+  // the TOC after reading one long section (Diagnostics + Storage are
+  // both substantial). Idempotent: if a previous render already added
+  // the link, remove and re-add so the latest TOC anchor wins.
+  const tocId = toc.id || (toc.id = 'settingsTocAnchor');
+  sections.forEach(s => {
+    const existing = s.querySelector(':scope > .settings-goto-top');
+    if (existing) existing.remove();
+    const link = document.createElement('a');
+    link.className = 'settings-goto-top';
+    link.href = '#' + tocId;
+    link.textContent = '↑ Go to top';
+    link.onclick = (ev) => {
+      ev.preventDefault();
+      document.getElementById(tocId)?.scrollIntoView({behavior: 'smooth', block: 'start'});
+    };
+    s.appendChild(link);
+  });
 }
 
 // v3.63.299 — Render the per-provider concurrency override rows into the
