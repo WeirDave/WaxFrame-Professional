@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.308
+
+**Variant UX cleanup · action buttons moved into expanded panel · rotating-color edges per variant · uppercase tag retired**
+
+Build: `20260613-002`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Three follow-on fixes from David's live review of v3.63.307's "+ Add variant" feature.
+
+**1. `+ Add variant` and `✕ Remove this variant` moved into the expanded panel.** v3.63.307 placed both buttons inline on the collapsed row summary — right next to Manage. The row summary's `onclick=toggleAISetupRow` handler toggles open/closed on ANY child click, and although the button's `event.stopPropagation()` was wired, the button read as redundant because the user can't click "specifically on the button" — clicking anywhere on the card opens it. David's report: "you don't have to have that variant button because on the collapsed card because clicking on the card opens the card up anyway no matter what you click on so the button basically is kind of worthless." Both buttons now live in a `.ai-setup-expanded-actions` row at the bottom of the expanded panel, with an inline note explaining what they do. The collapsed row's action slot is empty for variants (no checkbox, no button) — pure click-to-expand behavior.
+
+**2. Rotating-color left edges so variants are visually distinct.** v3.63.307 gave every variant the same faded 2px gold left border. David's report: "the card looks identical and you can't really figure it out... we can add different colors and then you could have different variants that way that designate them." The edge is now 4px solid and cycles through five hues — gold / teal / lavender / salmon / green — keyed off the variant's index among siblings of its parent. So a hive with Claude Opus + Claude Sonnet + Claude Haiku as three variants of Claude renders three distinct cards, edge color sticking with each variant across reloads (index is computed from id-sort order, which is stable). New helper `_variantColorIndex(ai)` does the lookup; CSS classes `.v-color-0` through `.v-color-4` carry the palette via a `--variant-edge` CSS variable.
+
+**3. Inline `(VARIANT)` uppercase tag retired.** v3.63.307 emitted a separate gold uppercase span next to the AI name in the row-summary name-group. In tight layouts (compact-model dropdown + Customized badge + Builder + Manage all competing for horizontal space), the tag bled into the ✓ Ready status pill and visually rendered as a "VAR" stamp overlapping the green pill. David's report: "you also placed some sort of weird variant stamp or something right where the ready button is." The tag is gone; the variant signal now rides on (a) the auto-numbered name in parens ("(variant 2)", "(variant 3)") and (b) the rotating colored edge.
+
+**Auto-numbering.** Variant names now read "ChatGPT (variant 2)", "ChatGPT (variant 3)", etc., with the number derived from the variant id's `-vN` suffix so what's displayed lines up with what's persisted. Previously every variant of the same parent rendered as "ChatGPT (variant)" — five variants meant five identical labels in the Builder picker and Jump-to-AI sidebar, which David flagged: "I clicked on that actually created several variants LOL and so the X variant button was actually needed but I couldn't tell they were variants I didn't realize it because I didn't scroll down."
+
+### Files touched
+
+- [js/app.js](js/app.js) — `_variantTagHTML` removed from row markup; `_variantColorIndex(ai)` helper added; `expandedActionRow` computed inside the `isExpanded` branch and injected at the bottom of the expanded template; `addAIVariant` auto-numbers the variant name via the id's `-vN` suffix; orphaned `isDefaultParent` const cleaned up
+- [style.css](style.css) — `.ai-setup-variant-tag` rule removed (the gold uppercase span is gone); `.ai-setup-add-variant-placeholder` removed (no placeholder slot — button lives in expanded panel only); `.ai-setup-row.is-variant` border bumped to 4px solid with `--variant-edge` CSS variable + `.v-color-0` through `-4` palette classes; new `.ai-setup-expanded-actions` row with inline action note; `.ai-setup-add-variant-btn` and `.ai-remove-variant-btn` reshaped for in-panel use (28px height, 12px font, btn-sm pattern)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.307
 
 **"+ Add variant" on default AI cards · multiple Claudes / ChatGPTs in one hive sharing one key (backlog OPEN FEATURE #2 closed)**

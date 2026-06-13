@@ -5682,15 +5682,16 @@ function buildAISetupRowHTML(ai) {
   const currentModel = getModelForAI(ai);
 
   // Action area on summary line:
-  //   variant   → inline "✕ Remove variant" button (parent stays)
+  //   variant   → empty (✕ Remove variant lives inside expanded panel —
+  //               see v3.63.308 below). Clicking the collapsed row only
+  //               toggles open/closed; destructive action belongs behind
+  //               the row chevron.
   //   custom AI → bulk-remove checkbox
   //   default   → empty (defaults can't be removed; their key is cleared
   //   inside the expanded panel)
   let actionHTML;
   if (isVariant) {
-    actionHTML = `<button class="ai-remove-variant-btn" type="button"
-      onclick="removeAIVariant('${ai.id}'); event.stopPropagation();"
-      title="Remove this variant of ${escapeHtml(_parentNameForVariant(ai))}. The parent card stays.">✕ Variant</button>`;
+    actionHTML = '';
   } else if (isCustom) {
     const checked = _selectedCustomIds.has(ai.id) ? 'checked' : '';
     actionHTML = `<input type="checkbox" class="ai-select-check" id="aichk-${ai.id}" ${checked} onchange="toggleCustomSelection('${ai.id}', this.checked); event.stopPropagation();" onclick="event.stopPropagation();" title="Select ${escapeHtml(ai.name)} for bulk removal">`;
@@ -5774,6 +5775,42 @@ function buildAISetupRowHTML(ai) {
     const getKeyLink = '';
     const builderAffordance = '';
 
+    // v3.63.308 — Action row at the bottom of the expanded panel.
+    // Default-AI parent rows get "+ Add variant" (suppressed when no key
+    // is saved — variants would have nothing to ride). Variant rows get
+    // "✕ Remove this variant" as a destructive action (parent stays).
+    // Both live inside the expanded panel rather than on the collapsed
+    // summary so the row-summary click → toggle-open behavior doesn't
+    // compete with them (David: "you can't click specifically on the
+    // button [on the collapsed card]").
+    const isDefaultParentRow = !isCustom && !isVariant;
+    let expandedActionRow = '';
+    if (isDefaultParentRow && hasKey) {
+      expandedActionRow = `
+        <div class="ai-setup-expanded-actions">
+          <button class="ai-setup-add-variant-btn" type="button"
+            onclick="addAIVariant('${ai.id}'); event.stopPropagation();"
+            title="Add another ${escapeHtml(ai.name)} reviewer sharing this API key — pick a different model in the new row to run e.g. ${escapeHtml(ai.name)} Opus + Sonnet together in one hive.">+ Add variant</button>
+          <span class="ai-setup-expanded-action-note">Spawns a sibling row sharing this key with its own model picker.</span>
+        </div>`;
+    } else if (isDefaultParentRow && !hasKey) {
+      expandedActionRow = `
+        <div class="ai-setup-expanded-actions">
+          <button class="ai-setup-add-variant-btn is-disabled" type="button"
+            disabled aria-disabled="true"
+            title="Save an API key above first — variants ride the parent's key.">+ Add variant</button>
+          <span class="ai-setup-expanded-action-note">Save an API key above first.</span>
+        </div>`;
+    } else if (isVariant) {
+      expandedActionRow = `
+        <div class="ai-setup-expanded-actions">
+          <button class="ai-remove-variant-btn" type="button"
+            onclick="removeAIVariant('${ai.id}'); event.stopPropagation();"
+            title="Remove this variant of ${escapeHtml(_parentNameForVariant(ai))}. The parent card stays.">✕ Remove this variant</button>
+          <span class="ai-setup-expanded-action-note">Parent ${escapeHtml(_parentNameForVariant(ai))} card stays; the shared API key is untouched.</span>
+        </div>`;
+    }
+
     expandedHTML = `
       <div class="ai-setup-expanded">
         ${getKeyLink}
@@ -5794,6 +5831,7 @@ function buildAISetupRowHTML(ai) {
         ${recommendRow}
         ${_renderHiveRolesAndTiers(ai, currentModel)}
         ${builderAffordance}
+        ${expandedActionRow}
       </div>`;
   }
   // v3.63.155 — Collapsed-row Builder chip retired. Replaced by the
@@ -5897,48 +5935,31 @@ function buildAISetupRowHTML(ai) {
     ? `<span class="ai-setup-model-label">Model:</span>`
     : '';
 
-  // v3.63.307 — "+ Add variant" affordance. Shown on default-AI parent
-  // rows ONLY (not on customs, which already get the multi-AI shape via
-  // Add Custom AI; not on variants themselves, which would chain into
-  // grandchildren and complicate the data model for negligible value).
-  // Spawns a sibling row that shares this parent's saved API key but
-  // carries its own model, so e.g. Claude Opus + Claude Sonnet + Claude
-  // Haiku can ride one Anthropic key in the same hive. Disabled state
-  // when the parent has no key — variants without a working key can't
-  // make any API call. The button reserves a fixed-width slot via the
-  // placeholder span on rows where it's suppressed so columns stay
-  // aligned across the grid.
-  let addVariantHTML;
-  const isDefaultParent = !isCustom && !isVariant;
-  if (isDefaultParent && hasKey) {
-    addVariantHTML = `<button class="ai-setup-add-variant-btn" type="button"
-      onclick="addAIVariant('${ai.id}'); event.stopPropagation();"
-      title="Add another ${escapeHtml(ai.name)} reviewer sharing this API key — pick a different model in the new row to run e.g. ${escapeHtml(ai.name)} Opus + Sonnet together in one hive.">+ Variant</button>`;
-  } else if (isDefaultParent && !hasKey) {
-    addVariantHTML = `<button class="ai-setup-add-variant-btn is-disabled" type="button"
-      disabled aria-disabled="true"
-      onclick="event.stopPropagation();"
-      title="Save an API key on ${escapeHtml(ai.name)} first — variants ride the parent's key.">+ Variant</button>`;
-  } else {
-    addVariantHTML = `<span class="ai-setup-add-variant-placeholder" aria-hidden="true"></span>`;
-  }
-  // v3.63.307 — Variants render with an "(variant)" suffix on the visible
-  // name so the user can tell siblings apart in the Builder grid + Jump-to-
-  // AI sidebar etc. without relying on the model name alone. Rename still
-  // works (variants are isCustom from rename's perspective).
-  const variantTagHTML = isVariant
-    ? `<span class="ai-setup-variant-tag" title="Variant of ${escapeHtml(_parentNameForVariant(ai))} — shares the parent's API key.">(variant)</span>`
-    : '';
-  // Variants are also renamable — they live outside DEFAULT_AIS so
-  // isCustom is true for them too. The same rename plumbing applies.
+  // v3.63.307 — addVariantHTML retired from the collapsed summary row.
+  // v3.63.308 — Initial placement was an inline button next to Manage,
+  // but the row-summary onclick toggles the expand/collapse on ANY
+  // child click, so the button fought the row click and read as inert
+  // even though event.stopPropagation() was wired. Moved into the
+  // expanded panel as a real action button — see expandedActionRow
+  // computed earlier in the isExpanded branch.
+  // v3.63.308 — Variant tag retired. v3.63.307 emitted a separate
+  // uppercase gold (VARIANT) span next to the name; in tight layouts
+  // it bled into the ✓ Ready status pill (David's report: "weird
+  // variant stamp right where the ready button is"). The variant
+  // signal now rides on (a) the row's auto-generated name carrying
+  // "(variant N)" inline and (b) a rotating-color left edge keyed off
+  // the variant's index among siblings of its parent.
+  const variantColorIdx = isVariant ? _variantColorIndex(ai) : -1;
+  const variantColorCls = isVariant ? ` v-color-${variantColorIdx % 5}` : '';
+  // Variants are renamable — they live outside DEFAULT_AIS so isCustom
+  // is true for them too. The same rename plumbing applies.
   return `
-    <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'} ${validateState}${isVariant ? ' is-variant' : ''}" id="airow-${ai.id}">
+    <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'} ${validateState}${isVariant ? ' is-variant' + variantColorCls : ''}" id="airow-${ai.id}">
       <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
         <span class="ai-setup-name-group">
           <span class="ai-setup-name" id="ainame-${ai.id}" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
-          ${variantTagHTML}
           ${isCustom ? `<button class="ai-setup-rename-btn" onclick="event.stopPropagation(); startCustomAIRename('${ai.id}')" title="Rename ${escapeHtml(ai.name)}">✏️</button>` : ''}
         </span>
         ${statusPillHTML}
@@ -5946,7 +5967,6 @@ function buildAISetupRowHTML(ai) {
         ${compactModel}
         ${overrideBadgeHTML}
         ${builderButtonHTML}
-        ${addVariantHTML}
         ${manageLinkHTML}
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
           ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${escapeHtml(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
@@ -5965,6 +5985,19 @@ function _parentNameForVariant(ai) {
   if (!ai || !ai.parentId) return '';
   const parent = aiList.find(a => a.id === ai.parentId);
   return parent ? parent.name : ai.parentId;
+}
+
+// v3.63.308 — Variant index among siblings of the same parent, sorted by
+// id (chatgpt-v2 < chatgpt-v3 < chatgpt-v4). Drives the rotating left-edge
+// color so siblings render visually distinct cards even when their model
+// picks are similar. Returns -1 when ai isn't a variant.
+function _variantColorIndex(ai) {
+  if (!ai || !ai.parentId) return -1;
+  const siblings = aiList
+    .filter(a => a.parentId === ai.parentId)
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const idx = siblings.findIndex(s => s.id === ai.id);
+  return idx < 0 ? 0 : idx;
 }
 
 // Per-session expand/collapse state — set of AI ids that are expanded.
@@ -9978,14 +10011,19 @@ function addAIVariant(parentId) {
     return;
   }
   const id = _nextVariantId(parent.id);
+  // v3.63.308 — Auto-number the variant name so a hive with five Claudes
+  // doesn't read as five identical "Claude (variant)" rows in the Builder
+  // picker / Jump-to-AI / Worker-Bees grid. The number tracks the variant
+  // id's -vN suffix so the displayed name lines up with what's persisted.
   // Variant inherits the parent's currently-saved model as a starting
   // point so the new row is immediately functional. The user is expected
   // to pick a DIFFERENT model from the compact dropdown — that's the
   // whole point of the feature. ai.model (not cfg.model) is the variant's
   // authoritative model, so changing it here never affects the parent.
+  const variantNum = id.replace(/^.*-v/, '');
   const variant = {
     id,
-    name: `${parent.name} (variant)`,
+    name: `${parent.name} (variant ${variantNum})`,
     url: parent.url || '',
     icon: parent.icon || '',
     provider: parent.provider,
