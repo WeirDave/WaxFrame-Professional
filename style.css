@@ -8969,6 +8969,52 @@ kbd {
   margin: var(--space-8) 0 0;
 }
 
+/* v3.63.321 — Settings TOC. Renders at the top of the Settings inner
+   scroll area as a chip strip — each chip jumps to one alphabetized
+   section. Built at openSettings time by _renderSettingsToc; the
+   sections themselves are reordered alphabetically in the same pass.
+   David's call after we crammed Backup Sync in: "the settings menu
+   should have... a table of contents at the top that you can jump
+   to, especially as much info as we've crammed in this thing." */
+.settings-toc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 10px 14px;
+  margin: 0 0 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.settings-toc-label {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-right: 4px;
+}
+.settings-toc-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  cursor: pointer;
+}
+.settings-toc-link:hover,
+.settings-toc-link:focus {
+  background: rgba(244, 180, 0, 0.08);
+  border-color: var(--accent);
+  color: var(--accent);
+  outline: none;
+}
+
 /* v3.63.320 — Backup Sync section. Folder label sits next to the Pick
    button; scope checkboxes lay out in a compact 3-column grid so all 9
    sections fit without scrolling the settings row. */
