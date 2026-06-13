@@ -9015,15 +9015,17 @@ kbd {
   outline: none;
 }
 
-/* v3.63.322 — "↑ Go to top" link appended to the end of every settings
+/* v3.63.322/323 — "↑ Go to top" link appended to the end of every settings
    section by _renderSettingsToc. Saves the user scrolling all the way
-   back to the chip strip after reading a long section (Diagnostics +
-   Storage are both substantial). Matches the .link-accent color +
-   hover-underline convention used elsewhere in the app, so it reads
-   as a normal navigation link, not an extra control. */
+   back to the chip strip after reading a long section. Matches the
+   .link-accent color + hover-underline convention. v3.63.323 — right-
+   aligned via display:block + text-align:right (the v3.63.322 inline-
+   block + margin-left:auto only worked in flex parents, so the link
+   sat left). */
 .settings-goto-top {
-  display: inline-block;
-  margin: 14px 0 0 auto;
+  display: block;
+  text-align: right;
+  margin-top: 14px;
   font-size: var(--fs-sm);
   color: var(--accent);
   text-decoration: none;

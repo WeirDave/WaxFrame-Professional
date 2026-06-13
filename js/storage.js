@@ -1847,13 +1847,17 @@ async function _fsaEnsureSyncDir(forceRePick = false) {
       let perm = await handle.queryPermission(opts);
       if (perm !== 'granted') perm = await handle.requestPermission(opts);
       if (perm !== 'granted') {
-        if (typeof toast === 'function') toast('⚠️ Permission to the saved sync folder was denied — pick again.', 4000);
+        if (typeof toast === 'function') toast(`⚠️ Sync folder permission ${perm || 'denied'} — picking a new folder.`, 4500);
         handle = null;
       }
     } catch(e) {
-      // Stored handle is no longer usable (folder moved, deleted, or the
-      // permission API itself failed). Drop it and re-prompt.
+      // Stored handle is no longer usable (folder moved, deleted, or
+      // permission rejected the request — Edge sometimes returns 'denied'
+      // when transient user activation has been consumed). v3.63.323
+      // surfaces this to the user via toast so silent failure stops
+      // being silent. Drop it and re-prompt.
       console.warn('[fsa] stored handle unusable, re-prompting picker:', e);
+      if (typeof toast === 'function') toast(`⚠️ Saved folder unreachable (${e?.name || 'error'}) — picking a new folder.`, 4500);
       handle = null;
     }
   }
@@ -1866,9 +1870,13 @@ async function _fsaEnsureSyncDir(forceRePick = false) {
       });
       await _fsaPutStoredHandle(handle);
     } catch(e) {
-      // User canceled the picker (AbortError) — not an error condition,
-      // just an aborted save. Silent return.
-      if (e && e.name !== 'AbortError') console.warn('[fsa] picker failed:', e);
+      // AbortError = user canceled the picker dialog cleanly. Anything
+      // else is a real failure; v3.63.323 surfaces it via toast (was
+      // console.warn only, which David couldn't see in Edge while
+      // debugging the silent-button-click problem).
+      if (e && e.name === 'AbortError') return null;
+      console.warn('[fsa] picker failed:', e);
+      if (typeof toast === 'function') toast(`⚠️ Folder picker failed — ${e?.message || e?.name || 'unknown error'}`, 6000);
       return null;
     }
   }
@@ -2090,12 +2098,27 @@ function initBackupSyncSettings() {
   // Folder label
   _refreshBackupFolderLabel();
 }
+// v3.63.323 — UI-level "Forget folder" handler. Calls the existing
+// fsaForgetSyncDir, then refreshes the folder label so the user sees
+// "— Not set —" immediately. Useful when the stored handle's
+// permission has locked into a denied state Edge won't recover from
+// (David's Save Checkpoint silent-failure debug — Chrome works on the
+// same code, suggesting an Edge-specific stale permission state). Once
+// forgotten, the next Pick folder click pops a fresh OS picker and
+// re-grants permission cleanly.
+async function settingsForgetBackupFolder() {
+  if (!_fsaSupported()) return;
+  await fsaForgetSyncDir();
+  _refreshBackupFolderLabel();
+}
+
 if (typeof window !== 'undefined') {
-  window.settingsPickBackupFolder  = settingsPickBackupFolder;
-  window.saveAutoBackupFreq        = saveAutoBackupFreq;
-  window.saveAutoBackupScope       = saveAutoBackupScope;
+  window.settingsPickBackupFolder   = settingsPickBackupFolder;
+  window.settingsForgetBackupFolder = settingsForgetBackupFolder;
+  window.saveAutoBackupFreq         = saveAutoBackupFreq;
+  window.saveAutoBackupScope        = saveAutoBackupScope;
   window.openCheckpointFromSettings = openCheckpointFromSettings;
-  window.initBackupSyncSettings    = initBackupSyncSettings;
+  window.initBackupSyncSettings     = initBackupSyncSettings;
 }
 
 // Forget the stored folder handle. Console-callable for users who want

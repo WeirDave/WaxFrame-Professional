@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.323
+
+**Settings: "Go to top" right-aligned + Backup Sync gets a "Forget folder" button + Edge silent-failure paths now surface toasts**
+
+Build: `20260613-017`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Three follow-ons after David's v3.63.322 testing:
+
+**1. "↑ Go to top" link right-aligned.** v3.63.322 used `display: inline-block` + `margin-left: auto`, which only auto-shifts in flex parents — the section is a normal block, so the link stayed on the left. Switched to `display: block; text-align: right;` — link now sits at the bottom-right of each section per David's call.
+
+**2. "🗑 Forget folder" button next to "📁 Pick folder" in Backup Sync.** Lets you clear the stored handle without DevTools. Useful when the stored permission has locked into a denied state Edge won't recover from (David's report: Save Checkpoint works fine in Chrome on the same v3.63.321 code, doesn't in Edge — suggests an Edge-specific stale-permission issue). Next Pick folder click after Forget pops a fresh OS picker and re-grants permission cleanly.
+
+**3. Silent FSA failure paths now surface toasts.** `_fsaEnsureSyncDir` had three failure paths (stored-handle permission denied, stored-handle unusable exception, picker call failed with non-AbortError) that all returned `null` silently with only a `console.warn`. Edge users debugging without DevTools open had no idea what was happening. Now every failure path lands a visible toast naming the error (`Sync folder permission denied`, `Saved folder unreachable (NotAllowedError)`, `Folder picker failed — ...`), so the failure mode is at least diagnosable from the UI alone.
+
+### What's STILL not fixed
+
+The Chrome-after-halt retry failure David reported from his cookie-recipe round 2 (Perplexity model deprecated → round halted → retry click failed). The log David shared ends at the halt — no logs from after the retry button click. Need to know which button on the troubleshooting card was clicked and what toast/console message appeared. Will chase in the next release once we have that.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — `_fsaEnsureSyncDir` adds visible toasts on all three silent failure paths (permission denied, stored-handle unusable, picker failed); new `settingsForgetBackupFolder` UI handler that calls `fsaForgetSyncDir` then refreshes the folder label; window-binding added for the new handler
+- [index.html](index.html) — `🗑 Forget folder` button added next to the existing Pick folder button in the Backup Sync settings section
+- [style.css](style.css) — `.settings-goto-top` rewritten to `display: block; text-align: right` (was `inline-block` + ineffective `margin-left: auto`)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.322
 
 **Settings: "↑ Go to top" link on every section + "See section details" link gets the standard accent styling**
