@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.313
+
+**Hive Profile bar: save button stays on the same line as the status note (was wrapping to next row in v3.63.312)**
+
+Build: `20260613-007`<br>
+Released: `2026-06-13`
+
+### What changed
+
+v3.63.312 moved the "💾 Save as new profile" button to the right edge of the Hive Profile bar with an italic prompt callout. David's screenshot showed the button dropping to the next row whenever the note text + prompt didn't leave enough horizontal room for the button on the first line — because the outer `.hive-profile-bar` is `flex-wrap: wrap` and the button was a top-level sibling of the note rather than grouped with it.
+
+Wrapped (note + prompt + button) in a new `.hive-profile-bar-right-group` flex container with `margin-left: auto` and `justify-content: flex-end`. The group anchors to the right edge as one unit, so the button stays adjacent to the prompt regardless of how the note wraps internally. The note keeps its own max-width and right-text-align so multi-line wraps inside the note still look clean, but the button is now part of the same logical group instead of fighting for layout against it.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `renderHiveProfileBar`: note + prompt + save button now wrapped in a `.hive-profile-bar-right-group` div with margin-left:auto; prompt has a leading space so it joins cleanly to the note text
+- [style.css](style.css) — `.hive-profile-bar-right-group` flex layout with right alignment and gap; nested `.hive-profile-bar-note` rule resets its margin-left so the group's alignment wins
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.312
 
 **Hive Profile bar UX: "Save current as profile" renamed to "Save as new profile" + repositioned at the end of the status note**
