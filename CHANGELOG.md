@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.324
+
+**MODEL_DEPRECATED now auto-picks a replacement model so "Re-send" doesn't refire the dead one (David's Chrome cookie round 2)**
+
+Build: `20260613-018`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David caught a real bug in his cookie-recipe round 2: Perplexity's whole `sonar-reasoning-*` family deprecated overnight while `cfg.model = "sonar-reasoning-pro"`. The MODEL_DEPRECATED card popped, he clicked `Re-send Perplexity's prompt only`, and it failed identically. The bundle he shared made it obvious:
+
+1. Round 2 fires reviewer fan-out
+2. Perplexity returns HTTP 400: `'sonar-reasoning' model has been deprecated`
+3. `quarantineModel` flags `sonar-reasoning` so future model-list reads exclude it
+4. BUT `cfg.model` is still `sonar-reasoning-pro` (which is also dead, just not the exact id in the error string)
+5. User clicks Re-send → `callAPI` reads `cfg.model` → same dead model → same error
+
+Quarantine alone wasn't enough — it stopped FUTURE picks from landing on the bad model, but did nothing for the currently-selected model.
+
+### Fix
+
+`WF_DEBUG.showCard` now fires `recheckModelForAI(ctx.aiId, { keepExpanded: false, skipTiers: true })` in the background right after quarantine. The recheck:
+
+- Clears the per-AI model cache
+- Re-fetches the live model list (the just-quarantined model is excluded by the model-list filter)
+- Asks the provider's API to recommend its best Reviewer + Builder picks from the fresh list
+- Writes the winning model to `cfg.model` (and Gemini's URL endpoint where applicable)
+- Emits its existing `✨ Perplexity: switched to sonar-pro` toast so the user sees the swap
+
+By the time the user reads the troubleshooting card and clicks Re-send (~5–15s later), `cfg.model` is on a working pick. Click → Re-send → succeeds.
+
+Fire-and-forget: if the recheck itself fails (no live model list, recommend call errors), the recheck's own toast surfaces the failure and `cfg.model` stays unchanged. The next Re-send will fail with the same error — which is honest, since the provider truly has no working model for us at that point.
+
+### Why this is safe
+
+- Only fires on the 3 model-quarantine codes (MODEL_REJECTS_INSTRUCTIONS, MODEL_NEEDS_DIFFERENT_ENDPOINT, MODEL_DEPRECATED) — the same gate that triggers quarantine
+- `skipTiers: true` keeps it from re-classifying tiers for every variant of the provider (tier classifications still get refreshed on the next manual "Recommend Models for All" click)
+- `keepExpanded: false` so a row that wasn't open doesn't suddenly pop open from a background event
+- Catches its own errors so a failed recheck can't throw upward into the showCard flow
+
+### Files touched
+
+- [js/wf-debug.js](js/wf-debug.js) — `showCard`: after `quarantineModel(bad, entry.code)` lands, fire `recheckModelForAI` in the background to pull a fresh model that's no longer the quarantined one
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.323
 
 **Settings: "Go to top" right-aligned + Backup Sync gets a "Forget folder" button + Edge silent-failure paths now surface toasts**

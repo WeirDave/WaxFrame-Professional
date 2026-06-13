@@ -164,6 +164,24 @@ window.WF_DEBUG = {
       if (!bad && ctx.model) bad = ctx.model;
       if (!bad && typeof API_CONFIGS !== 'undefined' && ctx.provider && API_CONFIGS[ctx.provider]) bad = API_CONFIGS[ctx.provider].model;
       if (bad && typeof quarantineModel === 'function') quarantineModel(bad, entry.code);
+      // v3.63.324 — Auto-pick a fresh model after quarantine. Pre-v3.63.324
+      // the quarantine flagged the bad model id but cfg.model stayed
+      // pointed at it (or at a sibling — e.g. Perplexity's whole
+      // sonar-reasoning-* family deprecated overnight while cfg.model =
+      // "sonar-reasoning-pro"). Clicking "Re-send {ai}'s prompt only"
+      // then re-fired the same dead model and failed identically.
+      // David's Chrome cookie round 2 caught this end-to-end. Now we
+      // kick off recheckModelForAI in the background; by the time the
+      // user reads the card and clicks Re-send (~few seconds), cfg.model
+      // is on a working pick. recheckModelForAI's own toast announces
+      // the swap so the user sees the model change. Fire-and-forget:
+      // a recheck failure surfaces its own toast and leaves cfg.model
+      // unchanged (next Re-send will fail with the same error, which is
+      // honest — the provider truly has no working model for us).
+      if (ctx.aiId && typeof window.recheckModelForAI === 'function') {
+        window.recheckModelForAI(ctx.aiId, { keepExpanded: false, skipTiers: true })
+          .catch(e => console.warn('[auto-rec after quarantine] failed:', e));
+      }
     }
     // v3.63.252 — Bee-fatal card → block the auto-chain-resume hook in
     // closeTroubleshootingCard so dismissing the card alone can't trigger
