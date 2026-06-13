@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.317
+
+**"Recommend Models" now populates all 6 cards on the hive grid, not just Reviewer + Builder (straggler-code bug fix)**
+
+Build: `20260613-011`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David caught a stale-code bug during the v3.63.316 review: "the button on the set up your hive page for recommending models doesn't do the same function as recommend models and so it doesn't grab all the types that we now have. It only grabs reviewer and builder which means that should be straggler code that would have been deleted and we should point it to the code that now gives you 6 cards."
+
+The 6-card hive grid landed in v3.63.151 with two recommenders behind it: `recommendForDefault` / `recheckModelForAI` populate the **Reviewer + Builder** cards, while `classifyTiersForProvider` populates the **Cheap / Balanced / Thinker / Fast** tier cards. Both buttons labeled "Recommend Models" only fired the role recommender — 4 of 6 cards stayed empty until the user happened to apply a tier profile (which lazy-fires the classifier as a side effect).
+
+Now both buttons fire BOTH recommenders. Per-row "Recommend Models" runs role rec + tier classifier in parallel for that row's provider. "Recommend Models for All" runs role rec for every keyed AI in parallel AND tier classifier for every UNIQUE provider in parallel (variants of the same provider share one provider, so the classifier runs once per provider regardless of how many variants point at it). All 6 cards fill in one click.
+
+**Implementation notes:**
+
+- `recheckModelForAI(id, opts)` gained `opts.skipTiers`. Single-row callers leave it false (their row gets all 6 cards). The bulk caller passes true and runs one deduped tier pass alongside the role recs.
+- Tier cache (`waxframe_tiers_<provider>`) is invalidated alongside the role caches at the start of each call so the classifier fetches fresh data instead of returning the cached snapshot. Bulk path clears it once per unique provider before firing.
+- Re-render strategy: role rec re-renders the row when it lands; tier classifier re-renders independently when it lands. Two re-renders is a minor flicker but keeps the existing role-rec error handling untouched. Cleaner than threading both through a single Promise.all.
+- Tooltips on both buttons updated to advertise the 6-card behavior — they previously read "best Reviewer and Builder models," which is half the story now.
+
+**Wall-clock impact:** typically unchanged. Tier classifier is one API call per provider (asks the provider to bucket its models into 4 tiers) and runs concurrently with the per-AI role recs. Total time is bounded by max(slowest role rec, slowest tier classification) — still 5-15s for a 6-default hive even with tiers added.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `recheckModelForAI`: tier cache invalidation + parallel `classifyTiersForProvider` fire-and-forget with row re-render on completion; `recommendModelsForAll`: dedupe providers, clear tier caches once per provider, fire role recs (skipTiers:true) and tier classifications as two parallel task groups awaited together; tooltips on both `Recommend Models` and `Recommend Models for All` buttons updated to mention all 6 cards
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.316
 
 **File System Access API spike (Phase 1): "📁 Save to folder" lands checkpoints in a folder you pick once, no more Downloads-folder rummaging (Chrome/Edge only — Firefox/Safari unchanged)**

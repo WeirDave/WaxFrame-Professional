@@ -252,7 +252,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
 
   // v3.32.10 — recheck button label updated to reflect dual-role behavior.
   const recheckBtn = showRecheck
-    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's own API to recommend its best Reviewer and Builder models for WaxFrame">Recommend Models</button>`
+    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider for its best Reviewer and Builder models AND classify Cheap / Balanced / Thinker / Fast tier picks — populates all 6 cards on the hive grid">Recommend Models</button>`
     : '';
 
   return `<div class="model-select-wrap">
@@ -5730,7 +5730,7 @@ function buildAISetupRowHTML(ai) {
     // in the 6-card grid + "Why each pick" expander.
     const reviewerRec = (typeof getReviewerRecommendation === 'function') ? getReviewerRecommendation(ai.id) : null;
     const builderRec  = (typeof getBuilderRecommendation  === 'function') ? getBuilderRecommendation(ai.id)  : null;
-    const recommendBtn = (showRecheck) ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's own API to recommend its best Reviewer and Builder models for WaxFrame">Recommend Models</button>` : '';
+    const recommendBtn = (showRecheck) ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider for its best Reviewer and Builder models AND classify Cheap / Balanced / Thinker / Fast tier picks — populates all 6 cards on the hive grid">Recommend Models</button>` : '';
     // v3.63.211 — Filter-awareness inline note. Sum droppedCount across
     // the two role recommendations so the user sees "(N filtered)" when
     // the code-side filter removed any models from the candidate pool.
@@ -6199,7 +6199,7 @@ function renderWorkerBeeToolbar() {
       <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
       <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
       <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
-      <button class="btn btn-lg" id="recommendAllBtn" onclick="recommendModelsForAll()" title="Ask every keyed AI to recommend its best model — runs sequentially">Recommend Models for All</button>
+      <button class="btn btn-lg" id="recommendAllBtn" onclick="recommendModelsForAll()" title="Ask every keyed AI for Reviewer + Builder picks AND classify Cheap / Balanced / Thinker / Fast tiers per provider — fills all 6 cards on every hive row. Runs in parallel.">Recommend Models for All</button>
       <button class="btn btn-lg" onclick="toggleHiveConsoles()" title="Open the drawer with every provider's console in your hive">Provider Sites</button>`;
   } else {
     buttons = `
@@ -7231,7 +7231,7 @@ async function recommendModelsForAll() {
 
   if (!await wfConfirm(
     'Recommend Models for All',
-    `Ask each of your ${eligible.length} eligible AI${eligible.length !== 1 ? 's' : ''} to recommend its best Reviewer and Builder models? Runs in parallel — typically 5–15s total.`,
+    `Ask each of your ${eligible.length} eligible AI${eligible.length !== 1 ? 's' : ''} to recommend its best Reviewer and Builder models AND classify Cheap / Balanced / Thinker / Fast tier picks per provider — fills all 6 cards on the hive grid. Runs in parallel; typically 5–15s total.`,
     { suppressKey: 'waxframe_suppress_recommend_all_confirm' }
   )) return;
 
@@ -7248,19 +7248,48 @@ async function recommendModelsForAll() {
     _stopAllTick = wfBtnElapsed(btn, () => `Recommending… ${done}/${total} ·`);
   }
 
+  // v3.63.317 — Dedupe tier classification by provider. Pre-v3.63.317 the
+  // tier classifier never ran from this button at all (4 of 6 cards stayed
+  // empty until the user happened to apply a tier profile). Now it fires
+  // alongside the role recs, but variants of the same provider (e.g. 3
+  // Claude variants) share one provider, so classifying once per UNIQUE
+  // provider avoids 3x calls. Clears the per-provider tier cache before
+  // firing so the classifier fetches fresh data (mirrors the role-cache
+  // invalidation inside recheckModelForAI).
+  const uniqueProviders = new Set();
+  eligible.forEach(ai => {
+    if (ai.provider && API_CONFIGS[ai.provider]?._key) uniqueProviders.add(ai.provider);
+  });
+  uniqueProviders.forEach(p => {
+    try { localStorage.removeItem(`waxframe_tiers_${p}`); } catch(_) {}
+  });
+
   // v3.32.10 — parallel execution. Previously sequential with 400ms inter-AI
   // delay (30-60s typical for 6 AIs). Now fires Promise.all across all
   // eligible AIs; each AI internally fires its Reviewer+Builder calls in
   // parallel too. Total wall time bounded by slowest single response —
   // typically 5-15s for 6 default AIs, even with 12 underlying API calls.
+  // v3.63.317 — Role recs (per-AI) and tier classifications (per-provider,
+  // deduped above) fire IN PARALLEL via Promise.all on two task groups.
+  // Total wall time stays bounded by max(slowest-role-rec, slowest-tier-
+  // classification) — typically still 5-15s for 6 default AIs even with
+  // tiers added.
   let succeeded = 0;
   let failed = 0;
   // v3.63.156 — keepExpanded:false so the bulk Recommend run doesn't blow
   // open every row (David's report). Single-row Recommend Models button
   // calls without the opts argument and keeps its row expanded as before.
-  const results = await Promise.allSettled(
-    eligible.map(ai => recheckModelForAI(ai.id, { keepExpanded: false }).finally(() => { done++; }))
+  // v3.63.317 — skipTiers:true on each per-AI call so the deduped tier
+  // pass (below, parallel) is the only tier traffic.
+  const roleTask = Promise.allSettled(
+    eligible.map(ai => recheckModelForAI(ai.id, { keepExpanded: false, skipTiers: true })
+      .finally(() => { done++; }))
   );
+  const tierTask = (typeof classifyTiersForProvider === 'function')
+    ? Promise.allSettled([...uniqueProviders].map(p =>
+        classifyTiersForProvider(p).catch(e => { console.warn(`[recommend-all] tier classify ${p} failed:`, e); return null; })))
+    : Promise.resolve([]);
+  const [results, _tierResults] = await Promise.all([roleTask, tierTask]);
   _stopAllTick();
   results.forEach((r, idx) => {
     if (r.status === 'fulfilled') {
@@ -9242,7 +9271,13 @@ async function recheckModelForAI(id, opts) {
   // for all blows the cards all out and expands them all"). Single-row
   // user-initiated callers (the per-row Recommend Models button) keep
   // the default keepExpanded=true so the row they clicked stays open.
+  // v3.63.317 — opts.skipTiers lets bulk callers defer the tier
+  // classifier to a single deduped-by-provider pass at the end (see
+  // recommendModelsForAll). Single-row callers leave it false so all
+  // 6 cards on the grid (Reviewer + Builder + Cheap/Balanced/Thinker/
+  // Fast) populate from one button press.
   const _keepExpanded = (opts && opts.keepExpanded === false) ? false : true;
+  const _skipTiers    = !!(opts && opts.skipTiers);
   const ai = aiList.find(a => a.id === id);
   if (!ai) return;
   const cfg = API_CONFIGS[ai.provider];
@@ -9261,6 +9296,15 @@ async function recheckModelForAI(id, opts) {
   // provider/AI since v3.32.10 stores Reviewer and Builder picks separately.
   // The legacy single-cache key is also cleared for users migrating up from
   // v3.32.9 or earlier.
+  // v3.63.317: ALSO clear the per-provider tier cache so the classifier
+  // call below (parallel with the role rec) fetches fresh data instead
+  // of returning the cached snapshot. Skipped on bulk calls (skipTiers
+  // true) — recommendModelsForAll clears tier caches once per unique
+  // provider before firing to avoid 3x clears for 3 variants of one
+  // provider. David caught the bug: "the button only grabs reviewer and
+  // builder which means that should be straggler code that would have
+  // been deleted and we should point it to the code that now gives you
+  // 6 cards."
   try {
     if (isDefault) {
       localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); // legacy
@@ -9273,7 +9317,26 @@ async function recheckModelForAI(id, opts) {
       localStorage.removeItem(`waxframe_recommend_custom-${id}-builder`);
       localStorage.removeItem(`waxframe_models_${id}`);
     }
+    if (!_skipTiers) {
+      localStorage.removeItem(`waxframe_tiers_${ai.provider}`);
+    }
   } catch(e) {}
+
+  // v3.63.317 — Fire the tier classifier in parallel with the role rec
+  // below. Both populate the 6-card grid; pre-v3.63.317 only Reviewer +
+  // Builder fired here, leaving 4 of 6 cards empty until the user
+  // happened to apply a tier profile (which lazy-fires the classifier).
+  // Fire-and-forget: the tier promise re-renders the row when it lands;
+  // the role rec's main flow below also re-renders independently when
+  // it lands. Two re-renders is a minor flicker but keeps the role
+  // rec's existing error handling unchanged. Bulk callers pass
+  // skipTiers:true so recommendModelsForAll can fire one deduped
+  // tier pass instead of N variants firing the same provider.
+  if (!_skipTiers && typeof classifyTiersForProvider === 'function') {
+    classifyTiersForProvider(ai.provider)
+      .then(() => { renderAIRow(id, _keepExpanded); })
+      .catch(e => console.warn('[recheck] tier classifier failed:', e));
+  }
 
   const btn = document.getElementById(`recheckbtn-${id}`);
   const origLabel = btn ? btn.innerHTML : null;
