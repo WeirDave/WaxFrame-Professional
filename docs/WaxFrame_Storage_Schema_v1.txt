@@ -486,14 +486,14 @@ DONE in v3.63.300:
   ✓ Manual test plan written — see FORWARD-COMPAT TEST
     PLAN section below.
 
-STILL OPEN:
-  • Per-key schema versioning. Today the canonical keys
-    accrete optional fields and rely on empty-object
-    fallbacks. A first-class schema-version field on each
-    payload would make the next audit's "what shape am I
-    looking at?" question instant. Defer to a future
-    audit cycle; current shape is healthy enough that this
-    is a nice-to-have, not a blocker.
+DONE in v3.63.302:
+  ✓ Per-key schema versioning convention shipped. See
+    SCHEMA VERSIONING CONVENTION section below for the
+    full rule + helpers. Adopted on two representative keys
+    (waxframe_models_${providerId} and waxframe_recommend_${
+    cacheId}) as the working examples.
+
+Backlog item #6 retired in backlog v249.
 
 
 ════════════════════════════════════════════════════════════
@@ -595,3 +595,94 @@ bump or whenever the per-key shapes in app.js change in a
 non-additive way. Additive-only field accretion (the current
 norm) doesn't require a fresh test run — empty-object
 fallbacks handle the absence at read time.
+
+
+════════════════════════════════════════════════════════════
+SCHEMA VERSIONING CONVENTION (v3.63.302+)
+════════════════════════════════════════════════════════════
+Closes the last open item on backlog #6. Answers the
+question "what shape am I looking at?" for every object-
+payload localStorage entry in WaxFrame.
+
+THE RULE
+  • Object-shape payloads MAY carry a top-level
+    `schema_version: <integer>` field.
+  • Readers default to v1 when the field is absent. Every
+    payload written before v3.63.302 is implicitly v1 — no
+    in-the-wild localStorage needs to be touched.
+  • Writers stamp the version via wfWriteVersioned() on
+    every save (helper in storage.js).
+  • Future shape changes bump the integer and supply a
+    migrator chain `{ 2: v1=>v2, 3: v2=>v3, … }` to
+    wfReadVersioned().
+  • Newer-than-known payloads (downgrade case — a user
+    upgraded WaxFrame on machine A and downgraded on
+    machine B) are returned UNCHANGED with a console warn.
+    Never stomped. The user keeps their data.
+
+WHAT GETS IT
+  Object payloads. Today every per-key cache that already
+  stores a `{ ts, ... }` blob is a natural fit — minimal
+  noise to add one field. Examples:
+    • waxframe_models_${providerId}       ✓ adopted v3.63.302
+    • waxframe_recommend_${cacheId}       ✓ adopted v3.63.302
+    • waxframe_tiers_${providerId}        not yet — when next touched
+    • waxframe_hive_profile               not yet — when next touched
+    • waxframe_concurrency_overrides      not yet — flat object map
+
+WHAT DOESN'T GET IT
+  String / boolean / primitive payloads. The convention is
+  for object shapes only. Adding `schema_version` to a
+  1-character toggle like waxframe_v2_theme ('light' /
+  'dark' / 'auto') would be silly. Examples that stay raw:
+    waxframe_v2_theme, waxframe_muted, waxframe_dev,
+    waxframe_decision_diff_mode, waxframe_recommend_promptver
+    (a marker string, not a payload).
+
+ADOPTION POLICY
+  Per-key opt-in, not bulk-retrofit. 42 unique keys today;
+  rewriting all of them at once would risk breaking
+  something that doesn't need fixing. Instead: helpers live
+  in storage.js, the convention is documented here, and
+  each key adopts the helpers as its shape evolves OR as
+  someone touches its read/write path for another reason.
+
+THE HELPERS
+  Both live in js/storage.js, exposed on `window` for
+  cross-script use.
+
+  wfReadVersioned(key, currentVersion, migrators?)
+    Read a versioned payload. Walks the migrator chain to
+    upgrade legacy payloads to currentVersion. Returns
+    null on missing/invalid; returns the payload object
+    on success.
+
+  wfWriteVersioned(key, payload, currentVersion)
+    Serialize and store an object payload with
+    schema_version stamped. Quota/privacy-mode write
+    failures return false; success returns true. Does
+    NOT mutate the caller's payload (copies + stamps).
+
+  Migrator shape:
+    { 2: (payloadV1) => payloadV2,
+      3: (payloadV2) => payloadV3,
+      ... }
+  Keys are the version being upgraded TO. Sparse maps are
+  fine — a missing migrator step logs a warn and returns
+  the payload at the highest version it could reach.
+
+INTERACTION WITH CHECKPOINT-FILE FORMAT (v6 envelope)
+  The checkpoint file format already carries its own
+  `version` field at the outer envelope level — that's a
+  different problem (export/import file shape) and is
+  unaffected by this convention. The two coexist cleanly:
+  per-key schema_version lives INSIDE the payload;
+  checkpoint envelope version lives OUTSIDE it.
+
+ROLLOUT STATUS
+  v3.63.302  helpers shipped; convention documented;
+             adopted on waxframe_models_${providerId} and
+             waxframe_recommend_${cacheId}.
+  Future    each remaining object-payload key adopts the
+             helpers the next time its read/write path is
+             touched — no scheduled bulk migration.

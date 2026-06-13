@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260612-016
+// Build: 20260612-017
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -148,6 +148,122 @@ function _broadcastSessionWrite(roundValue) {
       ts:    Date.now()
     });
   } catch (e) { /* defensive — channel may have closed */ }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// v3.63.302 — PER-KEY SCHEMA VERSIONING CONVENTION
+// ══════════════════════════════════════════════════════════════════════
+// Closes the last open item on backlog #6 (localStorage migration audit).
+// The v3.63.294 static AST pass + v3.63.300 runtime verification settled
+// "what shape lives at each key today." This convention answers the next
+// question: "what shape am I LOOKING AT right now?"
+//
+// THE RULE
+//   • Object-shape payloads in localStorage may carry a top-level
+//     `schema_version: <integer>` field.
+//   • Readers default to version 1 when the field is absent. Every payload
+//     written before v3.63.302 is implicitly v1 — no localStorage in the
+//     wild needs to be touched.
+//   • Writers stamp the version on every save via wfWriteVersioned().
+//   • Future shape changes bump currentVersion and supply a migrator
+//     callback `{ 2: v1=>v2, 3: v2=>v3, … }` to wfReadVersioned().
+//   • Newer-than-known payloads (downgrade case) are returned UNCHANGED
+//     with a console warn — never stomped. A user who upgraded WaxFrame
+//     on machine A and downgraded on machine B keeps their data.
+//
+// WHY OPT-IN, NOT BULK-RETROFIT
+//   42 unique localStorage keys today. Stamping all of them at once
+//   would touch dozens of read/write sites and risk breaking something
+//   that doesn't need fixing. Instead: helpers live here, the convention
+//   is documented, and EACH key adopts the helpers as its shape evolves
+//   or as someone touches its read/write path for another reason. The
+//   v3.63.302 release adopts the convention on two representative keys
+//   (waxframe_models_${providerId} and waxframe_recommend_${cacheId}) so
+//   future maintainers have working examples next to the helper.
+//
+// NON-OBJECT PAYLOADS (string toggles like 'true'/'false', single ids,
+// theme names) are exempt — the convention is for object shapes only.
+// Adding a version wrapper to a 1-character toggle is overkill.
+//
+// INTERACTION WITH THE CHECKPOINT-FILE FORMAT (v6 envelope)
+// The checkpoint-file format already has its own `version` field at the
+// outer envelope level — that's a different problem (export/import file
+// shape) and is unaffected by this convention. The two coexist cleanly:
+// per-key schema_version inside the payload, file-envelope version
+// outside it.
+
+// wfReadVersioned(key, currentVersion, migrators?) — read a versioned
+// payload from localStorage, applying any needed migrators in order to
+// upgrade it to currentVersion. Returns null when the key is absent or
+// the JSON is invalid. Returns the payload object on success.
+//
+//   key:            localStorage key (string)
+//   currentVersion: the integer schema the caller wants to operate on
+//   migrators:      optional { [version]: (payload) => payload } map.
+//                   Keys are the version BEING UPGRADED TO; e.g. the
+//                   v1→v2 transform sits at migrators[2].
+function wfReadVersioned(key, currentVersion, migrators) {
+  if (!key) return null;
+  let raw;
+  try { raw = localStorage.getItem(key); } catch (e) { return null; }
+  if (raw == null) return null;
+  let payload;
+  try { payload = JSON.parse(raw); } catch (e) { return null; }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    // Non-object payload — convention doesn't apply; return as-is so
+    // callers that opt in can still use the helper safely on edge data.
+    return payload;
+  }
+  // v1 default — pre-convention payloads have no schema_version field.
+  let v = (typeof payload.schema_version === 'number' && payload.schema_version > 0)
+    ? payload.schema_version
+    : 1;
+  if (v > currentVersion) {
+    console.warn(`[wfReadVersioned] ${key} has schema_version=${v} but reader expects v${currentVersion} — returning unchanged (newer data preserved).`);
+    return payload;
+  }
+  while (v < currentVersion) {
+    const migrator = migrators && migrators[v + 1];
+    if (typeof migrator !== 'function') {
+      console.warn(`[wfReadVersioned] ${key} v${v}→v${v + 1} migrator missing — returning at v${v}.`);
+      return payload;
+    }
+    try {
+      payload = migrator(payload);
+    } catch (e) {
+      console.warn(`[wfReadVersioned] ${key} migrator v${v}→v${v + 1} threw:`, e);
+      return payload;
+    }
+    v++;
+  }
+  return payload;
+}
+
+// wfWriteVersioned(key, payload, currentVersion) — serialize and store an
+// object payload with schema_version stamped at the top level. Quota /
+// privacy-mode write failures return false; success returns true.
+// Non-object payloads are rejected (the convention is for object shapes
+// — caller can fall back to plain localStorage.setItem for primitives).
+function wfWriteVersioned(key, payload, currentVersion) {
+  if (!key || !payload || typeof payload !== 'object' || Array.isArray(payload)) return false;
+  const v = (typeof currentVersion === 'number' && currentVersion > 0) ? currentVersion : 1;
+  // Copy + stamp so the caller's payload isn't mutated (their working copy
+  // shouldn't acquire a schema_version field as a side effect of saving).
+  const versioned = Object.assign({}, payload, { schema_version: v });
+  try {
+    localStorage.setItem(key, JSON.stringify(versioned));
+    return true;
+  } catch (e) {
+    console.warn(`[wfWriteVersioned] ${key} write failed:`, e);
+    return false;
+  }
+}
+
+// Expose globally for cross-script use (api.js + app.js + future readers).
+// Same pattern as the other storage primitives at the top of this file.
+if (typeof window !== 'undefined') {
+  window.wfReadVersioned  = wfReadVersioned;
+  window.wfWriteVersioned = wfWriteVersioned;
 }
 
 function _showCrossTabConflictBanner(otherRound, myRound) {

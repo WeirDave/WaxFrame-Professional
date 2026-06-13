@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.302
+
+**Per-key schema versioning convention · backlog #6 (localStorage migration audit) retired**
+
+Build: `20260612-017`<br>
+Released: `2026-06-12`
+
+### What changed
+
+Closes the last open piece of the localStorage migration audit — backlog #6 in v248 (was #7 originally; renumbered over the course of v3.63.294 / v3.63.300 / v3.63.302 as adjacent items shipped).
+
+**The rule:** object-shape payloads in localStorage may carry a top-level `schema_version: <integer>` field. Readers default to `1` when the field is absent, so every payload written before v3.63.302 is implicitly v1 — nothing in the wild needs to be touched. Writers stamp the version on every save. Future shape changes bump the integer and supply a migrator chain `{ 2: v1=>v2, 3: v2=>v3, … }`. Newer-than-known payloads (the downgrade case, when a user upgraded WaxFrame on one machine and downgraded on another) are returned UNCHANGED with a console warn — never stomped.
+
+**Two helpers in [js/storage.js](js/storage.js):**
+
+- `wfReadVersioned(key, currentVersion, migrators?)` — reads a versioned payload, walks the migrator chain to upgrade legacy payloads to `currentVersion`. Returns null on missing/invalid, the payload object on success.
+- `wfWriteVersioned(key, payload, currentVersion)` — serializes and stores with `schema_version` stamped at the top level. Does NOT mutate the caller's payload (copies + stamps).
+
+Both exposed on `window` for cross-script use, like the other storage primitives.
+
+**Adopted on two representative keys** so future maintainers have working examples next to the helpers:
+
+- `waxframe_models_${providerId}` — the 7-day model-list cache. Five sites (1 write in [api.js](js/api.js), 3 writes + 1 read in [app.js](js/app.js)) plus two reads in [api.js](js/api.js) all routed through the new helpers.
+- `waxframe_recommend_${cacheId}` — the recommend-result cache. Read and write paths (`getCachedRecommendation` / `setCachedRecommendation`) both routed through.
+
+No behavior change at runtime — every payload now stamps `schema_version: 1` and every reader defaults legacy payloads to v1. The hook is set for future shape evolutions.
+
+**Adoption policy** — per-key opt-in, not bulk-retrofit. 42 unique localStorage keys today; rewriting all of them at once would risk breaking something that doesn't need fixing. Helpers live in storage.js, the convention is documented in [docs/WaxFrame_Storage_Schema_v1.txt](docs/WaxFrame_Storage_Schema_v1.txt), and each remaining key adopts the helpers as its shape evolves OR as someone touches its read/write path for another reason. The two adoptions in v3.63.302 are the seed.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — new SCHEMA VERSIONING CONVENTION block; `wfReadVersioned` + `wfWriteVersioned` helpers exposed on `window`
+- [js/api.js](js/api.js) — 1 write + 2 reads on `waxframe_models_${providerId}` routed through the helpers
+- [js/app.js](js/app.js) — 3 writes + 1 read on `waxframe_models_${providerId}`, plus the read + write paths for `waxframe_recommend_${cacheId}`, routed through the helpers
+- [docs/WaxFrame_Storage_Schema_v1.txt](docs/WaxFrame_Storage_Schema_v1.txt) — new SCHEMA VERSIONING CONVENTION section appended; REMAINING WORK section updated to record the v3.63.302 close
+- `docs/WaxFrame_Backlog_Master_v249.txt` — new backlog branched from v248; OPEN FEATURE #6 (localStorage migration audit) deleted per the ship-and-delete convention
+- `docs/WaxFrame_Backlog_Master_v246.txt` — deleted (3-version margin)
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.301
 
 **UX polish · Customized badge · Provider Sites button · concurrency override fixes · uniform card alignment · ⧉ external-link glyph · backlog +"Add variant"**

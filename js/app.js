@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260612-016
+// Build: 20260612-017
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -548,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260612-016';         // build stamp — update each session
+const BUILD       = '20260612-017';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -1308,9 +1308,9 @@ async function _autoUpdateRefreshOneAI(ai) {
     if (!Array.isArray(models) || !models.length) {
       return { id: ai.id, error: 'no models returned' };
     }
-    try {
-      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), models }));
-    } catch (e) { /* quota / privacy mode — accept */ }
+    // v3.63.302 — Stamped via wfWriteVersioned (schema_version=1) so this
+    // cache joins the per-key schema-versioning convention.
+    window.wfWriteVersioned(cacheKey, { ts: Date.now(), models }, 1);
     // Detect retired selection: if the user's currently-picked model
     // isn't in the fresh list, surface the disappearance. We do NOT
     // change the selection — leaving the picked model as-is lets the
@@ -7867,10 +7867,10 @@ function getRecommendationPrompt(role) {
 function getCachedRecommendation(cacheId) {
   if (!cacheId) return null;
   const key = `waxframe_recommend_${cacheId}`;
-  try {
-    const cached = JSON.parse(localStorage.getItem(key) || 'null');
-    if (cached && (Date.now() - cached.ts) < RECOMMEND_CACHE_TTL) return cached;
-  } catch(e) {}
+  // v3.63.302 — Reads through wfReadVersioned; legacy payloads (no
+  // schema_version field) default to v1 so existing caches work unchanged.
+  const cached = window.wfReadVersioned(key, 1);
+  if (cached && (Date.now() - cached.ts) < RECOMMEND_CACHE_TTL) return cached;
   return null;
 }
 
@@ -8734,7 +8734,11 @@ function setCachedRecommendation(cacheId, model, why, labels, none, filterMeta) 
       if (typeof filterMeta.droppedCount === 'number') payload.droppedCount = filterMeta.droppedCount;
       if (Array.isArray(filterMeta.droppedSample)) payload.droppedSample = filterMeta.droppedSample;
     }
-    localStorage.setItem(key, JSON.stringify(payload));
+    // v3.63.302 — wfWriteVersioned stamps schema_version=1 per the per-key
+    // versioning convention. Helper handles its own quota / privacy-mode
+    // write-failure logging, but keep the outer try/catch as belt-and-
+    // suspenders since callers may pass an unusual payload shape.
+    window.wfWriteVersioned(key, payload, 1);
   } catch(e) { console.warn(`[recommend-cache:${cacheId}] write failed:`, e); }
 }
 
@@ -9051,10 +9055,10 @@ async function recheckModelForAI(id, opts) {
       const format = cfg.format || 'openai';
       const models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
       if (!models?.length) throw new Error('No chat-compatible models returned');
-      // Cache the model list so buildModelSelector renders the full dropdown
-      try {
-        localStorage.setItem(`waxframe_models_${id}`, JSON.stringify({ ts: Date.now(), models }));
-      } catch(e) { console.warn(`[models-cache:${id}] write failed:`, e); }
+      // Cache the model list so buildModelSelector renders the full dropdown.
+      // v3.63.302 — wfWriteVersioned stamps schema_version=1 per the
+      // versioning convention; the helper logs its own failure path.
+      window.wfWriteVersioned(`waxframe_models_${id}`, { ts: Date.now(), models }, 1);
       // Stable askingModel: prefer cfg.model if it's in the live list,
       // otherwise first in list. No MODEL_FALLBACKS for customs since we
       // don't curate stable models for arbitrary endpoints.
@@ -9727,7 +9731,8 @@ function addCustomAI() {
       ? Array.from(modelSelect.options).filter(o => o.value && !o.disabled).map(o => o.value)
       : [model]; // fallback: at least cache the single model the user typed
     if (modelOptions.length) {
-      localStorage.setItem(`waxframe_models_${id}`, JSON.stringify({ ts: Date.now(), models: modelOptions }));
+      // v3.63.302 — wfWriteVersioned stamps schema_version=1 per convention.
+      window.wfWriteVersioned(`waxframe_models_${id}`, { ts: Date.now(), models: modelOptions }, 1);
     }
   } catch(e) { console.warn('[addCustomAI] failed to cache model list:', e); }
 
@@ -10494,7 +10499,8 @@ function addImportServerModels() {
       const cacheModels = fullServerModelIds && fullServerModelIds.length
         ? fullServerModelIds
         : [modelId];
-      localStorage.setItem(`waxframe_models_${id}`, JSON.stringify({ ts: Date.now(), models: cacheModels }));
+      // v3.63.302 — wfWriteVersioned stamps schema_version=1 per convention.
+      window.wfWriteVersioned(`waxframe_models_${id}`, { ts: Date.now(), models: cacheModels }, 1);
     } catch(e) { console.warn('[addImportServerModels] failed to cache model list:', e); }
 
     aiList.push(ai);
