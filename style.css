@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260612-020
+   Build: 20260612-021
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14245,9 +14245,13 @@ kbd {
 .hp-section .hp-section-header .hp-section-sub + .hp-section-sub {
   margin-top: var(--space-8);
 }
+/* v3.63.306 — was: text-decoration: underline (underlined at rest). Removed
+   so links inside .hp-section-header behave like every other internal link
+   on the site — colored at rest, underlined on hover via .link-accent:hover.
+   The context override was creating a visual inconsistency where the SAME
+   internal link looked different in a header than in body copy. */
 .hp-section .hp-section-header .hp-section-sub a {
   color: var(--accent);
-  text-decoration: underline;
 }
 .hp-section .hp-section-header .hp-section-sub strong { color: #ffffff; }
 

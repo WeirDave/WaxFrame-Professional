@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.306
+
+**External-link cleanup pass · stale → arrows stripped · gnu.org/Free-edition externals converted · section-header underline-at-rest removed**
+
+Build: `20260612-021`<br>
+Released: `2026-06-12`
+
+### What changed
+
+Three follow-on cleanups from looking at the docs pages live in both modes.
+
+**1. Stale literal `→` arrows stripped from external-link contexts.** Several inline external links were sitting on text patterns like `Read the source on GitHub →` and `Check rates →` where the `→` was the OLD external-indicator arrow before v3.63.303's affordance work. After the SVG icon landed in v3.63.304, those literal arrows were redundant — every link now showed both the arrow AND the SVG icon, "Check rates → 🔗" — which looked dorky. Stripped via PowerShell pass: 51 instances across `ai-api-pricing.html`, `what-are-tokens.html`, and 12 other doc pages.
+
+**2. External hosts missed by the original audit converted.** The v3.63.303 regex pass walked a fixed list of known external hosts (provider consoles, GitHub, Gumroad, weirdave.com). Two more turned up under live review: `www.gnu.org` (the AGPL license link in every page's footer) and `weirdave.github.io` (the WaxFrame Free edition link). 16 instances total, now using `class="external-link"` + the SVG icon + sr-only span per the established convention.
+
+**3. `.hp-section .hp-section-header .hp-section-sub a` underline-at-rest removed.** Doc-page section headers (the big gold-bordered intro boxes at the top of each page) had a context-specific CSS rule that forced every link inside them to render underlined at rest — overriding `.link-accent`'s normal `text-decoration: none`. The result: the SAME internal link looked underlined in a header and not-underlined in body copy on the same page. Removed the override; links in headers now behave like links anywhere else (colored at rest, underlined on hover via `.link-accent:hover`).
+
+### Files touched
+
+- 14 HTML files — 51 literal `→` arrows stripped from external-link contexts; 16 missed external hosts (gnu.org + weirdave.github.io) converted to the standard SVG-icon markup
+- [style.css](style.css) — `.hp-section .hp-section-header .hp-section-sub a` rule loses its `text-decoration: underline` line; comment block explains the v3.63.306 reasoning
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.305
 
 **External-link icon size tuned for legibility · "Get Key" capitalization fix**
