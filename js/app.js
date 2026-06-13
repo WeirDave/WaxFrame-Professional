@@ -391,15 +391,37 @@ if (typeof window !== 'undefined' && !window._wfModelSelectOutsideBound) {
   document.addEventListener('click', wfModelSelectCloseAll);
 }
 
+// v3.63.307 — getModelForAI: resolve the model to use for THIS ai object.
+// Variants (ai.parentId set) override the shared cfg.model on their ai.model
+// field — so two variants of the same provider can run different models while
+// sharing one API key + headers + body shape. Parent / non-variant rows fall
+// back to cfg.model unchanged. Defined here at the top of the file so every
+// render and request path can read through one canonical resolver.
+function getModelForAI(ai) {
+  if (!ai) return '';
+  if (ai.model) return ai.model;
+  const cfg = API_CONFIGS[ai.provider];
+  return (cfg && cfg.model) || '';
+}
+
 function saveModelForAI(aiId, modelId, opts) {
   const ai = aiList.find(a => a.id === aiId);
   if (!ai) return;
   const cfg = API_CONFIGS[ai.provider];
   if (!cfg) return;
-  cfg.model = modelId;
-  // Update Gemini endpoint if needed
-  if (ai.provider === 'gemini' && cfg.endpointFn) {
-    cfg.endpoint = cfg.endpointFn(modelId);
+  // v3.63.307 — Variants persist their model on the ai object, NOT on the
+  // shared API_CONFIGS entry. cfg.model is provider-scoped; if a variant
+  // wrote there it would clobber its parent (and any sibling variants).
+  // ai.model rides through saveHive -> customAIs serialization since
+  // variants always live outside DEFAULT_AIS.
+  if (ai.parentId) {
+    ai.model = modelId;
+  } else {
+    cfg.model = modelId;
+    // Update Gemini endpoint if needed
+    if (ai.provider === 'gemini' && cfg.endpointFn) {
+      cfg.endpoint = cfg.endpointFn(modelId);
+    }
   }
   saveSettings();
   // v3.63.13 — refresh the row so the new model surfaces in the card header
@@ -5162,8 +5184,29 @@ function renderAISetupGrid() {
       : '';
   } else {
     const isDef    = ai => !!DEFAULT_AIS.find(d => d.id === ai.id);
-    const defaults = _aiListAlpha(visible.filter(isDef));
-    const customs  = _aiListAlpha(visible.filter(ai => !isDef(ai)));
+    // v3.63.307 — Variants of defaults render NESTED under their parent in
+    // the defaults group, not in the customs group (even though they live
+    // outside DEFAULT_AIS). They walk in immediately after the parent so
+    // the visual relationship is obvious. Customs group excludes anything
+    // with a parentId — those belong to a default upstairs.
+    const defaultsOnly = _aiListAlpha(visible.filter(isDef));
+    const customs      = _aiListAlpha(visible.filter(ai => !isDef(ai) && !ai.parentId));
+    const variantsByParent = {};
+    visible.forEach(ai => {
+      if (!ai.parentId) return;
+      (variantsByParent[ai.parentId] = variantsByParent[ai.parentId] || []).push(ai);
+    });
+    // Stable variant sort: by id so chatgpt-v2 stays above chatgpt-v3.
+    Object.keys(variantsByParent).forEach(pid => {
+      variantsByParent[pid].sort((a, b) => a.id.localeCompare(b.id));
+    });
+    // Inline each parent's variants right after it.
+    const defaults = [];
+    defaultsOnly.forEach(parent => {
+      defaults.push(parent);
+      const kids = variantsByParent[parent.id] || [];
+      kids.forEach(k => defaults.push(k));
+    });
     let html = '';
     if (defaults.length) {
       html += (customs.length ? '<div class="ai-setup-group-label">Default providers</div>' : '')
@@ -5596,7 +5639,12 @@ function _buildProfileOverrideBadgeHTML(ai, cfg, hasKey) {
   const tiersBlob = (typeof getCachedTiers === 'function') ? getCachedTiers(ai.provider) : null;
   const expected  = tiersBlob?.tiers?.[opt.tier] || null;
   if (!expected) return placeholder;        // no data yet — defer judgement
-  if (cfg.model === expected) return placeholder; // matches profile, no override
+  // v3.63.307 — Read the per-AI model via getModelForAI so variants compare
+  // their own model against the profile, not the parent's shared cfg.model.
+  // Otherwise every variant of a row with cfg.model === expected would also
+  // claim "matches profile" while running a different model.
+  const currentModel = getModelForAI(ai);
+  if (currentModel === expected) return placeholder; // matches profile, no override
   // Diverges — render the badge. Title carries the diagnostic context so a
   // hover reveals what the profile would pick vs what the row is on now.
   //
@@ -5607,7 +5655,7 @@ function _buildProfileOverrideBadgeHTML(ai, cfg, hasKey) {
   // the pencil shouted louder). Plain text + the question-mark cursor =
   // unambiguous "this is a tag explaining state, not a button."
   const profileName = opt.label.split(' — ')[0];
-  return `<span class="ai-setup-override-badge" title="${escapeHtml(ai.name)} is using ${escapeHtml(cfg.model)} — the active ${escapeHtml(profileName)} profile would pick ${escapeHtml(expected)} instead. Switch the model from the row above to bring it back into the profile.">Customized</span>`;
+  return `<span class="ai-setup-override-badge" title="${escapeHtml(ai.name)} is using ${escapeHtml(currentModel)} — the active ${escapeHtml(profileName)} profile would pick ${escapeHtml(expected)} instead. Switch the model from the row above to bring it back into the profile.">Customized</span>`;
 }
 
 // v3.31.0 — Single-row template. Two visual states:
@@ -5616,17 +5664,34 @@ function _buildProfileOverrideBadgeHTML(ai, cfg, hasKey) {
 // Greyed-name class fires when the AI has no saved key.
 function buildAISetupRowHTML(ai) {
   const isCustom  = !DEFAULT_AIS.find(d => d.id === ai.id);
+  // v3.63.307 — Variants are aiList entries with .parentId set to the
+  // default they piggyback on. They share the parent's API_CONFIGS row
+  // (key, headers, body shape) but persist their own model on ai.model.
+  // isVariant guards the render shape (nested under parent in the
+  // defaults group, inline ✕ remove button instead of the bulk-select
+  // checkbox, "+ Add variant" affordance suppressed since variants
+  // don't spawn nested variants).
+  const isVariant = !!ai.parentId;
   const cfg       = API_CONFIGS[ai.provider];
   const key       = cfg?._key || '';
   const hasKey    = !!key;
   const isExpanded = _expandedAIIds.has(ai.id);
+  // v3.63.307 — Resolve the model for THIS ai (variants override cfg.model
+  // via ai.model). Used by every model-aware piece below: 6-card grid,
+  // compact dropdown, Builder-incapable check, override badge.
+  const currentModel = getModelForAI(ai);
 
   // Action area on summary line:
+  //   variant   → inline "✕ Remove variant" button (parent stays)
   //   custom AI → bulk-remove checkbox
-  //   default AI → empty (defaults can't be removed; their key is cleared
+  //   default   → empty (defaults can't be removed; their key is cleared
   //   inside the expanded panel)
   let actionHTML;
-  if (isCustom) {
+  if (isVariant) {
+    actionHTML = `<button class="ai-remove-variant-btn" type="button"
+      onclick="removeAIVariant('${ai.id}'); event.stopPropagation();"
+      title="Remove this variant of ${escapeHtml(_parentNameForVariant(ai))}. The parent card stays.">✕ Variant</button>`;
+  } else if (isCustom) {
     const checked = _selectedCustomIds.has(ai.id) ? 'checked' : '';
     actionHTML = `<input type="checkbox" class="ai-select-check" id="aichk-${ai.id}" ${checked} onchange="toggleCustomSelection('${ai.id}', this.checked); event.stopPropagation();" onclick="event.stopPropagation();" title="Select ${escapeHtml(ai.name)} for bulk removal">`;
   } else {
@@ -5727,7 +5792,7 @@ function buildAISetupRowHTML(ai) {
           ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}'); event.stopPropagation();" title="Test this API key">Test</button>` : ''}
         </div>
         ${recommendRow}
-        ${_renderHiveRolesAndTiers(ai, cfg?.model || '')}
+        ${_renderHiveRolesAndTiers(ai, currentModel)}
         ${builderAffordance}
       </div>`;
   }
@@ -5766,7 +5831,7 @@ function buildAISetupRowHTML(ai) {
   //   • no console URL (server-imported customs) → placeholder
   //   • key + console URL → "Manage"
   //   • no key + console URL → "Get Key"
-  const _builderIncapableNow = isBuilderIncapableModel(cfg?.model || ai.provider || '');
+  const _builderIncapableNow = isBuilderIncapableModel(currentModel || ai.provider || '');
   const _isCurrentBuilderNow = (typeof builder !== 'undefined' && builder === ai.id);
   const consoleUrlNow = ai.apiConsole || '';
 
@@ -5827,17 +5892,53 @@ function buildAISetupRowHTML(ai) {
   // across rows regardless of name / key / Builder state.
   const statusPillHTML = _buildRowStatusPill(ai, hasKey)
     || `<span class="ai-setup-status-pill-placeholder" aria-hidden="true"></span>`;
-  const compactModel = hasKey ? _buildCompactModelSelect(ai, cfg?.model || '') : '';
+  const compactModel = hasKey ? _buildCompactModelSelect(ai, currentModel) : '';
   const modelLabelHTML = hasKey
     ? `<span class="ai-setup-model-label">Model:</span>`
     : '';
+
+  // v3.63.307 — "+ Add variant" affordance. Shown on default-AI parent
+  // rows ONLY (not on customs, which already get the multi-AI shape via
+  // Add Custom AI; not on variants themselves, which would chain into
+  // grandchildren and complicate the data model for negligible value).
+  // Spawns a sibling row that shares this parent's saved API key but
+  // carries its own model, so e.g. Claude Opus + Claude Sonnet + Claude
+  // Haiku can ride one Anthropic key in the same hive. Disabled state
+  // when the parent has no key — variants without a working key can't
+  // make any API call. The button reserves a fixed-width slot via the
+  // placeholder span on rows where it's suppressed so columns stay
+  // aligned across the grid.
+  let addVariantHTML;
+  const isDefaultParent = !isCustom && !isVariant;
+  if (isDefaultParent && hasKey) {
+    addVariantHTML = `<button class="ai-setup-add-variant-btn" type="button"
+      onclick="addAIVariant('${ai.id}'); event.stopPropagation();"
+      title="Add another ${escapeHtml(ai.name)} reviewer sharing this API key — pick a different model in the new row to run e.g. ${escapeHtml(ai.name)} Opus + Sonnet together in one hive.">+ Variant</button>`;
+  } else if (isDefaultParent && !hasKey) {
+    addVariantHTML = `<button class="ai-setup-add-variant-btn is-disabled" type="button"
+      disabled aria-disabled="true"
+      onclick="event.stopPropagation();"
+      title="Save an API key on ${escapeHtml(ai.name)} first — variants ride the parent's key.">+ Variant</button>`;
+  } else {
+    addVariantHTML = `<span class="ai-setup-add-variant-placeholder" aria-hidden="true"></span>`;
+  }
+  // v3.63.307 — Variants render with an "(variant)" suffix on the visible
+  // name so the user can tell siblings apart in the Builder grid + Jump-to-
+  // AI sidebar etc. without relying on the model name alone. Rename still
+  // works (variants are isCustom from rename's perspective).
+  const variantTagHTML = isVariant
+    ? `<span class="ai-setup-variant-tag" title="Variant of ${escapeHtml(_parentNameForVariant(ai))} — shares the parent's API key.">(variant)</span>`
+    : '';
+  // Variants are also renamable — they live outside DEFAULT_AIS so
+  // isCustom is true for them too. The same rename plumbing applies.
   return `
-    <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'} ${validateState}" id="airow-${ai.id}">
+    <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'} ${validateState}${isVariant ? ' is-variant' : ''}" id="airow-${ai.id}">
       <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
         <span class="ai-setup-name-group">
           <span class="ai-setup-name" id="ainame-${ai.id}" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
+          ${variantTagHTML}
           ${isCustom ? `<button class="ai-setup-rename-btn" onclick="event.stopPropagation(); startCustomAIRename('${ai.id}')" title="Rename ${escapeHtml(ai.name)}">✏️</button>` : ''}
         </span>
         ${statusPillHTML}
@@ -5845,6 +5946,7 @@ function buildAISetupRowHTML(ai) {
         ${compactModel}
         ${overrideBadgeHTML}
         ${builderButtonHTML}
+        ${addVariantHTML}
         ${manageLinkHTML}
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
           ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${escapeHtml(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
@@ -5854,6 +5956,15 @@ function buildAISetupRowHTML(ai) {
       </div>
       ${expandedHTML}
     </div>`;
+}
+
+// v3.63.307 — Helper for variant rendering. Returns the parent AI's display
+// name, or the parentId string if the parent isn't currently in aiList (e.g.
+// the parent default was demoted away). Pure read; safe to call mid-render.
+function _parentNameForVariant(ai) {
+  if (!ai || !ai.parentId) return '';
+  const parent = aiList.find(a => a.id === ai.parentId);
+  return parent ? parent.name : ai.parentId;
 }
 
 // Per-session expand/collapse state — set of AI ids that are expanded.
@@ -6259,7 +6370,12 @@ function applyHiveProfile(profileId) {
       if (!ai) { skipped++; return; }                  // AI no longer present
       const cfg = API_CONFIGS[ai.provider];
       if (!cfg?._key) { skipped++; return; }            // AI lost its key
-      if (cfg.model === model) { applied++; return; }   // already on it
+      // v3.63.307 — Compare against the per-AI resolved model so a variant
+      // with ai.model === pick already counts as "applied" without a write.
+      // The saveModelForAI call below routes through the variant branch
+      // when ai.parentId is set, writing ai.model rather than the shared
+      // cfg.model — siblings stay decoupled.
+      if (getModelForAI(ai) === model) { applied++; return; }
       if (typeof saveModelForAI === 'function') saveModelForAI(ai.id, model, { keepExpanded: false, silent: true });
       applied++;
     });
@@ -6292,6 +6408,12 @@ function applyHiveProfile(profileId) {
   aiList.forEach(ai => {
     const cfg = API_CONFIGS[ai.provider];
     if (!cfg?._key) return;  // No key, no swap.
+    // v3.63.307 — Variants are explicit per-row overrides; skip them in
+    // a hive-profile sweep so the user's deliberate Claude-Opus-as-a-
+    // -variant pick doesn't get clobbered when they apply ⚖️ Balanced.
+    // The "Customized" override badge then signals correctly that the
+    // variant diverges from the active profile.
+    if (ai.parentId) return;
     total++;
     const tiersBlob = (typeof getCachedTiers === 'function') ? getCachedTiers(ai.provider) : null;
     const tierModel = tiersBlob?.tiers?.[opt.tier] || null;
@@ -6495,8 +6617,10 @@ function renderHiveProfileBar() {
     Object.entries(activeOpt.picks || {}).forEach(([aiId, model]) => {
       total++;
       const ai = aiList.find(a => a.id === aiId);
-      const cfg = ai ? API_CONFIGS[ai.provider] : null;
-      if (cfg?.model === model) matched++;
+      // v3.63.307 — Use the per-AI resolved model so a variant in opt.picks
+      // counts as matched when ai.model lines up — the shared cfg.model
+      // would be wrong here.
+      if (ai && getModelForAI(ai) === model) matched++;
     });
     if (matched === total) {
       note = `All ${total} captured AI${total === 1 ? '' : 's'} match the saved profile.`;
@@ -6509,6 +6633,11 @@ function renderHiveProfileBar() {
     aiList.forEach(ai => {
       const cfg = API_CONFIGS[ai.provider];
       if (!cfg?._key) return;
+      // v3.63.307 — Skip variants in the tier-profile tally. They're
+      // explicit per-row overrides, so counting them against the active
+      // profile would understate "AIs matching the profile" by exactly
+      // the count of variants the user added.
+      if (ai.parentId) return;
       const tiersBlob = (typeof getCachedTiers === 'function') ? getCachedTiers(ai.provider) : null;
       const tierModel = tiersBlob?.tiers?.[tier];
       if (!tierModel) return;
@@ -6810,7 +6939,10 @@ function renderBuilderScreenModel() {
   if (!ai) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
   const cfg = API_CONFIGS[ai.provider];
   const builderRec = getBuilderRecommendation(ai.id);
-  const cur = (cfg && cfg.model) || '';
+  // v3.63.307 — Resolve through getModelForAI so a variant-as-Builder
+  // shows its OWN model in the spotlight panel, not the parent's
+  // cfg.model. Variants and parent share cfg; only ai.model distinguishes.
+  const cur = getModelForAI(ai);
   const defaultModel = (builderRec && builderRec.model) ? builderRec.model : cur;
   const sel = buildModelSelector(ai.id, ai.provider, defaultModel, false);
   const iconEl = resolveAiIcon(ai, 'builder-spotlight-icon', 52);
@@ -9793,6 +9925,116 @@ function addCustomAI() {
       try { recheckModelForAI(id); } catch (e) { /* non-fatal — user can manually run Recommend on the row */ }
     }, 50);
   }
+}
+
+// ── VARIANT SIBLINGS OF DEFAULT AIS ─────────────────────────────────
+// v3.63.307 — A "variant" is a second (third, fourth…) reviewer that
+// rides the same API key as a default AI but runs a different model.
+// Example: a single Anthropic key powering Claude Opus + Claude Sonnet +
+// Claude Haiku in one hive, each as an independent reviewer slot.
+//
+// Variant shape:
+//   { id: 'claude-v2', name: 'Claude (variant)', url: parent.url,
+//     icon: parent.icon, provider: parent.provider, parentId: parent.id,
+//     model: <inherited from parent at spawn; user-editable> }
+//
+// Provider == parent's provider so API_CONFIGS lookups (key, headersFn,
+// bodyFn, extractFn, concurrency slot) all share with the parent. The
+// model lives on the ai object so siblings DON'T clobber each other when
+// they pick different models (cfg.model is provider-scoped — variants
+// must NOT write there). callAPI resolves the per-AI model via
+// getModelForAI(ai) defined near the top of this file.
+//
+// Persistence: variants land in saveHive's customAIs array since they're
+// not in DEFAULT_AIS. They survive a reload via loadSettings's customAIs
+// loop — _normalizeImportedAI preserves parentId / model.
+//
+// Render: variants render NESTED under their parent in the "Default
+// providers" group (not in "Custom AIs"). Removal is per-row via the
+// inline ✕ button — the bulk-select toolbar's "Remove selected" applies
+// only to customs WITHOUT a parentId.
+
+function _nextVariantId(parentId) {
+  // chatgpt → chatgpt-v2, chatgpt-v3… up through whatever's free.
+  // Uses linear scan since variant counts are tiny (<10 in practice).
+  const prefix = parentId + '-v';
+  let n = 2;
+  while (aiList.find(a => a.id === prefix + n)) n++;
+  return prefix + n;
+}
+
+function addAIVariant(parentId) {
+  const parent = aiList.find(a => a.id === parentId);
+  if (!parent) { console.warn('[addAIVariant] parent not found:', parentId); return; }
+  if (parent.parentId) {
+    // Defensive: never let a variant spawn a variant. Should be unreachable
+    // because the button doesn't render on variant rows, but if some future
+    // caller routes through here, treat parent.parentId as the root parent.
+    return addAIVariant(parent.parentId);
+  }
+  const cfg = API_CONFIGS[parent.provider];
+  if (!cfg || !cfg._key) {
+    toast('Save an API key on the parent card first — variants ride the parent key.', 4000);
+    return;
+  }
+  const id = _nextVariantId(parent.id);
+  // Variant inherits the parent's currently-saved model as a starting
+  // point so the new row is immediately functional. The user is expected
+  // to pick a DIFFERENT model from the compact dropdown — that's the
+  // whole point of the feature. ai.model (not cfg.model) is the variant's
+  // authoritative model, so changing it here never affects the parent.
+  const variant = {
+    id,
+    name: `${parent.name} (variant)`,
+    url: parent.url || '',
+    icon: parent.icon || '',
+    provider: parent.provider,
+    parentId: parent.id,
+    model: cfg.model || '',
+    apiConsole: parent.apiConsole || '',
+    apiDocs: parent.apiDocs || ''
+  };
+  aiList.push(variant);
+  activeAIs.push(variant);
+  _expandedAIIds.add(id);   // open the new row so the user can pick a model
+  _persistExpandedRows();
+  saveHive();
+  renderAISetupGrid();
+  toast(`+ ${parent.name} variant added — pick a different model on the new row.`, 3500);
+}
+
+async function removeAIVariant(variantId) {
+  const ai = aiList.find(a => a.id === variantId);
+  if (!ai || !ai.parentId) return;
+  const parentName = _parentNameForVariant(ai);
+  const ok = await wfConfirm(
+    'Remove variant',
+    `Remove this variant of ${parentName}? The parent card and its saved key are unaffected.`,
+    { okText: 'Remove variant', destructive: true }
+  );
+  if (!ok) return;
+  aiList    = aiList.filter(a => a.id !== variantId);
+  activeAIs = activeAIs.filter(a => a.id !== variantId);
+  if (builder === variantId) builder = null;
+  // Variants share the parent's API_CONFIGS entry — DO NOT delete it.
+  // Clean only the per-ai.id caches (recommend + models) so a future
+  // variant with the same id starts fresh.
+  try { localStorage.removeItem(`waxframe_recommend_custom-${variantId}`); } catch(e) { /* ignore */ }
+  try { localStorage.removeItem(`waxframe_recommend_custom-${variantId}-reviewer`); } catch(e) { /* ignore */ }
+  try { localStorage.removeItem(`waxframe_recommend_custom-${variantId}-builder`);  } catch(e) { /* ignore */ }
+  try { localStorage.removeItem(`waxframe_models_${variantId}`); } catch(e) { /* ignore */ }
+  _expandedAIIds.delete(variantId);
+  _persistExpandedRows();
+  saveHive();
+  renderAISetupGrid();
+  toast(`🗑 Variant removed.`);
+}
+
+// Inline-onclick handlers need explicit window binding under some Chrome
+// load orders (see v3.63.156 note on swapAIModelFromHiveCard).
+if (typeof window !== 'undefined') {
+  window.addAIVariant    = addAIVariant;
+  window.removeAIVariant = removeAIVariant;
 }
 
 // ── IMPORT FROM MODEL SERVER ──
@@ -15117,14 +15359,20 @@ async function bulkRemoveSelectedAIs() {
 function buildBulkSelectToolbarHTML() {
   // Hide entire toolbar when there are no custom AIs to act on — keeps the
   // default-AI-only setup screen uncluttered.
-  const customCount = aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)).length;
+  // v3.63.307 — Variants of defaults (ai.parentId set) live outside
+  // DEFAULT_AIS but are NOT customs for bulk-remove purposes — they get
+  // their own inline ✕ button on the row. Exclude them from both the
+  // count and the eligible-ids set so the toolbar's "0 of N custom AIs
+  // selected" matches what's actually selectable.
+  const isCustomEligible = a => !DEFAULT_AIS.find(d => d.id === a.id) && !a.parentId;
+  const customCount = aiList.filter(isCustomEligible).length;
   if (!customCount) return '<div id="bulkSelectToolbar" class="bulk-select-toolbar bulk-select-toolbar--empty"></div>';
 
   // Reconcile selected set against current customs — purges any stale ids
   // that may have lingered from an earlier state (e.g. an AI was removed
   // by another path while still ticked).
   const customIds = new Set(
-    aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)).map(a => a.id)
+    aiList.filter(isCustomEligible).map(a => a.id)
   );
   Array.from(_selectedCustomIds).forEach(id => {
     if (!customIds.has(id)) _selectedCustomIds.delete(id);
@@ -18119,11 +18367,16 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
   const _timeoutCtrl = new AbortController();
   const _timeoutId = setTimeout(() => _timeoutCtrl.abort(), _timeoutMs);
   try {
-    const endpoint = cfg.endpointFn ? cfg.endpointFn(cfg.model) : cfg.endpoint;
+    // v3.63.307 — Resolve per-AI model so variants (ai.parentId set) get
+    // their own model id into the request body / endpoint URL while sharing
+    // the parent's cfg (key, headers, body shape). For non-variant rows
+    // getModelForAI falls back to cfg.model, behavior is unchanged.
+    const _model = getModelForAI(ai);
+    const endpoint = cfg.endpointFn ? cfg.endpointFn(_model) : cfg.endpoint;
     response = await fetch(endpoint, {
       method: 'POST',
       headers: cfg.headersFn(cfg._key),
-      body: cfg.bodyFn(cfg.model, prompt),
+      body: cfg.bodyFn(_model, prompt),
       signal: _timeoutCtrl.signal
     });
   } catch(fetchErr) {
