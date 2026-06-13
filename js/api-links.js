@@ -1,5 +1,5 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260612-015
+// Build: 20260612-016
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that
@@ -8,6 +8,21 @@
 // both the guide page and the main app share one component (v3.56.42).
 
 // Keyed by DEFAULT_AIS id so app.js can map them 1:1.
+//
+// CONTRACT (v3.63.301): These URLs are the SINGLE SOURCE OF TRUTH for both
+// surfaces that link out to a default provider's console:
+//   • The per-card "Manage ⧉" / "Get key ⧉" link on every AI row in the
+//     Worker Bee setup grid (app.js renderAISetupGrid, reads ai.apiConsole).
+//   • The "Provider Sites ⧉" drawer opened from the Worker Bee toolbar
+//     and the API guide page (app.js toggleHiveConsoles + api-links.js
+//     toggleGuideConsoles, both read ai.apiConsole).
+// Both consumers read ai.apiConsole, which is hydrated from this map at
+// hive boot (see app.js DEFAULT_AIS). They CANNOT drift unless this
+// invariant is broken — never set ai.apiConsole from a literal URL inside
+// any consumer, always hydrate from API_CONSOLE_URLS. Custom AIs are
+// separate (apiConsole set at add-time from preset/user input) but
+// observe the same contract: both consumers read ai.apiConsole on the
+// same object.
 window.API_CONSOLE_URLS = {
   chatgpt:    'https://platform.openai.com/api-keys',
   claude:     'https://platform.claude.com/settings/keys',
@@ -131,7 +146,7 @@ function openConsolesDrawer(groups) {
       return '<a class="consoles-link" href="' + _clEsc(url) + '" target="_blank" rel="noopener noreferrer">' +
         '<span class="consoles-link-name">' + _clEsc(it.name) + '</span>' +
         '<span class="consoles-link-host">' + _clEsc(_clHost(url)) + '</span>' +
-        '<span class="consoles-link-arrow">↗</span>' +
+        '<span class="consoles-link-arrow">⧉</span>' +
       '</a>';
     }).join('');
   });

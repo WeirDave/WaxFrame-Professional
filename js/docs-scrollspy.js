@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — docs-scrollspy.js
-// Build: 20260612-015
+// Build: 20260612-016
 //  Shared scroll-spy for documentation pages (manual + playbooks).
 //  Watches every section the sidebar links to and highlights the
 //  link for the section nearest the top of the viewport.
@@ -19,7 +19,7 @@
     const sidebar = document.querySelector('.doc-sidebar');
     if (!sidebar) return;  // page doesn't use the sidebar pattern — no-op
 
-    // Only track in-page anchors. External links (e.g. "API Key Guide ↗"
+    // Only track in-page anchors. External links (e.g. "API Key Guide ⧉"
     // with href="api-details.html") have no leading '#' and are ignored.
     const links = Array.from(sidebar.querySelectorAll('a[href^="#"]'));
     const linkByTarget = new Map();
