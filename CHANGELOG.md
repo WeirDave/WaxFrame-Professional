@@ -2,6 +2,73 @@
 
 ---
 
+## v3.63.325
+
+**🚨 CRITICAL: Toasts were invisible the entire time — `#toast` had no CSS. Every `toast()` call across the app was writing into the void.**
+
+Build: `20260613-019`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David flagged it: "I didn't get any toast. I don't know where the toasts are supposed to be. Before you thought we were doing toasts at one point and then it turned out that you were sending them into void."
+
+He was right. The `toast()` function in app.js:1218 writes `textContent` and adds `.show` class to `<div id="toast">` in index.html. But **there was zero CSS for `#toast`**. The element was a 0×0 unstyled div with no positioning, no background, no visibility transition. Every toast call across the entire app — hundreds of them, going back releases — has been silently writing text into an invisible element.
+
+This means:
+- v3.63.323's new FSA error toasts: invisible
+- v3.63.324's "switched Perplexity to sonar-pro" auto-rec toast: invisible
+- Every model-recommendation success toast since v3.27.0 (when Recommend Models shipped): invisible
+- Every settings-save confirmation toast: invisible
+- The "Hive Sweep complete" / "Round failed" / "API key looks invalid" toasts: invisible
+
+Confirmed by `grep -rn "#toast" --include="*.css"` returning zero hits across the entire repo.
+
+### Fix
+
+Added `#toast` CSS:
+
+```css
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  max-width: min(80vw, 640px);
+  text-align: center;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+```
+
+Floating bottom-center, fades in/out via opacity, `pointer-events: none` so it never blocks input underneath. Uses CSS variables that fall back to dark defaults so it works even if the theme system fails.
+
+### What you'll see going forward
+
+Every existing toast call now actually renders. You'll see the FSA picker failure messages, the Perplexity-switched-to-sonar-pro after a model deprecation, settings confirmations, every `✓ done` and `⚠️ failed` ack across the app. None of these are new toasts — they were ALWAYS being called, just never visible.
+
+If anything looks too chatty now, we can dial individual `toast()` calls down — but the floor was set wrong before (zero feedback) and silently. Better to overshoot and trim than keep the void.
+
+### Files touched
+
+- [style.css](style.css) — new `#toast` + `#toast.show` rules; comment block in the file explains the discovery
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.324
 
 **MODEL_DEPRECATED now auto-picks a replacement model so "Re-send" doesn't refire the dead one (David's Chrome cookie round 2)**
