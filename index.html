@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.317">
+  <link rel="stylesheet" href="style.css?v=3.63.318">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.317",
+    "softwareVersion": "3.63.318",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1400,19 +1400,17 @@
 
             <div class="checkpoint-actions">
               <button class="btn" onclick="exitCheckpointScreen()" title="Cancel and return without saving">Cancel</button>
-              <button class="btn btn-cta" onclick="confirmSaveCheckpoint()" title="Save the ticked sections to a JSON file (downloads to your Downloads folder)">&#x1F4BE; Save Checkpoint</button>
-              <!-- v3.63.317 — Save to folder (Chrome/Edge/Opera only).
-                   The button is in the DOM unconditionally so the legacy
-                   download path keeps working untouched in Firefox/Safari;
-                   the .fsa-only class is shown only when <body> carries
-                   .is-fsa-supported (set by storage.js's _fsaSupported()
-                   check at DOMContentLoaded). First click prompts the OS
-                   picker pre-navigated to ~/Documents — pick or create a
-                   "WaxFrame" subfolder there and subsequent saves go
-                   straight in without re-prompting (handle persists in
-                   IDB). Spike Phase 1: manual save only; auto-save and
-                   load-from-folder deferred to Phase 2 pending feedback. -->
-              <button class="btn btn-cta fsa-only" onclick="confirmSaveCheckpointToFolder()" title="Save the ticked sections to a JSON file inside the synced folder you pick (defaults to ~/Documents) — handle persists so subsequent saves don't re-prompt the OS picker">&#x1F4C1; Save to folder</button>
+              <!-- v3.63.318 — Single Save Checkpoint button, smart-routed
+                   based on browser support. Chrome/Edge/Opera: opens the
+                   FSA folder picker (first time), then subsequent saves
+                   write silently to the remembered folder. Firefox /
+                   Safari: falls through to the legacy download, which
+                   Firefox surfaces as its own Save-As dialog by default.
+                   v3.63.316 originally shipped this as two side-by-side
+                   buttons — David flagged the overengineering: "I don't
+                   understand why you can't just make one button what it
+                   needs to do — we can detect a browser." -->
+              <button class="btn btn-cta" onclick="confirmSaveCheckpoint()" title="Save the ticked sections to a JSON file — picks the smartest path for your browser (folder picker in Chrome/Edge/Opera; Save-As dialog in Firefox; Downloads folder in Safari)">&#x1F4BE; Save Checkpoint</button>
             </div>
           </div>
 
@@ -3448,24 +3446,24 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.317';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.318';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.317"></script>
-<script src="lib/jszip.min.js?v=3.63.317"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.317"></script>
-<script src="js/version.js?v=3.63.317"></script>
-<script src="js/storage.js?v=3.63.317"></script>
-<script src="js/theme.js?v=3.63.317"></script>
-<script src="js/audio.js?v=3.63.317"></script>
-<script src="js/scenes.js?v=3.63.317"></script>
-<script src="js/wf-debug.js?v=3.63.317"></script>
-<script src="js/provider-models.js?v=3.63.317"></script>
-<script src="js/provider-catalog.js?v=3.63.317"></script>
-<script src="js/api.js?v=3.63.317"></script>
-<script src="js/templates.js?v=3.63.317"></script>
-<script src="js/api-links.js?v=3.63.317"></script>
-<script src="js/app.js?v=3.63.317"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.318"></script>
+<script src="lib/jszip.min.js?v=3.63.318"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.318"></script>
+<script src="js/version.js?v=3.63.318"></script>
+<script src="js/storage.js?v=3.63.318"></script>
+<script src="js/theme.js?v=3.63.318"></script>
+<script src="js/audio.js?v=3.63.318"></script>
+<script src="js/scenes.js?v=3.63.318"></script>
+<script src="js/wf-debug.js?v=3.63.318"></script>
+<script src="js/provider-models.js?v=3.63.318"></script>
+<script src="js/provider-catalog.js?v=3.63.318"></script>
+<script src="js/api.js?v=3.63.318"></script>
+<script src="js/templates.js?v=3.63.318"></script>
+<script src="js/api-links.js?v=3.63.318"></script>
+<script src="js/app.js?v=3.63.318"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

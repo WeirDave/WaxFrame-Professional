@@ -1601,6 +1601,26 @@ async function confirmSaveCheckpoint() {
     const el = document.getElementById('saveScope' + key[0].toUpperCase() + key.slice(1));
     scope[key] = !!el?.checked;
   }
+  // v3.63.318 — Smart-route based on browser support. In Chrome/Edge/Opera
+  // we route through the File System Access API so the user picks a folder
+  // once and subsequent saves write silently there. In Firefox/Safari we
+  // fall through to the legacy download — Firefox surfaces its own Save-As
+  // dialog by default (matching the picker UX organically); Safari drops
+  // to the Downloads folder. Pre-v3.63.318 these were two side-by-side
+  // buttons, which David flagged as overengineered: "I don't understand
+  // why you can't just make one button what it needs to do — we can
+  // detect a browser." Now one button, one canonical scope-collection
+  // path, the right destination per browser.
+  if (_fsaSupported()) {
+    const env = await _buildCheckpointEnvelope(scope);
+    if (!env) {
+      toast('⚠️ Nothing to checkpoint — tick at least one section that has data');
+      return;
+    }
+    const written = await _fsaWriteEnvelopeToFolder(env);
+    if (written) toast(`📁 Checkpoint saved — ${written}`, 5500);
+    return;
+  }
   await _writeCheckpoint(scope);
 }
 
@@ -1857,32 +1877,9 @@ async function _fsaWriteEnvelopeToFolder(env) {
     return null;
   }
 }
-// Save-checkpoint-to-folder entry point. Same scope-collection path as
-// confirmSaveCheckpoint above, just routed to FSA instead of the Blob
-// download.
-async function confirmSaveCheckpointToFolder() {
-  if (!_fsaSupported()) {
-    if (typeof toast === 'function') toast('⚠️ Not supported in this browser. Try Chrome, Edge, or Opera.', 5000);
-    return;
-  }
-  const scope = {};
-  for (const key of _CHECKPOINT_SCOPE_KEYS) {
-    const el = document.getElementById('saveScope' + key[0].toUpperCase() + key.slice(1));
-    scope[key] = !!el?.checked;
-  }
-  const env = await _buildCheckpointEnvelope(scope);
-  if (!env) {
-    toast('⚠️ Nothing to checkpoint — tick at least one section that has data');
-    return;
-  }
-  const written = await _fsaWriteEnvelopeToFolder(env);
-  if (written) {
-    toast(`📁 Checkpoint saved to folder — ${written}`, 5500);
-  }
-}
-// Forget the stored folder handle. Useful when the user wants to change
-// the sync target — they click "Change folder" and the next save will
-// re-prompt the picker.
+// Forget the stored folder handle. Console-callable for users who want
+// to change their sync folder mid-session; Phase 2 will surface a UI
+// affordance ("Change sync folder…") in the checkpoint screen settings.
 async function fsaForgetSyncDir() {
   if (!_fsaSupported()) return;
   try {
@@ -1893,22 +1890,8 @@ async function fsaForgetSyncDir() {
       req.onsuccess = () => resolve();
       req.onerror   = () => reject(req.error);
     });
-    if (typeof toast === 'function') toast('🗑 Sync folder forgotten — next Save to folder will re-prompt.', 4000);
+    if (typeof toast === 'function') toast('🗑 Sync folder forgotten — next Save Checkpoint will re-prompt.', 4000);
   } catch(e) { console.warn('[fsa] forgetSyncDir failed:', e); }
-}
-// At DOMContentLoaded, tag <body> with .is-fsa-supported so the Save-to-
-// folder button can use CSS to show itself only where it'll work. The
-// JS hook stays separate from rendering so the legacy download path
-// keeps working untouched in Firefox/Safari.
-if (typeof document !== 'undefined') {
-  const _markFsa = () => {
-    if (_fsaSupported() && document.body) document.body.classList.add('is-fsa-supported');
-  };
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', _markFsa);
-  } else {
-    _markFsa();
-  }
 }
 
 
