@@ -1553,8 +1553,67 @@ function _clearRestoreError() {
 // the diff view and swaps the Restore panel from intro state to diff state.
 // v3.63.231 — Failures now surface as an inline error banner in the intro
 // panel. Each new pick clears the prior error first.
-function chooseCheckpointFile() {
+async function chooseCheckpointFile() {
   _clearRestoreError();
+  // v3.63.326 — Smart picker. When the browser supports the File System
+  // Access API AND the user has configured a backup sync folder
+  // (Settings → Backup Sync → Pick folder), use showOpenFilePicker with
+  // startIn:<folder> so the OS dialog opens pre-navigated to that
+  // folder. Closes backlog #3 part (d) without adding a separate "Load
+  // from folder" button — the existing Choose Checkpoint File button
+  // just gets smarter defaults for users who've set up auto-backup.
+  // Firefox/Safari + browsers/sessions without a folder set fall
+  // through to the legacy <input type="file"> path unchanged.
+  if (_fsaSupported() && typeof window.showOpenFilePicker === 'function') {
+    let storedDir = null;
+    try { storedDir = await _fsaGetStoredHandle(); } catch (e) { /* fall through */ }
+    if (storedDir) {
+      try {
+        const [fileHandle] = await window.showOpenFilePicker({
+          startIn: storedDir,
+          types: [{ description: 'WaxFrame Checkpoint', accept: { 'application/json': ['.json'] } }],
+          excludeAcceptAllOption: false,
+          multiple: false,
+        });
+        if (!fileHandle) return;
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+        try {
+          const data = JSON.parse(text);
+          if (data._waxframe_diagnostic && !data._waxframe_backup) {
+            _showRestoreError(
+              "That's a Diagnostic Bundle, not a checkpoint",
+              "Diagnostic Bundles are export-only — they strip your keys for sending to support. They can't restore a session. Pick a Checkpoint file instead (the one with \"Checkpoint\" in the filename)."
+            );
+            return;
+          }
+          if (!data._waxframe_backup) {
+            _showRestoreError(
+              'Not a WaxFrame checkpoint',
+              "That JSON file doesn't look like a WaxFrame checkpoint. Checkpoints have \"Checkpoint\" in the filename and are produced by the \"Checkpoint - Save\" option in this app. Please double-check the file you are trying to restore."
+            );
+            return;
+          }
+          await _populateRestoreCheckpointDiff(data);
+        } catch (parseErr) {
+          _showRestoreError(
+            'Could not read that file',
+            "The file isn't valid JSON. Make sure you picked the .json file produced by Checkpoint - Save (not a renamed or truncated copy), then try again."
+          );
+        }
+        return;
+      } catch (e) {
+        // AbortError = user canceled the picker — silent return.
+        // Anything else falls through to the legacy <input type="file">
+        // path so the user still has a way in even if the FSA path
+        // throws something unexpected.
+        if (e && e.name === 'AbortError') return;
+        console.warn('[checkpoint] FSA open picker failed, falling back to input[type=file]:', e);
+      }
+    }
+  }
+  // Legacy fallback path: Firefox/Safari, or FSA-capable browsers
+  // without a configured backup folder. Unchanged from v3.63.227.
   const input    = document.createElement('input');
   input.type     = 'file';
   input.accept   = '.json';
