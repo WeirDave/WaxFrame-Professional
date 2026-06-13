@@ -10013,17 +10013,26 @@ function addAIVariant(parentId) {
   const id = _nextVariantId(parent.id);
   // v3.63.308 — Auto-number the variant name so a hive with five Claudes
   // doesn't read as five identical "Claude (variant)" rows in the Builder
-  // picker / Jump-to-AI / Worker-Bees grid. The number tracks the variant
-  // id's -vN suffix so the displayed name lines up with what's persisted.
+  // picker / Jump-to-AI / Worker-Bees grid.
+  // v3.63.309 — Display number derives from the count of EXISTING siblings
+  // (not the variant id's -vN suffix). The first variant of a parent now
+  // reads "(Variant 1)" rather than "(Variant 2)" — David's report: "I only
+  // have one variant of ChatGPT and it is labeling it as variant 2 which
+  // is incorrect it's only the first variant." The -vN id suffix is an
+  // internal collision-avoidance counter (parent occupies the implicit v1
+  // slot, so new variants start at v2); user-facing names should always
+  // start at Variant 1. "Variant" capitalized to match other action-label
+  // capitalization across the grid (Ready, Customized, Builder, Manage).
   // Variant inherits the parent's currently-saved model as a starting
   // point so the new row is immediately functional. The user is expected
   // to pick a DIFFERENT model from the compact dropdown — that's the
   // whole point of the feature. ai.model (not cfg.model) is the variant's
   // authoritative model, so changing it here never affects the parent.
-  const variantNum = id.replace(/^.*-v/, '');
+  const existingSiblingCount = aiList.filter(a => a.parentId === parent.id).length;
+  const displayNum = existingSiblingCount + 1;
   const variant = {
     id,
-    name: `${parent.name} (variant ${variantNum})`,
+    name: `${parent.name} (Variant ${displayNum})`,
     url: parent.url || '',
     icon: parent.icon || '',
     provider: parent.provider,
