@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260612-010
+// Build: 20260612-011
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -548,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260612-010';         // build stamp — update each session
+const BUILD       = '20260612-011';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -9302,84 +9302,16 @@ function resetModelField() {
 // can reuse the same model-fetching logic without going through the Add modal
 // form fields. Returns a string array of chat-compatible model ids, or throws
 // on any failure (caller handles UI feedback).
+//
+// v3.63.296 — Body lifted into js/provider-catalog.js as fetchModelsByFormat.
+// This function is now a thin delegate that preserves the 5-call-site surface
+// (cfg.endpoint, cfg.format, cfg._key, cfg._modelsEndpoint). The catalog
+// houses the per-format URL/auth/parse rules — same place fetchModelsList
+// (per-catalog-entry path) lives, so any per-format quirk fix touches one
+// file. All v3.27.4 / v3.53.0 / v3.56.28 / v3.60.7 / v3.63.284 history
+// commentary is preserved in the catalog's fetchModelsByFormat docblock.
 async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint = null) {
-  let modelsEndpoint, headers;
-  // v3.63.284 — Direct `api.anthropic.com/v1/models` branch removed. It
-  // CORS-fails from any browser origin, so it never produced a result on
-  // a real user. Built-in Claude uses the catalog's `anthropic-via-proxy`
-  // discovery path (waxframe-claude-proxy.weirdave.workers.dev); custom AIs
-  // with format='anthropic' must point at a CORS-enabled proxy of their
-  // own and provide an explicitModelsEndpoint. Falls through to the
-  // OpenAI-shape branch below.
-  if (format === 'google') {
-    // v3.53.0 — API key moved from query string to header. Generate calls
-    // already used 'x-goog-api-key' (see api.js headersFn); model-list path
-    // was the outlier. Query-string secrets leak into browser history,
-    // server logs, and screenshots — header doesn't.
-    modelsEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?pageSize=100`;
-    headers = { 'x-goog-api-key': key };
-  } else {
-    // v3.27.4: prefer the explicit modelsEndpoint stored on the AI config
-    // (set by Import Server flow). Falls back to deriving `${base}/v1/models`
-    // for legacy custom AIs that only stored a chat URL. The derive path
-    // breaks for Open WebUI / Alfredo (`/api/...` paths) — explicit URL fixes.
-    if (explicitModelsEndpoint) {
-      modelsEndpoint = explicitModelsEndpoint;
-    } else {
-      const base = url.replace(/\/$/, '').replace(/\/v1\/.*$/, '');
-      modelsEndpoint = `${base}/v1/models`;
-    }
-    headers = key ? { 'Authorization': `Bearer ${key}` } : {};
-    // v3.60.7 — Together AI's public /v1/models returns the entire catalog
-    // (~257 entries, 148 chat) with no per-entry serverless-vs-dedicated
-    // flag. Empirically (v3.60.5/v3.60.6 diagnostics) the API honors an
-    // undocumented `?serverless=true` query parameter that filters to
-    // currently-callable serverless models (~102 total / 23 chat). Together
-    // themselves keep that list current, so no hardcoded allowlist, no
-    // proxy, no CORS — same-origin request, same auth, just an appended
-    // param. Other providers' endpoints are unaffected (the regex matches
-    // only `api.together.xyz`).
-    //
-    // Graceful degradation: if Together ever silently drops the param,
-    // response falls back to ~257 entries (i.e. v3.60.6 behavior) —
-    // broken but not empty, and the regression is detectable in console.
-    if (/api\.together\.xyz/i.test(modelsEndpoint)) {
-      const sep = modelsEndpoint.includes('?') ? '&' : '?';
-      modelsEndpoint = `${modelsEndpoint}${sep}serverless=true`;
-    }
-  }
-  const resp = await fetch(modelsEndpoint, { headers });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const data = await resp.json();
-  let models = [];
-  if (format === 'anthropic') {
-    models = (data?.data || []).map(m => m.id);
-  } else if (format === 'google') {
-    models = (data?.models || [])
-      .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
-      .map(m => m.name.replace('models/', ''));
-  } else {
-    // v3.56.28 — accept both shapes: OpenAI returns {data:[...]}, Together AI
-    // (and some gateways) return a bare array tagging each entry with a `type`
-    // (chat/image/video/audio/…). Keep only chat when that field is present;
-    // providers without it (OpenAI, Mistral, DeepSeek) fall through unaffected.
-    // v3.60.5 tried a `running !== false` filter here on the theory that
-    // `running` meant "currently serverless." It does not — `running: false`
-    // is the default state for every entry, including flagship serverless
-    // models. v3.60.6 reverted that filter. v3.60.7 solves the staleness
-    // problem upstream by appending `?serverless=true` to the request URL
-    // for Together AI (see fetchModelsFromEndpoint above), so no per-entry
-    // status filtering is needed here.
-    const _arr = Array.isArray(data) ? data : (data?.data || []);
-    models = _arr.filter(m => !m.type || m.type === 'chat').map(m => m.id).sort();
-  }
-  // Same structural-only filter the default 6 use
-  models = models.filter(m => !STRUCTURAL_NON_CHAT_RE.test(m));
-  // v3.32.11 — dedup. Mistral's /v1/models endpoint returns duplicate ids
-  // (mistral-large-2512, mistral-large-latest, voxtral-mini-2507, etc. all
-  // appear twice). Set preserves insertion order so first occurrence wins.
-  models = [...new Set(models)];
-  return models;
+  return window.WFProviderCatalog.fetchModelsByFormat(url, format, key, explicitModelsEndpoint);
 }
 
 // v3.56.29 — Advanced-options disclosure for the Add Custom Worker Bee modal.

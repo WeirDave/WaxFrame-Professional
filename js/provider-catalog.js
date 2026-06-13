@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260612-010
+// Build: 20260612-011
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -518,6 +518,97 @@
     return key ? { 'Authorization': 'Bearer ' + key } : {};
   }
 
+  // ── fetchModelsByFormat ───────────────────────────────────────────
+  // v3.63.296 — the third (and last) near-duplicate of the model-list
+  // fetcher moves into the catalog. This one is the FORMAT-DRIVEN path:
+  // given a URL + format + key (instead of a catalog-entry id), build the
+  // right models endpoint and parse the response by format.
+  //
+  // Pre-v3.63.296 this lived in app.js as fetchModelsFromEndpoint, used
+  // by the custom-AI Add flow (no catalog entry), the Worker-Bee page
+  // reload, and the tier-classifier fallback when fetchModelsForProvider
+  // returns null. Now app.js's function is a one-line delegate to this
+  // helper, and any per-format quirk fix lives once.
+  //
+  // SCOPE — different from fetchModelsList(entry, key):
+  //   • Custom AIs don't have filterExtras / filterRequire — only the
+  //     shared STRUCTURAL_NON_CHAT_RE applies.
+  //   • Custom AIs don't get created-epoch sorting; results come back
+  //     in provider order (with an alphabetic sort for OpenAI-shape
+  //     bare-array responses to match v3.27.1 behavior).
+  //   • Honors an explicit modelsEndpoint override (Open WebUI / Alfredo
+  //     use /api/... paths that `${base}/v1/models` derivation breaks on).
+  //
+  // PRESERVED HISTORY:
+  //   v3.27.4    — explicit modelsEndpoint override
+  //   v3.53.0    — Google api key moved to header (out of query string)
+  //   v3.56.28   — accept bare-array OpenAI responses + `type` filter for
+  //                Together AI's mixed chat/image/video catalog
+  //   v3.60.7    — Together's `?serverless=true` carve-out
+  //   v3.63.284  — direct api.anthropic.com/v1/models branch dropped (it
+  //                always CORS-failed from browser origins); custom AIs
+  //                with format='anthropic' must use an explicit proxy URL
+  async function fetchModelsByFormat(url, format, key, explicitModelsEndpoint) {
+    // ── Derive models endpoint URL ──
+    var modelsEndpoint;
+    if (format === 'google') {
+      modelsEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=100';
+    } else if (explicitModelsEndpoint) {
+      modelsEndpoint = explicitModelsEndpoint;
+    } else {
+      var base = String(url || '').replace(/\/$/, '').replace(/\/v1\/.*$/, '');
+      modelsEndpoint = base + '/v1/models';
+    }
+    // Together AI's public /v1/models returns the entire catalog without a
+    // serverless-vs-dedicated flag. The undocumented `?serverless=true`
+    // query parameter trims to currently-callable serverless models. Safe
+    // to apply unconditionally: other providers don't match the host check.
+    if (/api\.together\.xyz/i.test(modelsEndpoint)) {
+      var sep = modelsEndpoint.indexOf('?') !== -1 ? '&' : '?';
+      modelsEndpoint = modelsEndpoint + sep + 'serverless=true';
+    }
+
+    // ── Build auth headers (format-driven, like diagnosticModelsHeaders
+    //    but unkeyed-OpenAI yields no Authorization header at all) ──
+    var headers;
+    if (format === 'google')         headers = { 'x-goog-api-key': key };
+    else if (format === 'anthropic') headers = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
+    else                             headers = key ? { 'Authorization': 'Bearer ' + key } : {};
+
+    // ── Fetch + parse by format ──
+    var resp = await fetch(modelsEndpoint, { headers: headers });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    var models = [];
+    if (format === 'anthropic') {
+      models = ((data && data.data) || []).map(function (m) { return m.id; });
+    } else if (format === 'google') {
+      models = ((data && data.models) || [])
+        .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1; })
+        .map(function (m) { return String(m.name || '').replace('models/', ''); });
+    } else {
+      // OpenAI-shape: accept both wrappers (OpenAI's { data: [...] } and
+      // Together AI's bare array). When entries carry a `type` field
+      // (Together AI's mixed catalog), keep only chat; providers without
+      // it (OpenAI, Mistral, DeepSeek) pass through unchanged.
+      var arr = Array.isArray(data) ? data : ((data && data.data) || []);
+      models = arr
+        .filter(function (m) { return !m.type || m.type === 'chat'; })
+        .map(function (m) { return m.id; })
+        .sort();
+    }
+
+    // ── Structural filter + dedup ──
+    // Reads STRUCTURAL_NON_CHAT_RE off WFProviderModels at call time so a
+    // future regex update there flows through automatically (the closure
+    // capture above happened at module eval; this is the live value).
+    var STRUCT = (root.WFProviderModels && root.WFProviderModels.STRUCTURAL_NON_CHAT_RE) || STRUCTURAL_NON_CHAT_RE;
+    models = models.filter(function (m) { return !STRUCT.test(m); });
+    // v3.32.11 — dedup. Mistral's /v1/models returns duplicate ids; Set
+    // preserves insertion order so first occurrence wins.
+    return Array.from(new Set(models));
+  }
+
   // Wire catalog-derived MODEL_FILTERS into WFProviderModels so help.html's
   // parseModelsResponse / filterModelForProvider — which read from there —
   // pick up the catalog's compositions automatically. The value-level
@@ -528,14 +619,19 @@
     root.WFProviderModels.MODEL_FALLBACKS = buildModelFallbacks();
   }
 
-  // v3.63.284 — Public surface narrowed to the 5 names actually consumed
-  // externally (verified via grep across js/* and *.html):
+  // Public surface — names consumed externally (verified via grep across
+  // js/* and *.html):
   //   • CATALOG                   — read by app.js (VISION_PROVIDERS filter)
   //                                 and help.html (BUILT_IN_MODEL_PROVIDERS)
   //   • getEntry                  — read by api.js (per-provider entry lookup)
   //   • buildApiConfigs           — called by api.js at module-eval time
   //                                 to build window.API_CONFIGS
-  //   • fetchModelsList           — called by api.js fetchers
+  //   • fetchModelsList           — called by api.js fetchers (per-catalog-
+  //                                 entry path; applies filterExtras/Require
+  //                                 and created-epoch sort)
+  //   • fetchModelsByFormat       — called by app.js's fetchModelsFromEndpoint
+  //                                 (custom-AI path; format-driven, structural
+  //                                 filter only, alphabetic sort for openai)
   //   • diagnosticModelsUrl,
   //     diagnosticModelsHeaders   — called by help.html's diagnostic dump
   // The other 9 helpers (FORMATS, BODY_BUILDERS, EXTRACTORS, AUTH_HEADERS,
@@ -550,6 +646,7 @@
     getEntry: getEntry,
     buildApiConfigs: buildApiConfigs,
     fetchModelsList: fetchModelsList,
+    fetchModelsByFormat: fetchModelsByFormat,
     diagnosticModelsUrl: diagnosticModelsUrl,
     diagnosticModelsHeaders: diagnosticModelsHeaders
   };
