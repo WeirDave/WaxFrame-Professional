@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260612-017
+     Build: 20260612-018
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260612-017">
+  <meta name="waxframe-build" content="20260612-018">
   <title>API Key Guide for AI Providers — WaxFrame</title>
   <meta name="description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <link rel="canonical" href="https://waxframe.com/api-details.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.302">
+  <link rel="stylesheet" href="style.css?v=3.63.303">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -173,13 +173,13 @@
        own distinct slot — inside .nav-panel but outside .nav-body so it
        sticks to the bottom of the panel like the work-screen version. -->
   <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
+    <a class="nav-buy-cta external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
       <span class="nav-buy-cta-icon">🛒</span>
       <span class="nav-buy-cta-text">
         <span class="nav-buy-cta-title">Buy a License</span>
         <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
       </span>
-    </a>
+    <span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>
   </div>
 </div>
 
@@ -261,8 +261,8 @@
   <h2 class="wf-card-title">🚀 Start Here: Get Your First Key (Step by Step)</h2>
   <p>New to API keys? This is the part where most first-timers get stuck — so here’s the whole thing, start to finish, with nothing skipped. We’ll use <strong>Claude (Anthropic)</strong> as the example because the console is clean and easy to follow. Every other provider on this page works the same way: once you’ve done one, you’ve done them all.</p>
   <ol class="steps">
-    <li>Go to <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener noreferrer">platform.claude.com/settings/keys</a> and sign in. If you don’t have an account yet, create one — it’s free, and you only pay for what you actually use later.</li>
-    <li><strong>Add a little credit first — you’ll probably run into this before anything else.</strong> A brand-new API account starts at $0, and a key with no balance can’t actually make calls — so fund it before you go on. Open <a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener noreferrer">Billing</a> and add about <strong>$5</strong>; you’re only charged for what you use. Measured across recent runs, $5 of credit typically covers <strong>about 15 full WaxFrame hive reviews</strong> on a 10-AI hive — most users top up once a quarter, not once a week.</li>
+    <li>Go to <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener noreferrer" class="external-link">platform.claude.com/settings/keys<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and sign in. If you don’t have an account yet, create one — it’s free, and you only pay for what you actually use later.</li>
+    <li><strong>Add a little credit first — you’ll probably run into this before anything else.</strong> A brand-new API account starts at $0, and a key with no balance can’t actually make calls — so fund it before you go on. Open <a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener noreferrer" class="external-link">Billing<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and add about <strong>$5</strong>; you’re only charged for what you use. Measured across recent runs, $5 of credit typically covers <strong>about 15 full WaxFrame hive reviews</strong> on a 10-AI hive — most users top up once a quarter, not once a week.</li>
     <li>On the <strong>API Keys</strong> page, click <strong>Create Key</strong> (top-right). A small dialog opens.</li>
     <li>Leave the <strong>Workspace</strong> dropdown on <strong>Default</strong>, type <strong>WaxFrame</strong> in the <strong>Name</strong> field, then click <strong>Add</strong>.</li>
     <li><strong>Copy the key.</strong> ⚠️ It is shown only once. Don’t close the popup until you’ve copied it somewhere safe (see the tip below — this matters).</li>
@@ -297,7 +297,7 @@
     <div class="wf-card is-green">
       <h3 class="wf-card-title">Your keys live in your browser</h3>
       <p>Your API keys are stored in your browser's <code>localStorage</code> and sent to each AI provider only when WaxFrame makes a request on your behalf. WaxFrame has no backend — there is no database holding your keys, your prompts, or your documents.</p>
-      <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer (see our <a href="privacy.html" class="link-accent">Privacy Policy</a>) at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent"><code>waxframe-claude-proxy.weirdave.workers.dev</code></a>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. (The link goes to the live Worker endpoint, which expects API requests — opening it directly in a browser returns an API error rather than a page. That's normal.) All other providers (OpenAI, Gemini, Grok, Perplexity, Mistral, Cohere, Together AI, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
+      <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer (see our <a href="privacy.html" class="link-accent">Privacy Policy</a>) at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent external-link"><code>waxframe-claude-proxy.weirdave.workers.dev</code><span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. (The link goes to the live Worker endpoint, which expects API requests — opening it directly in a browser returns an API error rather than a page. That's normal.) All other providers (OpenAI, Gemini, Grok, Perplexity, Mistral, Cohere, Together AI, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
 
       <p><strong>Where exactly they live:</strong> your API keys are saved in your browser's <code>localStorage</code> (the same mechanism that remembers your dark-mode preference, your hive setup, and your project state). This is per-browser-profile, per-machine — keys you save on your work laptop don't appear on your phone, and clearing browser data for this site removes them. They are <strong>not encrypted at rest</strong>; any code or extension running in this browser profile that can read <code>localStorage</code> can read them. That's the same threat model as any browser-stored credential. For shared or untrusted devices, use a separate browser profile or clear data when finished.</p>
       <p>WaxFrame — open source, no backend, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
@@ -318,14 +318,14 @@
           <span class="model-note">OpenAI's flagship model</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">platform.openai.com/api-keys</a> and sign in.</li>
+          <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" class="external-link">platform.openai.com/api-keys<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and sign in.</li>
           <li>Click <strong>Create new secret key</strong>, give it a name, click Create.</li>
           <li>Copy the key immediately — it is shown only once.</li>
           <li>Paste it into the ChatGPT field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Your ChatGPT subscription does NOT include API access — the API is completely separate and pay-as-you-go. Go to <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer">platform.openai.com → Billing</a> and add credit ($5–$10 gets you plenty of testing).</p></div>
+          <div class="wf-tip-body"><p>Your ChatGPT subscription does NOT include API access — the API is completely separate and pay-as-you-go. Go to <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer" class="external-link">platform.openai.com → Billing<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and add credit ($5–$10 gets you plenty of testing).</p></div>
         </div>
       </div>
     </div>
@@ -342,14 +342,14 @@
           <span class="model-note">Anthropic's capable everyday model</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener noreferrer">platform.claude.com/settings/keys</a> and sign in.</li>
+          <li>Go to <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener noreferrer" class="external-link">platform.claude.com/settings/keys<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and sign in.</li>
           <li>Click <strong>Create Key</strong>, give it a name (e.g. "WaxFrame"), click Create.</li>
           <li>Copy the key immediately — shown only once.</li>
           <li>Paste it into the Claude field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Requires credit balance. Go to <a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener noreferrer">platform.claude.com → Billing</a> and add credit (~$5 minimum). You are only charged for what you use.</p></div>
+          <div class="wf-tip-body"><p>Requires credit balance. Go to <a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener noreferrer" class="external-link">platform.claude.com → Billing<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and add credit (~$5 minimum). You are only charged for what you use.</p></div>
         </div>
       </div>
     </div>
@@ -366,7 +366,7 @@
           <span class="model-note">Google's fast multimodal model</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/apikey</a> and sign in with your Google account.</li>
+          <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="external-link">aistudio.google.com/apikey<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and sign in with your Google account.</li>
           <li>Click <strong>Create API Key</strong>, name it <strong>WaxFrame</strong>, and copy the new key. (Don’t reuse a key already listed for an existing project — see the note below.)</li>
           <li>Paste the new key into the Gemini field in WaxFrame and press Enter.</li>
         </ol>
@@ -376,7 +376,7 @@
         </div>
         <div class="wf-tip wf-tip-good">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Gemini has a generous free API tier — no credit card required to start. Important caveat: once you enable billing on your Google AI Studio account (add a credit card), the same Gemini model can start routing through paid-tier paths and charging per token, even when you think you're still on free. Costs can climb quickly with the Builder role specifically — it reads project setup, reference material, the full working document, and every reviewer's suggestions every round. For casual use, keep billing off. If billing is on, watch your <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener noreferrer">Google AI Studio usage page</a> during longer runs.</p></div>
+          <div class="wf-tip-body"><p>Gemini has a generous free API tier — no credit card required to start. Important caveat: once you enable billing on your Google AI Studio account (add a credit card), the same Gemini model can start routing through paid-tier paths and charging per token, even when you think you're still on free. Costs can climb quickly with the Builder role specifically — it reads project setup, reference material, the full working document, and every reviewer's suggestions every round. For casual use, keep billing off. If billing is on, watch your <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener noreferrer" class="external-link">Google AI Studio usage page<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> during longer runs.</p></div>
         </div>
       </div>
     </div>
@@ -392,13 +392,13 @@
           <span class="model-label">Model:</span><code data-seed-model="grok">grok-4.1-fast</code>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://console.x.ai" target="_blank" rel="noopener noreferrer">console.x.ai</a> and sign in with your X account.</li>
+          <li>Go to <a href="https://console.x.ai" target="_blank" rel="noopener noreferrer" class="external-link">console.x.ai<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and sign in with your X account.</li>
           <li>Navigate to <strong>API Keys</strong> and generate a new key.</li>
           <li>Paste it into the Grok field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Requires credit balance — add at <a href="https://console.x.ai" target="_blank" rel="noopener noreferrer">console.x.ai → Billing</a>. API availability may vary — check the console for current status.</p></div>
+          <div class="wf-tip-body"><p>Requires credit balance — add at <a href="https://console.x.ai" target="_blank" rel="noopener noreferrer" class="external-link">console.x.ai → Billing<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>. API availability may vary — check the console for current status.</p></div>
         </div>
       </div>
     </div>
@@ -415,7 +415,7 @@
           <span class="model-note">Mistral's flagship model</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener noreferrer">console.mistral.ai/api-keys</a> and sign in.</li>
+          <li>Go to <a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener noreferrer" class="external-link">console.mistral.ai/api-keys<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and sign in.</li>
           <li>Create a new API key and copy it.</li>
           <li>Paste it into the Mistral field in WaxFrame and press Enter.</li>
         </ol>
@@ -437,13 +437,13 @@
           <span class="model-label">Model:</span><code data-seed-model="perplexity">sonar-pro</code>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer">console.perplexity.ai</a> and sign in.</li>
+          <li>Go to <a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="external-link">console.perplexity.ai<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and sign in.</li>
           <li>Click <strong>Generate</strong> under API Keys and copy the key.</li>
           <li>Paste it into the Perplexity field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Requires credit balance — add at <a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer">console.perplexity.ai → Billing → Add Credits</a>.</p></div>
+          <div class="wf-tip-body"><p>Requires credit balance — add at <a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="external-link">console.perplexity.ai → Billing → Add Credits<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>.</p></div>
         </div>
         <div class="wf-tip wf-tip-good">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
@@ -472,7 +472,7 @@
           <span class="model-note">Cohere's flagship Command model</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://dashboard.cohere.com/api-keys" target="_blank" rel="noopener noreferrer">dashboard.cohere.com/api-keys</a> and sign in.</li>
+          <li>Go to <a href="https://dashboard.cohere.com/api-keys" target="_blank" rel="noopener noreferrer" class="external-link">dashboard.cohere.com/api-keys<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and sign in.</li>
           <li>Create an API key and copy it.</li>
           <li>Paste it into the Cohere field in WaxFrame and press Enter.</li>
         </ol>
@@ -495,13 +495,13 @@
           <span class="model-note">DeepSeek's flagship model</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">platform.deepseek.com/api_keys</a> and sign up.</li>
+          <li>Go to <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer" class="external-link">platform.deepseek.com/api_keys<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and sign up.</li>
           <li>Click <strong>Create new API key</strong> and copy it.</li>
           <li>Paste it into the DeepSeek field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip wf-tip-good">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>DeepSeek is 10–20x cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank" rel="noopener noreferrer">platform.deepseek.com → Top Up</a> — $5 goes a long way. One caveat: it is consistently the slowest responder in the hive (often 60–90s), which is why it is an opt-in rather than one of the default six. If you don't mind the wait, it is the most affordable capable AI you can add.</p></div>
+          <div class="wf-tip-body"><p>DeepSeek is 10–20x cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank" rel="noopener noreferrer" class="external-link">platform.deepseek.com → Top Up<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> — $5 goes a long way. One caveat: it is consistently the slowest responder in the hive (often 60–90s), which is why it is an opt-in rather than one of the default six. If you don't mind the wait, it is the most affordable capable AI you can add.</p></div>
         </div>
       </div>
     </div>
@@ -518,7 +518,7 @@
           <span class="model-note">Open-weight model via Together's gateway</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://api.together.ai/settings/api-keys" target="_blank" rel="noopener noreferrer">api.together.ai/settings/api-keys</a> and sign in.</li>
+          <li>Go to <a href="https://api.together.ai/settings/api-keys" target="_blank" rel="noopener noreferrer" class="external-link">api.together.ai/settings/api-keys<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a> and sign in.</li>
           <li>Create an API key and copy it.</li>
           <li>Paste it into the Together field in WaxFrame and press Enter.</li>
         </ol>
@@ -969,7 +969,7 @@
 <div class="wf-card is-accent">
   <p><strong>You don't need all your AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, Gemini makes an excellent free Builder, with Claude for nuanced feedback and Grok for early assertive input. On the tightest budget, Gemini as Builder plus DeepSeek as a reviewer is the cheapest hive that runs — just expect slower rounds. A smaller hive completes rounds faster; the full hive gives the most thorough review.</p>
   <p><strong>Toggle, don't remove.</strong> Use the checkboxes on the work screen to toggle individual AIs on or off between rounds while preserving their API keys. This is the most efficient way to manage persistent reviewers.</p>
-  <p><strong>Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope. For a deeper look at how tokens are counted, see <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ⧉</a>. For a per-token cost comparison across every provider on this page, see <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="link-accent">AI API Pricing ⧉</a>.</p>
+  <p><strong>Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope. For a deeper look at how tokens are counted, see <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens?</a>. For a per-token cost comparison across every provider on this page, see <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="link-accent">AI API Pricing</a>.</p>
   <p><strong>Watch for convergence signals.</strong> When multiple AIs start returning NO CHANGES in the same round, the hive signals that the document has converged and may be ready for finalization or manual review.</p>
 </div>
 
@@ -998,7 +998,7 @@
         <span class="goal-info-phase refine">No Tracking</span>
         <span class="goal-info-desc">No analytics, no telemetry, no cookies, no accounts. Nothing is tracked.</span>
       </div>
-      <p class="goal-info-tip">Your API keys go directly from your browser to each AI provider, with one exception: Claude traffic routes through a small Cloudflare Worker (no CORS support from Anthropic) that does not log keys or prompts. See the API Setup page for the full disclosure. Read our <a href="privacy.html" class="link-accent">Privacy Policy</a> and <a href="terms.html" class="link-accent">Terms of Use</a>, or <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">read the source on GitHub →</a></p>
+      <p class="goal-info-tip">Your API keys go directly from your browser to each AI provider, with one exception: Claude traffic routes through a small Cloudflare Worker (no CORS support from Anthropic) that does not log keys or prompts. See the API Setup page for the full disclosure. Read our <a href="privacy.html" class="link-accent">Privacy Policy</a> and <a href="terms.html" class="link-accent">Terms of Use</a>, or <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">read the source on GitHub →<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
   </div></div>
@@ -1031,8 +1031,8 @@
     <div class="goal-info-body">
       <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span class="app-version-stamp"></span></span></div>
       <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" class="link-accent">Read license →</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">github.com/WeirDave/WaxFrame-Professional<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent external-link">weirdave.com<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a></span></div>
       <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
       <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
@@ -1053,7 +1053,7 @@
     <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
     <div class="license-modal-error" id="licenseKeyError"></div>
     <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
-    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →</a>
+    <a class="license-modal-buy external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>
     <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
   </div>
 </div>
@@ -1073,18 +1073,18 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.302"></script>
-<script src="lib/docx.min.js?v=3.63.302"></script>
-<script src="js/docx-export.js?v=3.63.302"></script>
-<script src="js/nav-helper.js?v=3.63.302"></script>
-<script src="js/license-helper.js?v=3.63.302"></script>
-<script src="js/api-links.js?v=3.63.302"></script>
-<script src="js/version.js?v=3.63.302"></script>
-<script src="js/docs-scrollspy.js?v=3.63.302"></script>
+<script src="js/theme.js?v=3.63.303"></script>
+<script src="lib/docx.min.js?v=3.63.303"></script>
+<script src="js/docx-export.js?v=3.63.303"></script>
+<script src="js/nav-helper.js?v=3.63.303"></script>
+<script src="js/license-helper.js?v=3.63.303"></script>
+<script src="js/api-links.js?v=3.63.303"></script>
+<script src="js/version.js?v=3.63.303"></script>
+<script src="js/docs-scrollspy.js?v=3.63.303"></script>
 <!-- v3.63.286 — api.js calls WFProviderCatalog.buildApiConfigs() at module eval; provider-models.js + provider-catalog.js must load first. -->
-<script src="js/provider-models.js?v=3.63.302"></script>
-<script src="js/provider-catalog.js?v=3.63.302"></script>
-<script src="js/api.js?v=3.63.302"></script>
+<script src="js/provider-models.js?v=3.63.303"></script>
+<script src="js/provider-catalog.js?v=3.63.303"></script>
+<script src="js/api.js?v=3.63.303"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
   // v3.57.0 — derive displayed model names from the live API_CONFIGS seeds

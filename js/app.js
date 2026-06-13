@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260612-017
+// Build: 20260612-018
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -548,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260612-017';         // build stamp — update each session
+const BUILD       = '20260612-018';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -926,7 +926,7 @@ function renderSettings() {
 // provider via WFProviderModels.baseProviderId, and the UI groups by
 // unique base: one row per base provider with at least one keyed AI in
 // the hive, regardless of whether that AI is a built-in default or a
-// custom variant. Plain-English copy + per-row "Check your limits ⧉"
+// custom variant. Plain-English copy + per-row "Check your limits"
 // link out to API_USAGE_URLS so the user can see what their actual tier
 // allows before deciding whether to lift the cap.
 function renderConcurrencyOverrides() {
@@ -976,8 +976,9 @@ function renderConcurrencyOverrides() {
     const override = overrides[base];
     const value    = (typeof override === 'number' && isFinite(override) && override > 0) ? String(override) : '';
     const usageUrl = usageUrls[base] || '';
+    // v3.63.303 — external-link pill markup per Kai's spec.
     const limitsLink = usageUrl
-      ? ' <a class="settings-inline-link" href="' + escapeHtml(usageUrl) + '" target="_blank" rel="noopener noreferrer" title="Open ' + escapeHtml(label) + ' usage / limits page in a new tab">Check your limits ⧉</a>'
+      ? ' <a class="settings-inline-link external-link" href="' + escapeHtml(usageUrl) + '" target="_blank" rel="noopener noreferrer" title="Open ' + escapeHtml(label) + ' usage / limits page in a new tab">Check your limits<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>'
       : '';
     return (
       '<div class="settings-row">' +
@@ -1668,11 +1669,23 @@ function consoleLog(msg, type = 'info', rawData = null, link = null) {
   if (link && _safeLinkUrl && link.label) {
     const sep = document.createTextNode(' · ');
     const linkEl = document.createElement('a');
-    linkEl.className = 'console-link';
+    linkEl.className = 'console-link external-link';
     linkEl.href = _safeLinkUrl;
     linkEl.target = '_blank';
     linkEl.rel = 'noopener';
     linkEl.textContent = link.label;
+    // v3.63.303 — external-link pill markup per Kai's spec. DOM API used
+    // (not innerHTML) so the XSS-safety the rest of this function relies
+    // on stays intact — link.label is still text-content only.
+    const _pill = document.createElement('span');
+    _pill.className = 'external-pill';
+    _pill.setAttribute('aria-hidden', 'true');
+    _pill.textContent = 'External';
+    linkEl.appendChild(_pill);
+    const _srOnly = document.createElement('span');
+    _srOnly.className = 'sr-only';
+    _srOnly.textContent = '(opens external site in a new tab)';
+    linkEl.appendChild(_srOnly);
     const url = _safeLinkUrl;
     linkEl.onclick = (e) => {
       e.preventDefault();
@@ -5661,7 +5674,7 @@ function buildAISetupRowHTML(ai) {
     // suppressed (nothing meaningful to link to).
     // v3.63.22 — Inline error message surfaced when validate-on-save
     // flips the _invalidKeys flag. Placed inside the manage-account
-    // banner so it sits on the same row as "Open {Provider} account ⧉"
+    // banner so it sits on the same row as "Open {Provider} account"
     // — the user's natural next action when a key is bad is to open
     // the provider console and check / rotate the key, so the message
     // and the action live together. Pushed to the right via
@@ -5742,8 +5755,8 @@ function buildAISetupRowHTML(ai) {
   //
   // Manage link states:
   //   • no console URL (server-imported customs) → placeholder
-  //   • key + console URL → "Manage ⧉"
-  //   • no key + console URL → "Get key ⧉"
+  //   • key + console URL → "Manage"
+  //   • no key + console URL → "Get key"
   const _builderIncapableNow = isBuilderIncapableModel(cfg?.model || ai.provider || '');
   const _isCurrentBuilderNow = (typeof builder !== 'undefined' && builder === ai.id);
   const consoleUrlNow = ai.apiConsole || '';
@@ -5778,14 +5791,17 @@ function buildAISetupRowHTML(ai) {
   if (!consoleUrlNow) {
     manageLinkHTML = `<span class="ai-setup-manage-link-placeholder" aria-hidden="true"></span>`;
   } else {
-    const label = hasKey ? 'Manage ⧉' : 'Get key ⧉';
+    const label = hasKey ? 'Manage' : 'Get key';
     const title = hasKey
       ? `Manage your account at ${ai.name} (opens in a new tab)`
       : `Get an API key from ${ai.name} (opens in a new tab)`;
-    manageLinkHTML = `<a class="ai-setup-manage-link${hasKey ? '' : ' is-getkey'}"
+    // v3.63.303 — external-link pill markup per Kai's spec. The pill is
+    // aria-hidden (decorative); the .sr-only span carries the "opens
+    // external site in a new tab" announcement for screen readers.
+    manageLinkHTML = `<a class="ai-setup-manage-link external-link${hasKey ? '' : ' is-getkey'}"
       href="${escapeHtml(safeUrl(consoleUrlNow))}" target="_blank" rel="noopener noreferrer"
       onclick="event.stopPropagation();"
-      title="${escapeHtml(title)}">${label}</a>`;
+      title="${escapeHtml(title)}">${label}<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>`;
   }
 
   // v3.63.209 (closes backlog "Per-row Manual override tag") — When a Hive
@@ -6000,10 +6016,10 @@ async function setHiveMode(newMode) {
 // Both modes append the global Expand all / Collapse all controls so a
 // power user with a 40-bee hive can mass-toggle row state.
 //
-// v3.63.301 — "Get API keys" button renamed to "Provider Sites ⧉". The
+// v3.63.301 — "Get API keys" button renamed to "Provider Sites". The
 // old label implied first-time setup only; once a user has keys, they
 // still want to revisit those console pages to check billing, change
-// tiers, see usage. The per-card "Manage ⧉" link on every row handles
+// tiers, see usage. The per-card "Manage" link on every row handles
 // one-at-a-time deep links; this button is the bulk-browse entry point
 // (drawer of every provider in the hive). Both read from API_CONSOLE_URLS
 // in api-links.js so they can't drift apart.
@@ -6018,7 +6034,7 @@ function renderWorkerBeeToolbar() {
       <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
       <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
       <button class="btn btn-lg" id="recommendAllBtn" onclick="recommendModelsForAll()" title="Ask every keyed AI to recommend its best model — runs sequentially">Recommend Models for All</button>
-      <button class="btn btn-lg" onclick="toggleHiveConsoles()" title="Open the drawer with every provider's console in your hive">Provider Sites ⧉</button>`;
+      <button class="btn btn-lg" onclick="toggleHiveConsoles()" title="Open the drawer with every provider's console in your hive">Provider Sites</button>`;
   } else {
     buttons = `
       <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
@@ -6396,8 +6412,8 @@ function renderHiveSidebar() {
 
       <div class="bees-sidebar-block">
         <div class="bees-sidebar-heading">Related</div>
-        <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="bees-sidebar-related">🔑 API Key Guide ⧉</a>
-        <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="bees-sidebar-related">💰 AI API Pricing ⧉</a>
+        <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="bees-sidebar-related">🔑 API Key Guide</a>
+        <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="bees-sidebar-related">💰 AI API Pricing</a>
       </div>
 
     </div>
@@ -7318,7 +7334,7 @@ function applyNotesTemplate(template) {
 // blocked. The API guide page calls toggleGuideConsoles() (a fixed list)
 // instead, since it has no live hive.
 //
-// v3.63.301 — wired to the "Provider Sites ⧉" toolbar button (renamed from
+// v3.63.301 — wired to the "Provider Sites" toolbar button (renamed from
 // "Get API keys" — the old label implied first-time setup only, but the
 // drawer is equally useful for returning users checking billing / tiers /
 // usage on each provider's console).
@@ -9317,7 +9333,7 @@ function annotateCustomAIDropdown(labels, recommendedModel) {
 // ── v3.25.7 / v3.26.1: Custom AI decision aids (Recommend + Browse models) ──
 // Both aids only make sense AFTER Fetch Models has populated the dropdown:
 // - 🤖 Recommend has nothing to ask about until there's a model list
-// - ⧉ Browse models is contextual — visible only for known Quick Add presets
+// - Browse models is contextual — visible only for known Quick Add presets
 //   that declare a chooseModelLink
 // The aids row container is toggled when EITHER aid is showable, individual
 // aids are toggled by their own logic. v3.26.1 moved the aids out of the
@@ -18198,7 +18214,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
       // showCard below), but the console link is the audit-trail
       // copy: it stays visible after the card is dismissed and
       // survives reload via consoleHTML serialization to IDB.
-      ai.apiConsole ? { url: ai.apiConsole, label: `Open ${ai.name} ⧉` } : null
+      ai.apiConsole ? { url: ai.apiConsole, label: `Open ${ai.name}` } : null
     );
     const entry = WF_DEBUG.classify(new Error(msg), ctx);
     WF_DEBUG.showCard(entry, ctx);

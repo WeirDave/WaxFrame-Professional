@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — hive-profiles.html
-     Build: 20260612-017
+     Build: 20260612-018
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260612-017">
+  <meta name="waxframe-build" content="20260612-018">
   <title>Hive Profiles — WaxFrame Reference</title>
   <meta name="description" content="Hive Profiles let you swap every AI's model pick across the whole hive with one click — Cheap, Balanced, Thinker, Fast, or your own saved configuration.">
   <link rel="canonical" href="https://waxframe.com/hive-profiles.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Hive Profiles let you swap every AI's model pick across the whole hive with one click — Cheap, Balanced, Thinker, Fast, or your own saved configuration.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.302">
+  <link rel="stylesheet" href="style.css?v=3.63.303">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -121,13 +121,13 @@
        own distinct slot — inside .nav-panel but outside .nav-body so it
        sticks to the bottom of the panel like the work-screen version. -->
   <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
+    <a class="nav-buy-cta external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
       <span class="nav-buy-cta-icon">🛒</span>
       <span class="nav-buy-cta-text">
         <span class="nav-buy-cta-title">Buy a License</span>
         <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
       </span>
-    </a>
+    <span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>
   </div>
 </div>
 
@@ -328,8 +328,8 @@
 <div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)document.getElementById('aboutModalHelper').classList.remove('active')">
   <div class="finish-modal">
     <h2 class="finish-modal-title">About WaxFrame</h2>
-    <p class="finish-modal-msg">WaxFrame is a vanilla HTML/CSS/JS app for refining documents through multi-AI hives. Free trial available — buy WaxFrame Pro on <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" class="link-accent">Gumroad</a>.</p>
-    <p class="finish-modal-msg">Open source on GitHub: <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">WeirDave/WaxFrame-Professional</a>. AGPL-3.0 license.</p>
+    <p class="finish-modal-msg">WaxFrame is a vanilla HTML/CSS/JS app for refining documents through multi-AI hives. Free trial available — buy WaxFrame Pro on <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" class="link-accent external-link">Gumroad<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>.</p>
+    <p class="finish-modal-msg">Open source on GitHub: <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">WeirDave/WaxFrame-Professional<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>. AGPL-3.0 license.</p>
     <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Close</button>
   </div>
 </div>
@@ -338,7 +338,7 @@
   <div class="finish-modal">
     <h2 class="finish-modal-title">Open Source</h2>
     <p class="finish-modal-msg">WaxFrame runs entirely in your browser. No server holds your document, your API keys, or your session — everything lives in your browser's local storage and goes directly to the AI APIs you've configured. Buy the Pro license to support continued development.</p>
-    <p class="finish-modal-msg">Source at <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a>.</p>
+    <p class="finish-modal-msg">Source at <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">github.com/WeirDave/WaxFrame-Professional<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>.</p>
     <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Close</button>
   </div>
 </div>
@@ -351,7 +351,7 @@
     <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
     <div class="license-modal-error" id="licenseKeyError"></div>
     <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
-    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →</a>
+    <a class="license-modal-buy external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →<span class="external-pill" aria-hidden="true">External</span><span class="sr-only">(opens external site in a new tab)</span></a>
     <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
   </div>
 </div>
@@ -371,12 +371,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.302"></script>
-<script src="lib/docx.min.js?v=3.63.302"></script>
-<script src="js/docx-export.js?v=3.63.302"></script>
-<script src="js/nav-helper.js?v=3.63.302"></script>
-<script src="js/license-helper.js?v=3.63.302"></script>
-<script src="js/version.js?v=3.63.302"></script>
+<script src="js/theme.js?v=3.63.303"></script>
+<script src="lib/docx.min.js?v=3.63.303"></script>
+<script src="js/docx-export.js?v=3.63.303"></script>
+<script src="js/nav-helper.js?v=3.63.303"></script>
+<script src="js/license-helper.js?v=3.63.303"></script>
+<script src="js/version.js?v=3.63.303"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
