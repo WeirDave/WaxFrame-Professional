@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.314
+
+**Hive Profile bar tighter: dropdown + note + save button now share one row instead of stacking**
+
+Build: `20260613-008`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David flagged v3.63.313's layout as still wasteful: "Better I guess but lots of wasted space." The right-group with note + button was still wrapping under the dropdown row instead of sitting next to it, because the note's hard 560px max-width (added in v3.63.157 to fix mid-sentence wraps) plus the button's intrinsic width was too wide for the available space left after the dropdown. The whole group dropped to a new row, leaving most of the dropdown row empty and most of the note row empty too.
+
+`.hive-profile-bar-right-group` now uses `flex: 1 1 auto` + `min-width: 0` so it claims the remaining space on the dropdown row, and the nested note overrides its own `max-width: 560px` → `max-width: none` so the note text wraps multi-line within the group instead of holding the group at 560px+ minimum. Result: dropdown on the left, note + prompt + button on the right, all on one row. When the note doesn't fit on one line at the available width, it wraps internally — but it wraps at the right edge, with the button still adjacent to the prompt.
+
+### Files touched
+
+- [style.css](style.css) — `.hive-profile-bar-right-group` switched from `flex-wrap: wrap` to `flex-wrap: nowrap` + `flex: 1 1 auto` + `min-width: 0` so the group takes the available dropdown-row space; nested `.hive-profile-bar-note` overrides drop the 560px max-width and add `min-width: 0` so note text wraps within available space instead of forcing the group wider
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.313
 
 **Hive Profile bar: save button stays on the same line as the status note (was wrapping to next row in v3.63.312)**
