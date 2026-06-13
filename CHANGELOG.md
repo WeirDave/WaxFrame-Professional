@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.322
+
+**Settings: "↑ Go to top" link on every section + "See section details" link gets the standard accent styling**
+
+Build: `20260613-016`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Two follow-ons after v3.63.321's alphabetical reorder + TOC chip strip:
+
+**1. "↑ Go to top" link at the end of every section.** David: "you forgot to put in go to tops 'Goto Top →'." Long sections like Diagnostics and Storage meant scrolling all the way back to the chip strip after reading one. The link now sits at the end of each section and smooth-scrolls back to the TOC. Rendered by the same `_renderSettingsToc` pass that builds the chip strip — idempotent on re-opens, future-proof against new sections.
+
+**2. "See section details on the Checkpoint screen" link in Backup Sync now styled.** David: "the link to the checkpoint screen inside the settings menu is not acting like a link, it doesn't have the hover underline or gold to match the rest of the links throughout our entire website." Missing `class="link-accent"` on the `<a>` — added. Now reads gold at rest with underline on hover, matching every other in-text link.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `_renderSettingsToc` appends a `.settings-goto-top` link to every section after the alphabetical reorder; smooth-scrolls back to the TOC on click
+- [index.html](index.html) — `class="link-accent"` added to the "See section details" link in the Backup Sync section
+- [style.css](style.css) — new `.settings-goto-top` rule (gold accent, underline on hover, right-aligned via auto margin)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.321
 
 **Settings: alphabetical section order + jump-to TOC at the top (David's "we crammed a lot in here" follow-up)**
