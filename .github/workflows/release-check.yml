@@ -32,6 +32,15 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# v3.63.298 — Explicit least-privilege GITHUB_TOKEN scope so CodeQL alert
+# actions/missing-workflow-permissions (#28) closes and the workflow's
+# intent is self-documenting. The validator runs `node tools/release-
+# check.mjs` against the checked-out tree — read-only over file contents,
+# no PR comments, no issue creation, no tag pushes. `contents: read` is
+# the minimum the checkout action needs; nothing else is required.
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: Validate release ceremony
