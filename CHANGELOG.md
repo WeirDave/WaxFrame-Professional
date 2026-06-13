@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.305
+
+**External-link icon size tuned for legibility · "Get Key" capitalization fix**
+
+Build: `20260612-020`<br>
+Released: `2026-06-12`
+
+### What changed
+
+Two small follow-on tweaks to v3.63.304's external-link SVG icon, both from looking at it live in the Setup screen.
+
+**1. Icon size + opacity bumped.** v3.63.304 set the icon at `0.82em` height and `0.65` opacity per Kai's initial sizing. On the per-card Manage / Get Key link (where the underlying text is 12px) that meant a ~10px icon at 65% opacity — visually too quiet to register as "this opens elsewhere." David flagged it as "barely visible." Bumped to `1.25em` (about 15px on the same 12px text) and `0.85` opacity — same Wikipedia / MDN scale convention, much more legible at viewing distance. Brighten-on-hover/focus still goes to 1.0.
+
+**2. "Get key" → "Get Key".** The per-card link label for unkeyed AIs now uses title case to match every other action label in the grid (Manage, Builder, Customized). Was the only lowercase odd-one-out.
+
+### Files touched
+
+- [style.css](style.css) — `.external-link-icon` width/height bumped from 0.82em → 1.25em; opacity from 0.65 → 0.85; transition unchanged; sized-comment in the docblock for `.is-getkey` updated to match the new label casing
+- [js/app.js](js/app.js) — `'Get key'` → `'Get Key'` (label literal + the matching comment in the Manage link states docblock)
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.304
 
 **External-link affordance v2: "External" pill swapped for a small inline SVG icon (Kai spec v2)**

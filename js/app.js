@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260612-019
+// Build: 20260612-020
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -548,7 +548,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260612-019';         // build stamp — update each session
+const BUILD       = '20260612-020';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -5765,7 +5765,7 @@ function buildAISetupRowHTML(ai) {
   // Manage link states:
   //   • no console URL (server-imported customs) → placeholder
   //   • key + console URL → "Manage"
-  //   • no key + console URL → "Get key"
+  //   • no key + console URL → "Get Key"
   const _builderIncapableNow = isBuilderIncapableModel(cfg?.model || ai.provider || '');
   const _isCurrentBuilderNow = (typeof builder !== 'undefined' && builder === ai.id);
   const consoleUrlNow = ai.apiConsole || '';
@@ -5800,7 +5800,7 @@ function buildAISetupRowHTML(ai) {
   if (!consoleUrlNow) {
     manageLinkHTML = `<span class="ai-setup-manage-link-placeholder" aria-hidden="true"></span>`;
   } else {
-    const label = hasKey ? 'Manage' : 'Get key';
+    const label = hasKey ? 'Manage' : 'Get Key';
     const title = hasKey
       ? `Manage your account at ${ai.name} (opens in a new tab)`
       : `Get an API key from ${ai.name} (opens in a new tab)`;
