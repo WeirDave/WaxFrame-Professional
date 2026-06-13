@@ -2,6 +2,46 @@
 
 ---
 
+## v3.63.296
+
+**Provider Catalog phase 3 · all three model-list discovery paths share one dispatcher**
+
+Build: `20260612-011`<br>
+Released: `2026-06-12`
+
+### The third fetcher comes home
+
+Two phases of the Provider Catalog work shipped this week — [v3.63.274](https://github.com/WeirDave/WaxFrame-Professional/releases/tag/v3.63.274) put the data record together and collapsed `fetchModelsForProvider` + `fetchModelsForProviderLive` into one dispatcher, [v3.63.295](https://github.com/WeirDave/WaxFrame-Professional/releases/tag/v3.63.295) moved the curated fallback lists into the catalog so `provider-models.js` could shed its data layer entirely. There was always a third fetcher in play: [app.js](js/app.js)'s `fetchModelsFromEndpoint`, used by the custom-AI Add flow, the Worker-Bee page reload, and the tier-classifier fallback. It had its own copy of the URL derivation, header building, parse-by-format, and STRUCTURAL filter — the same job as the catalog's two fetchers, written a different way.
+
+v3.63.296 brings it onto the catalog.
+
+### What changed
+
+- **New `WFProviderCatalog.fetchModelsByFormat(url, format, key, explicitModelsEndpoint?)`** — the format-driven cousin of `fetchModelsList(entry, key)`. Takes a URL and a format string instead of a catalog entry id (so custom AIs that don't appear in `CATALOG` can ride it), then walks the exact same per-format paths: Google's v1beta listing, Anthropic's proxy URL, OpenAI-shape `${base}/v1/models` derivation with the explicit-endpoint override and the Together `?serverless=true` carve-out. Format-driven auth headers, format-driven response parsing, structural filter, dedup. Throws on HTTP failure so the caller decides UI feedback.
+- **[app.js](js/app.js)'s `fetchModelsFromEndpoint` is now a one-line delegate** — body collapsed from 80 lines to `return window.WFProviderCatalog.fetchModelsByFormat(url, format, key, explicitModelsEndpoint);`. The 5 call sites in app.js (custom-AI Add, recheck, Worker-Bee reload, two tier-classifier fallbacks) are untouched.
+
+The v3.27.4 / v3.53.0 / v3.56.28 / v3.60.7 / v3.63.284 history commentary that lived on this function — the why behind the explicit-endpoint override, the api-key-out-of-query-string move, the bare-array shape accept, the Together carve-out, the dropped direct-anthropic branch — is preserved verbatim in the catalog's `fetchModelsByFormat` docblock.
+
+### Outcome
+
+The catalog now owns ALL THREE model-list discovery paths:
+
+| Path | Caller | Filter applied |
+|---|---|---|
+| `fetchModelsList(entry, key)` | api.js (built-in catalog entries) | structural + per-entry filterExtras / filterRequire |
+| `fetchModelsByFormat(url, format, key, explicitEndpoint?)` | app.js (custom AIs, tier-classifier fallback) | structural only |
+| `diagnosticModelsUrl(entry) + headers` | help.html (raw diagnostic dump) | none |
+
+Any per-format quirk — a new auth scheme, a new response shape, a new vendor-specific query-param carve-out — touches exactly one file now. The drift surface that produced v3.63.143's silently-bypassed Mistral discovery is gone for all three callers.
+
+### Files touched
+
+- [js/provider-catalog.js](js/provider-catalog.js) — new `fetchModelsByFormat` function (~70 lines); added to the export surface; public-API docblock updated to describe the three-fetcher trio
+- [js/app.js](js/app.js) — `fetchModelsFromEndpoint` reduced from 80 lines to a one-line delegate (history comments preserved in the catalog instead)
+- [js/version.js](js/version.js), [CHANGELOG.md](CHANGELOG.md), cache-bust stamps
+
+---
+
 ## v3.63.295
 
 **Provider Catalog phase 2 · catalog owns the curated fallback lists outright**
