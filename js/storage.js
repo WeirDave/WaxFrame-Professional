@@ -1601,24 +1601,40 @@ async function confirmSaveCheckpoint() {
     const el = document.getElementById('saveScope' + key[0].toUpperCase() + key.slice(1));
     scope[key] = !!el?.checked;
   }
-  // v3.63.318 — Smart-route based on browser support. In Chrome/Edge/Opera
-  // we route through the File System Access API so the user picks a folder
-  // once and subsequent saves write silently there. In Firefox/Safari we
-  // fall through to the legacy download — Firefox surfaces its own Save-As
-  // dialog by default (matching the picker UX organically); Safari drops
-  // to the Downloads folder. Pre-v3.63.318 these were two side-by-side
-  // buttons, which David flagged as overengineered: "I don't understand
-  // why you can't just make one button what it needs to do — we can
-  // detect a browser." Now one button, one canonical scope-collection
-  // path, the right destination per browser.
+  // v3.63.318 / 319 — Smart-route based on browser support. Chrome / Edge /
+  // Opera get the FSA folder picker; Firefox / Safari fall through to the
+  // legacy download (Firefox surfaces its own Save-As dialog by default,
+  // Safari drops to Downloads).
+  //
+  // v3.63.319 — User-activation timing fix. v3.63.318 called
+  // _buildCheckpointEnvelope FIRST, then _fsaWriteEnvelopeToFolder
+  // (which calls _fsaEnsureSyncDir → requestPermission / show
+  // DirectoryPicker). Problem: _buildCheckpointEnvelope awaits a
+  // saveSession flush + IDB read, which consumes Edge's transient user
+  // activation. By the time _fsaEnsureSyncDir runs, user-gesture is
+  // gone; requestPermission and showDirectoryPicker both require
+  // gesture and silently reject. Result: David's button "does
+  // absolutely nothing." Fix: acquire the directory handle FIRST while
+  // the click's gesture is still fresh, THEN build the envelope (which
+  // doesn't need a gesture), THEN write.
   if (_fsaSupported()) {
+    const dir = await _fsaEnsureSyncDir(false);
+    if (!dir) return;   // user canceled picker or permission denied — toast handled inside
     const env = await _buildCheckpointEnvelope(scope);
     if (!env) {
       toast('⚠️ Nothing to checkpoint — tick at least one section that has data');
       return;
     }
-    const written = await _fsaWriteEnvelopeToFolder(env);
-    if (written) toast(`📁 Checkpoint saved — ${written}`, 5500);
+    try {
+      const fileHandle = await dir.getFileHandle(env.filename, { create: true });
+      const writable   = await fileHandle.createWritable();
+      await writable.write(env.json);
+      await writable.close();
+      toast(`📁 Checkpoint saved — ${env.filename}`, 5500);
+    } catch(e) {
+      console.warn('[checkpoint] FSA write failed:', e);
+      toast(`⚠️ Save to folder failed — ${e.message || e}`, 6000);
+    }
     return;
   }
   await _writeCheckpoint(scope);

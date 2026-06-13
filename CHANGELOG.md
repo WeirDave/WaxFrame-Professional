@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.319
+
+**Save Checkpoint button no longer silently dead in Edge/Chrome — user-activation timing fix**
+
+Build: `20260613-013`<br>
+Released: `2026-06-13`
+
+### What changed
+
+v3.63.318 collapsed the Save Checkpoint flow to one button with smart-routing, but I broke the FSA path. David caught it immediately on refresh: "clicking it does absolutely nothing now."
+
+Root cause: User-activation timing. The button click fires `confirmSaveCheckpoint`, which calls `_buildCheckpointEnvelope(scope)` — that awaits a `saveSession({force:true})` flush + an `idbGet()` read. Those awaits consume Edge's transient user activation. By the time `_fsaWriteEnvelopeToFolder` runs and tries `requestPermission` / `showDirectoryPicker`, the user gesture is gone. Both calls require gesture and silently no-op (or throw `SecurityError` caught by the existing handler) — no toast, no picker, button looks dead.
+
+Fix: reordered `confirmSaveCheckpoint` to acquire the directory handle FIRST (while the click's gesture is still fresh), then build the envelope (which doesn't need a gesture), then write. The write happens against the now-permitted handle without re-prompting.
+
+Inline write replaces the call to `_fsaWriteEnvelopeToFolder` so the gesture-eating `_fsaEnsureSyncDir` call doesn't run a second time. The helper stays defined for any other caller; the manual save just doesn't go through it anymore.
+
+### Why this matters going forward
+
+David also flagged the deeper architecture point: auto-backup belongs in Settings, not on the Save Checkpoint button. "You're trying to tie it into the button and it should be a setting in the settings to where Edge users and Chrome users pick your folder for auto saving and then you pick it and then it lives in the setup menu and then every time or then it just fires automatically for making backups. You can manually go in and do a save checkpoint at any point."
+
+That's the right separation. **Next release will add a Settings panel** for the backup folder + an auto-backup toggle. Manual Save Checkpoint stays as the one-off escape hatch (via FSA in Edge/Chrome, via download in Firefox/Safari) — the v3.63.319 fix keeps it working until the Settings UI lands.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — `confirmSaveCheckpoint` reordered so `_fsaEnsureSyncDir` runs FIRST while the click's user activation is still fresh; envelope build moves after; write happens inline against the already-permitted handle
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.318
 
 **Save Checkpoint collapsed back to ONE button, browser-smart routing inside — v3.63.316's two-button design retired (David: "we can detect a browser, you're overengineering this")**
