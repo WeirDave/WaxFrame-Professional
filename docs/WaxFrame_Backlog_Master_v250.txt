@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v247
-2026-06-12
+WaxFrame Backlog Master v250
+2026-06-13
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -195,64 +195,6 @@ OPEN FEATURES
            no intentional wording change is made; Deep Dive still
            captures the final prompt sent to each AI; a future UI
            can point at these modules without parsing app.js.
-
-
-5. localStorage migration audit
-   ─────────────────────────────────────────────────────────
-   WHAT:   Every localStorage key the app reads/writes is
-           subject to format drift over time. The v3.63.241
-           audit pass enumerated current keys (waxframe_v2_*
-           + others) but did not exhaustively verify that
-           each one's read path handles all the historical
-           shapes it might encounter on long-lived browsers.
-           Format-version branches in storage.js (currently
-           v6 with v5/v4 import compatibility) are the most
-           important; key-value primitives in app.js are the
-           long tail.
-   WHY:    A user who's been running WaxFrame since v3.21
-           has localStorage entries written by every
-           intermediate version. A single un-migrated key
-           can silently corrupt state on a project a year
-           into use. The audit category 5 (state recovery)
-           in WaxFrame_Audit_Methodology_v1.txt covers this
-           explicitly.
-   STATE:  PARTIAL — v3.63.294 shipped the static-enumeration
-           first pass: AST scan of every js/*.js + every
-           HTML inline <script>, 224 operations normalized
-           to 42 unique keys (29 static + 13 dynamic-name
-           patterns), schema documented for each key in
-           docs/WaxFrame_Storage_Schema_v1.txt. v3.63.300
-           shipped the two follow-on items the v3.63.294
-           pass left flagged: runtime verification of
-           waxframe_models_${providerId} (confirmed actively
-           read by getModelsForProvider, the dropdown hot
-           path — the static scanner missed it because the
-           read uses a template literal) and the
-           waxframe_recommend_* family (confirmed runtime-
-           reconciled via cacheId, "audit-script attribution
-           artifact" from the asymmetric SET / REM template
-           shapes). v3.63.300 also wrote the manual test
-           plan for forwarding a v3.21-era profile through
-           every release boundary (FORWARD-COMPAT TEST PLAN
-           section at the bottom of the schema doc).
-           Still open: per-key schema versioning — a first-
-           class schema-version field on each payload so
-           the next audit's "what shape am I looking at?"
-           question is instant. Defer to a future cycle;
-           current additive-only accretion is healthy
-           enough that this is a nice-to-have.
-   WHERE:  js/storage.js (envelope migrations), js/app.js
-           (per-feature keys: waxframe_dev,
-           waxframe_hive_profile, waxframe_conflict_ledger,
-           etc.). Schema doc:
-           docs/WaxFrame_Storage_Schema_v1.txt. Audit
-           script: .claude/scratch/ls-audit.js (gitignored).
-   DONE:   Each localStorage key has a documented schema
-           (current shape + earlier shapes encountered in
-           the wild); the read path for each handles legacy
-           shapes or migrates them on read; a manual test
-           plan exists for forwarding a v3.21-era profile
-           through every release boundary.
 
 
 ════════════════════════════════════════════════════════════
