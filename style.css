@@ -18134,6 +18134,17 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   color: var(--accent);
   border-color: var(--accent);
 }
+/* v3.63.312 — "Save as new profile" prompt span sits at the end of the
+   status note. Same dim italic so it reads as a continuation of the note
+   ("X of Y are using their cheap pick. The rest were manually overridden.
+   — Save this mix as a profile?") rather than competing for attention. The
+   button itself flows immediately after via the parent flex row, anchored
+   to the right edge by the note's margin-left:auto. */
+.hive-profile-bar-save-prompt {
+  margin-left: 6px;
+  font-style: italic;
+  color: var(--text-dim);
+}
 .hive-profile-bar-delete {
   color: var(--red);
   border-color: rgba(248, 113, 113, 0.45);

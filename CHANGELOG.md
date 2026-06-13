@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.312
+
+**Hive Profile bar UX: "Save current as profile" renamed to "Save as new profile" + repositioned at the end of the status note**
+
+Build: `20260613-006`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David flagged the Hive Profile bar's save button as confusing: "we have a button next to that drop down that says Save current as profile which is confusing." The dropdown's selection IS persisted automatically — picking Cheap → Balanced writes Balanced as the active profile, no user action required — so a button labeled "Save current" reading right next to the dropdown suggests redundancy when its actual purpose is creating a NEW named snapshot of the current per-AI mix.
+
+Two fixes:
+
+**1. Renamed: "💾 Save current as profile" → "💾 Save as new profile."** Direct signal that this creates a NEW profile, not a save of the active selection. Tooltip clarifies: "Capture your current per-AI model picks as a reusable named profile you can pick from the dropdown later."
+
+**2. Repositioned at the end of the status note.** v3.63.212 placed the save button immediately after the dropdown. v3.63.312 moves it to the right edge of the profile bar, sitting after the status note's "8 of 10 are using their cheap pick. The rest were manually overridden." text. The note ends with a small italic prompt span — "— Save this mix as a profile?" — so the button reads as the answer to that question rather than a competing control. David's design: "I should say something like you know to save this as a profile click here and have the button be to the right of that. It would make more logical sense and the user would know what the button intended."
+
+**Save button is suppressed when it adds no value.** When the active profile is a tier with zero overrides ("All N AIs with a cheap pick are using it"), saving captures a snapshot identical to picking the tier again — pure noise. Same for the "no picks cached yet" state. In every other state (Custom active, tier with manual overrides, saved-custom with or without overrides), the save action genuinely preserves something the dropdown alone can't recover.
+
+Delete profile button stays next to the dropdown — it's a destructive action on the SELECTED profile, not a snapshot of current state, so it belongs near the dropdown that exposes it.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `renderHiveProfileBar`: button label changed; `_saveIsUseful` flag computed alongside the note text; save button + prompt span appended after the note instead of immediately after the dropdown; delete button stays next to the dropdown; suppression cases when the save adds no value
+- [style.css](style.css) — new `.hive-profile-bar-save-prompt` rule: italic dim text reading as a continuation of the note rather than a competing element
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.311
 
 **Halt before Builder on EVERY reviewer-phase failure, not just bee-fatal ones · Builder no longer spends money on a degraded reviewer set**

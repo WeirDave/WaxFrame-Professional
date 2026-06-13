@@ -6656,6 +6656,15 @@ function renderHiveProfileBar() {
   //   • Saved (v3.63.212) → how many of the snapshotted AIs are still on
   //     their snapshotted model
   let note = '';
+  // v3.63.312 — Track whether saving the current mix as a new profile is
+  // a useful action right now. When the active profile is a tier with no
+  // overrides ("all N AIs are using their cheap pick"), saving captures
+  // a snapshot identical to picking the tier again, so suppress the
+  // save prompt + button in that case to reduce noise. In every other
+  // state (custom profile active, tier with overrides, saved-custom with
+  // or without overrides) the save action genuinely adds value — the
+  // current mix isn't recoverable from any single dropdown pick.
+  let _saveIsUseful = true;
   if (active === 'custom') {
     note = 'Each AI is using a manually-picked model. Pick a profile from the dropdown to apply one across the whole hive.';
   } else if (activeOpt?.isCustom) {
@@ -6692,19 +6701,41 @@ function renderHiveProfileBar() {
     });
     if (available === 0) {
       note = `No ${escapeHtml(tier)} picks cached yet for any AI. Click "Recommend Models for All" to populate.`;
+      _saveIsUseful = false;
     } else if (matched === available) {
       note = `All ${available} AIs with a ${escapeHtml(tier)} pick are using it. Override individual rows from the expanded view.`;
+      _saveIsUseful = false;   // identical to picking the tier again
     } else {
       note = `${matched} of ${available} AIs are using their ${escapeHtml(tier)} pick. The rest were manually overridden.`;
     }
   }
 
-  // v3.63.212 — Save Current as Profile button + delete-active-profile
-  // button. Save button is always available (will warn if no keyed AIs to
-  // capture). Delete only appears when the active profile is a custom one
-  // (built-ins can't be deleted). Both call into the helpers defined
-  // alongside HIVE_PROFILE_OPTIONS.
-  const saveBtn = `<button class="btn btn-sm hive-profile-bar-save" onclick="openSaveHiveProfileModal()" title="Save your current per-AI model picks as a reusable named profile">💾 Save current as profile</button>`;
+  // v3.63.212 / v3.63.312 — Save + Delete profile buttons.
+  //
+  // v3.63.212 placed "💾 Save current as profile" next to the dropdown
+  // with the matching note pushed to the far right. David flagged the
+  // wording + position as confusing: "we have a button next to that drop
+  // down that says Save current as profile which is confusing" — the
+  // dropdown's selection IS persisted automatically, so a "Save current"
+  // button reading right next to it suggests redundancy when it actually
+  // creates a NEW named snapshot.
+  //
+  // v3.63.312 fixes both:
+  //   • Renamed "Save current as profile" → "Save as new profile" so the
+  //     "new" intent is unambiguous.
+  //   • Moved the button to the end of the note line, with a one-line
+  //     prompt ("Save this mix as a profile?") appended to the note so
+  //     the button's purpose reads from context. David: "I should say
+  //     something like you know to save this as a profile click here
+  //     and have the button be to the right of that — would make more
+  //     logical sense and the user would know what the button intended."
+  //   • Save button suppressed when _saveIsUseful is false (no picks
+  //     cached yet, or tier mix has zero overrides — see above).
+  //   • Delete profile stays next to the dropdown — it's a destructive
+  //     action on the SELECTED profile, not a snapshot of current state.
+  const saveBtn = _saveIsUseful
+    ? `<span class="hive-profile-bar-save-prompt">— Save this mix as a profile?</span><button class="btn btn-sm hive-profile-bar-save" onclick="openSaveHiveProfileModal()" title="Capture your current per-AI model picks as a reusable named profile you can pick from the dropdown later">💾 Save as new profile</button>`
+    : '';
   const delBtn = activeOpt?.isCustom
     ? `<button class="btn btn-sm hive-profile-bar-delete" onclick="deleteCustomHiveProfile('${escapeHtml(activeOpt.id)}')" title="Delete the saved profile &quot;${escapeHtml(activeOpt.rawLabel)}&quot;">🗑 Delete profile</button>`
     : '';
@@ -6714,9 +6745,9 @@ function renderHiveProfileBar() {
     <select class="hive-profile-bar-select" id="hiveProfileSelect" onchange="applyHiveProfile(this.value)">
       ${options}
     </select>
-    ${saveBtn}
     ${delBtn}
     <span class="hive-profile-bar-note">${note}</span>
+    ${saveBtn}
   `;
 }
 
