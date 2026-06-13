@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260612-016
+// Build: 20260612-017
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -178,8 +178,10 @@ async function _fetchModelsViaCatalog(provider, opts, callerName) {
       // v3.32.11 — dedup defensively at write time. The catalog already
       // dedups; this is a belt-and-braces guard against future regressions.
       const deduped = Array.from(new Set(models));
-      try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), models: deduped })); }
-      catch (e) { console.warn(`[models-cache:${provider}] write failed:`, e); }
+      // v3.63.302 — Stamped via wfWriteVersioned at schema_version=1 so the
+      // payload joins the schema-versioning convention (see storage.js). No
+      // behavior change today — just a hook for future shape evolutions.
+      window.wfWriteVersioned(cacheKey, { ts: Date.now(), models: deduped }, 1);
       return deduped;
     }
   } catch (e) {
@@ -235,11 +237,12 @@ async function fetchModelsForProvider(provider, opts) {
   if (!MODEL_FILTERS[provider]) return null; // no endpoint for this provider
 
   // Read cache first — that's the only difference vs fetchModelsForProviderLive.
+  // v3.63.302 — wfReadVersioned defaults legacy payloads to schema_version=1
+  // (every cache blob in the wild before v3.63.302 is implicitly v1). Same
+  // shape returned today; the helper just gives future shape changes a hook.
   const cacheKey = `waxframe_models_${provider}`;
-  try {
-    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-    if (cached && (Date.now() - cached.ts) < MODELS_CACHE_TTL) return cached.models;
-  } catch (e) {}
+  const cached = window.wfReadVersioned(cacheKey, 1);
+  if (cached && (Date.now() - cached.ts) < MODELS_CACHE_TTL) return cached.models;
 
   return _fetchModelsViaCatalog(provider, opts, 'fetchModelsForProvider');
 }
@@ -253,11 +256,11 @@ function getModelsForProvider(provider) {
   // to every match, so the same recommendation appears stamped on multiple
   // rows. Dedup is provider-agnostic and idempotent — safe to run on every
   // read regardless of cache state.
+  // v3.63.302 — wfReadVersioned handles missing schema_version (defaults to
+  // v1) so legacy cache blobs continue to read unchanged.
   let models = [];
-  try {
-    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-    if (cached?.models?.length > 0) models = cached.models;
-  } catch (e) {}
+  const cached = window.wfReadVersioned(cacheKey, 1);
+  if (cached?.models?.length > 0) models = cached.models;
   if (!models.length) models = MODEL_FALLBACKS[provider] || [];
   // Set preserves insertion order, so the first occurrence of each id wins.
   // v3.63.31 — drop quarantined (incapable) models so neither the dropdown
