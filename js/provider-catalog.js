@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260612-009
+// Build: 20260612-010
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -40,19 +40,33 @@
 //     shape; it was scaffold for an audit-trail UI that never shipped and
 //     had zero readers across the codebase.)
 //
+// v3.63.295 — Phase 2 of the catalog refactor: the curated MODEL_FALLBACKS
+// lists used to live in provider-models.js and were re-pointed into each
+// catalog entry's `fallback` field at IIFE init. As of v3.63.295, the
+// fallback arrays are INLINE in the entries below — provider-models.js
+// no longer carries a MODEL_FALLBACKS literal, and the catalog is the only
+// home of curated provider data. Same applies to MODEL_FILTERS, which was
+// being overridden at catalog init anyway; provider-models.js's helpers
+// now read both maps via root.WFProviderModels.* at call time.
+//
 // LOADING: plain browser global script. Air-gap safe (no imports, no CDNs).
 // Load order: AFTER version.js + provider-models.js (catalog reads
-// STRUCTURAL_NON_CHAT_RE and MODEL_FALLBACKS from there), BEFORE api.js
-// (api.js calls buildApiConfigs() at module eval time).
+// STRUCTURAL_NON_CHAT_RE from there), BEFORE api.js (api.js calls
+// buildApiConfigs() at module eval time).
 // ============================================================
 (function (root) {
   'use strict';
 
+  // v3.63.295 — Catalog owns the curated fallback lists outright. Each
+  // entry's `fallback` field is now an inline array of model ids instead
+  // of a reference back into provider-models.js's MODEL_FALLBACKS literal
+  // (which has been removed). The catalog still consumes the regex
+  // primitives (STRUCTURAL / CHATGPT / DATED) from provider-models.js
+  // because those are pure parsing helpers, not provider data.
   var WFPM = (root && root.WFProviderModels) || {};
   var STRUCTURAL_NON_CHAT_RE    = WFPM.STRUCTURAL_NON_CHAT_RE;
   var CHATGPT_RESPONSES_ONLY_RE = WFPM.CHATGPT_RESPONSES_ONLY_RE;
   var DATED_SNAPSHOT_RE         = WFPM.DATED_SNAPSHOT_RE;
-  var MODEL_FALLBACKS           = WFPM.MODEL_FALLBACKS || {};
 
   // ── Format primitives ─────────────────────────────────────────────
   // splitEnvelope finds the boundary between WaxFrame's prompt envelope
@@ -206,7 +220,7 @@
       format: 'anthropic',
       discovery: 'anthropic-via-proxy',
       vision: true, // v3.63.279 — supports image input via the vision fallback path
-      fallback: MODEL_FALLBACKS.claude
+      fallback: ['claude-sonnet-4-6', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-opus-4-6', 'claude-haiku-4-5']
     },
     {
       id: 'chatgpt', label: 'OpenAI (ChatGPT)',
@@ -217,7 +231,7 @@
       vision: true,
       // -pro / -codex are Responses-API-only; dated snapshots clutter.
       filterExtras: [CHATGPT_RESPONSES_ONLY_RE, DATED_SNAPSHOT_RE],
-      fallback: MODEL_FALLBACKS.chatgpt
+      fallback: ['gpt-5.5', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']
     },
     {
       id: 'copilot', label: 'Microsoft (Copilot)',
@@ -238,7 +252,7 @@
       format: 'google',
       discovery: 'gemini-list',
       vision: true,
-      fallback: MODEL_FALLBACKS.gemini
+      fallback: ['gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3.1-flash-lite']
     },
     {
       id: 'grok', label: 'xAI (Grok)',
@@ -247,7 +261,7 @@
       format: 'openai',
       discovery: 'openai-models',
       vision: true,
-      fallback: MODEL_FALLBACKS.grok
+      fallback: ['grok-4.1-fast', 'grok-4.3', 'grok-4.20-reasoning']
     },
     {
       id: 'perplexity', label: 'Perplexity',
@@ -256,7 +270,7 @@
       format: 'openai',
       discovery: 'perplexity-self',
       filterRequire: /^sonar/i,
-      fallback: MODEL_FALLBACKS.perplexity
+      fallback: ['sonar', 'sonar-pro', 'sonar-reasoning', 'sonar-reasoning-pro', 'sonar-deep-research']
     },
     {
       id: 'mistral', label: 'Mistral',
@@ -264,7 +278,7 @@
       endpoint: 'https://api.mistral.ai/v1/chat/completions',
       format: 'openai',
       discovery: 'openai-models',
-      fallback: MODEL_FALLBACKS.mistral
+      fallback: ['mistral-large-latest', 'mistral-small-latest', 'ministral-8b-latest']
     },
     {
       id: 'deepseek', label: 'DeepSeek',
@@ -272,7 +286,7 @@
       endpoint: 'https://api.deepseek.com/v1/chat/completions',
       format: 'openai',
       discovery: 'openai-models',
-      fallback: MODEL_FALLBACKS.deepseek
+      fallback: ['deepseek-v4-flash', 'deepseek-v4-pro']
     },
     {
       // Together rides app.js's fetchModelsFromEndpoint path for /v1/models
@@ -285,7 +299,7 @@
       endpoint: 'https://api.together.xyz/v1/chat/completions',
       format: 'openai',
       discovery: null,
-      fallback: MODEL_FALLBACKS.together
+      fallback: ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Qwen/Qwen2.5-72B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1']
     },
     {
       // Cohere's OpenAI-compat endpoint — same body, same extract, same auth.
@@ -296,7 +310,7 @@
       endpoint: 'https://api.cohere.ai/compatibility/v1/chat/completions',
       format: 'openai',
       discovery: null,
-      fallback: MODEL_FALLBACKS.cohere
+      fallback: ['command-r-plus', 'command-r', 'command-a-03-2025']
     }
   ];
 
