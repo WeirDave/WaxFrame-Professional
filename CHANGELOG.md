@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.318
+
+**Save Checkpoint collapsed back to ONE button, browser-smart routing inside — v3.63.316's two-button design retired (David: "we can detect a browser, you're overengineering this")**
+
+Build: `20260613-012`<br>
+Released: `2026-06-13`
+
+### What changed
+
+v3.63.316 shipped File System Access support as a SECOND button (`📁 Save to folder`) sitting next to the legacy `💾 Save Checkpoint`. David tested in Edge and missed the new button entirely: "I totally missed the save to folder thing because it wasn't intuitive to me. Usually nowadays save IS the same as save to folder, so I largely ignored the save to folder thing... I don't understand why you can't just make one button what it needs to do. We can detect a browser. I think you're over engineering this."
+
+He's right. Collapsed to one button.
+
+**Behavior is now uniform across browsers — picker every time, just routed through the API that gives the best UX:**
+
+- **Chrome / Edge / Opera** → File System Access folder picker. First click opens the picker (pre-navigated to `~/Documents`); subsequent saves write silently to the remembered folder. Handle persists in IDB across page reloads (single OS permission prompt at session start).
+- **Firefox** → legacy download path, which Firefox surfaces as its own Save-As dialog by default. Same picker UX, different API underneath.
+- **Safari** → legacy download to the Downloads folder. (Safari doesn't ship a Save-As dialog on web downloads. Best we can do.)
+
+The routing happens inside `confirmSaveCheckpoint` — single canonical scope-collection path, then a `_fsaSupported()` branch picks the destination. Same Cancel + Save Checkpoint button layout users have seen since v3.63.226. No new UI surface, no CSS hook, no body-class detection.
+
+### What was retired
+
+- `confirmSaveCheckpointToFolder` function (v3.63.316) — dead, the smart route inside `confirmSaveCheckpoint` covers both paths.
+- `.fsa-only` CSS class + the DOMContentLoaded body-class hook that gated it. JavaScript routes correctly per browser; no CSS toggle needed.
+- The second button in `index.html`'s checkpoint Save panel.
+
+`_fsaSupported`, `_fsaEnsureSyncDir`, `_fsaWriteEnvelopeToFolder`, `_buildCheckpointEnvelope`, and `fsaForgetSyncDir` all stay — they're the actual machinery. Just one less button surfaced over them.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — `confirmSaveCheckpoint` now branches on `_fsaSupported()`; `confirmSaveCheckpointToFolder` removed; DOMContentLoaded body-class hook removed; `fsaForgetSyncDir` toast updated to mention "Save Checkpoint" instead of "Save to folder"
+- [index.html](index.html) — second `📁 Save to folder` button removed; original `💾 Save Checkpoint` tooltip updated to advertise the per-browser smart routing
+- [style.css](style.css) — `.fsa-only` rules deleted; comment block explains the v3.63.316 → 318 collapse
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.317
 
 **"Recommend Models" now populates all 6 cards on the hive grid, not just Reviewer + Builder (straggler-code bug fix)**
