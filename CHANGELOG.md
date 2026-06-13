@@ -2,6 +2,52 @@
 
 ---
 
+## v3.63.327
+
+**Global status bar on every screen + hive-profile ongoing-progress migrated from toast() to setStatus() (audit + fix)**
+
+Build: `20260613-021`<br>
+Released: `2026-06-13`
+
+### What David caught
+
+After v3.63.325 made the `#toast` div actually render for the first time in the app's history, David hit a stuck toast on the Worker Bees screen: `Applied 🪙 Cheap to 5 of 6 AIs — classifying 1 more in the background…` — pinned indefinitely. His instinct was right:
+
+> I'm pretty sure that the toasts went away because of the fact that we have a status bar… I kind of feel like maybe that's why the toast wasn't there and everything was supposed to be directed towards that status bar.
+
+### Audit findings
+
+- `setStatus(msg)` writes to `#statusText`, which lives **inside** `<div class="work-footer">`. That footer only exists on **screen-work**. On every other screen (Setup 1–4, Worker Bees, Checkpoint, Settings, Welcome, Finish), `setStatus` is a silent no-op.
+- This meant developers writing ongoing-progress messages on non-work screens had nowhere to put them — so they used `toast()`. Toasts were silently invisible (`#toast` had no CSS until v3.63.325), so the misuse never showed.
+- `applyHiveProfile` is the canonical example: it auto-replays recursively when the background tier-classifier completes (around app.js:6618). The OUTER call toasted `Applied X to Y AIs — classifying N more in the background…`. The replay re-fired the same toast. Pre-v3.63.325 this was hidden spam; v3.63.325 made it user-facing spam.
+
+### Fix (real, not bandaid)
+
+**1. Global status bar at the bottom-left of the viewport** — present on every screen. New `<div id="globalStatus">` in index.html + `.global-status` rule in style.css (fixed positioning, `pointer-events: none`, fade in/out). `setStatus(msg)` writes to both this AND the existing work-footer `#statusText` so the work screen keeps its footer status AND every other screen gets one too.
+
+**2. `applyHiveProfile` migrated from `toast` to `setStatus`** — the 5 "Applied / Classifying / No picks cached" messages are ongoing-state, not ephemeral notifications. They belong in the status bar. The recursive auto-replay now updates the status bar text in place instead of pinning a toast on screen.
+
+### What's NOT in this release (intentionally)
+
+I did NOT audit every `toast()` call in the codebase — there are hundreds. The migration here covers the **visibly broken** case David hit (`applyHiveProfile` ongoing-progress). Other toast calls that should ALSO be `setStatus` exist, but they're not stuck on screen because they're not in recursive-replay loops. Future audits can convert them piecemeal as they're noticed.
+
+The pattern going forward:
+- **`toast(msg)`** — ephemeral notification, fade in/out, 2.8s. For `✓ Saved` / `⚠ Failed`-style acks.
+- **`setStatus(msg)`** — ongoing state. Persistent until replaced. For `Loading… / Classifying… / Applying…`-style progress.
+
+### Reverted from v3.63.327 first-cut
+
+I'd started with a bandaid: silent-replay flag + dedup + click-to-dismiss on toast. David called it correctly: "Don't add shit to make a band aid… fix the code that's broken." Reverted all three before shipping. The status-bar migration is the right structural fix.
+
+### Files touched
+
+- [index.html](index.html) — new `<div id="globalStatus" class="global-status"></div>` next to the existing `#toast` div; visible on every screen
+- [js/app.js](js/app.js) — `setStatus` writes to BOTH `#statusText` (work footer) AND `#globalStatus` (everywhere); empty msg hides the global bar; `applyHiveProfile` 5 toast calls migrated to `setStatus`
+- [style.css](style.css) — new `.global-status` + `.global-status.show` rules: fixed bottom-left, fade via opacity, max-width clamp, pointer-events:none
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.326
 
 **Choose Checkpoint File pre-navigates to your auto-backup folder on Chrome/Edge — FSA spike Phase 3 closes backlog #3 part (d)**
