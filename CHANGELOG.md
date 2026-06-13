@@ -2,6 +2,57 @@
 
 ---
 
+## v3.63.320
+
+**Auto-backup as a Settings panel — pick folder + frequency preset + sections, then forget about it (FSA spike Phase 2)**
+
+Build: `20260613-014`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David's redesign call after v3.63.319: "Auto-save... should be a setting in the settings to where Edge users and Chrome users pick your folder for auto saving and then you pick it and then it lives in the setup menu and then every time or then it just fires automatically for making backups. You can manually go in and do a save checkpoint at any point."
+
+Right separation. Manual Save Checkpoint stays as the one-off escape hatch on the Checkpoint screen. **Auto-backup is now its own Settings panel** — configure once, fires on its own thereafter.
+
+### The Settings panel (`💾 Backup Sync`)
+
+Lives between Workflow & Updates and Diagnostics in the Settings screen.
+
+- **Backup folder** — click `📁 Pick folder`, OS picker opens pre-navigated to `~/Documents`, you create or pick a `WaxFrame` subfolder. Current folder name shows next to the button after picking. Choice persists in IDB across sessions (one OS permission prompt at session start).
+- **Auto-backup frequency** — radio pills: `Off` / `Every round` / `Every other round` / `Every 3rd round`. David's call: "every single round, every other round, or every 3rd round... we don't want to do it by the second, that's dumb." Cadence is round-based, not timer-based. Default: `Off`.
+- **Sections to include** — 3-column checkbox grid mirroring the manual Checkpoint screen's 9-section scope (project info / ref material / starting doc / session / AI list / models / API keys / Builder / license). Defaults: everything ON except `API keys` (sensitive — opt-in) and `License key` (off by default). Link to the Checkpoint screen for full per-section descriptions.
+
+### Trigger plumbing
+
+Hook lives inside `_logRoundBump`, which all 5 round-completion sites already call:
+
+- `round_complete_main` (continuing-success)
+- `convergence_unanimous`
+- `convergence_majority`
+- `builder_only_complete`
+- `apply_decisions_all_bypassed`
+
+After every site fires `_logRoundBump`, the new `_autoBackupAfterRound` checks: FSA supported, freq > 0, current round divisible by freq, folder handle reachable + permitted. Any check fails → silent no-op. All pass → build the envelope using the saved scope, write it to the folder, surface a small `📁 Auto-backup saved — round N` toast.
+
+**Frequency math:** fires when `round % freq === 0`. So `Every other round` = rounds 2, 4, 6, 8…; `Every 3rd round` = rounds 3, 6, 9, 12…
+
+**Permission edge case:** auto-backup runs OUTSIDE a user gesture, so we can't `requestPermission` here. If the stored handle has lapsed permission, the auto-backup silently skips that round. The next manual Save Checkpoint click re-grants and the loop resumes. Cleaner than nagging the user with a permission prompt mid-round.
+
+### Firefox / Safari behavior
+
+Section renders but with a yellow banner: "Auto-backup requires Chrome, Edge, or Opera." Folder/frequency/scope controls disabled. The banner also notes the manual Save Checkpoint button still works (downloads via the legacy path). Users see the feature exists and what they'd get by switching browsers, without losing access to the manual flow.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — `_AUTO_BACKUP_FREQ_KEY` + `_AUTO_BACKUP_SCOPE_KEY` + defaults; getter/setter pairs; `_autoBackupAfterRound` (the trigger); `settingsPickBackupFolder`, `_refreshBackupFolderLabel`, `saveAutoBackupFreq`, `saveAutoBackupScope`, `openCheckpointFromSettings`, `initBackupSyncSettings` (Settings panel handlers); window-bound exports so app.js can call without tight coupling
+- [js/app.js](js/app.js) — `_logRoundBump` calls `window._autoBackupAfterRound` after instrumentation; `renderSettings` calls `initBackupSyncSettings` to populate the panel on open
+- [index.html](index.html) — new `💾 Backup Sync` settings section: folder picker row, frequency radio pills, scope checkbox grid, Firefox/Safari unsupported banner
+- [style.css](style.css) — `.settings-backup-folder-label`, `.settings-backup-scope-grid` (3-column grid), `.settings-backup-scope-row`, `.settings-backup-unsupported` banner styling
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.319
 
 **Save Checkpoint button no longer silently dead in Edge/Chrome — user-activation timing fix**

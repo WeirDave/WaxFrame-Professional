@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.319">
+  <link rel="stylesheet" href="style.css?v=3.63.320">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.319",
+    "softwareVersion": "3.63.320",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1093,6 +1093,67 @@
             </div>
           </div>
 
+          <!-- v3.63.320 — Backup Sync settings. Manual "Save Checkpoint"
+               (Checkpoint screen → Menu) stays as the one-off escape
+               hatch. This section configures the auto-backup loop:
+               folder choice, frequency presets (every / every other /
+               every 3rd round, or off), and which sections to include.
+               Firefox/Safari users see the section but with a disabled
+               banner — auto-backup requires the File System Access API,
+               which only Chrome/Edge/Opera ship. -->
+          <div class="settings-section" id="settingsBackupSection">
+            <h2 class="settings-section-title">&#x1F4BE; Backup Sync</h2>
+            <p class="settings-section-desc">Save a checkpoint to a folder on your disk automatically as you work &mdash; so if your browser cache gets cleared, the tab crashes, or you switch machines, you have a fresh recovery point ready. Pick a folder once and forget about it. Manual <strong>Save Checkpoint</strong> on the Checkpoint screen still works for one-off saves anytime. Requires Chrome, Edge, or Opera (file-system API not exposed in Firefox/Safari).</p>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Backup folder</span>
+                <span class="settings-row-help">Where backup files land on disk. First click opens the OS picker pre-navigated to <code>~/Documents</code> &mdash; pick or create a <code>WaxFrame</code> subfolder there. The choice is remembered across sessions (one permission prompt at session start).</span>
+              </div>
+              <div class="settings-inline-controls">
+                <span class="settings-backup-folder-label" id="setBackupFolderLabel">&mdash; Not set &mdash;</span>
+                <button class="btn settings-reset-btn" id="setBackupFolderBtn" onclick="settingsPickBackupFolder()">&#x1F4C1; Pick folder</button>
+              </div>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Auto-backup frequency</span>
+                <span class="settings-row-help">How often a backup file lands. More frequent = more disk space + finer rollback granularity; less frequent = less clutter. <strong>Off</strong> disables auto-backup entirely; the manual Save Checkpoint flow still works.</span>
+              </div>
+              <div class="settings-inline-controls" role="radiogroup" aria-label="Auto-backup frequency">
+                <label class="settings-radio-pill"><input type="radio" name="setBackupFreq" value="0" onchange="saveAutoBackupFreq(this.value)"><span>Off</span></label>
+                <label class="settings-radio-pill"><input type="radio" name="setBackupFreq" value="1" onchange="saveAutoBackupFreq(this.value)"><span>Every round</span></label>
+                <label class="settings-radio-pill"><input type="radio" name="setBackupFreq" value="2" onchange="saveAutoBackupFreq(this.value)"><span>Every other round</span></label>
+                <label class="settings-radio-pill"><input type="radio" name="setBackupFreq" value="3" onchange="saveAutoBackupFreq(this.value)"><span>Every 3rd round</span></label>
+              </div>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Sections to include</span>
+                <span class="settings-row-help">Which pieces of WaxFrame state land in each backup file. Defaults match a self-portable backup &mdash; project + session + AI list + models + builder + license. <strong>API keys</strong> are off by default (sensitive). Same 9 sections as the manual Checkpoint screen, where each has a full description. <a href="javascript:void(0)" onclick="openCheckpointFromSettings()">See section details on the Checkpoint screen &rarr;</a></span>
+              </div>
+              <div class="settings-backup-scope-grid">
+                <label class="settings-backup-scope-row"><input type="checkbox" id="setBackupScopeProjectInfo" onchange="saveAutoBackupScope()"><span>Project info</span></label>
+                <label class="settings-backup-scope-row"><input type="checkbox" id="setBackupScopeRefMaterial" onchange="saveAutoBackupScope()"><span>Reference material</span></label>
+                <label class="settings-backup-scope-row"><input type="checkbox" id="setBackupScopeStartingDoc" onchange="saveAutoBackupScope()"><span>Starting document</span></label>
+                <label class="settings-backup-scope-row"><input type="checkbox" id="setBackupScopeSession" onchange="saveAutoBackupScope()"><span>Session in progress</span></label>
+                <label class="settings-backup-scope-row"><input type="checkbox" id="setBackupScopeAiList" onchange="saveAutoBackupScope()"><span>AI list</span></label>
+                <label class="settings-backup-scope-row"><input type="checkbox" id="setBackupScopeModels" onchange="saveAutoBackupScope()"><span>Model picks</span></label>
+                <label class="settings-backup-scope-row"><input type="checkbox" id="setBackupScopeKeys" onchange="saveAutoBackupScope()"><span>API keys <em>(sensitive)</em></span></label>
+                <label class="settings-backup-scope-row"><input type="checkbox" id="setBackupScopeBuilder" onchange="saveAutoBackupScope()"><span>Builder selection</span></label>
+                <label class="settings-backup-scope-row"><input type="checkbox" id="setBackupScopeLicense" onchange="saveAutoBackupScope()"><span>License key</span></label>
+              </div>
+            </div>
+
+            <div class="settings-row settings-backup-unsupported" id="setBackupUnsupportedRow" style="display:none;">
+              <div class="settings-row-label" style="width:100%;">
+                <span class="settings-row-help" style="font-weight:600;">&#x26A0;&#xFE0F; Auto-backup requires Chrome, Edge, or Opera. Your current browser doesn&rsquo;t support the File System Access API used here. The manual <strong>Save Checkpoint</strong> button still works &mdash; it falls back to the standard download flow.</span>
+              </div>
+            </div>
+          </div>
+
           <div class="settings-section">
             <h2 class="settings-section-title">🔬 Diagnostics</h2>
             <p class="settings-section-desc">Off by default. Turn these on only when troubleshooting a specific issue — they have a small memory + speed cost while active. Power-users only; nothing here is needed for normal use.</p>
@@ -1400,7 +1461,7 @@
 
             <div class="checkpoint-actions">
               <button class="btn" onclick="exitCheckpointScreen()" title="Cancel and return without saving">Cancel</button>
-              <!-- v3.63.319 — Single Save Checkpoint button, smart-routed
+              <!-- v3.63.320 — Single Save Checkpoint button, smart-routed
                    based on browser support. Chrome/Edge/Opera: opens the
                    FSA folder picker (first time), then subsequent saves
                    write silently to the remembered folder. Firefox /
@@ -3446,24 +3507,24 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.319';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.320';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.319"></script>
-<script src="lib/jszip.min.js?v=3.63.319"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.319"></script>
-<script src="js/version.js?v=3.63.319"></script>
-<script src="js/storage.js?v=3.63.319"></script>
-<script src="js/theme.js?v=3.63.319"></script>
-<script src="js/audio.js?v=3.63.319"></script>
-<script src="js/scenes.js?v=3.63.319"></script>
-<script src="js/wf-debug.js?v=3.63.319"></script>
-<script src="js/provider-models.js?v=3.63.319"></script>
-<script src="js/provider-catalog.js?v=3.63.319"></script>
-<script src="js/api.js?v=3.63.319"></script>
-<script src="js/templates.js?v=3.63.319"></script>
-<script src="js/api-links.js?v=3.63.319"></script>
-<script src="js/app.js?v=3.63.319"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.320"></script>
+<script src="lib/jszip.min.js?v=3.63.320"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.320"></script>
+<script src="js/version.js?v=3.63.320"></script>
+<script src="js/storage.js?v=3.63.320"></script>
+<script src="js/theme.js?v=3.63.320"></script>
+<script src="js/audio.js?v=3.63.320"></script>
+<script src="js/scenes.js?v=3.63.320"></script>
+<script src="js/wf-debug.js?v=3.63.320"></script>
+<script src="js/provider-models.js?v=3.63.320"></script>
+<script src="js/provider-catalog.js?v=3.63.320"></script>
+<script src="js/api.js?v=3.63.320"></script>
+<script src="js/templates.js?v=3.63.320"></script>
+<script src="js/api-links.js?v=3.63.320"></script>
+<script src="js/app.js?v=3.63.320"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

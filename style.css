@@ -8968,6 +8968,52 @@ kbd {
   font-style: italic;
   margin: var(--space-8) 0 0;
 }
+
+/* v3.63.320 — Backup Sync section. Folder label sits next to the Pick
+   button; scope checkboxes lay out in a compact 3-column grid so all 9
+   sections fit without scrolling the settings row. */
+.settings-backup-folder-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  padding: 6px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-backup-scope-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px 14px;
+  min-width: 360px;
+}
+.settings-backup-scope-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  cursor: pointer;
+}
+.settings-backup-scope-row input[type="checkbox"] {
+  flex-shrink: 0;
+}
+.settings-backup-scope-row em {
+  font-style: italic;
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+}
+.settings-backup-unsupported {
+  background: rgba(244, 180, 0, 0.08);
+  border: 1px solid rgba(244, 180, 0, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-top: 8px;
+}
 .settings-saved-note {
   font-size: var(--fs-sm);
   color: var(--green);
