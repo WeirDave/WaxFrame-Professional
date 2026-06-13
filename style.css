@@ -18134,14 +18134,32 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   color: var(--accent);
   border-color: var(--accent);
 }
-/* v3.63.312 — "Save as new profile" prompt span sits at the end of the
-   status note. Same dim italic so it reads as a continuation of the note
-   ("X of Y are using their cheap pick. The rest were manually overridden.
-   — Save this mix as a profile?") rather than competing for attention. The
-   button itself flows immediately after via the parent flex row, anchored
-   to the right edge by the note's margin-left:auto. */
+/* v3.63.312 — Right-aligned group containing (note + prompt span + save
+   button). The outer .hive-profile-bar is flex-wrap:wrap; without this
+   group, the save button dropped to the next line whenever the note
+   text didn't leave room for it. The group itself has margin-left:auto
+   to anchor to the right edge (replacing the note's old margin-left:auto
+   when it sat at the top level). flex-wrap:wrap on the group keeps the
+   note + button on the same logical line when they fit, and lets them
+   stack neatly on narrow screens when they don't. */
+.hive-profile-bar-right-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.hive-profile-bar-right-group .hive-profile-bar-note {
+  /* Inside the group, the note loses its own margin-left:auto — the
+     group handles right alignment. Note keeps its max-width and
+     text-align:right so multi-line wraps still look clean. */
+  margin-left: 0;
+}
+/* "— Save this mix as a profile?" callout sitting at the tail of the
+   note text. Italic dim so it reads as a continuation of the note
+   rather than a competing element. */
 .hive-profile-bar-save-prompt {
-  margin-left: 6px;
   font-style: italic;
   color: var(--text-dim);
 }

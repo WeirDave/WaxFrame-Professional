@@ -6733,21 +6733,34 @@ function renderHiveProfileBar() {
   //     cached yet, or tier mix has zero overrides — see above).
   //   • Delete profile stays next to the dropdown — it's a destructive
   //     action on the SELECTED profile, not a snapshot of current state.
+  const promptSpan = _saveIsUseful
+    ? `<span class="hive-profile-bar-save-prompt"> — Save this mix as a profile?</span>`
+    : '';
   const saveBtn = _saveIsUseful
-    ? `<span class="hive-profile-bar-save-prompt">— Save this mix as a profile?</span><button class="btn btn-sm hive-profile-bar-save" onclick="openSaveHiveProfileModal()" title="Capture your current per-AI model picks as a reusable named profile you can pick from the dropdown later">💾 Save as new profile</button>`
+    ? `<button class="btn btn-sm hive-profile-bar-save" onclick="openSaveHiveProfileModal()" title="Capture your current per-AI model picks as a reusable named profile you can pick from the dropdown later">💾 Save as new profile</button>`
     : '';
   const delBtn = activeOpt?.isCustom
     ? `<button class="btn btn-sm hive-profile-bar-delete" onclick="deleteCustomHiveProfile('${escapeHtml(activeOpt.id)}')" title="Delete the saved profile &quot;${escapeHtml(activeOpt.rawLabel)}&quot;">🗑 Delete profile</button>`
     : '';
 
+  // v3.63.312 — Wrap (note + prompt + save button) in a single
+  // right-aligned flex group so they stay together. The outer bar is
+  // flex-wrap:wrap; without the group, the save button drops to the
+  // next line whenever the note text doesn't leave room for it on the
+  // first line (David's screenshot caught this). Group's margin-left:
+  // auto handles the right-edge alignment that .hive-profile-bar-note
+  // used to do on its own; the note loses its own margin-left:auto
+  // when it lives inside the group (overridden by CSS below).
   bar.innerHTML = `
     <span class="hive-profile-bar-label">Hive Profile:</span>
     <select class="hive-profile-bar-select" id="hiveProfileSelect" onchange="applyHiveProfile(this.value)">
       ${options}
     </select>
     ${delBtn}
-    <span class="hive-profile-bar-note">${note}</span>
-    ${saveBtn}
+    <div class="hive-profile-bar-right-group">
+      <span class="hive-profile-bar-note">${note}${promptSpan}</span>
+      ${saveBtn}
+    </div>
   `;
 }
 
