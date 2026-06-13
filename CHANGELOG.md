@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.311
+
+**Halt before Builder on EVERY reviewer-phase failure, not just bee-fatal ones · Builder no longer spends money on a degraded reviewer set**
+
+Build: `20260613-005`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David: "we should be interrupting anytime we get an interruption mid round or feedback directly back from a reviewer and we should halt the ability for the builder to go so that we can fix what the reviewer problem is and then try to rerun that reviewer round again not full round but just for that specific AI of course."
+
+Pre-v3.63.311 the halt-before-Builder behavior only fired for bee-fatal codes (MODEL_DEPRECATED, AUTH_FAILED, MODEL_REJECTS_INSTRUCTIONS, MODEL_NEEDS_DIFFERENT_ENDPOINT, CREDIT_LOW, CONTENT_FILTERED on the Builder). For non-fatal codes (NETWORK_ERROR, EMPTY_RESPONSE, RATE_LIMITED, CORS_BLOCKED, PROVIDER_DOWN, CONTENT_FILTERED on a reviewer), the round continued and the Builder spent money on a degraded reviewer set. That's the gap that burned David on Together AI's empty-response round 20 — v3.63.310's surgical-retry path papered over it after the fact, but the right fix is to never spend the Builder call in the first place.
+
+The halt logic in `WF_DEBUG.showCard` is now gated on a new `_HALT_EXEMPT_CODES` set — only warnings (SLOW_RESPONDER, IMPORT_WARNINGS) and off-round flows (LICENSE_*, MODELS_ENDPOINT_*, NO_MODELS) skip the halt. Every other classified error sets `_beeFatalInRound = true`, tracks the failing AI on `_partialRound.failedAIIds`, and cancels Auto Mode so the user actually sees the troubleshooting card. The runRound halt block at the end of the reviewer phase then skips the Builder phase entirely, leaving the user on a paused round with the failure card open.
+
+Recovery uses the same three-option pattern landed in v3.63.310: pick a different model, re-send the failing bee's prompt only, disable the AI for the session, OR the last-resort retry round. The auto-route at the top of runRound continues to do the right thing — clicking Smoke or toggling Auto on after fixing the bee surgically retries instead of re-billing every healthy bee.
+
+**Auto Mode interaction.** Auto cancels on ANY reviewer failure now (was: only bee-fatal). The console log + toast carry a generic "halt before Builder" framing instead of the prior "model/key fix" wording so the message is honest about what's happening for a transient network blip vs a permanent model retirement. The user's choice is the same either way: fix the bee and resume, disable the bee and proceed degraded, or accept the round as-is and start a new one.
+
+**What's NOT changed.** `_BEE_FATAL_CODES` still drives model quarantine and `_beeFatalCardActive` (closeTroubleshootingCard's auto-chain-resume hook). Both have semantics specific to "this bee's MODEL is broken, not a transient issue" — quarantining a model just because the network blipped would be wrong; suppressing the auto-chain-resume on dismissal would be too aggressive for a transient failure that resolves on its own.
+
+### Files touched
+
+- [js/wf-debug.js](js/wf-debug.js) — `showCard`: halt + failedAIIds tracking + Auto-cancel moved out of the `_BEE_FATAL_CODES` gate and into a new `!_HALT_EXEMPT_CODES` gate; `_beeFatalCardActive` stays gated on bee-fatal; new `_HALT_EXEMPT_CODES` set lists the codes that bypass the halt (warnings + off-round flows)
+- [js/app.js](js/app.js) — `runRound` halt block: console message + status pill rephrased to "N bee(s) failed mid-round" instead of "bee-fatal failure," matching the broader scope
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.310
 
 **Surgical retry for non-fatal failures · three-option recovery on every troubleshooting card · degraded-round undo+resend (David live-review)**
