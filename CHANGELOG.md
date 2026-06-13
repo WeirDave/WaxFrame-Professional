@@ -2,6 +2,58 @@
 
 ---
 
+## v3.63.316
+
+**File System Access API spike (Phase 1): "📁 Save to folder" lands checkpoints in a folder you pick once, no more Downloads-folder rummaging (Chrome/Edge only — Firefox/Safari unchanged)**
+
+Build: `20260613-010`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Backlog FEATURE #3 (FSA API exploration) opened as a research spike — the question was whether the File System Access API was worth wiring through WaxFrame's save/load flows. This release ships **Phase 1**: enough working code to test the round-trip and decide on Phase 2.
+
+**What you get in Chrome / Edge / Opera:** a new `📁 Save to folder` button next to the existing `💾 Save Checkpoint` on the Checkpoint screen's Save panel. First click pops the OS folder picker pre-navigated to `~/Documents` (Mac) or `C:\Users\<name>\Documents` (Windows). Pick or create a `WaxFrame` subfolder there. From that point on, every click of the button writes the timestamped checkpoint JSON straight into that folder — no Downloads-folder rummaging, no rename dance.
+
+The folder handle persists in IndexedDB across page reloads. On a fresh session the browser pops a single small permission prompt (an OS-level FSA contract WaxFrame can't bypass) — one click of `Allow` and you're back to silent saves for the rest of the session.
+
+**What you get in Firefox / Safari:** nothing. The button doesn't render because the FSA API isn't supported in those browsers. The legacy `💾 Save Checkpoint` → Downloads flow keeps working untouched.
+
+### Design decisions worth flagging
+
+**Default location: `~/Documents`** (David's call). The FSA `showDirectoryPicker` accepts a `startIn` hint with a fixed enum of well-known locations (`desktop`, `documents`, `downloads`, `music`, `pictures`, `videos`) — `documents` is the only one that's both cross-platform AND not auto-cleaned by the OS. Temp dirs aren't an accepted `startIn` value AND the OS auto-cleans them, which would lose your projects.
+
+**No silent folder creation.** The OS picker dialog ALWAYS opens on first click — the FSA contract gives the user final say on where the app can write. WaxFrame can suggest a starting folder; it can't pick on the user's behalf.
+
+**Handle persistence via IDB, not localStorage.** `FileSystemDirectoryHandle` is structured-cloneable per the WHATWG spec, so it survives IDB storage natively. localStorage only takes strings — handles serialized through it would fail to rehydrate.
+
+**Filename collisions: not handled, by design.** Each save writes a fresh `<project>-<version>-WaxFrame-Checkpoint-<YYYYMMDD-HHmm>.json` — same shape as the download path. Two saves in the same minute would clobber each other, but that's the same risk as the download path and is rare in practice. Phase 2 may add `-rN` round suffix or rotation.
+
+### What's deferred to Phase 2 (only if Phase 1 feels right)
+
+- **Auto-save every N seconds** — the backlog's original ask. Deferred because it has real failure modes (handle invalidation if the folder is moved, conflict if you edit the JSON in another app, permission re-prompts every session). Manual saves prove the workflow without those risks.
+- **Load-from-folder** — list `.json` files in the synced folder on the Restore panel, pick one without the OS file dialog. The existing Choose File flow already works fine on any folder; the FSA win here is smaller than on the save side.
+- **Project files instead of checkpoint files** — the backlog framed this as Project sync. Checkpoints carry strictly more state (project + hive + session), so Phase 1 syncs those and lets you decide later whether a thinner Project-only file is worth a separate path.
+
+### Try it (Chrome / Edge / Opera)
+
+1. Worker Bees screen → nav menu → `💾 Checkpoint - Save`
+2. Tick the sections you want in the file (Project info, Session, etc.)
+3. Click `📁 Save to folder` instead of `💾 Save Checkpoint`
+4. OS picker opens at `~/Documents` — navigate to (or create) a `WaxFrame` folder, click `Select Folder`
+5. File lands in that folder. Reload the page, hit the button again — single Allow prompt, then silent save.
+
+Holler with feedback. If it feels good we ship Phase 2; if it feels awkward we know without having spent the auto-save budget.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — `_buildCheckpointEnvelope` extracted from `_writeCheckpoint` so the FSA path and the download path share one source of truth for the scope splice + filename + blob. New FSA helpers: `_fsaSupported`, `_fsaGetStoredHandle`, `_fsaPutStoredHandle`, `_fsaEnsureSyncDir`, `_fsaWriteEnvelopeToFolder`, `confirmSaveCheckpointToFolder`, `fsaForgetSyncDir`. DOMContentLoaded hook adds `.is-fsa-supported` to `<body>` on browsers that support it.
+- [index.html](index.html) — `📁 Save to folder` button added to the Checkpoint Save panel actions; carries `.fsa-only` class so it's hidden in unsupported browsers.
+- [style.css](style.css) — new `.fsa-only` / `body.is-fsa-supported .fsa-only` rules to gate the FSA-only UI.
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.315
 
 **Hive Profile bar truly one row: prompt span dropped + right-group flex-basis 0 anchors on the dropdown line**
