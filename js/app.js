@@ -17375,8 +17375,14 @@ async function runRound(opts) {
     // the user with no surfaced recovery — Smoke and Auto-toggle both
     // re-billed every healthy bee.
     if (window._partialRound) window._partialRound.pausedHalted = true;
-    consoleLog(`🛑 Round ${round} halted — bee-fatal failure detected. Builder phase skipped to save the degraded call. Fix the flagged bee, then click Smoke (or toggle Auto) to finalize — it'll auto-route to a surgical retry instead of re-billing every bee.`, 'warn');
-    setStatus(`⏸ Round ${round} paused — fix the flagged bee, then click Smoke to finalize`);
+    // v3.63.311 — Halt now fires for EVERY reviewer-phase failure (not
+    // just bee-fatal). The console message and status pill no longer
+    // pin the cause to "bee-fatal" since the halt is generic; the
+    // troubleshooting card carries the specific diagnosis.
+    const _failedCount = (window._partialRound?.failedAIIds?.length) || 1;
+    const _failedNoun = _failedCount === 1 ? 'a bee' : `${_failedCount} bees`;
+    consoleLog(`🛑 Round ${round} halted — ${_failedNoun} failed mid-round. Builder phase skipped to save the call. Fix the flagged bee${_failedCount === 1 ? '' : 's'} on the troubleshooting card, then click Re-send (or Smoke) to finalize — surgical retry, not a full re-bill.`, 'warn');
+    setStatus(`⏸ Round ${round} paused — fix the flagged bee${_failedCount === 1 ? '' : 's'} on the card, then re-send or smoke`);
     if (btn) {
       btn.classList.remove('running');
       const lbl = btn.querySelector('.shake-wide-label');

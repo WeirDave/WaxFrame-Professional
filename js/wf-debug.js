@@ -165,29 +165,35 @@ window.WF_DEBUG = {
       if (!bad && typeof API_CONFIGS !== 'undefined' && ctx.provider && API_CONFIGS[ctx.provider]) bad = API_CONFIGS[ctx.provider].model;
       if (bad && typeof quarantineModel === 'function') quarantineModel(bad, entry.code);
     }
-    // v3.63.252 — Bee-fatal card → cancel Auto Mode immediately and block the
-    // auto-chain-resume hook in closeTroubleshootingCard. Without this, Auto
-    // would re-fire the round (re-billing every other bee) the moment the user
-    // dismissed the card, even though the offending bee's model still can't
-    // succeed. The user must pick a new model and use "Re-send {ai}'s prompt
-    // only" to finalize the round at one-bee cost instead of a full round.
+    // v3.63.252 — Bee-fatal card → block the auto-chain-resume hook in
+    // closeTroubleshootingCard so dismissing the card alone can't trigger
+    // a fresh round. Stays gated on _BEE_FATAL_CODES because for non-fatal
+    // failures (transient network, etc.) we DO want the auto-chain hook
+    // available if the user explicitly chooses to dismiss and continue.
     if (entry && WF_DEBUG._BEE_FATAL_CODES.has(entry.code)) {
       window._beeFatalCardActive = true;
-      // v3.63.255 — Signal runRound that a bee-fatal failure happened in this
-      // round so it can halt before the Builder phase fires (saves the
-      // degraded Builder call, often the most expensive call in the round —
-      // a Gemini Pro builder on a 10-bee hive is a 16k-char prompt + 30s+ of
-      // compute that would otherwise be re-spent the moment the user clicks
-      // Re-send to finalize). runRound clears this flag at every round
-      // start, so a stale value from a prior round can't bleed forward.
-      window._beeFatalInRound = true;
-      // v3.63.256 — Track the failing bee id on _partialRound so the next
-      // runRound entry can auto-route to a surgical retry instead of firing
-      // a fresh round. Without this, dismissing the card stranded the user
-      // — there was no surfaced way to invoke Re-send once the card was
-      // gone, and the only remaining actions (Smoke / Auto-toggle) fired
-      // fresh rounds that re-billed every healthy bee. Now the natural
-      // action after fixing the bee does the right thing automatically.
+    }
+    // v3.63.311 — Halt the Builder for EVERY reviewer-phase failure, not
+    // just bee-fatal ones. David: "we should be interrupting anytime we
+    // get an interruption mid round or feedback directly back from a
+    // reviewer and we should halt the ability for the builder to go so
+    // that we can fix what the reviewer problem is and then try to rerun
+    // that reviewer round again not full round but just for that specific
+    // AI of course." Pre-v3.63.311 only MODEL_DEPRECATED, AUTH_FAILED,
+    // MODEL_REJECTS_INSTRUCTIONS, MODEL_NEEDS_DIFFERENT_ENDPOINT, and
+    // CONTENT_FILTERED halted; NETWORK_ERROR, EMPTY_RESPONSE,
+    // RATE_LIMITED, CORS_BLOCKED, CREDIT_LOW, PROVIDER_DOWN let the
+    // Builder run against a degraded reviewer set — exactly the Together
+    // AI round 20 scenario that lost the round's reviewer chair.
+    //
+    // Warning codes (SLOW_RESPONDER, IMPORT_WARNINGS, MODELS_ENDPOINT_*,
+    // LICENSE_*) DO NOT halt — those fire outside the round path or
+    // describe a non-blocking condition. The _HALT_EXEMPT_CODES set
+    // explicitly enumerates them so adding new failure codes downstream
+    // automatically inherits the halt-before-Builder behavior.
+    const _isHaltExempt = entry && WF_DEBUG._HALT_EXEMPT_CODES.has(entry.code);
+    if (entry && !_isHaltExempt) {
+      window._beeFatalInRound = true;   // legacy flag name; semantically now "halt this round"
       if (window._partialRound && ctx.aiId) {
         if (!Array.isArray(window._partialRound.failedAIIds)) {
           window._partialRound.failedAIIds = [];
@@ -204,10 +210,10 @@ window.WF_DEBUG = {
         window._autoFailureStreak = 0;
         if (typeof updateAutoToggleUI === 'function') updateAutoToggleUI();
         if (typeof consoleLog === 'function') {
-          consoleLog(`🤖 Auto Mode cancelled — ${ctx.aiName || 'a bee'} needs a model/key fix before the round can finalize`, 'warn');
+          consoleLog(`🤖 Auto Mode cancelled — ${ctx.aiName || 'a bee'} failed mid-round; halt before Builder so you can decide`, 'warn');
         }
         if (typeof toast === 'function') {
-          toast(`🤖 Auto Mode off — fix ${ctx.aiName || 'the bee'} and click Smoke to finalize`, 5000);
+          toast(`🤖 Auto Mode off — fix ${ctx.aiName || 'the bee'} and pick a recovery option`, 5000);
         }
       }
     }
@@ -216,11 +222,31 @@ window.WF_DEBUG = {
     }
   },
 
+  // v3.63.311 — Codes that should NOT trigger the halt-before-Builder
+  // behavior. Warnings (slow responder, import warnings) describe a
+  // non-blocking condition; license/models-endpoint errors fire outside
+  // the round path (Worker Bees screen, hive import flow). Everything
+  // else gets the halt by default so the user can fix the failure
+  // surgically before the Builder spends money on a degraded reviewer
+  // set. See showCard above for the gate.
+  _HALT_EXEMPT_CODES: new Set([
+    'SLOW_RESPONDER',
+    'IMPORT_WARNINGS',
+    'MODELS_ENDPOINT_AUTH',
+    'MODELS_ENDPOINT_PATH_NOT_FOUND',
+    'MODELS_ENDPOINT_SERVER_ERROR',
+    'MODELS_ENDPOINT_NO_MODELS',
+    'LICENSE_VERIFY_FAILED',
+    'LICENSE_INVALID',
+    'NO_MODELS'
+  ]),
+
   // v3.63.252 — Codes where the failure is rooted at one specific bee
   // (its model, its key, its content filter) and the round can only succeed
-  // by either fixing that bee or finishing without it. Auto-cancel fires
-  // for these; the round-wide retry button alone would just re-bill every
-  // other bee on a round that still can't succeed.
+  // by either fixing that bee or finishing without it. Used for model
+  // quarantine + _beeFatalCardActive (auto-chain-resume hook in
+  // closeTroubleshootingCard). The halt-before-Builder behavior moved off
+  // this set in v3.63.311 — see _HALT_EXEMPT_CODES above.
   _BEE_FATAL_CODES: new Set([
     'MODEL_NEEDS_DIFFERENT_ENDPOINT',
     'MODEL_REJECTS_INSTRUCTIONS',
