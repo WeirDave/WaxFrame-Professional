@@ -6733,9 +6733,6 @@ function renderHiveProfileBar() {
   //     cached yet, or tier mix has zero overrides — see above).
   //   • Delete profile stays next to the dropdown — it's a destructive
   //     action on the SELECTED profile, not a snapshot of current state.
-  const promptSpan = _saveIsUseful
-    ? `<span class="hive-profile-bar-save-prompt"> — Save this mix as a profile?</span>`
-    : '';
   const saveBtn = _saveIsUseful
     ? `<button class="btn btn-sm hive-profile-bar-save" onclick="openSaveHiveProfileModal()" title="Capture your current per-AI model picks as a reusable named profile you can pick from the dropdown later">💾 Save as new profile</button>`
     : '';
@@ -6743,14 +6740,14 @@ function renderHiveProfileBar() {
     ? `<button class="btn btn-sm hive-profile-bar-delete" onclick="deleteCustomHiveProfile('${escapeHtml(activeOpt.id)}')" title="Delete the saved profile &quot;${escapeHtml(activeOpt.rawLabel)}&quot;">🗑 Delete profile</button>`
     : '';
 
-  // v3.63.312 — Wrap (note + prompt + save button) in a single
-  // right-aligned flex group so they stay together. The outer bar is
-  // flex-wrap:wrap; without the group, the save button drops to the
-  // next line whenever the note text doesn't leave room for it on the
-  // first line (David's screenshot caught this). Group's margin-left:
-  // auto handles the right-edge alignment that .hive-profile-bar-note
-  // used to do on its own; the note loses its own margin-left:auto
-  // when it lives inside the group (overridden by CSS below).
+  // v3.63.312 / .315 — Wrap (note + save button) in a single right-aligned
+  // flex group so they stay together. v3.63.314 added an inline prompt
+  // span "— Save this mix as a profile?" between note and button to read
+  // as a callout for the button; David's v3.63.314 screenshot showed the
+  // prompt + button + note still wrapping to a second row, so v3.63.315
+  // drops the prompt entirely (the button's own label already says what
+  // it does) and trusts the flex-basis:0 group below to anchor the
+  // remainder on the dropdown row.
   bar.innerHTML = `
     <span class="hive-profile-bar-label">Hive Profile:</span>
     <select class="hive-profile-bar-select" id="hiveProfileSelect" onchange="applyHiveProfile(this.value)">
@@ -6758,7 +6755,7 @@ function renderHiveProfileBar() {
     </select>
     ${delBtn}
     <div class="hive-profile-bar-right-group">
-      <span class="hive-profile-bar-note">${note}${promptSpan}</span>
+      <span class="hive-profile-bar-note">${note}</span>
       ${saveBtn}
     </div>
   `;

@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.315
+
+**Hive Profile bar truly one row: prompt span dropped + right-group flex-basis 0 anchors on the dropdown line**
+
+Build: `20260613-009`<br>
+Released: `2026-06-13`
+
+### What changed
+
+v3.63.314 was supposed to pull the note + button onto the same row as the dropdown. David's v3.63.314 screenshot showed it still wrapping to a second row: "well this is 314.... still not right. remove '. — Save this mix as a profile?' and then move it all up to the same line."
+
+Two reasons it didn't behave:
+
+**1. The right-group's `flex: 1 1 auto` kept its hypothetical main size at the content's natural width** — which (note text ~420px + prompt ~180px + button ~165px = ~765px) exceeds the available space on the dropdown row after the dropdown + label + gaps. The outer bar's `flex-wrap: wrap` triggers based on the hypothetical size, so the group wrapped to a new line BEFORE the flex algorithm got to shrink anything inside it.
+
+Switched to `flex: 1 1 0`. The `flex-basis: 0` makes the group's hypothetical main size zero — well under any wrap threshold. flex-grow expands it from there to claim whatever's left of the dropdown row. The note inside shrinks (max-width:none + min-width:0) and its text wraps multi-line within the group instead of pushing the group wider.
+
+**2. The inline prompt span "— Save this mix as a profile?" was dropped per David's instruction.** The button's own label "💾 Save as new profile" already signals what it does, and removing the prompt gives the note more horizontal room to fit on one line at typical viewport widths.
+
+Also reset `text-wrap` from `balance` to `normal` inside the group — the v3.63.157 balance heuristic fights against the flex shrink algorithm, leaving the note at a wider hypothetical size than the available space.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `renderHiveProfileBar`: `promptSpan` removed entirely; comment block updated to explain the v3.63.314 → 315 transition
+- [style.css](style.css) — `.hive-profile-bar-right-group` switched from `flex: 1 1 auto` to `flex: 1 1 0`; nested note gets `text-wrap: normal`; `.hive-profile-bar-save-prompt` rule retired (no longer rendered)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.314
 
 **Hive Profile bar tighter: dropdown + note + save button now share one row instead of stacking**

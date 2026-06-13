@@ -18134,45 +18134,35 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   color: var(--accent);
   border-color: var(--accent);
 }
-/* v3.63.312/313 — Right-aligned group containing (note + prompt span +
-   save button). The outer .hive-profile-bar is flex-wrap:wrap; without
-   this group, the save button dropped to the next line whenever the
-   note text didn't leave room for it. The group itself has flex:1 so
-   it consumes the available space remaining on the dropdown row, and
-   the content stays right-aligned via justify-content:flex-end.
-   min-width:0 + the nested note overrides below let the note text
-   wrap multi-line within the group instead of forcing the whole group
-   to wrap to a new row — David's report: "lots of wasted space" when
-   the group dropped under the dropdown. */
+/* v3.63.312–315 — Right-aligned group containing the status note + save
+   button on the same row as the dropdown. The outer .hive-profile-bar
+   is flex-wrap:wrap; v3.63.313/314 used flex:1 1 auto which keeps the
+   group's hypothetical main size at its CONTENT width — which is large
+   enough to trigger the bar's wrap before the flex algorithm gets to
+   shrink anything. David flagged the result: "lots of wasted space"
+   with the group sitting under the dropdown.
+   v3.63.315 switches to flex:1 1 0 so the group's hypothetical main
+   size is ZERO, well under any wrap threshold; flex-grow then expands
+   it to claim the remaining dropdown-row width. The note inside
+   shrinks (max-width:none + min-width:0) and its text wraps multi-line
+   within the group instead of forcing the group wider. text-wrap is
+   reset to normal so the v3.63.157 balance heuristic doesn't fight the
+   shrink. */
 .hive-profile-bar-right-group {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
   justify-content: flex-end;
   flex-wrap: nowrap;
 }
 .hive-profile-bar-right-group .hive-profile-bar-note {
-  /* Inside the group, the note loses its margin-left:auto (the group
-     owns right alignment) and its hard 560px max-width (the group's
-     flex:1 controls available space — the note shrinks/wraps to fit
-     whatever's left after the button). text-align:right stays so
-     multi-line wraps still look clean.
-     v3.63.157 added the 560px max-width to fix mid-sentence wraps; in
-     the group context the available space IS the wrap budget, so the
-     fixed max-width does more harm than good. */
   margin-left: 0;
   max-width: none;
   min-width: 0;
   flex: 0 1 auto;
-}
-/* "— Save this mix as a profile?" callout sitting at the tail of the
-   note text. Italic dim so it reads as a continuation of the note
-   rather than a competing element. */
-.hive-profile-bar-save-prompt {
-  font-style: italic;
-  color: var(--text-dim);
+  text-wrap: normal;
 }
 .hive-profile-bar-delete {
   color: var(--red);
