@@ -222,24 +222,45 @@ PROVIDER + MODEL CACHES (dynamic keys per provider/AI id)
 ════════════════════════════════════════════════════════════
 
 waxframe_models_${providerId}            Model list cache
-                                         per provider. Set
-                                         on every fetch;
-                                         no reads — the
-                                         provider catalog
-                                         module reads from
-                                         its own runtime
-                                         shape, and this
-                                         key is a side-effect
-                                         persistence for
-                                         post-mortem only.
-                                         FLAGGED [WRITE-ONLY]
-                                         — would be a clean
-                                         pickup if the
-                                         persistence isn't
-                                         used by anything;
-                                         needs runtime
-                                         verification before
-                                         removing.
+                                         per provider. 7-day
+                                         TTL. Verified
+                                         ACTIVELY READ at
+                                         runtime in v3.63.300:
+                                         • api.js fetchModels
+                                           ForProvider — cache
+                                           hit path, returns
+                                           cached if fresh
+                                         • api.js getModels
+                                           ForProvider — hot
+                                           path for the model
+                                           dropdown, falls
+                                           back to the catalog
+                                           fallback list only
+                                           if cache is empty
+                                         • app.js recheck
+                                           ModelForAI — read/
+                                           write for the
+                                           recheck flow
+                                         • help.html dump
+                                           panel — diagnostic
+                                           read for the model
+                                           cache table
+                                         The static AST scan
+                                         in v3.63.294 flagged
+                                         this WRITE-ONLY
+                                         because the read sites
+                                         use template literals
+                                         (`waxframe_models_${
+                                         provider}`) that the
+                                         scanner didn't match
+                                         against the literal
+                                         SET templates. NOT a
+                                         clean pickup — the
+                                         cache is load-bearing
+                                         and removing it would
+                                         force a live /v1/
+                                         models GET on every
+                                         dropdown render.
 
 waxframe_tiers_${providerId}             Per-provider tier
                                          classification
@@ -259,27 +280,84 @@ waxframe_recommend_custom-${aiId}-reviewer        user clears
                                                   the cache or
                                                   changes the
                                                   prompt version.
-                                                  All 6 patterns
-                                                  show set=0
+
+                                                  Verified
+                                                  ACTIVELY READ
+                                                  + WRITTEN at
+                                                  runtime in
+                                                  v3.63.300:
+                                                  • getCached
+                                                    Recommendation
+                                                    (app.js
+                                                    L7804)
+                                                    READ —
+                                                    dynamic key
+                                                    `waxframe_
+                                                    recommend_${
+                                                    cacheId}`,
+                                                    7-day TTL
+                                                    against
+                                                    cached.ts
+                                                  • setCached
+                                                    Recommendation
+                                                    (app.js
+                                                    L8655)
+                                                    WRITE —
+                                                    same dynamic
+                                                    key, payload
+                                                    { ts, model,
+                                                    why, labels,
+                                                    none?,
+                                                    droppedCount?,
+                                                    droppedSample? }
+                                                  • Cleanup
+                                                    paths at
+                                                    7302-7309,
+                                                    8955-8962,
+                                                    15008-15013
+                                                    REMOVE the
+                                                    six role-
+                                                    specific
+                                                    templates
+                                                    when an AI
+                                                    is removed
+                                                    or recheck
+                                                    invalidates
+                                                  • Bulk-rotate
+                                                    at 7657-7661
+                                                    when prompt
+                                                    version
+                                                    advances
+
+                                                  The static AST
+                                                  scan in
+                                                  v3.63.294
+                                                  showed set=0
                                                   get=0 rem=3
-                                                  here because
-                                                  the SET sites
-                                                  use a fully
-                                                  dynamic key
-                                                  built from
-                                                  template strings
-                                                  that include
-                                                  the role at
-                                                  call time; the
-                                                  REM sites use
-                                                  separate
-                                                  literal templates
-                                                  for each role
-                                                  for cleanliness.
-                                                  Not orphan —
-                                                  audit-script
+                                                  per pattern
+                                                  because the
+                                                  SET/GET sites
+                                                  use one
+                                                  generic
+                                                  template
+                                                  (cacheId =
+                                                  `default-${
+                                                  aiId}-${role}`
+                                                  or `custom-${
+                                                  aiId}-${role}`)
+                                                  while the REM
+                                                  sites use the
+                                                  six fully-
+                                                  literal
+                                                  templates the
+                                                  scanner could
+                                                  attribute. Not
+                                                  orphan — audit-
+                                                  script
                                                   attribution
-                                                  artifact.
+                                                  artifact, runtime
+                                                  reconciles via
+                                                  cacheId.
 
 waxframe_recommend_promptver             'v2' marker. If
                                          missing or
@@ -372,37 +450,148 @@ FINDINGS SUMMARY
    Orphan keys (read-never-written,
      excluding intentional patterns):  0
 
-   Notable patterns to keep in mind for future passes:
+   Notable patterns kept in mind across this pass:
 
-   • waxframe_models_${providerId} flags WRITE-ONLY in the
-     audit. Needs runtime check: is the persisted cache
-     actually consumed on next boot, or is the in-memory
-     copy the only one ever read?
-   • The waxframe_recommend_* family shows odd set/get/rem
-     counts because the SETs use a single template that
-     includes the role at runtime while the REMs use 6
-     separate literal templates per role. Not orphan —
-     audit-script attribution artifact. Worth confirming
-     with a runtime trace.
+   • waxframe_models_${providerId} was flagged WRITE-ONLY
+     by the v3.63.294 static AST scan. v3.63.300 verified
+     at runtime that the cache is ACTIVELY READ by
+     getModelsForProvider (the dropdown hot path) and
+     fetchModelsForProvider (the 7-day cache hit path).
+     The static scanner missed it because both reads use
+     a template-literal key — the same pattern the SETs
+     use. Schema entry above updated; the cache is
+     load-bearing, not a candidate for removal.
+   • waxframe_recommend_* family also verified at runtime
+     in v3.63.300. getCachedRecommendation (READ) and
+     setCachedRecommendation (WRITE) share one dynamic
+     template `waxframe_recommend_${cacheId}` where
+     cacheId encodes default/custom + aiId + role.
+     Cleanup paths use the six fully-literal templates so
+     each role is cleared on AI removal / recheck-invalidate.
+     The "set=0 get=0 rem=3" attribution per pattern in
+     the static scan is an artifact of asymmetric template
+     literals — runtime reconciles via cacheId.
 
 
 ════════════════════════════════════════════════════════════
 REMAINING WORK ON BACKLOG #7
 ════════════════════════════════════════════════════════════
 
-1. Manual test plan: forward a v3.21-era profile through
-   every release boundary, confirm each read path tolerates
-   the historical shape it encounters.
+DONE in v3.63.300:
+  ✓ Runtime verification of the two flagged patterns
+    (waxframe_models_* and waxframe_recommend_*) — both
+    confirmed actively read; schema entries updated above
+    with the actual call sites and the static-scan
+    attribution artifact explanation.
+  ✓ Manual test plan written — see FORWARD-COMPAT TEST
+    PLAN section below.
 
-2. Runtime verification of the two "audit-script
-   attribution artifact" patterns flagged above
-   (waxframe_models_* and waxframe_recommend_*) — confirm
-   the in-memory model is the source of truth and the
-   persisted forms are post-mortem-only OR re-consumed
-   on boot.
+STILL OPEN:
+  • Per-key schema versioning. Today the canonical keys
+    accrete optional fields and rely on empty-object
+    fallbacks. A first-class schema-version field on each
+    payload would make the next audit's "what shape am I
+    looking at?" question instant. Defer to a future
+    audit cycle; current shape is healthy enough that this
+    is a nice-to-have, not a blocker.
 
-3. Per-key schema versioning. Today the canonical keys
-   accrete optional fields and rely on empty-object
-   fallbacks. A first-class schema-version field on each
-   payload would make the next audit's "what shape am I
-   looking at?" question instant.
+
+════════════════════════════════════════════════════════════
+FORWARD-COMPAT TEST PLAN — v3.21 PROFILE THROUGH CURRENT
+════════════════════════════════════════════════════════════
+Manual test plan for confirming a long-running user's
+localStorage survives every release boundary between v3.21
+(the oldest WaxFrame Professional version still in the wild)
+and current. Run this whenever the storage envelope changes
+(envelope.version bump in storage.js) or whenever a per-key
+shape changes in app.js. Each step describes the starting
+state, the migration path expected to fire, and the post-
+migration assertion you verify in DevTools.
+
+A. SETUP — capture a v3.21 starting snapshot
+   1. Open a fresh browser profile / clean Incognito window.
+   2. Load WaxFrame at the v3.21 tag in localhost (git
+      checkout v3.21, open file://… or python -m http.server).
+      Note: vendor libs may have moved; use the v3.21 lib/
+      directory not current.
+   3. Configure: one default AI (Claude) with a real key,
+      one custom AI (Open WebUI on localhost), one project
+      with two saved checkpoints, one suppress-prompt
+      dismissed (e.g. theme-help confirm).
+   4. Export localStorage to a JSON file via
+      `JSON.stringify(localStorage)` in the console. This
+      is the FROZEN SNAPSHOT used for every following step.
+
+B. MIGRATIONS to walk (in order)
+   For each release range below, hot-swap to the target
+   tag and load the page. Confirm: no thrown errors in
+   console; the configured AI + project + checkpoints are
+   visible; the suppress-prompt stays suppressed.
+
+   v3.21 → v3.32  Envelope was pre-v6 in this range.
+                  Storage.js read path should auto-migrate
+                  envelope.version to v4. Key migrations
+                  worth eyeballing: waxframe_v2_hive shape
+                  change (api configs moved into hive),
+                  waxframe_v2_settings retiring (read-only
+                  legacy after v3.45).
+   v3.32 → v3.45  envelope.version bump to v5. The pre-
+                  v3.45 waxframe_v2_settings key gets
+                  one-shot-migrated into the hive envelope
+                  on first read. Confirm settings persisted
+                  (theme, mute, devtoolbar position).
+   v3.45 → v3.63  envelope.version bump to v6. Many per-
+                  feature keys added across this range
+                  (waxframe_dev, waxframe_hive_profile,
+                  waxframe_conflict_ledger, the recommend
+                  cache family, the models cache family,
+                  the tiers cache, etc.). Each is
+                  defaulted to empty/false at read time
+                  if absent, so the v3.21 snapshot reaches
+                  the work screen with all new toggles at
+                  their defaults — no manual cleanup
+                  required.
+   v3.63 → current  Within v3.63.* the recommend cache
+                  invalidates whenever waxframe_recommend_
+                  promptver doesn't match the current
+                  prompt-version sentinel (currently 'v2').
+                  Confirm: load with `localStorage.
+                  removeItem('waxframe_recommend_promptver')`
+                  first; the IIFE at app.js L7657-7661
+                  should clean the entire family on next
+                  load.
+
+C. PER-KEY SPOT CHECKS (after the full walk)
+   For each key listed below, open DevTools and verify the
+   expected post-migration shape:
+
+   • waxframe_v2_hive       envelope { version: 6, payload: {...} }
+   • waxframe_v2_settings   absent OR the legacy shape (we
+                            keep it readable but stop
+                            writing it)
+   • waxframe_dev           'true' / 'false' (string)
+   • waxframe_muted         'true' / 'false' (string)
+   • waxframe_v2_theme      'light' / 'dark' / 'auto'
+   • waxframe_hive_profile  { activeId, profiles: { [id]: {...} } }
+   • waxframe_models_${p}   { ts: epoch, models: string[] } — for
+                            each provider you keyed in step A.4
+   • waxframe_recommend_default-${aiId}-reviewer
+                            { ts, model, why, labels, none? } —
+                            present iff Recommend ran for that
+                            AI in this session
+   • waxframe_v2_hive_recovery
+                            absent (only set when the main
+                            hive blob fails to parse — the
+                            "break-glass" safety net)
+
+D. EXIT
+   Tear down the test profile. Document any deviations
+   from the expected post-migration shape and file as
+   storage bugs in the backlog (or, if the deviation is
+   intentional design, update this test plan to reflect it).
+
+Cadence: run this test plan once per major envelope.version
+bump or whenever the per-key shapes in app.js change in a
+non-additive way. Additive-only field accretion (the current
+norm) doesn't require a fresh test run — empty-object
+fallbacks handle the absence at read time.

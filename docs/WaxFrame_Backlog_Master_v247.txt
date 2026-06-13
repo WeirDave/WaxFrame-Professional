@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v244
+WaxFrame Backlog Master v247
 2026-06-12
 
 ABOUT THIS DOCUMENT
@@ -66,40 +66,7 @@ OPEN BUGS
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
 
-1. Per-key concurrency override for RPS-awareness (Settings UI)
-   ─────────────────────────────────────────────────────────
-   WHAT:   v3.63.250 shipped the per-PROVIDER concurrency
-           limiter that closed the core of the original
-           RPS-awareness ask (queuing requests so no provider
-           receives more than N concurrent in-flight calls).
-           One piece of the original DONE statement was not
-           shipped: a per-KEY override that lets a power
-           user lift the cap for a paid-tier key on a
-           provider whose default is conservative for the
-           free tier.
-   WHY:    Conservative defaults serve free-tier users well
-           but penalize someone paying for a higher tier.
-           A Cohere enterprise customer with 100+ RPS
-           headroom shouldn't be capped at 2 concurrent.
-           The override lets them lift it without a code
-           change.
-   STATE:  OPEN — not started. Mechanism is in place
-           (getProviderConcurrencyCap reads from the module
-           constant). The remaining work is the Settings UI
-           + persistence + the lookup change to consult an
-           override map before falling back to the default.
-   WHERE:  app.js: getProviderConcurrencyCap() at the top
-           of the v3.63.250 limiter block. Settings panel
-           in index.html.
-   DONE:   A new Settings row lets a user enter a
-           concurrency override per saved API key;
-           getProviderConcurrencyCap() consults the
-           per-key override before the per-provider default;
-           overrides persist in localStorage and survive
-           reload.
-
-
-2. Builder-incapable family list expansion
+1. Builder-incapable family list expansion
    ─────────────────────────────────────────────────────────
    WHAT:   Some AI model families can't reliably act as
            Builder — they break the %%CONFLICTS_START%%
@@ -126,7 +93,7 @@ OPEN FEATURES
            hides it or shows it disabled with a tooltip.
 
 
-3. Pause/Resume at reviewer seam
+2. Pause/Resume at reviewer seam
    ─────────────────────────────────────────────────────────
    WHAT:   A refinement round has natural phases:
              (1) reviewers analyze the working document,
@@ -160,7 +127,7 @@ OPEN FEATURES
            a reload via localStorage).
 
 
-4. File System Access API exploration
+3. File System Access API exploration
    ─────────────────────────────────────────────────────────
    WHAT:   The File System Access API is a modern browser
            API (Chrome, Edge, Opera; not Firefox or Safari)
@@ -191,45 +158,7 @@ OPEN FEATURES
            written up; go/no-go decision on shipping.
 
 
-5. Provider Catalog foundation
-   ─────────────────────────────────────────────────────────
-   WHAT:   Today each AI provider (OpenAI, Anthropic,
-           Google, Cohere, DeepSeek, Mistral, Grok,
-           Perplexity, Together AI, Jamba, etc.) is
-           hardcoded into app.js. Each one has its quirks:
-           auth header format, endpoint URL, request body
-           schema, response shape, model list, model-family
-           defaults, RPS ceiling, structural-Builder
-           capability. Adding a new provider means patching
-           app.js in at least 5 places (auth helper,
-           dispatcher, response parser, model dropdown,
-           recommendation classifier).
-   WHY:    The provider list will keep growing. A Provider
-           Catalog turns each provider into a data record
-           — one JSON-like object per provider with all the
-           knobs above — and the dispatcher reads the
-           catalog instead of branching on hardcoded
-           provider names. Adding a provider becomes "drop
-           in a catalog entry," not "patch five functions."
-   STATE:  PARKED — the refactor is too big to justify until
-           the provider list grows further or a redesign
-           forces it. Foundation work (extracting the shape
-           of a catalog entry) could happen incrementally.
-   WHERE:  Affects most provider-specific branches in
-           app.js: auth header building, request body
-           construction, response parsing, model dropdown
-           population, recommend-model classifier.
-   DONE:   Phase 1 (foundation): a typed shape for a
-           Provider entry is defined and one existing
-           provider is migrated to read from the catalog
-           with no behavior change; Phase 2 (rollout):
-           remaining providers migrate one by one; Phase 3
-           (payoff): a new provider can be added by writing
-           a catalog entry + key UI plumbing, no dispatcher
-           changes needed.
-
-
-6. Prompt instruction modularization
+4. Prompt instruction modularization
    ─────────────────────────────────────────────────────────
    WHAT:   The instructions WaxFrame sends to each AI are
            still largely assembled inline in app.js. Reviewer
@@ -268,7 +197,7 @@ OPEN FEATURES
            can point at these modules without parsing app.js.
 
 
-7. localStorage migration audit
+5. localStorage migration audit
    ─────────────────────────────────────────────────────────
    WHAT:   Every localStorage key the app reads/writes is
            subject to format drift over time. The v3.63.241
@@ -287,12 +216,37 @@ OPEN FEATURES
            into use. The audit category 5 (state recovery)
            in WaxFrame_Audit_Methodology_v1.txt covers this
            explicitly.
-   STATE:  OPEN — needs runtime testing for full coverage.
-           A static enumeration of every setItem/getItem
-           pair is a useful first pass.
+   STATE:  PARTIAL — v3.63.294 shipped the static-enumeration
+           first pass: AST scan of every js/*.js + every
+           HTML inline <script>, 224 operations normalized
+           to 42 unique keys (29 static + 13 dynamic-name
+           patterns), schema documented for each key in
+           docs/WaxFrame_Storage_Schema_v1.txt. v3.63.300
+           shipped the two follow-on items the v3.63.294
+           pass left flagged: runtime verification of
+           waxframe_models_${providerId} (confirmed actively
+           read by getModelsForProvider, the dropdown hot
+           path — the static scanner missed it because the
+           read uses a template literal) and the
+           waxframe_recommend_* family (confirmed runtime-
+           reconciled via cacheId, "audit-script attribution
+           artifact" from the asymmetric SET / REM template
+           shapes). v3.63.300 also wrote the manual test
+           plan for forwarding a v3.21-era profile through
+           every release boundary (FORWARD-COMPAT TEST PLAN
+           section at the bottom of the schema doc).
+           Still open: per-key schema versioning — a first-
+           class schema-version field on each payload so
+           the next audit's "what shape am I looking at?"
+           question is instant. Defer to a future cycle;
+           current additive-only accretion is healthy
+           enough that this is a nice-to-have.
    WHERE:  js/storage.js (envelope migrations), js/app.js
-           (per-feature keys: waxframe_dev, waxframe_hive_profile,
-           waxframe_conflict_ledger, etc.).
+           (per-feature keys: waxframe_dev,
+           waxframe_hive_profile, waxframe_conflict_ledger,
+           etc.). Schema doc:
+           docs/WaxFrame_Storage_Schema_v1.txt. Audit
+           script: .claude/scratch/ls-audit.js (gitignored).
    DONE:   Each localStorage key has a documented schema
            (current shape + earlier shapes encountered in
            the wild); the read path for each handles legacy
