@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v246
+WaxFrame Backlog Master v249
 2026-06-12
 
 ABOUT THIS DOCUMENT
@@ -66,40 +66,7 @@ OPEN BUGS
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
 
-1. Per-key concurrency override for RPS-awareness (Settings UI)
-   ─────────────────────────────────────────────────────────
-   WHAT:   v3.63.250 shipped the per-PROVIDER concurrency
-           limiter that closed the core of the original
-           RPS-awareness ask (queuing requests so no provider
-           receives more than N concurrent in-flight calls).
-           One piece of the original DONE statement was not
-           shipped: a per-KEY override that lets a power
-           user lift the cap for a paid-tier key on a
-           provider whose default is conservative for the
-           free tier.
-   WHY:    Conservative defaults serve free-tier users well
-           but penalize someone paying for a higher tier.
-           A Cohere enterprise customer with 100+ RPS
-           headroom shouldn't be capped at 2 concurrent.
-           The override lets them lift it without a code
-           change.
-   STATE:  OPEN — not started. Mechanism is in place
-           (getProviderConcurrencyCap reads from the module
-           constant). The remaining work is the Settings UI
-           + persistence + the lookup change to consult an
-           override map before falling back to the default.
-   WHERE:  app.js: getProviderConcurrencyCap() at the top
-           of the v3.63.250 limiter block. Settings panel
-           in index.html.
-   DONE:   A new Settings row lets a user enter a
-           concurrency override per saved API key;
-           getProviderConcurrencyCap() consults the
-           per-key override before the per-provider default;
-           overrides persist in localStorage and survive
-           reload.
-
-
-2. Builder-incapable family list expansion
+1. Builder-incapable family list expansion
    ─────────────────────────────────────────────────────────
    WHAT:   Some AI model families can't reliably act as
            Builder — they break the %%CONFLICTS_START%%
@@ -124,6 +91,60 @@ OPEN FEATURES
            goes on the list; recommendation engine excludes
            it from Builder picks; Builder dropdown either
            hides it or shows it disabled with a tooltip.
+
+
+2. "+ Add variant" UX on default AI cards
+   ─────────────────────────────────────────────────────────
+   WHAT:   Each default AI card (Claude, ChatGPT, Gemini,
+           Grok, Mistral, Perplexity) gets a "+ Add variant"
+           button. Clicking it spawns a sibling slot under
+           that parent: same provider, same saved API key,
+           but its own model picker. So a user can run
+           Claude Sonnet + Claude Opus + Claude Haiku in
+           the SAME hive as three independent reviewers, all
+           billed through the same Anthropic key.
+   WHY:    The concurrency override feature shipped in
+           v3.63.299 only earns its keep when a hive has
+           2+ AIs sharing one provider. For default-AI users
+           that scenario is currently impossible without
+           re-keying through the "Add Custom AI" flow with
+           the matching preset — which adds an entry under
+           CUSTOM AIs rather than as a sibling of the default
+           card, reading as a hack rather than a first-class
+           feature. Surfacing variants as siblings of the
+           default card makes "I want multiple Claudes" feel
+           native, and unlocks the concurrency override UI
+           for the default-AI population. Server imports
+           (Open WebUI etc.) already have natural multi-AI-
+           per-provider behavior; this feature gives default
+           providers the same.
+   STATE:  OPEN — design direction understood; not started.
+           Concurrency limiter + override now correctly route
+           through the BASE provider (v3.63.301), so adding
+           variants Just Works for throttling once the UI +
+           storage shape land.
+   WHERE:  AI setup grid render:
+             renderAISetupGrid + _buildAISetupRow in app.js.
+           Variant storage: most likely a new key
+             hive.aiVariants = { [parentId]: [{id, model, ...}] }
+           or extend customAIConfigs with a parentId field.
+           Variant resolution at round time:
+             activeAIs already iterated by callAPI — variants
+             would surface as additional ai objects with
+             ai.parentId set so the key is read from
+             API_CONFIGS[parentId]._key (single key, many AIs).
+   DONE:   Each default AI card has a "+ Add variant" button
+           that spawns a sibling row sharing the parent's
+           key but with its own model picker; variants
+           persist across reloads; removing a variant doesn't
+           orphan it from the hive; removing the parent
+           prompts to either remove all variants too or
+           promote one variant to parent; concurrency
+           override Settings still shows one row per BASE
+           provider (already true in v3.63.301); recommend-
+           model + tier classifier work per-variant; the
+           Builder badge applies to the variant the user
+           crowned, not the parent.
 
 
 3. Pause/Resume at reviewer seam
@@ -228,59 +249,6 @@ OPEN FEATURES
            no intentional wording change is made; Deep Dive still
            captures the final prompt sent to each AI; a future UI
            can point at these modules without parsing app.js.
-
-
-6. localStorage migration audit
-   ─────────────────────────────────────────────────────────
-   WHAT:   Every localStorage key the app reads/writes is
-           subject to format drift over time. The v3.63.241
-           audit pass enumerated current keys (waxframe_v2_*
-           + others) but did not exhaustively verify that
-           each one's read path handles all the historical
-           shapes it might encounter on long-lived browsers.
-           Format-version branches in storage.js (currently
-           v6 with v5/v4 import compatibility) are the most
-           important; key-value primitives in app.js are the
-           long tail.
-   WHY:    A user who's been running WaxFrame since v3.21
-           has localStorage entries written by every
-           intermediate version. A single un-migrated key
-           can silently corrupt state on a project a year
-           into use. The audit category 5 (state recovery)
-           in WaxFrame_Audit_Methodology_v1.txt covers this
-           explicitly.
-   STATE:  PARTIAL — v3.63.294 shipped the static-enumeration
-           first pass: AST scan of every js/*.js + every
-           HTML inline <script>, 224 operations normalized
-           to 42 unique keys (29 static + 13 dynamic-name
-           patterns), schema documented for each key in
-           docs/WaxFrame_Storage_Schema_v1.txt. Zero orphan
-           keys found at the static layer; two flagged
-           patterns explained as intentional
-           (waxframe_v2_hive_recovery is a write-only safety
-           net read by the user via DevTools after a parse
-           failure; waxframe_v2_settings is the retired
-           pre-v3.45 legacy key kept readable for one-shot
-           migration). Two patterns flagged for runtime
-           verification (waxframe_models_${providerId}
-           appears WRITE-ONLY; the waxframe_recommend_*
-           family shows odd attribution counts due to
-           dynamic-key SET vs literal-template REM).
-           Remaining work: the runtime forward-compat test
-           plan and the two flagged-for-verification
-           pattern checks.
-   WHERE:  js/storage.js (envelope migrations), js/app.js
-           (per-feature keys: waxframe_dev,
-           waxframe_hive_profile, waxframe_conflict_ledger,
-           etc.). Schema doc:
-           docs/WaxFrame_Storage_Schema_v1.txt. Audit
-           script: .claude/scratch/ls-audit.js (gitignored).
-   DONE:   Each localStorage key has a documented schema
-           (current shape + earlier shapes encountered in
-           the wild); the read path for each handles legacy
-           shapes or migrates them on read; a manual test
-           plan exists for forwarding a v3.21-era profile
-           through every release boundary.
 
 
 ════════════════════════════════════════════════════════════
