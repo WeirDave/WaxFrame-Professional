@@ -11861,13 +11861,11 @@ kbd {
   margin: var(--space-16) 0 var(--space-8);
 }
 
-/* v3.63.316 — FSA-only controls (File System Access API spike Phase 1).
-   The "📁 Save to folder" button on the checkpoint Save panel renders
-   only when the browser actually supports the API; storage.js sets
-   .is-fsa-supported on <body> at DOMContentLoaded. Firefox/Safari users
-   keep the legacy download flow untouched and see nothing extra. */
-.fsa-only { display: none; }
-body.is-fsa-supported .fsa-only { display: inline-flex; }
+/* v3.63.316 / 318 — FSA toggle CSS retired. v3.63.316 used a `.fsa-only`
+   class + body-class hook to show a separate "Save to folder" button
+   only in Chrome/Edge. v3.63.318 collapsed that into the single Save
+   Checkpoint button with browser-smart routing inside confirmSaveCheckpoint
+   (see js/storage.js). No CSS hook needed anymore. */
 
 /* ── Project goal modal ── */
 .goal-modal-name         { font-size: var(--fs-13); color: var(--text); font-weight: 600; margin-bottom: 2px; }
