@@ -2090,6 +2090,19 @@ function incrementTrialRound() {
   } catch(e) { return 1; }
 }
 
+// v3.63.310 — Surgical retry undoes a finalized degraded round (history.pop
+// + round--), which means the trial round it just burned should also be
+// refunded. Floor at 0 so an unexpected double-call can't drive the count
+// negative. Called from retrySingleAIInPartialRound's undo path.
+function decrementTrialRound() {
+  try {
+    const data = JSON.parse(localStorage.getItem(LS_LICENSE) || '{}');
+    data.trialRoundsUsed = Math.max(0, (data.trialRoundsUsed || 0) - 1);
+    localStorage.setItem(LS_LICENSE, JSON.stringify(data));
+    return data.trialRoundsUsed;
+  } catch(e) { return 0; }
+}
+
 function saveLicense(key) {
   try {
     const existing = JSON.parse(localStorage.getItem(LS_LICENSE) || '{}');
@@ -16879,9 +16892,56 @@ async function retrySingleAIInPartialRound(aiId) {
     if (typeof toast === 'function') toast('⚠️ Project changed — retry no longer valid');
     return;
   }
+  // v3.63.310 — Detect the "round already finalized" case (degraded-success
+  // path: round completed with one bee failed → history.push + round++ +
+  // possibly phase = 'refine' already ran). In this state pr.round (N) !=
+  // global round (N+1) but the undo state captured in the continuing path
+  // tells us exactly how to unwind: pop the just-pushed entry, restore
+  // round/phase/trial-counter to their pre-finalize values, then proceed
+  // with the retry. After unwind, pr.round === round again and the rest of
+  // the function runs the bee-fatal-halt code path verbatim.
+  //
+  // Guarded by all of:
+  //   • pr.round + 1 === round — exactly one round has elapsed, the one we
+  //     want to undo; if pr.round+2 === round or worse, a SECOND round has
+  //     already finalized on top and undoing only the latest entry would
+  //     leave the round counter inconsistent. Bail.
+  //   • pr.preContinueRound != null — the continuing path wrote the
+  //     snapshot (set in v3.63.310 alongside lastPushedEntry).
+  //   • pr.lastPushedEntry is still the top of history — defensive identity
+  //     check guards against a foreign push (extension, async write)
+  //     sneaking in between continue and retry.
   if (pr.round !== round) {
-    if (typeof toast === 'function') toast('⚠️ A new round has already started — retry no longer valid');
-    return;
+    const _canUndoFinalize = (
+      pr.round + 1 === round &&
+      pr.preContinueRound != null &&
+      pr.lastPushedEntry &&
+      history.length > 0 &&
+      history[history.length - 1] === pr.lastPushedEntry
+    );
+    if (!_canUndoFinalize) {
+      if (typeof toast === 'function') toast('⚠️ A new round has already started — retry no longer valid');
+      return;
+    }
+    // Unwind the finalize. The reviewer-phase pop below (the original
+    // bee-fatal halt path's pop) would no-op now because lastPushedEntry
+    // is going to land on null here; that's fine.
+    history.pop();
+    round = pr.preContinueRound;
+    if (pr.preContinuePhase) phase = pr.preContinuePhase;
+    if (pr.preContinueTrialIncrement && typeof decrementTrialRound === 'function') {
+      try { decrementTrialRound(); } catch (e) { /* nice-to-have, ignore */ }
+    }
+    pr.lastPushedEntry = null;
+    pr.preContinueRound = null;
+    pr.preContinuePhase = null;
+    pr.preContinueTrialIncrement = false;
+    pr.round = round;   // resync so the rest of this function and runRound see N
+    if (typeof renderRoundHistory === 'function') renderRoundHistory();
+    if (typeof renderWorkPhaseBar === 'function') renderWorkPhaseBar();
+    if (typeof updateRoundBadge === 'function') updateRoundBadge();
+    if (typeof updateLicenseBadge === 'function') updateLicenseBadge();
+    consoleLog(`↩ Unwound Round ${round} for surgical retry — popping the degraded entry and re-running with the just-recovered bee.`, 'info');
   }
   const ai = (Array.isArray(activeAIs) ? activeAIs : []).find(a => a.id === aiId);
   if (!ai) {
@@ -18020,7 +18080,21 @@ async function runRound(opts) {
   // retry (e.g. user fixed a reviewer's bad model AFTER the degraded round
   // succeeded) can pop the degraded entry and replace it with a re-built one
   // that includes the previously-failed reviewer's response.
-  if (window._partialRound) window._partialRound.lastPushedEntry = _continuingEntry;
+  // v3.63.310 — Also capture the round + phase + trial-flag in effect BEFORE
+  // the post-continue counter bumps below. retrySingleAIInPartialRound's
+  // undo path reads these to unwind a degraded-success round back to its
+  // pre-finalize state so the resumed runRound writes a fresh history entry
+  // at the SAME round number, not at N+1. Without the snapshot, the retry
+  // either re-bills every bee (full round) or no-ops at the round-mismatch
+  // guard. David's report (Together AI round 20): "we should provide an
+  // option where we try to run that particular round again for that
+  // particular AI" — this is the plumbing for that.
+  if (window._partialRound) {
+    window._partialRound.lastPushedEntry = _continuingEntry;
+    window._partialRound.preContinueRound = round;
+    window._partialRound.preContinuePhase = phase;
+    window._partialRound.preContinueTrialIncrement = !isLicensed();
+  }
   window._lastConflicts = null;
   window._lastAppliedChanges = null;
 

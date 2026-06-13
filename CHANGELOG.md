@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.310
+
+**Surgical retry for non-fatal failures · three-option recovery on every troubleshooting card · degraded-round undo+resend (David live-review)**
+
+Build: `20260613-004`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David flagged a gap on Together AI's empty-response failure in round 20 of his Fernbox run: "together AI failed giving an empty round and when I said retry round it just went straight to the builder ... we should provide an option where we try to run that particular round again for that particular AI." Drilling in, the same fix David already had for bee-fatal model errors (MODEL_DEPRECATED, AUTH_FAILED, etc.) wasn't wired up for *non-fatal* failures (network errors, empty responses, rate limits, CORS, credit-low, provider 5xx, content filter). Those cards offered only "Retry round" — which re-bills every healthy bee that already responded cleanly.
+
+This release mirrors the bee-fatal three-option recovery pattern onto every non-fatal card, AND extends the surgical-retry plumbing so it works AFTER a degraded round has already finalized — the round the user was actually staring at when Together AI failed.
+
+**Three-option recovery on every card.** Every troubleshooting card now offers (in this order):
+
+1. **Pick a different model** — inline model dropdown, swap, then retry. Useful even on rate-limit / credit-low cards because a smaller/cheaper model on the same provider can land a separate rate bucket or fit a depleted balance.
+2. **Re-send {ai}'s prompt only** — surgical retry. Re-fires the failing bee against the cached reviewer set, then re-runs the Builder. Cost: one reviewer call + one Builder call vs a full-round re-bill of every bee.
+3. **Disable this AI for the session** — toggle the bee off, finalize the round at its degraded state, move on. Existed already on rate-limit / credit-low; now on every card.
+4. **Retry round** — the old "re-bill everything" option stays as the last-resort escape hatch.
+
+Codes touched: CORS_BLOCKED, RATE_LIMITED, CREDIT_LOW, PROVIDER_DOWN, CONTENT_FILTERED, EMPTY_RESPONSE, NETWORK_ERROR. Bee-fatal codes (MODEL_DEPRECATED, MODEL_NEEDS_DIFFERENT_ENDPOINT, MODEL_REJECTS_INSTRUCTIONS, AUTH_FAILED) already had the pattern from v3.63.252+ and gain `disable-ai` to round it out.
+
+**Degraded-round undo+resend.** Pre-v3.63.310, the surgical retry path (`retrySingleAIInPartialRound`) only worked when a bee-fatal error HALTED the round before the Builder phase — the round counter hadn't advanced, history hadn't been written, no undo was needed. For a non-fatal failure like Together AI's empty response, the round continued, the Builder ran against the degraded set, `history.push` wrote a `continuing` entry, `round++` advanced the counter. The retry path's `if (pr.round !== round) return` guard then blocked any subsequent surgical retry with "A new round has already started — retry no longer valid" — even though no new round had actually started, only the counter had moved.
+
+The continuing-success path now captures a snapshot on `_partialRound` (`preContinueRound`, `preContinuePhase`, `preContinueTrialIncrement`) BEFORE the counter bumps. `retrySingleAIInPartialRound` detects the post-finalize state (pr.round + 1 === round AND lastPushedEntry still on top AND snapshot present), pops the degraded history entry, restores round/phase/trial-counter to their pre-finalize values, then runs the normal retry path — surgical reviewer re-fire + Builder re-run. The resumed `runRound` writes a fresh history entry at the SAME round number, not at N+1, so the round chip stays at 20 instead of jumping to 21 mid-recovery.
+
+**Trial-round refund.** Added `decrementTrialRound()` (mirror of `incrementTrialRound`), called from the undo path so users on the free trial don't burn a round for the degraded outcome they're about to overwrite. Floored at 0 to defend against accidental double-call.
+
+### Files touched
+
+- [js/wf-debug.js](js/wf-debug.js) — CORS_BLOCKED, RATE_LIMITED, CREDIT_LOW, PROVIDER_DOWN, CONTENT_FILTERED, EMPTY_RESPONSE, NETWORK_ERROR all gain `fix-bee` + `resend-ai` + `disable-ai` actions; comment blocks carry the design rationale and David's quote
+- [js/app.js](js/app.js) — `retrySingleAIInPartialRound`: post-finalize undo path (history.pop + round/phase/trial restore) when `pr.round + 1 === round` and the lastPushedEntry + snapshot are intact; continuing-success path captures the snapshot before the counter bumps; new `decrementTrialRound()` helper alongside `incrementTrialRound`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.309
 
 **Variant naming off-by-one fix · first variant now reads "Variant 1" instead of "Variant 2" · "Variant" capitalized**

@@ -527,6 +527,18 @@ window.WF_ERROR_CATALOG = [
     meaning: 'Your custom endpoint did not whitelist this WaxFrame origin. The request reached the server, but the browser refused to read the response as a security measure. Most common with self-hosted endpoints (Open WebUI, Ollama, internal gateways).',
     actions: [
       { label: 'Read CORS troubleshooting', kind: 'link', href: 'api-details.html' },
+      // v3.63.310 — Three-option recovery pattern from the bee-fatal cards
+      // mirrored onto every non-fatal card too (David: "for basically all
+      // these other errors we get we should also give an option to run the
+      // round with that same AI again or change the model of that AI and
+      // rerun the round … the other choice should be disable the AI for
+      // the session"). resend-ai = surgical retry, fix-bee = model swap +
+      // surgical retry, disable-ai = take this bee off the hive for the
+      // session. Retry round stays as the last "just redo everything"
+      // escape hatch.
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -622,8 +634,14 @@ window.WF_ERROR_CATALOG = [
     actions: [
       { label: 'Open provider console', kind: 'console-link' },
       { label: 'Open provider docs', kind: 'docs-link' },
-      { label: 'Retry round', kind: 'retry' },
-      { label: 'Disable this AI for the session', kind: 'disable-ai' }
+      // v3.63.310 — Three-option recovery pattern (see CORS_BLOCKED header).
+      // A smaller / cheaper model on the same provider sometimes lands a
+      // separate rate-limit bucket, so fix-bee is genuinely useful even
+      // though provider == provider.
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' },
+      { label: 'Retry round', kind: 'retry' }
     ]
   },
   {
@@ -661,8 +679,13 @@ window.WF_ERROR_CATALOG = [
     actions: [
       { label: 'Open provider console', kind: 'console-link' },
       { label: 'Open provider docs', kind: 'docs-link' },
-      { label: 'Retry round', kind: 'retry' },
-      { label: 'Disable this AI for the session', kind: 'disable-ai' }
+      // v3.63.310 — Three-option recovery pattern. A cheaper model on the
+      // same provider may have less per-token cost and fit under whatever
+      // tiny remaining balance is on the account.
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' },
+      { label: 'Retry round', kind: 'retry' }
     ]
   },
   {
@@ -714,6 +737,12 @@ window.WF_ERROR_CATALOG = [
     title: '{ai} — Provider server error',
     meaning: '{ai} returned a 5xx error — this is on their side, not yours. Their API is having issues. WaxFrame skipped {ai} for the round. Check the provider status page if it persists.',
     actions: [
+      // v3.63.310 — Three-option recovery pattern. A different model on
+      // the same provider may route through a separate backend pool that's
+      // still healthy while the failing one recovers.
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -736,6 +765,12 @@ window.WF_ERROR_CATALOG = [
     meaning: "{ai}'s safety filter blocked the request (the provider returned 200 OK with no text and a blockReason of {blockReason}). This is often a false positive on words like 'crush', 'kill', 'broken', or 'fail' that appear innocuously in product reviews, technical writing, or troubleshooting docs — Gemini in particular is aggressive here. The simplest fix is to switch Builder to another provider (Claude, ChatGPT, Grok, Mistral); the rest of the hive can still include {ai} as a reviewer if you want. Alternatively, rephrase the reference material to use less filter-prone language.",
     actions: [
       { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
+      // v3.63.310 — Three-option recovery pattern. Different models on
+      // the same provider have different filter aggression (Gemini Pro
+      // vs Flash, for example), so fix-bee is a real escape hatch here.
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' },
       { label: 'Retry round',    kind: 'retry' }
     ]
   },
@@ -745,6 +780,14 @@ window.WF_ERROR_CATALOG = [
     title: '{ai} — Provider returned an empty response',
     meaning: '{ai} returned success (200 OK) but the response body had no text content. This usually means a content filter blocked the output, or the model output was truncated. Try a different Builder, or shorten the document.',
     actions: [
+      // v3.63.310 — Three-option recovery pattern. David's surgical-retry
+      // request originated from a Together AI empty-response round: "we
+      // should provide an option where we try to run that particular round
+      // again for that particular AI … or change the model … or disable
+      // the AI for the session."
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -755,6 +798,13 @@ window.WF_ERROR_CATALOG = [
     title: '{ai} — Network error',
     meaning: 'WaxFrame could not reach the API. Common causes: no internet, DNS issue, VPN interfering, or the API hostname is unreachable from this network. If you are on an air-gapped or restricted network, you will need a model server (Alfredo, Ollama, Open WebUI) instead of the public providers.',
     actions: [
+      // v3.63.310 — Three-option recovery pattern. Network hiccups are
+      // the canonical surgical-retry case: one bee's request didn't
+      // complete, every other bee returned text cleanly. Re-firing just
+      // the one keeps the round at single-bee cost.
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
