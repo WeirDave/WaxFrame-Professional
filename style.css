@@ -11861,6 +11861,14 @@ kbd {
   margin: var(--space-16) 0 var(--space-8);
 }
 
+/* v3.63.316 — FSA-only controls (File System Access API spike Phase 1).
+   The "📁 Save to folder" button on the checkpoint Save panel renders
+   only when the browser actually supports the API; storage.js sets
+   .is-fsa-supported on <body> at DOMContentLoaded. Firefox/Safari users
+   keep the legacy download flow untouched and see nothing extra. */
+.fsa-only { display: none; }
+body.is-fsa-supported .fsa-only { display: inline-flex; }
+
 /* ── Project goal modal ── */
 .goal-modal-name         { font-size: var(--fs-13); color: var(--text); font-weight: 600; margin-bottom: 2px; }
 .goal-modal-meta         { font-size: var(--fs-12); color: var(--text-dim); margin-bottom: var(--space-14); }

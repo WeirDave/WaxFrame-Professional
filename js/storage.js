@@ -1604,11 +1604,12 @@ async function confirmSaveCheckpoint() {
   await _writeCheckpoint(scope);
 }
 
-// Internal — the actual save logic. Reads live state, applies the 9-key
-// granular scope (omitted sub-sections are spliced out of LS_PROJECT /
-// LS_HIVE before write — the file carries only the fields the user
-// ticked), writes a format-v6 envelope, streams it to a Blob download.
-async function _writeCheckpoint(scope) {
+// v3.63.316 — Envelope builder extracted from _writeCheckpoint so the
+// FSA "Save to folder" path (also v3.63.316) shares one source of truth
+// for the scope splice + filename + blob. Returns { filename, json, blob,
+// tagsToast, scope } or null if no sections had data — callers handle the
+// destination (download anchor vs FileSystemFileHandle).
+async function _buildCheckpointEnvelope(scope) {
   // v3.35.2 — Flush in-memory state to IDB before reading the snapshot.
   // Without this, a checkpoint taken while in-memory state hadn't yet been
   // auto-saved to IDB (e.g. right after setup, before any round has run)
@@ -1619,29 +1620,16 @@ async function _writeCheckpoint(scope) {
   const hiveRaw    = localStorage.getItem(LS_HIVE)    || null;
   const projectRaw = localStorage.getItem(LS_PROJECT) || null;
   const licenseRaw = localStorage.getItem(LS_LICENSE) || null;
-  // Legacy localStorage session — almost always null since the IDB
-  // migration ran ages ago. Kept for forward compatibility with any
-  // unmigrated browser.
   const sessionLS  = localStorage.getItem(LS_SESSION) || null;
-  // Primary session source: IndexedDB. The session blob (round history,
-  // working document, console HTML, notes, project clock seconds) lives here.
   let sessionIDB   = null;
   try { sessionIDB = await idbGet(); } catch(e) { /* ignore */ }
 
-  // v3.63.227 — Granular splice per scope key. The output LS_PROJECT and
-  // LS_HIVE blobs contain ONLY the fields whose scope key is true; everything
-  // else is omitted from the file. The format-v6 envelope carries the 9-key
-  // _waxframe_backup_scope so the importer knows exactly what was included.
   let outHive       = null;
   let outProject    = null;
   let outLicense    = null;
   let outSessionLS  = null;
   let outSessionIDB = null;
 
-  // ── LS_PROJECT splice ──
-  // Build a fresh project blob containing only the sub-sections the user
-  // ticked. Each scope key (projectInfo, refMaterial, startingDoc) maps to
-  // a disjoint subset of LS_PROJECT field names.
   if (scope.projectInfo || scope.refMaterial || scope.startingDoc) {
     let parsedProj;
     try { parsedProj = projectRaw ? JSON.parse(projectRaw) : null; } catch(_) { parsedProj = null; }
@@ -1658,15 +1646,10 @@ async function _writeCheckpoint(scope) {
       if (scope.startingDoc && parsedProj.pastedDocument !== undefined) {
         out.pastedDocument = parsedProj.pastedDocument;
       }
-      // Only emit the blob if something actually landed in it.
       if (Object.keys(out).length) outProject = JSON.stringify(out);
     }
   }
 
-  // ── LS_HIVE splice ──
-  // Same model: each hive scope key (aiList, models, keys, builder) maps to
-  // a disjoint subset of LS_HIVE field names. A file can carry just keys or
-  // just builder without bringing the AI list with them.
   if (scope.aiList || scope.models || scope.keys || scope.builder) {
     let parsedHive;
     try { parsedHive = hiveRaw ? JSON.parse(hiveRaw) : null; } catch(_) { parsedHive = null; }
@@ -1685,13 +1668,6 @@ async function _writeCheckpoint(scope) {
   }
 
   if (scope.license && licenseRaw) outLicense = licenseRaw;
-  // v3.63.276 — Round-state localStorage keys carry the conflict-resolution
-  // state machine and per-AI warnings that survive across rounds in the same
-  // session. Pre-v3.63.276 these were not in any scope, so Save Checkpoint →
-  // Restore silently lost decision history and the Builder re-raised
-  // already-resolved questions. Now bundled into the `session` scope (same
-  // toggle covers the IDB session blob + these per-key blobs — they're
-  // semantically the same scope: "what the user has decided so far").
   let outRoundState = null;
   if (scope.session) {
     outSessionLS  = sessionLS;
@@ -1704,13 +1680,8 @@ async function _writeCheckpoint(scope) {
     if (rs.resolvedDecisions || rs.conflictLedger || rs.aiWarnings) outRoundState = rs;
   }
 
-  // Need at least ONE section to contain something. Otherwise the file
-  // would be an empty envelope — bail with a hint about what to do.
   const captured = !!(outHive || outProject || outLicense || outSessionLS || outSessionIDB || outRoundState);
-  if (!captured) {
-    toast('⚠️ Nothing to checkpoint — tick at least one section that has data');
-    return;
-  }
+  if (!captured) return null;
 
   const checkpoint = {
     _waxframe_backup:         true,
@@ -1723,19 +1694,9 @@ async function _writeCheckpoint(scope) {
     LS_LICENSE: outLicense,
     LS_SESSION: outSessionLS,
     IDB_SESSION: outSessionIDB,
-    // v3.63.276 — Optional round-state block. Older importers ignore unknown
-    // top-level keys, so a v7 file restores cleanly on a v6 importer (without
-    // the round-state restoration, which only matters if the user was mid-
-    // conflict-resolution at save time).
     LS_ROUND_STATE: outRoundState,
   };
 
-  // Filename: legacy `{name}-{version}-WaxFrame-Checkpoint-{stamp}.json`
-  // shape. Self-describing via internals (the `_waxframe_backup_scope`
-  // envelope field tells the importer what's inside), so the filename
-  // stays simple regardless of scope. Project name + version read from
-  // the parsed LS_PROJECT — backupSession can be triggered from any
-  // screen, and buildExportName() depends on work-screen DOM elements.
   const proj     = (() => { try { return JSON.parse(projectRaw || '{}'); } catch(e) { return {}; } })();
   const safeName = (proj.projectName    || 'session').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   const safeVer  = (proj.projectVersion || '').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -1743,23 +1704,11 @@ async function _writeCheckpoint(scope) {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-  const filename = `${baseName}-WaxFrame-Checkpoint-${stamp}`;
+  const filename = `${baseName}-WaxFrame-Checkpoint-${stamp}.json`;
 
-  // 30s deferred URL.revokeObjectURL — see history at the prior backupSession
-  // implementation (v3.21.19 / v3.21.21). Larger checkpoints need more
-  // dispatcher time; 30s is well past the worst observed case.
-  const blob = new Blob([JSON.stringify(checkpoint, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `${filename}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  const json = JSON.stringify(checkpoint, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
 
-  // Toast confirms what actually landed in the file, so the user knows the
-  // scope was honored. Compact tag list from the 9 granular scope keys.
   const tags = [];
   if (scope.projectInfo) tags.push('project info');
   if (scope.refMaterial) tags.push('ref material');
@@ -1770,7 +1719,196 @@ async function _writeCheckpoint(scope) {
   if (scope.keys)        tags.push('API keys');
   if (scope.builder)     tags.push('builder');
   if (scope.license)     tags.push('license');
-  toast(`💾 Checkpoint saved — ${tags.join(', ')}`, 5000);
+
+  return { filename, json, blob, tags };
+}
+
+// Internal — the actual save logic. Reads live state, applies the 9-key
+// granular scope (omitted sub-sections are spliced out of LS_PROJECT /
+// LS_HIVE before write — the file carries only the fields the user
+// ticked), writes a format-v6 envelope, streams it to a Blob download.
+// v3.63.316 — Envelope-building extracted to _buildCheckpointEnvelope so
+// _writeCheckpoint and _writeCheckpointToFolder share one source of truth.
+async function _writeCheckpoint(scope) {
+  const env = await _buildCheckpointEnvelope(scope);
+  if (!env) {
+    toast('⚠️ Nothing to checkpoint — tick at least one section that has data');
+    return;
+  }
+  // 30s deferred URL.revokeObjectURL — see history at the prior backupSession
+  // implementation (v3.21.19 / v3.21.21). Larger checkpoints need more
+  // dispatcher time; 30s is well past the worst observed case.
+  const url = URL.createObjectURL(env.blob);
+  const a   = document.createElement('a');
+  a.href     = url;
+  a.download = env.filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  toast(`💾 Checkpoint saved — ${env.tags.join(', ')}`, 5000);
+}
+
+// ── FILE SYSTEM ACCESS API SUPPORT (v3.63.316) ──
+// Backlog FEATURE #3 spike Phase 1. Detects whether the browser supports
+// the File System Access API (Chrome/Edge/Opera; not Firefox or Safari),
+// persists a chosen sync-folder handle in IDB so the picker doesn't
+// re-prompt every save, and writes the checkpoint envelope into that
+// folder via FileSystemFileHandle.createWritable(). Load-from-folder
+// (and auto-save every N seconds) deferred to Phase 2 — Phase 1 is just
+// proving the round-trip feels good enough to be worth the rest.
+//
+// Default folder hint: startIn:'documents' — opens the OS picker pre-
+// navigated to ~/Documents (Mac) or C:\Users\<name>\Documents (Windows),
+// matching backlog/David's request. The OS dialog always confirms the
+// user's choice — we can suggest a start location, not silently pick.
+// User typically creates or picks a "WaxFrame" subfolder there.
+const _FSA_SYNC_DIR_KEY = 'waxframe_fsa_sync_dir';
+function _fsaSupported() {
+  return typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function';
+}
+// Read/write the sync-folder handle from the same IDB store as the
+// session blob (different key, no schema clash). FileSystemDirectoryHandle
+// is structured-cloneable per the WHATWG spec, so it stores natively.
+async function _fsaGetStoredHandle() {
+  if (!_fsaSupported()) return null;
+  try {
+    const db = await idbOpen();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).get(_FSA_SYNC_DIR_KEY);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror   = () => reject(req.error);
+    });
+  } catch(e) { console.warn('[fsa] getStoredHandle failed:', e); return null; }
+}
+async function _fsaPutStoredHandle(handle) {
+  if (!_fsaSupported()) return;
+  try {
+    const db = await idbOpen();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      const req = tx.objectStore(IDB_STORE).put(handle, _FSA_SYNC_DIR_KEY);
+      req.onsuccess = () => resolve();
+      req.onerror   = () => reject(req.error);
+    });
+  } catch(e) { console.warn('[fsa] putStoredHandle failed:', e); }
+}
+// Return a usable directory handle with readwrite permission. Prompts
+// the picker when no handle is stored OR when the stored handle has
+// gone stale (folder moved/deleted) OR when re-permission is denied.
+// `forceRePick:true` skips the stored-handle path entirely — used when
+// the user explicitly wants to change folders.
+async function _fsaEnsureSyncDir(forceRePick = false) {
+  if (!_fsaSupported()) {
+    if (typeof toast === 'function') toast('⚠️ Save-to-folder needs Chrome, Edge, or Opera (not supported in this browser).', 5000);
+    return null;
+  }
+  let handle = forceRePick ? null : await _fsaGetStoredHandle();
+  if (handle) {
+    try {
+      const opts = { mode: 'readwrite' };
+      let perm = await handle.queryPermission(opts);
+      if (perm !== 'granted') perm = await handle.requestPermission(opts);
+      if (perm !== 'granted') {
+        if (typeof toast === 'function') toast('⚠️ Permission to the saved sync folder was denied — pick again.', 4000);
+        handle = null;
+      }
+    } catch(e) {
+      // Stored handle is no longer usable (folder moved, deleted, or the
+      // permission API itself failed). Drop it and re-prompt.
+      console.warn('[fsa] stored handle unusable, re-prompting picker:', e);
+      handle = null;
+    }
+  }
+  if (!handle) {
+    try {
+      handle = await window.showDirectoryPicker({
+        id: 'waxframe-sync',     // Chrome remembers the last folder per id
+        mode: 'readwrite',
+        startIn: 'documents',
+      });
+      await _fsaPutStoredHandle(handle);
+    } catch(e) {
+      // User canceled the picker (AbortError) — not an error condition,
+      // just an aborted save. Silent return.
+      if (e && e.name !== 'AbortError') console.warn('[fsa] picker failed:', e);
+      return null;
+    }
+  }
+  return handle;
+}
+// Write the v3.63.316 checkpoint envelope to the synced folder. Same
+// filename pattern as the download path (timestamped, never overwrites
+// a prior save). Returns the relative filename on success or null on
+// failure.
+async function _fsaWriteEnvelopeToFolder(env) {
+  const dir = await _fsaEnsureSyncDir(false);
+  if (!dir) return null;
+  try {
+    const fileHandle = await dir.getFileHandle(env.filename, { create: true });
+    const writable   = await fileHandle.createWritable();
+    await writable.write(env.json);
+    await writable.close();
+    return env.filename;
+  } catch(e) {
+    console.warn('[fsa] write failed:', e);
+    if (typeof toast === 'function') toast(`⚠️ Save to folder failed — ${e.message || e}`, 6000);
+    return null;
+  }
+}
+// Save-checkpoint-to-folder entry point. Same scope-collection path as
+// confirmSaveCheckpoint above, just routed to FSA instead of the Blob
+// download.
+async function confirmSaveCheckpointToFolder() {
+  if (!_fsaSupported()) {
+    if (typeof toast === 'function') toast('⚠️ Not supported in this browser. Try Chrome, Edge, or Opera.', 5000);
+    return;
+  }
+  const scope = {};
+  for (const key of _CHECKPOINT_SCOPE_KEYS) {
+    const el = document.getElementById('saveScope' + key[0].toUpperCase() + key.slice(1));
+    scope[key] = !!el?.checked;
+  }
+  const env = await _buildCheckpointEnvelope(scope);
+  if (!env) {
+    toast('⚠️ Nothing to checkpoint — tick at least one section that has data');
+    return;
+  }
+  const written = await _fsaWriteEnvelopeToFolder(env);
+  if (written) {
+    toast(`📁 Checkpoint saved to folder — ${written}`, 5500);
+  }
+}
+// Forget the stored folder handle. Useful when the user wants to change
+// the sync target — they click "Change folder" and the next save will
+// re-prompt the picker.
+async function fsaForgetSyncDir() {
+  if (!_fsaSupported()) return;
+  try {
+    const db = await idbOpen();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      const req = tx.objectStore(IDB_STORE).delete(_FSA_SYNC_DIR_KEY);
+      req.onsuccess = () => resolve();
+      req.onerror   = () => reject(req.error);
+    });
+    if (typeof toast === 'function') toast('🗑 Sync folder forgotten — next Save to folder will re-prompt.', 4000);
+  } catch(e) { console.warn('[fsa] forgetSyncDir failed:', e); }
+}
+// At DOMContentLoaded, tag <body> with .is-fsa-supported so the Save-to-
+// folder button can use CSS to show itself only where it'll work. The
+// JS hook stays separate from rendering so the legacy download path
+// keeps working untouched in Firefox/Safari.
+if (typeof document !== 'undefined') {
+  const _markFsa = () => {
+    if (_fsaSupported() && document.body) document.body.classList.add('is-fsa-supported');
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _markFsa);
+  } else {
+    _markFsa();
+  }
 }
 
 
