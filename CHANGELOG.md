@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.326
+
+**Choose Checkpoint File pre-navigates to your auto-backup folder on Chrome/Edge — FSA spike Phase 3 closes backlog #3 part (d)**
+
+Build: `20260613-020`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Backlog #3 part (d) — "load existing files from that folder on launch" — was the last loose end on the FSA spike. We shipped Phase 1 (manual save to folder, v3.63.316), Phase 2 (auto-backup Settings panel, v3.63.320), and now Phase 3 closes the loop with smart load.
+
+**No new button.** First-cut shipping had a separate `📁 Load from folder` button with its own modal showing a file list. David called it: "we already have a restore checkpoint, so I'm not sure what you're adding exactly." He was right — the existing `📂 Choose Checkpoint File` button already lets you pick any .json from anywhere on disk. The new button was a duplicate UI surface.
+
+**Just smarter defaults.** Instead, `chooseCheckpointFile()` now detects FSA support + a stored backup folder handle. When both are present, it routes through `showOpenFilePicker({ startIn: folderHandle, types: [...] })` — same OS file picker, just pre-navigated to your `Documents/WaxFrame` folder (or wherever you set Backup Sync to), filtered to `.json`. One less navigation step. Firefox/Safari + browsers without a configured folder fall through to the legacy `<input type="file">` path unchanged.
+
+### Files touched
+
+- [js/storage.js](js/storage.js) — `chooseCheckpointFile` gained the FSA fast-path at the top; legacy `<input type="file">` path stays as the fallback; AbortError on cancel is silent, other errors fall through to the legacy path so the user always has a way in
+- [index.html](index.html) — tooltip on `Choose Checkpoint File` updated to mention the smart default; the first-cut "Load from folder" button + its modal both removed
+- [style.css](style.css) — first-cut `.checkpoint-folder-picker-*` rules removed (no modal to style)
+- [docs/WaxFrame_Backlog_Master_v251.txt](docs/WaxFrame_Backlog_Master_v251.txt) — backlog v250 → v251: FSA #3 entry retired (Phase 1 + 2 + 3 all shipped); Pause/Resume at reviewer seam (#2 in v250) also formally retired — we agreed not to build it earlier in the session but I never edited the doc; v248 dropped to keep the 3-version margin
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+### Backlog state after this release
+
+**1 deferred bug + 2 open features:**
+
+- Bug #1 — Lock button one-way (DEFERRED on your repro with the v3.63.165 diagnostic line)
+- Feature #1 — Builder-incapable family list expansion (housekeeping, no candidate queued)
+- Feature #2 — Prompt instruction modularization (internal refactor, no user-visible benefit)
+
+---
+
 ## v3.63.325
 
 **🚨 CRITICAL: Toasts were invisible the entire time — `#toast` had no CSS. Every `toast()` call across the app was writing into the void.**
