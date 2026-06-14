@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.337
+
+**Add Custom AI flow: dedup duplicate `GET /v1/models` and retire the modal's wasted auto-recommend POST**
+
+Build: `20260613-031`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David traced through the Add Custom AI flow and caught a real duplication: when you paste a key and hit Enter in the modal, then click Add to Hive, the same `GET /v1/models` fires twice in a row — once in `fetchCustomAIModels()` (modal) and again 50ms later in `recheckModelForAI()` (post-add). On top of that, the modal's `_autoRecommendCustomAI()` fired a `POST /v1/chat/completions` to annotate the dropdown with a ✨ pick, but cached the result under `cacheId = url` — a key nothing on the Bee row ever reads. The post-add recheck overwrites that work with role-split Reviewer + Builder recommends under the canonical `custom-{id}-reviewer` / `-builder` keys.
+
+Two fixes in this release:
+
+**1. Hand-off models from modal → recheck.** `recheckModelForAI` now accepts `opts.models`. When `addCustomAI` invokes it, it passes the dropdown's just-fetched list. Inside `recheckModelForAI`: when the handed-off list is present, skip both the `GET /v1/models` call AND the `localStorage.removeItem('waxframe_models_{id}')` / re-write dance (`addCustomAI` already wrote the same data; clearing + rewriting is pure churn). Saves one round trip on every custom-AI add.
+
+**2. Retire the modal's auto-recommend POST.** The `_autoRecommendCustomAI()` call in `fetchCustomAIModels`'s success path is removed. Its visible effect was the ✨ annotation on the recommended model in the dropdown for the few seconds before Add to Hive — not nothing, but not worth a wasted chat-completion under a cache key no other code path reads. Convention from v3.63.332 applied: kill the surface, kill the function. `_autoRecommendCustomAI` + `annotateCustomAIDropdown` both deleted (no other callers).
+
+User-visible after:
+- Modal still validates the URL/key (the ✓ Ready pill still fires on `fetchCustomAIModels` success — that path is unchanged).
+- Model dropdown still populates in the modal so user picks before Add.
+- Dropdown no longer shows the ✨ pre-pick annotation — the canonical role-split picks land on the Bee row as soon as `recheckModelForAI` completes, which is what the row's badges actually read.
+
+Net per Add Custom AI: -1 `GET /v1/models`, -1 `POST /v1/chat/completions`.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `recheckModelForAI` accepts `opts.models`, conditionalizes model-cache clear + fetch + write on it; `_autoRecommendCustomAI()` call removed from `fetchCustomAIModels`; `_autoRecommendCustomAI` + `annotateCustomAIDropdown` functions deleted; `addCustomAI` builds the handoff list from the dropdown options and passes it to `recheckModelForAI`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps across all helper HTMLs
+
+---
+
 ## v3.63.336
 
 **Add Custom Worker Bee modal: header bee retired, body bee bumped to 240px so it owns the empty space**
