@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.335">
+  <link rel="stylesheet" href="style.css?v=3.63.336">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.335",
+    "softwareVersion": "3.63.336",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1838,8 +1838,11 @@
 <!-- ── Add Custom AI Modal ── -->
 <div class="custom-ai-modal-overlay" id="addCustomAIModal" onclick="if(event.target===this)showAddCustomAI()">
   <div class="custom-ai-modal">
+    <!-- v3.63.336 — Header bee removed. The same API Bee now lives larger in
+         the Model column (see .custom-ai-model-mascot below). Header reads
+         cleaner without the duplicate, and the body bee gets to be the
+         dominant visual instead of competing with a small copy of itself. -->
     <div class="custom-ai-modal-hdr">
-      <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="custom-ai-modal-bee">
       <div>
         <div class="custom-ai-modal-title">Add a Custom Worker Bee <button type="button" class="goal-info-btn" onclick="showCustomAIInfoModal()" title="What goes in each field?" aria-label="What goes in each field?"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></div>
         <div class="custom-ai-modal-sub">Connect any OpenAI-compatible, Anthropic, or Google endpoint</div>
@@ -3524,24 +3527,24 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.335';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.336';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.335"></script>
-<script src="lib/jszip.min.js?v=3.63.335"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.335"></script>
-<script src="js/version.js?v=3.63.335"></script>
-<script src="js/storage.js?v=3.63.335"></script>
-<script src="js/theme.js?v=3.63.335"></script>
-<script src="js/audio.js?v=3.63.335"></script>
-<script src="js/scenes.js?v=3.63.335"></script>
-<script src="js/wf-debug.js?v=3.63.335"></script>
-<script src="js/provider-models.js?v=3.63.335"></script>
-<script src="js/provider-catalog.js?v=3.63.335"></script>
-<script src="js/api.js?v=3.63.335"></script>
-<script src="js/templates.js?v=3.63.335"></script>
-<script src="js/api-links.js?v=3.63.335"></script>
-<script src="js/app.js?v=3.63.335"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.336"></script>
+<script src="lib/jszip.min.js?v=3.63.336"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.336"></script>
+<script src="js/version.js?v=3.63.336"></script>
+<script src="js/storage.js?v=3.63.336"></script>
+<script src="js/theme.js?v=3.63.336"></script>
+<script src="js/audio.js?v=3.63.336"></script>
+<script src="js/scenes.js?v=3.63.336"></script>
+<script src="js/wf-debug.js?v=3.63.336"></script>
+<script src="js/provider-models.js?v=3.63.336"></script>
+<script src="js/provider-catalog.js?v=3.63.336"></script>
+<script src="js/api.js?v=3.63.336"></script>
+<script src="js/templates.js?v=3.63.336"></script>
+<script src="js/api-links.js?v=3.63.336"></script>
+<script src="js/app.js?v=3.63.336"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.336
+
+**Add Custom Worker Bee modal: header bee retired, body bee bumped to 240px so it owns the empty space**
+
+Build: `20260613-030`<br>
+Released: `2026-06-13`
+
+### What changed
+
+v3.63.335 dropped an API Bee mascot into the dead rectangle below the Model column, but kept the small 48px header bee where it had always been. David's read after seeing it: two bees competed, the body bee felt under-committed at 140px, and the header bee was now redundant. Fix:
+
+- **Header bee removed.** The `<img class="custom-ai-modal-bee">` element deleted from the modal header. The header now reads as just a clean title + subtitle ("Add a Custom Worker Bee" + "Connect any OpenAI-compatible, Anthropic, or Google endpoint") with the existing inline ⓘ info button. Less visual noise.
+- **Body bee bumped 140px → 240px.** With nothing competing, the body mascot can claim the empty rectangle properly. Opacity dropped 0.85 → 1.0 (back to fully solid) for the same reason — the dimming was only there to keep the bee from fighting the header bee, which no longer exists.
+
+The decision: a single, larger, fully-visible API Bee planted in the body, instead of two small dimmer bees stacked top + bottom. Same image, same modal, just used with more conviction.
+
+### Files touched
+
+- [index.html](index.html) — `<img class="custom-ai-modal-bee">` removed from `.custom-ai-modal-hdr`; comment block explains the retirement
+- [style.css](style.css) — `.custom-ai-model-mascot-img` max-width/height bumped 140 → 240; opacity rule removed (defaults to 1.0)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps across all helper HTMLs
+
+---
+
 ## v3.63.335
 
 **Add Custom Worker Bee modal: API Bee mascot fills the dead space below the Model column**
