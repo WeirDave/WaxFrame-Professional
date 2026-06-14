@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.335
+
+**Add Custom Worker Bee modal: API Bee mascot fills the dead space below the Model column**
+
+Build: `20260613-029`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David flagged a layout problem in the modal: the Icon column on the right is naturally tall (96px preview box + Upload Icon + Browse Icons + help text), but the Model column on the left is short (just an input + small Fetch Models button + a "Browse models on website" link). The asymmetry left a giant empty rectangle under the Model column. His first instinct was "shrink the modal." His second instinct was better: drop the API Bee mascot in there. Same bee that already lives in the header — putting a bigger version in the empty space turns dead air into branded breath.
+
+Implementation is small:
+
+- `<div class="custom-ai-model-mascot">` added to the Model column with the existing `WaxFrame_API_Bee_v1.png`.
+- `.custom-ai-model-row` switched from `align-items: flex-start` to `align-items: stretch` so the short Model column fills the row's height (set by the taller Icon column).
+- `.custom-ai-field-wrap--model` made `display: flex; flex-direction: column;` so the new mascot div can use `margin-top: auto` to push itself to the bottom of the column.
+- The mascot is `aria-hidden="true"` and `pointer-events: none` — it's decorative, not interactive. Opacity dropped to 0.85 so it doesn't compete with the form fields for attention.
+
+Modal height didn't change — same `max-height: 90vh` cap, same content. The bee just claims the empty rectangle that was already there.
+
+### Files touched
+
+- [index.html](index.html) — `.custom-ai-model-mascot` div added inside the Model column with `WaxFrame_API_Bee_v1.png`
+- [style.css](style.css) — `.custom-ai-model-row` align-items switched to stretch; `.custom-ai-field-wrap--model` made flex-column; new `.custom-ai-model-mascot` + `.custom-ai-model-mascot-img` rules
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.334
 
 **Add Custom Worker Bee modal: ✓ Ready / ✗ Invalid pill on the API Key field, mirroring the AI Setup row pill**

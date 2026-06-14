@@ -4248,11 +4248,40 @@ body.helper-body .page-main {
 .custom-ai-model-row {
   display: flex;
   gap: 24px;
-  align-items: flex-start;
+  /* v3.63.335 — was align-items: flex-start. Switched to stretch so the
+     short Model column matches the taller Icon column's height, which lets
+     .custom-ai-model-mascot's margin-top:auto push the API Bee to the
+     bottom of the column instead of hugging the Browse-models link. */
+  align-items: stretch;
 }
 .custom-ai-field-wrap--model {
   flex: 1;
   min-width: 0;
+  /* v3.63.335 — Flex column so the mascot can margin-top:auto to fill the
+     leftover vertical space. */
+  display: flex;
+  flex-direction: column;
+}
+/* v3.63.335 — API Bee mascot in the empty space below the Model input.
+   margin-top: auto pushes it to the bottom of the (now flex) Model
+   column so it sits in the gap rather than directly under the link.
+   Opacity drop is decorative — the bee shouldn't compete with the form
+   fields for attention. */
+.custom-ai-model-mascot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: var(--space-12);
+  pointer-events: none;
+}
+.custom-ai-model-mascot-img {
+  max-width: 140px;
+  max-height: 140px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  opacity: 0.85;
 }
 .custom-ai-field-wrap--iconcol {
   flex: 0 0 auto;
