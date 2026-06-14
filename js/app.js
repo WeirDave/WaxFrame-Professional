@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260612-021
+// Build: 20260614-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260612-021';         // build stamp — update each session
+const BUILD       = '20260614-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -581,7 +581,7 @@ const BUILD       = '20260612-021';         // build stamp — update each sessi
 // auto-backup-after-round hook (every round-completion path on app.js
 // already calls _logRoundBump right before incrementing `round`, so the
 // auto-backup rides the same wave). The "can be removed once root cause
-// is fixed" comment that lived here pre-v3.63.342 was stale on both fronts:
+// is fixed" comment that lived here pre-v3.63.343 was stale on both fronts:
 // the auto-backup makes the function load-bearing regardless, and the
 // forensic part is cheap enough to leave in as a safety net against
 // regression of the original symptom. Don't remove this function.
@@ -21243,15 +21243,15 @@ function viewRoundDoc(idx) {
   // break out and run arbitrary JS with full localStorage access (API keys
   // live there). Fix: replace the inline onclick + computed id selector
   // with data-tab-id attributes + a delegated click listener on the modal,
-  // and HTML-escape every dynamic value in the header. switchHistTab now
-  // looks up the active panel by data-panel-id instead of building an id
-  // string from user input.
+  // attribute-escape the tab ids, and HTML-escape every dynamic value in the
+  // header. switchHistTab now looks up the active panel by data-panel-id
+  // instead of building an id string from user input.
   const tabButtons = hasResponses ? aiNames.map((id) =>
-    `<button class="work-phase-pill hist-resp-tab" data-tab-id="${esc(id)}">${esc(getFriendlyName(id))}</button>`
+    `<button class="work-phase-pill hist-resp-tab" data-tab-id="${escapeHtml(id)}">${esc(getFriendlyName(id))}</button>`
   ).join('') : '';
 
   const tabPanels = hasResponses ? aiNames.map((id) =>
-    `<div class="hist-resp-panel" data-panel-id="${esc(id)}">
+    `<div class="hist-resp-panel" data-panel-id="${escapeHtml(id)}">
       <textarea class="hist-doc-modal-ta" readonly>${esc(responses[id] || '(no response)')}</textarea>
     </div>`
   ).join('') : '';
@@ -21299,11 +21299,12 @@ function switchHistTab(id, btn) {
   if (!modal) return;
   modal.querySelectorAll('.hist-resp-panel').forEach(p => p.classList.remove('active'));
   modal.querySelectorAll('.hist-resp-tab').forEach(b => b.classList.remove('active'));
-  // v3.63.338 — Look up the panel by data-panel-id with proper attribute-
-  // selector escaping instead of constructing an id selector from user input.
+  // v3.63.338 — Look up the panel by data-panel-id without constructing a
+  // selector string from user input.
   // Pre-v3.63.338 this was `modal.querySelector(\`#histresp-${id}\`)` which
   // would happily explode on a crafted id (`foo"]; alert(1); //`).
-  const panel = modal.querySelector(`.hist-resp-panel[data-panel-id="${CSS.escape(id)}"]`);
+  const panel = Array.from(modal.querySelectorAll('.hist-resp-panel'))
+    .find(p => p.dataset.panelId === id);
   if (panel) panel.classList.add('active');
   if (btn) btn.classList.add('active');
 }
