@@ -374,7 +374,14 @@ const REQUIRED_CSP_DIRECTIVES = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  'upgrade-insecure-requests'
+  'upgrade-insecure-requests',
+  // v3.63.353 — strict-CSP cutover. script-src must contain the sha256
+  // hash that pins the v3.63.345 pre-paint head guard AND must NOT
+  // contain 'unsafe-inline'. The "must contain" half is encoded as a
+  // substring match in the loop below; the "must NOT contain
+  // 'unsafe-inline' on script-src" half is a separate dedicated check
+  // immediately after.
+  "'sha256-v6gFi56+2bv74Kb6ZsiwAOsnOhaMjjXtAhflRjSVRcw='"
 ];
 
 for (const file of htmlFiles) {
@@ -388,9 +395,21 @@ for (const file of htmlFiles) {
   const missing = REQUIRED_CSP_DIRECTIVES.filter(d => !policy.includes(d));
   if (missing.length) {
     fail(rel(file), `CSP missing required directive(s): ${missing.join(', ')}`);
-  } else {
-    ok(rel(file));
+    continue;
   }
+  // v3.63.353 strict-CSP cutover — script-src must NOT contain
+  // 'unsafe-inline'. style-src 'unsafe-inline' is fine (we still
+  // emit inline <style> in the head guard and per-element style=""
+  // attributes) and 'unsafe-eval' is still accepted on script-src
+  // (vendored SheetJS/mammoth/pdf.js use new Function() internally —
+  // dropping it would break document import; documented as residual
+  // risk under Check 7's CVE-tracked floor checks).
+  const scriptSrc = (policy.match(/script-src\s+([^;]+)/) || [])[1] || '';
+  if (/'unsafe-inline'/.test(scriptSrc)) {
+    fail(rel(file), `CSP script-src must NOT contain 'unsafe-inline' (strict-CSP cutover landed in v3.63.353). Got: script-src ${scriptSrc.trim()}`);
+    continue;
+  }
+  ok(rel(file));
 }
 
 // ── Check 6: Clickjacking guard + CSP violation listener presence ───

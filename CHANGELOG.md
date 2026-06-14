@@ -2,6 +2,65 @@
 
 ---
 
+## v3.63.353
+
+**Strict-CSP CUTOVER · `'unsafe-inline'` dropped from `script-src` on every page · pre-paint head guard pinned by sha256 · Check 5 enforces strict directive shape**
+
+Build: `20260614-011`<br>
+Released: `2026-06-14`
+
+### What changed
+
+The migration's destination. Six prior releases (v3.63.347 → v3.63.352) extracted every inline `on*=` attribute and every inline `<script>` block across all 16 HTML pages into external js/*.js files; this release flips the actual CSP directive.
+
+**1. CSP `script-src` tightened on every page.**
+
+Before:
+```
+script-src 'self' 'unsafe-inline' 'unsafe-eval'
+```
+
+After:
+```
+script-src 'self' 'unsafe-eval' 'sha256-v6gFi56+2bv74Kb6ZsiwAOsnOhaMjjXtAhflRjSVRcw='
+```
+
+The sha256 hash pins the v3.63.345 pre-paint clickjacking / CSP-violation head guard — the one inline `<script>` that has to stay inline by design (an external file load would give an attacker a window of visible-but-clickable UI before the guard runs). The hash was computed from the head guard's byte-exact body, identical across all 16 HTML pages.
+
+**2. `'unsafe-eval'` stays.** Vendored SheetJS, mammoth, and pdf.js use `new Function()` internally — dropping `'unsafe-eval'` would break document import. Documented as accepted residual risk; the vendored libraries are version-floor-tracked under Check 7.
+
+**3. `'unsafe-inline'` stays on `style-src`.** Every page emits a `<style>html.wf-framebusted{display:none}</style>` block at the top of `<head>` (part of the v3.63.345 clickjacking guard), and there are scattered `style="..."` attributes throughout the work-screen markup. Inline styles have a far smaller attack surface than inline scripts and are an explicit non-goal for this migration.
+
+**4. CSP comment on every page rewritten** to reflect the cutover state (was the original v3.63.340 "tightening is a separate multi-release effort" note).
+
+**5. `tools/release-check.mjs` Check 5 hardened.**
+- `REQUIRED_CSP_DIRECTIVES` now includes the sha256 hash; any page whose CSP loses it fails.
+- New dedicated check: the `script-src` directive must NOT contain `'unsafe-inline'`. Any page that re-introduces it fails CI with a per-file annotation.
+
+### Behavior change for the user
+
+None. Every inline handler was migrated to a delegated `data-action` dispatcher in helper-handlers.js, every page-specific inline `<script>` was moved to its own external js/*.js file, and the head guard was unchanged. The CSP cutover is an attacker-facing change only — XSS injection attempts that try to load inline scripts or set inline event handlers now hit the directive and are blocked by the browser before they execute.
+
+### Strict-CSP migration recap (v3.63.347 → v3.63.353)
+
+| Phase | Release | What landed |
+| ----- | ------- | ----------- |
+| 1 | v3.63.347 | helper-handlers.js delegation infrastructure; start-here.html migrated; Check 8 baseline (per-file inline-handler ratchet) |
+| 2 | v3.63.348 | 11 helper pages swept; 13 of 16 pages strict-CSP-clean |
+| 3 | v3.63.349 | api-details.html migrated; `consoles-toggle` + generic `data-hide-on-error`/`data-dim-on-error` shims; 14 of 16 |
+| 4 | v3.63.350 | prompt-editor.html migrated; per-page dispatcher in js/prompt-editor.js; 15 of 16 |
+| 5 | v3.63.351 | index.html migrated (396 handlers in one sweep); generic `call`/`call-chain`/`backdrop-call` dispatcher in helper-handlers.js; js/app-bootstrap.js for the three irreducible glue shims; 16 of 16 |
+| 6 | v3.63.352 | every page-specific inline `<script>` block extracted (templates renderer, pricing renderer, help env, viewport hint, mobile share, pdf loader); Check 9 enforces exactly one inline script per page |
+| 7 | v3.63.353 | **CSP cutover — `'unsafe-inline'` dropped from `script-src`** |
+
+### Files touched
+
+- 16 HTML pages — CSP `script-src` rewritten to drop `'unsafe-inline'` and add the head-guard sha256; CSP comment block updated
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 5 expanded: sha256 required, `'unsafe-inline'` on script-src forbidden
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps
+
+---
+
 ## v3.63.352
 
 **Strict-CSP migration · Phase 6: every page-specific inline `<script>` block extracted to external js/*.js · only the pre-paint head guard remains inline · Check 9 enforces the invariant**

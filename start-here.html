@@ -7,13 +7,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- v3.63.340 — Content-Security-Policy. Locks the unused-feature attack
-       surface (object/embed, base tag injection, form action redirection,
-       http downgrades) without breaking the current inline-script architecture.
-       Tightening script-src to remove unsafe-inline/unsafe-eval is a separate
-       multi-release effort that needs every inline onclick handler moved to
-       addEventListener first. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <!-- v3.63.353 — Content-Security-Policy (strict-CSP cutover).
+       script-src is locked to 'self' plus two sha256- hashes that pin the
+       pre-paint head guard below. The v3.63.347 → v3.63.352 inline-handler /
+       inline-script migration removed every other inline JavaScript surface
+       across all 16 HTML pages; release-check Check 5 enforces the strict
+       directive, Check 8 enforces zero inline on*= attrs per file, Check 9
+       enforces exactly one inline script tag per page (the head guard below).
+       'unsafe-eval' stays on script-src for vendored SheetJS / mammoth /
+       pdf.js (new Function internals). style-src 'unsafe-inline' stays
+       because we emit per-element style="..." attributes and the
+       inline <style> on the next line. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-v6gFi56+2bv74Kb6ZsiwAOsnOhaMjjXtAhflRjSVRcw='; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <!-- v3.63.345 — Clickjacking guard + CSP violation listener.
        Frame-busting: GitHub Pages cannot set the HTTP frame-ancestors
        directive, so this client-side check hides the page if we detect
@@ -52,7 +57,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260614-010">
+  <meta name="waxframe-build" content="20260614-011">
   <title>Start Here — Make Your First Document with WaxFrame</title>
   <meta name="description" content="A plain-English first-run guide for creating or improving a document with WaxFrame.">
   <link rel="canonical" href="https://waxframe.com/start-here.html">
@@ -66,7 +71,7 @@
   <meta name="twitter:description" content="A plain-English first-run guide for creating or improving a document with WaxFrame.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.352">
+  <link rel="stylesheet" href="style.css?v=3.63.353">
 </head>
 <body class="helper-body">
 
@@ -312,13 +317,13 @@
   </div>
 </div>
 
-<script src="js/version.js?v=3.63.352"></script>
-<script src="js/theme.js?v=3.63.352"></script>
-<script src="js/audio.js?v=3.63.352"></script>
-<script src="js/docx-export.js?v=3.63.352"></script>
-<script src="js/nav-helper.js?v=3.63.352"></script>
-<script src="js/license-helper.js?v=3.63.352"></script>
-<script src="js/helper-handlers.js?v=3.63.352"></script>
+<script src="js/version.js?v=3.63.353"></script>
+<script src="js/theme.js?v=3.63.353"></script>
+<script src="js/audio.js?v=3.63.353"></script>
+<script src="js/docx-export.js?v=3.63.353"></script>
+<script src="js/nav-helper.js?v=3.63.353"></script>
+<script src="js/license-helper.js?v=3.63.353"></script>
+<script src="js/helper-handlers.js?v=3.63.353"></script>
 
 </body>
 </html>
