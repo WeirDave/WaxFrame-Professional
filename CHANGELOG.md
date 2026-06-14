@@ -2,6 +2,28 @@
 
 ---
 
+## v3.63.358
+
+**Template hint banner hidden-state migration + cache-bust release stamp**
+
+Build: `20260614-016`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Small Phase 2 inline-style cleanup on the main app setup screen.
+
+- `#templateHintBanner` now starts hidden with the existing `.is-hidden` utility class instead of `style="display:none"`.
+- The three paired JavaScript paths (`clearProject()`, `applyTemplate()`, and `dismissTemplateHintBanner()`) now use `classList.add/remove('is-hidden')` instead of `element.style.display`.
+- Release stamps advanced to `3.63.358` / `20260614-016` so the changed `js/app.js` URL cache-busts correctly on the live site.
+
+### Verification
+
+- `node tools/release-check.mjs`
+- GitHub Pages smoke workflow from v3.63.357 already covered the affected work-screen capture path; this release fixes the validator failure caused by the missing cache-bust bump.
+
+---
+
 ## v3.63.357
 
 **Inline-style cleanup Phase 1: 8 pure-static `style="..."` values moved to `.wf-*` utility classes, 4 file inputs swapped to `hidden` HTML attribute, 8 attribute-value sha256 hashes dropped from CSP**
