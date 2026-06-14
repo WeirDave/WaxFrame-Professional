@@ -4276,12 +4276,15 @@ body.helper-body .page-main {
   pointer-events: none;
 }
 .custom-ai-model-mascot-img {
-  max-width: 140px;
-  max-height: 140px;
+  /* v3.63.336 — sized up from 140px to 240px. The header bee was retired
+     this release, so the body bee is the only mascot in the modal — it
+     should command the empty rectangle, not whisper from a corner.
+     Opacity bumped 0.85 → 1.0 for the same reason: nothing else competes. */
+  max-width: 240px;
+  max-height: 240px;
   width: 100%;
   height: auto;
   object-fit: contain;
-  opacity: 0.85;
 }
 .custom-ai-field-wrap--iconcol {
   flex: 0 0 auto;
