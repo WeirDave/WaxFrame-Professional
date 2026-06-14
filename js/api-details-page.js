@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api-details-page.js
-// Build: 20260614-023
+// Build: 20260614-024
 //  api-details.html page-specific init. Stamps the API_CONFIGS
 //  model names into the on-page guide so model references
 //  cannot drift from the live app. Extracted from the formerly-

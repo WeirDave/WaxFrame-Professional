@@ -2,6 +2,93 @@
 
 ---
 
+## v3.63.366
+
+**Phase 8 close-out: script-src strict-CSP RE-TIGHTENED. `'unsafe-inline'` drops; the pre-paint head guard is pinned with sha256. Six releases of Phase 8 migration land.**
+
+Build: `20260614-024`<br>
+Released: `2026-06-14`
+
+### Why this release
+
+v3.63.360 was the hotfix that rolled back the v3.63.353 strict-CSP cutover after ~107 template-string inline `on*=` handlers in `js/app.js` (and a few in `api-links.js` / `storage.js`) silently broke when `'unsafe-inline'` dropped. The most visible symptom was the reference-card ✕ delete button failing.
+
+Phase 8 (v3.63.361 → v3.63.365) migrated every one of those handlers to delegated `data-action` / `data-input-action` / `data-change-action` / `data-key-action` / `data-error-fn` dispatch routed through the dispatcher in [js/helper-handlers.js](js/helper-handlers.js). The ratchet across all tracked JS files hit zero in v3.63.365.
+
+This release flips the CSP directive back to strict, restores the head-guard sha256 pin, and updates release-check's Check 5 to enforce the new policy. It carries no JS source changes — only the CSP meta tag flip, the recomputed head-guard hash, and the release-check assertion direction.
+
+### CSP directive change
+
+Across all 16 HTML pages:
+
+**Before** (v3.63.360 → v3.63.365):
+```
+script-src 'self' 'unsafe-inline' 'unsafe-eval'
+```
+
+**After** (v3.63.366):
+```
+script-src 'self' 'unsafe-eval' 'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='
+```
+
+- **`'unsafe-inline'` removed.** With every template-string inline handler migrated to the dispatcher, no inline JS runs at all anymore on any page — except for the pre-paint clickjacking + CSP-violation listener at the top of every `<head>`.
+- **Head-guard sha256 added.** Pins the v3.63.345 clickjacking + CSP-violation listener (`(function () { if (window.self !== window.top) { … } document.addEventListener("securitypolicyviolation", …); })();`). The hash was freshly computed against the CURRENT block content — the v3.63.353 hash no longer applies because the script content evolved since then.
+- **CSP3 hash/`unsafe-inline` interaction.** If `'unsafe-inline'` ever sneaks back into `script-src` alongside the hash, the spec ignores the hash AND grants `'unsafe-inline'`, silently re-allowing every blocked inline construct. release-check's Check 5 now explicitly fails the build when `script-src` contains `'unsafe-inline'`.
+- **`'unsafe-eval'` stays.** Vendored SheetJS / mammoth.browser / pdf.js use `new Function()` internals; dropping eval would break every Word / Excel / PDF import.
+
+### What stayed strict from v3.63.356
+
+`style-src` is unchanged — already strict since v3.63.356/.357. Five sha256 entries pin the inline `<style>` blocks and the three `style="display:none*"` attributes that still ship; the `'unsafe-hashes'` keyword enables attribute-value hash matching.
+
+### What stayed unchanged from v3.63.360
+
+All migration code from v3.63.361 → v3.63.365 — the dispatcher additions (`call-multi`, `scroll-to`, `remove-element`, `key-call-multi`, prefixed `data-fn` / `data-args` lookup, `data-stop`, `data-prevent`, `data-error-fn`) and the per-surface migrations across reference cards, hive setup grid, template gallery, settings TOC, applied-changes panel, round-history modal, per-AI-row hive card body, holdout/conflict decision UI, api-links/storage stragglers. Nothing about the strict-CSP flip required a code change in those layers — they were correct under loose CSP and they're correct under strict.
+
+### release-check Check 5 updates
+
+- **`REQUIRED_CSP_DIRECTIVES` adds** `'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='` (head-guard pin) — every HTML page's CSP must contain it.
+- **Assertion direction flipped** for `script-src 'unsafe-inline'`: was "must contain"; now "must NOT contain". Re-adding `'unsafe-inline'` fails CI — the exact regression we just lived through can't happen again without an explicit removal of the check.
+- **`'unsafe-eval'` stays accepted** in the assertion logic — there's no parallel "must NOT contain" check for it (PDF / DOCX / XLSX import depends on it).
+
+### Click-test (mandatory before commit)
+
+Live in the preview server under the new strict policy. Captured violations via a pre-load external probe (`js/__csp_probe.js`, removed before commit) that registers a `securitypolicyviolation` listener BEFORE the rest of the page parses — earlier than the head guard's own listener becomes effective.
+
+- ✅ Page loads under strict `script-src`: head guard executes (`wf-framebusted` class hook set up, violation listener registered)
+- ✅ **Zero CSP violations** on initial page parse
+- ✅ Reference-card surface: paste-text card created, textarea typed (>20 chars), ✕ clicked → confirmation modal opens with correct copy, Remove button drops the doc
+- ✅ Hive header: `setHiveMode("server")` reached the spy; `showAddCustomAI()` reached the spy via a header-button click
+- ✅ Per-AI-row: row summary expand toggle → `toggleAISetupRow("chatgpt")` with string arg
+- ✅ Settings TOC: `scrollIntoView` invoked on the named section after clicking a `data-action="scroll-to"` link
+- ✅ Zero CSP violations after exercising the migrated surfaces
+- ✅ Release-check Check 5 passes: every HTML page carries the head-guard sha256 directive AND no `'unsafe-inline'` on `script-src`
+- ✅ Zero console errors / warnings
+
+### Files touched
+
+- 16 HTML pages — `script-src` directive flipped to strict; head-guard sha256 added; CSP comment marker updated to v3.63.366
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 5 assertion direction flipped; `REQUIRED_CSP_DIRECTIVES` includes the new head-guard sha256
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+### Phase 8 closing summary
+
+Six releases shipped over the arc:
+
+| Release | Surface | Inline handlers migrated |
+|---|---|---|
+| v3.63.361 | Reference Material card grid | 5 |
+| v3.63.362 | Hive setup grid top-level controls | 13 |
+| v3.63.363 | Settings TOC, template gallery, banners, bulk-select, applied-lock, round-history modal, TKP retest, icon picker, session-bee, bee tooltip, import-server modal, custom-AI builder | ~40 |
+| v3.63.364 | Per-AI-row hive card body | 21 source positions × N rows |
+| v3.63.365 | Holdout/conflict decision UI + api-links.js / storage.js / app.js stragglers | 18 |
+| v3.63.366 | **CSP re-tighten — `'unsafe-inline'` drops; head-guard sha256 pin restored; CI flip** | (0 code; policy + check) |
+
+Dispatcher in [js/helper-handlers.js](js/helper-handlers.js) grew from a small static `ACTIONS` table to a flexible delegation system supporting click / input / change / keydown / error events, single-arg / multi-arg call shapes (`call`, `call-multi`, `call-chain`), prefixed `data-fn-key` namespacing, and opt-in `data-stop` / `data-prevent` flags. Shims in [js/app-bootstrap.js](js/app-bootstrap.js) handle the composite-call cases that don't fit the generic dispatcher.
+
+Phase 8 is closed. The strict-CSP migration is back where v3.63.353 tried to take it — and this time it stays.
+
+---
+
 ## v3.63.365
 
 **Phase 8 surfaces 5 + 6 (combined): holdout/conflict decision UI + the last three handlers in api-links.js / storage.js / app.js — all template-string inline handlers now zero**
