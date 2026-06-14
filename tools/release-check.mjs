@@ -375,28 +375,37 @@ const REQUIRED_CSP_DIRECTIVES = [
   "base-uri 'self'",
   "form-action 'self'",
   'upgrade-insecure-requests',
-  // v3.63.360 — script-src strict-CSP cutover ROLLED BACK. The
-  // v3.63.353 cutover dropped 'unsafe-inline' from script-src and
-  // pinned the pre-paint head guard with sha256, but the migration
-  // missed ~107 inline on*= attributes embedded in template literals
-  // inside js/app.js (and a few in api-links.js / storage.js / wf-
-  // debug.js) that get injected into the DOM via innerHTML. Every one
-  // of them was silently blocked by the strict directive — the most
-  // visible symptom was the reference-card X delete button failing.
-  // The original CSP migration only swept static HTML; the dynamic
-  // template-string handlers stayed inline. Until those are properly
-  // converted to data-action delegation (Phase 8 of the strict-CSP
-  // migration), script-src has to allow inline. The head-guard hash
-  // was dropped from the directive — it's redundant when 'unsafe-
-  // inline' is back. The sha256 hashes on style-src stay; style-src
-  // was never affected by inline event handlers, only inline styles.
+  // v3.63.366 — script-src strict-CSP RE-TIGHTENED. The v3.63.360
+  // rollback restored 'unsafe-inline' on script-src after the v3.63.353
+  // strict cutover broke ~107 inline on*= attributes embedded in
+  // template literals inside js/app.js (the original migration only
+  // swept static HTML and missed the template-string handlers, which
+  // injected via innerHTML at render time). Phase 8 (v3.63.361 →
+  // v3.63.365) migrated every one of those to data-action / data-fn
+  // delegation routed through the dispatcher in js/helper-handlers.js.
+  // Ratchet for tracked JS files is now zero. With every inline
+  // handler gone, 'unsafe-inline' can drop again and the head-guard
+  // sha256 pins the pre-paint inline <script> in its place.
   //
-  // v3.63.356 / v3.63.357 — style-src stayed strict. style-src must
-  // carry both <style>-block hashes (head guard + help.html break-
-  // glass), the 'unsafe-hashes' keyword, and the 3 style="display:
-  // none*" attribute-value hashes that still ship in the HTML. The
-  // "must NOT contain 'unsafe-inline' on style-src" half is a
-  // separate dedicated check below.
+  // The head-guard hash below is for the CURRENT content of the v3.63.345
+  // clickjacking + CSP-violation block (recomputed in v3.63.366 because
+  // the original v3.63.353 hash was for a different content snapshot).
+  // CSP3 rule: when ANY hash is present in a script-src directive,
+  // 'unsafe-inline' is ignored — so keeping the hash here AND a stray
+  // 'unsafe-inline' would silently re-block the dynamic handlers. The
+  // dedicated "must NOT contain 'unsafe-inline'" check below catches
+  // any future regression.
+  //
+  // 'unsafe-eval' stays. SheetJS / mammoth.browser / pdf.js use
+  // new Function() internals for their parsers; dropping eval would
+  // break every Word / Excel / PDF import.
+  "'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='",  // <script> head guard (clickjacking + CSP-violation listener)
+  //
+  // v3.63.356 / v3.63.357 — style-src strict cutover; the sha256
+  // entries below pin both inline <style> blocks (head guard +
+  // help.html break-glass) and the 3 style="display:none*"
+  // attribute-value hashes that still ship in the HTML. The
+  // 'unsafe-hashes' keyword enables hash matching on style attrs.
   "'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo='",  // <style> head guard
   "'sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8='",  // <style> help.html break-glass
   "'unsafe-hashes'",                                        // required to let style="" hashes apply
@@ -418,17 +427,20 @@ for (const file of htmlFiles) {
     fail(rel(file), `CSP missing required directive(s): ${missing.join(', ')}`);
     continue;
   }
-  // v3.63.360 — script-src strict cutover ROLLED BACK; the check
-  // that previously enforced "must NOT contain 'unsafe-inline' on
-  // script-src" is gone. The directive shape must now CONTAIN
-  // 'unsafe-inline' so the ~107 inline on*= attributes injected via
-  // innerHTML from JS template strings continue to fire.
-  // 'unsafe-eval' is still accepted (vendored SheetJS / mammoth /
-  // pdf.js use new Function() internally — dropping it would break
-  // document import).
+  // v3.63.366 — script-src strict cutover RE-LANDED. Phase 8
+  // (v3.63.361 → v3.63.365) migrated every template-string inline on*=
+  // handler in js/ to data-action delegation routed through the
+  // dispatcher in helper-handlers.js. With the ratchet at zero,
+  // 'unsafe-inline' drops from script-src and the pre-paint head
+  // guard is pinned with the sha256 listed in REQUIRED_CSP_DIRECTIVES.
+  // Adding 'unsafe-inline' back would silently re-break the dispatch
+  // because CSP3 ignores hashes when 'unsafe-inline' is present —
+  // any future regression on this directive must fail CI here.
+  // 'unsafe-eval' stays (SheetJS / mammoth / pdf.js use new Function()
+  // internally — dropping it would break document import).
   const scriptSrc = (policy.match(/script-src\s+([^;]+)/) || [])[1] || '';
-  if (!/'unsafe-inline'/.test(scriptSrc)) {
-    fail(rel(file), `CSP script-src must contain 'unsafe-inline' until the JS-template-string on*= migration (Phase 8) lands. Got: script-src ${scriptSrc.trim()}`);
+  if (/'unsafe-inline'/.test(scriptSrc)) {
+    fail(rel(file), `CSP script-src must NOT contain 'unsafe-inline' (strict-CSP re-tightened in v3.63.366 after Phase 8 inline-handler migration). Got: script-src ${scriptSrc.trim()}`);
     continue;
   }
   // v3.63.356 strict style-src cutover — style-src must NOT contain
