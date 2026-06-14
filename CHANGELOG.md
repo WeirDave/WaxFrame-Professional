@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.345
+
+**Clickjacking guard + CSP violation listener landed on every HTML page · release-check guards both**
+
+Build: `20260614-003`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Two of the parking-lot items from yesterday's Codex review wrap-up. Both ride a single inline `<head>` block because both are pre-paint security hooks that need to run before any UI renders.
+
+**1. Clickjacking guard (frame-busting).** The HTTP `Content-Security-Policy: frame-ancestors` directive is the proper way to block embedding WaxFrame in a hidden attacker iframe — but GitHub Pages doesn't accept custom response headers, so we can't set it. The client-side equivalent: an inline `<style>` rule that hides the entire `<html>` element via a CSS class, plus an inline `<script>` that checks `window.self !== window.top` and only adds the hide class when we *are* framed. If unframed (the normal case), the class never lands and the page renders normally. If framed, the page hides AND tries to `window.top.location = window.self.location` to bust out of the frame. Modern browsers block cross-origin `top.location` writes, so a cross-origin attacker can't redirect us — but the hide class is already applied, so the page stays blank as the fail-safe.
+
+The script must be inline because any external file load gives the attacker a window of visible-but-clickable UI before the guard runs. When we eventually do the strict-CSP migration, this inline script will need a nonce or hash entry in script-src — flagged in the comment so it doesn't get missed.
+
+**2. CSP violation listener.** A `document.addEventListener('securitypolicyviolation', …)` hook that catches every browser-reported CSP block and pushes it into the Deep Dive ring buffer along with a `console.warn`. Gives us local telemetry without needing a server-side `report-to` endpoint (which would require HTTP header config we don't have). When we start the strict-CSP migration, this listener will surface exactly what's still firing under the looser policy — invaluable baseline data so we know what to fix before tightening `script-src`.
+
+### Guard rail
+
+Added **Check 6** to `tools/release-check.mjs`: every HTML file must carry both the `wf-framebusted` CSS class hook AND the `securitypolicyviolation` event listener. Silent removal or partial regression now fails CI with a per-file annotation. The existing vendored-library floor check renumbered to Check 7.
+
+### Files touched
+
+- All 16 HTML files — inline `<style>` + `<script>` block inserted directly after the CSP meta tag with an explanatory comment
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 6 (frame-buster + violation listener presence) added; vendored-floor check renumbered to Check 7
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.344
 
 **CI smoke job: raise `getWsUrl()` poll budget from 12s to 60s so cold GitHub runners stop flaking**

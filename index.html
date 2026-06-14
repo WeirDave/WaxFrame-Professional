@@ -16,6 +16,44 @@
        multi-release effort that needs every inline onclick handler moved to
        addEventListener first. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <!-- v3.63.345 — Clickjacking guard + CSP violation listener.
+       Frame-busting: GitHub Pages cannot set the HTTP frame-ancestors
+       directive, so this client-side check hides the page if we detect
+       we are embedded in an iframe, then tries to break out by redirecting
+       the top window. The inline-style class is added BEFORE any visible
+       paint so the attacker never sees clickable UI; if the top.location
+       write is cross-origin-blocked, the page stays hidden as the fail-safe.
+       CSP listener: captures securitypolicyviolation events into the Deep
+       Dive ring buffer + console. Gives us local visibility into what the
+       permissive CSP is catching without needing a server-side report
+       endpoint. Useful baseline for the future strict-CSP migration. -->
+  <style>html.wf-framebusted{display:none}</style>
+  <script>
+  (function () {
+    if (window.self !== window.top) {
+      document.documentElement.classList.add("wf-framebusted");
+      try { window.top.location = window.self.location; } catch (e) {}
+    }
+    document.addEventListener("securitypolicyviolation", function (e) {
+      var msg = {
+        kind: "csp-violation",
+        directive: e.violatedDirective,
+        blockedURI: e.blockedURI,
+        sourceFile: e.sourceFile,
+        line: e.lineNumber,
+        col: e.columnNumber,
+        ts: Date.now()
+      };
+      try { console.warn("[CSP]", msg); } catch (_) {}
+      try {
+        if (window.WF_DEBUG && Array.isArray(window.WF_DEBUG.ringBuffer)) {
+          window.WF_DEBUG.ringBuffer.push(msg);
+          if (window.WF_DEBUG.ringBuffer.length > 200) window.WF_DEBUG.ringBuffer.shift();
+        }
+      } catch (_) {}
+    });
+  })();
+  </script>
   <meta name="waxframe-build" content="20260614-001">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
@@ -30,7 +68,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.344">
+  <link rel="stylesheet" href="style.css?v=3.63.345">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -69,7 +107,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.344",
+    "softwareVersion": "3.63.345",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -3534,24 +3572,24 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.344';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.345';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.344"></script>
-<script src="lib/jszip.min.js?v=3.63.344"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.344"></script>
-<script src="js/version.js?v=3.63.344"></script>
-<script src="js/storage.js?v=3.63.344"></script>
-<script src="js/theme.js?v=3.63.344"></script>
-<script src="js/audio.js?v=3.63.344"></script>
-<script src="js/scenes.js?v=3.63.344"></script>
-<script src="js/wf-debug.js?v=3.63.344"></script>
-<script src="js/provider-models.js?v=3.63.344"></script>
-<script src="js/provider-catalog.js?v=3.63.344"></script>
-<script src="js/api.js?v=3.63.344"></script>
-<script src="js/templates.js?v=3.63.344"></script>
-<script src="js/api-links.js?v=3.63.344"></script>
-<script src="js/app.js?v=3.63.344"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.345"></script>
+<script src="lib/jszip.min.js?v=3.63.345"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.345"></script>
+<script src="js/version.js?v=3.63.345"></script>
+<script src="js/storage.js?v=3.63.345"></script>
+<script src="js/theme.js?v=3.63.345"></script>
+<script src="js/audio.js?v=3.63.345"></script>
+<script src="js/scenes.js?v=3.63.345"></script>
+<script src="js/wf-debug.js?v=3.63.345"></script>
+<script src="js/provider-models.js?v=3.63.345"></script>
+<script src="js/provider-catalog.js?v=3.63.345"></script>
+<script src="js/api.js?v=3.63.345"></script>
+<script src="js/templates.js?v=3.63.345"></script>
+<script src="js/api-links.js?v=3.63.345"></script>
+<script src="js/app.js?v=3.63.345"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
