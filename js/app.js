@@ -5734,10 +5734,17 @@ function _buildRowStatusPill(ai, hasKey) {
   if (window._invalidKeys && window._invalidKeys[ai.id]) {
     return `<span class="ai-setup-status-pill is-invalid" title="API key looks invalid — open the expanded view to retest or rotate.">✗ Invalid</span>`;
   }
-  if (window._validKeys && window._validKeys[ai.id]) {
-    return `<span class="ai-setup-status-pill is-ready" title="API key validated — this AI is ready to use.">✓ Ready</span>`;
-  }
-  return '';
+  // v3.63.331 — Default to ✓ Ready when the key is present and not explicitly
+  // flagged invalid. Pre-v3.63.331 the pill only showed when window._validKeys
+  // had been set by validateAllSavedKeys — but that validation doesn't run
+  // (or doesn't write the flag) for every provider, so providers like
+  // Perplexity ended up showing NO pill at all while every other row showed
+  // ✓ Ready. The inconsistency read as "Perplexity is broken" when actually
+  // its key was working fine — David: "Why is Perplexity not green?" The
+  // honest semantic of "key saved + no validation failure logged" is Ready;
+  // if validation later flips _invalidKeys true, the first branch above
+  // catches it on the next render.
+  return `<span class="ai-setup-status-pill is-ready" title="${window._validKeys && window._validKeys[ai.id] ? 'API key validated — this AI is ready to use.' : 'API key saved — last validation status unknown but no failure logged.'}">✓ Ready</span>`;
 }
 
 // v3.63.209 — Profile-override badge helper. Returns the badge HTML when
