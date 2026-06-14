@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-022
+// Build: 20260614-023
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-022';         // build stamp — update each session
+const BUILD       = '20260614-023';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -15841,7 +15841,7 @@ function resolveAiIcon(ai, cssClass, size) {
   const buildIconImg = (src) =>
     `<img src="${escapeHtml(src)}" class="${safeClass}" width="${sz}" height="${sz}" alt="${safeName}"` +
     ` data-ai-name="${safeName}" data-ai-class="${safeClass}" data-ai-size="${sz}"` +
-    ` onerror="resolveAiIconFallback(this)">`;
+    ` data-error-fn="resolveAiIconFallback">`;
 
   for (const entry of known) {
     if (entry.keys.some(k => combined.includes(k))) {
@@ -20189,21 +20189,21 @@ function renderConflicts() {
             <span class="convergence-ai-badge"><img src="images/WaxFrame_Worker_Bee_v2.png" class="inline-bee" alt="">${esc(s.name)}</span>
             <span class="decision-badge convergence-count-badge">Suggestion ${i + 1} of ${total}</span>
           </div>
-          ${ctx ? `<div class="decision-current decision-current-clickable" title="Click to scroll document to this text" onclick="scrollToCurrentText(window._holdoutAnchors[${i}])"><span class="decision-label">Current:</span> "${esc(ctx.preview)}"</div>` : ''}
+          ${ctx ? `<div class="decision-current decision-current-clickable" title="Click to scroll document to this text" data-action="call" data-fn="__wfScrollToHoldoutAnchor" data-arg-this="1" data-idx="${i}"><span class="decision-label">Current:</span> "${esc(ctx.preview)}"</div>` : ''}
           <div class="convergence-suggestion">${esc(stripLineRefs(s.text))}</div>
           <div class="decision-options">
             <button class="decision-opt-btn" id="hopt-${i}-apply"
-              onclick="selectHoldout(${i}, 'apply', ${total})">
+              data-action="call-multi" data-fn="selectHoldout" data-args="data-num:idx,lit:apply,data-num:total" data-idx="${i}" data-total="${total}">
               <span class="decision-opt-num decision-opt-num-apply">✓</span>
               <span class="decision-opt-text">Apply this suggestion</span>
             </button>
             <button class="decision-opt-btn decline-btn" id="hopt-${i}-decline"
-              onclick="selectHoldout(${i}, 'decline', ${total})">
+              data-action="call-multi" data-fn="selectHoldout" data-args="data-num:idx,lit:decline,data-num:total" data-idx="${i}" data-total="${total}">
               <span class="decision-opt-num decision-opt-num-decline">✕</span>
               <span class="decision-opt-text">Decline — skip this one</span>
             </button>
             <button class="decision-opt-btn decision-opt-custom custom-btn" id="hopt-${i}-custom"
-              onclick="selectHoldout(${i}, 'custom', ${total})">
+              data-action="call-multi" data-fn="selectHoldout" data-args="data-num:idx,lit:custom,data-num:total" data-idx="${i}" data-total="${total}">
               <span class="decision-opt-num decision-opt-num-custom">✎</span>
               <span class="decision-opt-text decision-opt-text-dim">Custom — type your own</span>
             </button>
@@ -20211,13 +20211,13 @@ function renderConflicts() {
           <div class="decision-custom-wrap" id="hcustom-${i}" style="display:none">
             <textarea class="decision-custom-ta" id="hcustom-ta-${i}"
               placeholder="Type your custom text here..."
-              oninput="updateHoldoutCustom(${i}, ${total})"></textarea>
+              data-input-action="call-multi" data-fn="updateHoldoutCustom" data-args="data-num:idx,data-num:total" data-idx="${i}" data-total="${total}"></textarea>
           </div>
         </div>`;
       });
 
       html += `<button class="btn-apply-decisions" id="applyHoldoutsBtn"
-        onclick="applyHoldouts()" disabled>
+        data-action="call" data-fn="applyHoldouts" disabled>
         ✅ Apply Selections &amp; Continue
       </button>`;
     }
@@ -20343,35 +20343,35 @@ function renderConflicts() {
           ${lockedBadge}
         </div>
         <div class="decision-question">${esc(stripLineRefs(d.question))}</div>
-        ${d.current ? (() => { window._conflictCurrentTexts[di] = d.current; return `<div class="decision-current decision-current-clickable" title="Click to scroll document to this text" onclick="scrollToCurrentText(window._conflictCurrentTexts[${di}])"><span class="decision-label">Current:</span> "${esc(d.current)}"</div>`; })() : ''}
+        ${d.current ? (() => { window._conflictCurrentTexts[di] = d.current; return `<div class="decision-current decision-current-clickable" title="Click to scroll document to this text" data-action="call" data-fn="__wfScrollToConflictCurrent" data-arg-this="1" data-idx="${di}"><span class="decision-label">Current:</span> "${esc(d.current)}"</div>`; })() : ''}
         <div class="decision-options">
           ${d.options.map((opt, oi) => `
             <button class="decision-opt-btn${oi === _preIdx ? ' selected' : ''}" id="dopt-${di}-${oi}"
-              onclick="selectDecision(${di}, ${oi}, ${total})">
+              data-action="call-multi" data-fn="selectDecision" data-args="data-num:di,data-num:oi,data-num:total" data-di="${di}" data-oi="${oi}" data-total="${total}">
               <span class="decision-opt-num">${oi + 1}</span>
               <span class="decision-opt-text">"${wfDecisionDiffHtml(d.current, opt.text, window._wfDecisionDiffMode)}"</span>
               ${opt.ais ? `<span class="decision-opt-ais">${esc(opt.ais)}</span>` : ''}
             </button>`).join('')}
           <button class="decision-opt-btn decision-opt-custom" id="dopt-${di}-custom"
-            onclick="selectCustomDecision(${di}, ${total})">
+            data-action="call-multi" data-fn="selectCustomDecision" data-args="data-num:di,data-num:total" data-di="${di}" data-total="${total}">
             <span class="decision-opt-num decision-opt-num-custom">✎</span>
             <span class="decision-opt-text decision-opt-text-dim">Custom — type your own</span>
           </button>
           ${isChurn ? '' : `<button class="decision-opt-btn decision-opt-bypass" id="dopt-${di}-bypass"
-            onclick="selectBypassDecision(${di}, ${total})">
+            data-action="call-multi" data-fn="selectBypassDecision" data-args="data-num:di,data-num:total" data-di="${di}" data-total="${total}">
             <span class="decision-opt-num decision-opt-num-bypass">✏️</span>
             <span class="decision-opt-text decision-opt-text-dim">I edited the document directly — skip this conflict</span>
           </button>`}
         </div>
         <div class="decision-lock-row">
-          <button class="${lockBtnClass}" onclick="lockConflictDecision(${di})" title="${lockBtnTitle}">
+          <button class="${lockBtnClass}" data-action="call-multi" data-fn="lockConflictDecision" data-args="data-num:di" data-di="${di}" title="${lockBtnTitle}">
             ${lockBtnLabel}
           </button>
         </div>
         <div class="decision-custom-wrap" id="dcustom-${di}" style="display:none">
           <textarea class="decision-custom-ta" id="dcustom-ta-${di}"
             placeholder="Type your custom text here..."
-            oninput="updateCustomDecision(${di}, ${total})">${esc(d.current || '')}</textarea>
+            data-input-action="call-multi" data-fn="updateCustomDecision" data-args="data-num:di,data-num:total" data-di="${di}" data-total="${total}">${esc(d.current || '')}</textarea>
         </div>
       </div>`;
     });
@@ -20382,14 +20382,14 @@ function renderConflicts() {
     // appears for the rare case the user wants the hive to keep working it.
     if (_hasChurn) {
       const _preArmed = Object.keys(window._decisionChoices).length === conflicts.userDecisions.length;
-      html += `<button class="btn-apply-decisions" id="applyDecisionsBtn" onclick="applyDecisions()" ${_preArmed ? '' : 'disabled'}>
+      html += `<button class="btn-apply-decisions" id="applyDecisionsBtn" data-action="call" data-fn="applyDecisions" ${_preArmed ? '' : 'disabled'}>
         🔒 Apply &amp; Lock
       </button>
-      <button class="btn-apply-nolock" id="applyNoLockBtn" onclick="applyDecisions({ noLock: true })" ${_preArmed ? '' : 'disabled'} title="Apply the chosen text but leave it unlocked — the hive may rework it again">
+      <button class="btn-apply-nolock" id="applyNoLockBtn" data-action="call" data-fn="__wfApplyDecisionsNoLock" ${_preArmed ? '' : 'disabled'} title="Apply the chosen text but leave it unlocked — the hive may rework it again">
         Apply without locking
       </button>`;
     } else {
-      html += `<button class="btn-apply-decisions" id="applyDecisionsBtn" onclick="applyDecisions()" disabled>
+      html += `<button class="btn-apply-decisions" id="applyDecisionsBtn" data-action="call" data-fn="applyDecisions" disabled>
         ✅ Apply My Decisions to Document
       </button>`;
     }
