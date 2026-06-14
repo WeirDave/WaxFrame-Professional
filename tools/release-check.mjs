@@ -384,26 +384,27 @@ const REQUIRED_CSP_DIRECTIVES = [
   "'sha256-v6gFi56+2bv74Kb6ZsiwAOsnOhaMjjXtAhflRjSVRcw='",
   // v3.63.356 — strict style-src cutover. style-src must carry both
   // <style>-block hashes (head guard + help.html break-glass), the
-  // 'unsafe-hashes' keyword, and the 11 style="..." attribute hashes
-  // covering every inline-style attr the codebase emits. Without all
-  // of these, the page either fails to render correctly (missing block
+  // 'unsafe-hashes' keyword, and one sha256 entry per unique inline
+  // style="..." attribute value still present in the HTML. Without
+  // them, the page either fails to render correctly (missing block
   // hash) or fails a CSP violation listener at runtime (missing attr
-  // hash). The "must NOT contain 'unsafe-inline' on style-src" half is
-  // a separate dedicated check below.
+  // hash). The "must NOT contain 'unsafe-inline' on style-src" half
+  // is a separate dedicated check below.
+  //
+  // v3.63.357 — Down from 11 attr-value hashes to 3: the 8 pure-
+  // static style values moved to .wf-* utility classes in style.css
+  // and 4 file inputs swapped to the `hidden` HTML attribute (no
+  // inline style at all). The 3 remaining attr-value hashes cover
+  // the `display:none` variants used as initial-hidden state on
+  // elements whose JS toggles them via element.style.display = ''
+  // (the revert-to-CSS-default pattern, which would break if those
+  // elements were also matched by a `display: none` class rule).
   "'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo='",  // <style> head guard
   "'sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8='",  // <style> help.html break-glass
   "'unsafe-hashes'",                                        // required to let style="" hashes apply
-  "'sha256-U39LwpFPBpT3Lt7xuEnj4BJI8V09wjPcxMKm3L/O4UI='",  // style="background: rgba(247,195,64...)"
   "'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE='",  // style="display:none"
   "'sha256-0EZqoz+oBhx7gF4nvY2bSqoGyy4zLjNF+SDQXGp/ZrY='",  // style="display:none;"
-  "'sha256-ukRLfhNT2UwV6SrWA/TIvp9f6n9i7rlY8yTJ7/Q4Aj4='",  // style="display:none;margin-top:8px;"
-  "'sha256-JzjJaC8w0SNFOqj128IsNlFo2pjyKirpYABgcVjzRlo='",  // style="flex-direction:column;..."
-  "'sha256-xJgw9VSwNWk+JhDx6dCtEnb5rREf+xfiKboIRRQ2wyk='",  // style="font-style: italic; color: ..."
-  "'sha256-1vbUwk7z0f5vVRhaiAOVIE7zWtBPpnUQrHt+FHxrfo0='",  // style="font-weight: 400; opacity: 0.7;"
-  "'sha256-ayqU6ju5l8n91VHdnqda+AJokO4F7JlcyuLJ97i8ADs='",  // style="font-weight:600;"
-  "'sha256-51C2sujOczlVGMvLFIZvjBzQ4whhqY1WZWebTLn72hI='",  // style="margin-top: var(--space-16);"
-  "'sha256-mHwBL94Tr/tKp56eEVRJEyifdcssVP0Gtta7uViWopE='",  // style="width:1.4em;height:1.4em;..."
-  "'sha256-nMxMqdZhkHxz5vAuW/PAoLvECzzsmeAxD/BNwG15HuA='"   // style="width:100%;"
+  "'sha256-ukRLfhNT2UwV6SrWA/TIvp9f6n9i7rlY8yTJ7/Q4Aj4='"   // style="display:none;margin-top:8px;"
 ];
 
 for (const file of htmlFiles) {

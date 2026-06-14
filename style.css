@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260614-014
+   Build: 20260614-015
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -18402,3 +18402,22 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
     flex: 1 1 100%;
   }
 }
+
+/* ============================================================
+   Inline-style utility classes (v3.63.357)
+   ------------------------------------------------------------
+   Replaces pure-static style="..." attributes that were
+   sha256-pinned in v3.63.356. Moving them here drops 8 of the
+   11 attribute-value hashes from style-src and shrinks the
+   CSP meta tag on every page. Each class is used once or
+   twice — utility shape kept narrow so adding a new one stays
+   cheap.
+   ============================================================ */
+.wf-strong         { font-weight: 600; }
+.wf-dim-italic     { font-style: italic; color: var(--text-dim); }
+.wf-text-faded     { font-weight: 400; opacity: 0.7; }
+.wf-mt-16          { margin-top: var(--space-16); }
+.wf-inline-icon    { width: 1.4em; height: 1.4em; vertical-align: middle; }
+.wf-w-full         { width: 100%; }
+.wf-callout-warm   { background: rgba(247, 195, 64, 0.08); border-radius: 8px; padding: var(--space-12) var(--space-14); margin: 0 0 var(--space-14); }
+.wf-help-links-col { flex-direction: column; align-items: flex-start; gap: 10px; max-width: 560px; }
