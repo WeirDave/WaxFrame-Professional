@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-025
+// Build: 20260614-026
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-025';         // build stamp — update each session
+const BUILD       = '20260614-026';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -3825,8 +3825,10 @@ async function clearProject() {
   switchDocTab('upload');
   // ── REFERENCE MATERIAL wipe (v3.24.0 — multi-doc) ──
   referenceDocs = [];
+  // v3.63.368 — flip via .is-hidden so style-src can stay strict (no
+  // inline style attribute on the element); textContent clear is unchanged.
   const refStatus = document.getElementById('refFileStatus');
-  if (refStatus) { refStatus.style.display = 'none'; refStatus.textContent = ''; }
+  if (refStatus) { refStatus.classList.add('is-hidden'); refStatus.textContent = ''; }
   const refFileInput = document.getElementById('refFileInput');
   if (refFileInput) refFileInput.value = '';
   if (typeof renderReferenceCards === 'function') renderReferenceCards();
@@ -11789,7 +11791,7 @@ async function processRefFile(file, batchLabel = '', verifyCollector = null) {
 
   const status = document.getElementById('refFileStatus');
   if (status) {
-    status.style.display = 'block';
+    status.classList.remove('is-hidden');
     status.textContent = `${batchLabel}⏳ Reading ${file.name}…`;
     setFileStatusState(status, 'loading');
   }
@@ -14203,12 +14205,12 @@ function _refBannerRevEl()   { return document.getElementById('refBatchBannerRev
 
 function _showRefBatchBanner(msg) {
   const b = _refBannerEl(), t = _refBannerTextEl();
-  if (b) b.style.display = 'block';
+  if (b) b.classList.remove('is-hidden');
   if (t) t.textContent = msg;
 }
 function _hideRefBatchBanner() {
   const b = _refBannerEl(), r = _refBannerRevEl();
-  if (b) b.style.display = 'none';
+  if (b) b.classList.add('is-hidden');
   if (r) r.innerHTML = '';
 }
 

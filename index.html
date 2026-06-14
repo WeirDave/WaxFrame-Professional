@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260614-025
+     Build: 20260614-026
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -59,7 +59,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260614-025">
+  <meta name="waxframe-build" content="20260614-026">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -73,7 +73,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.367">
+  <link rel="stylesheet" href="style.css?v=3.63.368">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -112,7 +112,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.367",
+    "softwareVersion": "3.63.368",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -555,8 +555,8 @@
             <input type="file" id="refFileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm" multiple hidden data-change-action="call" data-fn="handleRefFileSelect" data-arg-event="1">
           </div>
         </div>
-        <div id="refFileStatus" class="file-status" style="display:none;"></div>
-        <div id="refBatchBanner" class="ref-batch-banner" style="display:none;" role="status" aria-live="polite">
+        <div id="refFileStatus" class="file-status is-hidden"></div>
+        <div id="refBatchBanner" class="ref-batch-banner is-hidden" role="status" aria-live="polite">
           <div class="ref-batch-banner-main" id="refBatchBannerText"></div>
           <div class="ref-batch-banner-reviews" id="refBatchBannerReviews"></div>
         </div>
@@ -3426,7 +3426,7 @@
      above the minimum" (green) and "✗ Below minimum by N px wide" /
      "✗ Below minimum by M px tall" (red) so the user sees exactly
      which dimension is the problem. -->
-<script src="js/min-screen-viewport.js?v=3.63.367"></script>
+<script src="js/min-screen-viewport.js?v=3.63.368"></script>
 
 <!-- Mobile not supported overlay — but a funnel landing, not a wall.
      Mobile visitors landing on index.html from search results get a
@@ -3512,30 +3512,30 @@
      (and the only Add-Bookmark JS API was killed by browsers years
      ago for security reasons). Falls back to clipboard copy + a
      short instruction toast if navigator.share isn't available. -->
-<script src="js/mobile-share.js?v=3.63.367"></script>
+<script src="js/mobile-share.js?v=3.63.368"></script>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.4MB total. -->
 <!-- v3.63.16 — pdf.js upgraded to 4.10.38 (closes CVE-2024-4367). 4.x ships ESM only,
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
-<script type="module" src="js/pdf-loader.mjs?v=3.63.367"></script>
-<script src="lib/mammoth.browser.min.js?v=3.63.367"></script>
-<script src="lib/jszip.min.js?v=3.63.367"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.367"></script>
-<script src="js/version.js?v=3.63.367"></script>
-<script src="js/storage.js?v=3.63.367"></script>
-<script src="js/theme.js?v=3.63.367"></script>
-<script src="js/audio.js?v=3.63.367"></script>
-<script src="js/scenes.js?v=3.63.367"></script>
-<script src="js/wf-debug.js?v=3.63.367"></script>
-<script src="js/provider-models.js?v=3.63.367"></script>
-<script src="js/provider-catalog.js?v=3.63.367"></script>
-<script src="js/api.js?v=3.63.367"></script>
-<script src="js/templates.js?v=3.63.367"></script>
-<script src="js/api-links.js?v=3.63.367"></script>
-<script src="js/app.js?v=3.63.367"></script>
-<script src="js/helper-handlers.js?v=3.63.367"></script>
-<script src="js/app-bootstrap.js?v=3.63.367"></script>
+<script type="module" src="js/pdf-loader.mjs?v=3.63.368"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.368"></script>
+<script src="lib/jszip.min.js?v=3.63.368"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.368"></script>
+<script src="js/version.js?v=3.63.368"></script>
+<script src="js/storage.js?v=3.63.368"></script>
+<script src="js/theme.js?v=3.63.368"></script>
+<script src="js/audio.js?v=3.63.368"></script>
+<script src="js/scenes.js?v=3.63.368"></script>
+<script src="js/wf-debug.js?v=3.63.368"></script>
+<script src="js/provider-models.js?v=3.63.368"></script>
+<script src="js/provider-catalog.js?v=3.63.368"></script>
+<script src="js/api.js?v=3.63.368"></script>
+<script src="js/templates.js?v=3.63.368"></script>
+<script src="js/api-links.js?v=3.63.368"></script>
+<script src="js/app.js?v=3.63.368"></script>
+<script src="js/helper-handlers.js?v=3.63.368"></script>
+<script src="js/app-bootstrap.js?v=3.63.368"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
