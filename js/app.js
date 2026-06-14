@@ -9506,6 +9506,15 @@ async function recheckModelForAI(id, opts) {
   // Fast) populate from one button press.
   const _keepExpanded = (opts && opts.keepExpanded === false) ? false : true;
   const _skipTiers    = !!(opts && opts.skipTiers);
+  // v3.63.337 — opts.models lets a caller hand off an already-fetched model
+  // list so we skip the GET /v1/models call below. Used by addCustomAI right
+  // after the Add Custom AI modal already fetched it, to avoid the back-to-
+  // back duplicate network round trip David noticed. When supplied, we also
+  // DON'T clear or re-write the waxframe_models_{id} cache — addCustomAI
+  // already wrote it with the same data a moment ago.
+  const _handedOffModels = (opts && Array.isArray(opts.models) && opts.models.length)
+    ? opts.models
+    : null;
   const ai = aiList.find(a => a.id === id);
   if (!ai) return;
   const cfg = API_CONFIGS[ai.provider];
@@ -9538,12 +9547,14 @@ async function recheckModelForAI(id, opts) {
       localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); // legacy
       localStorage.removeItem(`waxframe_recommend_default-${ai.provider}-reviewer`);
       localStorage.removeItem(`waxframe_recommend_default-${ai.provider}-builder`);
-      localStorage.removeItem(`waxframe_models_${ai.provider}`);
+      // v3.63.337 — Skip the models-cache clear when the caller handed us a
+      // fresh list. No point clearing what we're about to leave untouched.
+      if (!_handedOffModels) localStorage.removeItem(`waxframe_models_${ai.provider}`);
     } else {
       localStorage.removeItem(`waxframe_recommend_custom-${id}`); // legacy
       localStorage.removeItem(`waxframe_recommend_custom-${id}-reviewer`);
       localStorage.removeItem(`waxframe_recommend_custom-${id}-builder`);
-      localStorage.removeItem(`waxframe_models_${id}`);
+      if (!_handedOffModels) localStorage.removeItem(`waxframe_models_${id}`);
     }
     if (!_skipTiers) {
       localStorage.removeItem(`waxframe_tiers_${ai.provider}`);
@@ -9588,12 +9599,19 @@ async function recheckModelForAI(id, opts) {
       // Open WebUI / Alfredo / non-`/v1/` servers fetch the correct URL
       // instead of the broken derive path.
       const format = cfg.format || 'openai';
-      const models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
+      // v3.63.337 — Reuse the handed-off list when present (Add Custom AI
+      // already fetched it in the modal a moment ago). Saves one GET to
+      // /v1/models. The cache write below is skipped in that branch too —
+      // addCustomAI already wrote it with the same data; re-writing is waste.
+      const models = _handedOffModels
+        ? _handedOffModels
+        : await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
       if (!models?.length) throw new Error('No chat-compatible models returned');
-      // Cache the model list so buildModelSelector renders the full dropdown.
-      // v3.63.302 — wfWriteVersioned stamps schema_version=1 per the
-      // versioning convention; the helper logs its own failure path.
-      window.wfWriteVersioned(`waxframe_models_${id}`, { ts: Date.now(), models }, 1);
+      if (!_handedOffModels) {
+        // Cache the model list so buildModelSelector renders the full dropdown.
+        // v3.63.302 — wfWriteVersioned stamps schema_version=1 per convention.
+        window.wfWriteVersioned(`waxframe_models_${id}`, { ts: Date.now(), models }, 1);
+      }
       // Stable askingModel: prefer cfg.model if it's in the live list,
       // otherwise first in list. No MODEL_FALLBACKS for customs since we
       // don't curate stable models for arbitrary endpoints.
@@ -9761,93 +9779,17 @@ async function migrateRecommendOnStartup() {
   }
 }
 
-// Internal helper called automatically after a successful Fetch Models.
-// Uses the currently fetched models in the dropdown to ask the provider
-// which model is the Best/Fastest/Budget pick for document refinement,
-// then annotates the dropdown options accordingly. Replaces the prior
-// button-driven `recommendCustomAIModel()` — re-poll lives on the main
-// screen, not in the Add a Custom Worker Bee modal.
-async function _autoRecommendCustomAI() {
-  const urlInput  = document.getElementById('customAIUrl');
-  const fmtSelect = document.getElementById('customAIFormat');
-  const keyInput  = document.getElementById('customAIKey');
-  const selectEl  = document.getElementById('customAIModelSelect');
-
-  if (!urlInput || !selectEl) return;
-
-  const url = urlInput.value.trim();
-  const format = fmtSelect.value;
-  const key = keyInput.value.trim();
-
-  if (!url || selectEl.style.display === 'none' || !selectEl.options.length) {
-    return;
-  }
-
-  // Only consider models that aren't disabled (already-in-hive ones are skipped)
-  const models = Array.from(selectEl.options)
-    .filter(o => !o.disabled && o.value)
-    .map(o => o.value);
-
-  if (!models.length) return;
-
-  const askingModel = selectEl.value && !selectEl.options[selectEl.selectedIndex]?.disabled
-    ? selectEl.value
-    : models[0];
-
-  // Visible loading state — disable dropdown so user can't pick mid-flight
-  selectEl.disabled = true;
-
-  toast(`🤖 Asking provider for recommendation…`, 3000);
-
-  const result = await recommendModel({
-    cacheId: url.replace(/\/+$/, ''),
-    endpoint: url,
-    format,
-    key,
-    models,
-    askingModel
-  });
-
-  selectEl.disabled = false;
-
-  if (result?.model) {
-    selectEl.value = result.model;
-    if (result.labels) annotateCustomAIDropdown(result.labels, result.model);
-    const cachedTag = result.cached ? ' (cached)' : '';
-    toast(`✨ ${result.model}${cachedTag}${result.why ? ' — ' + result.why : ''}`, 7000);
-  } else {
-    // Quiet failure — dropdown is still populated, user can pick manually.
-    toast('⚠️ Provider didn\'t return a clean recommendation — pick a model manually', 5000);
-  }
-}
-
-// v3.29.5 — Re-render customAIModelSelect <option> labels with tag info
-// returned from a successful recommendModel() call. Mirrors the formatting
-// in buildModelSelector() so the custom-AI flow shows the same ✨ Best /
-// ⚡ Fastest / 💰 Budget annotations as the built-in flow. Disabled
-// already-in-hive options are left untouched.
-function annotateCustomAIDropdown(labels, recommendedModel) {
-  const selectEl = document.getElementById('customAIModelSelect');
-  if (!selectEl || !labels) return;
-  const iconForTag = (tagStr) => {
-    if (!tagStr) return '';
-    const map = { 'Fastest': '⚡', 'Budget': '💰' };
-    return tagStr.split(' · ').map(t => map[t] || '').filter(Boolean).join(' ');
-  };
-  Array.from(selectEl.options).forEach(opt => {
-    if (opt.disabled) return; // already-in-hive entries — leave their "✓ … already in hive" suffix alone
-    const m = opt.value;
-    const lbl = labels[m];
-    if (!lbl) {
-      opt.textContent = m; // bare id for un-tagged models
-      return;
-    }
-    const icons = iconForTag(lbl.tag);
-    const iconPart = icons ? `${icons} ` : '';
-    const baseDisplay = `${iconPart}${m} — ${lbl.tag}`;
-    opt.textContent = m === recommendedModel ? `✨ ${baseDisplay}` : baseDisplay;
-  });
-}
+// v3.63.337 — Removed: _autoRecommendCustomAI + annotateCustomAIDropdown.
+// They fired a POST /v1/chat/completions after the Add Custom AI modal's
+// successful Fetch Models, then annotated the dropdown with ✨ Best /
+// ⚡ Fastest / 💰 Budget labels. The result was cached under cacheId=url
+// which no other code path reads — the post-Add recheckModelForAI runs
+// canonical role-split Reviewer + Builder recommends under
+// custom-{id}-reviewer / -builder, the exact keys getReviewerRecommendation
+// and getBuilderRecommendation read from the Bee row. So the modal's
+// recommend was duplicate work whose only user-visible effect (✨ in the
+// dropdown for ~3 seconds before Add to Hive) didn't justify a wasted POST.
+// Same audit convention from v3.63.332: kill the surface, kill the function.
 
 // ── v3.25.7 / v3.26.1: Custom AI decision aids (Recommend + Browse models) ──
 // Both aids only make sense AFTER Fetch Models has populated the dropdown:
@@ -10117,22 +10059,18 @@ async function fetchCustomAIModels() {
       toast(parts.join(' · '), filteredOutCount > 0 || presetMatch ? 5000 : 3000);
     }
 
-    // v3.29.8 — auto-recommend after a successful fetch. Fetch already
-    // proved the URL works and the API key is valid (we got a model list
-    // back), so the only thing left is to ask the provider which model
-    // is the best/fastest/cheapest pick for document refinement. Skip if
-    // there are no available (non-already-in-hive) models since there's
-    // nothing to recommend, and skip on Anthropic/Google because their
-    // flows don't go through the OpenAI-compatible recommend path. The
-    // recommend call is fire-and-forget; if it fails we just leave the
-    // dropdown un-annotated and the user can still pick manually or hit
-    // the Recommend a Model button to retry.
-    if (availCount > 0 && format === 'openai') {
-      // Don't await — let the toast above show first, then quietly run
-      // the recommend in the background. _autoRecommendCustomAI handles
-      // its own loading state and posts a toast on result.
-      _autoRecommendCustomAI();
-    }
+    // v3.63.337 — _autoRecommendCustomAI() call retired. It fired a
+    // POST /v1/chat/completions to annotate the dropdown with a ✨ pick,
+    // but cached the result under cacheId=url which nothing on the Bee
+    // row ever reads. The post-Add-to-Hive recheckModelForAI runs the
+    // canonical role-split Reviewer + Builder recommends under the cache
+    // keys getReviewerRecommendation / getBuilderRecommendation actually
+    // read. David's audit: "we ask for the models and then once they're
+    // added we ask again for the models so we're doing double calls
+    // right in a row" — same critique applies to the recommend layer,
+    // which was a wasted POST under a key the row ignored. The function
+    // itself + annotateCustomAIDropdown are deleted further down (both
+    // had only this one caller).
 
   } catch(e) {
     fetchBtn.textContent = 'Fetch Models';
@@ -10328,8 +10266,16 @@ function addCustomAI() {
   // getBuilderRecommendation read on the Bee row. Fire-and-forget;
   // renderAIRow lights up the picks when each role's result lands.
   if (key && format === 'openai') {
+    // v3.63.337 — Hand off the model list we just cached so recheckModelForAI
+    // skips its own GET /v1/models call. modelOptions was built above (line
+    // ~10294 in the source before this comment landed) from the modal's
+    // dropdown; it's the same list the canonical fetch would return seconds
+    // later. Saves the duplicate network round trip David called out.
+    const handoffModels = modelSelect && modelSelect.style.display !== 'none'
+      ? Array.from(modelSelect.options).filter(o => o.value && !o.disabled).map(o => o.value)
+      : null;
     setTimeout(() => {
-      try { recheckModelForAI(id); } catch (e) { /* non-fatal — user can manually run Recommend on the row */ }
+      try { recheckModelForAI(id, handoffModels?.length ? { models: handoffModels } : undefined); } catch (e) { /* non-fatal — user can manually run Recommend on the row */ }
     }, 50);
   }
 }
