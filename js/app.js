@@ -9963,9 +9963,15 @@ function resetModelField() {
   const textInput   = document.getElementById('customAIModel');
   const selectEl    = document.getElementById('customAIModelSelect');
   const fetchBtn    = document.getElementById('customAIFetchModelsBtn');
+  const keyStatus   = document.getElementById('customAIKeyStatus');
   if (textInput)  { textInput.value = ''; textInput.style.display = ''; }
   if (selectEl)   { selectEl.style.display = 'none'; selectEl.innerHTML = ''; }
   if (fetchBtn)   { fetchBtn.textContent = 'Fetch Models'; fetchBtn.disabled = false; }
+  // v3.63.334 — Clear the API-key Ready/Invalid pill on any key edit. Mirrors
+  // the AI Setup row behavior: editing the key invalidates any prior
+  // validation, so the pill should disappear until the next Fetch Models
+  // proves the new key works.
+  if (keyStatus) keyStatus.innerHTML = '';
   updateRecommendBtn();
 }
 
@@ -10089,6 +10095,15 @@ async function fetchCustomAIModels() {
     selectEl.style.display = '';
     fetchBtn.textContent = '↺ Refresh';
     fetchBtn.disabled = false;
+    // v3.63.334 — Surface the same ✓ Ready pill the AI Setup row shows. A
+    // successful fetch proves either the key was accepted (keyed providers)
+    // or the endpoint is reachable without a key (Ollama / local servers).
+    // Either way, the modal now gives the same persistent green confirmation
+    // the row does, instead of just a toast that fades.
+    const keyStatus = document.getElementById('customAIKeyStatus');
+    if (keyStatus) {
+      keyStatus.innerHTML = `<span class="ai-setup-status-pill is-ready" title="Endpoint returned a model list — connection validated.">✓ Ready</span>`;
+    }
     updateRecommendBtn();
 
     // Compose the toast — most informative first
@@ -10122,6 +10137,21 @@ async function fetchCustomAIModels() {
   } catch(e) {
     fetchBtn.textContent = 'Fetch Models';
     fetchBtn.disabled = false;
+    // v3.63.334 — Mirror the AI Setup row's ✗ Invalid pill for failure
+    // state. Status 401/403 → the key was rejected, so "Invalid" reads
+    // honestly. Any other failure → endpoint unreachable / wrong URL /
+    // server error: "Failed" reads more accurately than "Invalid" since
+    // the key wasn't necessarily what broke.
+    const httpMatch = String(e.message || '').match(/HTTP (\d+)/);
+    const httpStatus = httpMatch ? parseInt(httpMatch[1], 10) : null;
+    const keyStatus = document.getElementById('customAIKeyStatus');
+    if (keyStatus) {
+      if (httpStatus === 401 || httpStatus === 403) {
+        keyStatus.innerHTML = `<span class="ai-setup-status-pill is-invalid" title="Endpoint rejected this API key (HTTP ${httpStatus}).">✗ Invalid</span>`;
+      } else {
+        keyStatus.innerHTML = `<span class="ai-setup-status-pill is-invalid" title="Fetch failed — see toast for the specific reason.">✗ Failed</span>`;
+      }
+    }
     // v3.29.8 — humanize the error toast. Previously we just showed the
     // raw `e.message` which surfaced "HTTP 401" or "NetworkError when
     // attempting to fetch" — useless to a non-developer. Route through
@@ -10129,9 +10159,8 @@ async function fetchCustomAIModels() {
     // ctx so MODELS_ENDPOINT_AUTH / PATH_NOT_FOUND / SERVER_ERROR /
     // NO_MODELS catalog entries can match. The classifier returns a
     // catalog entry with `meaning` written for humans.
-    const httpMatch = String(e.message || '').match(/HTTP (\d+)/);
-    const ctx = httpMatch
-      ? { kind: 'models_endpoint', status: parseInt(httpMatch[1], 10) }
+    const ctx = httpStatus
+      ? { kind: 'models_endpoint', status: httpStatus }
       : (e.message === 'No models returned' || e.message?.startsWith('No chat-compatible'))
         ? { kind: 'models_endpoint', status: 'no_models' }
         : { kind: 'models_endpoint' };
