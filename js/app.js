@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-019
+// Build: 20260614-020
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-019';         // build stamp — update each session
+const BUILD       = '20260614-020';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -6261,14 +6261,14 @@ function renderHiveModeToggle() {
   wrap.innerHTML = `
     <div class="hive-mode-toggle" role="radiogroup" aria-label="Hive mode">
       <button class="hive-mode-btn ${isInternet ? 'is-active' : ''}"
-              onclick="setHiveMode('internet')"
+              data-action="call" data-fn="setHiveMode" data-arg="internet"
               role="radio"
               aria-checked="${isInternet}"
               title="Use direct-API providers (Anthropic, OpenAI, Google, etc.) — pay per use">
         🌎 Internet Based AI (Default)
       </button>
       <button class="hive-mode-btn ${!isInternet ? 'is-active' : ''}"
-              onclick="setHiveMode('server')"
+              data-action="call" data-fn="setHiveMode" data-arg="server"
               role="radio"
               aria-checked="${!isInternet}"
               title="Use AIs from a model server (Alfredo, OpenWebUI, LM Studio, etc.) — for air-gapped or self-hosted setups">
@@ -6326,21 +6326,21 @@ function renderWorkerBeeToolbar() {
   if (isInternet) {
     buttons = `
       <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
-      <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
-      <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
-      <button class="btn btn-lg" id="recommendAllBtn" onclick="recommendModelsForAll()" title="Ask every keyed AI for Reviewer + Builder picks AND classify Cheap / Balanced / Thinker / Fast tiers per provider — fills all 6 cards on every hive row. Runs in parallel.">Recommend Models for All</button>
-      <button class="btn btn-lg" onclick="toggleHiveConsoles()" title="Open the drawer with every provider's console in your hive">Provider Sites</button>`;
+      <button class="btn btn-lg" data-action="call" data-fn="showAddCustomAI">Add Custom AI</button>
+      <button class="btn btn-lg" id="testAllKeysBtn" data-action="call" data-fn="testAllKeys">Test All Keys</button>
+      <button class="btn btn-lg" id="recommendAllBtn" data-action="call" data-fn="recommendModelsForAll" title="Ask every keyed AI for Reviewer + Builder picks AND classify Cheap / Balanced / Thinker / Fast tiers per provider — fills all 6 cards on every hive row. Runs in parallel.">Recommend Models for All</button>
+      <button class="btn btn-lg" data-action="call" data-fn="toggleHiveConsoles" title="Open the drawer with every provider's console in your hive">Provider Sites</button>`;
   } else {
     buttons = `
-      <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
-      <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
-      <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>`;
+      <button class="btn btn-lg" data-action="call" data-fn="showImportServerModal">Import from Model Server</button>
+      <button class="btn btn-lg" data-action="call" data-fn="showAddCustomAI">Add Custom AI</button>
+      <button class="btn btn-lg" id="testAllKeysBtn" data-action="call" data-fn="testAllKeys">Test All Keys</button>`;
   }
   // Expand/collapse-all controls — small, sit at the right
   const expandControls = `
     <span class="bee-controls-spacer"></span>
-    <button class="btn btn-sm bee-controls-expand-btn" onclick="expandAllAISetupRows()" title="Expand every AI row">⊞ Expand all</button>
-    <button class="btn btn-sm bee-controls-expand-btn" onclick="collapseAllAISetupRows()" title="Collapse every AI row">⊟ Collapse all</button>`;
+    <button class="btn btn-sm bee-controls-expand-btn" data-action="call" data-fn="expandAllAISetupRows" title="Expand every AI row">⊞ Expand all</button>
+    <button class="btn btn-sm bee-controls-expand-btn" data-action="call" data-fn="collapseAllAISetupRows" title="Collapse every AI row">⊟ Collapse all</button>`;
   row.innerHTML = buttons + expandControls;
 }
 // v3.32.10 — buildBestFastBudgetButtonsHTML and applyCategoryRecommendation
@@ -6885,10 +6885,11 @@ function renderHiveProfileBar() {
   //   • Delete profile stays next to the dropdown — it's a destructive
   //     action on the SELECTED profile, not a snapshot of current state.
   const saveBtn = _saveIsUseful
-    ? `<button class="btn btn-sm hive-profile-bar-save" onclick="openSaveHiveProfileModal()" title="Capture your current per-AI model picks as a reusable named profile you can pick from the dropdown later">💾 Save as new profile</button>`
+    ? `<button class="btn btn-sm hive-profile-bar-save" data-action="call" data-fn="openSaveHiveProfileModal" title="Capture your current per-AI model picks as a reusable named profile you can pick from the dropdown later">💾 Save as new profile</button>`
     : '';
+  // activeOpt.id is escaped into data-arg via escapeHtml (same shape used pre-migration in the onclick string-literal context).
   const delBtn = activeOpt?.isCustom
-    ? `<button class="btn btn-sm hive-profile-bar-delete" onclick="deleteCustomHiveProfile('${escapeHtml(activeOpt.id)}')" title="Delete the saved profile &quot;${escapeHtml(activeOpt.rawLabel)}&quot;">🗑 Delete profile</button>`
+    ? `<button class="btn btn-sm hive-profile-bar-delete" data-action="call" data-fn="deleteCustomHiveProfile" data-arg="${escapeHtml(activeOpt.id)}" title="Delete the saved profile &quot;${escapeHtml(activeOpt.rawLabel)}&quot;">🗑 Delete profile</button>`
     : '';
 
   // v3.63.312 / .315 — Wrap (note + save button) in a single right-aligned
@@ -6901,7 +6902,7 @@ function renderHiveProfileBar() {
   // remainder on the dropdown row.
   bar.innerHTML = `
     <span class="hive-profile-bar-label">Hive Profile:</span>
-    <select class="hive-profile-bar-select" id="hiveProfileSelect" onchange="applyHiveProfile(this.value)">
+    <select class="hive-profile-bar-select" id="hiveProfileSelect" data-change-action="call" data-fn="applyHiveProfile" data-arg-value="1">
       ${options}
     </select>
     ${delBtn}
