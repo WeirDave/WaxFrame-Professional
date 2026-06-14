@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.370
+
+**Inline-style cleanup pass 4: `#phaseSelect` (the hidden phase-state `<select>` on the work screen) moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-028`<br>
+Released: `2026-06-14`
+
+### What changed
+
+`#phaseSelect` is a permanently-hidden form control on the work screen. It drives the draft/refine phase state (a real `<select>` whose `value` is read/written from JS); the visible UI uses the work-phase pill row. Three sites in [js/app.js](js/app.js) write its `.value` (`initWorkScreen`, `setPhase`, checkpoint restore), but nothing ever reads or writes `.style.display` — the element stays hidden for its entire lifetime.
+
+Pure attribute swap: `style="display:none"` → `class="is-hidden"`. No JS changes.
+
+### Verified in preview
+
+- Initial state — `.is-hidden` present, computed `display: none`, no inline style attribute, value `"draft"`
+- `setPhase('refine')` — value updates to `"refine"`, `.is-hidden` still present, computed display still `none`
+- `setPhase('draft')` — restores the initial value
+
+### Files touched
+
+- [index.html](index.html) — 1 inline `style="display:none"` removed; `class="is-hidden"` added
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 22 → 21 inline `style="display:none*"` attrs remaining.
+
+---
+
 ## v3.63.369
 
 **Inline-style cleanup pass 3: source-document upload UI (`#fileStatus`, `#fileClearRow`, `#pasteTextStats`, `#sourceSizeCheck`) moved off `style="display:none"` to `.is-hidden` + errata fix for one leftover `#refFileStatus` toggle missed in v3.63.368**
