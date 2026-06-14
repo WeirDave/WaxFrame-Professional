@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app-bootstrap.js
-// Build: 20260614-021
+// Build: 20260614-022
 //  Glue shims for index.html's strict-CSP migration (v3.63.351).
 //
 //  Three inline handlers on the work screen had shapes the generic
@@ -91,5 +91,54 @@
     if (!el || !el.dataset) return;
     if (typeof toggleSessionBee === 'function') toggleSessionBee(el.dataset.aiId, el.checked);
     if (typeof renderBeeDotStrip === 'function') renderBeeDotStrip();
+  };
+
+  // ── Per-AI-row hive card shims (Phase 8, v3.63.364) ──────────
+  //
+  // Three composite handlers in the per-AI-row hive card body don't
+  // fit the dispatcher's single-fn conventions and need shims.
+
+  // 6-card hive-pick keyboard activation. Original inline:
+  //   onkeydown="if(event.key==='Enter'||event.key===' '){...}"
+  // Fires swapAIModelFromHiveCard on Enter or Space, preventDefault to
+  // suppress the space-scroll and Enter-default click semantics, and
+  // stopPropagation so the row-summary keydown listener (once it lands)
+  // doesn't also toggle.
+  //
+  // Wired as: data-key-action="key-call-multi" data-fn="__wfHiveCardSwapKey"
+  //           data-args="this,event" data-ai-id="${id}" data-pick-model="${model}"
+  window.__wfHiveCardSwapKey = function(el, e) {
+    if (!el || !el.dataset || !e) return;
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    if (typeof swapAIModelFromHiveCard === 'function') {
+      swapAIModelFromHiveCard(el.dataset.aiId, el.dataset.pickModel);
+    }
+    e.stopPropagation();
+  };
+
+  // API-key input "Enter saves" plus the 3rd-arg this. Original inline:
+  //   onkeydown="if(event.key==='Enter'){saveKeyForAI('${id}',this.value,this);}"
+  // Three args (id, value, this) — call-multi can't reach el itself
+  // alongside el.value, so a tiny shim is cleaner than another
+  // dispatcher token.
+  //
+  // Wired as: data-key-action="key-call-multi" data-fn="__wfSaveKeyOnEnter"
+  //           data-args="this,event" data-ai-id="${ai.id}"
+  window.__wfSaveKeyOnEnter = function(el, e) {
+    if (!el || !el.dataset || !e) return;
+    if (e.key !== 'Enter') return;
+    if (typeof saveKeyForAI === 'function') saveKeyForAI(el.dataset.aiId, el.value, el);
+  };
+
+  // Builder pick — chain setBuilder + renderAISetupGrid. Original inline:
+  //   onclick="event.stopPropagation(); event.preventDefault(); setBuilder('${id}'); renderAISetupGrid(); return false;"
+  //
+  // Wired as: data-action="call" data-fn="__wfSetBuilderAndRender"
+  //           data-arg-this="1" data-ai-id="${ai.id}" data-stop="1"
+  window.__wfSetBuilderAndRender = function(el) {
+    if (!el || !el.dataset) return;
+    if (typeof setBuilder === 'function') setBuilder(el.dataset.aiId);
+    if (typeof renderAISetupGrid === 'function') renderAISetupGrid();
   };
 })();
