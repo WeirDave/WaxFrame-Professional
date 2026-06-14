@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-021
+// Build: 20260614-022
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -212,7 +212,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
     return (r && b) ? ' is-both-pick' : r ? ' is-reviewer-pick' : b ? ' is-builder-pick' : w ? ' is-builder-warn-pick' : '';
   };
   const optRows = models.map(m =>
-    `<div class="model-select-opt${_tintCls(m)}${m === currentModel ? ' is-selected' : ''}" role="option" data-value="${escapeHtml(m)}" onclick="wfModelSelectPick(this, event)">${_optInner(m)}</div>`
+    `<div class="model-select-opt${_tintCls(m)}${m === currentModel ? ' is-selected' : ''}" role="option" data-value="${escapeHtml(m)}" data-action="call-multi" data-fn="wfModelSelectPick" data-args="this,event" data-stop="1">${_optInner(m)}</div>`
   ).join('');
   // Current-value display: matches the chosen row, or the raw id when the saved
   // model isn't in the live list (e.g. it was quarantined / removed).
@@ -252,15 +252,15 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
 
   // v3.32.10 — recheck button label updated to reflect dual-role behavior.
   const recheckBtn = showRecheck
-    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider for its best Reviewer and Builder models AND classify Cheap / Balanced / Thinker / Fast tier picks — populates all 6 cards on the hive grid">Recommend Models</button>`
+    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" data-action="call" data-fn="recheckModelForAI" data-arg="${aiId}" title="Ask the provider for its best Reviewer and Builder models AND classify Cheap / Balanced / Thinker / Fast tier picks — populates all 6 cards on the hive grid">Recommend Models</button>`
     : '';
 
   return `<div class="model-select-wrap">
     <span class="model-select-label">Pick a model:</span>
     <div class="model-select model-select-custom" id="modelsel-${aiId}" data-value="${escapeHtml(currentModel || '')}"
       tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"
-      onclick="wfModelSelectToggle(this, event)"
-      onkeydown="wfModelSelectKey(this, event)">
+      data-action="call-multi" data-fn="wfModelSelectToggle" data-args="this,event"
+      data-key-action="key-call-multi" data-fn-key="wfModelSelectKey" data-args-key="this,event">
       <span class="model-select-value">${valueInner}</span>
       <span class="model-select-arrow" aria-hidden="true">▾</span>
       <div class="model-select-list" role="listbox">${optRows}</div>
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-021';         // build stamp — update each session
+const BUILD       = '20260614-022';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -5464,8 +5464,9 @@ function _renderHiveCardShell(opts) {
   return `
     <div class="ai-hive-card is-pickable" role="button" tabindex="0"
       title="${escapeHtml(titleText)} — click to use"
-      onclick="swapAIModelFromHiveCard('${_idJs}', '${_pickJs}'); event.stopPropagation();"
-      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();swapAIModelFromHiveCard('${_idJs}', '${_pickJs}');event.stopPropagation();}">
+      data-action="call-multi" data-fn="swapAIModelFromHiveCard" data-args="data:aiId,data:pickModel" data-stop="1"
+      data-key-action="key-call-multi" data-fn-key="__wfHiveCardSwapKey" data-args-key="this,event"
+      data-ai-id="${escapeHtml(aiId)}" data-pick-model="${escapeHtml(pickModel)}">
       <div class="ai-hive-card-label">${labelHTML}</div>
       <div class="ai-hive-card-model">${modelHTML}</div>
     </div>`;
@@ -5585,7 +5586,7 @@ function _renderHiveRolesAndTiers(ai, currentModel) {
     whyRows.push(`<div class="ai-hive-why-row"><div class="ai-hive-why-tier">💰⚖️🧠⚡ Tiers</div><div class="ai-hive-why-text">${escapeHtml(tiersWhy)}</div></div>`);
   }
   const whyExpander = whyRows.length ? `
-    <button class="ai-hive-why-toggle" type="button" onclick="event.stopPropagation(); toggleHiveWhy('${ai.id}');">
+    <button class="ai-hive-why-toggle" type="button" data-action="call" data-fn="toggleHiveWhy" data-arg="${ai.id}" data-stop="1">
       <span id="ai-hive-why-arrow-${ai.id}">▸</span> Why each pick
     </button>
     <div class="ai-hive-why-body" id="ai-hive-why-body-${ai.id}">
@@ -5672,14 +5673,14 @@ function _buildCompactModelSelect(ai, currentModel) {
   if (!models.length) {
     if (currentModel) {
       return `<select class="ai-setup-compact-model is-stale" id="compactmodel-${ai.id}"
-        onclick="event.stopPropagation();"
+        data-action="noop"
         title="${escapeHtml(currentModel)} (saved — expand and click Recommend Models to refresh the list)"
         disabled>
         <option value="${escapeHtml(currentModel)}" selected>${escapeHtml(currentModel)} (saved)</option>
       </select>`;
     }
     return `<select class="ai-setup-compact-model is-stale" id="compactmodel-${ai.id}"
-      onclick="event.stopPropagation();"
+      data-action="noop"
       title="No models loaded yet — expand this row and click Recommend Models."
       disabled>
       <option>(no models loaded — click Recommend Models)</option>
@@ -5719,8 +5720,8 @@ function _buildCompactModelSelect(ai, currentModel) {
     : '';
 
   return `<select class="ai-setup-compact-model" id="compactmodel-${ai.id}"
-    onclick="event.stopPropagation();"
-    onchange="saveModelForAI('${ai.id}', this.value); renderAISetupGrid(); event.stopPropagation();"
+    data-action="noop"
+    data-change-action="call-multi" data-fn="swapAIModelFromHiveCard" data-args="data:aiId,value" data-ai-id="${ai.id}" data-stop="1"
     title="${escapeHtml(currentModel || '(pick a model)')}">
     ${placeholderOpt}${savedOpt}${opts}
   </select>`;
@@ -5835,7 +5836,7 @@ function buildAISetupRowHTML(ai) {
     actionHTML = '';
   } else if (isCustom) {
     const checked = _selectedCustomIds.has(ai.id) ? 'checked' : '';
-    actionHTML = `<input type="checkbox" class="ai-select-check" id="aichk-${ai.id}" ${checked} onchange="toggleCustomSelection('${ai.id}', this.checked); event.stopPropagation();" onclick="event.stopPropagation();" title="Select ${escapeHtml(ai.name)} for bulk removal">`;
+    actionHTML = `<input type="checkbox" class="ai-select-check" id="aichk-${ai.id}" ${checked} data-action="noop" data-change-action="call-multi" data-fn="toggleCustomSelection" data-args="data:aiId,checked" data-ai-id="${ai.id}" data-stop="1" title="Select ${escapeHtml(ai.name)} for bulk removal">`;
   } else {
     actionHTML = '';
   }
@@ -5858,7 +5859,7 @@ function buildAISetupRowHTML(ai) {
     // in the 6-card grid + "Why each pick" expander.
     const reviewerRec = (typeof getReviewerRecommendation === 'function') ? getReviewerRecommendation(ai.id) : null;
     const builderRec  = (typeof getBuilderRecommendation  === 'function') ? getBuilderRecommendation(ai.id)  : null;
-    const recommendBtn = (showRecheck) ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider for its best Reviewer and Builder models AND classify Cheap / Balanced / Thinker / Fast tier picks — populates all 6 cards on the hive grid">Recommend Models</button>` : '';
+    const recommendBtn = (showRecheck) ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" data-action="call" data-fn="recheckModelForAI" data-arg="${ai.id}" title="Ask the provider for its best Reviewer and Builder models AND classify Cheap / Balanced / Thinker / Fast tier picks — populates all 6 cards on the hive grid">Recommend Models</button>` : '';
     // v3.63.211 — Filter-awareness inline note. Sum droppedCount across
     // the two role recommendations so the user sees "(N filtered)" when
     // the code-side filter removed any models from the candidate pool.
@@ -5930,7 +5931,7 @@ function buildAISetupRowHTML(ai) {
       expandedActionRow = `
         <div class="ai-setup-expanded-actions">
           <button class="ai-setup-add-variant-btn" type="button"
-            onclick="addAIVariant('${ai.id}'); event.stopPropagation();"
+            data-action="call" data-fn="addAIVariant" data-arg="${ai.id}" data-stop="1"
             title="Add another ${escapeHtml(ai.name)} reviewer sharing this API key — pick a different model in the new row to run e.g. ${escapeHtml(ai.name)} Opus + Sonnet together in one hive.">+ Add variant</button>
           <span class="ai-setup-expanded-action-note">Spawns a sibling row sharing this key with its own model picker.</span>
         </div>`;
@@ -5946,7 +5947,7 @@ function buildAISetupRowHTML(ai) {
       expandedActionRow = `
         <div class="ai-setup-expanded-actions">
           <button class="ai-remove-variant-btn" type="button"
-            onclick="removeAIVariant('${ai.id}'); event.stopPropagation();"
+            data-action="call" data-fn="removeAIVariant" data-arg="${ai.id}" data-stop="1"
             title="Remove this variant of ${escapeHtml(_parentNameForVariant(ai))}. The parent card stays.">✕ Remove this variant</button>
           <span class="ai-setup-expanded-action-note">Parent ${escapeHtml(_parentNameForVariant(ai))} card stays; the shared API key is untouched.</span>
         </div>`;
@@ -5963,11 +5964,12 @@ function buildAISetupRowHTML(ai) {
           <input type="password" class="ai-setup-key" id="key-${ai.id}"
             placeholder="Paste key — Enter to save…"
             value="${escapeHtml(key)}"
-            onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}"
-            onclick="event.stopPropagation();">
-          <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}'); event.stopPropagation();" title="Show/hide key">👁️</button>
-          ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}'); event.stopPropagation();" title="Remove saved API key">✕ Key</button>` : ''}
-          ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}'); event.stopPropagation();" title="Test this API key">Test</button>` : ''}
+            data-action="noop"
+            data-key-action="key-call-multi" data-fn-key="__wfSaveKeyOnEnter" data-args-key="this,event"
+            data-ai-id="${ai.id}">
+          <button class="ai-eye-btn" data-action="call" data-fn="toggleKeyVis" data-arg="${ai.id}" data-stop="1" title="Show/hide key">👁️</button>
+          ${hasKey ? `<button class="ai-clear-key-btn" data-action="call" data-fn="clearKeyForAI" data-arg="${ai.id}" data-stop="1" title="Remove saved API key">✕ Key</button>` : ''}
+          ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" data-action="call" data-fn="testApiKey" data-arg="${ai.id}" data-stop="1" title="Test this API key">Test</button>` : ''}
         </div>
         ${recommendRow}
         ${_renderHiveRolesAndTiers(ai, currentModel)}
@@ -6027,16 +6029,16 @@ function buildAISetupRowHTML(ai) {
     builderButtonHTML = `<span class="ai-setup-builder-btn-placeholder" aria-hidden="true"></span>`;
   } else if (_isCurrentBuilderNow) {
     builderButtonHTML = `<button class="ai-setup-builder-btn is-active" type="button"
-      onclick="event.stopPropagation(); event.preventDefault(); return false;"
+      data-action="noop"
       title="${escapeHtml(ai.name)} is the Builder — the AI that rewrites your document each round.">🔨 Builder</button>`;
   } else if (_builderIncapableNow) {
     builderButtonHTML = `<button class="ai-setup-builder-btn is-incapable" type="button"
       disabled aria-disabled="true"
-      onclick="event.stopPropagation(); event.preventDefault(); return false;"
+      data-action="noop"
       title="${escapeHtml(ai.name)} has a structural output cap too low to finish a Builder round. Stays usable as a Reviewer.">⚠ Reviewer-only</button>`;
   } else {
     builderButtonHTML = `<button class="ai-setup-builder-btn is-pickable" type="button"
-      onclick="event.stopPropagation(); event.preventDefault(); setBuilder('${ai.id}'); renderAISetupGrid(); return false;"
+      data-action="call" data-fn="__wfSetBuilderAndRender" data-arg-this="1" data-ai-id="${ai.id}" data-stop="1"
       title="Click to make ${escapeHtml(ai.name)} the Builder.">🔨 Builder</button>`;
   }
 
@@ -6053,7 +6055,7 @@ function buildAISetupRowHTML(ai) {
     // external site in a new tab" announcement for screen readers.
     manageLinkHTML = `<a class="ai-setup-manage-link external-link${hasKey ? '' : ' is-getkey'}"
       href="${escapeHtml(safeUrl(consoleUrlNow))}" target="_blank" rel="noopener noreferrer"
-      onclick="event.stopPropagation();"
+      data-action="noop"
       title="${escapeHtml(title)}">${label}<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>`;
   }
 
@@ -6096,12 +6098,12 @@ function buildAISetupRowHTML(ai) {
   // is true for them too. The same rename plumbing applies.
   return `
     <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'} ${validateState}${isVariant ? ' is-variant' + variantColorCls : ''}" id="airow-${ai.id}">
-      <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
+      <div class="ai-setup-row-summary" data-action="call" data-fn="toggleAISetupRow" data-arg="${ai.id}" role="button" tabindex="0" aria-expanded="${isExpanded}">
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
         <span class="ai-setup-name-group">
           <span class="ai-setup-name" id="ainame-${ai.id}" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
-          ${isCustom ? `<button class="ai-setup-rename-btn" onclick="event.stopPropagation(); startCustomAIRename('${ai.id}')" title="Rename ${escapeHtml(ai.name)}">✏️</button>` : ''}
+          ${isCustom ? `<button class="ai-setup-rename-btn" data-action="call" data-fn="startCustomAIRename" data-arg="${ai.id}" data-stop="1" title="Rename ${escapeHtml(ai.name)}">✏️</button>` : ''}
         </span>
         ${statusPillHTML}
         ${modelLabelHTML}
@@ -6707,8 +6709,8 @@ function renderHiveSidebar() {
   const jumpLink = (ai) => {
     const cfg = API_CONFIGS[ai.provider];
     const hasKey = !!cfg?._key;
-    return `<a href="javascript:void(0)" class="bees-sidebar-jump${hasKey ? ' has-key' : ''}"
-      onclick="jumpToAISetupRow('${ai.id}')" title="Jump to ${escapeHtml(ai.name)}">
+    return `<a href="#airow-${escapeHtml(ai.id)}" class="bees-sidebar-jump${hasKey ? ' has-key' : ''}"
+      data-action="call" data-fn="jumpToAISetupRow" data-arg="${ai.id}" data-prevent="1" data-stop="1" title="Jump to ${escapeHtml(ai.name)}">
       ${resolveAiIcon(ai, 'bees-sidebar-jump-icon', 16)}
       <span class="bees-sidebar-jump-name">${escapeHtml(ai.name)}</span>
       ${hasKey ? '<span class="bees-sidebar-jump-dot" title="Key saved">●</span>' : ''}
@@ -7153,7 +7155,7 @@ function renderBuilderPicker() {
     return `
     <button class="builder-chip${isSel ? ' is-selected' : ''}"
       title="${escapeHtml(ai.name)}"
-      onclick="setBuilder('${ai.id}'); return false;">
+      data-action="call" data-fn="setBuilder" data-arg="${ai.id}">
       ${iconEl}
       <span class="builder-chip-name">${escapeHtml(ai.name)}</span>
       ${isSel ? '<span class="builder-chip-check">🔨</span>' : ''}

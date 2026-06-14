@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260614-021
+// Build: 20260614-022
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -255,6 +255,12 @@
   function callAction(el, e) {
     var fn = resolveDotted(el.dataset.fn);
     if (typeof fn !== 'function') return;
+    // v3.63.364 — opt-in preventDefault. Set data-prevent="1" on an
+    // <a> or <button type="submit"> to suppress the native default
+    // (hash navigation, form submit) that would otherwise fire after
+    // the dispatched fn returns. Cheaper than auto-preventDefault on
+    // <a> because it doesn't surprise an <a> whose href IS load-bearing.
+    if (e && el.dataset.prevent === '1') e.preventDefault();
     if (el.dataset.argValue === '1')         fn(el.value);
     else if (el.dataset.argChecked === '1')  fn(el.checked);
     else if (el.dataset.argThis === '1')     fn(el);
@@ -303,9 +309,23 @@
   //           data-args="data-num:i,lit:apply,data-num:total"
   //           data-i="3" data-total="7">…</button>
   function callMultiAction(el, e) {
-    var fn = resolveDotted(el.dataset.fn);
+    callMultiActionPrefixed(el, e, '');
+  }
+  // Prefix lets one element host multiple call-multi handlers without
+  // colliding on data-fn / data-args. When prefix is '', the action
+  // reads el.dataset.fn / el.dataset.args; when prefix is 'Key' it
+  // reads el.dataset.fnKey / el.dataset.argsKey (falling back to the
+  // unprefixed pair if the prefixed override is missing). Future
+  // prefixes can be added the same way (e.g. 'Change', 'Input') if a
+  // single element ever needs distinct change + input call-multi
+  // handlers.
+  function callMultiActionPrefixed(el, e, prefix) {
+    var fnKey   = prefix ? 'fn'   + prefix : 'fn';
+    var argsKey = prefix ? 'args' + prefix : 'args';
+    var fn = resolveDotted(el.dataset[fnKey] || el.dataset.fn);
     if (typeof fn !== 'function') return;
-    var spec = (el.dataset.args || '').split(',');
+    if (e && el.dataset.prevent === '1') e.preventDefault();
+    var spec = (el.dataset[argsKey] || el.dataset.args || '').split(',');
     var args = new Array(spec.length);
     for (var i = 0; i < spec.length; i++) {
       var t = spec[i].trim();
@@ -384,7 +404,20 @@
       if (!name) return;
       var fn = resolveDotted(name);
       if (typeof fn === 'function') fn();
-    }
+    },
+    // v3.63.364 — multi-arg key-call. Forwards every keydown event to
+    // data-fn via callMultiAction (same arg-spec grammar as the click /
+    // input / change call-multi action). The target function is
+    // responsible for its own key filtering. Used by wfModelSelectKey
+    // (arrow + Enter + Escape navigation inside the custom model
+    // dropdown) and the __wfHiveCardSwapKey shim (Enter / Space to
+    // commit a 6-card hive pick).
+    //
+    // When the same element ALSO carries a click data-action, the click
+    // and keydown handlers need distinct fn/args. data-fn-key and
+    // data-args-key override the generic data-fn / data-args for
+    // keydown only; clicks still read the unprefixed pair.
+    'key-call-multi': function(el, e) { callMultiActionPrefixed(el, e, 'Key'); }
   };
 
   // ── INPUT_ACTIONS and CHANGE_ACTIONS tables ────────────────
