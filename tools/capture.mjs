@@ -72,6 +72,17 @@ const SESSION_SEED = {"round": 2, "phase": "refine", "history": [{"round": 1, "p
 //     showTemplateGallery() as the post-ready step. The capture shows the
 //     gallery modal sitting on top of the Project screen — same view a
 //     user gets when clicking "📋 Use Template" on Setup 2.
+// v3.63.346 — `smoke: true` marks shots that run under the --smoke CI flag.
+// These are the high-blast-radius security surfaces Codex's review called
+// out: the work screen (full app boot + storage parse + render), the round-
+// history modal (the XSS-fixed surface), the Add Custom AI modal (import
+// path that touches every restored field), and checkpoint restore mode (the
+// flow that restores untrusted user-supplied JSON). Other shots are
+// screenshot-coverage only — useful locally for marketing/docs captures,
+// not run on every PR push because none of them touch security-critical
+// rendering paths. The earlier --only-work flag is still accepted as an
+// alias for --smoke (back-compat with v3.63.341's workflow shape during
+// transition, can be dropped in a future release).
 const SHOTS = [
   { id: 'screen-welcome',    base: 'welcome',          seed: null,           postReady: null },
   { id: 'screen-bees',       base: 'setup1',           seed: null,           postReady: null },
@@ -79,14 +90,37 @@ const SHOTS = [
   { id: 'screen-reference',  base: 'setup3',           seed: null,           postReady: null },
   { id: 'screen-document',   base: 'setup4',           seed: null,           postReady: null },
   { id: 'screen-settings',   base: 'settings',         seed: null,           postReady: null },
-  { id: 'screen-work',       base: 'work',             seed: 'full-session', postReady: null },
+  { id: 'screen-work',       base: 'work',             seed: 'full-session', postReady: null, smoke: true },
+  // v3.63.346 — Round History modal smoke. Full-session seed already has
+  // a Round 1 in history; viewRoundDoc(0) opens the same modal whose XSS
+  // sinks Codex flagged in v3.63.338/v3.63.343. The capture asserts the
+  // modal renders without throwing on a real session restoration path.
+  { id: 'screen-work',       base: 'work-history-modal', seed: 'full-session',
+    postReady: "try { if (typeof viewRoundDoc === 'function') viewRoundDoc(0); } catch(e){}",
+    smoke: true },
+  // v3.63.346 — Add Custom AI modal smoke. No seed needed; the modal opens
+  // empty. Asserts the modal opens without throwing — covers the API-key
+  // pill, fetch-models button, and model dropdown wiring touched in
+  // v3.63.334/v3.63.337.
+  { id: 'screen-bees',       base: 'bees-add-custom-ai', seed: null,
+    postReady: "try { if (typeof showAddCustomAI === 'function') showAddCustomAI(); } catch(e){}",
+    smoke: true },
   { id: 'screen-checkpoint', base: 'checkpoint-save',  seed: 'full-session',
     postReady: "try { if (typeof switchCheckpointMode === 'function') switchCheckpointMode('save'); } catch(e){}" },
+  // v3.63.346 — Checkpoint Restore mode smoke. Full-session seed gives the
+  // Current column non-empty values to compare against. Covers the restore
+  // flow that consumes untrusted user-supplied checkpoint JSON — the threat
+  // vector Codex called out for the XSS chain.
+  { id: 'screen-checkpoint', base: 'checkpoint-restore', seed: 'full-session',
+    postReady: "try { if (typeof switchCheckpointMode === 'function') switchCheckpointMode('restore'); } catch(e){}",
+    smoke: true },
   { id: 'screen-project',    base: 'template-gallery', seed: null,
     postReady: "try { if (typeof showTemplateGallery === 'function') showTemplateGallery(); } catch(e){}" }
 ];
 
-const shots = ONLY_WORK ? SHOTS.filter(s => s.base === 'work') : SHOTS;
+// v3.63.346 — Accept --smoke (preferred) or --only-work (legacy alias).
+const SMOKE_FLAG = process.argv.includes('--smoke') || ONLY_FLAG === '--only-work';
+const shots = SMOKE_FLAG ? SHOTS.filter(s => s.smoke === true) : SHOTS;
 
 // ============ static HTTP server ============
 const MIME = {

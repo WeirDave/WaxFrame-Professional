@@ -124,7 +124,12 @@ jobs:
           "$CHROME" --version || true
           echo "path=$CHROME" >> "$GITHUB_OUTPUT"
 
-      - name: Run work-screen behavior smoke
+      - name: Run security-surface behavior smoke
+        # v3.63.346 — --smoke runs the security-critical shots: work screen,
+        # round-history modal, Add Custom AI modal, checkpoint restore. Each
+        # is one of the XSS-prone surfaces Codex's review called out. The
+        # earlier --only-work alias is still accepted by capture.mjs for
+        # back-compat; this step uses the new flag name for clarity.
         run: |
           mkdir -p /tmp/wf-smoke
-          node tools/capture.mjs "$PWD" "${{ steps.chrome.outputs.path }}" /tmp/wf-smoke dark --only-work
+          node tools/capture.mjs "$PWD" "${{ steps.chrome.outputs.path }}" /tmp/wf-smoke dark --smoke
