@@ -2,6 +2,57 @@
 
 ---
 
+## v3.63.357
+
+**Inline-style cleanup Phase 1: 8 pure-static `style="..."` values moved to `.wf-*` utility classes, 4 file inputs swapped to `hidden` HTML attribute, 8 attribute-value sha256 hashes dropped from CSP**
+
+Build: `20260614-015`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Companion cleanup to v3.63.356's strict style-src cutover. The strict directive worked by hash-pinning 11 unique inline-style attribute values via `'unsafe-hashes'` + per-value sha256 entries. That setup is correct but bulky, and `'unsafe-hashes'` is still a relaxation (a same-text injection elsewhere on the page would match the hash). This release removes 8 of the 11 hashes by either converting pure-static styling to CSS classes or, for permanently-hidden file inputs, swapping `style="display:none"` for the `hidden` HTML attribute.
+
+**1. 8 pure-static style values → `.wf-*` utility classes in `style.css`:**
+
+| Class | Replaces | Used by |
+| ----- | -------- | ------- |
+| `.wf-strong` | `style="font-weight:600;"` | index.html settings warning text (2) |
+| `.wf-dim-italic` | `style="font-style: italic; color: var(--text-dim);"` | hive-profiles.html note (1) |
+| `.wf-text-faded` | `style="font-weight: 400; opacity: 0.7;"` | index.html about-modal "measured" label (1) |
+| `.wf-mt-16` | `style="margin-top: var(--space-16);"` | templates.html prose paragraphs (2) |
+| `.wf-inline-icon` | `style="width:1.4em;height:1.4em;vertical-align:middle"` | waxframe-user-manual.html bee icon (1) |
+| `.wf-w-full` | `style="width:100%;"` | index.html settings rows (2) |
+| `.wf-callout-warm` | `style="background: rgba(247, 195, 64, 0.08); border-radius: 8px; padding: …;"` | index.html about-modal cost callout (1) |
+| `.wf-help-links-col` | `style="flex-direction:column; align-items:flex-start; gap:10px; max-width:560px;"` | help.html links block (1) |
+
+None of these values is ever read or written by JavaScript — they're pure decorative styling. Class swaps are mechanical and zero-risk.
+
+**2. 4 file inputs → `hidden` HTML attribute.** `refFileInput`, `fileInput`, `customAIIconFileInput`, `importServerIconFileInput` carried `style="display:none"` (or `;`-terminated). JavaScript only triggers them programmatically (`fileInput.click()`); they never become visible. The browser's UA stylesheet applies `display: none` to elements carrying the `hidden` attribute, so the visual behavior is identical without any inline style. CSP doesn't restrict HTML attributes that aren't `style="..."` or `on*=`, so `hidden` is allowed unconditionally.
+
+**3. CSP attribute-value hash count: 11 → 3.** Every page's `style-src` directive shrinks by 8 sha256 entries (~470 bytes saved per page meta tag). The 3 remaining hashes cover the `display:none` variants used as initial-hidden state on elements whose JS toggles them via `element.style.display = ''` (the revert-to-CSS-default pattern, which would break if those elements were also matched by a `display: none` class rule). Those are tracked for the eventual Phase 2 (audit the ~23 JS call sites that use the revert pattern, convert to `classList.remove('wf-hidden')`, drop the remaining 3 hashes, drop `'unsafe-hashes'` entirely).
+
+**4. release-check Check 5 updated.** The required-substring list drops the 8 obsolete hashes; the dedicated "must NOT contain `'unsafe-inline'` on style-src" guard stays. A new style value introduced anywhere still needs to be hashed and added to the list — the directive shape is unchanged, just shorter.
+
+### What's left
+
+- 30 inline `style="display:none"` / `display:none;` / `display:none;margin-top:8px;` attrs across 5 pages — initial-hidden state on elements that JS shows/hides.
+- ~23 JS call sites using `element.style.display = ''` to revert. Phase 2 would refactor these to `classList.remove('wf-hidden')` so the `display:none` HTML attrs can move to a class too. Drops the remaining 3 attribute-value hashes and the `'unsafe-hashes'` keyword.
+
+### Files touched
+
+- [style.css](style.css) — 8 new `.wf-*` utility classes appended at end-of-file with a section banner
+- [index.html](index.html) — 7 elements swapped to classes (one duplicate row caught on a second pass); 4 file inputs swapped to `hidden`
+- [help.html](help.html) — 1 links block swapped to `.wf-help-links-col`
+- [hive-profiles.html](hive-profiles.html) — 1 note `<p>` swapped to `.wf-dim-italic`
+- [templates.html](templates.html) — 2 prose `<p>`s swapped to `.wf-mt-16`
+- [waxframe-user-manual.html](waxframe-user-manual.html) — 1 bee icon swapped to `.wf-inline-icon`
+- 16 HTML pages — 8 obsolete sha256 entries dropped from `style-src`
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 5 required-substring list trimmed from 14 entries (2 block + 11 attr + 1 keyword) to 6 (2 block + 3 attr + 1 keyword)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps
+
+---
+
 ## v3.63.356
 
 **Strict style-src CUTOVER: `'unsafe-inline'` dropped from `style-src` on every page · 2 `<style>` blocks + 11 `style="..."` attr values pinned by sha256 · Check 5 enforces strict directive · 12 dead inline style attrs deleted**
