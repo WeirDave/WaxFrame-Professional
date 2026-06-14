@@ -2,6 +2,66 @@
 
 ---
 
+## v3.63.352
+
+**Strict-CSP migration · Phase 6: every page-specific inline `<script>` block extracted to external js/*.js · only the pre-paint head guard remains inline · Check 9 enforces the invariant**
+
+Build: `20260614-010`<br>
+Released: `2026-06-14`
+
+### What changed
+
+The last cleanup before the CSP cutover. Pre-v3.63.352, every HTML page carried at least one trailing inline `<script>` block — the one-liner that sprayed `APP_VERSION` into `.app-version-stamp` placeholders — and four pages carried much larger inline behavior blocks (templates browser, pricing renderer, help-screen environment capture, the in-page work-screen viewport watcher + mobile-share helper + pdf.js module loader). All of them required `script-src 'unsafe-inline'`. All extracted.
+
+**1. Version-stamp init folded into `js/helper-handlers.js`.** Pre-v3.63.352 every helper page carried its own one-line `<script>document.querySelectorAll('.app-version-stamp')...</script>`. Removed from 13 pages; the same DOM walk now runs once on DOMContentLoaded inside `helper-handlers.js`, which every page already loads.
+
+**2. Six new external JS files extracted from inline blocks:**
+
+| File                             | Source                                | Lines  |
+| -------------------------------- | ------------------------------------- | -----: |
+| `js/templates-page.js`           | `templates.html` catalog renderer + JSON-LD ItemList | ~470 |
+| `js/pricing-renderer.js`         | `ai-api-pricing.html` Cloudflare Worker fetch + FALLBACK_DATA renderer | ~300 |
+| `js/api-details-page.js`         | `api-details.html` `data-seed-model` API_CONFIGS mirror | ~20 |
+| `js/help-page.js`                | `help.html` self-contained env capture / Slack / email | ~680 |
+| `js/min-screen-viewport.js`      | `index.html` 1366×768 minimum-screen hint watcher | ~35 |
+| `js/mobile-share.js`             | `index.html` `navigator.share()` + clipboard fallback | ~35 |
+| `js/pdf-loader.mjs`              | `index.html` ESM `<script type="module">` for pdf.js | ~3 |
+
+The `help-page.js` extraction preserves the file's "self-contained, no app.js dependency" design intent — `help.html` is the break-glass page, so its behavior must keep working even when `app.js` fails. The extracted file references no globals from outside its own module.
+
+**3. `tools/release-check.mjs` Check 9 — exactly one inline `<script>` per HTML page.** The single allowed inline block is the v3.63.345 pre-paint clickjacking + CSP-violation listener in `<head>`. Any new inline `<script>` added to any HTML page after v3.63.352 now fails CI, forcing the author to extract it first. JSON-LD blocks (`type="application/ld+json"`) and `<script>` example text inside HTML comments are correctly ignored.
+
+### Where we stand
+
+| Surface                              | Status |
+| ------------------------------------ | ------ |
+| Inline `on*=` attribute handlers     | 0 across all 16 HTML pages (locked by Check 8) |
+| Inline `<script>` blocks             | Exactly 1 per page — the head guard (locked by Check 9) |
+| `'unsafe-inline'` in CSP `script-src` | **STILL PRESENT** — the cutover happens next release |
+
+The only inline JavaScript that survives across the codebase is the v3.63.345 pre-paint head guard. It MUST stay inline (an external script load would give an attacker a window of visible-but-clickable UI before the guard runs). When CSP tightens, that block gets pinned by a `'sha256-...'` entry in the strict directive instead.
+
+### What's left
+
+- **v3.63.353 (final cutover):** drop `'unsafe-inline'` from `script-src` on every page's CSP meta tag; add a `'sha256-...'` hash for the head guard block. Update Check 5 to enforce the strict directive.
+
+### Files touched
+
+- [js/helper-handlers.js](js/helper-handlers.js) — version-stamp DOMContentLoaded init folded in
+- [js/templates-page.js](js/templates-page.js) — NEW, extracted from `templates.html`
+- [js/pricing-renderer.js](js/pricing-renderer.js) — NEW, extracted from `ai-api-pricing.html`
+- [js/api-details-page.js](js/api-details-page.js) — NEW, extracted from `api-details.html`
+- [js/help-page.js](js/help-page.js) — NEW, extracted from `help.html`
+- [js/min-screen-viewport.js](js/min-screen-viewport.js) — NEW, extracted from `index.html`
+- [js/mobile-share.js](js/mobile-share.js) — NEW, extracted from `index.html`
+- [js/pdf-loader.mjs](js/pdf-loader.mjs) — NEW, extracted from `index.html` (ESM module)
+- 14 helper HTML pages — trailing `app-version-stamp` inline `<script>` removed
+- [templates.html](templates.html), [ai-api-pricing.html](ai-api-pricing.html), [api-details.html](api-details.html), [help.html](help.html), [index.html](index.html) — page-specific inline blocks replaced with `<script src="...">` references
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 9: exactly-one-inline-script-per-page invariant
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps
+
+---
+
 ## v3.63.351
 
 **Strict-CSP migration · Phase 5: index.html migrated in a single sweep · 16 of 16 HTML pages strict-CSP-clean · ready for the CSP cutover**
