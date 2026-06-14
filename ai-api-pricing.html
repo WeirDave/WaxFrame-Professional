@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260614-005
+     Build: 20260614-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -54,7 +54,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260614-005">
+  <meta name="waxframe-build" content="20260614-006">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <link rel="canonical" href="https://waxframe.com/ai-api-pricing.html">
@@ -68,7 +68,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.347">
+  <link rel="stylesheet" href="style.css?v=3.63.348">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -139,7 +139,7 @@
 <!-- ========================================================
      SLIM HELPER-PAGE NAV MENU (v3.22.5)
      ======================================================== -->
-<div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+<div class="nav-backdrop" id="navBackdrop" data-action="nav-close"></div>
 
 <div class="nav-panel" id="navPanel">
   <div class="nav-panel-header">
@@ -149,30 +149,30 @@
         <span class="nav-panel-title">WaxFrame</span>
         <span class="nav-panel-tagline">Many minds, one refined result.</span>
         <span class="app-version-stamp nav-panel-version"></span>
-        <button class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+        <button class="nav-panel-about-btn" data-action="about-open" data-target="aboutModalHelper">ℹ️ About</button>
       </div>
     </div>
-    <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
+    <button class="nav-close-btn" data-action="nav-close">✕</button>
   </div>
 
   <div class="nav-body">
     <div class="nav-section-label">Help & Support</div>
-    <a class="nav-item" href="start-here.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⭐ Start Here</a>
-    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
-    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
-    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Hive Profiles</a>    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
-    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+    <a class="nav-item" href="start-here.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">⭐ Start Here</a>
+    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🔑 API Key Guide</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📋 Document Playbooks</a>
+    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🛟 Help</a>
+    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" data-action="nav-close"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Hive Profiles</a>    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🪙 What Are Tokens?</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">WaxFrame App</div>
-    <a class="nav-item" href="index.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
-    <a class="nav-item" href="index.html#settings" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⚙ Settings</a>
+    <a class="nav-item" href="index.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🚀 Open WaxFrame</a>
+    <a class="nav-item" href="index.html#settings" target="_blank" rel="noopener noreferrer" data-action="nav-close">⚙ Settings</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Legal</div>
-    <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
-    <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
+    <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🛡️ Privacy Policy</a>
+    <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📜 Terms of Use</a>
   </div>
   <!-- v3.63.283 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
        only to non-licensed (trial) users; license-helper.js's
@@ -180,7 +180,7 @@
        own distinct slot — inside .nav-panel but outside .nav-body so it
        sticks to the bottom of the panel like the work-screen version. -->
   <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
+    <a class="nav-buy-cta external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" data-action="nav-close" title="Buy a license to unlock unlimited rounds">
       <span class="nav-buy-cta-icon">🛒</span>
       <span class="nav-buy-cta-text">
         <span class="nav-buy-cta-title">Buy a License</span>
@@ -195,7 +195,7 @@
      ======================================================== -->
 <div class="page-header">
   <div class="page-header-left">
-    <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+    <button class="nav-hamburger" data-action="nav-open" title="Navigation"><span></span><span></span><span></span></button>
   </div>
   <div class="page-header-brand">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
@@ -206,10 +206,10 @@
     </div>
   </div>
   <div class="page-header-controls">
-    <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
-    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
-    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
-    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+    <button class="theme-opt mute-btn" data-action="mute-toggle" title="Toggle sounds">🔊</button>
+    <button class="theme-opt" data-theme="light" data-action="theme-set" title="Light mode">☀️</button>
+    <button class="theme-opt" data-theme="auto" data-action="theme-set" title="Auto">⚙️</button>
+    <button class="theme-opt" data-theme="dark" data-action="theme-set" title="Dark mode">🌙</button>
   </div>
 </div>
 
@@ -389,7 +389,7 @@
 </div><!-- /.doc-layout -->
 </div><!-- /page-main -->
 
-<div class="finish-modal-overlay" id="openSourceModal" onclick="if(event.target===this)this.classList.remove('active')">
+<div class="finish-modal-overlay" id="openSourceModal" data-action="modal-backdrop-close">
   <div class="finish-modal goal-info-modal">
     <div class="goal-info-icon">
       <img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img">
@@ -407,7 +407,7 @@
       </div>
       <p class="goal-info-tip">💡 Your API keys go directly from your browser to each AI provider. WaxFrame never sees them. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">Read the source on GitHub<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></p>
     </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
+    <button class="finish-modal-cancel" data-action="modal-close" data-target="openSourceModal">Got it →</button>
   </div></div>
 
 <!-- ========================================================
@@ -415,18 +415,18 @@
      ======================================================== -->
 <div class="page-footer page-footer-unified">
   <div class="page-footer-actions">
-    <button class="btn" onclick="downloadPageAsDocx()" title="Download this page as a Word document (.docx) with images — opens in Word, Google Docs, or LibreOffice">⬇ Download as Word</button>
+    <button class="btn" data-action="doc-download" title="Download this page as a Word document (.docx) with images — opens in Word, Google Docs, or LibreOffice">⬇ Download as Word</button>
   </div>
   <div class="page-footer-center"></div>
   <div class="page-footer-right">
     <span class="license-badge" id="licenseBadge" title="License status"></span>
-    <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+    <button class="footer-about-btn" data-action="modal-open" data-target="aboutModalHelper">ℹ️ About</button>
   </div></div>
 
 <!-- ========================================================
      ABOUT MODAL — helper-page version. Metadata only.
      ======================================================== -->
-<div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
+<div class="finish-modal-overlay" id="aboutModalHelper" data-action="modal-backdrop-close">
   <div class="finish-modal goal-info-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="about-modal-logo">
     <h2 class="finish-modal-title">WaxFrame</h2>
@@ -440,46 +440,47 @@
       <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
     </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
+    <button class="finish-modal-cancel" data-action="modal-close" data-target="aboutModalHelper">Got it →</button>
   </div></div>
 
 <!-- ========================================================
      LICENSE MODALS — helper-page (v3.22.6)
      ======================================================== -->
-<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+<div class="license-modal-overlay" id="licenseModal" data-action="license-modal-backdrop-close">
   <div class="license-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
     <h2 class="license-modal-title">WaxFrame Pro</h2>
     <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
-    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" data-key-action="license-submit-on-enter">
     <div class="license-modal-error" id="licenseKeyError"></div>
-    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <button class="license-modal-btn" id="licenseSubmitBtn" data-action="license-submit">Unlock Pro</button>
     <a class="license-modal-buy external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>
-    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+    <button class="finish-modal-cancel" data-action="license-modal-hide">← Not now</button>
   </div>
 </div>
 
-<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+<div class="license-modal-overlay" id="licenseManageModal" data-action="license-manage-modal-backdrop-close">
   <div class="license-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
     <h2 class="license-modal-title">Manage License</h2>
     <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
     <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
     <div class="license-modal-actions">
-      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
-      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+      <button class="license-modal-btn-secondary" data-action="license-replace">Replace Key</button>
+      <button class="license-modal-btn-danger" data-action="license-remove-confirm">Remove Key</button>
     </div>
-    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+    <button class="finish-modal-cancel" data-action="license-manage-modal-hide">← Close</button>
   </div>
 </div>
 
 
-<script src="js/theme.js?v=3.63.347"></script>
-<script src="lib/docx.min.js?v=3.63.347"></script>
-<script src="js/docx-export.js?v=3.63.347"></script>
-<script src="js/nav-helper.js?v=3.63.347"></script>
-<script src="js/license-helper.js?v=3.63.347"></script>
-<script src="js/version.js?v=3.63.347"></script>
+<script src="js/theme.js?v=3.63.348"></script>
+<script src="lib/docx.min.js?v=3.63.348"></script>
+<script src="js/docx-export.js?v=3.63.348"></script>
+<script src="js/nav-helper.js?v=3.63.348"></script>
+<script src="js/license-helper.js?v=3.63.348"></script>
+<script src="js/helper-handlers.js?v=3.63.348"></script>
+<script src="js/version.js?v=3.63.348"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

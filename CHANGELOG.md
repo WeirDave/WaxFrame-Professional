@@ -2,6 +2,58 @@
 
 ---
 
+## v3.63.348
+
+**Strict-CSP migration · Phase 2: 11 helper pages swept to data-action delegation in one batch · 13 of 16 HTML pages now strict-CSP-clean**
+
+Build: `20260614-006`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Big sweep across the static helper pages. v3.63.347 proved the delegation pattern on `start-here.html`; this release applies it to every helper page whose handler surface fits the existing `ACTIONS` table. Three helper-page templates still hold inline handlers: `api-details.html` (55, needs `toggleGuideConsoles`), `prompt-editor.html` (51, needs page-specific `resetAll` / `saveAll` / `resetOne` / `markModified` delegation), and `index.html` (396, scheduled for its own multi-batch release). Everything else hits zero.
+
+**1. `js/helper-handlers.js` extended.** Two additions:
+- New `doc-download` action backed by `downloadPageAsDocx()` (in `js/docx-export.js`) — replaces the `onclick="downloadPageAsDocx()"` on the footer Word-export button across 9 helper pages.
+- `modal-open` / `modal-close` / `about-open` now call `e.preventDefault()` when triggered from an `<a>` element. Replaces the inline `;return false;` tail that previously suppressed hash-link navigation when an anchor opened a modal (the `openSourceModal` link in several footer credits).
+
+**2. Eleven helper pages migrated in a single mechanical sweep:**
+
+| File                          | Before | After |
+| ----------------------------- | ------:| -----:|
+| `ai-api-pricing.html`         |     34 |     0 |
+| `ai-business-proposal.html`   |     35 |     0 |
+| `ai-cover-letter-editor.html` |     35 |     0 |
+| `ai-resume-review.html`       |     35 |     0 |
+| `document-playbooks.html`     |     33 |     0 |
+| `hive-profiles.html`          |     35 |     0 |
+| `privacy.html`                |     33 |     0 |
+| `templates.html`              |     32 |     0 |
+| `terms.html`                  |     33 |     0 |
+| `waxframe-user-manual.html`   |     33 |     0 |
+| `what-are-tokens.html`        |     36 |     0 |
+
+374 inline `on*=` attributes converted to `data-action` / `data-target` / `data-theme` / `data-key-action` via a single `sed` script working through the closed set of handler shapes inventoried across the helper-page family. Each page now loads `js/helper-handlers.js` after `js/license-helper.js`. Behavior unchanged — all interactions still flow through the same `nav-helper.js` / `license-helper.js` / `theme.js` / `audio.js` functions, just dispatched centrally instead of inlined per element.
+
+**3. `tools/release-check.mjs` Check 8 budgets ratcheted to 0** for every newly-migrated file. Adding back any inline handler to any of those 13 pages now fails CI per Check 8.
+
+### What's still left
+
+- `api-details.html` (55 handlers) — uses `toggleGuideConsoles()`, otherwise same shape as the helpers swept here. Probably one release.
+- `prompt-editor.html` (51 handlers) — uses `resetAll`, `saveAll`, `resetOne('NAME')`, `markModified('NAME')` which need their own page-specific dispatcher in a new file (the helper-handlers ACTIONS table is shared infrastructure, not page-specific). One release.
+- `index.html` (396 handlers) — biggest target. Needs careful breakdown into modal-by-modal sub-batches over multiple releases.
+- Trailing inline `<script>` blocks on every helper page (the `app-version-stamp` text-content snippet). These must move into `js/helper-handlers.js` (or a new on-DOMContentLoaded hook) before `'unsafe-inline'` can be removed from `script-src`.
+- The pre-paint inline scripts in every page's `<head>` (clickjacking guard + CSP violation listener from v3.63.345) must remain inline by design; when the migration completes they'll need `nonce` or `sha256-` entries in the strict directive.
+
+### Files touched
+
+- [js/helper-handlers.js](js/helper-handlers.js) — new `doc-download` action; `modal-open` / `modal-close` / `about-open` now `preventDefault()` on `<a>` targets
+- 11 helper HTML pages migrated to zero inline `on*=` handlers (see the table above)
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 8 budgets ratcheted to 0 for the 11 migrated files
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all source files
+
+---
+
 ## v3.63.347
 
 **Strict-CSP migration · Phase 1: helper-handlers delegation infrastructure + start-here.html migrated · release-check ratchets per-file inline-handler counts**
