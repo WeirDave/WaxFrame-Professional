@@ -672,7 +672,11 @@ function safeUrl(u) {
 function displayAiName(name) {
   return (name || '').replace(/^\[Base\]\s+/, '');
 }
-function toast(msg, ms = 2800) {
+function toast(msg, ms = 5000) {
+  // v3.63.330 — default raised from 2800ms to 5000ms. 2.8s was enough for a
+  // glance ack but too tight for the longer hive-profile / model-recommend
+  // messages that run 70+ characters. Individual callers can still pass
+  // shorter or longer ms; this just makes the default readable.
   const t = document.getElementById('toast');
   if (!t) return;
   t.textContent = msg;
@@ -9018,8 +9022,12 @@ async function classifyTiersForProvider(provider, opts) {
   // to be in the hive slot.
   const fbList = (typeof MODEL_FALLBACKS !== 'undefined' && MODEL_FALLBACKS[provider]) || [];
   const stableFallback = fbList.find(m => filtered.includes(m));
-  const askingModel = filtered[0]
-    || stableFallback
+  // v3.63.330 — Same priority flip as recommendForDefault: stable fallback
+  // first, then newest viable. Avoids picking access-gated newest models
+  // like Claude Fable 5 as the asker, which 404 with "Please use Opus 4.8"
+  // unless the account is whitelisted.
+  const askingModel = stableFallback
+    || filtered[0]
     || (cfg.model && filtered.includes(cfg.model) ? cfg.model : null)
     || models[0];
   // v3.63.279 — cfg.format is always populated by WFProviderCatalog.buildApiConfigs()
@@ -9358,11 +9366,27 @@ async function recommendForDefault(provider) {
   // able to answer — it has the best knowledge of newer siblings to judge the
   // list. Falls back to a stable known model, the configured default, then
   // list[0] when the filter empties (providers with no live catalog / dates).
+  //
+  // v3.63.330 — Reversed priority: stableFallback FIRST, then newest viable.
+  // The v3.56.46 "newest first" strategy backfires on providers whose newest
+  // listed model requires special account access (Anthropic lists Claude
+  // Fable 5 in /v1/models for everyone, but invoking it errors with "Please
+  // use Opus 4.8" unless the account is whitelisted). Newest-as-asker
+  // failed every recommend call for Fable-5-not-Fable-5-whitelisted
+  // accounts. The MODEL_FALLBACKS list per provider names stable known-good
+  // models (curated by us, not gated by Anthropic). Preferring that as
+  // asker trades a small bit of "knowledge of the very newest sibling"
+  // for reliability — the asker still has the FULL live list in its
+  // prompt, so it can still pick the newest model as ITS recommendation
+  // even when the asker itself is one tier back. David's Claude proxy
+  // returned 404 with "Please use Opus 4.8" on every recommend; this
+  // closes that loop without touching his worker (which is a clean
+  // pass-through).
   const viable = filterModelsForRole(models, 'reviewer');
   const fallbackList = MODEL_FALLBACKS[provider] || [];
   const stableFallback = fallbackList.find(m => models.includes(m));
-  const askingModel = viable[0]
-    || stableFallback
+  const askingModel = stableFallback
+    || viable[0]
     || (cfg.model && models.includes(cfg.model) ? cfg.model : null)
     || models[0];
 
