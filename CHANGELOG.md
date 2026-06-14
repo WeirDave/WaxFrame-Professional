@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.332
+
+**Dev toolbar audit: Classify Tiers retired, dead `WF_DEBUG.openViewer` Settings row removed, two orphaned wf-debug methods deleted**
+
+Build: `20260613-026`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David asked for a dev-toolbar audit with one principle: every line of toolbar code should map to a button that's actually rendered. No straggler functions hanging around just because they used to be wired to something.
+
+Three things removed.
+
+**1. Classify Tiers button retired.** We classify tiers natively on every recheck now (see the `[tiers:provider]` log lines in the console). The dedicated "🐝 Classify Tiers" button on the dev toolbar was redundant — pressing it just re-ran the same path the recheck already triggers. Button removed from the toolbar, `WF_DEBUG.classifyTiers` method removed from [js/wf-debug.js](js/wf-debug.js) (it had no other callers).
+
+**2. `WF_DEBUG.testResendFlow` deleted.** This was the v3.63.252 test trigger that fired a fake `AUTH_FAILED` card to exercise the surgical retry path end-to-end. Its dev-toolbar button retired in v3.63.330 ("Test Resend" removal). Last release I'd said it was "still callable from the console" — David's audit ask makes the right call: if no rendered surface invokes it, delete it. The surgical retry path is now well-exercised by real provider failures; the test harness has earned retirement.
+
+**3. Dead Settings → "📋 Open viewer" row removed.** This one was a real crasher, not just clutter. The Settings → 🔬 Diagnostics section had a "View captures" row with a "📋 Open viewer" button calling `WF_DEBUG.openViewer()`. That function hasn't existed since v3.63.139 when the View Captures + View Tiers modals were intentionally retired. The Settings row stayed behind by accident and would have thrown `WF_DEBUG.openViewer is not a function` on click. Removed. Deep Dive captures still flow out via the 📦 Bundle for Scout button on the dev toolbar, which is the actual workflow.
+
+### Convention going forward
+
+Every method on `WF_DEBUG` must be reachable from at least one currently-rendered surface (dev-toolbar button, Settings row, error-card action). If you retire the surface, retire the method in the same commit. The wf-debug.js header comment's "public surface" list is the source of truth and was updated to match.
+
+### Answer to David's organization question
+
+The dev-toolbar markup lives inline in [index.html:3229–3274](index.html:3229) — one `<div class="dev-toolbar">` containing the buttons, hidden by default with `style="display:none"`, revealed via `unlockDevMode()`. The handlers split by domain: `WF_DEBUG.*` methods in [js/wf-debug.js](js/wf-debug.js) (Deep Dive toggle, Bundle for Scout, Clear Buffer, Test Card), scene playback in [js/scenes.js](js/scenes.js), audio cues in [js/audio.js](js/audio.js). That split is intentional — playback code lives where playback code lives, and the toolbar is just glue calling out to it. There's no `dev-toolbar.js` because there's nothing toolbar-specific to put in one (it'd be a 4-line export). The audit principle replaces the file-organization need: as long as every wired button has a live handler and every WF_DEBUG method has a wired button, drift is bounded.
+
+### Files touched
+
+- [index.html](index.html) — `wfClassifyTiersBtn` removed from dev toolbar; dead "View captures" Settings row removed; comment block updated to record the audit convention
+- [js/wf-debug.js](js/wf-debug.js) — `WF_DEBUG.testResendFlow` deleted; `WF_DEBUG.classifyTiers` deleted; header comment public-surface list trimmed to drop `openViewer`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.331
 
 **Row status pill: default to ✓ Ready when key is present and not flagged invalid (fixes missing Perplexity pill)**
