@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-026
+// Build: 20260614-027
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-026';         // build stamp — update each session
+const BUILD       = '20260614-027';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2574,12 +2574,12 @@ function goToScreen(id) {
       const fname = localStorage.getItem('waxframe_v2_filename') || 'uploaded file';
       const status = document.getElementById('fileStatus');
       if (status) {
-        status.style.display = 'block';
+        status.classList.remove('is-hidden');
         status.textContent = `✅ ${docText.length.toLocaleString()} characters loaded from ${fname}`;
         setFileStatusState(status, 'success');
       }
       const clearRow = document.getElementById('fileClearRow');
-      if (clearRow) clearRow.style.display = 'block';
+      if (clearRow) clearRow.classList.remove('is-hidden');
     }
     setTimeout(updateDocRequirements, 0);
     // v3.52.0 — Render source size check when arriving on Setup 5.
@@ -3820,7 +3820,7 @@ async function clearProject() {
   if (pasteText) pasteText.value = '';
   updateProjLineNums('projPasteNums', pasteText);
   const fileStatus = document.getElementById('fileStatus');
-  if (fileStatus) { fileStatus.style.display = 'none'; fileStatus.textContent = ''; }
+  if (fileStatus) { fileStatus.classList.add('is-hidden'); fileStatus.textContent = ''; }
   docTab = 'upload';
   switchDocTab('upload');
   // ── REFERENCE MATERIAL wipe (v3.24.0 — multi-doc) ──
@@ -11261,9 +11261,9 @@ function clearUploadedFile() {
   } catch(e) { console.warn('[v2-filename:clear] remove failed:', e); }
   window._lastPDFPages = null;
   const status = document.getElementById('fileStatus');
-  if (status) { status.style.display = 'none'; status.textContent = ''; }
+  if (status) { status.classList.add('is-hidden'); status.textContent = ''; }
   const clearRow = document.getElementById('fileClearRow');
-  if (clearRow) clearRow.style.display = 'none';
+  if (clearRow) clearRow.classList.add('is-hidden');
   const fileInput = document.getElementById('fileInput');
   if (fileInput) fileInput.value = '';
   // Hide the now-stale re-extract banner if the work screen is mounted.
@@ -11307,13 +11307,13 @@ function handlePasteTextInput() {
   if (statsEl) {
     const text = ta.value || '';
     if (!text.trim()) {
-      statsEl.style.display = 'none';
+      statsEl.classList.add('is-hidden');
       statsEl.textContent = '';
     } else {
       const s = (typeof computeRefStats === 'function')
         ? computeRefStats(text)
         : { chars: text.length, words: 0, paragraphs: 0, pages: 0 };
-      statsEl.style.display = '';
+      statsEl.classList.remove('is-hidden');
       statsEl.textContent = (typeof formatDocStatsLine === 'function')
         ? formatDocStatsLine(s)
         : `${s.chars.toLocaleString()} chars`;
@@ -11414,7 +11414,7 @@ function renderSourceSizeCheck() {
   // source → new comparison), screen-document activation (re-entry
   // counts as a fresh look).
   if (_sourceSizeCheckDismissed) {
-    card.style.display = 'none';
+    card.classList.add('is-hidden');
     return;
   }
 
@@ -11423,7 +11423,7 @@ function renderSourceSizeCheck() {
   // the card from flashing on unrelated screens).
   const onDocScreen = document.getElementById('screen-document')?.classList.contains('active');
   if (!onDocScreen) {
-    card.style.display = 'none';
+    card.classList.add('is-hidden');
     return;
   }
 
@@ -11437,7 +11437,7 @@ function renderSourceSizeCheck() {
     sourceText = (typeof docText === 'string') ? docText : '';
   } else {
     // scratch — no source to size-check
-    card.style.display = 'none';
+    card.classList.add('is-hidden');
     return;
   }
 
@@ -11455,7 +11455,7 @@ function renderSourceSizeCheck() {
   const r = analyzeSourceSize(sourceText, lengthMode, lengthMin, lengthLimit, lengthUnit);
 
   if (r.status === 'silent') {
-    card.style.display = 'none';
+    card.classList.add('is-hidden');
     card.innerHTML = '';
     return;
   }
@@ -11474,8 +11474,10 @@ function renderSourceSizeCheck() {
   // round against the original.
   const actionHTML = `<button class="btn btn-sm btn-accent" data-action="call" data-fn="copySourceToReferenceMaterial" title="Add the Starting Document content as a Reference Material card so reviewers see it every round">📚 Copy to Reference Material</button>`;
 
+  // className overwrite drops any prior .is-hidden; explicit remove is
+  // belt-and-suspenders so a future class-list change here still hides.
   card.className = 'source-size-check ' + statusClass;
-  card.style.display = '';
+  card.classList.remove('is-hidden');
   card.innerHTML = `
     <div class="ssc-icon">${icon}</div>
     <div class="ssc-body">
@@ -11494,7 +11496,7 @@ function renderSourceSizeCheck() {
 function dismissSourceSizeCheck() {
   _sourceSizeCheckDismissed = true;
   const card = document.getElementById('sourceSizeCheck');
-  if (card) card.style.display = 'none';
+  if (card) card.classList.add('is-hidden');
 }
 
 function copySourceToReferenceMaterial() {
@@ -11529,7 +11531,7 @@ function copySourceToReferenceMaterial() {
     // keep nagging. Will reappear if source size shifts to a new
     // mismatch.
     const card = document.getElementById('sourceSizeCheck');
-    if (card) card.style.display = 'none';
+    if (card) card.classList.add('is-hidden');
   } else {
     if (typeof toast === 'function') toast('⚠️ Reference Material system not ready');
   }
@@ -11669,7 +11671,7 @@ async function processFile(file) {
     if (!proceed) return;
   }
   const status = document.getElementById('fileStatus');
-  status.style.display = 'block';
+  status.classList.remove('is-hidden');
   status.textContent = `⏳ Reading ${file.name}…`;
   setFileStatusState(status, 'loading');
 
@@ -11754,7 +11756,7 @@ async function processFile(file) {
     }
 
     const clearRow = document.getElementById('fileClearRow');
-    if (clearRow) clearRow.style.display = 'block';
+    if (clearRow) clearRow.classList.remove('is-hidden');
     updateLaunchRequirements();
     // v3.52.0 — Run source size check after the file is loaded. docText
     // is now populated with the extracted content so the helper can
@@ -11848,7 +11850,7 @@ async function processRefFile(file, batchLabel = '', verifyCollector = null) {
         : `📚 Added ${docCount} ${docNoun} from "${file.name}" (${totalChars.toLocaleString()} chars) as reference material`;
       status.textContent = batchLabel + msg;
       setFileStatusState(status, allWarnings.length ? 'warn' : 'ok');
-      setTimeout(() => { if (status) { status.style.display = 'none'; status.textContent = ''; } }, 6000);
+      setTimeout(() => { if (status) { status.classList.add('is-hidden'); status.textContent = ''; } }, 6000);
     }
     // v3.61.0 — OCR'd uploads (any newly-added ref doc with sourceType
     // 'pdf-vision') skip the IMPORT_WARNINGS troubleshooting card and open

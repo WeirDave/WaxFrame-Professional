@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.369
+
+**Inline-style cleanup pass 3: source-document upload UI (`#fileStatus`, `#fileClearRow`, `#pasteTextStats`, `#sourceSizeCheck`) moved off `style="display:none"` to `.is-hidden` + errata fix for one leftover `#refFileStatus` toggle missed in v3.63.368**
+
+Build: `20260614-027`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Continues the inline-style cleanup arc. Four source-document upload UI elements were initialized with `style="display:none"` and toggled at runtime via `el.style.display = '…'` in eleven sites in [js/app.js](js/app.js):
+
+- `#fileStatus` (file-upload progress and result line, shared with `_activeStatusEl()`)
+- `#fileClearRow` (the "✕ Remove file" button row that appears after a file is uploaded)
+- `#pasteTextStats` (the live word/char/page counter under the paste-text textarea)
+- `#sourceSizeCheck` (the "Source much larger than target" recommendation card with its dismiss + Copy-to-Reference-Material actions)
+
+All eleven toggle sites converted to `classList.add('is-hidden')` / `classList.remove('is-hidden')`. The card's `className` overwrite path at the show site explicitly follows with `classList.remove('is-hidden')` so a future class change there still hides correctly.
+
+CSS defaults:
+- `.file-status`, `.file-clear-row`, `.paste-text-stats` — no explicit `display` rule (browser-default `block` is the visible state)
+- `.source-size-check` — explicit `display: flex` (the visible state)
+- `.is-hidden` — `display: none !important` (the hidden state)
+
+Removing `.is-hidden` restores the CSS-default visible state in each case.
+
+### Errata
+
+While sweeping `#fileStatus`/`#refFileStatus` toggle sites I found one I missed in v3.63.368: the auto-clear `setTimeout` at the end of `processRefFiles()` (line 11853) was still setting `status.style.display = 'none'`. Fixed in this release — that's the last refFileStatus toggle.
+
+### Verified in preview
+
+- All four elements: initial `.is-hidden` set, zero inline `style` attribute
+- `#pasteTextStats` empty branch → `.is-hidden` remains, text cleared
+- `#pasteTextStats` non-empty branch → `.is-hidden` removed, stats text formatted ("53 chars · 9 words · 1 paragraphs · ≈<0.1 pages")
+- `dismissSourceSizeCheck()` → `.is-hidden` added, no inline style
+- Zero remaining `.style.display` references for these four element IDs (grep-clean)
+
+### Files touched
+
+- [index.html](index.html) — 4 inline `style="display:none"` removed; `.is-hidden` added
+- [js/app.js](js/app.js) — 11 `.style.display = '…'` flips swapped for `classList.add/remove('is-hidden')` across `goToScreen` screen-document branch, `clearProject` reset, `clearUploadedFile`, `handlePasteTextInput` (2 branches), `renderSourceSizeCheck` (4 branches), `dismissSourceSizeCheck`, `copySourceToReferenceMaterial`, file-load show path, file-load done path; PLUS 1 errata leftover refFileStatus toggle at `processRefFiles` setTimeout
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 26 → 22 inline `style="display:none*"` attrs remaining (the errata bonus also drops the missed refFileStatus toggle count).
+
+---
+
 ## v3.63.368
 
 **Inline-style cleanup pass 2: reference upload status + batch banner (`#refFileStatus`, `#refBatchBanner`) moved off `style="display:none"` to `.is-hidden`**
