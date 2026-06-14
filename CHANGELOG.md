@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.339
+
+**Release-check: automated CVE-floor assertion for vendored SheetJS (replaces manual SECURITY.md discipline)**
+
+Build: `20260613-033`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Closes Codex's Low-severity finding from the v3.63.338 security review: SheetJS is the one vendored library outside Dependabot's reach (npm permanently stuck at 0.18.5 — see SECURITY.md), so its currency relied entirely on manual discipline against cdn.sheetjs.com. Replaced that discipline with an automated assertion in [tools/release-check.mjs](tools/release-check.mjs).
+
+New Check 5: **Vendored library floors (CVE-tracked minimums).** For each registered vendored library, extracts the version string from the minified blob and asserts it's at or above a CVE-tracked floor. SheetJS xlsx is currently floored at `0.20.3` (past CVE-2023-30533 prototype pollution and CVE-2024-22363 ReDoS in NUMBER parser). Floor lives in code with a comment block listing the CVEs that determined it, so the next person bumping the vendored file sees the audit trail. To bump the floor: change the value in the same commit that ships the new file.
+
+The check is generalizable — adding PDF.js / Mammoth / JSZip to the `LIB_FLOORS` array would extend the same automation to them, but those three are already in Dependabot via package.json, so they're lower priority. SheetJS was the gap; SheetJS is now closed.
+
+Pattern matches the existing release-check shape: pure stdlib Node, regex-based extraction, fails CI with a file:line annotation on drift.
+
+### Files touched
+
+- [tools/release-check.mjs](tools/release-check.mjs) — new Check 5 plus a `cmpVer` helper for semver comparison
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.338
 
 **XSS hardening in `viewRoundDoc()` round-history modal (Codex security review) · superseded backlog snapshots removed**
