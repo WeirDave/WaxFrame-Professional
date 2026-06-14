@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.330
+
+**Claude askingModel: stable fallback first (fixes Fable 5 404) · toast default 2.8s → 5s · Test Resend + Diff Words removed from dev toolbar**
+
+Build: `20260613-024`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Three small fixes bundled together.
+
+**1. Claude askingModel priority flipped to stable-fallback-first.** David caught a real bug debugging the recommend-Claude 404s. His Claude proxy worker is a clean pass-through to Anthropic — no rejection logic. The 404 "Claude Fable 5 is not available. Please use Opus 4.8" was coming from Anthropic's actual API. Fable 5 IS listed in `/v1/models` (so it appears in WaxFrame's dropdowns) but invoking it requires special account access. WaxFrame's `recommendForDefault` picked the "newest viable" model from the live list as the asker, which landed on Fable 5 — and every recommend call 404'd.
+
+Reversed the priority: try the stable fallback from `MODEL_FALLBACKS[provider]` FIRST, then newest viable. The fallback list is curated (Sonnet 4.6, Opus 4.8, etc.) so it's never access-gated. The asker still has the full live model list in its prompt, so it can still recommend the newest model as ITS pick even when the asker itself is one tier back. Same flip applied to `classifyTiersForProvider`'s askingModel — same bug, same fix.
+
+**2. Toast default duration 2.8s → 5s.** David: "How long are toasts staying up because they seem to go away pretty quickly." 2.8s was enough for a glance ack but too tight for the longer hive-profile / model-recommend messages that run 70+ characters. Individual callers can still pass shorter or longer `ms`; this just makes the default readable.
+
+**3. Test Resend + Diff Words removed from the dev toolbar.** Per David's request. The functions (`WF_DEBUG.testResendFlow` and `wfCycleDecisionDiffMode`) are still callable from the console for ad-hoc debugging. The Diff Words affordance also still exists on the Conflicts panel itself (`#conflictDiffBtn`) — that's its natural surface anyway.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `recommendForDefault` askingModel priority flipped (stableFallback first); `classifyTiersForProvider` askingModel priority flipped (same fix); `toast()` default `ms` 2800 → 5000
+- [index.html](index.html) — `#wfTestResendBtn` + `#wfDiffModeBtn` dev toolbar buttons removed; comment block explains the retirement
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.329
 
 **v3.63.327's global status bar reverted — toast handles everything; italic per David's preference; v3.63.328's loop fix keeps toast tidy**
