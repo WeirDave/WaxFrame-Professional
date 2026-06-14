@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — prompt-editor.html
-     Build: 20260614-017
+     Build: 20260614-018
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- v3.63.353 — Content-Security-Policy (strict-CSP cutover).
+  <!-- v3.63.360 — Content-Security-Policy. script-src strict-CSP cutover ROLLED BACK in v3.63.360:
        script-src is locked to 'self' plus two sha256- hashes that pin the
        pre-paint head guard below. The v3.63.347 → v3.63.352 inline-handler /
        inline-script migration removed every other inline JavaScript surface
@@ -20,7 +20,7 @@
        pdf.js (new Function internals). style-src 'unsafe-inline' stays
        because we emit per-element style="..." attributes and the
        inline <style> on the next line. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-v6gFi56+2bv74Kb6ZsiwAOsnOhaMjjXtAhflRjSVRcw='; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8=' 'unsafe-hashes' 'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE=' 'sha256-0EZqoz+oBhx7gF4nvY2bSqoGyy4zLjNF+SDQXGp/ZrY=' 'sha256-ukRLfhNT2UwV6SrWA/TIvp9f6n9i7rlY8yTJ7/Q4Aj4='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8=' 'unsafe-hashes' 'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE=' 'sha256-0EZqoz+oBhx7gF4nvY2bSqoGyy4zLjNF+SDQXGp/ZrY=' 'sha256-ukRLfhNT2UwV6SrWA/TIvp9f6n9i7rlY8yTJ7/Q4Aj4='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <!-- v3.63.345 — Clickjacking guard + CSP violation listener.
        Frame-busting: GitHub Pages cannot set the HTTP frame-ancestors
        directive, so this client-side check hides the page if we detect
@@ -59,7 +59,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260614-017">
+  <meta name="waxframe-build" content="20260614-018">
   <title>Prompt Editor Reference — WaxFrame</title>
   <meta name="description" content="View and customize the prompts WaxFrame sends to your AI Worker Bees during multi-AI document refinement rounds.">
   <link rel="canonical" href="https://waxframe.com/prompt-editor.html">
@@ -73,7 +73,7 @@
   <meta name="twitter:description" content="View and customize the prompts WaxFrame sends to your AI Worker Bees during multi-AI document refinement rounds.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.359">
+  <link rel="stylesheet" href="style.css?v=3.63.360">
 </head>
 <body class="helper-body">
 
@@ -374,13 +374,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.359"></script>
-<script src="lib/docx.min.js?v=3.63.359"></script>
-<script src="js/docx-export.js?v=3.63.359"></script>
-<script src="js/nav-helper.js?v=3.63.359"></script>
-<script src="js/license-helper.js?v=3.63.359"></script>
-<script src="js/helper-handlers.js?v=3.63.359"></script>
-<script src="js/prompt-editor.js?v=3.63.359"></script>
-<script src="js/version.js?v=3.63.359"></script>
+<script src="js/theme.js?v=3.63.360"></script>
+<script src="lib/docx.min.js?v=3.63.360"></script>
+<script src="js/docx-export.js?v=3.63.360"></script>
+<script src="js/nav-helper.js?v=3.63.360"></script>
+<script src="js/license-helper.js?v=3.63.360"></script>
+<script src="js/helper-handlers.js?v=3.63.360"></script>
+<script src="js/prompt-editor.js?v=3.63.360"></script>
+<script src="js/version.js?v=3.63.360"></script>
 </body>
 </html>
