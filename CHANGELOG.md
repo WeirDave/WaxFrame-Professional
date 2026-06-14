@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.343
+
+**Round History modal XSS hardening: restored reviewer IDs are now attribute-escaped and tab lookup no longer builds selectors from imported data**
+
+Build: `20260614-001`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Closes the remaining Round History modal edge case from the crafted-checkpoint security review. v3.63.338 removed the original inline `onclick="switchHistTab('${id}', this)"` sink and escaped the modal header, but reviewer response IDs were still inserted into `data-tab-id` / `data-panel-id` with `esc()`. That helper is intentionally text-content-only and does not escape quotes, so a crafted response key in restored history could still break out of the attribute context.
+
+This release swaps those two attribute sinks to `escapeHtml(id)` and changes `switchHistTab()` to find the matching panel by direct `dataset.panelId === id` comparison instead of constructing a CSS selector string from restored data.
+
+### Files touched
+
+- [js/app.js](js/app.js:21249) — Round History modal tab IDs use attribute-safe escaping
+- [js/app.js](js/app.js:21306) — tab panel lookup compares dataset values directly
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.342
 
 **Straggler sweep: superseded playbook snapshots v38/v39 removed · stale "can be removed" comment on `_logRoundBump` rewritten to match reality**
