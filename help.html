@@ -30,6 +30,44 @@
        multi-release effort that needs every inline onclick handler moved to
        addEventListener first. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https:; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <!-- v3.63.345 — Clickjacking guard + CSP violation listener.
+       Frame-busting: GitHub Pages cannot set the HTTP frame-ancestors
+       directive, so this client-side check hides the page if we detect
+       we are embedded in an iframe, then tries to break out by redirecting
+       the top window. The inline-style class is added BEFORE any visible
+       paint so the attacker never sees clickable UI; if the top.location
+       write is cross-origin-blocked, the page stays hidden as the fail-safe.
+       CSP listener: captures securitypolicyviolation events into the Deep
+       Dive ring buffer + console. Gives us local visibility into what the
+       permissive CSP is catching without needing a server-side report
+       endpoint. Useful baseline for the future strict-CSP migration. -->
+  <style>html.wf-framebusted{display:none}</style>
+  <script>
+  (function () {
+    if (window.self !== window.top) {
+      document.documentElement.classList.add("wf-framebusted");
+      try { window.top.location = window.self.location; } catch (e) {}
+    }
+    document.addEventListener("securitypolicyviolation", function (e) {
+      var msg = {
+        kind: "csp-violation",
+        directive: e.violatedDirective,
+        blockedURI: e.blockedURI,
+        sourceFile: e.sourceFile,
+        line: e.lineNumber,
+        col: e.columnNumber,
+        ts: Date.now()
+      };
+      try { console.warn("[CSP]", msg); } catch (_) {}
+      try {
+        if (window.WF_DEBUG && Array.isArray(window.WF_DEBUG.ringBuffer)) {
+          window.WF_DEBUG.ringBuffer.push(msg);
+          if (window.WF_DEBUG.ringBuffer.length > 200) window.WF_DEBUG.ringBuffer.shift();
+        }
+      } catch (_) {}
+    });
+  })();
+  </script>
   <meta name="waxframe-build" content="20260614-001">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
@@ -447,10 +485,10 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.344"></script>
-  <script src="js/storage.js?v=3.63.344"></script>
-  <script src="js/provider-models.js?v=3.63.344"></script>
-  <script src="js/provider-catalog.js?v=3.63.344"></script>
+  <script src="js/version.js?v=3.63.345"></script>
+  <script src="js/storage.js?v=3.63.345"></script>
+  <script src="js/provider-models.js?v=3.63.345"></script>
+  <script src="js/provider-catalog.js?v=3.63.345"></script>
   <script>
   (function () {
     'use strict';

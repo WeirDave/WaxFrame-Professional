@@ -393,7 +393,35 @@ for (const file of htmlFiles) {
   }
 }
 
-// ── Check 6: Vendored library version floors ───────────────
+// ── Check 6: Clickjacking guard + CSP violation listener presence ───
+
+section('Clickjacking guard + CSP violation listener (every HTML file)');
+
+// Defends against silent removal of the inline security hook added in
+// v3.63.345. Two security mechanisms ride that single inline block:
+// (a) frame-busting class + JS that hides the page when embedded in an
+// iframe (GitHub Pages can't set the HTTP frame-ancestors directive, so
+// the client-side check is our equivalent), and (b) a securitypolicy
+// violation listener that captures CSP-blocked actions into the Deep Dive
+// ring buffer for forensic visibility. Losing either is a security
+// regression no functional test would catch.
+
+for (const file of htmlFiles) {
+  const content = read(file);
+  const hasFrameClass = content.includes('wf-framebusted');
+  const hasViolationListener = content.includes('securitypolicyviolation');
+  if (!hasFrameClass && !hasViolationListener) {
+    fail(rel(file), 'missing both clickjacking guard AND CSP violation listener (regressed from v3.63.345 baseline)');
+  } else if (!hasFrameClass) {
+    fail(rel(file), 'missing clickjacking guard (wf-framebusted class)');
+  } else if (!hasViolationListener) {
+    fail(rel(file), 'missing CSP violation listener (securitypolicyviolation event)');
+  } else {
+    ok(rel(file));
+  }
+}
+
+// ── Check 7: Vendored library version floors ───────────────
 
 section('Vendored library floors (CVE-tracked minimums)');
 
