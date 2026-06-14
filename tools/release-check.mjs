@@ -381,7 +381,29 @@ const REQUIRED_CSP_DIRECTIVES = [
   // substring match in the loop below; the "must NOT contain
   // 'unsafe-inline' on script-src" half is a separate dedicated check
   // immediately after.
-  "'sha256-v6gFi56+2bv74Kb6ZsiwAOsnOhaMjjXtAhflRjSVRcw='"
+  "'sha256-v6gFi56+2bv74Kb6ZsiwAOsnOhaMjjXtAhflRjSVRcw='",
+  // v3.63.356 — strict style-src cutover. style-src must carry both
+  // <style>-block hashes (head guard + help.html break-glass), the
+  // 'unsafe-hashes' keyword, and the 11 style="..." attribute hashes
+  // covering every inline-style attr the codebase emits. Without all
+  // of these, the page either fails to render correctly (missing block
+  // hash) or fails a CSP violation listener at runtime (missing attr
+  // hash). The "must NOT contain 'unsafe-inline' on style-src" half is
+  // a separate dedicated check below.
+  "'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo='",  // <style> head guard
+  "'sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8='",  // <style> help.html break-glass
+  "'unsafe-hashes'",                                        // required to let style="" hashes apply
+  "'sha256-U39LwpFPBpT3Lt7xuEnj4BJI8V09wjPcxMKm3L/O4UI='",  // style="background: rgba(247,195,64...)"
+  "'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE='",  // style="display:none"
+  "'sha256-0EZqoz+oBhx7gF4nvY2bSqoGyy4zLjNF+SDQXGp/ZrY='",  // style="display:none;"
+  "'sha256-ukRLfhNT2UwV6SrWA/TIvp9f6n9i7rlY8yTJ7/Q4Aj4='",  // style="display:none;margin-top:8px;"
+  "'sha256-JzjJaC8w0SNFOqj128IsNlFo2pjyKirpYABgcVjzRlo='",  // style="flex-direction:column;..."
+  "'sha256-xJgw9VSwNWk+JhDx6dCtEnb5rREf+xfiKboIRRQ2wyk='",  // style="font-style: italic; color: ..."
+  "'sha256-1vbUwk7z0f5vVRhaiAOVIE7zWtBPpnUQrHt+FHxrfo0='",  // style="font-weight: 400; opacity: 0.7;"
+  "'sha256-ayqU6ju5l8n91VHdnqda+AJokO4F7JlcyuLJ97i8ADs='",  // style="font-weight:600;"
+  "'sha256-51C2sujOczlVGMvLFIZvjBzQ4whhqY1WZWebTLn72hI='",  // style="margin-top: var(--space-16);"
+  "'sha256-mHwBL94Tr/tKp56eEVRJEyifdcssVP0Gtta7uViWopE='",  // style="width:1.4em;height:1.4em;..."
+  "'sha256-nMxMqdZhkHxz5vAuW/PAoLvECzzsmeAxD/BNwG15HuA='"   // style="width:100%;"
 ];
 
 for (const file of htmlFiles) {
@@ -398,15 +420,23 @@ for (const file of htmlFiles) {
     continue;
   }
   // v3.63.353 strict-CSP cutover — script-src must NOT contain
-  // 'unsafe-inline'. style-src 'unsafe-inline' is fine (we still
-  // emit inline <style> in the head guard and per-element style=""
-  // attributes) and 'unsafe-eval' is still accepted on script-src
+  // 'unsafe-inline'. 'unsafe-eval' is still accepted on script-src
   // (vendored SheetJS/mammoth/pdf.js use new Function() internally —
   // dropping it would break document import; documented as residual
   // risk under Check 7's CVE-tracked floor checks).
   const scriptSrc = (policy.match(/script-src\s+([^;]+)/) || [])[1] || '';
   if (/'unsafe-inline'/.test(scriptSrc)) {
     fail(rel(file), `CSP script-src must NOT contain 'unsafe-inline' (strict-CSP cutover landed in v3.63.353). Got: script-src ${scriptSrc.trim()}`);
+    continue;
+  }
+  // v3.63.356 strict style-src cutover — style-src must NOT contain
+  // 'unsafe-inline' either. Inline <style> blocks and style="..."
+  // attributes are pinned via the sha256 entries listed above instead;
+  // a new value introduced anywhere needs its hash added to that list
+  // or the browser will block the style.
+  const styleSrc = (policy.match(/style-src\s+([^;]+)/) || [])[1] || '';
+  if (/'unsafe-inline'/.test(styleSrc)) {
+    fail(rel(file), `CSP style-src must NOT contain 'unsafe-inline' (strict style-src cutover landed in v3.63.356). Got: style-src ${styleSrc.trim()}`);
     continue;
   }
   ok(rel(file));
