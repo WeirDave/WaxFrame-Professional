@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-018
+// Build: 20260614-019
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-018';         // build stamp — update each session
+const BUILD       = '20260614-019';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13837,8 +13837,13 @@ function refCardMarkup(doc, index) {
   if (doc.id !== safeId) doc.id = safeId;
   const idAttr = safeId;
 
-  const upBtn   = total > 1 && !isFirst ? `<button class="btn btn-sm ref-card-arrow" title="Move up" onclick="moveReferenceDocUp('${idAttr}')">▲</button>` : '';
-  const downBtn = total > 1 && !isLast  ? `<button class="btn btn-sm ref-card-arrow" title="Move down" onclick="moveReferenceDocDown('${idAttr}')">▼</button>` : '';
+  // v3.63.361 — Phase 8 migration: inline on*= attributes in template
+  // strings are silently dropped under strict script-src CSP. These
+  // wire through the data-action dispatcher in helper-handlers.js;
+  // idAttr is [A-Za-z0-9_-] only (safeRefId), safe as a literal
+  // data-arg without further escaping.
+  const upBtn   = total > 1 && !isFirst ? `<button class="btn btn-sm ref-card-arrow" title="Move up" data-action="call" data-fn="moveReferenceDocUp" data-arg="${idAttr}">▲</button>` : '';
+  const downBtn = total > 1 && !isLast  ? `<button class="btn btn-sm ref-card-arrow" title="Move down" data-action="call" data-fn="moveReferenceDocDown" data-arg="${idAttr}">▼</button>` : '';
   // Position badge sits between the up/down arrows so the number changes
   // visibly right where the user clicks — no manual needed to explain that
   // first-listed material reads as most authoritative to the hive.
@@ -13850,7 +13855,8 @@ function refCardMarkup(doc, index) {
     ? `<div class="ref-card-upload-status">${sourceIcon} <strong>${esc(doc.filename || doc.name)}</strong> — ${stats.chars.toLocaleString()} chars · text is read-only · remove and re-upload to replace</div>`
     : `<div class="ref-card-paste-wrap">
          <div class="ref-card-line-numbers" id="refLineNums-${idAttr}"></div>
-         <textarea class="ref-card-ta" id="refTa-${idAttr}" placeholder="Paste reference material here…" oninput="updateReferenceDocText('${idAttr}', this.value)">${esc(doc.text)}</textarea>
+         <textarea class="ref-card-ta" id="refTa-${idAttr}" placeholder="Paste reference material here…"
+                   data-input-action="call" data-fn="__wfUpdateRefDocText" data-arg-this="1" data-ref-id="${idAttr}">${esc(doc.text)}</textarea>
        </div>`;
 
   // v3.61.0 — The per-card 🔍 verify button has been removed. Verify is a
@@ -13865,12 +13871,12 @@ function refCardMarkup(doc, index) {
     <span class="ref-card-position" title="Position ${index + 1} of ${total} — first-listed material reads as most authoritative to the hive. Use the arrows to reorder.">${index + 1}</span>
     <span class="ref-card-source-badge" title="${sourceLabel}">${sourceIcon}</span>
     <input type="text" class="ref-card-name" value="${escapeHtml(doc.name)}"
-           oninput="renameReferenceDoc('${idAttr}', this.value)"
+           data-input-action="call" data-fn="__wfRenameRefDoc" data-arg-this="1" data-ref-id="${idAttr}"
            aria-label="Reference document name"
            placeholder="Reference name…">
     <div class="ref-card-actions">
       ${upBtn}${positionLabel}${downBtn}
-      <button class="btn btn-sm ref-card-remove" title="Remove" onclick="removeReferenceDoc('${idAttr}')">✕</button>
+      <button class="btn btn-sm ref-card-remove" title="Remove" data-action="call" data-fn="removeReferenceDoc" data-arg="${idAttr}">✕</button>
     </div>
   </div>
   <div class="ref-card-body">
