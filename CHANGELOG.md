@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.329
+
+**v3.63.327's global status bar reverted — toast handles everything; italic per David's preference; v3.63.328's loop fix keeps toast tidy**
+
+Build: `20260613-023`<br>
+Released: `2026-06-13`
+
+### What changed
+
+v3.63.327 added a global status bar (`<div id="globalStatus">`) pinned to the bottom-left of every screen, with `setStatus()` writing to both it AND the work-footer `#statusText`. The intent was right (give non-work screens a place for ongoing-state messages), but the execution created confusion: work-screen-only messages like `Standing by — Smoke the Hive to begin` started leaking onto Hive / Setup / Settings screens, and at the same time toasts were showing in the middle. Two competing visual indicators, neither in the right spot.
+
+David's call: "I'd recommend doing it on the far left one or the other but we don't need both." And separately: "If you don't think that the information will fit though then keep it as a toast." Some status messages run 100+ characters; a Continue-sized status window in the footer would need 4–5 lines for those, which is too tall.
+
+Going back to one mechanism: **toast**.
+
+- `#globalStatus` div removed from index.html
+- `.global-status` CSS rules removed
+- `setStatus()` back to writing only to `#statusText` (work-footer)
+- `applyHiveProfile` back to using `toast()` instead of `setStatus()` for its 5 progress/result messages
+- Toast text gets `font-style: italic` per David's earlier preference
+
+v3.63.328's loop fix stays — that's what keeps toasts from getting pinned on screen when the auto-classify chain fails permanently. Without that, the toast revert would just re-create the stuck-toast bug. With it, toasts behave as designed: fade in, fade out after 2.8s, no spam.
+
+### Files touched
+
+- [index.html](index.html) — `<div id="globalStatus">` removed
+- [js/app.js](js/app.js) — `setStatus()` reverted to single-target write; `applyHiveProfile` 5 toast calls restored
+- [style.css](style.css) — `.global-status` rules deleted; `#toast { font-style: italic; }` added
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.328
 
 **applyHiveProfile no longer infinite-loops when tier classifier keeps failing for a provider — David's "Recommend Models button unclickable" bug**
