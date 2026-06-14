@@ -2,6 +2,99 @@
 
 ---
 
+## v3.63.360
+
+**HOTFIX: script-src strict-CSP cutover from v3.63.353 ROLLED BACK · `'unsafe-inline'` restored on script-src · dynamically-injected inline handlers work again**
+
+Build: `20260614-018`<br>
+Released: `2026-06-14`
+
+### The bug
+
+User report: clicking the X delete button on a reference card with substantive content (e.g. a PDF) did nothing. "Clear All" still worked.
+
+Root cause: the reference-card X comes from a template literal inside `js/app.js`:
+
+```javascript
+<button class="btn btn-sm ref-card-remove" title="Remove" onclick="removeReferenceDoc('${idAttr}')">✕</button>
+```
+
+That string is injected via `innerHTML` at render time. With v3.63.353's strict CSP dropping `'unsafe-inline'` from `script-src`, the browser silently dropped the `onclick` attribute when parsing the injected HTML. The button rendered, the click handler never attached.
+
+### Scope
+
+~107 inline `on*=` attributes are embedded in template strings inside `js/app.js` plus a handful more in `api-links.js`, `storage.js`, `wf-debug.js`. The v3.63.347 → v3.63.353 strict-CSP migration converted every inline handler in static HTML files to delegated `data-action` dispatching, but never touched template-string handlers — they were invisible to the regex sweep. Once the cutover landed, all 107 were silently dead.
+
+Confirmed-broken surfaces (non-exhaustive):
+
+- Reference card X delete + rename input
+- Model select dropdowns on the hive setup grid
+- "Recommend Models" buttons
+- Settings TOC anchor links
+- Template gallery apply / export / duplicate / edit / delete buttons
+- Hive setup grid: model swap, API key entry, eye toggle, clear key, Test button
+- AI variant add/remove
+- Custom AI selection checkboxes
+- Round history modal action buttons
+- Worker bee "Why?" toggle
+
+CI smoke didn't catch it: the 9 shots only verified page load, version stamp population, and hamburger open — none clicked any dynamically-rendered button.
+
+### The rollback
+
+`script-src` reverted on every page from:
+```
+script-src 'self' 'unsafe-eval' 'sha256-v6gFi56+2bv74Kb6ZsiwAOsnOhaMjjXtAhflRjSVRcw='
+```
+back to:
+```
+script-src 'self' 'unsafe-inline' 'unsafe-eval'
+```
+
+The head-guard `sha256-` hash was dropped from the directive — CSP3 actually IGNORES `'unsafe-inline'` when a hash is present, so leaving the hash in would have re-broken the dynamic handlers. With the hash gone and `'unsafe-inline'` back, every inline handler executes again.
+
+### What stayed strict
+
+**`style-src` is unchanged.** The v3.63.356 / v3.63.357 strict style-src cutover stays — `style-src` controls inline `<style>` blocks and `style="..."` attributes, not inline event handlers. The X button bug had nothing to do with style-src; that cutover was correctly scoped.
+
+The two `display:none`-to-class migrations codex landed (v3.63.358 / v3.63.359 — `templateHintBanner`, `reExtractBanner`) also stay.
+
+### release-check Check 5 updated
+
+- The "must NOT contain `'unsafe-inline'` on script-src" assertion is gone.
+- A new "must CONTAIN `'unsafe-inline'` on script-src" assertion takes its place — removing it again is the exact regression we just lived through, so the check fails CI if anyone tries.
+- The head-guard sha256 is dropped from `REQUIRED_CSP_DIRECTIVES`.
+- All style-src hash entries stay.
+
+### What's next (Phase 8)
+
+The 107 inline handlers in JS template strings have to migrate to `data-action` delegation — same pattern as the static HTML sweep. The migration shape:
+
+```javascript
+// Before:
+`<button onclick="removeReferenceDoc('${id}')">✕</button>`
+
+// After:
+`<button data-action="call" data-fn="removeReferenceDoc" data-arg="${escapeHtml(id)}">✕</button>`
+```
+
+This is real work and high blast radius. Plan:
+1. Inventory every JS template-string inline handler (one-shot grep).
+2. Migrate one feature surface at a time (reference cards, then hive grid, then template gallery, etc.).
+3. Manually click-test each surface in a browser before merging.
+4. Add a new release-check that scans `js/*.js` for inline `on*=` in template strings — same shape as Check 8 for HTML, ratcheting down.
+5. Once the count hits zero, re-tighten script-src.
+
+Same playbook codex's banner-state migration is already proving out: one surface at a time, ship per surface.
+
+### Files touched
+
+- 16 HTML pages — `script-src` directive reverted; CSP comment marker updated to v3.63.360
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 5: dropped head-guard sha256 from required directives; flipped script-src `'unsafe-inline'` assertion direction
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps
+
+---
+
 ## v3.63.359
 
 **Inline-style cleanup Phase 2: re-extract banner hidden state moved to `.is-hidden`**
