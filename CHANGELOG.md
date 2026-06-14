@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.334
+
+**Add Custom Worker Bee modal: ✓ Ready / ✗ Invalid pill on the API Key field, mirroring the AI Setup row pill**
+
+Build: `20260613-028`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David caught a cohesion gap while adding Together AI in Edge: on the main AI Setup screen, a row with a saved-and-validated key shows a green ✓ Ready pill next to the AI name. In the Add Custom Worker Bee modal, the same key-validation flow exists (paste key, press Enter, models fetch) but the modal had no equivalent persistent visual — just a toast that fades.
+
+Fix: dropped a status span into the modal's API Key label and wired three states.
+
+- **Successful fetch** → green `✓ Ready` pill, tooltip "Endpoint returned a model list — connection validated." (Same `ai-setup-status-pill is-ready` class the row uses, so the visual is identical.)
+- **HTTP 401 / 403 from fetch** → red `✗ Invalid` pill, tooltip "Endpoint rejected this API key (HTTP 401)."
+- **Any other fetch failure** (network error, wrong URL, server error) → red `✗ Failed` pill, tooltip "Fetch failed — see toast for the specific reason." Splitting Invalid vs Failed reads more honestly than blanket-Invalid since the key wasn't necessarily what broke.
+- **User edits the key field** → pill clears immediately via `resetModelField()` (already called on input). Mirrors the AI Setup row behavior: editing the key invalidates any prior validation, so the pill should disappear until the next fetch proves the new key works.
+
+No new CSS — the modal pill reuses the existing `.ai-setup-status-pill` rules from style.css so consistency is automatic; if the row pill ever restyles, the modal pill follows.
+
+### Files touched
+
+- [index.html](index.html) — `#customAIKeyStatus` span added to the API Key label
+- [js/app.js](js/app.js) — `resetModelField` clears the new status span; `fetchCustomAIModels` success path sets ✓ Ready; failure path sets ✗ Invalid (401/403) or ✗ Failed (everything else)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.333
 
 **Together AI tier classification routes through Perplexity Sonar (web-grounded asker) · single-shot 429 retry stops Mistral from silently dropping classification**
