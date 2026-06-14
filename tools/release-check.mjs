@@ -510,22 +510,22 @@ section('Inline event-handler budget (strict-CSP migration ratchet)');
 // tightening.
 
 const INLINE_HANDLER_BUDGET = {
-  'ai-api-pricing.html':         34,
-  'ai-business-proposal.html':   35,
-  'ai-cover-letter-editor.html': 35,
-  'ai-resume-review.html':       35,
+  'ai-api-pricing.html':          0, // migrated in v3.63.348
+  'ai-business-proposal.html':    0, // migrated in v3.63.348
+  'ai-cover-letter-editor.html':  0, // migrated in v3.63.348
+  'ai-resume-review.html':        0, // migrated in v3.63.348
   'api-details.html':            55,
-  'document-playbooks.html':     33,
+  'document-playbooks.html':      0, // migrated in v3.63.348
   'help.html':                    0,
-  'hive-profiles.html':          35,
+  'hive-profiles.html':           0, // migrated in v3.63.348
   'index.html':                 396,
-  'privacy.html':                33,
+  'privacy.html':                 0, // migrated in v3.63.348
   'prompt-editor.html':          51,
   'start-here.html':              0, // migrated in v3.63.347
-  'templates.html':              32,
-  'terms.html':                  33,
-  'waxframe-user-manual.html':   33,
-  'what-are-tokens.html':        36
+  'templates.html':               0, // migrated in v3.63.348
+  'terms.html':                   0, // migrated in v3.63.348
+  'waxframe-user-manual.html':    0, // migrated in v3.63.348
+  'what-are-tokens.html':         0  // migrated in v3.63.348
 };
 
 const INLINE_HANDLER_RE = /\son(click|input|change|keydown|keyup|keypress|submit|focus|blur|mousedown|mouseup|mouseover|mouseout|wheel|load|error)\s*=/gi;
