@@ -32,7 +32,6 @@
 //    WF_DEBUG.captureFailure(c)  — store lightweight failure ctx
 //    WF_DEBUG.classify(err, ctx) — return matching catalog entry
 //    WF_DEBUG.showCard(entry, c) — render Troubleshooting Card
-//    WF_DEBUG.openViewer()       — open ring buffer modal
 //    WF_ERROR_CATALOG            — array of error entries
 //    WF_GENERIC_ENTRY            — fallback when no catalog match
 //    renderTroubleshootingCard()
@@ -452,109 +451,14 @@ window.WF_DEBUG = {
     if (typeof toast === 'function') toast(`Card ${this._testCardIdx} of ${WF_ERROR_CATALOG.length}: ${entry.code}`);
   },
 
-  // ════════════════════════════════════════════════════════════
-  // v3.63.252 — Test trigger for the surgical retry / bee-fatal flow
-  // ────────────────────────────────────────────────────────────
-  // Real-world AUTH_FAILED testing against built-in providers is messy
-  // because some providers (OpenAI in particular) return 401 without
-  // CORS headers, so the JS classifier sees it as NETWORK_ERROR — not
-  // AUTH_FAILED — and the surgical-retry hooks don't engage.
-  //
-  // This trigger sidesteps the CORS quirk by firing the AUTH_FAILED
-  // card directly with proper ctx, using a real bee from the most
-  // recent round's captured _partialRound. So:
-  //   • _BEE_FATAL_CODES auto-cancel fires (verify Auto pill flips)
-  //   • resend-ai action renders (verify button appears)
-  //   • Clicking Re-send fires a REAL callAPI against the bee's real
-  //     working key, splices the response into the cached set, and
-  //     runRound resumes through the Builder phase — end-to-end real
-  //     exercise of the surgical path with one bee's worth of spend.
-  //
-  // Requires a prior completed round so _partialRound has reviewer
-  // responses to splice into. Bails with a toast if no round has run.
-  // ════════════════════════════════════════════════════════════
-  testResendFlow() {
-    if (!window._partialRound) {
-      if (typeof toast === 'function') toast('🧪 Run a round first — test needs a captured _partialRound');
-      return;
-    }
-    const pr = window._partialRound;
-    const targetReviewer = pr.reviewerResponses && pr.reviewerResponses[0];
-    if (!targetReviewer) {
-      if (typeof toast === 'function') toast('🧪 No cached reviewers — run a round that gathers responses first');
-      return;
-    }
-    const ai = (typeof activeAIs !== 'undefined' && Array.isArray(activeAIs))
-      ? activeAIs.find(a => a.id === targetReviewer.id)
-      : null;
-    if (!ai) {
-      if (typeof toast === 'function') toast('🧪 Cached reviewer no longer in active hive');
-      return;
-    }
-    const entry = WF_ERROR_CATALOG.find(e => e.code === 'AUTH_FAILED');
-    if (!entry) {
-      if (typeof toast === 'function') toast('🧪 AUTH_FAILED catalog entry missing — check wf-debug.js');
-      return;
-    }
-    this.showCard(entry, {
-      aiName:           ai.name,
-      aiId:             ai.id,
-      provider:         ai.provider,
-      aiConsoleUrl:     ai.apiConsole || null,
-      aiDocsUrl:        ai.apiDocs    || null,
-      isCustomEndpoint: !!ai.isCustom,
-      status:           401,
-      message:          'TEST MODE — simulated AUTH_FAILED to exercise the surgical retry path. Click Re-send to fire a real call with your real key.',
-      raw:              JSON.stringify({ test: true, ai: ai.name, round: pr.round, partialRound: { builderRan: pr.builderRan, reviewers: pr.reviewerResponses.length } }, null, 2)
-    });
-    if (typeof toast === 'function') {
-      toast(`🧪 Test card fired for ${ai.name} — verify Auto cancelled + Resend visible`, 6000);
-    }
-  },
-
-  // ════════════════════════════════════════════════════════════
-  // v3.63.139 — Hive Profiles tier classifier dev-toolbar entry
-  // ────────────────────────────────────────────────────────────
-  // The actual classifier logic lives in app.js
-  // (classifyTiersForAllKeyed / classifyTiersForProvider /
-  // getCachedTiers). This is the thin front-end the worker-bee
-  // Classify Tiers button on the dev toolbar invokes: runs across every
-  // keyed provider sequentially, logs each raw response to the
-  // browser console for prompt iteration, toasts a summary.
-  // No viewer modal — results land in the next 📦 Bundle for
-  // Scout download alongside the ring buffer.
-  // ════════════════════════════════════════════════════════════
-  async classifyTiers(opts) {
-    // v3.63.141 — Always force-refresh when called from the dev-toolbar
-    // button (or any caller that doesn't explicitly pass force:false). The
-    // prior default served cache, which left v3.63.139's stale picks in
-    // place even after v3.63.140 shipped the live-fetch fix — the button
-    // never re-ran the previously-cached providers. Explicit user action
-    // should always be fresh; cache reads belong on the bundle/resolver
-    // side, not on the action button.
-    opts = opts || {};
-    const force = opts.force === false ? false : true;
-    if (typeof classifyTiersForAllKeyed !== 'function') {
-      if (typeof toast === 'function') toast('⚠️ Tier classifier unavailable — app.js not loaded');
-      return;
-    }
-    const btn = document.getElementById('wfClassifyTiersBtn');
-    const origLabel = btn ? btn.innerHTML : null;
-    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Classifying…'; }
-    if (typeof toast === 'function') toast('Re-classifying every keyed provider…', 4000);
-    try {
-      const results = await classifyTiersForAllKeyed({ force });
-      const ok   = Object.values(results).filter(r => r && (r.cheap || r.balanced || r.thinker || r.fast)).length;
-      const fail = Object.values(results).filter(r => !r).length;
-      console.log('Tier classifications — full result map:', results);
-      if (typeof toast === 'function') toast(`${ok} provider${ok === 1 ? '' : 's'} classified${fail ? ` · ${fail} failed (see console)` : ''} — bundle to send to Scout`, 6000);
-    } catch (e) {
-      console.warn('[WF_DEBUG.classifyTiers] failed:', e);
-      if (typeof toast === 'function') toast(`⚠️ Tier classification failed: ${e.message || 'unknown'}`, 6000);
-    } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = origLabel || '<img src="images/WaxFrame_Worker_Bee_v2.png" class="label-bee" alt="">Classify Tiers'; }
-    }
-  }
+  // v3.63.332 — Removed: testResendFlow (test trigger from v3.63.252 — the
+  // dev-toolbar button it was wired to retired in v3.63.330, so the function
+  // had no live caller) and classifyTiers (manual one-shot classifier wrapper
+  // from v3.63.139 — every recheck now classifies natively, so the manual
+  // button was duplicative noise; the dev-toolbar button retired here, the
+  // wrapper deleted with it). Convention: every method on WF_DEBUG must be
+  // reachable from at least one currently-rendered surface. If you retire
+  // the surface, retire the method in the same commit.
 };
 
 // ── ERROR CATALOG ──
