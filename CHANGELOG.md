@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.342
+
+**Straggler sweep: superseded playbook snapshots v38/v39 removed · stale "can be removed" comment on `_logRoundBump` rewritten to match reality**
+
+Build: `20260613-036`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Two stragglers Codex's review flagged that v3.63.338's pass missed.
+
+**1. Old playbook snapshots deleted.** `docs/WaxFrame_Playbook_Test_Master_v38.txt` and `v39.txt` removed. Same convention applied to backlog docs in v3.63.338 (keep current only). v40 is current — its first line stamps it as the canonical playbook master tracking test runs against v3.63.213 Pro and later. Older copies are now repo noise; the changelog + git history are the system of record for what changed between them.
+
+**2. Stale comment on `_logRoundBump` rewritten.** The pre-v3.63.342 comment claimed "Cheap; can be removed once the root cause is fixed" — referring to the round-counter forensic instrumentation added in v3.63.61 to catch a non-monotonic round jump symptom. That comment was stale on two fronts:
+- As of v3.63.320, `_logRoundBump` is *also* the single dispatch point for `window._autoBackupAfterRound()`. The function is load-bearing for auto-backup regardless of whether the round-jump bug recurs. Removing it would silently break the auto-backup-after-N-rounds feature.
+- The forensic instrumentation itself is genuinely cheap (one `console.warn` + a 200-entry ringBuffer push), and leaving it in is the only safety net against regression of the original symptom. There's no signal yet that removing it would be safe.
+
+Replaced the misleading "can be removed" comment with one that explains both purposes and the audit reasoning. No behavior change — just a documentation fix so the next auditor doesn't see a Chekhov's gun that won't ever fire.
+
+### Files touched
+
+- `docs/WaxFrame_Playbook_Test_Master_v38.txt`, `v39.txt` — deleted (superseded by v40)
+- [js/app.js](js/app.js:575) — `_logRoundBump` header comment rewritten
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.341
 
 **CI behavior smoke job: headless Chrome boots the app, seeds a realistic session, asserts the work screen renders without throwing**
