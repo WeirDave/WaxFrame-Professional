@@ -359,7 +359,41 @@ if (!prevTag) {
   }
 }
 
-// ── Check 5: Vendored library version floors ───────────────
+// ── Check 5: Content-Security-Policy presence ─────────────
+
+section('Content-Security-Policy meta tag (every HTML file)');
+
+// Defends against silent removal of the CSP added in v3.63.340. The policy
+// itself is permissive on script-src (the app's inline-handler architecture
+// would break under strict-CSP without a multi-release migration), but it
+// locks down the truly unused attack surface — object/embed, base-uri,
+// form-action, http downgrades. Losing those is a regression no test loop
+// would catch otherwise, since the CSP doesn't change rendered behavior.
+
+const REQUIRED_CSP_DIRECTIVES = [
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  'upgrade-insecure-requests'
+];
+
+for (const file of htmlFiles) {
+  const content = read(file);
+  const cspMatch = content.match(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"/);
+  if (!cspMatch) {
+    fail(rel(file), 'missing CSP meta tag (regressed from v3.63.340 baseline)');
+    continue;
+  }
+  const policy = cspMatch[1];
+  const missing = REQUIRED_CSP_DIRECTIVES.filter(d => !policy.includes(d));
+  if (missing.length) {
+    fail(rel(file), `CSP missing required directive(s): ${missing.join(', ')}`);
+  } else {
+    ok(rel(file));
+  }
+}
+
+// ── Check 6: Vendored library version floors ───────────────
 
 section('Vendored library floors (CVE-tracked minimums)');
 
