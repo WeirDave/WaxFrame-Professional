@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app-bootstrap.js
-// Build: 20260614-018
+// Build: 20260614-019
 //  Glue shims for index.html's strict-CSP migration (v3.63.351).
 //
 //  Three inline handlers on the work screen had shapes the generic
@@ -48,5 +48,32 @@
   window.__wfAutoFillAndChoose = function(el) {
     if (typeof autoFillAIName === 'function') autoFillAIName(el && el.value);
     if (typeof updateChooseModelLink === 'function') updateChooseModelLink();
+  };
+
+  // ── Reference-card oninput shims (Phase 8, v3.63.361) ──
+  //
+  // The dispatcher carries one arg per call (data-arg / data-arg-this /
+  // data-arg-value). The two ref-card oninput handlers pass TWO args
+  // — the doc id AND the new value — so a shim reads the id off
+  // data-ref-id and the value off el.value, then forwards to the
+  // existing public function (whose signature is shared with other
+  // programmatic call sites and can't change).
+  //
+  // Wired as: data-input-action="call" data-fn="__wfRenameRefDoc"
+  //           data-arg-this="1" data-ref-id="${idAttr}"
+  window.__wfRenameRefDoc = function(el) {
+    if (!el || !el.dataset) return;
+    if (typeof renameReferenceDoc === 'function') {
+      renameReferenceDoc(el.dataset.refId, el.value);
+    }
+  };
+
+  // Wired as: data-input-action="call" data-fn="__wfUpdateRefDocText"
+  //           data-arg-this="1" data-ref-id="${idAttr}"
+  window.__wfUpdateRefDocText = function(el) {
+    if (!el || !el.dataset) return;
+    if (typeof updateReferenceDocText === 'function') {
+      updateReferenceDocText(el.dataset.refId, el.value);
+    }
   };
 })();

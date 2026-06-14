@@ -2,6 +2,58 @@
 
 ---
 
+## v3.63.361
+
+**Phase 8 begins: reference-card surface migrated from inline `on*=` template handlers to `data-action` delegation**
+
+Build: `20260614-019`<br>
+Released: `2026-06-14`
+
+### Why this release
+
+The v3.63.360 hotfix restored `'unsafe-inline'` on `script-src` so the ~107 inline handlers buried in JS template strings would work again. That fix kept the site running but left the strict-CSP migration stuck. Phase 8 is the cleanup arc: migrate every template-string inline handler to the `data-action` dispatcher in [helper-handlers.js](js/helper-handlers.js), one feature surface at a time, then re-tighten script-src once the count hits zero.
+
+This release ships the **first surface — the Reference Material card grid**. It's the surface that broke loudest in user reports (the X delete button on a PDF card did nothing), so it leads the migration.
+
+### What changed
+
+Five inline handlers inside `refCardMarkup()` in [js/app.js](js/app.js) were the dead-loud ones under strict CSP. All five now route through the existing dispatcher:
+
+| Element | Before | After |
+|---|---|---|
+| ✕ delete button | `onclick="removeReferenceDoc('${id}')"` | `data-action="call" data-fn="removeReferenceDoc" data-arg="${id}"` |
+| ▲ move-up arrow | `onclick="moveReferenceDocUp('${id}')"` | `data-action="call" data-fn="moveReferenceDocUp" data-arg="${id}"` |
+| ▼ move-down arrow | `onclick="moveReferenceDocDown('${id}')"` | `data-action="call" data-fn="moveReferenceDocDown" data-arg="${id}"` |
+| Name input | `oninput="renameReferenceDoc('${id}', this.value)"` | `data-input-action="call" data-fn="__wfRenameRefDoc" data-arg-this="1" data-ref-id="${id}"` |
+| Paste textarea | `oninput="updateReferenceDocText('${id}', this.value)"` | `data-input-action="call" data-fn="__wfUpdateRefDocText" data-arg-this="1" data-ref-id="${id}"` |
+
+The single-arg buttons (✕, ▲, ▼) take the doc id literally via `data-arg`. The two-arg `oninput` handlers can't fit the dispatcher's one-arg convention, so two tiny shims were added to [js/app-bootstrap.js](js/app-bootstrap.js) — same shape as the existing `__wfMarkUserTyped` / `__wfAutoFillAndChoose` shims from the index.html cutover — that read the id off `data-ref-id` and the value off the element, then forward to the existing public function. The public signatures of `renameReferenceDoc` / `updateReferenceDocText` stay intact (both are called programmatically from elsewhere — see [js/app.js:12659](js/app.js:12659) — and can't change shape).
+
+### Click-test (mandatory before commit, per Phase 8 plan)
+
+Verified live in the preview server with the ref-card surface rendered into Setup 4:
+
+- ✅ ✕ delete on a card with substantive text → confirmation modal opens with the correct title and body ("Remove \"Renamed via delegation\"?"), Remove button completes the deletion
+- ✅ ▼ move-down → swaps array order, re-renders, position badge updates
+- ✅ ▲ move-up → swaps back
+- ✅ Name input typing → `__wfRenameRefDoc` shim → `doc.name` mutates without re-render (focus preserved)
+- ✅ Paste textarea typing → `__wfUpdateRefDocText` shim → `doc.text` mutates, per-card counters refresh, line-number gutter rebuilds, focus preserved
+- ✅ Zero console errors / warnings during all of the above
+
+### What's NOT in this release
+
+- The other ~102 inline handlers (hive grid, template gallery, settings TOC, model selects, AI variants, custom AI checkboxes, round history, "Recommend Models", worker bee "Why?", etc.) are untouched. They still work because `'unsafe-inline'` is still on script-src.
+- `script-src` stays loose. We don't re-tighten until every template-string handler is migrated.
+- No new release-check yet — that's Plan step 4, deferred until enough surfaces have migrated to make a meaningful ratchet floor.
+
+### Files touched
+
+- [js/app.js](js/app.js) — 5 inline attrs in `refCardMarkup()` rewritten to `data-action` / `data-input-action`
+- [js/app-bootstrap.js](js/app-bootstrap.js) — added `__wfRenameRefDoc` and `__wfUpdateRefDocText` shims
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.360
 
 **HOTFIX: script-src strict-CSP cutover from v3.63.353 ROLLED BACK · `'unsafe-inline'` restored on script-src · dynamically-injected inline handlers work again**
