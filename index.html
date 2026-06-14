@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.332">
+  <link rel="stylesheet" href="style.css?v=3.63.333">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.332",
+    "softwareVersion": "3.63.333",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1093,7 +1093,7 @@
             </div>
           </div>
 
-          <!-- v3.63.332 — Backup Sync settings. Manual "Save Checkpoint"
+          <!-- v3.63.333 — Backup Sync settings. Manual "Save Checkpoint"
                (Checkpoint screen → Menu) stays as the one-off escape
                hatch. This section configures the auto-backup loop:
                folder choice, frequency presets (every / every other /
@@ -1113,7 +1113,7 @@
               <div class="settings-inline-controls">
                 <span class="settings-backup-folder-label" id="setBackupFolderLabel">&mdash; Not set &mdash;</span>
                 <button class="btn settings-reset-btn" id="setBackupFolderBtn" onclick="settingsPickBackupFolder()">&#x1F4C1; Pick folder</button>
-                <!-- v3.63.332 — Forget folder. Clears the stored handle so the next Pick folder click pops a fresh OS picker. Useful when the stored handle's permission goes stale (Edge in particular sometimes locks the handle into a denied state that no permission re-grant can recover from). -->
+                <!-- v3.63.333 — Forget folder. Clears the stored handle so the next Pick folder click pops a fresh OS picker. Useful when the stored handle's permission goes stale (Edge in particular sometimes locks the handle into a denied state that no permission re-grant can recover from). -->
                 <button class="btn settings-reset-btn" id="setBackupFolderForgetBtn" onclick="settingsForgetBackupFolder()" title="Clear the saved folder choice — next Pick folder click will re-prompt the OS dialog">&#x1F5D1; Forget folder</button>
               </div>
             </div>
@@ -1171,7 +1171,7 @@
               </label>
             </div>
 
-            <!-- v3.63.332 — "View captures" row removed. Clicking it called
+            <!-- v3.63.333 — "View captures" row removed. Clicking it called
                  WF_DEBUG.openViewer() which has not existed since v3.63.139
                  when the View Captures + View Tiers modals were intentionally
                  retired (David's workflow is capture → save → send to Scout →
@@ -1464,7 +1464,7 @@
 
             <div class="checkpoint-actions">
               <button class="btn" onclick="exitCheckpointScreen()" title="Cancel and return without saving">Cancel</button>
-              <!-- v3.63.332 — Single Save Checkpoint button, smart-routed
+              <!-- v3.63.333 — Single Save Checkpoint button, smart-routed
                    based on browser support. Chrome/Edge/Opera: opens the
                    FSA folder picker (first time), then subsequent saves
                    write silently to the remembered folder. Firefox /
@@ -1497,7 +1497,7 @@
               </div>
               <div class="checkpoint-actions">
                 <button class="btn" onclick="exitCheckpointScreen()" title="Cancel and go back">Cancel</button>
-                <!-- v3.63.332 — Choose Checkpoint File is now smart-routed
+                <!-- v3.63.333 — Choose Checkpoint File is now smart-routed
                      in chooseCheckpointFile(): on Chrome/Edge/Opera with a
                      configured backup folder, it pre-navigates the OS
                      picker to that folder via showOpenFilePicker(startIn).
@@ -3252,7 +3252,7 @@
   <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 200 rounds in memory). Auto-enabled when dev mode unlocks; toggle here to flip off temporarily.">🔬 Deep Dive</button>
   <button id="wfBundleForScoutBtn" onclick="WF_DEBUG.bundleForScout()" title="Download one JSON containing the Deep Dive ring buffer + cached tier classifications + current project checkpoint + version metadata. Everything Scout needs to analyze your run, in one file.">📦 Bundle for Scout</button>
   <button id="wfClearBundleBtn" onclick="WF_DEBUG.clearBundle()" title="Wipe the Deep Dive ring buffer (per-round captures from the prior project). Tier classifications survive — they're per-provider, not per-project.">🗑 Clear Buffer</button>
-  <!-- v3.63.332 — Toolbar audit. Removed: Classify Tiers (we now classify
+  <!-- v3.63.333 — Toolbar audit. Removed: Classify Tiers (we now classify
        natively on every recheck — the manual button was redundant noise).
        The matching WF_DEBUG.classifyTiers + WF_DEBUG.testResendFlow JS
        handlers were also deleted from wf-debug.js so the toolbar contains
@@ -3516,24 +3516,24 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.332';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.333';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.332"></script>
-<script src="lib/jszip.min.js?v=3.63.332"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.332"></script>
-<script src="js/version.js?v=3.63.332"></script>
-<script src="js/storage.js?v=3.63.332"></script>
-<script src="js/theme.js?v=3.63.332"></script>
-<script src="js/audio.js?v=3.63.332"></script>
-<script src="js/scenes.js?v=3.63.332"></script>
-<script src="js/wf-debug.js?v=3.63.332"></script>
-<script src="js/provider-models.js?v=3.63.332"></script>
-<script src="js/provider-catalog.js?v=3.63.332"></script>
-<script src="js/api.js?v=3.63.332"></script>
-<script src="js/templates.js?v=3.63.332"></script>
-<script src="js/api-links.js?v=3.63.332"></script>
-<script src="js/app.js?v=3.63.332"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.333"></script>
+<script src="lib/jszip.min.js?v=3.63.333"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.333"></script>
+<script src="js/version.js?v=3.63.333"></script>
+<script src="js/storage.js?v=3.63.333"></script>
+<script src="js/theme.js?v=3.63.333"></script>
+<script src="js/audio.js?v=3.63.333"></script>
+<script src="js/scenes.js?v=3.63.333"></script>
+<script src="js/wf-debug.js?v=3.63.333"></script>
+<script src="js/provider-models.js?v=3.63.333"></script>
+<script src="js/provider-catalog.js?v=3.63.333"></script>
+<script src="js/api.js?v=3.63.333"></script>
+<script src="js/templates.js?v=3.63.333"></script>
+<script src="js/api-links.js?v=3.63.333"></script>
+<script src="js/app.js?v=3.63.333"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
