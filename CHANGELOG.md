@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.368
+
+**Inline-style cleanup pass 2: reference upload status + batch banner (`#refFileStatus`, `#refBatchBanner`) moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-026`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Continues the inline-style cleanup arc. Two reference-upload UI elements were initialized with `style="display:none;"` and toggled at runtime via `el.style.display = 'block' / 'none'`:
+
+- `#refFileStatus` (the per-file status line above the cards) — toggled in two sites in [js/app.js](js/app.js): the reset path in the project-wipe handler and the show path inside the file-extraction loop.
+- `#refBatchBanner` (the multi-file batch processing banner with progress text) — toggled inside the two helpers `_showRefBatchBanner()` and `_hideRefBatchBanner()`.
+
+All four toggle sites now use `classList.add('is-hidden')` / `classList.remove('is-hidden')`. `_activeStatusEl()` was left alone — it picks "the visible one" via `offsetParent !== null`, which works for `.is-hidden` the same way it worked for `style="display:none"` (the test is "does this element take up layout space," not "what's the inline-style value").
+
+### Verified in preview
+
+- Initial state — both `#refFileStatus` and `#refBatchBanner` carry `.is-hidden` and have zero inline `style` attribute
+- `_showRefBatchBanner("Test message")` — banner drops `.is-hidden`, no inline style is added, message text propagates to `#refBatchBannerText`
+- `_hideRefBatchBanner()` — banner re-adds `.is-hidden`, still no inline style
+- `#refFileStatus` show path — same shape: drops `.is-hidden`, no inline style, text content updates
+
+### Files touched
+
+- [index.html](index.html) — 2 inline `style="display:none;"` removed; `.is-hidden` added
+- [js/app.js](js/app.js) — 4 `style.display = …` flips swapped for `classList.add/remove('is-hidden')` (project-wipe reset, file-extract loader, batch-banner show, batch-banner hide)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 28 → 26 inline `style="display:none*"` attrs remaining.
+
+---
+
 ## v3.63.367
 
 **Inline-style cleanup pass 1: length-constraint range UI (`#lengthMin`, `#lengthRangeSep`) moved off `style="display:none"` to `.is-hidden`**
