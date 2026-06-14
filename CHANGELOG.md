@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.346
+
+**CI smoke expansion: round-history modal, Add Custom AI modal, and checkpoint Restore mode now covered alongside the work screen**
+
+Build: `20260614-004`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Closes the third of yesterday's parking-lot items. The v3.63.341 CI smoke job only covered the work screen — useful, but it didn't exercise the surfaces Codex's review specifically called out as highest-blast-radius. Three new shots added to `tools/capture.mjs`:
+
+**1. Round History modal (`work-history-modal`).** Reuses the same full-session seed as the work-screen shot, then fires `viewRoundDoc(0)` in postReady to open the modal whose XSS sinks Codex flagged in v3.63.338 and again in v3.63.343. If either fix regresses — or any future change re-introduces an unescaped user value into the modal template — the smoke fails. The seeded session already has a Round 1 in history, so the modal opens with realistic content.
+
+**2. Add Custom Worker Bee modal (`bees-add-custom-ai`).** No seed needed; opens on the bees screen via `showAddCustomAI()`. Asserts the modal renders without throwing. Covers the API-key Ready/Invalid pill from v3.63.334, the Model dropdown + Fetch Models button, and the new Mascot bee from v3.63.336.
+
+**3. Checkpoint Restore mode (`checkpoint-restore`).** Same screen as the existing checkpoint-save shot, but `switchCheckpointMode('restore')` in postReady. Covers the restore flow that consumes untrusted user-supplied checkpoint JSON — the threat model Codex called out for the original XSS chain. The save-mode shot stays for screenshot/marketing parity.
+
+### `--smoke` flag
+
+Renamed the CI flag from `--only-work` to `--smoke` to match the new broader semantics (`--only-work` still works as a legacy alias — back-compat with v3.63.341's workflow shape during transition). Each smoke-shot is marked with `smoke: true` in the SHOTS array; the filter is `s.smoke === true`. Adding a future smoke surface is now one boolean per entry instead of a hardcoded `base === 'work'` filter.
+
+Workflow step renamed from "Run work-screen behavior smoke" to "Run security-surface behavior smoke" to match.
+
+### Time budget
+
+Smoke went from 1 shot to 4. Each shot is ~10-15 seconds on a cold runner (modal open + paint settle). Total smoke run on CI: ~45-75 seconds, comfortably under the 8-minute job timeout. The v3.63.344 timeout bump to 60s for Chrome cold-start gives the first shot all the headroom it needs.
+
+### Files touched
+
+- [tools/capture.mjs](tools/capture.mjs) — 3 new SHOTS entries; `smoke: true` field; `--smoke` flag with `--only-work` alias
+- [.github/workflows/release-check.yml](.github/workflows/release-check.yml) — workflow step uses `--smoke`; step name updated for clarity
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.345
 
 **Clickjacking guard + CSP violation listener landed on every HTML page · release-check guards both**
