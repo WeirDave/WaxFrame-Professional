@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260614-006
+// Build: 20260614-007
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -95,6 +95,15 @@
       if (typeof downloadPageAsDocx === 'function') downloadPageAsDocx();
     },
 
+    // ── API-key console list (api-details.html only) ──
+    //   Backed by toggleGuideConsoles() in js/api-links.js. The button
+    //   appears only on api-details.html; the action is in this shared
+    //   table because the typeof-guard means it's a no-op on any page
+    //   that doesn't load api-links.js.
+    'consoles-toggle': function() {
+      if (typeof toggleGuideConsoles === 'function') toggleGuideConsoles();
+    },
+
     // ── Theme + audio ──
     //   data-theme="light|auto|dark" on the button
     'theme-set': function(el) {
@@ -174,4 +183,15 @@
     var fn = KEY_ACTIONS[el.dataset.keyAction];
     if (fn) fn(el, e);
   });
+
+  // ── Image load-error fallback ──────────────────────────────
+  // Replaces inline onerror="this.style.display='none'" on icon
+  // imagery. The `error` event does not bubble, so this listener
+  // must run in the capture phase. data-hide-on-error opts in.
+  document.addEventListener('error', function(e) {
+    var t = e.target;
+    if (t && t.tagName === 'IMG' && 'hideOnError' in t.dataset) {
+      t.style.display = 'none';
+    }
+  }, true);
 })();

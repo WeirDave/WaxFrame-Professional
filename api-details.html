@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260614-006
+     Build: 20260614-007
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -54,7 +54,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260614-006">
+  <meta name="waxframe-build" content="20260614-007">
   <title>API Key Guide for AI Providers — WaxFrame</title>
   <meta name="description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <link rel="canonical" href="https://waxframe.com/api-details.html">
@@ -68,7 +68,7 @@
   <meta name="twitter:description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.348">
+  <link rel="stylesheet" href="style.css?v=3.63.349">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -176,7 +176,7 @@
      Same visual treatment as the in-app nav-panel but with a
      reduced item set appropriate for standalone doc pages.
      ======================================================== -->
-<div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+<div class="nav-backdrop" id="navBackdrop" data-action="nav-close"></div>
 
 <div class="nav-panel" id="navPanel">
   <div class="nav-panel-header">
@@ -186,31 +186,31 @@
         <span class="nav-panel-title">WaxFrame</span>
         <span class="nav-panel-tagline">Many minds, one refined result.</span>
         <span class="app-version-stamp nav-panel-version"></span>
-        <button class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+        <button class="nav-panel-about-btn" data-action="about-open" data-target="aboutModalHelper">ℹ️ About</button>
       </div>
     </div>
-    <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
+    <button class="nav-close-btn" data-action="nav-close">✕</button>
   </div>
 
   <div class="nav-body">
     <div class="nav-section-label">Help & Support</div>
-    <a class="nav-item" href="start-here.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⭐ Start Here</a>
-    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
-    <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
-    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
-    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Hive Profiles</a>    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
-    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+    <a class="nav-item" href="start-here.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">⭐ Start Here</a>
+    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🔑 API Key Guide</a>
+    <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">💰 AI API Pricing</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📋 Document Playbooks</a>
+    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🛟 Help</a>
+    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" data-action="nav-close"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Hive Profiles</a>    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🪙 What Are Tokens?</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">WaxFrame App</div>
-    <a class="nav-item" href="index.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
-    <a class="nav-item" href="index.html#settings" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⚙ Settings</a>
+    <a class="nav-item" href="index.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🚀 Open WaxFrame</a>
+    <a class="nav-item" href="index.html#settings" target="_blank" rel="noopener noreferrer" data-action="nav-close">⚙ Settings</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Legal</div>
-    <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
-    <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
+    <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🛡️ Privacy Policy</a>
+    <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📜 Terms of Use</a>
   </div>
   <!-- v3.63.283 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
        only to non-licensed (trial) users; license-helper.js's
@@ -218,7 +218,7 @@
        own distinct slot — inside .nav-panel but outside .nav-body so it
        sticks to the bottom of the panel like the work-screen version. -->
   <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
+    <a class="nav-buy-cta external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" data-action="nav-close" title="Buy a license to unlock unlimited rounds">
       <span class="nav-buy-cta-icon">🛒</span>
       <span class="nav-buy-cta-text">
         <span class="nav-buy-cta-title">Buy a License</span>
@@ -233,7 +233,7 @@
      ======================================================== -->
 <div class="page-header">
   <div class="page-header-left">
-    <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+    <button class="nav-hamburger" data-action="nav-open" title="Navigation"><span></span><span></span><span></span></button>
   </div>
   <div class="page-header-brand">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
@@ -244,10 +244,10 @@
     </div>
   </div>
   <div class="page-header-controls">
-    <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
-    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
-    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
-    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+    <button class="theme-opt mute-btn" data-action="mute-toggle" title="Toggle sounds">🔊</button>
+    <button class="theme-opt" data-theme="light" data-action="theme-set" title="Light mode">☀️</button>
+    <button class="theme-opt" data-theme="auto" data-action="theme-set" title="Auto">⚙️</button>
+    <button class="theme-opt" data-theme="dark" data-action="theme-set" title="Dark mode">🌙</button>
   </div>
 </div>
 
@@ -345,7 +345,7 @@
       <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer (see our <a href="privacy.html" class="link-accent">Privacy Policy</a>) at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent external-link"><code>waxframe-claude-proxy.weirdave.workers.dev</code><svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. (The link goes to the live Worker endpoint, which expects API requests — opening it directly in a browser returns an API error rather than a page. That's normal.) All other providers (OpenAI, Gemini, Grok, Perplexity, Mistral, Cohere, Together AI, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
 
       <p><strong>Where exactly they live:</strong> your API keys are saved in your browser's <code>localStorage</code> (the same mechanism that remembers your dark-mode preference, your hive setup, and your project state). This is per-browser-profile, per-machine — keys you save on your work laptop don't appear on your phone, and clearing browser data for this site removes them. They are <strong>not encrypted at rest</strong>; any code or extension running in this browser profile that can read <code>localStorage</code> can read them. That's the same threat model as any browser-stored credential. For shared or untrusted devices, use a separate browser profile or clear data when finished.</p>
-      <p>WaxFrame — open source, no backend, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
+      <p>WaxFrame — open source, no backend, no tracking. <a href="#" data-action="modal-open" data-target="openSourceModal" class="link-accent">Learn more →</a></p>
     </div>
 
     <h2 id="keys-default">The Default Six</h2>
@@ -353,7 +353,7 @@
 
     <div class="ai-card">
       <div class="ai-card-header">
-        <img src="images/icon-chatgpt.png" onerror="this.style.display='none'">
+        <img src="images/icon-chatgpt.png" data-hide-on-error>
         <div class="ai-card-name" id="prov-chatgpt">ChatGPT (OpenAI)</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
@@ -377,7 +377,7 @@
 
     <div class="ai-card">
       <div class="ai-card-header">
-        <img src="images/icon-claude.png" onerror="this.style.display='none'">
+        <img src="images/icon-claude.png" data-hide-on-error>
         <div class="ai-card-name" id="prov-claude">Claude (Anthropic)</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
@@ -401,7 +401,7 @@
 
     <div class="ai-card">
       <div class="ai-card-header">
-        <img src="images/icon-gemini.png" alt="Gemini" onerror="this.style.display='none'">
+        <img src="images/icon-gemini.png" alt="Gemini" data-hide-on-error>
         <div class="ai-card-name" id="prov-gemini">Gemini (Google)</div>
         <span class="badge badge-free">Free tier available</span>
       </div>
@@ -428,7 +428,7 @@
 
     <div class="ai-card">
       <div class="ai-card-header">
-        <img src="images/icon-grok.png" alt="Grok" onerror="this.style.display='none'">
+        <img src="images/icon-grok.png" alt="Grok" data-hide-on-error>
         <div class="ai-card-name" id="prov-grok">Grok (xAI)</div>
         <span class="badge badge-limited">Limited availability</span>
       </div>
@@ -450,7 +450,7 @@
 
     <div class="ai-card">
       <div class="ai-card-header">
-        <img src="images/icon-mistral.png" onerror="this.style.display='none'">
+        <img src="images/icon-mistral.png" data-hide-on-error>
         <div class="ai-card-name" id="prov-mistral">Mistral</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
@@ -473,7 +473,7 @@
 
     <div class="ai-card">
       <div class="ai-card-header">
-        <img src="images/icon-perplexity.png" onerror="this.style.display='none'">
+        <img src="images/icon-perplexity.png" data-hide-on-error>
         <div class="ai-card-name" id="prov-perplexity">Perplexity</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
@@ -507,7 +507,7 @@
 
     <div class="ai-card">
       <div class="ai-card-header">
-        <img src="images/icon-cohere.png" onerror="this.style.display='none'">
+        <img src="images/icon-cohere.png" data-hide-on-error>
         <div class="ai-card-name" id="prov-cohere">Cohere</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
@@ -530,7 +530,7 @@
 
     <div class="ai-card">
       <div class="ai-card-header">
-        <img src="images/icon-deepseek.png" alt="DeepSeek" onerror="this.style.display='none'">
+        <img src="images/icon-deepseek.png" alt="DeepSeek" data-hide-on-error>
         <div class="ai-card-name" id="prov-deepseek">DeepSeek</div>
         <span class="badge badge-free">Very affordable</span>
       </div>
@@ -553,7 +553,7 @@
 
     <div class="ai-card">
       <div class="ai-card-header">
-        <img src="images/icon-together.png" onerror="this.style.display='none'">
+        <img src="images/icon-together.png" data-hide-on-error>
         <div class="ai-card-name" id="prov-together">Together AI</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
@@ -608,7 +608,7 @@
   <!-- CHATGPT -->
   <div class="kyh-card">
     <div class="kyh-card-header">
-      <img src="images/icon-chatgpt.png" class="kyh-card-icon" onerror="this.style.display='none'">
+      <img src="images/icon-chatgpt.png" class="kyh-card-icon" data-hide-on-error>
       <div>
         <div class="kyh-card-name">ChatGPT</div>
         <div class="kyh-card-model" data-seed-model="chatgpt">gpt-5.5</div>
@@ -649,7 +649,7 @@
   <!-- CLAUDE -->
   <div class="kyh-card">
     <div class="kyh-card-header">
-      <img src="images/icon-claude.png" class="kyh-card-icon" onerror="this.style.display='none'">
+      <img src="images/icon-claude.png" class="kyh-card-icon" data-hide-on-error>
       <div>
         <div class="kyh-card-name">Claude</div>
         <div class="kyh-card-model" data-seed-model="claude">claude-sonnet-4-6</div>
@@ -691,7 +691,7 @@
   <!-- DEEPSEEK -->
   <div class="kyh-card">
     <div class="kyh-card-header">
-      <img src="images/icon-deepseek.png" alt="DeepSeek" class="kyh-card-icon" onerror="this.style.display='none'">
+      <img src="images/icon-deepseek.png" alt="DeepSeek" class="kyh-card-icon" data-hide-on-error>
       <div>
         <div class="kyh-card-name">DeepSeek</div>
         <div class="kyh-card-model" data-seed-model="deepseek">deepseek-v4-flash</div>
@@ -733,7 +733,7 @@
   <!-- GEMINI -->
   <div class="kyh-card">
     <div class="kyh-card-header">
-      <img src="images/icon-gemini.png" alt="Gemini" class="kyh-card-icon" onerror="this.style.display='none'">
+      <img src="images/icon-gemini.png" alt="Gemini" class="kyh-card-icon" data-hide-on-error>
       <div>
         <div class="kyh-card-name">Gemini</div>
         <div class="kyh-card-model" data-seed-model="gemini">gemini-3.5-flash</div>
@@ -775,7 +775,7 @@
   <!-- GROK -->
   <div class="kyh-card">
     <div class="kyh-card-header">
-      <img src="images/icon-grok.png" alt="Grok" class="kyh-card-icon" onerror="this.style.display='none'">
+      <img src="images/icon-grok.png" alt="Grok" class="kyh-card-icon" data-hide-on-error>
       <div>
         <div class="kyh-card-name">Grok</div>
         <div class="kyh-card-model" data-seed-model="grok">grok-4.1-fast</div>
@@ -815,7 +815,7 @@
   <!-- PERPLEXITY -->
   <div class="kyh-card">
     <div class="kyh-card-header">
-      <img src="images/icon-perplexity.png" class="kyh-card-icon" onerror="this.style.display='none'">
+      <img src="images/icon-perplexity.png" class="kyh-card-icon" data-hide-on-error>
       <div>
         <div class="kyh-card-name">Perplexity</div>
         <div class="kyh-card-model" data-seed-model="perplexity">sonar-pro</div>
@@ -856,7 +856,7 @@
   <!-- MISTRAL -->
   <div class="kyh-card">
     <div class="kyh-card-header">
-      <img src="images/icon-mistral.png" class="kyh-card-icon" onerror="this.style.display='none'">
+      <img src="images/icon-mistral.png" class="kyh-card-icon" data-hide-on-error>
       <div>
         <div class="kyh-card-name">Mistral</div>
         <div class="kyh-card-model" data-seed-model="mistral">mistral-large-latest</div>
@@ -897,7 +897,7 @@
   <!-- COHERE -->
   <div class="kyh-card">
     <div class="kyh-card-header">
-      <img src="images/icon-cohere.png" class="kyh-card-icon" onerror="this.style.display='none'">
+      <img src="images/icon-cohere.png" class="kyh-card-icon" data-hide-on-error>
       <div>
         <div class="kyh-card-name">Cohere</div>
         <div class="kyh-card-model" data-seed-model="cohere">command-r-plus</div>
@@ -935,7 +935,7 @@
   <!-- TOGETHER AI -->
   <div class="kyh-card">
     <div class="kyh-card-header">
-      <img src="images/icon-together.png" class="kyh-card-icon" onerror="this.style.display='none'">
+      <img src="images/icon-together.png" class="kyh-card-icon" data-hide-on-error>
       <div>
         <div class="kyh-card-name">Together AI</div>
         <div class="kyh-card-model" data-seed-model="together">meta-llama/Llama-3.3-70B-Instruct-Turbo</div>
@@ -1027,7 +1027,7 @@
 </div><!-- /.doc-layout -->
 </div><!-- /page-main -->
 
-<div class="finish-modal-overlay" id="openSourceModal" onclick="if(event.target===this)this.classList.remove('active')">
+<div class="finish-modal-overlay" id="openSourceModal" data-action="modal-backdrop-close">
   <div class="finish-modal goal-info-modal">
     <div class="goal-info-icon">
       <img src="images/WaxFrame_InfoButton_v1.png" alt="" class="helper-info-img">
@@ -1045,7 +1045,7 @@
       </div>
       <p class="goal-info-tip">Your API keys go directly from your browser to each AI provider, with one exception: Claude traffic routes through a small Cloudflare Worker (no CORS support from Anthropic) that does not log keys or prompts. See the API Setup page for the full disclosure. Read our <a href="privacy.html" class="link-accent">Privacy Policy</a> and <a href="terms.html" class="link-accent">Terms of Use</a>, or <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">read the source on GitHub<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></p>
     </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
+    <button class="finish-modal-cancel" data-action="modal-close" data-target="openSourceModal">Got it →</button>
   </div></div>
 
 <!-- ========================================================
@@ -1055,20 +1055,20 @@
      ======================================================== -->
 <div class="page-footer page-footer-unified">
   <div class="page-footer-actions">
-    <button class="btn" onclick="downloadPageAsDocx()" title="Download this page as a Word document (.docx) with images — opens in Word, Google Docs, or LibreOffice">⬇ Download as Word</button>
-    <button class="btn" onclick="toggleGuideConsoles()" title="Open a list of provider key pages">🔑 Get API keys</button>
+    <button class="btn" data-action="doc-download" title="Download this page as a Word document (.docx) with images — opens in Word, Google Docs, or LibreOffice">⬇ Download as Word</button>
+    <button class="btn" data-action="consoles-toggle" title="Open a list of provider key pages">🔑 Get API keys</button>
   </div>
   <div class="page-footer-center"></div>
   <div class="page-footer-right">
     <span class="license-badge" id="licenseBadge" title="License status"></span>
-    <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+    <button class="footer-about-btn" data-action="modal-open" data-target="aboutModalHelper">ℹ️ About</button>
   </div></div>
 
 <!-- ========================================================
      ABOUT MODAL — helper-page version. Metadata only.
      Navigation lives in the hamburger menu, not here.
      ======================================================== -->
-<div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
+<div class="finish-modal-overlay" id="aboutModalHelper" data-action="modal-backdrop-close">
   <div class="finish-modal goal-info-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="about-modal-logo">
     <h2 class="finish-modal-title">WaxFrame</h2>
@@ -1082,7 +1082,7 @@
       <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
     </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
+    <button class="finish-modal-cancel" data-action="modal-close" data-target="aboutModalHelper">Got it →</button>
   </div>
 </div>
 <!-- ========================================================
@@ -1090,46 +1090,47 @@
      Mirrors in-app license modals for parity. License pill in
      footer-right toggles between these via license-helper.js.
      ======================================================== -->
-<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+<div class="license-modal-overlay" id="licenseModal" data-action="license-modal-backdrop-close">
   <div class="license-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
     <h2 class="license-modal-title">WaxFrame Pro</h2>
     <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
-    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" data-key-action="license-submit-on-enter">
     <div class="license-modal-error" id="licenseKeyError"></div>
-    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <button class="license-modal-btn" id="licenseSubmitBtn" data-action="license-submit">Unlock Pro</button>
     <a class="license-modal-buy external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>
-    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+    <button class="finish-modal-cancel" data-action="license-modal-hide">← Not now</button>
   </div>
 </div>
 
-<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+<div class="license-modal-overlay" id="licenseManageModal" data-action="license-manage-modal-backdrop-close">
   <div class="license-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
     <h2 class="license-modal-title">Manage License</h2>
     <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
     <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
     <div class="license-modal-actions">
-      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
-      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+      <button class="license-modal-btn-secondary" data-action="license-replace">Replace Key</button>
+      <button class="license-modal-btn-danger" data-action="license-remove-confirm">Remove Key</button>
     </div>
-    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+    <button class="finish-modal-cancel" data-action="license-manage-modal-hide">← Close</button>
   </div>
 </div>
 
 
-<script src="js/theme.js?v=3.63.348"></script>
-<script src="lib/docx.min.js?v=3.63.348"></script>
-<script src="js/docx-export.js?v=3.63.348"></script>
-<script src="js/nav-helper.js?v=3.63.348"></script>
-<script src="js/license-helper.js?v=3.63.348"></script>
-<script src="js/api-links.js?v=3.63.348"></script>
-<script src="js/version.js?v=3.63.348"></script>
-<script src="js/docs-scrollspy.js?v=3.63.348"></script>
+<script src="js/theme.js?v=3.63.349"></script>
+<script src="lib/docx.min.js?v=3.63.349"></script>
+<script src="js/docx-export.js?v=3.63.349"></script>
+<script src="js/nav-helper.js?v=3.63.349"></script>
+<script src="js/license-helper.js?v=3.63.349"></script>
+<script src="js/helper-handlers.js?v=3.63.349"></script>
+<script src="js/api-links.js?v=3.63.349"></script>
+<script src="js/version.js?v=3.63.349"></script>
+<script src="js/docs-scrollspy.js?v=3.63.349"></script>
 <!-- v3.63.286 — api.js calls WFProviderCatalog.buildApiConfigs() at module eval; provider-models.js + provider-catalog.js must load first. -->
-<script src="js/provider-models.js?v=3.63.348"></script>
-<script src="js/provider-catalog.js?v=3.63.348"></script>
-<script src="js/api.js?v=3.63.348"></script>
+<script src="js/provider-models.js?v=3.63.349"></script>
+<script src="js/provider-catalog.js?v=3.63.349"></script>
+<script src="js/api.js?v=3.63.349"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
   // v3.57.0 — derive displayed model names from the live API_CONFIGS seeds

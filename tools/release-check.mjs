@@ -514,7 +514,7 @@ const INLINE_HANDLER_BUDGET = {
   'ai-business-proposal.html':    0, // migrated in v3.63.348
   'ai-cover-letter-editor.html':  0, // migrated in v3.63.348
   'ai-resume-review.html':        0, // migrated in v3.63.348
-  'api-details.html':            55,
+  'api-details.html':             0, // migrated in v3.63.349
   'document-playbooks.html':      0, // migrated in v3.63.348
   'help.html':                    0,
   'hive-profiles.html':           0, // migrated in v3.63.348
