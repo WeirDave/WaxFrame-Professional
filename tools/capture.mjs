@@ -83,7 +83,48 @@ const SESSION_SEED = {"round": 2, "phase": "refine", "history": [{"round": 1, "p
 // rendering paths. The earlier --only-work flag is still accepted as an
 // alias for --smoke (back-compat with v3.63.341's workflow shape during
 // transition, can be dropped in a future release).
+// v3.63.355 — Helper-page smoke shots. The v3.63.347→v3.63.353 strict-CSP
+// migration rewired every interactive surface on every helper page
+// (closeNavMenu, setTheme, toggleMute, modal open/close, license actions,
+// theme-set, doc-download, image-error fallbacks) from inline on*=
+// attributes to a delegated data-action dispatcher loaded from
+// js/helper-handlers.js. The existing index.html-only smoke had zero
+// coverage of any helper page, so a typo'd data-action or a regression in
+// the dispatcher's ACTIONS table could ship undetected.
+//
+// Five helper-page shots — one per unique surface family — were chosen
+// to cover the full set of patterns the dispatcher exercises:
+//   • start-here.html       → bare nav + theme + about + license shapes
+//                              (the v3.63.347 proof-of-pattern page)
+//   • ai-resume-review.html → adds doc-download (footer Word export)
+//   • hive-profiles.html    → adds the unique modal-backdrop-close with
+//                              explicit data-target (different from the
+//                              self-targeting variant used elsewhere)
+//   • api-details.html      → adds consoles-toggle + data-hide-on-error
+//                              (18 provider-icon error fallbacks)
+//   • prompt-editor.html    → adds the page-specific prompt-* dispatcher
+//                              in js/prompt-editor.js plus call-chain
+//                              and set-data input actions
+//
+// Each shot asserts:
+//   1. helper-handlers.js completed its DOMContentLoaded init (every
+//      .app-version-stamp has been filled with APP_VERSION — proves the
+//      script downloaded, parsed, and ran without throwing).
+//   2. Zero exceptions fired during page load (captured via
+//      Runtime.exceptionThrown; any uncaught error fails the shot).
+//   3. The nav-open data-action delegation works (programmatic click on
+//      the hamburger flips .nav-panel to .open — proves the click
+//      dispatcher walks up and finds the ACTIONS entry).
+const HELPER_PAGES = [
+  { base: 'helper-start-here',    page: '/start-here.html' },
+  { base: 'helper-ai-resume',     page: '/ai-resume-review.html' },
+  { base: 'helper-hive-profiles', page: '/hive-profiles.html' },
+  { base: 'helper-api-details',   page: '/api-details.html' },
+  { base: 'helper-prompt-editor', page: '/prompt-editor.html' }
+];
+
 const SHOTS = [
+  ...HELPER_PAGES.map(h => ({ id: 'helper', base: h.base, page: h.page, helper: true, smoke: true })),
   { id: 'screen-welcome',    base: 'welcome',          seed: null,           postReady: null },
   { id: 'screen-bees',       base: 'setup1',           seed: null,           postReady: null },
   { id: 'screen-project',    base: 'setup2',           seed: null,           postReady: null },
@@ -248,6 +289,44 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 await cdp('Page.enable');
 await cdp('Runtime.enable');
 
+// ============ helper-page readiness + assertions (v3.63.355) ============
+// Helper pages don't have goToScreen()/screen-X — they're standalone HTML
+// files where readiness is "helper-handlers.js's DOMContentLoaded init
+// ran". The clearest proof of that is every .app-version-stamp element
+// having had its textContent filled with APP_VERSION (which is what the
+// init does). If those are empty, either the script didn't load or it
+// threw — both are smoke-test failures.
+const HELPER_READY_EXPR = `(function(){
+  try {
+    if (typeof APP_VERSION === 'undefined') return { ready: false, reason: 'no-app-version' };
+    var stamps = document.querySelectorAll('.app-version-stamp');
+    if (stamps.length === 0) return { ready: false, reason: 'no-stamps' };
+    for (var i = 0; i < stamps.length; i++) {
+      if (!stamps[i].textContent || !stamps[i].textContent.trim()) {
+        return { ready: false, reason: 'stamp-' + i + '-empty' };
+      }
+    }
+    return { ready: true };
+  } catch (e) { return { ready: false, reason: 'err:' + e.message }; }
+})()`;
+
+// Programmatic click on the hamburger ([data-action="nav-open"]). After
+// the click, the nav-panel must carry the .open class — that's what
+// nav-helper.js's openNavMenu() applies. If the panel doesn't open, the
+// click dispatcher either didn't fire, walked the wrong way, or
+// nav-helper.js failed to load.
+const HELPER_NAV_OPEN_ASSERT = `(function(){
+  try {
+    var btn = document.querySelector('[data-action="nav-open"]');
+    if (!btn) return { ok: false, reason: 'no-hamburger' };
+    btn.click();
+    var panel = document.getElementById('navPanel');
+    if (!panel) return { ok: false, reason: 'no-nav-panel' };
+    if (!panel.classList.contains('open')) return { ok: false, reason: 'panel-not-open' };
+    return { ok: true };
+  } catch (e) { return { ok: false, reason: 'err:' + e.message }; }
+})()`;
+
 // ============ readiness check (the handshake that beats the race) ============
 function readyExpr(screenId) {
   return `(function(){
@@ -369,9 +448,24 @@ for (const s of shots) {
     const filename = `screenshot_${s.base}_${th}.png`;
     const outFile = path.join(OUT_DIR, filename);
     if (fs.existsSync(outFile)) { try { fs.unlinkSync(outFile); } catch {} }
-    process.stdout.write(`Capturing ${s.base.padEnd(10)} ${th.padEnd(5)} -> ${filename} ... `);
+    process.stdout.write(`Capturing ${s.base.padEnd(22)} ${th.padEnd(5)} -> ${filename} ... `);
 
     let seedId = null;
+    // v3.63.355 — Helper-page shots capture exceptions during page load so
+    // any uncaught error fails the shot. The handler is attached per-shot
+    // and detached in the finally block so events from one shot can't
+    // contaminate another. Non-helper shots skip this — index.html boots
+    // a much larger code surface and would need its own exception
+    // baseline, out of scope for this round.
+    const shotExceptions = [];
+    let offException = null;
+    if (s.helper) {
+      offException = onEvent('Runtime.exceptionThrown', (params) => {
+        const det = params && params.exceptionDetails;
+        const msg = det && (det.text || (det.exception && det.exception.description) || 'unknown');
+        shotExceptions.push(msg);
+      });
+    }
     try {
       // DEFENSIVE: clear all state from any prior shot so seeds can't bleed forward.
       // (We're already on the origin from the previous loop iteration or the initial
@@ -386,8 +480,59 @@ for (const s of shots) {
       }
 
       const loadP = waitForEvent('Page.loadEventFired', 15000);
-      await cdp('Page.navigate', { url: `http://127.0.0.1:${SERVER_PORT}/index.html` });
+      const targetUrl = s.page
+        ? `http://127.0.0.1:${SERVER_PORT}${s.page}`
+        : `http://127.0.0.1:${SERVER_PORT}/index.html`;
+      await cdp('Page.navigate', { url: targetUrl });
       await loadP;
+
+      // v3.63.355 — Helper-page flow: set the theme on the page (helper
+      // pages source theme.js, so setTheme exists), poll the version-stamp
+      // readiness, then assert delegation works. No goToScreen — helper
+      // pages don't have screens.
+      if (s.helper) {
+        try { await cdp('Runtime.evaluate', {
+          expression: `(function(){ try { if (typeof setTheme === 'function') setTheme(${JSON.stringify(th)}); } catch(e){} })()`,
+          awaitPromise: false
+        }); } catch {}
+
+        const deadline = Date.now() + 12000;
+        let ready = false, lastReason = 'never-evaluated';
+        while (Date.now() < deadline) {
+          const r = await cdp('Runtime.evaluate', { expression: HELPER_READY_EXPR, returnByValue: true });
+          const v = r?.result?.value;
+          if (v?.ready) { ready = true; break; }
+          lastReason = v?.reason || 'unknown';
+          await sleep(100);
+        }
+        if (!ready) {
+          console.log(`FAILED (helper-not-ready: ${lastReason})`);
+          fail++;
+          continue;
+        }
+        if (shotExceptions.length) {
+          console.log(`FAILED (uncaught exception during load: ${shotExceptions[0].split('\n')[0]})`);
+          fail++;
+          continue;
+        }
+        // Nav-open delegation assertion. If this fails, the data-action
+        // click dispatcher in js/helper-handlers.js is broken.
+        const navR = await cdp('Runtime.evaluate', { expression: HELPER_NAV_OPEN_ASSERT, returnByValue: true });
+        const navV = navR?.result?.value;
+        if (!navV?.ok) {
+          console.log(`FAILED (nav-open delegation: ${navV?.reason || 'unknown'})`);
+          fail++;
+          continue;
+        }
+        await sleep(150);
+        const shot = await cdp('Page.captureScreenshot', { format: 'png' });
+        const buf = Buffer.from(shot.data, 'base64');
+        fs.writeFileSync(outFile, buf);
+        const kb = Math.round(buf.length / 1024);
+        console.log(`OK (${kb} KB)`);
+        ok++;
+        continue;
+      }
 
       // Re-drive + poll readiness. The instant the page proves it's on the
       // target screen with content rendered, we capture.
@@ -434,6 +579,8 @@ for (const s of shots) {
     } finally {
       // Always remove the seed so the next shot starts fresh.
       await removeSeedScript(seedId);
+      // v3.63.355 — Detach the per-shot exception listener.
+      if (offException) offException();
     }
   }
 }

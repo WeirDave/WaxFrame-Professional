@@ -2,6 +2,54 @@
 
 ---
 
+## v3.63.355
+
+**CI smoke expansion: 5 new shots cover every migrated helper-page family · proves the strict-CSP delegation pipeline end-to-end · smoke goes from 4 shots → 9**
+
+Build: `20260614-013`<br>
+Released: `2026-06-14`
+
+### What changed
+
+The v3.63.347 → v3.63.353 strict-CSP migration rewired every interactive surface on every helper page from inline `on*=` attributes to a delegated `data-action` dispatcher loaded from `js/helper-handlers.js`. Release-check + JS syntax check pass on every file, but until this release there was zero browser-level coverage of any helper page. A typo'd `data-action` value or a regression in the dispatcher's `ACTIONS` table could ship undetected.
+
+**Five new shots in `tools/capture.mjs`** — one per unique helper-page surface family:
+
+| Shot                   | Page                        | What it exercises |
+| ---------------------- | --------------------------- | ----------------- |
+| `helper-start-here`    | `start-here.html`           | Bare nav + theme + about + license shapes (the v3.63.347 proof-of-pattern page) |
+| `helper-ai-resume`     | `ai-resume-review.html`     | Adds `doc-download` (footer Word export) |
+| `helper-hive-profiles` | `hive-profiles.html`        | Adds the explicit-`data-target` `modal-backdrop-close` variant |
+| `helper-api-details`   | `api-details.html`          | Adds `consoles-toggle` + `data-hide-on-error` (18 provider-icon error fallbacks) |
+| `helper-prompt-editor` | `prompt-editor.html`        | Adds the per-page `prompt-*` dispatcher in `js/prompt-editor.js` + `call-chain` / `set-data` input actions |
+
+**Each shot asserts three things:**
+
+1. **`helper-handlers.js`'s DOMContentLoaded init ran.** Readiness condition is "every `.app-version-stamp` element has been filled with `APP_VERSION`". If those are empty, either the script failed to load (network / CSP block / 404) or it threw mid-init — both are smoke-test failures.
+2. **Zero uncaught exceptions during page load.** A new `Runtime.exceptionThrown` listener is attached per-shot (and detached in `finally`); any captured exception fails the shot with the first exception's message. Catches dispatcher errors, missing `typeof X === 'function'` guards, ESM module load failures, etc.
+3. **Nav-open data-action delegation works.** Programmatic click on `[data-action="nav-open"]` (the hamburger); asserts `.nav-panel` carries the `.open` class afterward. If the panel doesn't open, the click dispatcher either didn't fire, walked the wrong way, or `nav-helper.js` failed to load.
+
+**Run time:** smoke went from 4 shots (~45-75s on cold CI) to 9 shots (~90-135s). Comfortably under the 8-minute job timeout. Verified locally: all 9 pass on Chrome headless.
+
+### Why these five pages
+
+Each one adds a unique handler shape to the test surface:
+
+- `start-here.html` covers the baseline (nav, theme, mute, about modal, license modal, key-on-Enter).
+- `ai-resume-review.html` adds `doc-download` — the same shape used on 8 other helper pages, so a single shot covers the whole family.
+- `hive-profiles.html` is the only helper that uses `modal-backdrop-close` with an explicit `data-target` (the others use the self-targeting fallback).
+- `api-details.html` is the only helper that exercises `consoles-toggle` AND has 18 `data-hide-on-error` provider-icon `<img>` tags.
+- `prompt-editor.html` is the only helper with a page-specific dispatcher (`js/prompt-editor.js`'s `ACTIONS` + `INPUT_ACTIONS` for the `prompt-*` namespace).
+
+The other 11 helper pages share their handler surface with one of these five — covering them too would be redundant for regression detection while doubling the smoke wall-clock.
+
+### Files touched
+
+- [tools/capture.mjs](tools/capture.mjs) — `HELPER_PAGES` list; `HELPER_READY_EXPR` + `HELPER_NAV_OPEN_ASSERT` page-evaluated expressions; per-shot `Runtime.exceptionThrown` capture; helper-page branch in the capture loop
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps
+
+---
+
 ## v3.63.354
 
 **Docs: add AI-readable plain-text conversion of the user manual to `docs/`**
