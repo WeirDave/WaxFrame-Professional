@@ -5567,6 +5567,12 @@ kbd {
   border-radius: var(--radius-sm);
   padding: var(--space-10) var(--space-12);
 }
+.goal-info-row--cost {
+  background: rgba(247, 195, 64, 0.08);
+  border-radius: 8px;
+  padding: var(--space-12) var(--space-14);
+  margin: 0 0 var(--space-14);
+}
 .info-label {
   font-size: 10px;
   font-weight: 800;
@@ -5580,6 +5586,10 @@ kbd {
   background: var(--accent-dim);
   border: 1px solid var(--accent);
   color: var(--accent);
+}
+.info-label-note {
+  font-weight: 400;
+  opacity: 0.7;
 }
 .about-modal-subtitle {
   font-size: var(--fs-11);
@@ -8712,6 +8722,9 @@ kbd {
   gap: var(--space-4);
   max-width: 60ch;
 }
+.settings-row-label--full {
+  width: 100%;
+}
 .settings-row-name {
   font-size: var(--fs-base);
   font-weight: 700;
@@ -8721,6 +8734,9 @@ kbd {
   font-size: var(--fs-sm);
   color: var(--text-dim);
   line-height: 1.5;
+}
+.settings-row-help--strong {
+  font-weight: 600;
 }
 /* v3.63.301 — Inline link inside .settings-row-help. Used by the
    Concurrency overrides section to deep-link each row to the provider's
