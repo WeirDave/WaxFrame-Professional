@@ -2,6 +2,91 @@
 
 ---
 
+## v3.63.364
+
+**Phase 8 surface 4: per-AI-row hive card body — every model swap, key field, Test button, AI variant, builder pick, model select, row toggle, custom-AI checkbox, Why? expander, and bees-sidebar jump migrated to `data-action` delegation**
+
+Build: `20260614-022`<br>
+Released: `2026-06-14`
+
+### Why this release
+
+Surface 4 is the biggest single chunk of the Phase 8 migration. The per-AI-row hive card body carries 21 source-position inline handlers (rendered N times across every AI row in the hive grid) covering every interactive surface inside a row. After this release the only remaining template-string inline handlers in `js/app.js` are the holdout/conflict decision UI (surface 5, 14 source positions).
+
+### Dispatcher additions
+
+The dispatcher in [js/helper-handlers.js](js/helper-handlers.js) grew two more capabilities to support the per-AI-row's shape:
+
+1. **Prefixed `data-fn` / `data-args` lookup for KEY_ACTIONS** — When the same element carries both a click handler (e.g. `wfModelSelectToggle(el, event)`) and a keydown handler (e.g. `wfModelSelectKey(el, event)`) and both use `call-multi`, the dispatcher needs distinct fn names for each event. `key-call-multi` now reads `data-fn-key` and `data-args-key` before falling back to the generic `data-fn` / `data-args`. The mechanism is general: future event types can each carry their own prefixed override.
+
+2. **`data-prevent="1"` opt-in** — Parallel to the existing `data-stop="1"`. Calls `e.preventDefault()` after the dispatched function returns. Used by the bees-sidebar jump-link, which is an `<a>` with `href="#airow-…"` (changed from `href="javascript:void(0)"` for CSP cleanliness) so the dispatcher fires `jumpToAISetupRow` and the native hash navigation is suppressed.
+
+### What changed
+
+Per-AI-row body — 21 source-position handlers migrated:
+
+| Element | Before | After |
+|---|---|---|
+| Model-select option (custom dropdown) | `onclick="wfModelSelectPick(this, event)"` | `data-action="call-multi" data-fn="wfModelSelectPick" data-args="this,event" data-stop="1"` |
+| Top-of-file Recommend Models button | `onclick="recheckModelForAI('${aiId}')"` | `data-action="call" data-fn="recheckModelForAI" data-arg="${aiId}"` |
+| Model-select combobox toggle | `onclick="wfModelSelectToggle(this, event)"` + `onkeydown="wfModelSelectKey(this, event)"` | `data-action="call-multi" data-fn="wfModelSelectToggle"` + `data-key-action="key-call-multi" data-fn-key="wfModelSelectKey"` (prefixed lookup) |
+| 6-card hive pick (click) | `onclick="swapAIModelFromHiveCard('${id}', '${pick}'); event.stopPropagation();"` | `data-action="call-multi" data-fn="swapAIModelFromHiveCard" data-args="data:aiId,data:pickModel" data-stop="1"` |
+| 6-card hive pick (keyboard) | `onkeydown="if(event.key==='Enter'\|\|event.key===' '){…swap…}"` | `data-key-action="key-call-multi" data-fn-key="__wfHiveCardSwapKey"` (shim filters Enter/Space) |
+| Why-each-pick toggle | `onclick="event.stopPropagation(); toggleHiveWhy('${id}');"` | `data-action="call" data-fn="toggleHiveWhy" data-arg="${id}" data-stop="1"` |
+| Stale-mode compact select | `onclick="event.stopPropagation();"` | `data-action="noop"` |
+| Live compact model select (click) | `onclick="event.stopPropagation();"` | `data-action="noop"` |
+| Live compact model select (change) | `onchange="saveModelForAI('${id}', this.value); renderAISetupGrid(); event.stopPropagation();"` | `data-change-action="call-multi" data-fn="swapAIModelFromHiveCard" data-args="data:aiId,value" data-stop="1"` (the swap fn already does save + render) |
+| Custom-AI bulk-select checkbox | `onchange="toggleCustomSelection(…)" onclick="event.stopPropagation();"` | `data-action="noop" data-change-action="call-multi" data-fn="toggleCustomSelection" data-args="data:aiId,checked" data-stop="1"` |
+| Per-row Recommend Models button | `onclick="recheckModelForAI('${id}')"` | `data-action="call" data-fn="recheckModelForAI" data-arg="${id}"` |
+| Add AI variant | `onclick="addAIVariant('${id}'); event.stopPropagation();"` | `data-action="call" data-fn="addAIVariant" data-arg="${id}" data-stop="1"` |
+| Remove AI variant | `onclick="removeAIVariant('${id}'); event.stopPropagation();"` | `data-action="call" data-fn="removeAIVariant" data-arg="${id}" data-stop="1"` |
+| API key input (Enter saves) | `onkeydown="if(event.key==='Enter'){saveKeyForAI('${id}',this.value,this);}"` + click stop | `data-action="noop"` + `data-key-action="key-call-multi" data-fn-key="__wfSaveKeyOnEnter"` (shim — 3-arg `(id, value, el)` can't fit the dispatcher's 2-arg conventions) |
+| Eye toggle (show/hide key) | `onclick="toggleKeyVis('${id}'); event.stopPropagation();"` | `data-action="call" data-fn="toggleKeyVis" data-arg="${id}" data-stop="1"` |
+| Clear key | `onclick="clearKeyForAI('${id}'); event.stopPropagation();"` | `data-action="call" data-fn="clearKeyForAI" data-arg="${id}" data-stop="1"` |
+| Test API key | `onclick="testApiKey('${id}'); event.stopPropagation();"` | `data-action="call" data-fn="testApiKey" data-arg="${id}" data-stop="1"` |
+| Builder button (active) | `onclick="event.stopPropagation(); event.preventDefault(); return false;"` | `data-action="noop"` |
+| Builder button (incapable) | `onclick="event.stopPropagation(); event.preventDefault(); return false;"` | `data-action="noop"` |
+| Builder button (pickable) | `onclick="event.stopPropagation(); event.preventDefault(); setBuilder('${id}'); renderAISetupGrid(); return false;"` | `data-action="call" data-fn="__wfSetBuilderAndRender" data-arg-this="1" data-stop="1"` (shim chains `setBuilder` + `renderAISetupGrid`) |
+| Manage account link | `onclick="event.stopPropagation();"` | `data-action="noop"` (href still navigates — that's the intended behavior) |
+| Row summary (expand/collapse) | `onclick="toggleAISetupRow('${id}')"` | `data-action="call" data-fn="toggleAISetupRow" data-arg="${id}"` |
+| Custom-AI rename button | `onclick="event.stopPropagation(); startCustomAIRename('${id}')"` | `data-action="call" data-fn="startCustomAIRename" data-arg="${id}" data-stop="1"` |
+| Bees-sidebar jump chip | `<a href="javascript:void(0)" onclick="jumpToAISetupRow('${id}')">` | `<a href="#airow-${id}" data-action="call" data-fn="jumpToAISetupRow" data-arg="${id}" data-prevent="1" data-stop="1">` (href changed because `javascript:` is CSP-flagged; data-prevent suppresses the new hash navigation) |
+| setBuilder builder-chip grid | `onclick="setBuilder('${id}'); return false;"` | `data-action="call" data-fn="setBuilder" data-arg="${id}"` |
+
+### Shims added to [js/app-bootstrap.js](js/app-bootstrap.js)
+
+- **`__wfHiveCardSwapKey(el, e)`** — filters Enter/Space, calls `swapAIModelFromHiveCard(el.dataset.aiId, el.dataset.pickModel)`, then preventDefault + stopPropagation.
+- **`__wfSaveKeyOnEnter(el, e)`** — filters Enter, calls `saveKeyForAI(el.dataset.aiId, el.value, el)` (the 3rd-arg `this` is what `saveKeyForAI` writes the validation status DOM into, so it has to be the element itself).
+- **`__wfSetBuilderAndRender(el)`** — chains `setBuilder(el.dataset.aiId)` + `renderAISetupGrid()`.
+
+### Click-test
+
+Live in the preview server. Every migrated control verified with function spies that capture argument types:
+
+- ✅ Prefixed `data-fn` / `data-args` resolution — a synthetic combobox with `call-multi` (click) + `key-call-multi` (keydown) routed click args to fnA(`"click"`,`"fired"`) and key args to fnB(`<div>`,`KeyboardEvent`)
+- ✅ Hive-card swap — click fires `swapAIModelFromHiveCard("chatgpt", "gpt-mini")`; Enter key fires same; key `'a'` is correctly no-op
+- ✅ Row summary toggle — `toggleAISetupRow("chatgpt")` reached with string arg
+- ✅ Model-select dropdown — `wfModelSelectToggle(div, click)`, `wfModelSelectKey(div, keydown {key:'ArrowDown'})`, `wfModelSelectPick(div, click)` with `data-value="gpt-5"`, and `recheckModelForAI("chatgpt")` all routed correctly
+- ✅ Zero inline `on*=` attrs in the rendered row markup
+- ✅ Zero console errors / warnings
+
+### What's NOT in this release
+
+- Holdout / conflict decision UI (`selectHoldout`, `selectDecision`, `selectCustomDecision`, `selectBypassDecision`, `lockConflictDecision`, `scrollToCurrentText`, `applyHoldouts`, `applyDecisions`, `updateHoldoutCustom`, `updateCustomDecision`) — surface 5, the last `js/app.js` chunk
+- `js/api-links.js`, `js/storage.js`, `js/wf-debug.js` template-string inline handlers — surface 6
+- `script-src` re-tighten — surface 7
+
+### Files touched
+
+- [js/app.js](js/app.js) — 21 source positions covering every per-AI-row interactive surface
+- [js/helper-handlers.js](js/helper-handlers.js) — prefixed `data-fn` / `data-args` lookup for `key-call-multi`, `data-prevent="1"` opt-in for `call` / `call-multi`
+- [js/app-bootstrap.js](js/app-bootstrap.js) — three shims (`__wfHiveCardSwapKey`, `__wfSaveKeyOnEnter`, `__wfSetBuilderAndRender`)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: **49 → 14** template-string inline handlers remaining in `js/app.js`.
+
+---
+
 ## v3.63.363
 
 **Phase 8 surface 3: simple-action sweep — settings TOC, concurrency, template gallery, banners, bulk-select, applied-lock, round-history, TKP retest, icon picker, session-bee, bee-dot tooltip, import-server modal, custom-AI builder all migrated to `data-action` delegation**
