@@ -1,5 +1,5 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260614-022
+// Build: 20260614-023
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that
@@ -117,7 +117,7 @@ function _ensureConsolesDrawer() {
       '<span class="notes-drawer-title">🔑 Get an API key</span>' +
       '<span class="notes-drawer-sub">Click a provider to open its key page in a new tab.</span>' +
       '<div class="notes-drawer-actions">' +
-        '<button type="button" title="Close" class="btn btn-accent" onclick="closeConsolesDrawer()">✕ Close</button>' +
+        '<button type="button" title="Close" class="btn btn-accent" data-action="call" data-fn="closeConsolesDrawer">✕ Close</button>' +
       '</div>' +
     '</div>' +
     '<div class="consoles-list" id="consolesList"></div>';
