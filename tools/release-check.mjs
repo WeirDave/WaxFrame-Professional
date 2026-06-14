@@ -489,6 +489,67 @@ for (const lib of LIB_FLOORS) {
   ok(`${lib.name} = ${ver} (floor ${lib.floor})`);
 }
 
+// ── Check 8: Inline-handler budget (strict-CSP migration ratchet) ──
+
+section('Inline event-handler budget (strict-CSP migration ratchet)');
+
+// The strict-CSP migration (started in v3.63.347) tightens script-src to
+// drop 'unsafe-inline'. Every inline on*= attribute (onclick, oninput,
+// onkeydown, …) must be replaced with addEventListener / data-action
+// delegation before the directive can be removed.
+//
+// This check is a ratchet: per-file budgets fixed below, releases can
+// only HOLD or DECREASE them, never increase. The budget for a migrated
+// file is 0 — adding back any inline handler fails CI. New HTML files
+// must be added to the table with budget 0, no exceptions.
+//
+// To update after a migration release: re-run this check, copy the
+// reported actual counts into INLINE_HANDLER_BUDGET below for any file
+// whose count went down. A file at 0 is "strict-CSP-clean" and forms
+// part of the implicit allowlist for the eventual script-src
+// tightening.
+
+const INLINE_HANDLER_BUDGET = {
+  'ai-api-pricing.html':         34,
+  'ai-business-proposal.html':   35,
+  'ai-cover-letter-editor.html': 35,
+  'ai-resume-review.html':       35,
+  'api-details.html':            55,
+  'document-playbooks.html':     33,
+  'help.html':                    0,
+  'hive-profiles.html':          35,
+  'index.html':                 396,
+  'privacy.html':                33,
+  'prompt-editor.html':          51,
+  'start-here.html':              0, // migrated in v3.63.347
+  'templates.html':              32,
+  'terms.html':                  33,
+  'waxframe-user-manual.html':   33,
+  'what-are-tokens.html':        36
+};
+
+const INLINE_HANDLER_RE = /\son(click|input|change|keydown|keyup|keypress|submit|focus|blur|mousedown|mouseup|mouseover|mouseout|wheel|load|error)\s*=/gi;
+
+for (const file of htmlFiles) {
+  const r = rel(file);
+  const content = read(file);
+  const count = (content.match(INLINE_HANDLER_RE) || []).length;
+  if (!(r in INLINE_HANDLER_BUDGET)) {
+    fail(r, `new HTML file has no INLINE_HANDLER_BUDGET entry — add one in tools/release-check.mjs (must be 0 for new files post-v3.63.347)`);
+    continue;
+  }
+  const budget = INLINE_HANDLER_BUDGET[r];
+  if (count > budget) {
+    fail(r, `inline on*= handler count regressed: ${count} > budget ${budget}. Migrate the new handlers to data-action / addEventListener (see js/helper-handlers.js for the delegation pattern), or ratchet by reducing other handlers in the same file. Budgets ratchet down only.`);
+  } else if (count < budget) {
+    ok(`${r}: ${count} / budget ${budget} — ratchet budget DOWN to ${count} in tools/release-check.mjs`);
+  } else if (budget === 0) {
+    ok(`${r}: strict-CSP-clean (0 inline handlers)`);
+  } else {
+    ok(`${r}: ${count} / budget ${budget}`);
+  }
+}
+
 // ── Report ──────────────────────────────────────────────────
 
 console.log('');
