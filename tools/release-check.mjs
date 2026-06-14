@@ -550,6 +550,50 @@ for (const file of htmlFiles) {
   }
 }
 
+// ── Check 9: Inline-script count (post-v3.63.352 strict-CSP) ──
+
+section('Inline <script> count (strict-CSP migration ratchet)');
+
+// v3.63.352 finished extracting every page-specific inline <script>
+// block to external js/*.js files. The only inline script that
+// remains is the v3.63.345 pre-paint head guard (clickjacking class
+// hook + CSP-violation ring-buffer listener) which MUST stay inline
+// because any external file load gives an attacker a window of
+// visible-but-clickable UI before the guard runs. When 'unsafe-
+// inline' drops from script-src that head block will be pinned by
+// a 'sha256-' entry in the directive.
+//
+// Until then, this check enforces the invariant: every HTML page
+// has exactly ONE inline <script> content block (the head guard).
+// Any new inline block introduced after v3.63.352 fails CI per
+// this check, forcing the author to extract it before merge.
+
+const SCRIPT_OPEN_TAG = /<script(\s[^>]*)?>/gi;
+// Strip <!-- ... --> comments first so example markup inside an HTML
+// comment doesn't get counted as a real inline script. Multiline-safe.
+const stripComments = (text) => text.replace(/<!--[\s\S]*?-->/g, '');
+
+for (const file of htmlFiles) {
+  const r = rel(file);
+  const content = stripComments(read(file));
+  let inlineCount = 0;
+  let m;
+  SCRIPT_OPEN_TAG.lastIndex = 0;
+  while ((m = SCRIPT_OPEN_TAG.exec(content)) !== null) {
+    const attrs = m[1] || '';
+    if (/\bsrc\s*=/.test(attrs)) continue;             // external <script src=...>
+    if (/\btype\s*=\s*["']application\/ld\+json["']/i.test(attrs)) continue; // JSON-LD data, not executable
+    inlineCount++;
+  }
+  if (inlineCount === 0) {
+    fail(r, `expected exactly 1 inline <script> (the v3.63.345 head guard); found 0 — the clickjacking + CSP-violation listener went missing`);
+  } else if (inlineCount === 1) {
+    ok(`${r}: 1 inline <script> (the head guard)`);
+  } else {
+    fail(r, `expected exactly 1 inline <script> (the v3.63.345 head guard); found ${inlineCount}. v3.63.352 extracted every other inline block to external js/*.js files — extract any new inline content the same way before merging.`);
+  }
+}
+
 // ── Report ──────────────────────────────────────────────────
 
 console.log('');
