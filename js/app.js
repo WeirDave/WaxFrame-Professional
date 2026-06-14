@@ -572,12 +572,19 @@ let _lineNumDebounce = null;
 // APP_VERSION lives in version.js — loaded before app.js on every page.
 const BUILD       = '20260612-021';         // build stamp — update each session
 
-// v3.63.61 — Round-counter forensic instrumentation. Every increment site
-// is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
-// Symptom we're tracking: rounds occasionally jump non-monotonically
-// (e.g. 6 -> 13 with no intervening rounds in history). When the bug
-// recurs, the ringBuffer + console.warn trail will show which site(s)
-// fired in the gap. Cheap; can be removed once the root cause is fixed.
+// v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
+// (v3.63.61) as forensic instrumentation for a round-counter bug where
+// rounds occasionally jumped non-monotonically (e.g. 6 → 13 with no
+// intervening rounds in history) — the ringBuffer + console.warn trail
+// pinpoints which call site fires in the gap if the symptom ever recurs.
+// As of v3.63.320 this function is ALSO the single dispatch point for the
+// auto-backup-after-round hook (every round-completion path on app.js
+// already calls _logRoundBump right before incrementing `round`, so the
+// auto-backup rides the same wave). The "can be removed once root cause
+// is fixed" comment that lived here pre-v3.63.342 was stale on both fronts:
+// the auto-backup makes the function load-bearing regardless, and the
+// forensic part is cheap enough to leave in as a safety net against
+// regression of the original symptom. Don't remove this function.
 function _logRoundBump(siteTag) {
   try {
     const from = typeof round === 'number' ? round : null;
