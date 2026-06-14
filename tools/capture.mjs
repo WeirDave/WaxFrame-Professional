@@ -139,7 +139,14 @@ process.on('uncaughtException', (e) => { console.error('FATAL', e); cleanup(1); 
 
 // ============ wait for CDP, get WS URL ============
 async function getWsUrl() {
-  for (let i = 0; i < 60; i++) {
+  // v3.63.344 — Raised iteration budget from 60 (12s) to 300 (60s). The 12s
+  // ceiling flaked on cold GitHub Actions runners (caught first by the CI
+  // smoke job introduced in v3.63.341): Chrome's first-time profile creation
+  // + remote-debugging port bind can drift past 12s on shared CI infra under
+  // load. The poll itself is cheap (one fetch every 200ms), so a 60s budget
+  // gives generous headroom without slowing the happy path — most runs still
+  // resolve in well under a second.
+  for (let i = 0; i < 300; i++) {
     try {
       const r = await fetch(`http://127.0.0.1:${DEBUG_PORT}/json`);
       const tabs = await r.json();
@@ -148,7 +155,7 @@ async function getWsUrl() {
     } catch {}
     await sleep(200);
   }
-  throw new Error('Chrome DevTools endpoint did not become available');
+  throw new Error('Chrome DevTools endpoint did not become available within 60s');
 }
 const wsUrl = await getWsUrl();
 
