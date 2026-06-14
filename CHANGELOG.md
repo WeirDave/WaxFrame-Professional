@@ -2,6 +2,102 @@
 
 ---
 
+## v3.63.363
+
+**Phase 8 surface 3: simple-action sweep — settings TOC, concurrency, template gallery, banners, bulk-select, applied-lock, round-history, TKP retest, icon picker, session-bee, bee-dot tooltip, import-server modal, custom-AI builder all migrated to `data-action` delegation**
+
+Build: `20260614-021`<br>
+Released: `2026-06-14`
+
+### Why this release
+
+Surfaces 1 and 2 (reference-card grid, hive setup grid top-level) shipped clean. This release sweeps the remaining "simple" inline handlers — buttons that wire a single function with at most two args — across many small surfaces in [js/app.js](js/app.js). Each surface is independently small but together they account for ~40 template-string inline handlers, so bundling them keeps the release ceremony tractable.
+
+The work in this release is partly **dispatcher extension** and partly **migration**. To keep the surface 3 sweep clean without exploding the shim count, the delegated event dispatcher in [js/helper-handlers.js](js/helper-handlers.js) grows three new actions plus an opt-in stopPropagation flag.
+
+### Dispatcher additions
+
+1. **`call-multi`** — generic multi-arg call. Reads `data-args` as a comma-separated arg spec; each token resolves positionally:
+   - `value` → `el.value`
+   - `checked` → `el.checked`
+   - `this` → `el`
+   - `event` → event
+   - `data:<key>` → `el.dataset[<key>]` (string)
+   - `data-num:<key>` → `Number(el.dataset[<key>])` (numeric arg)
+   - `lit:<s>` → literal string after `lit:`
+   - `lit-num:<n>` → `Number(<n>)` (numeric literal)
+
+   Available on `data-action`, `data-input-action`, and `data-change-action`.
+
+2. **`scroll-to`** — replaces inline `onclick="document.getElementById('X').scrollIntoView(...)"`. Reads `data-target`; smooth-scrolls into view; preventDefault on `<a>` elements so the href doesn't trigger a hash navigation.
+
+3. **`remove-element`** — replaces inline `onclick="document.getElementById('X').remove()"`. Detaches the target node from the DOM. `data-target="self"` detaches the element itself.
+
+4. **`data-stop="1"` opt-in** — added to both `call` and `call-multi` callbacks. Set on an element to call `e.stopPropagation()` after the dispatched function returns. Needed where a global document-level click listener (e.g. `wfModelSelectCloseAll` at [js/app.js:391](js/app.js:391)) would otherwise pick up the click.
+
+### What changed
+
+| Surface | Handlers migrated | Notes |
+|---|---|---|
+| Settings TOC sidebar links | 1 | Now `data-action="scroll-to"` — uses new dispatcher action, drops the multi-statement inline expression |
+| Concurrency-override input | 1 | `call-multi` with `data:base,value` spec |
+| Template gallery — path picker | 3 | `selectTemplatePath` × 3 paths (scratch / refine / custom) |
+| Template gallery — "Change" link | 1 | `resetTemplatePath` |
+| Template gallery — custom toolbar | 3 | `newBlankTemplate`, `importCustomTemplate`, `setCustomTemplateSort` (via `<select>` onchange) |
+| Template gallery — Quick Start CTAs | 3 | `applyTemplate('quick-start', 'scratch')` × 3 sites |
+| Template gallery — per-card apply | 1 (rendered N) | `call-multi` with `data:tpl,data:path` per card |
+| Template gallery — custom-card actions | 4 (rendered N) | export / duplicate / edit / delete (one `data-action="call"` per button; stopPropagation dropped — the original was guarding against a non-existent parent listener) |
+| Template gallery — sidebar links + rename | 2 | `scroll-to` for category jump; `call` for rename |
+| Source-size-check banner | 2 | `copySourceToReferenceMaterial`, `dismissSourceSizeCheck` |
+| Bulk-select bar | 3 | `selectAllCustoms`, `selectNoneCustoms`, `bulkRemoveSelectedAIs` |
+| Applied changes — bulk Lock/Unlock | 2 | `call-multi` with `data-num:round` to preserve the numeric round-id (strict `===` lookup in history) |
+| Applied changes — per-line lock | 2 | `call-multi` with `data-num:round,data-num:idx` |
+| Round history modal | 5 | `viewRoundDoc`, `restoreRound` × 2 sites, `copyActiveHistTab`, modal close via `remove-element` |
+| TKP retest button | 1 | `retestSingleKey` |
+| Icon picker tiles | 1 (rendered N) | `_iconPickerSelect`; `onerror="this.style.opacity=…"` swapped to `data-dim-on-error` (already a dispatcher convention) |
+| Session-bee hex toggle | 1 (rendered N) | `call-multi` with `data:aiId,checked` |
+| Edit-Hive modal toggle | 1 (rendered N) | `__wfEditHiveToggle` shim — chains 2-arg `toggleSessionBee` with no-arg `renderBeeDotStrip`, doesn't fit `call-chain` or a single `call-multi` |
+| Bee-dot tooltip (mouseenter/leave/focus/blur) | 4 inline attrs → 0 | Attached imperatively in `renderBeeDotStrip` post-`innerHTML` pass. mouseenter/leave/focus/blur don't bubble; the global dispatcher can't catch them. Listeners GC with the strip's old nodes on next rebuild. |
+| Import-server modal items | 3 (rendered N) | checkbox onchange → `call`, icon button → `call`, nickname input → `call` with `data-arg-this="1"` |
+| Import-server icon `onerror` | 1 (rendered N) | swapped to `data-dim-on-error` |
+| Custom-AI builder buttons | 3 | The two dead variants (`is-active`, `is-incapable`) now `data-action="noop"` (dispatcher's noop runs `e.stopPropagation()`); the pickable variant uses `data-stop="1"` to preserve the original `event.stopPropagation()` plus `_cbPickBuilder` |
+
+A `__wfEditHiveToggle` shim was added to [js/app-bootstrap.js](js/app-bootstrap.js) for the Edit-Hive 2-arg-then-no-arg chain — same pattern as the existing `__wfRenameRefDoc` / `__wfUpdateRefDocText` / `__wfAutoFillAndChoose` shims.
+
+### Click-test
+
+Live in the preview server. New dispatcher actions verified end-to-end first, then per-surface spot checks with function spies confirmed correct routing and argument types:
+
+- ✅ `call-multi` — round-trip of `data:`, `data-num:`, `lit:`, `lit-num:` resolved 4 args to correct types
+- ✅ `scroll-to` — `<a>` element with `data-target` triggers `scrollIntoView` on the target div
+- ✅ `remove-element` — target id removed from DOM after click
+- ✅ Template gallery state-1 path picker: `selectTemplatePath("refine")` reached the function with correct arg; rendered markup has 0 `onclick` and 4 `data-action`
+- ✅ Settings TOC: rendered link routes to `scrollIntoView` on the named section
+- ✅ Applied-changes bulk Lock — `lockAllAppliedChanges` received `round=1` as `typeof "number"` (the `===` lookup in history works)
+- ✅ Applied-changes per-line lock — `lockAppliedChange` received `(round=1, idx=0)` both as `typeof "number"`
+- ✅ Round-history close button: removes `#histDocModal` from DOM
+- ✅ Bulk-select: all three buttons (`selectAllCustoms`, `selectNoneCustoms`, `bulkRemoveSelectedAIs`) route correctly
+- ✅ Bee-dot tooltip: dot has zero inline event attrs; `mouseenter` fires `showBeeTooltip(aiId)`, `mouseleave` fires `hideBeeTooltip()`
+- ✅ Zero console errors / warnings
+
+### What's NOT in this release
+
+- Per-AI-row hive card body (model swap onclick+onkeydown, model-select onchange, custom-AI selection checkbox, "Recommend Models" per-row, API key input + eye/clear/Test, AI variants add/remove, toggleHiveWhy, row-summary expand, custom-AI rename, builder pick at [js/app.js:7156](js/app.js:7156), bees-sidebar jump-link) — surface 4
+- Holdout / conflict decision UI (`selectHoldout`, `selectDecision`, `selectCustomDecision`, `selectBypassDecision`, `lockConflictDecision`, `scrollToCurrentText`, `applyHoldouts`, `applyDecisions`, `updateHoldoutCustom`, `updateCustomDecision`) — surface 5
+- `js/api-links.js`, `js/storage.js`, `js/wf-debug.js` template-string inline handlers — surface 6
+- `script-src` re-tighten — final phase 8 release once ratchet hits zero
+
+### Files touched
+
+- [js/app.js](js/app.js) — ~25 source positions covering ~40 rendered inline handlers, all rewritten to `data-action` / `data-input-action` / `data-change-action`
+- [js/helper-handlers.js](js/helper-handlers.js) — new `call-multi`, `scroll-to`, `remove-element` actions, `data-stop="1"` opt-in
+- [js/app-bootstrap.js](js/app-bootstrap.js) — `__wfEditHiveToggle` shim added
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: **89 → 49** template-string inline handlers remaining in `js/app.js`.
+
+---
+
 ## v3.63.362
 
 **Phase 8 surface 2: hive setup grid — top-level controls (mode tabs, header buttons, profile bar) migrated to `data-action` delegation**

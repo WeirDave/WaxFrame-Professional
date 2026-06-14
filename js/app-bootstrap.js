@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app-bootstrap.js
-// Build: 20260614-020
+// Build: 20260614-021
 //  Glue shims for index.html's strict-CSP migration (v3.63.351).
 //
 //  Three inline handlers on the work screen had shapes the generic
@@ -75,5 +75,21 @@
     if (typeof updateReferenceDocText === 'function') {
       updateReferenceDocText(el.dataset.refId, el.value);
     }
+  };
+
+  // ── Edit-Hive modal checkbox (Phase 8, v3.63.363) ─────────────
+  //
+  // The Edit-Hive modal's per-AI toggle ran two functions inline:
+  //   onchange="toggleSessionBee('${ai.id}', this.checked); renderBeeDotStrip();"
+  // First call has 2 args, second is no-arg and needs to fire AFTER —
+  // doesn't fit call-chain (1-arg-per-fn) or a single call-multi. A
+  // shim is cleaner than another dispatcher extension for one composite.
+  //
+  // Wired as: data-change-action="call" data-fn="__wfEditHiveToggle"
+  //           data-arg-this="1" data-ai-id="${ai.id}"
+  window.__wfEditHiveToggle = function(el) {
+    if (!el || !el.dataset) return;
+    if (typeof toggleSessionBee === 'function') toggleSessionBee(el.dataset.aiId, el.checked);
+    if (typeof renderBeeDotStrip === 'function') renderBeeDotStrip();
   };
 })();
