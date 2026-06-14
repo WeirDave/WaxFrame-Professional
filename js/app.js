@@ -3797,7 +3797,7 @@ async function clearProject() {
   // v3.32.1 — Hide the template hint banner; the project being cleared
   // means any previously-applied template's guidance is no longer relevant.
   const _tplBanner = document.getElementById('templateHintBanner');
-  if (_tplBanner) _tplBanner.style.display = 'none';
+  if (_tplBanner) _tplBanner.classList.add('is-hidden');
   const llEl = document.getElementById('lengthLimit'); if (llEl) llEl.value = '';
   const lmEl = document.getElementById('lengthMin');   if (lmEl) lmEl.value = '';
   const luEl = document.getElementById('lengthUnit');  if (luEl) luEl.value = 'characters';
@@ -5097,9 +5097,9 @@ async function applyTemplate(templateId, path) {
         ).join('');
         textEl.innerHTML = `<ul class="template-hint-list">${items}</ul>`;
       }
-      banner.style.display = '';
+      banner.classList.remove('is-hidden');
     } else {
-      banner.style.display = 'none';
+      banner.classList.add('is-hidden');
     }
   }
 
@@ -5196,7 +5196,7 @@ function _applyTemplateHive(tpl, keyedNow, have) {
 // dismissed (different application = different reminder).
 function dismissTemplateHintBanner() {
   const banner = document.getElementById('templateHintBanner');
-  if (banner) banner.style.display = 'none';
+  if (banner) banner.classList.add('is-hidden');
 }
 
 
