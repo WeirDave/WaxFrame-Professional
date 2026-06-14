@@ -2,6 +2,66 @@
 
 ---
 
+## v3.63.340
+
+**Content-Security-Policy meta tag landed on every HTML page · release-check guard ensures it can't silently regress**
+
+Build: `20260613-034`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Closes Codex's Medium-severity "no CSP safety net" finding from the v3.63.338 review. The full strict-CSP migration (move every inline onclick → addEventListener so we can drop `'unsafe-inline'`) is a multi-release effort, but the *current* state — zero CSP — meant any missed XSS sink had full script execution. This release delivers the foundational CSP that any future XSS bug would have to defeat *in addition* to whatever escaping mistake let it in.
+
+**The policy (added to all 16 HTML files via `<meta http-equiv="Content-Security-Policy">`):**
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-inline' 'unsafe-eval';
+style-src 'self' 'unsafe-inline' https:;
+font-src 'self' data: https:;
+img-src 'self' data: blob: https:;
+connect-src 'self' https:;
+worker-src 'self' blob:;
+object-src 'none';
+base-uri 'self';
+form-action 'self';
+upgrade-insecure-requests
+```
+
+**What it allows (current architecture, no regressions):**
+- Inline scripts and inline event handlers (`'unsafe-inline'` on script-src) — the app has thousands of them; tightening requires the migration.
+- `eval` / `new Function` (`'unsafe-eval'`) — vendored libs (mammoth, xlsx) may use these internally.
+- Inline styles, https:// fonts (typekit), https:// images, https:// fetches to any AI provider, blob: workers for pdf.js.
+
+**What it blocks (defense in depth — these were never used):**
+- `<object>`, `<embed>`, `<applet>` injection (`object-src 'none'`).
+- `<base>` tag injection that would redirect every relative URL on the page to an attacker origin (`base-uri 'self'`).
+- Form submission to attacker origins (`form-action 'self'`).
+- HTTP downgrade attempts (`upgrade-insecure-requests`).
+
+Even with `unsafe-inline` allowed, a future XSS bug now has narrower options — it can't quietly exfiltrate via `<form action="https://evil/">`, can't pivot via `<base href="https://evil/">`, can't drop a `<object data="…">`. Real reduction in blast radius, not just security theater.
+
+**Why meta tag instead of HTTP header:** WaxFrame is served from GitHub Pages, which doesn't accept custom response headers. Meta-tag delivery covers most directives — only `frame-ancestors`, `report-uri`, and `report-to` require true headers, none of which work in meta. The clickjacking protection (`frame-ancestors`) is a future item that needs a server-side surface (Cloudflare Pages with `_headers`, or a Worker fronting GitHub Pages).
+
+### Guard rail
+
+Added Check 5 to `tools/release-check.mjs`: every HTML file must carry the CSP meta tag AND must include the four "required" directives (`object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `upgrade-insecure-requests`). A silent removal of the CSP or weakening of those directives now fails the release-check. The existing Check 5 for vendored libraries got renumbered to Check 6.
+
+### What's deferred (still on the list from Codex)
+
+- **Strict CSP migration** — drop `'unsafe-inline'` / `'unsafe-eval'` from script-src after migrating all inline handlers. This is the high-impact follow-up; multi-release.
+- **`frame-ancestors` clickjacking protection** — needs a server-side surface (Pages → Cloudflare with `_headers`, or Worker fronting).
+- **CSP violation reporting** — `report-to` needs an endpoint and HTTP header; future.
+
+### Files touched
+
+- All 16 HTML files — CSP meta tag inserted after the viewport meta tag with an explanatory comment block
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 5 (CSP presence + required directives) added; vendored-floor check renumbered to Check 6
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.339
 
 **Release-check: automated CVE-floor assertion for vendored SheetJS (replaces manual SECURITY.md discipline)**
