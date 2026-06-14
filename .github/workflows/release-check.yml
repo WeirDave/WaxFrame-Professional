@@ -67,3 +67,64 @@ jobs:
 
       - name: Run release-ceremony validator
         run: node tools/release-check.mjs
+
+  # v3.63.341 — Behavior smoke. Closes Codex's Medium-severity "CI validates
+  # release ceremony, not app behavior" finding. tools/capture.mjs is a CDP
+  # driver that seeds a realistic localStorage + IndexedDB session, loads
+  # index.html in headless Chrome, and waits for the work screen to RENDER
+  # (a readiness expression confirms the right screen is visible AND its
+  # content materialized). The PNG it captures is a side effect — the
+  # actual assertion is "did the app boot, parse the seed, and reach a
+  # rendered work screen without throwing." A regression in app boot,
+  # storage parsing, or work-screen render path fails this with exit 1.
+  # --only-work runs a single high-value shot (one theme, work screen)
+  # so the smoke finishes in ~30-60s without exploding CI minutes.
+  smoke:
+    name: Browser behavior smoke (work screen)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Smoke doesn't need history.
+          fetch-depth: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # 22+ required — tools/capture.mjs uses the built-in WebSocket
+          # constructor (no `ws` package, matches project's no-deps stance).
+          node-version: '22'
+
+      - name: Locate Chrome binary
+        id: chrome
+        run: |
+          # GitHub's ubuntu-latest runners ship Google Chrome pre-installed.
+          # Try the common names + the canonical install path before falling
+          # over to apt-installed chromium as a last resort.
+          CHROME=""
+          for candidate in google-chrome-stable google-chrome chromium-browser chromium; do
+            if command -v "$candidate" > /dev/null 2>&1; then
+              CHROME=$(command -v "$candidate")
+              break
+            fi
+          done
+          if [ -z "$CHROME" ] && [ -x /opt/google/chrome/chrome ]; then
+            CHROME=/opt/google/chrome/chrome
+          fi
+          if [ -z "$CHROME" ]; then
+            echo "No Chrome / Chromium binary found on runner — installing chromium-browser"
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq chromium-browser
+            CHROME=$(command -v chromium-browser)
+          fi
+          echo "Using Chrome at: $CHROME"
+          "$CHROME" --version || true
+          echo "path=$CHROME" >> "$GITHUB_OUTPUT"
+
+      - name: Run work-screen behavior smoke
+        run: |
+          mkdir -p /tmp/wf-smoke
+          node tools/capture.mjs "$PWD" "${{ steps.chrome.outputs.path }}" /tmp/wf-smoke dark --only-work
