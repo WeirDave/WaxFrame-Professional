@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.359
+
+**Inline-style cleanup Phase 2: re-extract banner hidden state moved to `.is-hidden`**
+
+Build: `20260614-017`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Continues the safe, one-component-at-a-time inline-style cleanup.
+
+- `#reExtractBanner` now starts hidden with `.is-hidden` instead of `style="display:none"`.
+- `showReExtractBanner()` now reveals/hides the banner by removing/adding `.is-hidden`, preserving the banner's normal CSS `display:flex` rule.
+- The generic `data-action="hide-element"` handler now hides via `.is-hidden`; currently its only caller is the re-extract banner dismiss button.
+- `reExtractWithVision()` hides the banner with `.is-hidden` after a successful re-extract.
+
+### Verification
+
+- Browser check confirmed `#reExtractBanner` starts as `class="reextract-banner is-hidden"`, has no inline `style`, and computes to `display:none`.
+- `node tools/release-check.mjs`
+
+---
+
 ## v3.63.358
 
 **Template hint banner hidden-state migration + cache-bust release stamp**

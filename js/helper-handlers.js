@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260614-016
+// Build: 20260614-017
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -220,10 +220,10 @@
       var t = document.getElementById(el.dataset.target);
       if (t) t.click();
     },
-    //   Hide an element by id by setting style.display = 'none'.
+    //   Hide an element by id using the shared display utility.
     'hide-element': function(el) {
       var t = document.getElementById(el.dataset.target);
-      if (t) t.style.display = 'none';
+      if (t) t.classList.add('is-hidden');
     }
   };
 
