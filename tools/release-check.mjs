@@ -359,6 +359,74 @@ if (!prevTag) {
   }
 }
 
+// ── Check 5: Vendored library version floors ───────────────
+
+section('Vendored library floors (CVE-tracked minimums)');
+
+// For each library, we extract its version from the vendored minified blob
+// and assert it's at or above a known-safe floor. SheetJS specifically is
+// NOT in Dependabot (see SECURITY.md — npm no longer publishes; the canonical
+// source is cdn.sheetjs.com). Pre-v3.63.339, that gap was covered only by
+// manual discipline against the SheetJS advisory page — a process this check
+// replaces with automation.
+//
+// Floors are bumped DELIBERATELY when a new advisory drops — keeping a CVE-
+// tracked floor in code (instead of a wiki page) means the next person to
+// bump a vendored file gets an automatic comparison against the last known
+// safe version. To bump a floor: change the `floor` value below in the same
+// commit that ships the new vendored file.
+
+const LIB_FLOORS = [
+  {
+    file: 'lib/xlsx.full.min.js',
+    name: 'SheetJS xlsx',
+    // SECURITY.md: tracked manually against cdn.sheetjs.com.
+    // Known CVEs that determined this floor:
+    //   • CVE-2023-30533 (Prototype Pollution) — fixed in 0.19.3
+    //   • CVE-2024-22363 (ReDoS in NUMBER parser) — fixed in 0.20.2
+    // 0.20.3 is past both. Bump this floor whenever a newer advisory
+    // applies AND you ship a newer vendored file.
+    floor: '0.20.3',
+    extract: (content) => {
+      // Main XLSX bundle has multiple inner libs each carrying their own
+      // `version:"X.Y.Z"`. The main XLSX version is the only 0.x in the set
+      // (sub-libs cptable / codepages / etc. are 1.x or 2.x).
+      const m = content.match(/version["']?\s*[:=]\s*["'](0\.\d+\.\d+)["']/);
+      return m ? m[1] : null;
+    }
+  }
+];
+
+function cmpVer(a, b) {
+  const pa = a.split('.').map(n => parseInt(n, 10) || 0);
+  const pb = b.split('.').map(n => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const x = pa[i] || 0, y = pb[i] || 0;
+    if (x !== y) return x - y;
+  }
+  return 0;
+}
+
+for (const lib of LIB_FLOORS) {
+  let content;
+  try {
+    content = read(join(ROOT, lib.file));
+  } catch (e) {
+    fail(lib.file, `vendored library missing — release-check expected to find it at this path`);
+    continue;
+  }
+  const ver = lib.extract(content);
+  if (!ver) {
+    fail(lib.file, `${lib.name}: could not extract version from vendored blob — version-detection regex in tools/release-check.mjs may need updating after a library refactor`);
+    continue;
+  }
+  if (cmpVer(ver, lib.floor) < 0) {
+    fail(lib.file, `${lib.name}: vendored version ${ver} is below safety floor ${lib.floor} — known CVEs apply, ship a newer file (SheetJS: cdn.sheetjs.com)`);
+    continue;
+  }
+  ok(`${lib.name} = ${ver} (floor ${lib.floor})`);
+}
+
 // ── Report ──────────────────────────────────────────────────
 
 console.log('');
