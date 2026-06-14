@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260614-022
+// Build: 20260614-023
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -2461,7 +2461,7 @@ function _checkpointSecretHTML(rawValue) {
   const tail = v.length > 4 ? v.slice(-4) : v;
   const maskLen = Math.min(12, Math.max(4, v.length - 4));
   const mask = '•'.repeat(maskLen) + esc(tail);
-  return `<span class="checkpoint-secret"><span class="checkpoint-secret-mask">${mask}</span><span class="checkpoint-secret-real">${esc(v)}</span><button type="button" class="checkpoint-secret-reveal" onclick="toggleCheckpointSecret(event)" title="Show or hide the full value" aria-label="Show or hide the full value">👁</button></span>`;
+  return `<span class="checkpoint-secret"><span class="checkpoint-secret-mask">${mask}</span><span class="checkpoint-secret-real">${esc(v)}</span><button type="button" class="checkpoint-secret-reveal" data-action="call" data-fn="toggleCheckpointSecret" data-arg-event="1" title="Show or hide the full value" aria-label="Show or hide the full value">👁</button></span>`;
 }
 
 /* v3.63.261 — Set a preview-value element from a summarizer's return.

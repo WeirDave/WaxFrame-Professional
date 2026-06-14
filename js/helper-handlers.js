@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260614-022
+// Build: 20260614-023
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -487,11 +487,20 @@
   // must run in the capture phase. data-hide-on-error opts in.
   // data-dim-on-error is the lighter variant (drops to 30% opacity)
   // used on the Import-Server provider thumbnails in index.html.
+  //
+  // v3.63.366 — data-error-fn opt-in. Names a window-scoped function
+  // to call with the element as its sole arg. Used by the AI-icon
+  // fallback in app.js (resolveAiIconFallback) where a missing icon
+  // needs to be replaced with a generated avatar, not just hidden.
   document.addEventListener('error', function(e) {
     var t = e.target;
     if (!t || t.tagName !== 'IMG' || !t.dataset) return;
     if ('hideOnError' in t.dataset) t.style.display = 'none';
     else if ('dimOnError' in t.dataset) t.style.opacity = '0.3';
+    else if (t.dataset.errorFn) {
+      var fn = resolveDotted(t.dataset.errorFn);
+      if (typeof fn === 'function') fn(t);
+    }
   }, true);
 
   // ── Version-stamp init (v3.63.352) ─────────────────────────

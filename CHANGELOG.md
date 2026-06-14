@@ -2,6 +2,80 @@
 
 ---
 
+## v3.63.365
+
+**Phase 8 surfaces 5 + 6 (combined): holdout/conflict decision UI + the last three handlers in api-links.js / storage.js / app.js — all template-string inline handlers now zero**
+
+Build: `20260614-023`<br>
+Released: `2026-06-14`
+
+### Why this release
+
+This is the final migration release in the Phase 8 arc. Surface 5 (holdout/conflict decision UI) and surface 6 (the three stray template-string inline handlers in `js/api-links.js`, `js/storage.js`, and the AI-icon `onerror` in `js/app.js`) ship together because surface 6 is small enough that bundling avoids an extra release ceremony — both surfaces' click-tests exercise different parts of the work screen.
+
+After this release **zero** template-string inline `on*=` handlers remain in any tracked JS file. v3.63.366 (next, separate release) re-tightens `script-src`.
+
+### Dispatcher addition
+
+The error dispatcher in [js/helper-handlers.js](js/helper-handlers.js) grew a `data-error-fn` opt-in. Names a window-scoped function to call with the element as its sole arg when an image fails to load. Used by the AI-icon fallback in app.js (`resolveAiIconFallback`) where a missing icon needs to be replaced with a generated avatar, not just hidden/dimmed.
+
+### Surface 5: holdout/conflict decision UI
+
+15 source positions in `js/app.js` covering the convergence-suggestion (holdout) panel and the user-decision (conflict) panel:
+
+| Element | Before | After |
+|---|---|---|
+| Holdout "Current:" line — scroll-to-doc | `onclick="scrollToCurrentText(window._holdoutAnchors[${i}])"` | `data-action="call" data-fn="__wfScrollToHoldoutAnchor" data-arg-this="1" data-idx="${i}"` — shim does the runtime map lookup |
+| Holdout apply/decline/custom buttons (3) | `onclick="selectHoldout(${i}, 'apply' \| 'decline' \| 'custom', ${total})"` | `data-action="call-multi" data-fn="selectHoldout" data-args="data-num:idx,lit:apply\|decline\|custom,data-num:total"` — mixed numeric + literal arg spec |
+| Holdout custom textarea | `oninput="updateHoldoutCustom(${i}, ${total})"` | `data-input-action="call-multi" data-args="data-num:idx,data-num:total"` |
+| Apply Holdouts button | `onclick="applyHoldouts()"` | `data-action="call" data-fn="applyHoldouts"` |
+| Conflict "Current:" line — scroll-to-doc | `onclick="scrollToCurrentText(window._conflictCurrentTexts[${di}])"` | `data-action="call" data-fn="__wfScrollToConflictCurrent" data-arg-this="1" data-idx="${di}"` — shim does the runtime map lookup |
+| Conflict option buttons | `onclick="selectDecision(${di}, ${oi}, ${total})"` | `data-action="call-multi" data-args="data-num:di,data-num:oi,data-num:total"` |
+| Conflict Custom button | `onclick="selectCustomDecision(${di}, ${total})"` | `data-action="call-multi" data-args="data-num:di,data-num:total"` |
+| Conflict Bypass button | `onclick="selectBypassDecision(${di}, ${total})"` | `data-action="call-multi" data-args="data-num:di,data-num:total"` |
+| Conflict Lock button | `onclick="lockConflictDecision(${di})"` | `data-action="call-multi" data-args="data-num:di"` |
+| Conflict custom textarea | `oninput="updateCustomDecision(${di}, ${total})"` | `data-input-action="call-multi" data-args="data-num:di,data-num:total"` |
+| Apply Decisions buttons (3 sites: churn-mode primary, churn-mode no-lock, default) | `onclick="applyDecisions()"`, `onclick="applyDecisions({ noLock: true })"` | `data-action="call" data-fn="applyDecisions"`, `data-action="call" data-fn="__wfApplyDecisionsNoLock"` — call-multi can't carry an object literal so the no-lock variant is shimmed |
+
+### Shims added to [js/app-bootstrap.js](js/app-bootstrap.js)
+
+- **`__wfScrollToHoldoutAnchor(el)`** — reads `el.dataset.idx`, looks up `window._holdoutAnchors[idx]`, calls `scrollToCurrentText` with the resolved anchor string
+- **`__wfScrollToConflictCurrent(el)`** — same shape for `window._conflictCurrentTexts`
+- **`__wfApplyDecisionsNoLock()`** — calls `applyDecisions({ noLock: true })`
+
+### Surface 6: the last three stragglers
+
+- [js/api-links.js:120](js/api-links.js:120) — `onclick="closeConsolesDrawer()"` → `data-action="call" data-fn="closeConsolesDrawer"`
+- [js/storage.js:2464](js/storage.js:2464) — checkpoint-secret reveal button `onclick="toggleCheckpointSecret(event)"` → `data-action="call" data-fn="toggleCheckpointSecret" data-arg-event="1"`
+- [js/app.js:15844](js/app.js:15844) — AI-icon `<img>` `onerror="resolveAiIconFallback(this)"` → `data-error-fn="resolveAiIconFallback"` (new dispatcher token)
+
+### Click-test
+
+Live in the preview server. Every migrated handler exercised with function spies that capture argument types:
+
+- ✅ Holdout/conflict UI — 10 distinct function calls verified with correct arg types: `scrollToCurrentText("sample text")`, `selectDecision(2,3,5)` (all numbers), `selectCustomDecision(2,5)`, `selectBypassDecision(2,5)`, `lockConflictDecision(2)`, `updateCustomDecision(2,5)`, `applyDecisions({noLock:true})`, `selectHoldout(1,"apply",3)` (mixed num+str+num), `updateHoldoutCustom(1,3)`, `applyHoldouts()`
+- ✅ `toggleCheckpointSecret(Event)` — received an actual Event object via `data-arg-event="1"`
+- ✅ `closeConsolesDrawer()` — fired no-arg
+- ✅ `data-error-fn` — synthetic `<img src="missing.png" data-error-fn="…">` fired the named function with the IMG element after the error event
+- ✅ Zero console errors / warnings
+
+### What's NOT in this release
+
+`script-src` still carries `'unsafe-inline'`. The ratchet is now at zero across all tracked JS files, but actually flipping the CSP directive back to strict (and restoring the head-guard sha256) is the next release — v3.63.366 (Phase 8 close-out).
+
+### Files touched
+
+- [js/app.js](js/app.js) — 15 source positions in holdout/conflict UI + 1 AI-icon `onerror`
+- [js/api-links.js](js/api-links.js) — 1 close-drawer button
+- [js/storage.js](js/storage.js) — 1 checkpoint-secret reveal button
+- [js/helper-handlers.js](js/helper-handlers.js) — `data-error-fn` opt-in on the error dispatcher
+- [js/app-bootstrap.js](js/app-bootstrap.js) — three shims (`__wfScrollToHoldoutAnchor`, `__wfScrollToConflictCurrent`, `__wfApplyDecisionsNoLock`)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: **14 → 0** template-string inline handlers remaining in `js/app.js` (and zero across the entire `js/` tree). Phase 8 migration is complete; CSP re-tighten ships next.
+
+---
+
 ## v3.63.364
 
 **Phase 8 surface 4: per-AI-row hive card body — every model swap, key field, Test button, AI variant, builder pick, model select, row toggle, custom-AI checkbox, Why? expander, and bees-sidebar jump migrated to `data-action` delegation**

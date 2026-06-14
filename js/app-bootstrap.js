@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app-bootstrap.js
-// Build: 20260614-022
+// Build: 20260614-023
 //  Glue shims for index.html's strict-CSP migration (v3.63.351).
 //
 //  Three inline handlers on the work screen had shapes the generic
@@ -140,5 +140,49 @@
     if (!el || !el.dataset) return;
     if (typeof setBuilder === 'function') setBuilder(el.dataset.aiId);
     if (typeof renderAISetupGrid === 'function') renderAISetupGrid();
+  };
+
+  // ── Holdout / conflict decision UI shims (Phase 8, v3.63.365) ──
+  //
+  // Three composite handlers in the holdout / conflict decision panel
+  // need shims:
+
+  // Scroll to a holdout anchor. Original inline:
+  //   onclick="scrollToCurrentText(window._holdoutAnchors[${i}])"
+  // The arg is a runtime lookup into a window-scoped map keyed by
+  // suggestion index. data-arg can carry the index but the map lookup
+  // happens here.
+  //
+  // Wired as: data-action="call" data-fn="__wfScrollToHoldoutAnchor"
+  //           data-arg-this="1" data-idx="${i}"
+  window.__wfScrollToHoldoutAnchor = function(el) {
+    if (!el || !el.dataset) return;
+    var idx = el.dataset.idx;
+    var map = window._holdoutAnchors;
+    var anchor = map && idx != null ? map[idx] : null;
+    if (anchor && typeof scrollToCurrentText === 'function') scrollToCurrentText(anchor);
+  };
+
+  // Scroll to a conflict-card current-text. Original inline:
+  //   onclick="scrollToCurrentText(window._conflictCurrentTexts[${di}])"
+  // Same shape as the holdout-anchor case but a different map.
+  //
+  // Wired as: data-action="call" data-fn="__wfScrollToConflictCurrent"
+  //           data-arg-this="1" data-idx="${di}"
+  window.__wfScrollToConflictCurrent = function(el) {
+    if (!el || !el.dataset) return;
+    var idx = el.dataset.idx;
+    var map = window._conflictCurrentTexts;
+    var text = map && idx != null ? map[idx] : null;
+    if (text && typeof scrollToCurrentText === 'function') scrollToCurrentText(text);
+  };
+
+  // Apply decisions WITHOUT locking. Original inline:
+  //   onclick="applyDecisions({ noLock: true })"
+  // call-multi can't carry an object-literal argument so we shim.
+  //
+  // Wired as: data-action="call" data-fn="__wfApplyDecisionsNoLock"
+  window.__wfApplyDecisionsNoLock = function() {
+    if (typeof applyDecisions === 'function') applyDecisions({ noLock: true });
   };
 })();
