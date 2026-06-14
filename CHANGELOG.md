@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.367
+
+**Inline-style cleanup pass 1: length-constraint range UI (`#lengthMin`, `#lengthRangeSep`) moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-025`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Continues the inline-style cleanup arc that started with v3.63.358 / v3.63.359. The Length-Constraint range-mode controls (the `min` number input and the literal "to" separator between min and max) were initialized with `style="display:none;"` and toggled at runtime via `el.style.display = '' / 'none'` in `setLengthMode()` at [js/app.js:2967](js/app.js:2967).
+
+- HTML: both elements now start hidden via `class="… is-hidden"` instead of `style="display:none;"`.
+- JS: `setLengthMode()` now flips visibility with `classList.toggle('is-hidden', mode !== 'range')` — same semantic, zero inline styles.
+
+### Verified in preview
+
+- Initial state (mode `none`) — both elements carry `.is-hidden` and computed `display: none`, no inline style attribute on either
+- Mode `range` — both elements drop `.is-hidden` and computed display becomes `block`
+- Mode `target` — both elements re-add `.is-hidden` (mode-switch toggle works in both directions)
+
+### Files touched
+
+- [index.html](index.html) — 2 inline `style="display:none"` removed; `.is-hidden` added to the initial class list
+- [js/app.js:2967](js/app.js:2967) — `style.display` flip swapped for `classList.toggle('is-hidden', …)`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 30 → 28 inline `style="display:none*"` attrs remaining (across `index.html`, `templates.html`, `help.html`, and 2 template-literal positions in `js/app.js`).
+
+---
+
 ## v3.63.366
 
 **Phase 8 close-out: script-src strict-CSP RE-TIGHTENED. `'unsafe-inline'` drops; the pre-paint head guard is pinned with sha256. Six releases of Phase 8 migration land.**

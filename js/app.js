@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-024
+// Build: 20260614-025
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-024';         // build stamp — update each session
+const BUILD       = '20260614-025';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2961,11 +2961,12 @@ function setLengthMode(mode) {
     p.classList.toggle('is-active', isActive);
     p.setAttribute('aria-selected', isActive ? 'true' : 'false');
   });
-  // Show/hide range-specific UI (min field + separator)
+  // Show/hide range-specific UI (min field + separator). Uses .is-hidden
+  // so CSP style-src can stay strict — see v3.63.367 inline-style cutover.
   const minEl = document.getElementById('lengthMin');
   const sepEl = document.getElementById('lengthRangeSep');
-  if (minEl) minEl.style.display = (mode === 'range') ? '' : 'none';
-  if (sepEl) sepEl.style.display = (mode === 'range') ? '' : 'none';
+  if (minEl) minEl.classList.toggle('is-hidden', mode !== 'range');
+  if (sepEl) sepEl.classList.toggle('is-hidden', mode !== 'range');
   // Update placeholder on the main field for clarity
   const llEl = document.getElementById('lengthLimit');
   if (llEl) {
