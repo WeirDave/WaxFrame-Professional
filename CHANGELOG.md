@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.354
+
+**Docs: add AI-readable plain-text conversion of the user manual to `docs/`**
+
+Build: `20260614-012`<br>
+Released: `2026-06-14`
+
+### What changed
+
+`docs/waxframe-user-manual-clean.txt` added — a plain-text conversion of `waxframe-user-manual.html` for AI consumption. Source page chrome (nav, scripts, modal markup, repeated "Back to top" links, image tags) is stripped; tables flattened into readable rows; substantive manual content preserved verbatim. Sits alongside the existing reference docs (`WaxFrame_Audit_Methodology_v1.txt`, `WaxFrame_Playbook_Test_Master_v40.txt`, etc.) so any assistant picking up cold can read the canonical manual without having to scrape the HTML.
+
+No code changes; behavior unchanged. Cache-bust + build stamps advance for ceremony consistency.
+
+### Files touched
+
+- [docs/waxframe-user-manual-clean.txt](docs/waxframe-user-manual-clean.txt) — NEW, 39 KB
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps
+
+---
+
 ## v3.63.353
 
 **Strict-CSP CUTOVER · `'unsafe-inline'` dropped from `script-src` on every page · pre-paint head guard pinned by sha256 · Check 5 enforces strict directive shape**
