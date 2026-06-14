@@ -2,6 +2,61 @@
 
 ---
 
+## v3.63.347
+
+**Strict-CSP migration · Phase 1: helper-handlers delegation infrastructure + start-here.html migrated · release-check ratchets per-file inline-handler counts**
+
+Build: `20260614-005`<br>
+Released: `2026-06-14`
+
+### What changed
+
+First load-bearing step toward dropping `'unsafe-inline'` from script-src. Today's CSP allows inline `on*=` attributes because the app's 16 HTML files carry 1,016 of them. Tightening the directive is a multi-release effort that has to migrate them all first, one page at a time, with a guardrail that prevents new ones from sneaking in.
+
+**1. `js/helper-handlers.js` — event-delegation dispatcher.** New shared script loaded by every helper page. A single document-level click listener walks up from the click target looking for `[data-action="…"]`, then invokes the matching entry in an `ACTIONS` table — `nav-open`, `nav-close`, `modal-open` / `modal-close` / `modal-backdrop-close` (parameterized by `data-target`), `theme-set` (parameterized by `data-theme`), `mute-toggle`, and the license-modal actions defined in `js/license-helper.js`. A parallel `KEY_ACTIONS` table handles keydown delegation (e.g. Enter-to-submit on the license input). Every handler is a named function call rather than a string-eval'd expression, so it'll keep working when `'unsafe-inline'` is finally removed.
+
+**2. `start-here.html` migrated to zero inline handlers.** All 31 `on*=` attributes replaced with `data-action` (and where needed `data-target` / `data-theme` / `data-key-action`) attributes. Nav links, hamburger, theme/mute buttons, About-modal open/close, license-modal open/submit/replace/remove/manage — every interaction now flows through the delegated dispatcher. Behavior unchanged; the diff is mechanical attribute renames.
+
+**3. `tools/release-check.mjs` Check 8 — inline-handler budget.** Per-file count of `on*=` attributes is captured as a budget; releases can only HOLD or DECREASE it, never increase. Today's baseline:
+
+| File                          | Budget |
+| ----------------------------- | ------:|
+| `help.html`                   |      0 |
+| `start-here.html`             |      0 |
+| `privacy.html`                |     33 |
+| `terms.html`                  |     33 |
+| `templates.html`              |     32 |
+| `document-playbooks.html`     |     33 |
+| `waxframe-user-manual.html`   |     33 |
+| `ai-api-pricing.html`         |     34 |
+| `ai-business-proposal.html`   |     35 |
+| `ai-cover-letter-editor.html` |     35 |
+| `ai-resume-review.html`       |     35 |
+| `hive-profiles.html`          |     35 |
+| `what-are-tokens.html`        |     36 |
+| `prompt-editor.html`          |     51 |
+| `api-details.html`            |     55 |
+| `index.html`                  |    396 |
+
+A file with budget 0 is "strict-CSP-clean" — when every entry hits 0, the CSP can drop `'unsafe-inline'` from `script-src`. New HTML files must be added to the table with budget 0 (no exceptions) so a new page can't ship with un-delegated handlers and silently restart the migration debt.
+
+### What's still left
+
+- Migrate the other 14 helper pages (~430 handlers total). Each follows the same playbook as `start-here.html` — most handlers are duplicated nav boilerplate (~30 per page).
+- Migrate `index.html` (396 handlers). The biggest single batch; will need careful breakdown into modal-by-modal sub-batches.
+- Migrate the remaining inline `<script>` blocks — every helper page has a tiny `document.querySelectorAll('.app-version-stamp')…` snippet to stamp the version. These need to move into `helper-handlers.js` or another loaded JS file before `'unsafe-inline'` can be dropped from `script-src`.
+- The pre-paint inline scripts in every page's `<head>` (clickjacking guard + CSP violation listener, both from v3.63.345) must remain inline by design — when the migration completes, they'll need a `nonce` or `sha256-` hash entry in the strict `script-src` directive.
+- `'unsafe-eval'` survives the migration. The vendored SheetJS / mammoth / pdf.js / jszip / docx libs use `new Function()` internally — dropping `unsafe-eval` would break document import. Documented as accepted residual risk; those libraries are CVE-tracked under Check 7.
+
+### Files touched
+
+- [js/helper-handlers.js](js/helper-handlers.js) — NEW: event-delegation dispatcher, ACTIONS + KEY_ACTIONS tables
+- [start-here.html](start-here.html) — 31 `on*=` → `data-action` attribute renames; `<script src="js/helper-handlers.js">` added
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 8: per-file inline-handler budget with baseline counts for all 16 HTML files
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps, build stamps across `js/*.js`, `style.css`, and every helper page
+
+---
+
 ## v3.63.346
 
 **CI smoke expansion: round-history modal, Add Custom AI modal, and checkpoint Restore mode now covered alongside the work screen**
