@@ -2,6 +2,56 @@
 
 ---
 
+## v3.63.350
+
+**Strict-CSP migration · Phase 4: prompt-editor.html migrated (inline behavior block extracted to js/prompt-editor.js + per-page dispatcher) · 15 of 16 HTML pages now strict-CSP-clean · only index.html remains**
+
+Build: `20260614-008`<br>
+Released: `2026-06-14`
+
+### What changed
+
+`prompt-editor.html` is migrated. Unique among the helper pages because its 51 inline handlers wired four page-specific functions (`resetAll`, `saveAll`, `resetOne`, `markModified`) that were themselves defined in a giant inline `<script>` block at the bottom of the file — both surfaces had to move to external JS in one shot or the CSP couldn't tighten.
+
+**1. `js/prompt-editor.js` (new).** Carries everything the inline block carried — `LS_PROMPTS` storage key, the `DEFAULTS` prompt table (mirrors `app.js`), `loadPrompts` / `markModified` / `saveAll` / `resetAll` / `resetOne` / `showToast`. Plus a page-specific dispatcher: click + input listeners that recognize the `prompt-*` action namespace (`prompt-reset-all`, `prompt-save-all`, `prompt-reset` with `data-prompt-key`, `prompt-modified` with `data-prompt-key`). The page's shared helper actions (nav, theme, modal, license) still go through `helper-handlers.js`; the per-page dispatcher only handles the prompt namespace, so there's no precedence conflict between the two. Behavior on load is identical: `loadPrompts()` fires on DOMContentLoaded.
+
+**2. `prompt-editor.html` migrated:**
+- 51 inline `on*=` attributes → 0 via the same sed transform used in v3.63.348, extended with four prompt-specific patterns:
+  - `onclick="resetAll()"` → `data-action="prompt-reset-all"`
+  - `onclick="saveAll()"` → `data-action="prompt-save-all"`
+  - `onclick="resetOne('KEY')"` → `data-action="prompt-reset" data-prompt-key="KEY"` (8 occurrences)
+  - `oninput="markModified('KEY')"` → `data-input-action="prompt-modified" data-prompt-key="KEY"` (8 occurrences)
+- The inline `<script>` block that defined `LS_PROMPTS` and the behavior functions (12.6 KB / ~210 lines) deleted entirely. Replaced with `<script src="js/prompt-editor.js?v=3.63.350">`.
+- `<script src="js/helper-handlers.js">` added to the script-tag list.
+
+| File                  | Before | After |
+| --------------------- | ------:| -----:|
+| `prompt-editor.html`  |     51 |     0 |
+
+**3. `tools/release-check.mjs` Check 8 budget for `prompt-editor.html` ratcheted to 0.**
+
+### Where we stand
+
+| Status | Files | Inline handlers |
+| --- | --- | ---:|
+| ✅ Clean | 15 helper pages | 0 |
+| ⏳ Pending | `index.html` only | 396 |
+
+### What's still left
+
+- `index.html` (396 inline handlers) — the last and biggest target. Modal-by-modal sub-batches over multiple releases.
+- Trailing `app-version-stamp` inline `<script>` on every helper page. Must move into shared JS before `'unsafe-inline'` can drop from script-src.
+- Pre-paint `<head>` scripts (clickjacking guard + CSP violation listener) stay inline; will need `sha256-` hash entries in the strict directive.
+
+### Files touched
+
+- [js/prompt-editor.js](js/prompt-editor.js) — NEW: extracted prompt-editor behavior + page-specific click/input dispatcher
+- [prompt-editor.html](prompt-editor.html) — 51 on*= → 0; inline `<script>` block (12.6 KB) removed; loads `js/helper-handlers.js` + `js/prompt-editor.js`
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 8 budget for `prompt-editor.html` ratcheted to 0
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps
+
+---
+
 ## v3.63.349
 
 **Strict-CSP migration · Phase 3: api-details.html migrated · `consoles-toggle` action + generic `data-hide-on-error` image-fallback shim · 14 of 16 HTML pages strict-CSP-clean**
