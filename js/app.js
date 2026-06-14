@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-020
+// Build: 20260614-021
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-020';         // build stamp — update each session
+const BUILD       = '20260614-021';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -1028,8 +1028,7 @@ function _renderSettingsToc() {
       // Inline onclick so the scroll behavior is identical across all
       // browsers without a router hash change (which could trigger
       // back-button state in some SPAs).
-      const safeId = s.id.replace(/'/g, "\\'");
-      return `<a class="settings-toc-link" href="#${escapeHtml(s.id)}" onclick="document.getElementById('${safeId}').scrollIntoView({behavior:'smooth',block:'start'}); return false;">${escapeHtml(title)}</a>`;
+      return `<a class="settings-toc-link" href="#${escapeHtml(s.id)}" data-action="scroll-to" data-target="${escapeHtml(s.id)}">${escapeHtml(title)}</a>`;
     }).join('');
   // Reorder sections alphabetically by moving each one to the end of
   // the parent (appendChild on an already-DOM node MOVES it). TOC stays
@@ -1130,7 +1129,7 @@ function renderConcurrencyOverrides() {
           '<span class="settings-row-name">' + esc(label) + '</span>' +
           '<span class="settings-row-help">Default: ' + defCap + ' at a time (safe for free-tier accounts).' + limitsLink + '</span>' +
         '</div>' +
-        '<input type="number" min="1" max="100" step="1" placeholder="' + defCap + '" class="settings-number" value="' + value + '" onchange="onConcurrencyOverrideChange(\'' + base + '\', this.value)">' +
+        '<input type="number" min="1" max="100" step="1" placeholder="' + defCap + '" class="settings-number" value="' + value + '" data-change-action="call-multi" data-fn="onConcurrencyOverrideChange" data-args="data:base,value" data-base="' + escapeHtml(base) + '">' +
       '</div>'
     );
   }).join('');
@@ -2005,15 +2004,15 @@ function _renderCBRow(ai, tempCandidate = null) {
   let builderBtn;
   if (isCurrent && !_cbTempMode) {
     builderBtn = `<button class="ai-setup-builder-btn is-active" type="button"
-      onclick="event.stopPropagation(); event.preventDefault(); return false;"
+      data-action="noop"
       title="${escapeHtml(ai.name)} is the Builder.">🔨 Builder</button>`;
   } else if (isIncapable) {
     builderBtn = `<button class="ai-setup-builder-btn is-incapable" type="button" disabled
-      onclick="event.stopPropagation(); event.preventDefault(); return false;"
+      data-action="noop"
       title="${escapeHtml(ai.name)} has a structural output cap too low to Builder. Stays usable as Reviewer.">⚠ Reviewer-only</button>`;
   } else {
     builderBtn = `<button class="ai-setup-builder-btn is-pickable" type="button"
-      onclick="event.stopPropagation(); event.preventDefault(); _cbPickBuilder('${ai.id}'); return false;"
+      data-action="call" data-fn="_cbPickBuilder" data-arg="${ai.id}" data-stop="1"
       title="${pickTitle}">${pickLabel}</button>`;
   }
   return `<div class="cb-row" data-ai-id="${escapeHtml(ai.id)}">
@@ -4074,23 +4073,23 @@ function renderTemplateGalleryBody() {
              screen: opener clicks "Let's get started →" themselves to
              enter Setup 1 with the template already applied. From Setup
              2+: they see their filled-in fields immediately. -->
-        <button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template — fills in the Project Goal and a Reference scaffold so you can run a full round end-to-end"><strong>⭐ Quick Start</strong> — New to WaxFrame? Click here for a low-stakes Chocolate Chip Cookies demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</button>
+        <button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" data-action="call-multi" data-fn="applyTemplate" data-args="lit:quick-start,lit:scratch" title="Apply the Quick Start (Chocolate Chip Cookies) template — fills in the Project Goal and a Reference scaffold so you can run a full round end-to-end"><strong>⭐ Quick Start</strong> — New to WaxFrame? Click here for a low-stakes Chocolate Chip Cookies demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</button>
         <div class="template-path-grid">
-          <button class="template-path-card" onclick="selectTemplatePath('scratch')" type="button">
+          <button class="template-path-card" data-action="call" data-fn="selectTemplatePath" data-arg="scratch" type="button">
             <span class="template-path-card-icon">📝</span>
             <div class="template-path-card-text">
               <div class="template-path-card-name">Starting from scratch</div>
               <div class="template-path-card-desc">I have an idea but no draft yet. The hive will write one for me from the Project Goal + a Reference Material scaffold this template fills in.</div>
             </div>
           </button>
-          <button class="template-path-card" onclick="selectTemplatePath('refine')" type="button">
+          <button class="template-path-card" data-action="call" data-fn="selectTemplatePath" data-arg="refine" type="button">
             <span class="template-path-card-icon">✂️</span>
             <div class="template-path-card-text">
               <div class="template-path-card-name">Refining an existing draft</div>
               <div class="template-path-card-desc">I already have a draft. The hive will polish, tighten, and restructure what I paste into Starting Document — without rewriting wholesale.</div>
             </div>
           </button>
-          <button class="template-path-card template-path-card--custom" onclick="selectTemplatePath('custom')" type="button">
+          <button class="template-path-card template-path-card--custom" data-action="call" data-fn="selectTemplatePath" data-arg="custom" type="button">
             <span class="template-path-card-icon">⭐</span>
             <div class="template-path-card-text">
               <div class="template-path-card-name">Custom Templates</div>
@@ -4167,7 +4166,7 @@ function renderTemplateGalleryBody() {
   const pathIndicator = `
     <div class="template-path-indicator">
       <span class="template-path-indicator-label">${pathIcon} ${esc(pathLabel)}</span>
-      <button class="template-path-indicator-change" onclick="resetTemplatePath()" type="button">Change</button>
+      <button class="template-path-indicator-change" data-action="call" data-fn="resetTemplatePath" type="button">Change</button>
     </div>`;
 
   // v3.63.180 — Per-path header content rebuilt. Was a single ternary
@@ -4184,12 +4183,12 @@ function renderTemplateGalleryBody() {
   // new users browsing for onboarding).
   let ctaButton = '';
   let explainPara = '';
-  if (path === 'custom') ctaButton = `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()" title="Opens the project editor with empty fields. Fill in your project goal — plus optional reference material and a starting document — then ⭐ Template - Save to bank the recipe. Closes this gallery.">➕ New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()" title="Load a template file (.json) someone shared with you, or one you exported from another machine.">⬆ Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Custom templates bank your project goal, reference material, starting document, and the hive that ran them. Hover a saved template to export ⬆, duplicate 📋, edit ✏️, or delete 🗑 it.</span></div>`;
+  if (path === 'custom') ctaButton = `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" data-action="call" data-fn="newBlankTemplate" title="Opens the project editor with empty fields. Fill in your project goal — plus optional reference material and a starting document — then ⭐ Template - Save to bank the recipe. Closes this gallery.">➕ New blank template</button><button class="template-new-blank template-import-btn" type="button" data-action="call" data-fn="importCustomTemplate" title="Load a template file (.json) someone shared with you, or one you exported from another machine.">⬆ Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" data-change-action="call" data-fn="setCustomTemplateSort" data-arg-value="1"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Custom templates bank your project goal, reference material, starting document, and the hive that ran them. Hover a saved template to export ⬆, duplicate 📋, edit ✏️, or delete 🗑 it.</span></div>`;
   else if (path === 'scratch') {
-    ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>⭐ Quick Start</strong> — New to WaxFrame? Click here for a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`;
+    ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" data-action="call-multi" data-fn="applyTemplate" data-args="lit:quick-start,lit:scratch" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>⭐ Quick Start</strong> — New to WaxFrame? Click here for a low-stakes Chocolate Chip Cookies example that converges in a few rounds and teaches you the whole flow before you bring your own document.</button>`;
     explainPara = `<p class="template-gallery-explain">These templates are designed to spark a <strong>first draft</strong>. Pick the one closest to what you're writing — the hive will use this template to generate a document, then refine it round by round.</p>`;
   } else {
-    ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" onclick="applyTemplate('quick-start', 'scratch')" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>⭐ Quick Start</strong> — Want a guided tour first? Click here for a low-stakes Chocolate Chip Cookies demo that shows you the whole hive flow before you bring your own document.</button>`;
+    ctaButton = `<button type="button" class="template-gallery-intro template-gallery-intro--newuser template-gallery-intro--cta" data-action="call-multi" data-fn="applyTemplate" data-args="lit:quick-start,lit:scratch" title="Apply the Quick Start (Chocolate Chip Cookies) template"><strong>⭐ Quick Start</strong> — Want a guided tour first? Click here for a low-stakes Chocolate Chip Cookies demo that shows you the whole hive flow before you bring your own document.</button>`;
     explainPara = `<p class="template-gallery-explain">These templates are designed to <strong>refine work you've already written</strong>. Pick the one closest to your document type — the hive will polish, tighten, and restructure it round by round rather than starting over.</p>`;
   }
   const newuserCallout = ctaButton + explainPara;
@@ -4234,7 +4233,7 @@ function renderTemplateGalleryBody() {
             ? `<span class="template-card-length-badge">${esc(t.lengthBadge)}</span>`
             : '';
           const cardBtn = `
-          <button class="${cardCls}" onclick="applyTemplate('${escapeHtml(t.id)}', '${path}')" title="Apply the ${escapeHtml(t.name)} template (${escapeHtml(pathLabel)})">
+          <button class="${cardCls}" data-action="call-multi" data-fn="applyTemplate" data-args="data:tpl,data:path" data-tpl="${escapeHtml(t.id)}" data-path="${path}" title="Apply the ${escapeHtml(t.name)} template (${escapeHtml(pathLabel)})">
             <span class="template-card-icon">${esc(t.icon || '📄')}</span>
             <div class="template-card-text">
               <div class="template-card-name">${esc(t.name)}${badge}${lengthBadge}</div>
@@ -4245,7 +4244,7 @@ function renderTemplateGalleryBody() {
           // can't be removed). Wrap so the 🗑 sits over the card without
           // nesting a button inside the apply button.
           if (t.custom) {
-            return `<div class="template-card-wrap">${cardBtn}<button class="template-card-export" type="button" title="Export ${escapeHtml(t.name)} as a file" onclick="event.stopPropagation(); exportCustomTemplate('${escapeHtml(t.id)}')">⬆</button><button class="template-card-dup" type="button" title="Duplicate ${escapeHtml(t.name)} as a starting point for a variant" onclick="event.stopPropagation(); duplicateCustomTemplate('${escapeHtml(t.id)}')">📋</button><button class="template-card-edit" type="button" title="Edit ${escapeHtml(t.name)}" onclick="event.stopPropagation(); editCustomTemplate('${escapeHtml(t.id)}')">✏️</button><button class="template-card-del" type="button" title="Delete ${escapeHtml(t.name)}" onclick="event.stopPropagation(); deleteCustomTemplate('${escapeHtml(t.id)}')">🗑</button></div>`;
+            return `<div class="template-card-wrap">${cardBtn}<button class="template-card-export" type="button" title="Export ${escapeHtml(t.name)} as a file" data-action="call" data-fn="exportCustomTemplate" data-arg="${escapeHtml(t.id)}">⬆</button><button class="template-card-dup" type="button" title="Duplicate ${escapeHtml(t.name)} as a starting point for a variant" data-action="call" data-fn="duplicateCustomTemplate" data-arg="${escapeHtml(t.id)}">📋</button><button class="template-card-edit" type="button" title="Edit ${escapeHtml(t.name)}" data-action="call" data-fn="editCustomTemplate" data-arg="${escapeHtml(t.id)}">✏️</button><button class="template-card-del" type="button" title="Delete ${escapeHtml(t.name)}" data-action="call" data-fn="deleteCustomTemplate" data-arg="${escapeHtml(t.id)}">🗑</button></div>`;
           }
           return cardBtn;
         }).join('')}
@@ -4270,10 +4269,10 @@ function renderTemplateGalleryBody() {
     // universal and apply to built-in templates too.
     const BUILTIN_CUSTOM_CATS = ['My Templates', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
     const sidebarLinks = visibleCats.map(cat => {
-      const linkBtn = `<button type="button" class="template-gallery-sidebar-link" onclick="document.getElementById('tpl-cat-${catSlug(cat)}').scrollIntoView({behavior:'smooth', block:'start'})">${esc(cat)}</button>`;
+      const linkBtn = `<button type="button" class="template-gallery-sidebar-link" data-action="scroll-to" data-target="tpl-cat-${catSlug(cat)}">${esc(cat)}</button>`;
       const isFreeForm = path === 'custom' && !BUILTIN_CUSTOM_CATS.includes(cat);
       if (!isFreeForm) return linkBtn;
-      const renameBtn = `<button type="button" class="template-gallery-sidebar-rename" onclick="renameCustomCategory('${escapeHtml(cat)}')" title="Rename or merge this category (bulk-updates all templates in it)">✏️</button>`;
+      const renameBtn = `<button type="button" class="template-gallery-sidebar-rename" data-action="call" data-fn="renameCustomCategory" data-arg="${escapeHtml(cat)}" title="Rename or merge this category (bulk-updates all templates in it)">✏️</button>`;
       return `<div class="template-gallery-sidebar-item">${linkBtn}${renameBtn}</div>`;
     }).join('');
     body.innerHTML = pathIndicator + newuserCallout +
@@ -7652,7 +7651,7 @@ function renderTkpDetail(id) {
       ? `<a class="tkp-billing-link" href="${escapeHtml(safeUrl(rec.consoleUrl))}" target="_blank" rel="noopener noreferrer">Open ${escapeHtml(rec.name)} billing console →</a>`
       : '';
     const retestBtnHtml = (!rec.ok)
-      ? `<button class="tkp-retest-btn" type="button" onclick="retestSingleKey('${escapeHtml(id)}')">↻ Retest ${escapeHtml(rec.name)}</button>`
+      ? `<button class="tkp-retest-btn" type="button" data-action="call" data-fn="retestSingleKey" data-arg="${escapeHtml(id)}">↻ Retest ${escapeHtml(rec.name)}</button>`
       : '';
     rcvPane.innerHTML = `
       ${billingLinkHtml}${retestBtnHtml}
@@ -11016,14 +11015,14 @@ function renderImportServerChecklist() {
 
     return `
     <div class="import-server-item" id="isi-${i}">
-      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${escapeHtml(modelId)}" onchange="updateChecklistCount()">
+      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${escapeHtml(modelId)}" data-change-action="call" data-fn="updateChecklistCount">
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
-      <button type="button" class="import-server-icon-btn" id="isicon-${i}" onclick="openIconPickerForImportRow(${i})" title="Choose icon for ${escapeHtml(modelName)}">
-        <img src="${_importRowIcons[i] || GENERIC_ICON_PATH}" alt="" class="import-server-icon-thumb" onerror="this.style.opacity='0.3'">
+      <button type="button" class="import-server-icon-btn" id="isicon-${i}" data-action="call" data-fn="openIconPickerForImportRow" data-arg="${i}" title="Choose icon for ${escapeHtml(modelName)}">
+        <img src="${_importRowIcons[i] || GENERIC_ICON_PATH}" alt="" class="import-server-icon-thumb" data-dim-on-error>
       </button>
       <div class="import-server-nickname-wrap">
         <label class="import-server-nickname-label" for="isn-${i}">Nickname:</label>
-        <input type="text" class="import-server-name-input is-default" id="isn-${i}" value="${escapeHtml(modelName)}" data-default-value="${escapeHtml(modelName)}" oninput="onImportNicknameInput(this)">
+        <input type="text" class="import-server-name-input is-default" id="isn-${i}" value="${escapeHtml(modelName)}" data-default-value="${escapeHtml(modelName)}" data-input-action="call" data-fn="onImportNicknameInput" data-arg-this="1">
       </div>
     </div>`;
   }).join('');
@@ -11468,7 +11467,7 @@ function renderSourceSizeCheck() {
   // surfacing this card is to recommend the user move their oversized
   // source into Reference Material so reviewers can verify cuts every
   // round against the original.
-  const actionHTML = `<button class="btn btn-sm btn-accent" onclick="copySourceToReferenceMaterial()" title="Add the Starting Document content as a Reference Material card so reviewers see it every round">📚 Copy to Reference Material</button>`;
+  const actionHTML = `<button class="btn btn-sm btn-accent" data-action="call" data-fn="copySourceToReferenceMaterial" title="Add the Starting Document content as a Reference Material card so reviewers see it every round">📚 Copy to Reference Material</button>`;
 
   card.className = 'source-size-check ' + statusClass;
   card.style.display = '';
@@ -11483,7 +11482,7 @@ function renderSourceSizeCheck() {
       </div>
       <div class="ssc-actions">${actionHTML}</div>
     </div>
-    <button class="ssc-dismiss" onclick="dismissSourceSizeCheck()" title="Dismiss this check for the rest of this session">✕</button>
+    <button class="ssc-dismiss" data-action="call" data-fn="dismissSourceSizeCheck" title="Dismiss this check for the rest of this session">✕</button>
   `;
 }
 
@@ -15043,7 +15042,7 @@ function renderBeeStatusGrid() {
             ? `<span class="hex-builder-tag">BUILDER</span>`
             : `<input type="checkbox" class="hex-toggle" id="btog-${ai.id}"
                 ${isOn ? 'checked' : ''}
-                onchange="toggleSessionBee('${ai.id}', this.checked)">`
+                data-change-action="call-multi" data-fn="toggleSessionBee" data-args="data:aiId,checked" data-ai-id="${ai.id}">`
           }
           ${iconEl}
           <span class="hex-name" title="${escapeHtml(ai.name)}">${esc(displayAiName(ai.name))}</span>
@@ -15424,10 +15423,9 @@ function openIconPicker(opts = {}) {
       <div class="icon-picker-section-grid">
         ${section.items.map(it => `
           <button type="button" class="icon-picker-tile${opts.currentIcon === it.src ? ' is-selected' : ''}"
-                  onclick="_iconPickerSelect('${escapeHtml(it.src)}')"
+                  data-action="call" data-fn="_iconPickerSelect" data-arg="${escapeHtml(it.src)}"
                   title="${escapeHtml(it.name)}">
-            <img src="${it.src}" alt="${escapeHtml(it.name)}" class="icon-picker-tile-img"
-                 onerror="this.style.opacity='0.2'">
+            <img src="${it.src}" alt="${escapeHtml(it.name)}" class="icon-picker-tile-img" data-dim-on-error>
             <span class="icon-picker-tile-name">${esc(it.name)}</span>
           </button>
         `).join('')}
@@ -15767,9 +15765,9 @@ function buildBulkSelectToolbarHTML() {
       <strong>${selCount}</strong> of <strong>${customCount}</strong> custom AI${customCount !== 1 ? 's' : ''} selected
     </span>
     <div class="bulk-select-actions">
-      <button class="btn btn-xs" ${allSelected ? 'disabled' : ''} onclick="selectAllCustoms()" title="Select every custom AI">All</button>
-      <button class="btn btn-xs" ${selCount === 0 ? 'disabled' : ''} onclick="selectNoneCustoms()" title="Clear selection">None</button>
-      <button class="btn btn-danger bulk-select-remove-btn" ${selCount === 0 ? 'disabled' : ''} onclick="bulkRemoveSelectedAIs()" title="${selCount === 0 ? 'Tick at least one custom AI to enable' : `Remove ${selCount} selected`}">
+      <button class="btn btn-xs" ${allSelected ? 'disabled' : ''} data-action="call" data-fn="selectAllCustoms" title="Select every custom AI">All</button>
+      <button class="btn btn-xs" ${selCount === 0 ? 'disabled' : ''} data-action="call" data-fn="selectNoneCustoms" title="Clear selection">None</button>
+      <button class="btn btn-danger bulk-select-remove-btn" ${selCount === 0 ? 'disabled' : ''} data-action="call" data-fn="bulkRemoveSelectedAIs" title="${selCount === 0 ? 'Tick at least one custom AI to enable' : `Remove ${selCount} selected`}">
         🗑 Remove ${selCount}
       </button>
     </div>
@@ -16030,12 +16028,24 @@ function renderBeeDotStrip() {
     // setBeeStatus). Native title removed to prevent the double-tooltip
     // (browser-default + custom) artifact on slow hover.
     return `<div class="bee-dot ${stateClass}" id="bdot-${ai.id}" data-ai-id="${ai.id}"
-      onmouseenter="showBeeTooltip('${ai.id}', this)"
-      onmouseleave="hideBeeTooltip()"
-      onfocus="showBeeTooltip('${ai.id}', this)"
-      onblur="hideBeeTooltip()"
       tabindex="0"><span class="bee-dot-star" aria-hidden="true">★</span>${iconEl}</div>`;
   }).join('');
+  // v3.63.363 — Phase 8 migration. mouseenter/mouseleave/focus/blur don't
+  // bubble, so the global delegated dispatcher in helper-handlers.js can't
+  // catch them via document listeners. Pre-migration the bee-dot carried
+  // inline onmouseenter/leave/focus/blur attrs that ran under
+  // 'unsafe-inline'. Now we attach the listeners imperatively in this
+  // post-render pass — the listeners are GC'd whenever this strip is
+  // rebuilt (innerHTML replacement drops the old nodes).
+  strip.querySelectorAll('.bee-dot[data-ai-id]').forEach(dot => {
+    const aiId = dot.dataset.aiId;
+    const show = () => { if (typeof showBeeTooltip === 'function') showBeeTooltip(aiId, dot); };
+    const hide = () => { if (typeof hideBeeTooltip === 'function') hideBeeTooltip(); };
+    dot.addEventListener('mouseenter', show);
+    dot.addEventListener('mouseleave', hide);
+    dot.addEventListener('focus', show);
+    dot.addEventListener('blur', hide);
+  });
   // v3.32.14 — Rehydrate satisfaction state after innerHTML rebuild. The
   // dot strip can be rebuilt independently (toggleSessionBee onchange
   // handler at the hex-cell calls renderBeeDotStrip directly) so it
@@ -16062,7 +16072,7 @@ function openEditHive() {
       ${isB
         ? `<span class="edit-hive-tag">BUILDER</span>`
         : `<input type="checkbox" class="edit-hive-toggle" ${isOn ? 'checked' : ''}
-             onchange="toggleSessionBee('${ai.id}', this.checked); renderBeeDotStrip();">`
+             data-change-action="call" data-fn="__wfEditHiveToggle" data-arg-this="1" data-ai-id="${ai.id}">`
       }
     </div>`;
   }).join('');
@@ -19660,8 +19670,8 @@ function buildAppliedChangesHTML(latest) {
   // unlocked/mixed); all-locked → 🔒 prefix (currently locked).
   const allLocked = items.every(c => !!c.locked);
   const bulkBtn = allLocked
-    ? `<button class="applied-bulk-btn applied-bulk-btn-locked" onclick="unlockAllAppliedChanges(${latestRound})">🔒 Unlock All</button>`
-    : `<button class="applied-bulk-btn" onclick="lockAllAppliedChanges(${latestRound})">🔓 Lock All</button>`;
+    ? `<button class="applied-bulk-btn applied-bulk-btn-locked" data-action="call-multi" data-fn="unlockAllAppliedChanges" data-args="data-num:round" data-round="${latestRound}">🔒 Unlock All</button>`
+    : `<button class="applied-bulk-btn" data-action="call-multi" data-fn="lockAllAppliedChanges" data-args="data-num:round" data-round="${latestRound}">🔓 Lock All</button>`;
 
   let html = `<div class="conflicts-section-header applied-changes-header">
     <span class="applied-changes-header-text">✓ Builder Applied ${items.length} Change${items.length !== 1 ? 's' : ''} — Confirm or Keep Revising</span>
@@ -19687,8 +19697,8 @@ function buildAppliedChangesHTML(latest) {
     // state → 🔒 prefix. The status-indicator tag above is unchanged
     // ("🔒 Locked") because IT IS a state indicator, not an affordance.
     const lockBtn = c.locked
-      ? `<button class="applied-lock-btn applied-lock-btn-locked" onclick="lockAppliedChange(${latestRound}, ${i})">🔒 Unlock</button>`
-      : `<button class="applied-lock-btn" onclick="lockAppliedChange(${latestRound}, ${i})">🔓 Lock this line</button>`;
+      ? `<button class="applied-lock-btn applied-lock-btn-locked" data-action="call-multi" data-fn="lockAppliedChange" data-args="data-num:round,data-num:idx" data-round="${latestRound}" data-idx="${i}">🔒 Unlock</button>`
+      : `<button class="applied-lock-btn" data-action="call-multi" data-fn="lockAppliedChange" data-args="data-num:round,data-num:idx" data-round="${latestRound}" data-idx="${i}">🔓 Lock this line</button>`;
 
     // v3.39.6 — Card layout redesigned to read as a proper card and not
     // a wall of text. Left-edge accent bar anchors each card visually.
@@ -21019,8 +21029,8 @@ function renderRoundHistory() {
           <span class="round-hist-stats">${wordCount} words · ${responseCount} response${responseCount!==1?'s':''}</span>
         </div>
         <div class="round-hist-hdr-right">
-          <button class="round-hist-view-btn" onclick="viewRoundDoc(${idx})">View Doc</button>
-          <button class="round-hist-restore-btn" onclick="restoreRound(${idx})" title="Restore this version of the document">↩ Restore</button>
+          <button class="round-hist-view-btn" data-action="call" data-fn="viewRoundDoc" data-arg="${idx}">View Doc</button>
+          <button class="round-hist-restore-btn" data-action="call" data-fn="restoreRound" data-arg="${idx}" title="Restore this version of the document">↩ Restore</button>
         </div>
       </div>
     </div>`;
@@ -21274,9 +21284,9 @@ function viewRoundDoc(idx) {
       <div class="hist-doc-modal-hdr">
         <span>Round ${esc(roundLabel)} — ${esc(phaseLabel)} · ${esc(String(h.timestamp || ''))}</span>
         <div class="view-round-tab-row">
-          <button class="btn btn-ghost btn-sm" onclick="copyActiveHistTab()">📋 Copy</button>
-          <button class="btn btn-ghost btn-sm" onclick="restoreRound(${Number(idx)})">↩ Restore</button>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('histDocModal').remove()">✕ Close</button>
+          <button class="btn btn-ghost btn-sm" data-action="call" data-fn="copyActiveHistTab">📋 Copy</button>
+          <button class="btn btn-ghost btn-sm" data-action="call" data-fn="restoreRound" data-arg="${Number(idx)}">↩ Restore</button>
+          <button class="btn btn-ghost btn-sm" data-action="remove-element" data-target="histDocModal">✕ Close</button>
         </div>
       </div>
       <div class="view-round-tab-bar">

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates-page.js
-// Build: 20260614-020
+// Build: 20260614-021
 //  Catalog rendering for templates.html. Extracted from the
 //  formerly-inline <script> block in v3.63.352 so the page can
 //  drop 'unsafe-inline' from CSP. Pure renderer + ItemList JSON-LD
