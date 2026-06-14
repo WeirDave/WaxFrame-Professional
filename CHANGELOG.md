@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.331
+
+**Row status pill: default to ✓ Ready when key is present and not flagged invalid (fixes missing Perplexity pill)**
+
+Build: `20260613-025`<br>
+Released: `2026-06-13`
+
+### What changed
+
+David flagged that the Perplexity row on the AI setup screen had every signal of a working AI — model picked, role assignments slotted, "Last recommended" line populated — but the green `✓ Ready` pill that sat between the AI name and the MODEL column on the other five rows was just… missing. Every other provider showed Ready. Perplexity showed nothing.
+
+`_buildRowStatusPill` (app.js:5732) had a three-state truth table: no key → empty, `_invalidKeys[ai.id]` → red Invalid, `_validKeys[ai.id]` → green Ready, **otherwise** → empty. The third "otherwise" branch is what tripped Perplexity. `_validKeys` only gets written by the validation pass, and not every provider's path writes back to it cleanly. The other five rows happened to flip the flag; Perplexity didn't — so its row fell through to the silent-empty branch and just showed no pill at all.
+
+The empty render read as "Perplexity is broken." It wasn't — the key was valid, the recommend call had worked, role picks were happy. The pill was just lying through omission.
+
+Flipped the default. The pill now treats "has a key AND no explicit invalid flag" as Ready. If validation later flips `_invalidKeys`, the first branch above catches it on the next render and the pill turns red. If validation explicitly confirmed it, the tooltip still says "API key validated"; if validation never ran or never wrote back, the tooltip says "API key saved — last validation status unknown but no failure logged" — honest about what we know without leaving the visual slot blank.
+
+### Note on the count question
+
+David also asked about the toast saying "6 of 6" while the Hive Profile bar said "0 of 4 AIs are using their cheap pick." Not a bug — two different denominators:
+
+- **Toast** counts against TOTAL keyed AIs ("Applied Cheap to 6 of 6 AIs"). This is the "I just did the thing to your hive" message.
+- **Profile bar** counts against AIs that HAVE a cached cheap pick ("0 of 4 AIs are using their cheap pick"). The other 2 of 6 don't have a cheap pick cached, so they're not eligible to be counted — and after manual overrides, the matched-count drops from 4 to 0 even though the toast still claimed 6/6 at the moment of application.
+
+Both messages are individually correct. Together they read as a contradiction. Not changing the math today — flagging it here so the inconsistency is documented. If we want to harmonize, the cleaner fix is making the bar use the same denominator as the toast (total keyed AIs) and surfacing the skipped count separately, the way the toast already does — but that's a bigger refactor than one release should bundle.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `_buildRowStatusPill` now defaults to ✓ Ready when key exists and not flagged invalid; tooltip varies based on whether `_validKeys` confirmed it explicitly
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.330
 
 **Claude askingModel: stable fallback first (fixes Fable 5 404) · toast default 2.8s → 5s · Test Resend + Diff Words removed from dev toolbar**
