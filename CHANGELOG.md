@@ -2,6 +2,82 @@
 
 ---
 
+## v3.63.356
+
+**Strict style-src CUTOVER: `'unsafe-inline'` dropped from `style-src` on every page · 2 `<style>` blocks + 11 `style="..."` attr values pinned by sha256 · Check 5 enforces strict directive · 12 dead inline style attrs deleted**
+
+Build: `20260614-014`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Companion to v3.63.353's script-src cutover. After the strict-CSP migration removed every inline script surface, `'unsafe-inline'` remained on `style-src` — covering one inline `<style>` head guard per page (the v3.63.345 `.wf-framebusted` clickjacking class), help.html's break-glass inline style block, and 57 `style="..."` attributes scattered across 5 pages. This release pins every survivor by hash and drops the keyword.
+
+**1. Dead inline-style cleanup.** The 12 `<span style="--sx:Npx;--fall:Mpx;">` attrs inside `#builderSparks` on `index.html` set CSS custom properties (`--sx`, `--fall`) that no rule in `style.css` ever read — the actual particle positions come from `.builder-station-sparks span:nth-child(N)` rules using `--dx` / `--dy` further down the stylesheet. The values had no visible effect; deleted with an explanatory HTML comment in place.
+
+**2. Two `<style>` blocks pinned by sha256.**
+
+| Hash | Block | Scope |
+| --- | --- | --- |
+| `sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=` | `html.wf-framebusted{display:none}` | All 16 pages — the v3.63.345 pre-paint head guard |
+| `sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8=` | help.html palette + layout (break-glass) | `help.html` only — the standalone fallback style block that mirrors `style.css` :root so help.html renders even when `style.css` fails to load |
+
+**3. `'unsafe-hashes'` + 11 `style="..."` attribute hashes.** CSP's `'unsafe-hashes'` directive lets sha256 entries cover inline `style=""` attribute values (and inline event-handler attrs — which we no longer have). Each of the 11 unique attribute values across the codebase is hashed and listed:
+
+| Hash | Value | Usage |
+| --- | --- | --- |
+| `sha256-aqNN…AE=` | `display:none` | 13 elements (initial hidden state) |
+| `sha256-0EZq…ZrY=` | `display:none;` | 19 elements |
+| `sha256-ukRL…Aj4=` | `display:none;margin-top:8px;` | 1 (help.html wipe-status row) |
+| `sha256-mHwB…opE=` | `width:1.4em;height:1.4em;vertical-align:middle` | 1 (waxframe-user-manual.html bee icon) |
+| `sha256-nMxM…HuA=` | `width:100%;` | 2 (settings rows) |
+| `sha256-ayqU…ADs=` | `font-weight:600;` | 2 (settings warning copy) |
+| `sha256-1vbU…fo0=` | `font-weight: 400; opacity: 0.7;` | 1 (about-modal cost label) |
+| `sha256-xJgw…wyk=` | `font-style: italic; color: var(--text-dim);` | 1 (hive-profiles.html note) |
+| `sha256-51C2…72hI=` | `margin-top: var(--space-16);` | 2 (templates.html prose) |
+| `sha256-JzjJ…3Rlo=` | `flex-direction:column;align-items:flex-start;gap:10px;max-width:560px;` | 1 (help.html links block) |
+| `sha256-U39L…O4UI=` | `background: rgba(247, 195, 64, 0.08); border-radius: 8px; padding: var(--space-12) var(--space-14); margin: 0 0 var(--space-14);` | 1 (about-modal cost callout) |
+
+A new style attribute value that doesn't match any of those 11 hashes will be blocked by the browser at parse time. Adding a new unique value means: hash it, add the entry to `tools/release-check.mjs:REQUIRED_CSP_DIRECTIVES`, add it to the meta tag on every page. The release-check Check 5 enforces all 13 hashes (2 `<style>` + 11 `style=""`) are present.
+
+**4. `style-src` is now:**
+```
+style-src 'self' https'
+  'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo='
+  'sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8='
+  'unsafe-hashes'
+  'sha256-U39LwpFPBpT3Lt7xuEnj4BJI8V09wjPcxMKm3L/O4UI='
+  'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE='
+  'sha256-0EZqoz+oBhx7gF4nvY2bSqoGyy4zLjNF+SDQXGp/ZrY='
+  'sha256-ukRLfhNT2UwV6SrWA/TIvp9f6n9i7rlY8yTJ7/Q4Aj4='
+  'sha256-JzjJaC8w0SNFOqj128IsNlFo2pjyKirpYABgcVjzRlo='
+  'sha256-xJgw9VSwNWk+JhDx6dCtEnb5rREf+xfiKboIRRQ2wyk='
+  'sha256-1vbUwk7z0f5vVRhaiAOVIE7zWtBPpnUQrHt+FHxrfo0='
+  'sha256-ayqU6ju5l8n91VHdnqda+AJokO4F7JlcyuLJ97i8ADs='
+  'sha256-51C2sujOczlVGMvLFIZvjBzQ4whhqY1WZWebTLn72hI='
+  'sha256-mHwBL94Tr/tKp56eEVRJEyifdcssVP0Gtta7uViWopE='
+  'sha256-nMxMqdZhkHxz5vAuW/PAoLvECzzsmeAxD/BNwG15HuA='
+```
+
+(All on a single line in the actual meta tag; broken here for readability.)
+
+**5. Caveat — `'unsafe-hashes'`** is a meaningful tightening over plain `'unsafe-inline'` but is not "fully strict" CSP. A `style=""` attribute is allowed if its value's sha256 matches a listed entry; a same-text injection elsewhere in the document would also match. The keyword exists because hashing inline event handlers / inline styles would otherwise be impossible (you can't hash via a `<script>` body the way you can for `<script>` element content). The strictest path would be to convert every `style=""` to a CSS class — possible as future work, but the security benefit over `'unsafe-hashes'` is small and the risk of breaking the runtime show/hide patterns (where JS reads/writes `element.style.display`) is real.
+
+**6. Release-check Check 5 expanded.**
+- All 13 hash entries are now required substrings.
+- New dedicated check: `style-src` must NOT contain `'unsafe-inline'`. Any regression fails CI per-file.
+
+**7. CI smoke (9 shots — work screen, 3 modals, checkpoint restore, 5 helper pages) all pass under the strict directive.** Verified locally on Chrome headless. The smoke proves: every page renders, helper-handlers init runs, `data-action="nav-open"` delegation fires — none of which would succeed if a style hash were wrong or a `<style>` block were blocked.
+
+### Files touched
+
+- 16 HTML pages — `style-src` rewritten to drop `'unsafe-inline'`, add 2 `<style>` hashes + `'unsafe-hashes'` + 11 attribute-value hashes
+- [index.html](index.html) — 12 dead `--sx`/`--fall` spark `style="..."` attrs deleted
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 5 expanded: 13 new required hashes; new "must NOT contain `'unsafe-inline'` on style-src" check
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps
+
+---
+
 ## v3.63.355
 
 **CI smoke expansion: 5 new shots cover every migrated helper-page family · proves the strict-CSP delegation pipeline end-to-end · smoke goes from 4 shots → 9**
