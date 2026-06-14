@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260614-017
+  Build: 20260614-018
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- v3.63.353 — Content-Security-Policy (strict-CSP cutover).
+  <!-- v3.63.360 — Content-Security-Policy. script-src strict-CSP cutover ROLLED BACK in v3.63.360:
        script-src is locked to 'self' plus two sha256- hashes that pin the
        pre-paint head guard below. The v3.63.347 → v3.63.352 inline-handler /
        inline-script migration removed every other inline JavaScript surface
@@ -34,7 +34,7 @@
        pdf.js (new Function internals). style-src 'unsafe-inline' stays
        because we emit per-element style="..." attributes and the
        inline <style> on the next line. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-v6gFi56+2bv74Kb6ZsiwAOsnOhaMjjXtAhflRjSVRcw='; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8=' 'unsafe-hashes' 'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE=' 'sha256-0EZqoz+oBhx7gF4nvY2bSqoGyy4zLjNF+SDQXGp/ZrY=' 'sha256-ukRLfhNT2UwV6SrWA/TIvp9f6n9i7rlY8yTJ7/Q4Aj4='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8=' 'unsafe-hashes' 'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE=' 'sha256-0EZqoz+oBhx7gF4nvY2bSqoGyy4zLjNF+SDQXGp/ZrY=' 'sha256-ukRLfhNT2UwV6SrWA/TIvp9f6n9i7rlY8yTJ7/Q4Aj4='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <!-- v3.63.345 — Clickjacking guard + CSP violation listener.
        Frame-busting: GitHub Pages cannot set the HTTP frame-ancestors
        directive, so this client-side check hides the page if we detect
@@ -73,7 +73,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260614-017">
+  <meta name="waxframe-build" content="20260614-018">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
   <link rel="canonical" href="https://waxframe.com/help.html">
@@ -490,10 +490,10 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.359"></script>
-  <script src="js/storage.js?v=3.63.359"></script>
-  <script src="js/provider-models.js?v=3.63.359"></script>
-  <script src="js/provider-catalog.js?v=3.63.359"></script>
-  <script src="js/help-page.js?v=3.63.359"></script>
+  <script src="js/version.js?v=3.63.360"></script>
+  <script src="js/storage.js?v=3.63.360"></script>
+  <script src="js/provider-models.js?v=3.63.360"></script>
+  <script src="js/provider-catalog.js?v=3.63.360"></script>
+  <script src="js/help-page.js?v=3.63.360"></script>
 </body>
 </html>
