@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260614-009
+// Build: 20260614-010
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -365,4 +365,23 @@
     if ('hideOnError' in t.dataset) t.style.display = 'none';
     else if ('dimOnError' in t.dataset) t.style.opacity = '0.3';
   }, true);
+
+  // ── Version-stamp init (v3.63.352) ─────────────────────────
+  // Every page sprays the current app version into one or more
+  // <span class="app-version-stamp"> placeholders. Pre-v3.63.352
+  // a one-line inline <script> at the bottom of every HTML page
+  // did this; the inline tag required 'unsafe-inline' on script-
+  // src, blocking the strict-CSP cutover. Moving the snippet
+  // here means every page that loads helper-handlers.js gets the
+  // stamp for free.
+  function stampVersion() {
+    if (typeof APP_VERSION === 'undefined') return;
+    var els = document.querySelectorAll('.app-version-stamp');
+    for (var i = 0; i < els.length; i++) els[i].textContent = APP_VERSION;
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', stampVersion);
+  } else {
+    stampVersion();
+  }
 })();

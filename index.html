@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260614-009
+     Build: 20260614-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -54,7 +54,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260614-009">
+  <meta name="waxframe-build" content="20260614-010">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -68,7 +68,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.351">
+  <link rel="stylesheet" href="style.css?v=3.63.352">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -107,7 +107,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.351",
+    "softwareVersion": "3.63.352",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -3415,38 +3415,7 @@
      above the minimum" (green) and "✗ Below minimum by N px wide" /
      "✗ Below minimum by M px tall" (red) so the user sees exactly
      which dimension is the problem. -->
-<script>
-(function() {
-  var nowEl = document.getElementById('minScreenViewportNow');
-  var hintEl = document.getElementById('minScreenViewportHint');
-  if (!nowEl || !hintEl) return;
-  var MIN_W = 1366;
-  var MIN_H = 768;
-  function update() {
-    var w = window.innerWidth;
-    var h = window.innerHeight;
-    nowEl.textContent = w + ' × ' + h + ' px';
-    var okW = w >= MIN_W;
-    var okH = h >= MIN_H;
-    if (okW && okH) {
-      hintEl.textContent = '👍 You’re above the minimum — refresh to load WaxFrame.';
-      hintEl.className = 'min-screen-viewport-hint is-ok';
-    } else {
-      var parts = [];
-      if (!okW) parts.push((MIN_W - w) + ' px wider');
-      if (!okH) parts.push((MIN_H - h) + ' px taller');
-      hintEl.textContent = '✗ Needs ' + parts.join(' and ') + ' to fit the work screen.';
-      hintEl.className = 'min-screen-viewport-hint is-short';
-    }
-  }
-  update();
-  window.addEventListener('resize', update, { passive: true });
-  // Cover zoom and DPI changes that don't fire resize on every browser.
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', update, { passive: true });
-  }
-})();
-</script>
+<script src="js/min-screen-viewport.js?v=3.63.352"></script>
 
 <!-- Mobile not supported overlay — but a funnel landing, not a wall.
      Mobile visitors landing on index.html from search results get a
@@ -3532,66 +3501,30 @@
      (and the only Add-Bookmark JS API was killed by browsers years
      ago for security reasons). Falls back to clipboard copy + a
      short instruction toast if navigator.share isn't available. -->
-<script>
-function wfMobileShare() {
-  var url = 'https://waxframe.com/';
-  var data = {
-    title: 'WaxFrame — Multi-AI Document Refinement',
-    text: 'A browser-based multi-AI tool where AI Worker Bees review and refine your documents in iterative rounds.',
-    url: url
-  };
-  if (navigator.share) {
-    navigator.share(data).catch(function(){ /* user cancelled — ignore */ });
-    return;
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url).then(function() {
-      wfMobileShareToast('Link copied! Open your browser menu to bookmark it.');
-    }).catch(function() {
-      wfMobileShareToast('Tap your browser menu → Bookmark this page');
-    });
-    return;
-  }
-  wfMobileShareToast('Tap your browser menu → Bookmark this page');
-}
-function wfMobileShareToast(msg) {
-  var t = document.createElement('div');
-  t.className = 'mobile-overlay-toast';
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(function(){ t.classList.add('is-visible'); }, 10);
-  setTimeout(function(){
-    t.classList.remove('is-visible');
-    setTimeout(function(){ t.remove(); }, 300);
-  }, 3200);
-}
-</script>
+<script src="js/mobile-share.js?v=3.63.352"></script>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.4MB total. -->
 <!-- v3.63.16 — pdf.js upgraded to 4.10.38 (closes CVE-2024-4367). 4.x ships ESM only,
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
-<script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.351';
-  window.pdfjsLib = pdfjsLib;
-</script>
-<script src="lib/mammoth.browser.min.js?v=3.63.351"></script>
-<script src="lib/jszip.min.js?v=3.63.351"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.351"></script>
-<script src="js/version.js?v=3.63.351"></script>
-<script src="js/storage.js?v=3.63.351"></script>
-<script src="js/theme.js?v=3.63.351"></script>
-<script src="js/audio.js?v=3.63.351"></script>
-<script src="js/scenes.js?v=3.63.351"></script>
-<script src="js/wf-debug.js?v=3.63.351"></script>
-<script src="js/provider-models.js?v=3.63.351"></script>
-<script src="js/provider-catalog.js?v=3.63.351"></script>
-<script src="js/api.js?v=3.63.351"></script>
-<script src="js/templates.js?v=3.63.351"></script>
-<script src="js/api-links.js?v=3.63.351"></script>
-<script src="js/app.js?v=3.63.351"></script>
-<script src="js/helper-handlers.js?v=3.63.351"></script>
-<script src="js/app-bootstrap.js?v=3.63.351"></script>
+<script type="module" src="js/pdf-loader.mjs?v=3.63.352"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.352"></script>
+<script src="lib/jszip.min.js?v=3.63.352"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.352"></script>
+<script src="js/version.js?v=3.63.352"></script>
+<script src="js/storage.js?v=3.63.352"></script>
+<script src="js/theme.js?v=3.63.352"></script>
+<script src="js/audio.js?v=3.63.352"></script>
+<script src="js/scenes.js?v=3.63.352"></script>
+<script src="js/wf-debug.js?v=3.63.352"></script>
+<script src="js/provider-models.js?v=3.63.352"></script>
+<script src="js/provider-catalog.js?v=3.63.352"></script>
+<script src="js/api.js?v=3.63.352"></script>
+<script src="js/templates.js?v=3.63.352"></script>
+<script src="js/api-links.js?v=3.63.352"></script>
+<script src="js/app.js?v=3.63.352"></script>
+<script src="js/helper-handlers.js?v=3.63.352"></script>
+<script src="js/app-bootstrap.js?v=3.63.352"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
