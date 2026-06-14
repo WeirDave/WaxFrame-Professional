@@ -2,6 +2,61 @@
 
 ---
 
+## v3.63.349
+
+**Strict-CSP migration · Phase 3: api-details.html migrated · `consoles-toggle` action + generic `data-hide-on-error` image-fallback shim · 14 of 16 HTML pages strict-CSP-clean**
+
+Build: `20260614-007`<br>
+Released: `2026-06-14`
+
+### What changed
+
+`api-details.html` is migrated. Same handler shapes as the helpers swept in v3.63.348, plus two new ones surfaced by this page specifically.
+
+**1. `consoles-toggle` action added to `js/helper-handlers.js`.** Backs the "🔑 Get API keys" button that was the lone `onclick="toggleGuideConsoles()"` on this page. The action sits in the shared ACTIONS table behind a `typeof` guard, so it's a safe no-op on any page that doesn't load `js/api-links.js`.
+
+**2. `data-hide-on-error` generic image-fallback.** This page (and `index.html` later) carries 18 `<img onerror="this.style.display='none'">` attributes on provider-icon thumbnails — the inline handler hides the image if a referenced PNG ever goes missing. Inline `onerror` requires `'unsafe-inline'` just like `onclick`, so it has to go too. Replaced with a capture-phase document-level listener:
+
+```js
+document.addEventListener('error', function(e) {
+  var t = e.target;
+  if (t && t.tagName === 'IMG' && 'hideOnError' in t.dataset) {
+    t.style.display = 'none';
+  }
+}, true);
+```
+
+Capture phase is required because the `error` event does not bubble. Every `<img onerror="this.style.display='none'">` on the page becomes `<img data-hide-on-error>`. Same behavior, no inline-script surface.
+
+**3. `api-details.html` swept to 0** via the same sed transform as v3.63.348 plus the two new patterns above (`onclick="toggleGuideConsoles()"` and `onerror="this.style.display='none'"`). `<script src="js/helper-handlers.js">` added to the page's script list.
+
+| File                | Before | After |
+| ------------------- | ------:| -----:|
+| `api-details.html`  |     55 |     0 |
+
+### Where we stand
+
+| Status | Files | Handlers remaining |
+| --- | --- | ---:|
+| ✅ Clean | 14 helper pages | 0 |
+| ⏳ Pending | `prompt-editor.html`, `index.html` | 447 |
+
+### What's still left
+
+- `prompt-editor.html` (51) — needs a page-specific dispatcher for `resetAll`, `saveAll`, `resetOne('NAME')`, `markModified('NAME')`. New `js/prompt-editor-handlers.js`. One release.
+- `index.html` (~389 click handlers + 7 `onerror` images). Modal-by-modal sub-batches over multiple releases.
+- Trailing `app-version-stamp` inline `<script>` on every helper page (the post-load DOM walk). Must move into shared JS before `'unsafe-inline'` drops.
+- Pre-paint inline scripts in every `<head>` (clickjacking guard + CSP violation listener) remain inline by design; will need `sha256-` hash entries in the strict directive.
+
+### Files touched
+
+- [js/helper-handlers.js](js/helper-handlers.js) — new `consoles-toggle` action; document-level capture-phase `error` listener for `data-hide-on-error`
+- [api-details.html](api-details.html) — 55 inline `on*=` (37 click + 18 error) → 0; loads `js/helper-handlers.js`
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 8 budget for `api-details.html` ratcheted to 0
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps
+
+---
+
 ## v3.63.348
 
 **Strict-CSP migration · Phase 2: 11 helper pages swept to data-action delegation in one batch · 13 of 16 HTML pages now strict-CSP-clean**
