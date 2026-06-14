@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.344
+
+**CI smoke job: raise `getWsUrl()` poll budget from 12s to 60s so cold GitHub runners stop flaking**
+
+Build: `20260614-002`<br>
+Released: `2026-06-14`
+
+### What changed
+
+The CI behavior smoke job from v3.63.341 flaked on its second real run with `FATAL Error: Chrome DevTools endpoint did not become available`. Cause: `getWsUrl()` in [tools/capture.mjs](tools/capture.mjs) polled Chrome's remote-debugging port for 60 iterations × 200ms = **12 seconds** before giving up. That budget worked on the first warm-runner run but blew through on the second run when the runner was cold — Chrome's first-time profile creation + remote-debugging port bind drifted past 12s under shared-infra load. Classic flake, not a real failure.
+
+Raised the budget to **300 iterations × 200ms = 60 seconds**. The poll itself is cheap (one fetch every 200ms), so the higher ceiling gives generous headroom without slowing the happy path — most runs still resolve in well under a second, and the only time it spends close to 60s is on a cold runner that would otherwise have failed. Error message also updated to mention the 60s budget so future debugging starts from the right number.
+
+### Files touched
+
+- [tools/capture.mjs](tools/capture.mjs:141) — `getWsUrl()` iteration budget raised from 60 to 300; explanatory comment block + updated error message
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.343
 
 **Round History modal XSS hardening: restored reviewer IDs are now attribute-escaped and tab lookup no longer builds selectors from imported data**
