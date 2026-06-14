@@ -2,6 +2,62 @@
 
 ---
 
+## v3.63.362
+
+**Phase 8 surface 2: hive setup grid — top-level controls (mode tabs, header buttons, profile bar) migrated to `data-action` delegation**
+
+Build: `20260614-020`<br>
+Released: `2026-06-14`
+
+### Why this release
+
+Continues Phase 8 — one feature surface at a time. v3.63.361 migrated the reference-card grid; this release handles the next chunk: the **hive setup grid's top-level controls** (the static toolbar that sits above the per-AI rows). The per-AI-row internals (model swap, key entry, eye toggle, clear, Test, AI variants, Why?, custom-AI checkbox, model-select onchange, custom-AI rename) stay scoped to follow-up releases — they're a bigger surface with more variation and shouldn't share a click-test window with the toolbar.
+
+### What changed
+
+13 inline handlers across three small render functions in [js/app.js](js/app.js):
+
+| Function | Element | Before | After |
+|---|---|---|---|
+| `renderHiveModeToggle` | 🌎 Internet Based AI tab | `onclick="setHiveMode('internet')"` | `data-action="call" data-fn="setHiveMode" data-arg="internet"` |
+| `renderHiveModeToggle` | 🖥 Server Based AI tab | `onclick="setHiveMode('server')"` | `data-action="call" data-fn="setHiveMode" data-arg="server"` |
+| `renderWorkerBeeToolbar` | Add Custom AI | `onclick="showAddCustomAI()"` | `data-action="call" data-fn="showAddCustomAI"` |
+| `renderWorkerBeeToolbar` | Test All Keys | `onclick="testAllKeys()"` | `data-action="call" data-fn="testAllKeys"` |
+| `renderWorkerBeeToolbar` | Recommend Models for All | `onclick="recommendModelsForAll()"` | `data-action="call" data-fn="recommendModelsForAll"` |
+| `renderWorkerBeeToolbar` | Provider Sites | `onclick="toggleHiveConsoles()"` | `data-action="call" data-fn="toggleHiveConsoles"` |
+| `renderWorkerBeeToolbar` | Import from Model Server | `onclick="showImportServerModal()"` | `data-action="call" data-fn="showImportServerModal"` |
+| `renderWorkerBeeToolbar` | ⊞ Expand all | `onclick="expandAllAISetupRows()"` | `data-action="call" data-fn="expandAllAISetupRows"` |
+| `renderWorkerBeeToolbar` | ⊟ Collapse all | `onclick="collapseAllAISetupRows()"` | `data-action="call" data-fn="collapseAllAISetupRows"` |
+| `renderHiveProfileBar` | 💾 Save as new profile | `onclick="openSaveHiveProfileModal()"` | `data-action="call" data-fn="openSaveHiveProfileModal"` |
+| `renderHiveProfileBar` | 🗑 Delete profile | `onclick="deleteCustomHiveProfile('${id}')"` | `data-action="call" data-fn="deleteCustomHiveProfile" data-arg="${id}"` |
+| `renderHiveProfileBar` | Profile `<select>` | `onchange="applyHiveProfile(this.value)"` | `data-change-action="call" data-fn="applyHiveProfile" data-arg-value="1"` |
+
+Every handler is single-literal-arg or no-arg, so all 13 fit the existing dispatcher convention straight — no new shims needed. The hive-profile `<select>` uses `data-arg-value="1"` so `callAction` forwards `el.value` to `applyHiveProfile`, matching the original `this.value` semantics.
+
+### Click-test (mandatory before commit, per Phase 8 plan)
+
+Live in the preview server with `screen-bees` mounted:
+
+- ✅ Mode-toggle tabs — both 🌎 Internet and 🖥 Server clicks dispatched `setHiveMode` with the correct argument
+- ✅ Worker-bee toolbar (Internet mode) — all 4 action buttons (Add Custom AI, Test All Keys, Recommend Models for All, Provider Sites) plus both expand-all / collapse-all controls reached their target functions with no args
+- ✅ Hive-profile bar — Save button reached `openSaveHiveProfileModal`; `<select>` `change` event forwarded the selected option value to `applyHiveProfile`
+- ✅ Zero console errors / warnings
+
+Server-mode-only buttons (Import from Model Server) share the dispatcher shape with the Internet-mode buttons — once one button reaches its target via the generic `call` action, the dispatcher behavior is proven for the rest.
+
+### What's NOT in this release
+
+- Per-AI-row handlers inside `renderAISetupRow` / hive-card body (model-select dropdown onchange, `swapAIModelFromHiveCard`, `saveModelForAI`, key-input + Enter + eye toggle + clear + Test, AI-variant add/remove, custom-AI checkbox, "Recommend Models" per-row, `toggleHiveWhy`, `toggleAISetupRow`, `startCustomAIRename`, `setBuilder`) — still inline, still working under loose script-src
+- Template gallery, settings TOC, model selects, holdout/conflict decision UI, applied-bulk-btn, round-history modal, source-size-check, session-bee toggles, bee-tooltip, import-server modal rows — all out of scope; queued for later releases
+- `script-src` stays loose; ratchet count drops from 102 → 89 with this release
+
+### Files touched
+
+- [js/app.js](js/app.js) — 13 inline attrs across `renderHiveModeToggle`, `renderWorkerBeeToolbar`, `renderHiveProfileBar` rewritten
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.361
 
 **Phase 8 begins: reference-card surface migrated from inline `on*=` template handlers to `data-action` delegation**
