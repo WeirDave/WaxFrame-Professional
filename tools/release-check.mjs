@@ -518,7 +518,7 @@ const INLINE_HANDLER_BUDGET = {
   'document-playbooks.html':      0, // migrated in v3.63.348
   'help.html':                    0,
   'hive-profiles.html':           0, // migrated in v3.63.348
-  'index.html':                 396,
+  'index.html':                   0, // migrated in v3.63.351
   'privacy.html':                 0, // migrated in v3.63.348
   'prompt-editor.html':           0, // migrated in v3.63.350
   'start-here.html':              0, // migrated in v3.63.347

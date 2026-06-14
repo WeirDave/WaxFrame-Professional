@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260614-008
+// Build: 20260614-009
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -140,8 +140,125 @@
     'license-manage-modal-backdrop-close': function(el, e) {
       if (e.target !== el) return;
       if (typeof hideLicenseManageModal === 'function') hideLicenseManageModal();
+    },
+
+    // ── Generic dispatch (v3.63.351, for index.html mass migration) ──
+    //
+    // The work-screen had ~390 `<button onclick="funcName()">` wired
+    // to functions in app.js. Naming each as its own ACTIONS entry
+    // would balloon this file with hundreds of one-line shims; the
+    // generic actions below read the function name (and any single
+    // argument) from data attributes on the element instead:
+    //
+    //   data-action="call"        + data-fn="funcName"
+    //   data-action="call"        + data-fn="funcName" + data-arg="X"
+    //   data-action="call"        + data-fn="funcName" + data-arg-this="1"  (passes the element)
+    //   data-action="call"        + data-fn="funcName" + data-arg-event="1" (passes the event)
+    //   data-action="call-chain"  + data-fn="f1,f2,f3" (calls each, no args)
+    //   data-action="backdrop-call" + data-fn="closeFooModal" (only fires when target === el)
+    //   data-action="set-data"    + data-key="userTyped" + data-value="true"
+    //   data-action="noop"        (consumes the click — parent data-actions do not fire)
+    //
+    // The function name is resolved via a dotted-path walk over window
+    // (so "WF_DEBUG.bundleForScout" works). This is NOT eval — we never
+    // parse a string as code; we only look up a name in a known scope
+    // and invoke it. Safe under strict CSP.
+    'call': callAction,
+    'call-chain': function(el) {
+      // Each chained function is invoked with the dispatched element
+      // as its first argument. Functions that don't need it (the vast
+      // majority) ignore the extra arg. Functions that DO need it
+      // (the __wf* bootstrap shims in app-bootstrap.js, which read
+      // el.dataset / el.value to replicate the original inline
+      // expression) get exactly what they need.
+      var names = (el.dataset.fn || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+      for (var i = 0; i < names.length; i++) {
+        var fn = resolveDotted(names[i]);
+        if (typeof fn === 'function') fn(el);
+      }
+    },
+    'backdrop-call': function(el, e) {
+      if (e.target !== el) return;
+      var fn = resolveDotted(el.dataset.fn);
+      if (typeof fn === 'function') fn();
+    },
+    'set-data': function(el) {
+      var key = el.dataset.key, value = el.dataset.value;
+      if (key) el.dataset[key] = value === undefined ? '' : value;
+    },
+    // 'noop' replaces inline `onclick="event.stopPropagation()"`. It
+    // halts both the delegated walk-up (our dispatcher returns at the
+    // first data-action match) AND the native bubble — important when
+    // a non-delegated listener is attached higher in the tree, which
+    // is what the original stopPropagation() was guarding against.
+    'noop': function(_, e) { if (e) e.stopPropagation(); },
+
+    // ── index.html-specific composites (v3.63.351) ─────────────
+    // Multi-statement onclick patterns that share a stable shape.
+    // Naming them keeps the migration script's regex tractable and
+    // avoids one-off generic encodings like `call-chain` plus an
+    // out-of-band arg.
+    //
+    //   close nav AND switch screens (data-arg = screen id)
+    'nav-goto-screen': function(el) {
+      if (typeof closeNavMenu === 'function') closeNavMenu();
+      if (typeof goToScreen === 'function') goToScreen(el.dataset.arg);
+    },
+    //   close the finish-round modal AND return to the welcome screen
+    'finish-exit-home': function() {
+      if (typeof hideFinishModal === 'function') hideFinishModal();
+      if (typeof goToScreen === 'function') goToScreen('screen-welcome');
+    },
+    //   close the finish-round modal AND open Save-Template
+    'finish-save-template': function() {
+      if (typeof hideFinishModal === 'function') hideFinishModal();
+      if (typeof openSaveTemplateModal === 'function') openSaveTemplateModal();
+    },
+    //   Programmatically click a hidden <input type="file"> (the file-
+    //   picker pattern used by drop zones).
+    'click-element': function(el) {
+      var t = document.getElementById(el.dataset.target);
+      if (t) t.click();
+    },
+    //   Hide an element by id by setting style.display = 'none'.
+    'hide-element': function(el) {
+      var t = document.getElementById(el.dataset.target);
+      if (t) t.style.display = 'none';
     }
   };
+
+  // Shared helper for the generic `call` action. Used by both the click
+  // ACTIONS table and the input/change INPUT_ACTIONS / CHANGE_ACTIONS
+  // tables below. The arg modes (most specific first):
+  //   data-arg-value="1"   → fn(el.value)    -- text/select input value
+  //   data-arg-checked="1" → fn(el.checked)  -- checkbox/radio state
+  //   data-arg-this="1"    → fn(el)          -- the element itself
+  //   data-arg-event="1"   → fn(event)       -- the event object
+  //   data-arg="X"         → fn("X")         -- literal string from attr
+  //   (none)               → fn()            -- no args
+  function callAction(el, e) {
+    var fn = resolveDotted(el.dataset.fn);
+    if (typeof fn !== 'function') return;
+    if (el.dataset.argValue === '1')         fn(el.value);
+    else if (el.dataset.argChecked === '1')  fn(el.checked);
+    else if (el.dataset.argThis === '1')     fn(el);
+    else if (el.dataset.argEvent === '1')    fn(e);
+    else if ('arg' in el.dataset)            fn(el.dataset.arg);
+    else                                     fn();
+  }
+
+  // Walk a dotted name ("WF_DEBUG.bundleForScout") through `window`
+  // and return the resolved value, or undefined if any link is missing.
+  function resolveDotted(name) {
+    if (!name) return undefined;
+    var parts = name.split('.');
+    var cur = window;
+    for (var i = 0; i < parts.length; i++) {
+      if (cur == null) return undefined;
+      cur = cur[parts[i]];
+    }
+    return cur;
+  }
 
   // ── KEY_ACTIONS table ──────────────────────────────────────
   //
@@ -154,7 +271,43 @@
       if (e.key === 'Enter' && typeof submitLicenseKey === 'function') {
         submitLicenseKey();
       }
+    },
+    // Generic Enter-key trigger. data-fn names the function to call,
+    // optionally with data-arg / data-arg-this / data-arg-event.
+    // data-prevent-default="1" calls e.preventDefault() (used by the
+    // Custom-AI fetch-models input).
+    'enter-call': function(el, e) {
+      if (e.key !== 'Enter') return;
+      if (el.dataset.preventDefault === '1') e.preventDefault();
+      callAction(el, e);
+    },
+    // Two-key dispatch for the inline wfPrompt input (Enter to OK,
+    // Escape to cancel). data-fn-enter / data-fn-escape name the
+    // window-scoped functions to call.
+    'enter-escape-call': function(el, e) {
+      var name = e.key === 'Enter' ? el.dataset.fnEnter
+               : e.key === 'Escape' ? el.dataset.fnEscape
+               : null;
+      if (!name) return;
+      var fn = resolveDotted(name);
+      if (typeof fn === 'function') fn();
     }
+  };
+
+  // ── INPUT_ACTIONS and CHANGE_ACTIONS tables ────────────────
+  //
+  // For oninput / onchange handlers. data-input-action / data-change-action
+  // pick which entry fires. Generic `call` / `call-chain` / `set-data`
+  // mirror the click side and share data-fn / data-arg conventions.
+  const INPUT_ACTIONS = {
+    'call':       callAction,
+    'call-chain': ACTIONS['call-chain'],
+    'set-data':   ACTIONS['set-data']
+  };
+  const CHANGE_ACTIONS = {
+    'call':       callAction,
+    'call-chain': ACTIONS['call-chain'],
+    'set-data':   ACTIONS['set-data']
   };
 
   // ── Click dispatcher ───────────────────────────────────────
@@ -184,14 +337,32 @@
     if (fn) fn(el, e);
   });
 
+  // ── Input / Change dispatchers ─────────────────────────────
+  // Single listener each — input and change events fire on a focused
+  // form control, no tree walk needed.
+  document.addEventListener('input', function(e) {
+    var el = e.target;
+    if (!el || !el.dataset || !el.dataset.inputAction) return;
+    var fn = INPUT_ACTIONS[el.dataset.inputAction];
+    if (fn) fn(el, e);
+  });
+  document.addEventListener('change', function(e) {
+    var el = e.target;
+    if (!el || !el.dataset || !el.dataset.changeAction) return;
+    var fn = CHANGE_ACTIONS[el.dataset.changeAction];
+    if (fn) fn(el, e);
+  });
+
   // ── Image load-error fallback ──────────────────────────────
   // Replaces inline onerror="this.style.display='none'" on icon
   // imagery. The `error` event does not bubble, so this listener
   // must run in the capture phase. data-hide-on-error opts in.
+  // data-dim-on-error is the lighter variant (drops to 30% opacity)
+  // used on the Import-Server provider thumbnails in index.html.
   document.addEventListener('error', function(e) {
     var t = e.target;
-    if (t && t.tagName === 'IMG' && 'hideOnError' in t.dataset) {
-      t.style.display = 'none';
-    }
+    if (!t || t.tagName !== 'IMG' || !t.dataset) return;
+    if ('hideOnError' in t.dataset) t.style.display = 'none';
+    else if ('dimOnError' in t.dataset) t.style.opacity = '0.3';
   }, true);
 })();

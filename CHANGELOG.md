@@ -2,6 +2,86 @@
 
 ---
 
+## v3.63.351
+
+**Strict-CSP migration · Phase 5: index.html migrated in a single sweep · 16 of 16 HTML pages strict-CSP-clean · ready for the CSP cutover**
+
+Build: `20260614-009`<br>
+Released: `2026-06-14`
+
+### What changed
+
+The last and biggest target. `index.html` carried 396 inline `on*=` attributes spanning 234 unique handler shapes — every screen, every modal, every settings input, every dev-mode toggle. Migrated in one mechanical sweep via a new `tools/migrate-inline-handlers.mjs` driver that maps regex patterns to data-action substitutions; the file goes from 396 inline handlers to zero, leaving 15 of 16 HTML pages already clean from prior phases and `index.html` now joining them.
+
+**1. `js/helper-handlers.js` extended with a generic dispatcher.** Hundreds of `<button onclick="funcName()">` patterns would have needed hundreds of named ACTIONS entries. Instead, three generic actions read the target function name (and any single argument) straight from data attributes on the element:
+
+| Action               | Wires           | Replaces                                   |
+| -------------------- | --------------- | ------------------------------------------ |
+| `call`               | `data-fn="X"` + arg modes | `onclick="X()"`, `onclick="X('Y')"`, `onclick="X(this)"`, `onclick="X(event)"` |
+| `call-chain`         | `data-fn="A,B,C"` | `onclick="A();B();C()"` (no args)        |
+| `backdrop-call`      | `data-fn="X"`   | `onclick="if(event.target===this)X()"`     |
+| `set-data`           | `data-key`/`data-value` | `onclick="this.dataset.X='Y'"`       |
+| `noop`               | (no data)       | `onclick="event.stopPropagation()"` — preserves stopPropagation semantics |
+
+Arg modes for `call`: `data-arg="STR"` (literal), `data-arg-this="1"` (element), `data-arg-event="1"` (event), `data-arg-value="1"` (el.value — text/select), `data-arg-checked="1"` (el.checked — checkbox/radio).
+
+Function names are resolved via a dotted-path walk on `window` (so `WF_DEBUG.bundleForScout` works). This is **not** `eval` — no string is ever parsed as code; only a known name is looked up in a scope and invoked. Strict-CSP-compatible.
+
+**2. KEY_ACTIONS / INPUT_ACTIONS / CHANGE_ACTIONS** added alongside the click ACTIONS. Same `call` / `call-chain` / `set-data` shape. Two new specialized key actions:
+- `enter-call` — call `data-fn` on Enter; `data-prevent-default="1"` calls `e.preventDefault()` first (used by the Custom-AI fetch-models input).
+- `enter-escape-call` — `data-fn-enter` / `data-fn-escape` for the inline wfPrompt input.
+
+**3. Five `index.html`-specific composite actions** added to the ACTIONS table for multi-statement patterns that share a stable shape (close nav + go to screen, close finish modal + go home, etc.).
+
+**4. `js/app-bootstrap.js` (new).** Three tiny glue functions for inline expressions the generic `call` dispatcher couldn't faithfully express on its own (`WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)` self-toggle; `this.dataset.userTyped='true'` in a chain; `autoFillAIName(this.value); updateChooseModelLink()` chained with a `.value` mid-stream). Each is named with a `__wf` prefix so they're obvious as migration shims.
+
+**5. `tools/migrate-inline-handlers.mjs` (new).** Reusable, idempotent driver script. Reads any HTML file, applies the pattern transformations in priority order (specific → generic), writes back, then reports remaining inline-handler count and shows surviving lines. Was used to do the 396-handler sweep in one run; will stay in the repo for future audits.
+
+**6. `index.html` swept to 0:**
+
+| File           | Before | After |
+| -------------- | ------:| -----:|
+| `index.html`   |    396 |     0 |
+
+**7. `tools/release-check.mjs` Check 8 budget for `index.html` ratcheted to 0.**
+
+### What the migration looks like in the diff
+
+A few representative shape changes:
+
+| Before                                                                  | After                                                              |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `onclick="closeNavMenu()"`                                              | `data-action="nav-close"`                                          |
+| `onclick="goToScreen('screen-bees')"`                                   | `data-action="call" data-fn="goToScreen" data-arg="screen-bees"`   |
+| `onclick="WF_DEBUG.bundleForScout()"`                                   | `data-action="call" data-fn="WF_DEBUG.bundleForScout"`             |
+| `onclick="if(event.target===this)closeRoundErrorModal()"`               | `data-action="backdrop-call" data-fn="closeRoundErrorModal"`       |
+| `onclick="closeNavMenu();goToScreen('screen-bees')"`                    | `data-action="nav-goto-screen" data-arg="screen-bees"`             |
+| `onchange="settingsToggleSlowAlerts(this.checked)"`                     | `data-change-action="call" data-fn="settingsToggleSlowAlerts" data-arg-checked="1"` |
+| `<img onerror="this.style.opacity='0.3'">`                              | `<img data-dim-on-error>`                                          |
+
+### Where we stand
+
+| Status | Files | Inline handlers |
+| --- | --- | ---:|
+| ✅ Clean | 16 of 16 HTML pages | 0 |
+| ⏳ Pending | (none) | 0 |
+
+`script-src 'unsafe-inline'` can now be dropped — every inline `on*=` attribute is gone. Two surfaces still need cleanup before the directive change ships:
+
+- Trailing `app-version-stamp` inline `<script>` on every page (one-line `document.querySelectorAll(...)` walk). Must move into shared JS.
+- Pre-paint `<head>` scripts (clickjacking guard + CSP violation listener, both from v3.63.345) stay inline by design — when CSP tightens they'll need `'sha256-...'` hash entries in the strict directive.
+
+### Files touched
+
+- [js/helper-handlers.js](js/helper-handlers.js) — generic `call` / `call-chain` / `backdrop-call` / `set-data` / `noop` ACTIONS; mirrored INPUT_ACTIONS / CHANGE_ACTIONS; new `enter-call` / `enter-escape-call` KEY_ACTIONS; new `data-dim-on-error` image fallback variant; 5 index.html-specific composite actions
+- [js/app-bootstrap.js](js/app-bootstrap.js) — NEW: three `__wf*` glue functions for expressions the generic dispatcher can't represent
+- [tools/migrate-inline-handlers.mjs](tools/migrate-inline-handlers.mjs) — NEW: driver script for the sweep
+- [index.html](index.html) — 396 inline `on*=` → 0; loads `js/helper-handlers.js` + `js/app-bootstrap.js`
+- [tools/release-check.mjs](tools/release-check.mjs) — Check 8 budget for `index.html` ratcheted to 0
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps
+
+---
+
 ## v3.63.350
 
 **Strict-CSP migration · Phase 4: prompt-editor.html migrated (inline behavior block extracted to js/prompt-editor.js + per-page dispatcher) · 15 of 16 HTML pages now strict-CSP-clean · only index.html remains**
