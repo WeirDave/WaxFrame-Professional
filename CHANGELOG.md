@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.341
+
+**CI behavior smoke job: headless Chrome boots the app, seeds a realistic session, asserts the work screen renders without throwing**
+
+Build: `20260613-035`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Closes Codex's Medium-severity "CI validates release ceremony, not app behavior" finding. The release-check has always confirmed *the files are consistent*, but it never proved *the app actually boots*. A regression in storage parsing, IDB shape, the work screen's render path, or even a missing `<script>` tag would sail through `release-check.mjs` and only surface when a real user opened the page. Now it surfaces at PR time.
+
+The screenshot capture tool ([tools/capture.mjs](tools/capture.mjs)) already had everything needed — it's a CDP driver that seeds a real localStorage + IndexedDB session, navigates to `index.html`, and waits for a readiness expression to confirm the target screen actually rendered (not just that the page loaded). It exits 1 on any failure. It was just never wired to CI. Codex's review made the gap obvious.
+
+**New `smoke` job in [.github/workflows/release-check.yml](.github/workflows/release-check.yml):**
+- Runs in parallel with the existing `validate` job (separate runner, doesn't slow ceremony validation).
+- Locates Chrome on the runner — tries `google-chrome-stable` → `google-chrome` → `chromium-browser` → `chromium` → `/opt/google/chrome/chrome` → apt-installed fallback. GitHub's `ubuntu-latest` ships Chrome pre-installed, so the fallback rarely fires.
+- Calls `node tools/capture.mjs … dark --only-work` against `/tmp/wf-smoke` (output discarded — the assertion is the exit code, not the PNG).
+- `--only-work` runs a single high-value shot: the work screen, in dark mode, seeded with the full Chocolate Chip Cookies session including 6 reviewer responses, console-log restore, and a Round 2 Refine phase. If the app's boot path, storage parser, work-screen render, or session restoration breaks — the readiness expression times out and the job exits 1.
+- Node 22 (the existing validate job uses Node 20; the smoke job needs the built-in `WebSocket` constructor capture.mjs requires).
+- 8-minute timeout (single shot finishes in 30-60s; the cushion is for first-time Chrome warmup on a cold runner).
+
+This is a *real* behavior smoke, not a syntactic one. The seeded session exercises:
+- `loadSettings()` parsing the hive blob
+- IndexedDB restoration of the session store
+- `goToScreen('screen-work')` and the full work-screen render pipeline
+- The console-restore sanitizer Codex specifically validated as "real" in the same review
+
+Future shots can be added by extending the `SHOTS` array in `tools/capture.mjs` — checkpoint restore, round-history modal (the v3.63.338 XSS surface), and custom AI setup are all natural next additions.
+
+### Files touched
+
+- [.github/workflows/release-check.yml](.github/workflows/release-check.yml) — new `smoke` job parallel to `validate`; Chrome-binary detection step; Node 22 for the built-in WebSocket constructor
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.340
 
 **Content-Security-Policy meta tag landed on every HTML page · release-check guard ensures it can't silently regress**
