@@ -9046,23 +9046,75 @@ async function classifyTiersForProvider(provider, opts) {
     filtered.map((m, i) => `${i + 1}. ${m}`).join('\n')
   );
 
+  // v3.63.333 — Perplexity-grounded classification for hallucination-prone
+  // providers. The numbered-list pattern in MODEL_TIER_CLASSIFICATION_PROMPT
+  // means the picks themselves can't be hallucinated (the asker picks BY
+  // NUMBER from a real list), but the WHY text can — and Together AI's small
+  // free-tier askers (LFM2-24B etc.) consistently write rationale prose that
+  // names models not in the list. The fix David asked for: route the classify
+  // call through Perplexity Sonar, which has live web search built in, so
+  // both picks AND rationale anchor to the provider's actual current docs
+  // and pricing pages. The model LIST still comes from the provider's own
+  // /v1/models (truth source for what's available); only the asker swaps.
+  // Falls back to the provider's own asker when Perplexity has no key.
+  // The set is conservative — only providers David has observed hallucinating.
+  // Add more here when a provider's native asker proves unreliable.
+  const perplexityKeyed = !!(API_CONFIGS.perplexity && API_CONFIGS.perplexity._key);
+  const useGroundedAsker = _PERPLEXITY_GROUNDED_PROVIDERS.has(provider) && perplexityKeyed;
+  let askerModel  = askingModel;
+  let askerCfg    = cfg;
+  let askerFormat = format;
+  let askerPrompt = prompt;
+  let via         = 'native';
+  if (useGroundedAsker) {
+    const pFb = (typeof MODEL_FALLBACKS !== 'undefined' && MODEL_FALLBACKS.perplexity) || ['sonar-pro'];
+    // sonar-pro pairs web search with strict format-following. sonar (base)
+    // is also fine but sonar-pro's grounding is noticeably tighter when the
+    // request explicitly asks for catalog cross-check.
+    askerModel  = pFb.find(m => m === 'sonar-pro') || pFb[0] || 'sonar-pro';
+    askerCfg    = API_CONFIGS.perplexity;
+    askerFormat = 'openai';
+    via         = 'perplexity-grounded';
+    askerPrompt =
+      `IMPORTANT: You are NOT classifying your own (Perplexity's) models. ` +
+      `You are classifying ${provider}'s models from a list provided below. ` +
+      `Use your web search ability to look up ${provider}'s CURRENT chat-model catalog and pricing tiers ` +
+      `before picking — some entries in the list may be community-uploaded mirrors, deprecated, or out-of-primary-lineup. ` +
+      `Anchor every pick AND every "WHY:" rationale in ${provider}'s public documentation, ` +
+      `NOT in the literal model names in the list.\n\n` +
+      prompt;
+  }
+
   let url, headers, body;
   try {
-    if (format === 'anthropic') {
-      url = cfg.endpoint;
-      headers = { 'Content-Type': 'application/json', 'x-api-key': cfg._key, 'anthropic-version': '2023-06-01' };
-      body = JSON.stringify({ model: askingModel, max_tokens: 400, messages: [{ role: 'user', content: prompt }] });
-    } else if (format === 'google') {
-      url = `https://generativelanguage.googleapis.com/v1beta/models/${askingModel}:generateContent`;
-      headers = { 'Content-Type': 'application/json', 'x-goog-api-key': cfg._key };
-      body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+    if (askerFormat === 'anthropic') {
+      url = askerCfg.endpoint;
+      headers = { 'Content-Type': 'application/json', 'x-api-key': askerCfg._key, 'anthropic-version': '2023-06-01' };
+      body = JSON.stringify({ model: askerModel, max_tokens: 400, messages: [{ role: 'user', content: askerPrompt }] });
+    } else if (askerFormat === 'google') {
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${askerModel}:generateContent`;
+      headers = { 'Content-Type': 'application/json', 'x-goog-api-key': askerCfg._key };
+      body = JSON.stringify({ contents: [{ parts: [{ text: askerPrompt }] }] });
     } else {
-      url = cfg.endpoint;
+      url = askerCfg.endpoint;
       headers = { 'Content-Type': 'application/json' };
-      if (cfg._key) headers['Authorization'] = `Bearer ${cfg._key}`;
-      body = JSON.stringify({ model: askingModel, messages: [{ role: 'user', content: prompt }] });
+      if (askerCfg._key) headers['Authorization'] = `Bearer ${askerCfg._key}`;
+      body = JSON.stringify({ model: askerModel, messages: [{ role: 'user', content: askerPrompt }] });
     }
-    const resp = await fetch(url, { method: 'POST', headers, body });
+    // v3.63.333 — Single backoff retry on 429. classifyTiersForAllKeyed
+    // fans out to every keyed provider in parallel; per-minute quotas
+    // (Mistral free-tier is the canonical case in David's log — two
+    // back-to-back 429s on recheck) trip when 6 providers hit at the
+    // same instant. One 5s wait usually clears the burst. If the second
+    // attempt also 429s, the user genuinely is throttled and additional
+    // retries are noise — record + return null and let the bundle/UI
+    // surface the quota condition.
+    let resp = await fetch(url, { method: 'POST', headers, body });
+    if (resp.status === 429) {
+      console.info(`[tiers:${provider}] 429 from asker — backing off 5s then retrying once`);
+      await new Promise(r => setTimeout(r, 5000));
+      resp = await fetch(url, { method: 'POST', headers, body });
+    }
     if (!resp.ok) {
       const errBody = await resp.text().catch(() => '');
       _recordTierError(provider, 'http-error', `HTTP ${resp.status} ${resp.statusText} — ${errBody.slice(0, 200)}`);
@@ -9070,11 +9122,11 @@ async function classifyTiersForProvider(provider, opts) {
     }
     const data = await resp.json();
     let text = '';
-    if (format === 'anthropic')   text = data?.content?.[0]?.text || '';
-    else if (format === 'google') text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    else                          text = data?.choices?.[0]?.message?.content || '';
+    if (askerFormat === 'anthropic')   text = data?.content?.[0]?.text || '';
+    else if (askerFormat === 'google') text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    else                               text = data?.choices?.[0]?.message?.content || '';
     if (!text) {
-      _recordTierError(provider, 'empty-response', `Empty response body from ${askingModel}`);
+      _recordTierError(provider, 'empty-response', `Empty response body from ${askerModel}`);
       return null;
     }
     const parsed = _parseTierResponse(text, filtered);
@@ -9094,14 +9146,26 @@ async function classifyTiersForProvider(provider, opts) {
       balanced: parsed.balanced,
       thinker:  parsed.thinker,
       fast:     parsed.fast
-    }, parsed.why, { modelSource, askingModel, whyTiers: parsed.whyTiers });
-    console.info(`[tiers:${provider}] classified (source: ${modelSource}, asker: ${askingModel}) —`, parsed);
-    return { ...parsed, cached: false, modelSource, askingModel };
+    }, parsed.why, { modelSource, askingModel: askerModel, whyTiers: parsed.whyTiers, via });
+    console.info(`[tiers:${provider}] classified (source: ${modelSource}, asker: ${askerModel}, via: ${via}) —`, parsed);
+    return { ...parsed, cached: false, modelSource, askingModel: askerModel, via };
   } catch (e) {
     _recordTierError(provider, 'classifier-exception', e);
     return null;
   }
 }
+
+// v3.63.333 — Providers whose native asker has been observed hallucinating
+// rationale prose. Tier classification for these routes through Perplexity
+// Sonar when Perplexity is keyed (see useGroundedAsker block above).
+// Together AI: confirmed by David from his 2026-06-13 recheck log where
+// LiquidAI/LFM2-24B-A2B wrote a WHY text referencing "Qwen2.7-7b" (does
+// not exist), "minimax-m3", "moonshotai/Kimi-K2.6" — none in the picks.
+// Add a provider here when its native asker proves unreliable AND a
+// browser-side cross-check against the provider's public docs would catch
+// it. Don't add providers with strong own-models (chatgpt/claude/gemini/
+// grok/mistral/deepseek) — their askers don't need the grounding.
+const _PERPLEXITY_GROUNDED_PROVIDERS = new Set(['together-ai']);
 
 // Convenience runner — classify every keyed provider in parallel (defaults
 // AND customs as of v3.63.140; the v3.63.139 version only walked

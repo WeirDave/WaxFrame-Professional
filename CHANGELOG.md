@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.333
+
+**Together AI tier classification routes through Perplexity Sonar (web-grounded asker) · single-shot 429 retry stops Mistral from silently dropping classification**
+
+Build: `20260613-027`<br>
+Released: `2026-06-13`
+
+### What changed
+
+Two fixes for the classifier path, both surfaced from David's 2026-06-13 recheck log.
+
+**1. Together AI: Perplexity-grounded asker.** The MODEL_TIER_CLASSIFICATION_PROMPT uses a "pick BY NUMBER from this real list" pattern so the picks themselves can never be hallucinated. But the WHY: rationale text is free-form, and Together AI's small free-tier askers (LiquidAI/LFM2-24B-A2B was the one that hit David's log) consistently write prose that references models not on the list. From David's actual run:
+
+> WHY: cheap: Llama-3.3-70B-Instruct-Turbo is large yet community tablets offer bundles under $0.50 per token. · balanced: Qwen2.7-7b is recognized as a solid flagship... · thinker: arize-ai/qwen-2-1.5b-instruct has explicit reasoning... · fast: minimax-m3 and moonshotai/Kimi-K2.6 both offer small footprints
+
+Of the model ids mentioned in WHY, none are in the actual picks. "Qwen2.7-7b" doesn't exist as a real Qwen release. "minimax-m3", "moonshotai/Kimi-K2.6" don't appear on Together's list. The picks (`Meta-Llama-3-8B-Instruct-Lite`, `Qwen2.5-7B-Instruct-Turbo`, `deepcogito/cogito-v2-1-671b`) are real — but the rationale is fabricated, which destroys user trust in the whole output.
+
+Fix: route the classification call through Perplexity Sonar instead of Together's own asker. Sonar has live web search built in — the prompt explicitly tells it "you are NOT classifying your own (Perplexity's) models, you are classifying Together AI's models, use web search to verify against their current public catalog and pricing pages, anchor every pick AND every rationale in what the provider actually documents." The model LIST still comes from Together's /v1/models (truth source for what's actually deployed); only the asker swaps. Falls back to Together's own asker if Perplexity has no key configured. Implemented via a `_PERPLEXITY_GROUNDED_PROVIDERS` set seeded with `together-ai` — the convention is documented in the code so future providers can be added when their native asker proves unreliable. Strong-own-model providers (chatgpt / claude / gemini / grok / mistral / deepseek) don't need this and aren't in the set.
+
+The cached tier blob and the `[tiers:provider]` console log now both carry a `via:` field (`'native'` or `'perplexity-grounded'`) so the Bundle for Scout export shows which path each classification took.
+
+**2. Mistral 429: single-shot retry with 5s backoff.** Same log showed Mistral hit two consecutive HTTP 429s during recheck and the classifier silently returned `result: null`. Cause: `classifyTiersForAllKeyed` fans out to every keyed provider in parallel and per-minute quotas (Mistral free tier is the canonical case) trip when 6 providers fire at the same instant. Fix is conservative — one retry after a 5s wait. That clears the burst case without becoming a retry loop that masks real quota exhaustion. If the second attempt also 429s, `_recordTierError` records it (already wired) so the Bundle for Scout export shows the quota condition.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `classifyTiersForProvider` rewired to support a grounded-asker path via Perplexity Sonar, with prompt-prepended override instructions to suppress the prompt's "YOUR OWN models" framing when the asker is Perplexity classifying someone else's catalog; 429 retry added at the fetch site with single 5s backoff; new `_PERPLEXITY_GROUNDED_PROVIDERS` set documenting the providers that route through grounded classification (currently `together-ai` only); `via:` field added to the tier cache, console log line, and return value for diagnostic visibility
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust stamps
+
+---
+
 ## v3.63.332
 
 **Dev toolbar audit: Classify Tiers retired, dead `WF_DEBUG.openViewer` Settings row removed, two orphaned wf-debug methods deleted**
