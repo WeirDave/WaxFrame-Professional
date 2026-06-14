@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260614-005
+// Build: 20260614-006
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -48,13 +48,21 @@
 
     // ── Modals (open / close by id) ──
     //   data-target="modalId"
-    'modal-open': function(el) {
+    //
+    //   When triggered from an <a> we preventDefault so the link's href
+    //   (often "#" or a fragment-only target) doesn't trigger navigation
+    //   or hash scroll. Pre-v3.63.348 the inline handlers carried an
+    //   explicit `;return false;` at the end for this; the dispatcher
+    //   now does it once for every anchor-typed action.
+    'modal-open': function(el, e) {
+      if (el.tagName === 'A') e.preventDefault();
       var id = el.dataset.target;
       if (!id) return;
       var modal = document.getElementById(id);
       if (modal) modal.classList.add('active');
     },
-    'modal-close': function(el) {
+    'modal-close': function(el, e) {
+      if (el.tagName === 'A') e.preventDefault();
       var id = el.dataset.target;
       if (!id) return;
       var modal = document.getElementById(id);
@@ -72,11 +80,19 @@
 
     // ── About modal (nav button shortcut: close nav + open about) ──
     //   data-target="aboutModalHelper" on the button
-    'about-open': function(el) {
+    'about-open': function(el, e) {
+      if (el.tagName === 'A') e.preventDefault();
       if (typeof closeNavMenu === 'function') closeNavMenu();
       var id = el.dataset.target || 'aboutModalHelper';
       var modal = document.getElementById(id);
       if (modal) modal.classList.add('active');
+    },
+
+    // ── Document download (helper-page Word export) ──
+    //   Backed by downloadPageAsDocx() in js/docx-export.js, which
+    //   reads the current page DOM and emits a .docx with images.
+    'doc-download': function() {
+      if (typeof downloadPageAsDocx === 'function') downloadPageAsDocx();
     },
 
     // ── Theme + audio ──
