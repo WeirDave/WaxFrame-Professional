@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-034
+// Build: 20260614-035
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-034';         // build stamp — update each session
+const BUILD       = '20260614-035';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2399,7 +2399,7 @@ async function submitDevPassword() {
     // Show toolbar immediately without page reload
     const tb = document.getElementById('devToolbar');
     if (tb) {
-      tb.style.display = 'flex';
+      tb.classList.remove('is-hidden');
       const savedPos = JSON.parse(localStorage.getItem('waxframe_dev_toolbar_pos') || 'null');
       if (savedPos) { tb.style.top = savedPos.top + 'px'; tb.style.left = savedPos.left + 'px'; tb.style.right = 'auto'; }
     }
@@ -2428,7 +2428,7 @@ function exitDevMode() {
   localStorage.removeItem('waxframe_dev');
   localStorage.removeItem('waxframe_dev_toolbar_pos');
   const tb = document.getElementById('devToolbar');
-  if (tb) tb.style.display = 'none';
+  if (tb) tb.classList.add('is-hidden');
   const navDevSection = document.getElementById('navDevSection');
   if (navDevSection) navDevSection.classList.remove('active');
   toast('Dev mode disabled');
@@ -21915,7 +21915,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (navDevSection) navDevSection.classList.add('active');
     const tb = document.getElementById('devToolbar');
     if (tb) {
-      tb.style.display = 'flex';
+      tb.classList.remove('is-hidden');
       // Restore saved position
       const savedPos = JSON.parse(localStorage.getItem('waxframe_dev_toolbar_pos') || 'null');
       if (savedPos) {

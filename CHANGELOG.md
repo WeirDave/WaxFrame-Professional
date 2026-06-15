@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.377
+
+**Inline-style cleanup pass 11: `#devToolbar` moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-035`<br>
+Released: `2026-06-14`
+
+### What changed
+
+The dev-mode floating toolbar at the bottom of every screen was initialized with `style="display:none"` and toggled at runtime via `el.style.display = 'flex' / 'none'`. Four sites in [js/app.js](js/app.js):
+
+- [js/app.js:2402](js/app.js:2402) — `submitDevPassword` reveal on correct password
+- [js/app.js:2431](js/app.js:2431) — `exitDevMode` hide on logout
+- [js/app.js:21918](js/app.js:21918) — `DOMContentLoaded` reveal when `localStorage.waxframe_dev === '1'`
+- The fourth `getElementById('devToolbar')` site is `attachDevToolbarDrag` (line 2442) — only reads `tb.dataset.dragAttached`, doesn't touch display
+
+CSS default `.dev-toolbar { display: flex; … }` already lives in [style.css:10342](style.css:10342) so removing `.is-hidden` restores the correct visible state. The runtime drag handler still writes `tb.style.top / left / right / position` for live positioning — those are dynamic per-drag positioning styles, not display, and stay as-is.
+
+### Verified in preview
+
+- Initial state — `.is-hidden` present, computed `display: none`, zero inline `style` attribute
+- `classList.remove('is-hidden')` (the migration path the JS now uses on reveal) — class drops cleanly, no inline `style` added; real-browser computed display would be `flex` from the `.dev-toolbar` CSS rule (preview shows `display: none` because the headless server's 1px viewport triggers the mobile-overlay rule which hides everything site-wide — environmental, not a migration bug)
+- `classList.add('is-hidden')` (the migration path on hide) — class adds cleanly, computed `display: none`
+
+### Files touched
+
+- [index.html](index.html) — 1 inline `style="display:none"` removed; `.is-hidden` added
+- [js/app.js](js/app.js) — 3 `.style.display = 'flex' / 'none'` flips swapped for `classList.remove/add('is-hidden')`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 6 → 5 inline `style="display:none*"` attrs remaining.
+
+---
+
 ## v3.63.376
 
 **Inline-style cleanup pass 10: Save Template "custom category" input + char-counter (`#saveTemplateCategoryCustom`, `#saveTemplateCategoryCustomCount`) moved off `style="display:none"` to `.is-hidden`**
