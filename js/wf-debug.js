@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260614-039
+// Build: 20260614-040
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -770,6 +770,9 @@ window.WF_ERROR_CATALOG = [
     meaning: 'The Builder produced output but did not include the %%CONFLICTS_START%% block WaxFrame needs to read the result. Some AIs ignore strict formatting instructions. Try retrying the round (often works the second time), or switch to a different Builder via Change Builder.',
     actions: [
       { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
+      // v3.63.382 — Builder-only retry against cached reviews. Saves the
+      // reviewer round-trip when only Builder synthesis was bad.
+      { label: 'Retry Builder only', kind: 'retry-builder-cached' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -789,6 +792,10 @@ window.WF_ERROR_CATALOG = [
     meaning: 'The Builder hit its API\'s max-output-tokens cap before finishing the %%CONFLICTS_START%% formatting block WaxFrame needs. This is a model capacity limit, not bad instruction-following — retrying with the same model will get truncated again. Switch to a Builder with a higher output cap (Claude / GPT / Gemini Pro all support 8K+; DeepSeek and Mistral Large work too). Some families have a hard cap that can\'t be raised — notably AI21\'s Jamba (capped at 4096 across 1.5 / 1.6 / 1.7), which is structurally incompatible with the Builder role no matter how you configure it. Jamba still works fine as a Reviewer.',
     actions: [
       { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
+      // v3.63.382 — Builder-only retry against cached reviews. Only useful
+      // after a Builder swap (same model would just truncate again), but
+      // letting the user retry just the Builder costs no reviewer tokens.
+      { label: 'Retry Builder only', kind: 'retry-builder-cached' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -799,6 +806,11 @@ window.WF_ERROR_CATALOG = [
     meaning: 'The Builder produced a document longer than the length cap you set on the Project screen. Your document was not changed and the round was not saved. You can retry (the next attempt may comply), switch to a different Builder, or raise the length cap on the Project screen.',
     actions: [
       { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
+      // v3.63.382 — Builder-only retry against cached reviews. The Builder's
+      // output is non-deterministic at typical temperatures, so a fresh
+      // attempt against the same input may comply — and it costs no
+      // reviewer tokens.
+      { label: 'Retry Builder only', kind: 'retry-builder-cached' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -809,6 +821,11 @@ window.WF_ERROR_CATALOG = [
     meaning: 'The Builder included the formatting block markers but they did not parse cleanly. The AI may have escaped or modified the markers. Retry the round or switch to a different Builder.',
     actions: [
       { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
+      // v3.63.382 — Builder-only retry against cached reviews. Delimiter
+      // mis-formatting is usually a one-off model glitch; a fresh Builder
+      // call against the same reviews often parses cleanly. No reviewer
+      // tokens are spent.
+      { label: 'Retry Builder only', kind: 'retry-builder-cached' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -1179,6 +1196,20 @@ function renderTroubleshootingCard(entry, ctx) {
             window.retrySingleAIInPartialRound(ctx.aiId);
           } else if (typeof toast === 'function') {
             toast('⚠️ Re-send unavailable — single-AI retry helper not loaded');
+          }
+        };
+      } else if (a.kind === 'retry-builder-cached') {
+        // v3.63.382 — Builder-only retry against the round's cached reviewer
+        // responses. Wired to the new "Retry Builder only" button on every
+        // Builder-failure card (BUILDER_DELIMITERS, BUILDER_NO_CONFLICTS_BLOCK,
+        // BUILDER_BLOAT, BUILDER_TRUNCATED). Saves the reviewer round-trip
+        // cost when the round only failed because Builder synthesis was bad.
+        btn.onclick = () => {
+          closeTroubleshootingCard();
+          if (typeof window.retryBuilderAgainstCachedReviews === 'function') {
+            window.retryBuilderAgainstCachedReviews();
+          } else if (typeof toast === 'function') {
+            toast('⚠️ Builder retry unavailable — helper not loaded');
           }
         };
       } else if (a.kind === 'open-modal' && a.handler && typeof window[a.handler] === 'function') {
