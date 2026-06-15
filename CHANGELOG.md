@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.373
+
+**Inline-style cleanup pass 7: Add Custom AI modal (4 hidden elements) moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-031`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Four elements in the Add Custom AI modal were initialized with `style="display:none;"` and toggled at runtime via `el.style.display`:
+
+- `#customAIKeyLink` — the "Get your API key →" link (shown only when the active preset has a key URL)
+- `#customAIProviderHelpLink` — the "📖 Provider docs →" link (shown only when the active preset has a docs URL)
+- `#customAIAdvanced` — the "+ Advanced options" form-row (URL + Docs inputs, hidden by default; revealed via `toggleCustomAIAdvanced` or auto-revealed via `syncCustomAIAdvanced` when a preset fills them)
+- `#customAIModelSelect` — the fetched-models `<select>` (hidden until Fetch Models lands; shown alongside the manual text input)
+
+All four HTML attrs swapped to `class="… is-hidden"`. **13 JS sites** migrated:
+
+- **6 write sites** — `classList.add('is-hidden')` (initial reset paths), `classList.remove('is-hidden')` (reveal paths)
+- **2 read-and-toggle sites** — `toggleCustomAIAdvanced` flips on `classList.contains('is-hidden')`; `syncCustomAIAdvanced` uses `classList.toggle('is-hidden', !hasVal)`
+- **5 visibility-check read sites** (`getModelFromForm`, `updateModelAids`, `addCustomAI` × 3) — `el.style.display !== 'none'` swapped for `!el.classList.contains('is-hidden')` so the form still picks the right model source after the migration
+
+CSS defaults verified before migration: `.custom-ai-form-row { display: grid }`, `.custom-ai-key-link { display: block }`, `.custom-ai-select` (browser-default `inline-block`) all restore correctly when `.is-hidden` is removed.
+
+### Verified in preview
+
+- All four elements: initial `.is-hidden` set, computed `display: none`, zero inline `style` attribute
+- `toggleCustomAIAdvanced()` first call: `.is-hidden` removed, computed `display: grid`, no inline style
+- `toggleCustomAIAdvanced()` second call: `.is-hidden` re-added, computed `display: none`
+- 13 toggle sites swept — no remaining `.style.display` references for `customAIKeyLink`, `customAIProviderHelpLink`, `customAIAdvanced`, `customAIModelSelect` or their local handles
+
+### Files touched
+
+- [index.html](index.html) — 4 inline `style="display:none"` removed; `.is-hidden` added to all four
+- [js/app.js](js/app.js) — 13 sites migrated: 8 write paths (`classList.add/remove/toggle('is-hidden')`) + 5 read paths (`!classList.contains('is-hidden')` for visibility checks)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 16 → 12 inline `style="display:none*"` attrs remaining.
+
+---
+
 ## v3.63.372
 
 **Inline-style cleanup pass 6: checkpoint Restore panels (`#chkRestorePanel`, `#chkRestoreDiff`) moved off `style="display:none"` to `.is-hidden`**

@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-030
+// Build: 20260614-031
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-030';         // build stamp — update each session
+const BUILD       = '20260614-031';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -7868,8 +7868,8 @@ function showAddCustomAI() {
   if (fmtSelect)  fmtSelect.value = 'openai';
   if (modelInput) modelInput.value = '';
   if (quickAdd)   quickAdd.value  = '';
-  if (keyLink)    keyLink.style.display = 'none';
-  if (helpLink)   helpLink.style.display = 'none';
+  if (keyLink)    keyLink.classList.add('is-hidden');
+  if (helpLink)   helpLink.classList.add('is-hidden');
   // v3.56.6 — clear the API Console / Docs URL fields and their userTyped flags
   const consoleInput = document.getElementById('customAIConsoleUrl');
   if (consoleInput) { consoleInput.value = ''; delete consoleInput.dataset.userTyped; }
@@ -7915,7 +7915,7 @@ function _customAIIconCtx() {
     name:  document.getElementById('customAIName')?.value || '',
     model: (() => {
       const sel = document.getElementById('customAIModelSelect');
-      if (sel && sel.style.display !== 'none' && sel.value) return sel.value;
+      if (sel && !sel.classList.contains('is-hidden') && sel.value) return sel.value;
       return document.getElementById('customAIModel')?.value || '';
     })()
   };
@@ -9819,7 +9819,7 @@ function updateModelAids() {
   const selectEl = document.getElementById('customAIModelSelect');
   if (!aidsRow || !link || !selectEl) return;
 
-  const hasFetched = selectEl.style.display !== 'none' && selectEl.options.length > 0;
+  const hasFetched = !selectEl.classList.contains('is-hidden') && selectEl.options.length > 0;
 
   // Browse models: shown when fetched AND we have a chooseModelLink
   const url = document.getElementById('customAIUrl')?.value || '';
@@ -9856,8 +9856,8 @@ function applyQuickAdd(value) {
   const nameInput = document.getElementById('customAIName');
 
   if (!value) {
-    if (keyLink)  keyLink.style.display = 'none';
-    if (helpLink) helpLink.style.display = 'none';
+    if (keyLink)  keyLink.classList.add('is-hidden');
+    if (helpLink) helpLink.classList.add('is-hidden');
     const consoleInput = document.getElementById('customAIConsoleUrl');
     if (consoleInput && !consoleInput.dataset.userTyped) consoleInput.value = '';
     const docsInput = document.getElementById('customAIDocsUrl');
@@ -9886,9 +9886,9 @@ function applyQuickAdd(value) {
     if (preset.keyLink) {
       keyLink.href = preset.keyLink;
       keyLink.textContent = preset.keyLinkLabel;
-      keyLink.style.display = '';
+      keyLink.classList.remove('is-hidden');
     } else {
-      keyLink.style.display = 'none';
+      keyLink.classList.add('is-hidden');
     }
   }
 
@@ -9900,9 +9900,9 @@ function applyQuickAdd(value) {
     if (preset.chooseModelLink) {
       helpLink.href = preset.chooseModelLink;
       helpLink.textContent = `📖 ${preset.name} docs →`;
-      helpLink.style.display = '';
+      helpLink.classList.remove('is-hidden');
     } else {
-      helpLink.style.display = 'none';
+      helpLink.classList.add('is-hidden');
     }
   }
 
@@ -9919,7 +9919,7 @@ function resetModelField() {
   const fetchBtn    = document.getElementById('customAIFetchModelsBtn');
   const keyStatus   = document.getElementById('customAIKeyStatus');
   if (textInput)  { textInput.value = ''; textInput.style.display = ''; }
-  if (selectEl)   { selectEl.style.display = 'none'; selectEl.innerHTML = ''; }
+  if (selectEl)   { selectEl.classList.add('is-hidden'); selectEl.innerHTML = ''; }
   if (fetchBtn)   { fetchBtn.textContent = 'Fetch Models'; fetchBtn.disabled = false; }
   // v3.63.334 — Clear the API-key Ready/Invalid pill on any key edit. Mirrors
   // the AI Setup row behavior: editing the key invalidates any prior
@@ -9955,8 +9955,8 @@ function toggleCustomAIAdvanced() {
   const adv = document.getElementById('customAIAdvanced');
   const btn = document.getElementById('customAIAdvancedToggle');
   if (!adv) return;
-  const hidden = adv.style.display === 'none' || !adv.style.display;
-  adv.style.display = hidden ? 'grid' : 'none';
+  const hidden = adv.classList.contains('is-hidden');
+  adv.classList.toggle('is-hidden', !hidden);
   if (btn) btn.textContent = hidden ? '− Advanced options' : '+ Advanced options';
 }
 function syncCustomAIAdvanced() {
@@ -9966,7 +9966,7 @@ function syncCustomAIAdvanced() {
   const c = document.getElementById('customAIConsoleUrl');
   const d = document.getElementById('customAIDocsUrl');
   const hasVal = !!((c && c.value.trim()) || (d && d.value.trim()));
-  adv.style.display = hasVal ? 'grid' : 'none';
+  adv.classList.toggle('is-hidden', !hasVal);
   if (btn) btn.textContent = hasVal ? '− Advanced options' : '+ Advanced options';
 }
 
@@ -10046,7 +10046,7 @@ async function fetchCustomAIModels() {
     if (initialPick) selectEl.value = initialPick;
 
     textInput.style.display = 'none';
-    selectEl.style.display = '';
+    selectEl.classList.remove('is-hidden');
     fetchBtn.textContent = '↺ Refresh';
     fetchBtn.disabled = false;
     // v3.63.334 — Surface the same ✓ Ready pill the AI Setup row shows. A
@@ -10125,7 +10125,7 @@ function addCustomAI() {
   const format = document.getElementById('customAIFormat').value;
   const key    = document.getElementById('customAIKey').value.trim();
   const modelSelect = document.getElementById('customAIModelSelect');
-  const model  = (modelSelect && modelSelect.style.display !== 'none' ? modelSelect.value : document.getElementById('customAIModel').value.trim()) || 'default';
+  const model  = (modelSelect && !modelSelect.classList.contains('is-hidden') ? modelSelect.value : document.getElementById('customAIModel').value.trim()) || 'default';
   let   name   = document.getElementById('customAIName').value.trim();
 
   // v3.57.4 — P3: validate the endpoint the same way the Import-Server path
@@ -10241,7 +10241,7 @@ function addCustomAI() {
   // model dropdown AND NO Recommend button — buildModelSelector returned ''
   // because getModelsForProvider had nothing to return for the new id.
   try {
-    const modelOptions = modelSelect && modelSelect.style.display !== 'none'
+    const modelOptions = modelSelect && !modelSelect.classList.contains('is-hidden')
       ? Array.from(modelSelect.options).filter(o => o.value && !o.disabled).map(o => o.value)
       : [model]; // fallback: at least cache the single model the user typed
     if (modelOptions.length) {
@@ -10262,7 +10262,7 @@ function addCustomAI() {
   document.getElementById('customAIModel').value  = '';
   document.getElementById('customAIQuickAdd').value = '';
   const kl = document.getElementById('customAIKeyLink');
-  if (kl) kl.style.display = 'none';
+  if (kl) kl.classList.add('is-hidden');
   resetModelField();
 
   renderAISetupGrid();
@@ -10283,7 +10283,7 @@ function addCustomAI() {
     // ~10294 in the source before this comment landed) from the modal's
     // dropdown; it's the same list the canonical fetch would return seconds
     // later. Saves the duplicate network round trip David called out.
-    const handoffModels = modelSelect && modelSelect.style.display !== 'none'
+    const handoffModels = modelSelect && !modelSelect.classList.contains('is-hidden')
       ? Array.from(modelSelect.options).filter(o => o.value && !o.disabled).map(o => o.value)
       : null;
     setTimeout(() => {
