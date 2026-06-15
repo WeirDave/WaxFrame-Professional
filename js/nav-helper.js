@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — nav-helper.js
-// Build: 20260614-033
+// Build: 20260614-034
 //  Shared hamburger-menu open/close functions for helper pages
 //  (~13 pages today — see the script-tag list in any helper page's
 //  <head>). Mirrors the work-screen openNavMenu / closeNavMenu in

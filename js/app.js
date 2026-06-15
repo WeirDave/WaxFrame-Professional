@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-033
+// Build: 20260614-034
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-033';         // build stamp — update each session
+const BUILD       = '20260614-034';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -4442,10 +4442,10 @@ function openSaveTemplateModal() {
       const editCat = (editTpl.category || 'My Templates').trim();
       if (BUILTIN_CATEGORIES.includes(editCat)) {
         catEl.value = editCat;
-        if (catCustomEl) { catCustomEl.style.display = 'none'; catCustomEl.value = ''; }
+        if (catCustomEl) { catCustomEl.classList.add('is-hidden'); catCustomEl.value = ''; }
       } else {
         catEl.value = '__custom__';
-        if (catCustomEl) { catCustomEl.style.display = ''; catCustomEl.value = editCat; }
+        if (catCustomEl) { catCustomEl.classList.remove('is-hidden'); catCustomEl.value = editCat; }
       }
     }
     if (titleEl) titleEl.textContent = '\u270f\ufe0f Template - Update';
@@ -4472,7 +4472,7 @@ function openSaveTemplateModal() {
     if (iconEl) iconEl.value = '\ud83d\udcc1';
     if (descEl) descEl.value = '';
     if (catEl) catEl.value = 'My Templates';
-    if (catCustomEl) { catCustomEl.style.display = 'none'; catCustomEl.value = ''; }
+    if (catCustomEl) { catCustomEl.classList.add('is-hidden'); catCustomEl.value = ''; }
     if (titleEl) titleEl.textContent = '\u2b50 Template - Save';
     if (btnEl)   btnEl.textContent   = '\u2b50 Template - Save';
   }
@@ -4509,12 +4509,12 @@ function onSaveTemplateCategoryChange() {
   if (!catEl || !customEl) return;
   const counterEl = document.getElementById('saveTemplateCategoryCustomCount');
   if (catEl.value === '__custom__') {
-    customEl.style.display = '';
-    if (counterEl) counterEl.style.display = '';
+    customEl.classList.remove('is-hidden');
+    if (counterEl) counterEl.classList.remove('is-hidden');
     setTimeout(() => customEl.focus(), 30);
   } else {
-    customEl.style.display = 'none';
-    if (counterEl) counterEl.style.display = 'none';
+    customEl.classList.add('is-hidden');
+    if (counterEl) counterEl.classList.add('is-hidden');
     customEl.value = '';
   }
   // v3.63.194 — Refresh the counter so it doesn't lag behind the
