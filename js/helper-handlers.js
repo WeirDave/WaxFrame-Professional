@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260614-032
+// Build: 20260614-033
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //

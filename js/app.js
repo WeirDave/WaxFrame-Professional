@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-032
+// Build: 20260614-033
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-032';         // build stamp — update each session
+const BUILD       = '20260614-033';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -3651,9 +3651,9 @@ function _autoHalt(reasonCode, reasonText) {
         ? activeAIs.find(a => a.id === window._autoBackupCandidate)
         : null)?.name || 'Failover Builder';
       promoteBtn.textContent = `🔁 Promote ${_n} & resume`;
-      promoteBtn.style.display = '';
+      promoteBtn.classList.remove('is-hidden');
     } else {
-      promoteBtn.style.display = 'none';
+      promoteBtn.classList.add('is-hidden');
     }
   }
   updateAutoToggleUI();
@@ -8358,13 +8358,13 @@ function wfConfirm(title, message, opts = {}) {
       if (opts.checkbox) {
         if (checkLbl) checkLbl.textContent = opts.checkbox.label || '';
         checkBox.checked = !!opts.checkbox.checked;
-        checkRow.style.display = '';
+        checkRow.classList.remove('is-hidden');
       } else if (opts.suppressKey) {
         if (checkLbl) checkLbl.textContent = "Don't show this again";
         checkBox.checked = false;
-        checkRow.style.display = '';
+        checkRow.classList.remove('is-hidden');
       } else {
-        checkRow.style.display = 'none';
+        checkRow.classList.add('is-hidden');
         checkBox.checked = false;
       }
     }

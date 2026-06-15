@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260614-032
+     Build: 20260614-033
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -59,7 +59,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260614-032">
+  <meta name="waxframe-build" content="20260614-033">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -73,7 +73,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.374">
+  <link rel="stylesheet" href="style.css?v=3.63.375">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -112,7 +112,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.374",
+    "softwareVersion": "3.63.375",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2339,7 +2339,7 @@
   <div class="finish-modal wf-confirm-modal">
     <h2 class="finish-modal-title" id="wfConfirmTitle">Confirm</h2>
     <p class="finish-modal-msg" id="wfConfirmMsg"></p>
-    <label class="wf-confirm-check-row" id="wfConfirmCheckRow" style="display:none">
+    <label class="wf-confirm-check-row is-hidden" id="wfConfirmCheckRow">
       <input type="checkbox" id="wfConfirmCheck">
       <span id="wfConfirmCheckLabel"></span>
     </label>
@@ -2388,7 +2388,7 @@
     <h2 class="finish-modal-title">Auto paused</h2>
     <p class="finish-modal-msg auto-halt-reason" id="autoHaltReason">Auto stopped.</p>
     <div class="auto-halt-actions">
-      <button title="Promote your configured Failover Builder and resume Auto Mode" class="auto-halt-btn auto-halt-resume" id="autoHaltPromoteBtn" style="display:none" data-action="call" data-fn="autoHaltPromoteBackup">🔁 Promote failover &amp; resume</button>
+      <button title="Promote your configured Failover Builder and resume Auto Mode" class="auto-halt-btn auto-halt-resume is-hidden" id="autoHaltPromoteBtn" data-action="call" data-fn="autoHaltPromoteBackup">🔁 Promote failover &amp; resume</button>
       <button title="Resume Auto Mode and chain the next round automatically" class="auto-halt-btn auto-halt-resume" id="autoHaltResumeBtn" data-action="call" data-fn="autoHaltResume">▶ Resume Auto</button>
       <button title="Switch to Manual Mode — you click Smoke the Hive for each round" class="auto-halt-btn auto-halt-manual" data-action="call" data-fn="autoHaltSwitchManual">↩ Switch to Manual</button>
       <button title="Stop here — keep the current document and end Auto Mode" class="auto-halt-btn auto-halt-stop" data-action="call" data-fn="autoHaltStop">⏹ Stop here</button>
@@ -2481,7 +2481,7 @@
     <h2 class="finish-modal-title tc-title-row"><span class="tc-icon">🩺</span> <span id="tcTitle">Something went wrong</span></h2>
     <div class="tc-body">
       <p class="tc-meaning" id="tcMeaning"></p>
-      <div class="tc-provider-message" id="tcProviderMessage" style="display:none">
+      <div class="tc-provider-message is-hidden" id="tcProviderMessage">
         <div class="tc-provider-message-label">What the provider actually said:</div>
         <div class="tc-provider-message-text" id="tcProviderMessageText"></div>
       </div>
@@ -3426,7 +3426,7 @@
      above the minimum" (green) and "✗ Below minimum by N px wide" /
      "✗ Below minimum by M px tall" (red) so the user sees exactly
      which dimension is the problem. -->
-<script src="js/min-screen-viewport.js?v=3.63.374"></script>
+<script src="js/min-screen-viewport.js?v=3.63.375"></script>
 
 <!-- Mobile not supported overlay — but a funnel landing, not a wall.
      Mobile visitors landing on index.html from search results get a
@@ -3512,30 +3512,30 @@
      (and the only Add-Bookmark JS API was killed by browsers years
      ago for security reasons). Falls back to clipboard copy + a
      short instruction toast if navigator.share isn't available. -->
-<script src="js/mobile-share.js?v=3.63.374"></script>
+<script src="js/mobile-share.js?v=3.63.375"></script>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.4MB total. -->
 <!-- v3.63.16 — pdf.js upgraded to 4.10.38 (closes CVE-2024-4367). 4.x ships ESM only,
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
-<script type="module" src="js/pdf-loader.mjs?v=3.63.374"></script>
-<script src="lib/mammoth.browser.min.js?v=3.63.374"></script>
-<script src="lib/jszip.min.js?v=3.63.374"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.374"></script>
-<script src="js/version.js?v=3.63.374"></script>
-<script src="js/storage.js?v=3.63.374"></script>
-<script src="js/theme.js?v=3.63.374"></script>
-<script src="js/audio.js?v=3.63.374"></script>
-<script src="js/scenes.js?v=3.63.374"></script>
-<script src="js/wf-debug.js?v=3.63.374"></script>
-<script src="js/provider-models.js?v=3.63.374"></script>
-<script src="js/provider-catalog.js?v=3.63.374"></script>
-<script src="js/api.js?v=3.63.374"></script>
-<script src="js/templates.js?v=3.63.374"></script>
-<script src="js/api-links.js?v=3.63.374"></script>
-<script src="js/app.js?v=3.63.374"></script>
-<script src="js/helper-handlers.js?v=3.63.374"></script>
-<script src="js/app-bootstrap.js?v=3.63.374"></script>
+<script type="module" src="js/pdf-loader.mjs?v=3.63.375"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.375"></script>
+<script src="lib/jszip.min.js?v=3.63.375"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.375"></script>
+<script src="js/version.js?v=3.63.375"></script>
+<script src="js/storage.js?v=3.63.375"></script>
+<script src="js/theme.js?v=3.63.375"></script>
+<script src="js/audio.js?v=3.63.375"></script>
+<script src="js/scenes.js?v=3.63.375"></script>
+<script src="js/wf-debug.js?v=3.63.375"></script>
+<script src="js/provider-models.js?v=3.63.375"></script>
+<script src="js/provider-catalog.js?v=3.63.375"></script>
+<script src="js/api.js?v=3.63.375"></script>
+<script src="js/templates.js?v=3.63.375"></script>
+<script src="js/api-links.js?v=3.63.375"></script>
+<script src="js/app.js?v=3.63.375"></script>
+<script src="js/helper-handlers.js?v=3.63.375"></script>
+<script src="js/app-bootstrap.js?v=3.63.375"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
