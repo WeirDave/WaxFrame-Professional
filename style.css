@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260614-038
+   Build: 20260614-039
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2669,6 +2669,19 @@ body.helper-body .page-main {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: var(--space-4);
+}
+/* v3.63.381 — Model line restored. Same monospace + dim treatment as the
+   state line below so model/state read as paired technical metadata under
+   the AI name + role at top. */
+.bee-dot-tooltip .bdt-model {
+  font-size: var(--fs-11);
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  margin-bottom: var(--space-4);
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .bee-dot-tooltip .bdt-state {
   font-size: var(--fs-11);
