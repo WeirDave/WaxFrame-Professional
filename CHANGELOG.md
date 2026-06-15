@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.374
+
+**Inline-style cleanup pass 8: Import Server icon preview (`#importServerIconPreview`) moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-032`<br>
+Released: `2026-06-14`
+
+### What changed
+
+The Import Server modal's icon preview `<img>` was initialized with `style="display:none;"` and toggled via the shared `_setPreview()` helper inside the `wfIconUpload` IIFE in [js/app.js](js/app.js).
+
+`_setPreview()` is shared by both `#importServerIconPreview` (this release) and `#customAIIconPreview` (already had no inline `style="display:none"` — its default state is "no src, visually empty"). The migration swaps the two `previewEl.style.display = '' / 'none'` lines for `previewEl.classList.remove/add('is-hidden')`. Same toggle semantics for both call sites — the only observable difference is `#customAIIconPreview` now also picks up `.is-hidden` when reset (no visual change, since `<img>` without src renders empty anyway).
+
+### Verified in preview
+
+- Initial state — `.is-hidden` present, computed `display: none`, no inline `style` attribute
+- Toggle test via the same DOM-manipulation pattern the helper uses: `classList.remove('is-hidden')` + setting `src` → computed `display: inline` with no inline style; `classList.add('is-hidden')` + `removeAttribute('src')` → computed `display: none` with no inline style
+
+### Files touched
+
+- [index.html](index.html) — 1 inline `style="display:none"` removed; `.is-hidden` added
+- [js/app.js](js/app.js) — `_setPreview()` `previewEl.style.display = '' / 'none'` swapped for `classList.remove/add('is-hidden')` (used by both `importServerIconPreview` and `customAIIconPreview`)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 12 → 11 inline `style="display:none*"` attrs remaining.
+
+---
+
 ## v3.63.373
 
 **Inline-style cleanup pass 7: Add Custom AI modal (4 hidden elements) moved off `style="display:none"` to `.is-hidden`**
