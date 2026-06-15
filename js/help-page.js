@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — help-page.js
-// Build: 20260614-037
+// Build: 20260614-038
 //  Self-contained break-glass help screen behavior. Renders the
 //  version line, environment capture, copy-to-clipboard buttons,
 //  and Slack/email links. Deliberately does NOT depend on app.js
@@ -633,7 +633,7 @@
     function setWipeStatus(msg, cls) {
       if (!wipeStatus) return;
       wipeStatus.textContent = msg;
-      wipeStatus.style.display = msg ? '' : 'none';
+      wipeStatus.classList.toggle('is-hidden', !msg);
       wipeStatus.style.color = cls === 'warn' ? '#c5832a' : cls === 'err' ? '#b94a3a' : cls === 'ok' ? '#3a7a4a' : '';
     }
     function wireWipeButton(btnId, origLabel, armedLabel, wipeFn, layerName) {

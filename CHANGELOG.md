@@ -2,6 +2,102 @@
 
 ---
 
+## v3.63.380
+
+**Inline-style cleanup CLOSE-OUT: last inline `style="display:none*"` attr migrated, `style-src` drops `'unsafe-hashes'` AND the three attribute-value sha256 hashes**
+
+Build: `20260614-038`<br>
+Released: `2026-06-14`
+
+### Why this release
+
+The v3.63.367 → v3.63.379 arc migrated every remaining inline `style="display:none*"` HTML attribute to the shared `.is-hidden` utility class — 13 surface-by-surface passes covering reference upload banners, source-document upload UI, settings sections, checkpoint panels, the Add Custom AI modal, the import-server preview, the wfConfirm checkbox row, the auto-halt promote button, the token-count provider message, the Save Template custom-category fields, the dev toolbar, the templates.html sidebar, and the holdout/conflict decision UI. After v3.63.379 only ONE inline `style="display:none*"` attr remained: the `#wipeStatus` line in `help.html`, which carries `style="display:none;margin-top:8px;"` and lives on a self-contained break-glass page (no `style.css` dependency by design).
+
+This close-out release migrates that last attr AND drops every CSP relaxation that the inline attribute set required to stay loaded.
+
+### Migration
+
+- **help.html `#wipeStatus`** — was `style="display:none;margin-top:8px;"`; now `class="sub wipe-status-spacer is-hidden"`. The `.is-hidden` and `.wipe-status-spacer` rules were added to help.html's own inline `<style>` block (the design contract for help.html mandates self-containment — no `style.css` dependency, since the page must render even when `style.css` is broken).
+- **[js/help-page.js](js/help-page.js)** — `setWipeStatus` runtime toggle swapped from `wipeStatus.style.display = msg ? '' : 'none'` to `wipeStatus.classList.toggle('is-hidden', !msg)`. The `wipeStatus.style.color` runtime severity-color assignment is a separate concern (per-call dynamic, not CSP-affected) and stays as-is.
+
+### `style-src` close-out
+
+Across all 16 HTML pages, the `style-src` directive flipped from:
+
+```
+style-src 'self' https'
+  'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo='
+  'sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8='
+  'unsafe-hashes'
+  'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE='   // style="display:none"
+  'sha256-0EZqoz+oBhx7gF4nvY2bSqoGyy4zLjNF+SDQXGp/ZrY='   // style="display:none;"
+  'sha256-ukRLfhNT2UwV6SrWA/TIvp9f6n9i7rlY8yTJ7/Q4Aj4='   // style="display:none;margin-top:8px;"
+```
+
+down to:
+
+```
+style-src 'self' https'
+  'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo='   // framebust <style> (unchanged)
+  'sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs='   // help.html big <style> (refreshed; now includes .is-hidden + .wipe-status-spacer)
+```
+
+Dropped:
+
+- **`'unsafe-hashes'`** — was required to allow hash-matching on attribute-value styles. With zero inline `style="…"` attrs left in any page, this is no longer needed.
+- **Three sha256 attribute-value hashes** — for the three distinct values that used to ship (`display:none`, `display:none;`, `display:none;margin-top:8px;`). Each was used by exactly the attribute the migration arc removed; with the arc complete, they're dead policy.
+
+Updated:
+
+- **help.html big `<style>` block hash** — the addition of `.is-hidden { display: none !important; }` and `.wipe-status-spacer { margin-top: 8px; }` rules changed the block content, so its sha256 was recomputed. The new hash is what the HTML5 parser feeds to CSP (DOMParser-normalized `textContent`).
+
+### release-check Check 5 updates
+
+- `'unsafe-hashes'` is now a "must NOT contain on style-src" assertion — adding it back regresses the close-out and fails CI.
+- The three attribute-value hashes were removed from `REQUIRED_CSP_DIRECTIVES`.
+- The help.html `<style>` block hash entry swapped to the new `sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs=` value.
+
+### Verified in preview
+
+- Strict style-src loads cleanly: both inline `<style>` blocks on `help.html` (framebust + the big block carrying `.is-hidden`, palette, fonts, page layout, etc.) hash-match their CSP entries
+- `.is-hidden { display: none !important; }` rule is active on help.html — `#wipeStatus` initial `.is-hidden` correctly resolves to `getComputedStyle(...).display === 'none'`
+- Zero CSP violations across `index.html` and `help.html` after exercising the migrated surfaces (ref-card creation, screen navigation, source-size-check render)
+- All 11 spot-checked elements correctly start `.is-hidden` in `index.html` (length inputs, reference banners, file UI, phaseSelect, settings sections, checkpoint panels, custom-AI links, import server preview, wfConfirm checkRow, save-template fields, devToolbar)
+- `release-check` passes all 9 checks including the new "style-src must NOT contain `'unsafe-hashes'`" assertion
+
+### Files touched
+
+- 16 HTML pages — `style-src` directive flipped to drop `'unsafe-hashes'` + 3 attribute-value hashes; help.html `<style>` hash updated to new value
+- [help.html](help.html) — `.is-hidden` + `.wipe-status-spacer` added to inline `<style>` block; `#wipeStatus` markup migrated
+- [js/help-page.js](js/help-page.js) — `setWipeStatus` runtime toggle migrated to `classList.toggle('is-hidden', !msg)`
+- [tools/release-check.mjs](tools/release-check.mjs) — `REQUIRED_CSP_DIRECTIVES` shrunk; new "must NOT contain `'unsafe-hashes'`" assertion added; comment block updated
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+### Inline-style cleanup arc closes
+
+| Release | Surface | Inline attrs |
+|---|---|---|
+| v3.63.358 | templateHintBanner | 1 |
+| v3.63.359 | reExtractBanner | 1 |
+| v3.63.367 | Length-constraint range UI | 2 |
+| v3.63.368 | Reference upload banners | 2 |
+| v3.63.369 | Source-document upload UI | 5 |
+| v3.63.370 | phaseSelect | 1 |
+| v3.63.371 | Settings sections | 3 |
+| v3.63.372 | Checkpoint restore panels | 2 |
+| v3.63.373 | Add Custom AI modal | 4 |
+| v3.63.374 | Import server icon preview | 1 |
+| v3.63.375 | wfConfirm checkRow + auto-halt + tc provider | 3 |
+| v3.63.376 | Save Template custom category | 2 |
+| v3.63.377 | devToolbar | 1 |
+| v3.63.378 | templates.html sidebar | 2 |
+| v3.63.379 | decision-custom-wrap (holdout + conflict) | 2 |
+| v3.63.380 | help.html `#wipeStatus` + `style-src` close-out | 1 (+ CSP) |
+
+Total: 33 inline `style="display:none*"` attrs migrated to `.is-hidden`; CSP `style-src` directive is now as strict as the inline-content surface allows — only the two `<style>` blocks remain, both pinned by sha256.
+
+---
+
 ## v3.63.379
 
 **Inline-style cleanup pass 13: decision-custom-wrap textareas (holdout `#hcustom-${i}` + conflict `#dcustom-${di}`) moved off `style="display:none"` to `.is-hidden`**

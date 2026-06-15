@@ -401,17 +401,23 @@ const REQUIRED_CSP_DIRECTIVES = [
   // break every Word / Excel / PDF import.
   "'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='",  // <script> head guard (clickjacking + CSP-violation listener)
   //
-  // v3.63.356 / v3.63.357 — style-src strict cutover; the sha256
-  // entries below pin both inline <style> blocks (head guard +
-  // help.html break-glass) and the 3 style="display:none*"
-  // attribute-value hashes that still ship in the HTML. The
-  // 'unsafe-hashes' keyword enables hash matching on style attrs.
-  "'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo='",  // <style> head guard
-  "'sha256-2s7ScrUyOdjkV3zbZCPukmcPp6fD094kYGhSk6nHpt8='",  // <style> help.html break-glass
-  "'unsafe-hashes'",                                        // required to let style="" hashes apply
-  "'sha256-aqNNdDLnnrDOnTNdkJpYlAxKVJtLt9CtFLklmInuUAE='",  // style="display:none"
-  "'sha256-0EZqoz+oBhx7gF4nvY2bSqoGyy4zLjNF+SDQXGp/ZrY='",  // style="display:none;"
-  "'sha256-ukRLfhNT2UwV6SrWA/TIvp9f6n9i7rlY8yTJ7/Q4Aj4='"   // style="display:none;margin-top:8px;"
+  // v3.63.380 — style-src strict CLOSE-OUT. The v3.63.367 → v3.63.379
+  // arc migrated every inline `style="display:none*"` attribute in the
+  // HTML to a shared `.is-hidden` utility class (which lives in
+  // style.css for the app pages and inside help.html's own inline
+  // <style> for the self-contained break-glass page). With zero
+  // attribute-value styles left, 'unsafe-hashes' AND the three
+  // attribute hashes can all drop. The help.html big <style> block
+  // gained the .is-hidden + .wipe-status-spacer rules, so its sha256
+  // changed; the new hash is below.
+  "'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo='",  // <style> head guard (framebust hide)
+  // <style> help.html break-glass (now with .is-hidden + .wipe-status-spacer).
+  // Hash is computed over the HTML5-parsed textContent of the <style> element
+  // (the canonical form the browser uses for CSP hash matching) — newlines
+  // are normalized to LF and the surrounding whitespace inside the element
+  // is preserved verbatim. Computed by DOMParser('text/html'), which is what
+  // every modern browser does.
+  "'sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs='"
 ];
 
 for (const file of htmlFiles) {
@@ -444,13 +450,26 @@ for (const file of htmlFiles) {
     continue;
   }
   // v3.63.356 strict style-src cutover — style-src must NOT contain
-  // 'unsafe-inline' either. Inline <style> blocks and style="..."
-  // attributes are pinned via the sha256 entries listed above instead;
-  // a new value introduced anywhere needs its hash added to that list
-  // or the browser will block the style.
+  // 'unsafe-inline'. Inline <style> blocks are pinned via the two
+  // sha256 entries listed above (framebust hide + help.html break-
+  // glass); a new value introduced anywhere needs its hash added to
+  // that list or the browser will block the style.
+  //
+  // v3.63.380 close-out — style-src must NOT contain 'unsafe-hashes'
+  // either. Pre-v3.63.380, 'unsafe-hashes' + three attribute-value
+  // hashes covered the inline `style="display:none*"` attrs scattered
+  // across index.html / help.html / templates.html. The v3.63.367 →
+  // v3.63.379 cleanup arc removed every one of those, so the keyword
+  // and its three companion hashes all dropped. Adding 'unsafe-hashes'
+  // back would silently re-allow any new inline style attribute that
+  // hash-matched, defeating the whole arc.
   const styleSrc = (policy.match(/style-src\s+([^;]+)/) || [])[1] || '';
   if (/'unsafe-inline'/.test(styleSrc)) {
     fail(rel(file), `CSP style-src must NOT contain 'unsafe-inline' (strict style-src cutover landed in v3.63.356). Got: style-src ${styleSrc.trim()}`);
+    continue;
+  }
+  if (/'unsafe-hashes'/.test(styleSrc)) {
+    fail(rel(file), `CSP style-src must NOT contain 'unsafe-hashes' (strict-CSS close-out landed in v3.63.380 after all inline style="display:none*" attributes migrated to .is-hidden). Got: style-src ${styleSrc.trim()}`);
     continue;
   }
   ok(rel(file));
