@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates-page.js
-// Build: 20260614-035
+// Build: 20260614-036
 //  Catalog rendering for templates.html. Extracted from the
 //  formerly-inline <script> block in v3.63.352 so the page can
 //  drop 'unsafe-inline' from CSP. Pure renderer + ItemList JSON-LD
@@ -249,12 +249,12 @@ function renderCustom() {
   `;
 
   // Reveal the "Your Templates" sidebar group now that the section exists.
-  // Inline display: '' clears the inline style="display:none" defaults
-  // set in the hardcoded sidebar markup. Audited inline-style exception.
+  // v3.63.378 — drop .is-hidden so style-src can stay strict (no inline
+  // style attribute on the element).
   const sbCat = document.getElementById('sbCustomCategory');
   const sbLink = document.getElementById('sbCustomLink');
-  if (sbCat)  sbCat.style.display  = '';
-  if (sbLink) sbLink.style.display = '';
+  if (sbCat)  sbCat.classList.remove('is-hidden');
+  if (sbLink) sbLink.classList.remove('is-hidden');
 
   const btn = document.getElementById('tplExportAllBtn');
   if (btn) btn.addEventListener('click', exportAllCustomsAsZip);
