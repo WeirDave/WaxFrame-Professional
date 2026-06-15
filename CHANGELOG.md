@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.376
+
+**Inline-style cleanup pass 10: Save Template "custom category" input + char-counter (`#saveTemplateCategoryCustom`, `#saveTemplateCategoryCustomCount`) moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-034`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Two fields in the Save Template modal's category column were initialized with `style="display:none"` and toggled at runtime via `el.style.display`:
+
+- `#saveTemplateCategoryCustom` — the free-form category text input (revealed when the user picks `+ Custom category…` in the category `<select>`)
+- `#saveTemplateCategoryCustomCount` — the live 0/40 char counter under the input
+
+Both HTML attrs swapped to `class="… is-hidden"`. Six JS toggle sites migrated to `classList.add/remove('is-hidden')`:
+
+- [js/app.js:4445, 4448](js/app.js:4445) — edit-mode prefill (built-in category → hide custom input; free-form category → show custom input pre-filled)
+- [js/app.js:4475](js/app.js:4475) — save-mode default (always hides on first open)
+- [js/app.js:4512, 4513, 4516, 4517](js/app.js:4512) — `onSaveTemplateCategoryChange` toggle in both directions for both input and counter
+
+### Verified in preview
+
+- Initial state — both elements `.is-hidden`, computed `display: none`, zero inline `style` attribute
+- After setting `saveTemplateCategory.value = '__custom__'` and firing `onSaveTemplateCategoryChange()` — both drop `.is-hidden`, computed `display: block`, no inline style; the user can now type a custom category name
+- Reverting to a built-in category (`'My Templates'`) and re-firing the handler — both re-add `.is-hidden`, computed `display: none`
+
+### Files touched
+
+- [index.html](index.html) — 2 inline `style="display:none"` removed; `.is-hidden` added to both
+- [js/app.js](js/app.js) — 6 `.style.display = …` flips swapped for `classList.add/remove('is-hidden')` across `openSaveTemplateModal` (3 sites) and `onSaveTemplateCategoryChange` (4 sites for input + counter together)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 8 → 6 inline `style="display:none*"` attrs remaining.
+
+---
+
 ## v3.63.375
 
 **Inline-style cleanup pass 9: wfConfirm checkbox row + auto-halt promote button + token-count provider message moved off `style="display:none"` to `.is-hidden`**
