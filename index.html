@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260614-028
+     Build: 20260614-029
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -59,7 +59,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260614-028">
+  <meta name="waxframe-build" content="20260614-029">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -73,7 +73,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.370">
+  <link rel="stylesheet" href="style.css?v=3.63.371">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -112,7 +112,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.370",
+    "softwareVersion": "3.63.371",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1057,7 +1057,7 @@
                row has a "Check your limits" link out to the provider's
                usage page so the user can see what their tier allows
                before deciding whether to lift anything. -->
-          <div class="settings-section" id="settingsConcurrencySection" style="display:none">
+          <div class="settings-section is-hidden" id="settingsConcurrencySection">
             <h2 class="settings-section-title">🚦 Concurrency overrides</h2>
             <p class="settings-section-desc">WaxFrame slows itself down on purpose so the hive can't get rate-limited when multiple AIs share one provider — that's the default and it's fine for almost everyone. <strong>You probably don't need to touch anything here.</strong> Only lift a cap if you pay for a higher tier on one of these providers AND you have two or more AIs running through it (e.g. two Cohere variants in your custom AIs, or a server import with multiple models on one endpoint). Each row has a "Check your limits" link to that provider's usage page so you can see what your tier actually allows. Leave a row empty to use the default. Changes take effect on your next round.</p>
             <div id="setConcurrencyOverridesContainer"></div>
@@ -1199,7 +1199,7 @@
               </div>
             </div>
 
-            <div class="settings-row settings-backup-unsupported" id="setBackupUnsupportedRow" style="display:none;">
+            <div class="settings-row settings-backup-unsupported is-hidden" id="setBackupUnsupportedRow">
               <div class="settings-row-label wf-w-full">
                 <span class="settings-row-help wf-strong">&#x26A0;&#xFE0F; Auto-backup requires Chrome, Edge, or Opera. Your current browser doesn&rsquo;t support the File System Access API used here. The manual <strong>Save Checkpoint</strong> button still works &mdash; it falls back to the standard download flow.</span>
               </div>
@@ -1267,7 +1267,7 @@
               <button class="btn settings-reset-btn btn-danger" id="setWipeAllStorageBtn" title="Clear everything — full reset">Wipe EVERYTHING</button>
             </div>
 
-            <div class="settings-row" id="setWipeStatusRow" style="display:none;">
+            <div class="settings-row is-hidden" id="setWipeStatusRow">
               <div class="settings-row-label wf-w-full">
                 <span class="settings-row-help wf-strong" id="setWipeStatus"></span>
               </div>
@@ -3426,7 +3426,7 @@
      above the minimum" (green) and "✗ Below minimum by N px wide" /
      "✗ Below minimum by M px tall" (red) so the user sees exactly
      which dimension is the problem. -->
-<script src="js/min-screen-viewport.js?v=3.63.370"></script>
+<script src="js/min-screen-viewport.js?v=3.63.371"></script>
 
 <!-- Mobile not supported overlay — but a funnel landing, not a wall.
      Mobile visitors landing on index.html from search results get a
@@ -3512,30 +3512,30 @@
      (and the only Add-Bookmark JS API was killed by browsers years
      ago for security reasons). Falls back to clipboard copy + a
      short instruction toast if navigator.share isn't available. -->
-<script src="js/mobile-share.js?v=3.63.370"></script>
+<script src="js/mobile-share.js?v=3.63.371"></script>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.4MB total. -->
 <!-- v3.63.16 — pdf.js upgraded to 4.10.38 (closes CVE-2024-4367). 4.x ships ESM only,
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
-<script type="module" src="js/pdf-loader.mjs?v=3.63.370"></script>
-<script src="lib/mammoth.browser.min.js?v=3.63.370"></script>
-<script src="lib/jszip.min.js?v=3.63.370"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.370"></script>
-<script src="js/version.js?v=3.63.370"></script>
-<script src="js/storage.js?v=3.63.370"></script>
-<script src="js/theme.js?v=3.63.370"></script>
-<script src="js/audio.js?v=3.63.370"></script>
-<script src="js/scenes.js?v=3.63.370"></script>
-<script src="js/wf-debug.js?v=3.63.370"></script>
-<script src="js/provider-models.js?v=3.63.370"></script>
-<script src="js/provider-catalog.js?v=3.63.370"></script>
-<script src="js/api.js?v=3.63.370"></script>
-<script src="js/templates.js?v=3.63.370"></script>
-<script src="js/api-links.js?v=3.63.370"></script>
-<script src="js/app.js?v=3.63.370"></script>
-<script src="js/helper-handlers.js?v=3.63.370"></script>
-<script src="js/app-bootstrap.js?v=3.63.370"></script>
+<script type="module" src="js/pdf-loader.mjs?v=3.63.371"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.371"></script>
+<script src="lib/jszip.min.js?v=3.63.371"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.371"></script>
+<script src="js/version.js?v=3.63.371"></script>
+<script src="js/storage.js?v=3.63.371"></script>
+<script src="js/theme.js?v=3.63.371"></script>
+<script src="js/audio.js?v=3.63.371"></script>
+<script src="js/scenes.js?v=3.63.371"></script>
+<script src="js/wf-debug.js?v=3.63.371"></script>
+<script src="js/provider-models.js?v=3.63.371"></script>
+<script src="js/provider-catalog.js?v=3.63.371"></script>
+<script src="js/api.js?v=3.63.371"></script>
+<script src="js/templates.js?v=3.63.371"></script>
+<script src="js/api-links.js?v=3.63.371"></script>
+<script src="js/app.js?v=3.63.371"></script>
+<script src="js/helper-handlers.js?v=3.63.371"></script>
+<script src="js/app-bootstrap.js?v=3.63.371"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
