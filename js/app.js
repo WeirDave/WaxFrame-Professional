@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-036
+// Build: 20260614-037
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-036';         // build stamp — update each session
+const BUILD       = '20260614-037';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -20213,7 +20213,7 @@ function renderConflicts() {
               <span class="decision-opt-text decision-opt-text-dim">Custom — type your own</span>
             </button>
           </div>
-          <div class="decision-custom-wrap" id="hcustom-${i}" style="display:none">
+          <div class="decision-custom-wrap is-hidden" id="hcustom-${i}">
             <textarea class="decision-custom-ta" id="hcustom-ta-${i}"
               placeholder="Type your custom text here..."
               data-input-action="call-multi" data-fn="updateHoldoutCustom" data-args="data-num:idx,data-num:total" data-idx="${i}" data-total="${total}"></textarea>
@@ -20373,7 +20373,7 @@ function renderConflicts() {
             ${lockBtnLabel}
           </button>
         </div>
-        <div class="decision-custom-wrap" id="dcustom-${di}" style="display:none">
+        <div class="decision-custom-wrap is-hidden" id="dcustom-${di}">
           <textarea class="decision-custom-ta" id="dcustom-ta-${di}"
             placeholder="Type your custom text here..."
             data-input-action="call-multi" data-fn="updateCustomDecision" data-args="data-num:di,data-num:total" data-di="${di}" data-total="${total}">${esc(d.current || '')}</textarea>
@@ -20480,7 +20480,7 @@ function hydrateDecisionSelections() {
       document.getElementById(`dopt-${di}-custom`)?.classList.add('selected');
       const wrap = document.getElementById(`dcustom-${di}`);
       const ta   = document.getElementById(`dcustom-ta-${di}`);
-      if (wrap) wrap.style.display = 'block';
+      if (wrap) wrap.classList.remove('is-hidden');
       if (ta && choice.text) { ta.value = choice.text; ta.dataset.userEdited = '1'; }
     } else if (choice.type === 'bypass') {
       document.getElementById(`dopt-${di}-bypass`)?.classList.add('selected');
@@ -20499,7 +20499,7 @@ function selectDecision(decisionIdx, optionIdx, total) {
     document.getElementById(`dopt-${decisionIdx}-${optionIdx}`)?.classList.add('selected');
     // Hide custom input if visible
     const customWrap = document.getElementById(`dcustom-${decisionIdx}`);
-    if (customWrap) customWrap.style.display = 'none';
+    if (customWrap) customWrap.classList.add('is-hidden');
     card.classList.add('resolved');
     // Store selected option text so Custom can pre-fill with it for easy editing
     const optText = card.querySelector(`#dopt-${decisionIdx}-${optionIdx} .decision-opt-text`);
@@ -20522,7 +20522,7 @@ function selectCustomDecision(decisionIdx, total) {
     card.querySelectorAll('.decision-opt-btn').forEach(btn => btn.classList.remove('selected'));
     document.getElementById(`dopt-${decisionIdx}-custom`)?.classList.add('selected');
     const customWrap = document.getElementById(`dcustom-${decisionIdx}`);
-    if (customWrap) { customWrap.style.display = 'block'; }
+    if (customWrap) { customWrap.classList.remove('is-hidden'); }
     const ta = document.getElementById(`dcustom-ta-${decisionIdx}`);
     if (ta) {
       // v3.63.29 — seed the box with the text the user was about to edit: the
@@ -20562,7 +20562,7 @@ function selectBypassDecision(decisionIdx, total) {
     card.querySelectorAll('.decision-opt-btn').forEach(btn => btn.classList.remove('selected'));
     document.getElementById(`dopt-${decisionIdx}-bypass`)?.classList.add('selected');
     const customWrap = document.getElementById(`dcustom-${decisionIdx}`);
-    if (customWrap) customWrap.style.display = 'none';
+    if (customWrap) customWrap.classList.add('is-hidden');
     card.classList.add('resolved', 'bypassed');
   }
   // Store as bypass — applyDecisions will skip prompt injection but still lock it
@@ -20899,7 +20899,7 @@ function selectHoldout(idx, choice, total) {
     card.querySelectorAll('.decision-opt-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById(`hopt-${idx}-${choice}`)?.classList.add('selected');
     const customWrap = document.getElementById(`hcustom-${idx}`);
-    if (customWrap) customWrap.style.display = choice === 'custom' ? 'block' : 'none';
+    if (customWrap) customWrap.classList.toggle('is-hidden', choice !== 'custom');
     if (choice === 'decline') {
       card.classList.add('resolved', 'declined');
       card.classList.remove('custom-selected');
