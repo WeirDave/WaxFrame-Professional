@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-039
+// Build: 20260614-040
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-039';         // build stamp — update each session
+const BUILD       = '20260614-040';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -17386,6 +17386,123 @@ async function retrySingleAIInPartialRound(aiId) {
   });
 }
 window.retrySingleAIInPartialRound = retrySingleAIInPartialRound;
+
+// ════════════════════════════════════════════════════════════════════
+// v3.63.382 — Builder-only retry against cached reviewer responses.
+// Wired to the new "Retry Builder only" button on every Builder-failure
+// card (BUILDER_DELIMITERS, BUILDER_NO_CONFLICTS_BLOCK, BUILDER_BLOAT,
+// BUILDER_TRUNCATED). Saves the reviewer round-trip cost when the
+// reviewers actually succeeded and only the Builder synthesis was bad
+// (the most common case for these four failure kinds — the reviewers
+// produced valid feedback, the Builder just couldn't parse / formatted
+// wrong / exceeded length).
+//
+// Same plumbing as retrySingleAIInPartialRound but without the
+// reviewer re-fire step: the cached set is already complete, so we
+// re-enter runRound's resumed-from-partial branch directly. runRound
+// pops any stale history entry from a finalized failure, replays the
+// Builder phase against the cached set, and continues normally.
+//
+// Pop semantics (lifted from retrySingleAIInPartialRound):
+// - If the round was finalized to a degraded-success history entry,
+//   unwind: pop entry, restore round/phase/trial counter.
+// - Then re-enter runRound; it pops any reviewer-phase failure entry
+//   on its own.
+//
+// Notes:
+//   • Does NOT re-fire any reviewer; reviewerResponses are reused
+//     verbatim. The Builder receives the same input as the original
+//     failed call — relying on model nondeterminism (or a Builder
+//     swap before clicking the button) for a different outcome.
+//   • Project-gen guard rejects if user discarded the project mid-
+//     await. Cleared if _partialRound went stale (cleared on terminal
+//     exits per runRound's design).
+//   • Surfaces the same toast/console patterns the single-AI retry
+//     does so the work-screen experience reads consistently.
+// ════════════════════════════════════════════════════════════════════
+async function retryBuilderAgainstCachedReviews() {
+  const pr = window._partialRound;
+  if (!pr) {
+    if (typeof toast === 'function') toast('⚠️ No cached reviews to retry against — run a fresh round');
+    return;
+  }
+  if (pr.runGen !== (window._projectGen || 0)) {
+    window._partialRound = null;
+    if (typeof toast === 'function') toast('⚠️ Project changed — retry no longer valid');
+    return;
+  }
+  if (!Array.isArray(pr.reviewerResponses) || pr.reviewerResponses.length === 0) {
+    if (typeof toast === 'function') toast('⚠️ No reviewer responses cached — run a fresh round');
+    return;
+  }
+  // Same "round already finalized" unwind as retrySingleAIInPartialRound.
+  // See that function's commentary for the rationale.
+  if (pr.round !== round) {
+    const _canUndoFinalize = (
+      pr.round + 1 === round &&
+      pr.preContinueRound != null &&
+      pr.lastPushedEntry &&
+      history.length > 0 &&
+      history[history.length - 1] === pr.lastPushedEntry
+    );
+    if (!_canUndoFinalize) {
+      if (typeof toast === 'function') toast('⚠️ A new round has already started — retry no longer valid');
+      return;
+    }
+    history.pop();
+    round = pr.preContinueRound;
+    if (pr.preContinuePhase) phase = pr.preContinuePhase;
+    if (pr.preContinueTrialIncrement && typeof decrementTrialRound === 'function') {
+      try { decrementTrialRound(); } catch (e) {}
+    }
+    pr.lastPushedEntry = null;
+    pr.preContinueRound = null;
+    pr.preContinuePhase = null;
+    pr.preContinueTrialIncrement = false;
+    pr.round = round;
+    if (typeof renderRoundHistory === 'function') renderRoundHistory();
+    if (typeof renderWorkPhaseBar === 'function') renderWorkPhaseBar();
+    if (typeof updateRoundBadge === 'function') updateRoundBadge();
+    if (typeof updateLicenseBadge === 'function') updateLicenseBadge();
+    consoleLog(`↩ Unwound Round ${round} for Builder retry — popping the degraded entry and re-running the Builder against the cached reviews.`, 'info');
+  }
+  const btn = document.getElementById('runRoundBtn');
+  if (btn?.classList.contains('running')) {
+    if (typeof toast === 'function') toast('⚠️ A round is already running');
+    return;
+  }
+  // Pop the round_failed history entry (if any) so the resumed Builder phase
+  // can write a fresh entry on top of the prior state. Identity-checked.
+  if (pr.lastPushedEntry && history.length > 0 && history[history.length - 1] === pr.lastPushedEntry) {
+    history.pop();
+    pr.lastPushedEntry = null;
+    if (typeof renderRoundHistory === 'function') renderRoundHistory();
+  }
+  const builderAI = (Array.isArray(activeAIs) ? activeAIs : []).find(a => a.id === pr.builderId);
+  consoleLog(`🔁 Builder-only retry: ${builderAI?.name || pr.builderId} — Round ${pr.round} · re-synthesizing against ${pr.reviewerResponses.length} cached reviewer response${pr.reviewerResponses.length === 1 ? '' : 's'}`, 'info');
+  if (typeof showSmokerOverlay === 'function') showSmokerOverlay("Smokin' the Hive…");
+  if (btn) {
+    btn.classList.add('running');
+    const lbl = btn.querySelector('.shake-wide-label');
+    if (lbl) lbl.textContent = 'Rebuilding…';
+  }
+  if (typeof startRoundTimer === 'function') startRoundTimer(btn, 'Rebuilding…');
+  setStatus(`🔁 Builder rebuilding Round ${pr.round} against cached reviews…`);
+  window._roundUiState = 'running';
+  if (typeof updateRoundBadge === 'function') updateRoundBadge();
+
+  // Hand off to runRound's resumed-from-partial branch.
+  // That branch skips the reviewer fan-out, runs the Builder phase + every
+  // post-Builder gate (length, conflicts, convergence, history.push, Auto-
+  // chain). Saves the reviewer call cost when the round only failed
+  // because the Builder synthesis was bad.
+  await runRound({
+    resumedFromPartial:      true,
+    cachedReviewerResponses: pr.reviewerResponses,
+    retryLabel:              `Builder-only retry: ${builderAI?.name || pr.builderId}`
+  });
+}
+window.retryBuilderAgainstCachedReviews = retryBuilderAgainstCachedReviews;
 
 // ── RUN ROUND ──
 async function runRound(opts) {
