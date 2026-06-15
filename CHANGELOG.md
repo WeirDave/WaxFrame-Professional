@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.371
+
+**Inline-style cleanup pass 5: three Settings-screen sections (`#settingsConcurrencySection`, `#setBackupUnsupportedRow`, `#setWipeStatusRow`) moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-029`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Three Settings-screen elements were initialized with `style="display:none"` and toggled at runtime via `el.style.display = '' / 'none'`:
+
+- `#settingsConcurrencySection` — the per-provider concurrency-override panel (rendered into the Diagnostics section, hidden when no keyed provider has a finite default cap)
+- `#setBackupUnsupportedRow` — the "Auto-backup requires Chrome/Edge/Opera" notice (shown only when `_fsaSupported()` returns false)
+- `#setWipeStatusRow` — the storage-wipe status line (shown when `setStatus(msg, cls)` is called with a non-empty message)
+
+All three toggle sites converted to `classList.add('is-hidden')` / `classList.remove('is-hidden')` / `classList.toggle('is-hidden', !msg)`. The color assignment on `setWipeStatus` (separate concern — runtime color string from severity class) was left alone for now.
+
+### help.html `wipeStatus` deferred
+
+The help.html `#wipeStatus` line carries `style="display:none;margin-top:8px;"` and lives on a **self-contained** page (no `style.css` dependency by design — the help page must render even when style.css is broken). Migrating it to `.is-hidden` requires adding the `.is-hidden` rule to help.html's inline `<style>` block, which changes its sha256 hash and breaks the style-src CSP entry pinning it. Deferred to **v3.63.380** (the style-src strict close-out) where every style-src hash recompute happens at once.
+
+### Verified in preview
+
+- All three settings elements: initial `.is-hidden` set, computed `display: none`, zero inline `style` attribute
+- `renderConcurrencyOverrides()` with no eligible providers (no keyed providers in test state) → `settingsConcurrencySection` correctly stays `.is-hidden` (the no-eligible-rows branch fires)
+- Setting/clearing the wipe-status row text via the same `classList.toggle('is-hidden', !msg)` shape (tested directly) toggles `.is-hidden` correctly in both directions with no inline style attribute
+
+### Files touched
+
+- [index.html](index.html) — 3 inline `style="display:none"` removed; `.is-hidden` added
+- [js/app.js](js/app.js) — `wireSettingsWipeButtons` `setStatus` swapped to `classList.toggle('is-hidden', !msg)`; `renderConcurrencyOverrides` two-branch toggle swapped to `classList.add/remove('is-hidden')`
+- [js/storage.js](js/storage.js) — `initBackupSyncSettings` `setBackupUnsupportedRow` reveal swapped to `classList.remove('is-hidden')`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 21 → 18 inline `style="display:none*"` attrs remaining (help.html wipeStatus stays for now).
+
+---
+
 ## v3.63.370
 
 **Inline-style cleanup pass 4: `#phaseSelect` (the hidden phase-state `<select>` on the work screen) moved off `style="display:none"` to `.is-hidden`**

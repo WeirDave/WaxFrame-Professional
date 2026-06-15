@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-028
+// Build: 20260614-029
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-028';         // build stamp — update each session
+const BUILD       = '20260614-029';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -829,7 +829,7 @@ function wireSettingsWipeButtons() {
   function setStatus(msg, cls) {
     if (!statusEl || !statusRow) return;
     statusEl.textContent = msg;
-    statusRow.style.display = msg ? '' : 'none';
+    statusRow.classList.toggle('is-hidden', !msg);
     statusEl.style.color = cls === 'warn' ? '#c5832a' : cls === 'err' ? '#b94a3a' : cls === 'ok' ? '#3a7a4a' : '';
   }
   function wire(btnId, origLabel, armedLabel, wipeFn, layerName) {
@@ -1107,11 +1107,11 @@ function renderConcurrencyOverrides() {
     baseLabel(a).toLowerCase().localeCompare(baseLabel(b).toLowerCase()));
 
   if (!rows.length) {
-    section.style.display = 'none';
+    section.classList.add('is-hidden');
     container.innerHTML = '';
     return;
   }
-  section.style.display = '';
+  section.classList.remove('is-hidden');
 
   container.innerHTML = rows.map(base => {
     const label    = baseLabel(base);

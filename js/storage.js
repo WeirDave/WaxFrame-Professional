@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260614-028
+// Build: 20260614-029
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -2134,7 +2134,7 @@ function openCheckpointFromSettings() {
 function initBackupSyncSettings() {
   if (!_fsaSupported()) {
     const row = document.getElementById('setBackupUnsupportedRow');
-    if (row) row.style.display = '';
+    if (row) row.classList.remove('is-hidden');
     const btn = document.getElementById('setBackupFolderBtn');
     if (btn) { btn.disabled = true; btn.title = 'Requires Chrome, Edge, or Opera'; }
     document.querySelectorAll('input[name="setBackupFreq"]').forEach(el => { el.disabled = true; });
