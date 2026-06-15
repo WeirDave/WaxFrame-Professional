@@ -2,6 +2,46 @@
 
 ---
 
+## v3.63.382
+
+**Builder-failure cards get a new "Retry Builder only" action — re-synthesizes against cached reviewer responses, saves the reviewer round-trip tokens**
+
+Build: `20260614-040`<br>
+Released: `2026-06-14`
+
+### The bug
+
+User report: when the Builder's output failed to parse (malformed `%%CONFLICTS_START%%` block, missing delimiters, length overrun, output truncation), the only retry path was "Retry round" — which re-fires every reviewer as well as the Builder. The reviewers had ALREADY produced valid responses; their tokens are now wasted on a path that re-runs them just because the synthesis step downstream couldn't parse cleanly.
+
+For a 5-reviewer hive, "Retry round" costs 5 reviewer calls + 1 Builder call. "Retry Builder only" costs 1 Builder call — same outcome on the typical case (model nondeterminism + a fresh Builder swap usually parses cleanly the second time).
+
+### The fix
+
+The infrastructure already existed for the single-AI surgical retry path (`retrySingleAIInPartialRound`, v3.63.252) which caches `reviewerResponses` on `window._partialRound` and re-enters `runRound({ resumedFromPartial: true, cachedReviewerResponses })` to skip the reviewer fan-out. v3.63.382 reuses that machinery for a Builder-only retry — the cached reviewer set is already complete, so no reviewer re-fire is needed, just the Builder synthesis against the cached input.
+
+New pieces:
+
+- **`retryBuilderAgainstCachedReviews()`** in [js/app.js](js/app.js) — guards on `_partialRound` presence + project-gen + cached reviewer count, performs the same "round already finalized" unwind that `retrySingleAIInPartialRound` does, then enters `runRound({ resumedFromPartial: true, cachedReviewerResponses: pr.reviewerResponses, retryLabel: 'Builder-only retry: <name>' })`. Exposed on `window` for the dispatcher.
+- **`'retry-builder-cached'` action kind** in [js/wf-debug.js](js/wf-debug.js) — closes the troubleshooting card and calls `window.retryBuilderAgainstCachedReviews()` with a graceful fallback toast if the helper isn't loaded.
+- **"Retry Builder only" button** added to all four Builder-failure cards: `BUILDER_DELIMITERS`, `BUILDER_NO_CONFLICTS_BLOCK`, `BUILDER_BLOAT`, `BUILDER_TRUNCATED`. The legacy "Retry round" button stays — there are still cases where re-firing reviewers makes sense (mid-session model swap, reviewers that drifted, etc.).
+
+### Verified in preview
+
+- `window.retryBuilderAgainstCachedReviews` is globally defined after page load
+- Guard fires correctly: with `_partialRound = null`, calling the function shows the "No cached reviews to retry against — run a fresh round" toast and returns without entering `runRound`
+- With a synthetic `_partialRound` populated, the function dispatches `runRound({ resumedFromPartial: true, cachedReviewerResponses: <cachedSet>, retryLabel: 'Builder-only retry: <id>' })` — verified via `runRound` spy
+- The new `'retry-builder-cached'` button now appears between "Change Builder" and "Retry round" on the BUILDER_DELIMITERS card; same shape for the other three Builder-failure cards (BUILDER_NO_CONFLICTS_BLOCK, BUILDER_BLOAT, BUILDER_TRUNCATED)
+
+### Files touched
+
+- [js/app.js](js/app.js) — new `retryBuilderAgainstCachedReviews()` function with full guards and unwind handling; exposed on `window`
+- [js/wf-debug.js](js/wf-debug.js) — new `'retry-builder-cached'` action kind in the dispatcher; "Retry Builder only" button added to BUILDER_DELIMITERS, BUILDER_NO_CONFLICTS_BLOCK, BUILDER_BLOAT, BUILDER_TRUNCATED cards
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+This release closes the third (and final) of the three user-reported bugs from this evening's work session.
+
+---
+
 ## v3.63.381
 
 **Two work-screen restorations: "🐝 Setup" button on the Hive header (jump back to Setup 1), and the model name in the bee-dot tooltip**
