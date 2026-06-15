@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260614-029
+// Build: 20260614-030
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1404,9 +1404,9 @@ function switchCheckpointMode(mode) {
     if (savePill)    savePill.classList.remove('active');
     if (restorePill) restorePill.classList.add('active');
     savePanel.style.display    = 'none';
-    restorePanel.style.display = '';
+    restorePanel.classList.remove('is-hidden');
     if (restoreIntro) restoreIntro.style.display = '';
-    if (restoreDiff)  restoreDiff.style.display  = 'none';
+    if (restoreDiff)  restoreDiff.classList.add('is-hidden');
     // Clear any prior stash so a Save → Restore toggle never leaks parsed
     // data from a previous session. Also clear any stale error banner
     // from a previous bad-file pick.
@@ -1417,7 +1417,7 @@ function switchCheckpointMode(mode) {
     if (savePill)    savePill.classList.add('active');
     if (restorePill) restorePill.classList.remove('active');
     savePanel.style.display    = '';
-    restorePanel.style.display = 'none';
+    restorePanel.classList.add('is-hidden');
     // v3.63.261 — Save mode now defaults to ALL sections ticked. The
     // user-can-just-click-through default produces a *complete* checkpoint
     // (everything in one file) rather than the prior "safe partial" that
@@ -2968,7 +2968,7 @@ async function _populateRestoreCheckpointDiff(data) {
   const introEl = document.getElementById('chkRestoreIntro');
   const diffEl  = document.getElementById('chkRestoreDiff');
   if (introEl) introEl.style.display = 'none';
-  if (diffEl)  diffEl.style.display  = '';
+  if (diffEl)  diffEl.classList.remove('is-hidden');
 
   // v3.63.263 — Stash live + checkpoint state for the expand-on-click
   // detail panels. Both sides need their full data accessible

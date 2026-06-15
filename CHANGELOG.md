@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.372
+
+**Inline-style cleanup pass 6: checkpoint Restore panels (`#chkRestorePanel`, `#chkRestoreDiff`) moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-030`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Two checkpoint-screen panels were initialized with `style="display:none"`:
+
+- `#chkRestorePanel` — the entire Restore mode UI (intro card + diff rows), hidden by default until the user picks the Restore mode pill
+- `#chkRestoreDiff` — the per-row diff display, hidden until a checkpoint file is picked and parsed
+
+Both HTML attrs swapped to `class="… is-hidden"`. The three JS toggle sites in [js/storage.js](js/storage.js) (mode-pill click handler `switchCheckpointMode` two branches + the file-pick handler's diff reveal) all converted to `classList.add/remove('is-hidden')`. The sibling `chkSavePanel` and `chkRestoreIntro` toggles were left on `.style.display = '' / 'none'` — they had no HTML inline `style="display:none"` to start with (so they're out of the 30-attr ratchet scope) and the runtime style mutation isn't a CSP problem.
+
+### Verified in preview
+
+- Initial state — both panels `.is-hidden`, computed `display: none`, zero inline `style` attribute
+- `switchCheckpointMode('restore')` — `chkRestorePanel` drops `.is-hidden` (computed `display: block`), `chkRestoreDiff` stays `.is-hidden` (correct — waits for file pick)
+- `switchCheckpointMode('save')` — `chkRestorePanel` re-adds `.is-hidden` (back to `display: none`), `chkRestoreDiff` stays `.is-hidden`
+
+### Files touched
+
+- [index.html](index.html) — 2 inline `style="display:none"` removed; `.is-hidden` added
+- [js/storage.js](js/storage.js) — 3 `.style.display = …` flips swapped for `classList.add/remove('is-hidden')`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 18 → 16 inline `style="display:none*"` attrs remaining.
+
+---
+
 ## v3.63.371
 
 **Inline-style cleanup pass 5: three Settings-screen sections (`#settingsConcurrencySection`, `#setBackupUnsupportedRow`, `#setWipeStatusRow`) moved off `style="display:none"` to `.is-hidden`**
