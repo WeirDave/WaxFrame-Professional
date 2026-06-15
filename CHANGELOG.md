@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.375
+
+**Inline-style cleanup pass 9: wfConfirm checkbox row + auto-halt promote button + token-count provider message moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-033`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Three elements across three independent modals were initialized with `style="display:none"` and toggled at runtime via `el.style.display`:
+
+- `#wfConfirmCheckRow` — the optional checkbox row inside the WaxFrame-styled confirm modal (shown when `wfConfirm()` is called with either `opts.checkbox` or `opts.suppressKey`)
+- `#autoHaltPromoteBtn` — the auto-halt "🔁 Promote failover & resume" button (shown only when `reasonCode === 'failure-streak-backup'` AND a failover Builder candidate is staged)
+- `#tcProviderMessage` — the troubleshooting card's "What the provider actually said" message block (shown when `ctx.message` is populated for provider-side failures like rate limits, auth failures, credit-low)
+
+All three HTML attrs swapped to `class="… is-hidden"`. Seven JS toggle sites migrated to `classList.add/remove('is-hidden')`:
+
+- [js/app.js:3654, 3656](js/app.js:3654) — `promoteBtn` reveal/hide based on reason code
+- [js/app.js:8361, 8365, 8367](js/app.js:8361) — `checkRow` three-way branch (`checkbox` opt → show, `suppressKey` opt → show, neither → hide)
+- [js/wf-debug.js:1001, 1003](js/wf-debug.js:1001) — `providerWrap` reveal/hide based on `ctx.message`
+
+### Verified in preview
+
+- All three elements: initial `.is-hidden` set, computed `display: none`, zero inline `style` attribute
+- `wfConfirm('Test', 'Test message', { checkbox: { label: 'Test check', checked: false } })` — checkRow drops `.is-hidden`, computed `display: flex`, no inline style — the checkbox row appears as expected
+
+### Files touched
+
+- [index.html](index.html) — 3 inline `style="display:none"` removed; `.is-hidden` added to all three
+- [js/app.js](js/app.js) — 5 `.style.display = …` flips swapped for `classList.add/remove('is-hidden')` (2 in auto-halt promote, 3 in wfConfirm checkRow)
+- [js/wf-debug.js](js/wf-debug.js) — 2 `.style.display = …` flips swapped for `classList.add/remove('is-hidden')` (in the troubleshooting-card provider message render)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 11 → 8 inline `style="display:none*"` attrs remaining.
+
+---
+
 ## v3.63.374
 
 **Inline-style cleanup pass 8: Import Server icon preview (`#importServerIconPreview`) moved off `style="display:none"` to `.is-hidden`**

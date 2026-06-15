@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260614-032
+// Build: 20260614-033
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -998,9 +998,9 @@ function renderTroubleshootingCard(entry, ctx) {
         return `<a href="${url}" target="_blank" rel="noopener">${url}</a>${tail}`;
       });
       providerText.innerHTML = linkified;
-      providerWrap.style.display = '';
+      providerWrap.classList.remove('is-hidden');
     } else {
-      providerWrap.style.display = 'none';
+      providerWrap.classList.add('is-hidden');
     }
   }
 
