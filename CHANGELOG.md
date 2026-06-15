@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.381
+
+**Two work-screen restorations: "🐝 Setup" button on the Hive header (jump back to Setup 1), and the model name in the bee-dot tooltip**
+
+Build: `20260614-039`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Two work-screen affordances reported missing by the user:
+
+1. **`🐝 Setup` button on the Hive header** — a jump-back-to-Setup-1 button is added next to "Edit Hive" / "Change Builder" in the work-screen's left-panel Hive header. Clicking it dispatches `goToScreen("screen-bees")` via the existing helper-handlers `call` action. Lets users rotate API keys, add/remove AIs, change models, or reset Builder defaults mid-session without hunting through the hamburger nav.
+
+2. **Model name back on the bee tooltip** — hovering or focusing a bee-dot now shows four lines: AI name, role (Builder/Reviewer), **model** (e.g. `gpt-5.5`), and live state. The model line is read from `getModelForAI(ai)` so it reflects the current per-AI override (variants, manual swap, profile pick) — not the parent provider's cfg.model. The state-tick refresh (`refreshBeeTooltip`) updates the model line too, so a mid-hover model swap on Setup 1 reflects without requiring a mouseleave/re-enter.
+
+### Files touched
+
+- [index.html](index.html) — `🐝 Setup` button added to `.flex-row-sm` inside `.left-panel-header` on the work screen, just before `hive-edit-btn`
+- [js/app.js](js/app.js) — `ensureBeeTooltipEl` adds a `.bdt-model` row to the four-line tooltip; `showBeeTooltip` and `refreshBeeTooltip` both populate it from `getModelForAI(ai)`
+- [style.css](style.css) — `.bee-dot-tooltip .bdt-model` rule added (monospace, dim, max-width 240px with ellipsis truncation for long model ids); sits between `.bdt-role` and `.bdt-state`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+### Verified in preview
+
+- `🐝 Setup` button rendered with `data-fn="goToScreen" data-arg="screen-bees"`; live click dispatches `goToScreen("screen-bees")` (spy confirmed)
+- `showBeeTooltip` populates `.bdt-model` with `gpt-5.5` for the test AI; tooltip carries all four lines (name, role, model, state)
+
+### What's NOT in this release
+
+The Builder-malformed retry UX (user-reported bug #3 — when Builder output is malformed the only option is "Retry round" which re-runs all reviewers AND the Builder, wasting reviewer tokens). That's an architectural change: the Builder error cards in `js/wf-debug.js` need a new "Re-run Builder against cached reviews" action, and `runRound` needs to cache `reviewerResponses` on Builder failure so the retry can synthesize against them without re-fetching. Deferred to a follow-up release.
+
+---
+
 ## v3.63.380
 
 **Inline-style cleanup CLOSE-OUT: last inline `style="display:none*"` attr migrated, `style-src` drops `'unsafe-hashes'` AND the three attribute-value sha256 hashes**

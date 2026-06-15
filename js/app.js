@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-038
+// Build: 20260614-039
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-038';         // build stamp — update each session
+const BUILD       = '20260614-039';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -15956,6 +15956,7 @@ function ensureBeeTooltipEl() {
   tt.innerHTML =
     '<div class="bdt-name"></div>' +
     '<div class="bdt-role"></div>' +
+    '<div class="bdt-model"></div>' +
     '<div class="bdt-state"></div>';
   document.body.appendChild(tt);
   return tt;
@@ -15979,6 +15980,11 @@ function showBeeTooltip(aiId, dotEl) {
   const tt = ensureBeeTooltipEl();
   tt.querySelector('.bdt-name').textContent  = ai.name;
   tt.querySelector('.bdt-role').textContent  = aiId === builder ? 'Builder' : 'Reviewer';
+  // v3.63.381 — Model line restored. Was on the bee tooltip prior to the
+  // Phase 8 tooltip rewrite; users rely on it to confirm which model is
+  // actually running for each AI without leaving the work screen.
+  const model = (typeof getModelForAI === 'function') ? getModelForAI(ai) : '';
+  tt.querySelector('.bdt-model').textContent = model || '(no model set)';
   tt.querySelector('.bdt-state').textContent = getBeeStateText(aiId);
   // Position above the dot, centered. Show first so we can read offsetWidth.
   tt.classList.add('is-visible');
@@ -16017,6 +16023,11 @@ function refreshBeeTooltip(aiId) {
   if (!ai) return;
   tt.querySelector('.bdt-name').textContent  = ai.name;
   tt.querySelector('.bdt-role').textContent  = aiId === builder ? 'Builder' : 'Reviewer';
+  // v3.63.381 — Refresh the model line on every state-change tick too, so
+  // a mid-hover Builder swap (or model swap via Setup 1) shows the new
+  // model without requiring the user to mouseleave/re-enter the dot.
+  const model = (typeof getModelForAI === 'function') ? getModelForAI(ai) : '';
+  tt.querySelector('.bdt-model').textContent = model || '(no model set)';
   tt.querySelector('.bdt-state').textContent = getBeeStateText(aiId);
 }
 
