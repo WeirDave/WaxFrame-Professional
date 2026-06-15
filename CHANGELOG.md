@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.379
+
+**Inline-style cleanup pass 13: decision-custom-wrap textareas (holdout `#hcustom-${i}` + conflict `#dcustom-${di}`) moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-037`<br>
+Released: `2026-06-14`
+
+### What changed
+
+Two template-literal sites in [js/app.js](js/app.js) render `<div class="decision-custom-wrap">` wrappers around the "Custom — type your own" textareas that appear inside holdout cards (the convergence-suggestion review panel) and conflict cards (the user-decision review panel). Both were emitted with `style="display:none"` and toggled at runtime via `el.style.display = 'block' / 'none'`:
+
+- [js/app.js:20216](js/app.js:20216) — holdout custom wrap template literal (`#hcustom-${i}`)
+- [js/app.js:20376](js/app.js:20376) — conflict custom wrap template literal (`#dcustom-${di}`)
+
+Both HTML template attrs swapped to `class="decision-custom-wrap is-hidden"`. Five JS toggle sites migrated to `classList.add/remove/toggle('is-hidden', …)`:
+
+- [js/app.js:20483](js/app.js:20483) — re-hydrate `dcustom-${di}` on session reload (conflict choice was `custom` — reveal it via `classList.remove('is-hidden')`)
+- [js/app.js:20502](js/app.js:20502) — `selectDecision` hide custom wrap when an option pill is picked
+- [js/app.js:20525](js/app.js:20525) — `selectCustomDecision` reveal custom wrap (`classList.remove('is-hidden')`)
+- [js/app.js:20565](js/app.js:20565) — `selectBypassDecision` hide custom wrap
+- [js/app.js:20902](js/app.js:20902) — `selectHoldout` toggle: `classList.toggle('is-hidden', choice !== 'custom')` — keeps the one-line conditional from the original
+
+The unrelated `builderScreenModelWrap` toggles at lines 7182 / 7198 are a different element on a different surface; they stay as-is (out of scope for v3.63.379).
+
+### Verified in preview
+
+Synthetic decision-custom-wrap fragments rendered with the new shape — `class="decision-custom-wrap is-hidden"` — and exercised through every migration path:
+
+- Initial state — both `#hcustom-0` and `#dcustom-0` carry `.is-hidden`, computed `display: none`, zero inline `style` attribute
+- `classList.toggle('is-hidden', false)` (selectHoldout 'custom' path) and `classList.remove('is-hidden')` (selectCustomDecision path) — both reveal, computed `display: block`, no inline style
+- `classList.toggle('is-hidden', true)` (selectHoldout non-'custom' path) and `classList.add('is-hidden')` (selectDecision + selectBypassDecision) — both hide, computed `display: none`
+
+### Files touched
+
+- [js/app.js](js/app.js) — 2 template-literal HTML attrs swapped to `class="… is-hidden"`; 5 JS `.style.display = …` flips swapped for `classList.add/remove/toggle('is-hidden', …)`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 3 → 1 inline `style="display:none*"` attrs remaining (the last one is `help.html` wipeStatus — deferred to v3.63.380 which also recomputes the help.html `<style>` block CSP hash).
+
+---
+
 ## v3.63.378
 
 **Inline-style cleanup pass 12: templates.html "Your Templates" sidebar group (`#sbCustomCategory`, `#sbCustomLink`) moved off `style="display:none"` to `.is-hidden`**
