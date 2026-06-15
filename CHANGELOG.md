@@ -2,6 +2,49 @@
 
 ---
 
+## v3.63.383
+
+**Hex-card hover tooltip on the work screen now shows the model alongside the AI name (was just the AI name)**
+
+Build: `20260614-041`<br>
+Released: `2026-06-14`
+
+### The bug
+
+User report on v3.63.381: the "model tooltips that you made are only showing the primary provider not the model chosen. so 'ChatGPT' or 'Claude' is all your showing".
+
+v3.63.381 added the model line to the **bee-dot tooltip** (the smaller dots in the dot strip — that works). But the user was hovering over the **hex cards** (the larger AI cards in the work-screen Hive panel), whose native browser `title` attribute on `.hex-name` showed only `escapeHtml(ai.name)` — so the hover tooltip read `"ChatGPT"` or `"Claude"` with no model.
+
+### The fix
+
+The `.hex-name` `title` attribute on the work-screen Hive panel hex cards now reads:
+
+```
+<AI name> · Model: <resolved-model-id>
+```
+
+The model is resolved through `getModelForAI(ai)` so it picks up per-AI overrides (variants, manual swaps from Setup 1's compact model select, Hive Profile picks) — the same resolver the bee-dot tooltip uses for its `.bdt-model` line. Falls back to `"(not set)"` if the AI has neither `ai.model` nor `cfg.model` (no provider model id ever wired up).
+
+### Verified in preview
+
+Six default AIs after `renderBeeStatusGrid()` show:
+
+| Card | Title attribute |
+|---|---|
+| ChatGPT | `ChatGPT · Model: gpt-5.5` |
+| Claude | `Claude · Model: claude-sonnet-4-6` |
+| Gemini | `Gemini · Model: gemini-3.5-flash` |
+| Grok | `Grok · Model: grok-4.1-fast` |
+| Mistral | `Mistral · Model: mistral-large-latest` |
+| Perplexity | `Perplexity · Model: sonar-pro` |
+
+### Files touched
+
+- [js/app.js](js/app.js) — `renderBeeStatusGrid` hex-name title attribute updated to include the resolved model
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.382
 
 **Builder-failure cards get a new "Retry Builder only" action — re-synthesizes against cached reviewer responses, saves the reviewer round-trip tokens**
