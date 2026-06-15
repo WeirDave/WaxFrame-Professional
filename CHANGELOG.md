@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.378
+
+**Inline-style cleanup pass 12: templates.html "Your Templates" sidebar group (`#sbCustomCategory`, `#sbCustomLink`) moved off `style="display:none"` to `.is-hidden`**
+
+Build: `20260614-036`<br>
+Released: `2026-06-14`
+
+### What changed
+
+The `templates.html` "Your Templates" sidebar group is two adjacent sidebar items (a category header + a link to the custom-templates section) hardcoded with `style="display:none;"`. They're revealed by `js/templates-page.js` only when `localStorage.waxframe_custom_templates` actually has saved templates — first-time visitors never see a dead sidebar entry pointing at a missing section.
+
+Both HTML attrs swapped to `class="… is-hidden"`. The reveal site in [js/templates-page.js:256](js/templates-page.js:256) and [:257](js/templates-page.js:257) swapped from `el.style.display = ''` to `el.classList.remove('is-hidden')`.
+
+`templates.html` loads `style.css` (it's a public SEO/marketing page, not a self-contained break-glass page like `help.html`), so the shared `.is-hidden { display: none !important }` rule applies the same way the rest of the site uses it. CSS defaults for `.doc-sidebar-category` (no display rule → browser-default `block`) and `.doc-sidebar-link` (`display: block` per style.css:12241) restore correctly when `.is-hidden` is removed.
+
+### Verified in preview
+
+- Navigated to `templates.html` directly
+- Initial state — both elements `.is-hidden`, computed `display: none`, zero inline `style` attribute
+- After `classList.remove('is-hidden')` on both (the migration path the JS now uses) — both reveal, computed `display: block`, no inline style added
+- Re-applying `.is-hidden` re-hides — clean both directions
+
+### Files touched
+
+- [templates.html](templates.html) — 2 inline `style="display:none"` removed; `.is-hidden` added to both
+- [js/templates-page.js](js/templates-page.js) — 2 `.style.display = ''` flips swapped for `classList.remove('is-hidden')` in the custom-template render reveal path
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+Ratchet: 5 → 3 inline `style="display:none*"` attrs remaining (the 3 left are: 2 template-literal sites in [js/app.js](js/app.js) at lines 20216 / 20376 for `#hcustom-${i}` / `#dcustom-${di}` decision-custom-wrap, and the 1 deferred `help.html` wipeStatus that needs CSP hash recompute).
+
+---
+
 ## v3.63.377
 
 **Inline-style cleanup pass 11: `#devToolbar` moved off `style="display:none"` to `.is-hidden`**
