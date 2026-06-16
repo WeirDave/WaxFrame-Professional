@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.388
+
+**Revert v3.63.387's launcher-script cruft; keep the diagnostic improvements**
+
+Build: `20260615-004`<br>
+Released: `2026-06-15`
+
+### What changed
+
+v3.63.387 shipped two launcher scripts (`WaxFrame-Portable.bat` and `WaxFrame-Portable.command`) as a workaround for the file:// PDF-import limitation. David tried the `.command` on his work Mac and it didn't run (corp laptop locks down script execution), and asked to remove the launchers so they don't sit in the repo as unused cruft. Pulling them.
+
+What this release does:
+
+- **Delete** `WaxFrame-Portable.bat` and `WaxFrame-Portable.command`.
+- **Revert** the README portable section back to "open `index.html` in a browser," with a short caveat block explaining the file:// PDF limitation and pointing at DOCX-conversion / waxframe.com as workarounds.
+- **Revert** the launcher-script references inside `extractPDF`'s file:// error message — but **keep** the file:// detection and the `window._pdfjsLoadError` surfacing from v3.63.387, because those are still useful diagnostics regardless of the workaround path.
+- **Keep** `pdf-loader.mjs`'s try/catch from v3.63.387 — it catches the silent dynamic-import failure either way.
+
+A proper fix for portable PDF — vendoring a classic-script (UMD-style) build of pdf.js 4.x that loads without ESM — is on the roadmap but a bigger lift; tracked separately.
+
+### Verified in preview
+
+- `extractPDF.toString()` no longer mentions `WaxFrame-Portable.bat`, `WaxFrame-Portable.command`, or `python -m http.server`.
+- file:// branch still present (now suggests DOCX conversion + hosted version).
+- `_pdfjsLoadError` branch still present.
+- pdfjsLib still loads correctly on http://.
+
+### Files touched
+
+- Deleted: `WaxFrame-Portable.bat`, `WaxFrame-Portable.command`
+- [README.md](README.md) — portable install steps reverted; short caveat block added for the PDF/file:// limitation
+- [js/app.js](js/app.js) — `extractPDF()` error reverted (file:// detection retained, launcher references removed)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.387
 
 **Portable PDF import: clear error + launcher scripts that run a local web server**
