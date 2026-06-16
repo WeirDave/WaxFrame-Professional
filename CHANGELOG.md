@@ -2,6 +2,55 @@
 
 ---
 
+## v3.63.385
+
+**Server-mode connectivity pill on the Hive Setup row (4 states, auto-probed)**
+
+Build: `20260615-001`<br>
+Released: `2026-06-15`
+
+### What changed
+
+Server-imported AIs (Alfredo, Ollama, LM Studio, OpenWebUI — anything brought in via the Import Server modal) had no row-header pill at all. The pre-existing `✓ Ready` pill gates on `hasKey`, and these AIs are keyless; they carry a `_modelsEndpoint` instead. So the row's status column was blank and there was no way to tell at a glance whether the server was still up, or whether the model the user had picked weeks ago was still on the server.
+
+David: "I'm wondering if some of these are frankly still connected… the server list models don't get updated and I don't have a current list… we should have the connected and the reason… the model that I've chosen on the server endpoint is still there or not."
+
+This release adds a connectivity pill in the same slot, driven by a live probe against `_modelsEndpoint`. Four states:
+
+- **🔄 Checking…** — probe in flight, or just-mounted before the first check returns. Renders gray.
+- **✓ Connected** — endpoint responded AND the AI's currently-picked model is in the returned list. Renders green (reuses `.is-ready`).
+- **⚠ Model missing** — endpoint responded but the picked model is NOT in the current list (server admin removed or renamed it). Renders gold; tooltip lists the first 5 models that ARE available so the user knows what to switch to.
+- **✗ Unreachable** — fetch failed, timeout, or non-2xx. Renders red (reuses `.is-invalid`); tooltip surfaces the underlying error.
+
+Auto-fires on every `screen-bees` entry, throttled to one probe per AI per 60 seconds (so re-entering the screen mid-session doesn't spam endpoints). Clicking the pill bypasses the throttle and re-probes immediately — useful right after the server admin rolls changes.
+
+### How it works
+
+- `_buildRowStatusPill(ai, hasKey)` now branches early when `cfg._modelsEndpoint` is set: instead of returning '' (which is what made server rows blank pre-v3.63.385), it delegates to `_buildServerConnectivityPill(ai)`.
+- The pill HTML carries `data-server-pill-aiid="<id>"` so the live update path (`_refreshServerConnectivityPillInDom`) can locate and replace it in place without re-rendering the whole row (preserves expand state, focus, etc.).
+- Click wiring is the same `data-action="call" data-fn="recheckServerAIConnectivity"` pattern used by the rest of the strict-CSP migration — no inline handlers.
+- Cache lives on `window._serverConnectivity[aiId] = { state, lastChecked, models, error }`. Throttle is `SERVER_PROBE_THROTTLE_MS = 60_000`; the `force:true` opts flag (used by the click path) skips it.
+- The probe itself reuses the existing `fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint)` helper — same path the import-server modal and round-flight token sniff already exercise.
+
+### Verified in preview
+
+- All 4 states render with correct class + emoji + label:
+  - `is-checking` → 🔄 Checking…
+  - `is-ready` → ✓ Connected
+  - `is-warn` → ⚠ Model missing
+  - `is-invalid` → ✗ Unreachable
+- Auto-probe fires on `screen-bees` entry; cache populates `unreachable` for a fake URL (confirmed end-to-end through `fetchModelsFromEndpoint`'s error path).
+- Throttle holds: second non-force call within 60s leaves cache untouched. Force call re-probes (state flips back through `checking`).
+- Internet-mode AIs (ChatGPT, Claude, Gemini, etc.) untouched — `_modelsEndpoint` check gates only server rows.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `_buildRowStatusPill` server-mode branch; new `_buildServerConnectivityPill`, `_serverPillStateClass`, `_serverPillLabel`, `_serverPillTitle`, `_checkServerAIConnectivity`, `_refreshServerConnectivityPillInDom`, `recheckServerAIConnectivity`, `probeAllServerAIConnectivity`; auto-probe wired into `goToScreen('screen-bees')`
+- [style.css](style.css) — new `.ai-setup-status-pill.is-checking` and `.is-warn` variants
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.384
 
 **Work-screen Hive header buttons: bee EMOJI removed from Setup, worker-bee IMAGE added; 🔨 added to Change Builder**

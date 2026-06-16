@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260614-042
+// Build: 20260615-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260614-042';         // build stamp — update each session
+const BUILD       = '20260615-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2551,6 +2551,11 @@ function goToScreen(id) {
     }
     renderAISetupGrid();
     setTimeout(updateBeesRequirements, 0);
+    // v3.63.385 — Fire connectivity probes for every server-mode AI on the
+    // hive. Throttled internally to 60s so revisiting the screen during a
+    // single session doesn't spam endpoints; the click-the-pill path
+    // bypasses throttle when the user wants a fresh answer.
+    setTimeout(probeAllServerAIConnectivity, 50);
   }
   // v3.63.163 — screen-builder handler removed (DOM was deleted from
   // index.html in this release). renderBuilderPicker now only fires
@@ -5740,6 +5745,12 @@ function _buildCompactModelSelect(ai, currentModel) {
 //   green = working / healthy
 //   gold  = selected / active pick
 function _buildRowStatusPill(ai, hasKey) {
+  // v3.63.385 — Server-mode AIs (imported from a local/LAN model server —
+  // Alfredo, Ollama, LM Studio, OpenWebUI) don't carry an API key, so the
+  // hasKey gate hid the pill entirely. Server AIs get a separate connectivity
+  // pill driven by a live probe against _modelsEndpoint; see the helper below.
+  const cfg = API_CONFIGS[ai.provider];
+  if (cfg && cfg._modelsEndpoint) return _buildServerConnectivityPill(ai);
   if (!hasKey) return '';
   if (window._invalidKeys && window._invalidKeys[ai.id]) {
     return `<span class="ai-setup-status-pill is-invalid" title="API key looks invalid — open the expanded view to retest or rotate.">✗ Invalid</span>`;
@@ -5756,6 +5767,143 @@ function _buildRowStatusPill(ai, hasKey) {
   // catches it on the next render.
   return `<span class="ai-setup-status-pill is-ready" title="${window._validKeys && window._validKeys[ai.id] ? 'API key validated — this AI is ready to use.' : 'API key saved — last validation status unknown but no failure logged.'}">✓ Ready</span>`;
 }
+
+// ════════════════════════════════════════════════════════════════════
+// v3.63.385 — Server-mode connectivity pill.
+// Four states, all rendered into the same row-header slot as the
+// Internet-mode Ready pill:
+//
+//   🔄 Checking…       — probe in flight (also the just-mounted state
+//                        before the first check finishes)
+//   ✓ Connected        — _modelsEndpoint returned a model list AND the
+//                        AI's currently-picked model is in that list
+//   ⚠ Model missing    — endpoint responded but the picked model is NOT
+//                        in the current list (server admin removed or
+//                        renamed it — actionable for the user)
+//   ✗ Unreachable      — fetch failed / endpoint timed out / non-2xx
+//
+// Cache lives at window._serverConnectivity[aiId]:
+//   { state, lastChecked, models, error }
+//
+// Auto-check fires on screen-bees entry; throttle is 60s so re-entering
+// the screen during a normal session doesn't re-ping. Clicking the pill
+// re-checks immediately (the throttle is bypassed) — useful when the
+// server admin just rolled changes.
+//
+// Renders a stable wrapper with [data-server-pill-aiid] so the live
+// probe handler can locate and replace the pill content without
+// touching the rest of the row (preserves expand state, focus, etc.).
+// ════════════════════════════════════════════════════════════════════
+window._serverConnectivity = window._serverConnectivity || {};
+const SERVER_PROBE_THROTTLE_MS = 60 * 1000;
+
+function _buildServerConnectivityPill(ai) {
+  const cache = window._serverConnectivity[ai.id];
+  const state = cache?.state || 'unknown';
+  return `<span class="ai-setup-status-pill ${_serverPillStateClass(state)}" ` +
+         `data-server-pill-aiid="${escapeHtml(ai.id)}" ` +
+         `data-action="call" data-fn="recheckServerAIConnectivity" data-arg="${escapeHtml(ai.id)}" ` +
+         `title="${escapeHtml(_serverPillTitle(state, ai, cache))}" ` +
+         `role="button" tabindex="0">${_serverPillLabel(state)}</span>`;
+}
+
+function _serverPillStateClass(state) {
+  if (state === 'connected')      return 'is-ready';
+  if (state === 'model-missing')  return 'is-warn';
+  if (state === 'unreachable')    return 'is-invalid';
+  return 'is-checking';   // 'checking' and 'unknown' both render as in-flight
+}
+function _serverPillLabel(state) {
+  if (state === 'connected')      return '✓ Connected';
+  if (state === 'model-missing')  return '⚠ Model missing';
+  if (state === 'unreachable')    return '✗ Unreachable';
+  return '🔄 Checking…';
+}
+function _serverPillTitle(state, ai, cache) {
+  const picked = getModelForAI(ai) || '(no model picked)';
+  if (state === 'connected') {
+    return `Endpoint responded. Picked model "${picked}" is in the current model list. Click to re-check.`;
+  }
+  if (state === 'model-missing') {
+    const sample = (cache?.models || []).slice(0, 5).join(', ');
+    return `Endpoint responded BUT "${picked}" is not in the current model list. The server admin may have removed or renamed it — expand the row and pick a fresh model. Available now: ${sample || '(none)'}. Click to re-check.`;
+  }
+  if (state === 'unreachable') {
+    return `Could not reach the model-server endpoint. Reason: ${cache?.error || 'unknown'}. Click to re-check.`;
+  }
+  return 'Probing the model-server endpoint…';
+}
+
+async function _checkServerAIConnectivity(ai, opts) {
+  opts = opts || {};
+  const cfg = API_CONFIGS[ai.provider];
+  if (!cfg || !cfg._modelsEndpoint) return;
+  const force = !!opts.force;
+  const now = Date.now();
+  const cache = window._serverConnectivity[ai.id];
+  if (!force && cache && cache.lastChecked && (now - cache.lastChecked < SERVER_PROBE_THROTTLE_MS)) {
+    return;   // throttled
+  }
+  window._serverConnectivity[ai.id] = { state: 'checking', lastChecked: now, models: cache?.models || [], error: '' };
+  _refreshServerConnectivityPillInDom(ai.id);
+  let models = [];
+  try {
+    models = await fetchModelsFromEndpoint(cfg.endpoint, cfg.format, cfg._key || '', cfg._modelsEndpoint);
+    if (!Array.isArray(models)) models = [];
+  } catch (e) {
+    window._serverConnectivity[ai.id] = {
+      state:       'unreachable',
+      lastChecked: Date.now(),
+      models:      [],
+      error:       (e && e.message) || String(e || 'unknown error')
+    };
+    _refreshServerConnectivityPillInDom(ai.id);
+    return;
+  }
+  const picked = getModelForAI(ai);
+  const inList = !!(picked && models.some(m => m === picked));
+  window._serverConnectivity[ai.id] = {
+    state:       inList ? 'connected' : 'model-missing',
+    lastChecked: Date.now(),
+    models,
+    error:       ''
+  };
+  _refreshServerConnectivityPillInDom(ai.id);
+}
+
+function _refreshServerConnectivityPillInDom(aiId) {
+  const ai = (Array.isArray(activeAIs) ? activeAIs : []).find(a => a.id === aiId);
+  if (!ai) return;
+  const span = document.querySelector(`[data-server-pill-aiid="${CSS.escape(aiId)}"]`);
+  if (!span) return;
+  const fresh = _buildServerConnectivityPill(ai);
+  // Replace the wrapper span verbatim so class / title / label all update.
+  const tmp = document.createElement('div');
+  tmp.innerHTML = fresh;
+  const next = tmp.firstElementChild;
+  if (next) span.replaceWith(next);
+}
+
+// Public entry-point for the data-action="call" wiring on the pill itself.
+// Bypasses throttle so a click always re-probes.
+function recheckServerAIConnectivity(aiId) {
+  const ai = (Array.isArray(activeAIs) ? activeAIs : []).find(a => a.id === aiId);
+  if (!ai) return;
+  _checkServerAIConnectivity(ai, { force: true });
+}
+window.recheckServerAIConnectivity = recheckServerAIConnectivity;
+
+// Auto-check every server-mode AI on screen-bees entry (throttled per
+// SERVER_PROBE_THROTTLE_MS). Wired in goToScreen's screen-bees branch.
+function probeAllServerAIConnectivity() {
+  const list = Array.isArray(activeAIs) ? activeAIs : [];
+  list.forEach(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    if (!cfg || !cfg._modelsEndpoint) return;
+    _checkServerAIConnectivity(ai);   // fire-and-forget; throttle handles repeats
+  });
+}
+window.probeAllServerAIConnectivity = probeAllServerAIConnectivity;
 
 // v3.63.209 — Profile-override badge helper. Returns the badge HTML when
 // the row's current model diverges from the active Hive Profile's expected
