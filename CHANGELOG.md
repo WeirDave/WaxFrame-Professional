@@ -2,6 +2,49 @@
 
 ---
 
+## v3.63.387
+
+**Portable PDF import: clear error + launcher scripts that run a local web server**
+
+Build: `20260615-003`<br>
+Released: `2026-06-15`
+
+### What changed
+
+David: "on the work side which means you know our product as a portable version is telling me that the Pdf.javascript file is missing when I'm trying to load in a PDF into reference materials."
+
+Root cause: the portable install path (downloaded ZIP → extract → double-click `index.html`) loads the app via `file://` protocol. Modern browsers **refuse to load ES-module imports across `file://` origins** for CORS-style security reasons. `pdf-loader.mjs` does exactly that (`import * as pdfjsLib from "../lib/pdf.min.mjs"`), so the import failed silently, `window.pdfjsLib` was never set, and `extractPDF()` threw the generic "PDF.js not loaded — refresh the page and try again" — which doesn't tell the user what's actually wrong or how to fix it. DOCX, XLSX, and plain text imports were unaffected because their libraries are classic (non-module) scripts that load fine via `file://`.
+
+This release ships a real fix and a clear diagnostic:
+
+- **`WaxFrame-Portable.bat` (Windows) and `WaxFrame-Portable.command` (Mac/Linux)** — included in the repo (and therefore in every Source ZIP). Each script runs `python -m http.server 8765` inside the WaxFrame folder and opens the browser at `http://localhost:8765/`. Result: WaxFrame loads via a real `http://` origin and PDF import works exactly like it does on waxframe.com. Both scripts include friendly fallback messages if Python 3 isn't installed (point users to python.org/downloads and also mention `npx serve` as a Node-based alternative).
+- **`pdf-loader.mjs` now catches the dynamic-import failure** and stashes the underlying error on `window._pdfjsLoadError`. Pre-v3.63.387 the failure was silent.
+- **`extractPDF()` shows a portable-aware error** when `window.pdfjsLib` is undefined:
+  - If `location.protocol === 'file:'`: tells the user PDF import isn't available in file:// mode, points them at the launcher scripts, and notes DOCX/XLSX/text still work.
+  - If `window._pdfjsLoadError` is set: surfaces the underlying error message and tells them to check `lib/pdf.min.mjs` is present.
+  - Otherwise: the legacy "refresh and try again" message (the http:// hosted case that pre-v3.63.387 covered).
+- **README.md updated** — the portable install instructions now say "double-click `WaxFrame-Portable.bat/.command`" instead of "open `index.html`," with a callout explaining why.
+
+### Why not just convert PDF.js back to a non-module build?
+
+PDF.js dropped UMD/IIFE builds in 4.x. Downgrading to 3.x would re-open CVE-2024-4367 (arbitrary JS execution via crafted PDF font metrics — fixed at library level in 4.x). Not a trade we'd make for a UX fix. The launcher script gets the portable experience to feature-parity with the hosted app at zero security cost.
+
+### Verified in preview
+
+- `extractPDF.toString()` contains the new `'PDF import not available in portable file:// mode'` branch, the `'window._pdfjsLoadError'` check, and a launcher-script reference (`WaxFrame-Portable.bat`).
+- http:// preview still loads `pdfjsLib` correctly — no regression on the hosted path.
+
+### Files touched
+
+- [WaxFrame-Portable.bat](WaxFrame-Portable.bat) — new Windows launcher
+- [WaxFrame-Portable.command](WaxFrame-Portable.command) — new macOS/Linux launcher
+- [js/pdf-loader.mjs](js/pdf-loader.mjs) — wrap dynamic import in try/catch; surface failure via `window._pdfjsLoadError`
+- [js/app.js](js/app.js) — `extractPDF()` now produces a portable-aware error when `pdfjsLib` is missing
+- [README.md](README.md) — portable install steps point at the launcher; rationale callout added
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages (now includes `.mjs` files in the sweep — pre-v3.63.387 the bulk-stamp pass only matched `.js`)
+
+---
+
 ## v3.63.386
 
 **Server-mode pill: "✓ Connected" shortened to "✓ Ready" (was clipping the 84px pill)**
