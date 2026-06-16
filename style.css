@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260614-042
+   Build: 20260615-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -18164,6 +18164,26 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   background: rgba(229, 90, 90, 0.12);
   border: 1px solid var(--red, #e55a5a);
   color: var(--red, #e55a5a);
+}
+/* v3.63.385 — Server-mode connectivity pill states. ".is-checking"
+   covers the in-flight / just-mounted state; ".is-warn" covers the
+   "endpoint responded but the picked model isn't in the current
+   list" case (server admin renamed or removed it). Connected reuses
+   .is-ready green, unreachable reuses .is-invalid red. */
+.ai-setup-status-pill.is-checking {
+  background: rgba(180, 180, 180, 0.14);
+  border: 1px solid var(--border, #888);
+  color: var(--text-dim, #888);
+  cursor: pointer;
+}
+.ai-setup-status-pill.is-warn {
+  background: rgba(244, 180, 0, 0.12);
+  border: 1px solid var(--accent, #f4b400);
+  color: var(--accent, #f4b400);
+  cursor: pointer;
+}
+.ai-setup-status-pill[data-server-pill-aiid] {
+  cursor: pointer;
 }
 
 .ai-setup-compact-model {
