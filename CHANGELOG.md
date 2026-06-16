@@ -2,6 +2,32 @@
 
 ---
 
+## v3.63.386
+
+**Server-mode pill: "✓ Connected" shortened to "✓ Ready" (was clipping the 84px pill)**
+
+Build: `20260615-002`<br>
+Released: `2026-06-15`
+
+### What changed
+
+Shipped right after v3.63.385. David: "honestly I just think it should say ready connected is too long it's not fitting in the pill and basically means the same thing." The 84px collapsed-row pill clipped the longer word, and the semantic is the same as the Internet-mode pill — both = "this AI is good to use right now."
+
+- `_serverPillLabel('connected')` now returns `✓ Ready` instead of `✓ Connected`.
+- Tooltip wording adjusted: "Server endpoint reached and picked model 'X' is in the current model list — ready to use. Click to re-check."
+- Other 3 states unchanged (🔄 Checking… / ⚠ Model missing / ✗ Unreachable).
+
+### Verified in preview
+
+- `_buildServerConnectivityPill` with cache state `connected` emits `✓ Ready` inside `class="ai-setup-status-pill is-ready"`.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `_serverPillLabel` and `_serverPillTitle`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.385
 
 **Server-mode connectivity pill on the Hive Setup row (4 states, auto-probed)**
