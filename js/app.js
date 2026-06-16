@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260615-004
+// Build: 20260615-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260615-004';         // build stamp — update each session
+const BUILD       = '20260615-005';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2551,7 +2551,7 @@ function goToScreen(id) {
     }
     renderAISetupGrid();
     setTimeout(updateBeesRequirements, 0);
-    // v3.63.388 — Fire connectivity probes for every server-mode AI on the
+    // v3.63.389 — Fire connectivity probes for every server-mode AI on the
     // hive. Throttled internally to 60s so revisiting the screen during a
     // single session doesn't spam endpoints; the click-the-pill path
     // bypasses throttle when the user wants a fresh answer.
@@ -5745,7 +5745,7 @@ function _buildCompactModelSelect(ai, currentModel) {
 //   green = working / healthy
 //   gold  = selected / active pick
 function _buildRowStatusPill(ai, hasKey) {
-  // v3.63.388 — Server-mode AIs (imported from a local/LAN model server —
+  // v3.63.389 — Server-mode AIs (imported from a local/LAN model server —
   // Alfredo, Ollama, LM Studio, OpenWebUI) don't carry an API key, so the
   // hasKey gate hid the pill entirely. Server AIs get a separate connectivity
   // pill driven by a live probe against _modelsEndpoint; see the helper below.
@@ -5769,7 +5769,7 @@ function _buildRowStatusPill(ai, hasKey) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.63.388 — Server-mode connectivity pill.
+// v3.63.389 — Server-mode connectivity pill.
 // Four states, all rendered into the same row-header slot as the
 // Internet-mode Ready pill:
 //
@@ -5814,7 +5814,7 @@ function _serverPillStateClass(state) {
   return 'is-checking';   // 'checking' and 'unknown' both render as in-flight
 }
 function _serverPillLabel(state) {
-  // v3.63.388 — "Connected" → "Ready" because the 84px pill clipped
+  // v3.63.389 — "Connected" → "Ready" because the 84px pill clipped
   // the longer word, and David's read: "it's not fitting in the pill and
   // basically means the same thing." Same semantic as the Internet-mode
   // Ready pill — both = "this AI is good to use right now."
@@ -12145,36 +12145,38 @@ async function extractPDF(file) {
   };
 
   if (!window.pdfjsLib) {
-    // v3.63.388 — Surface the actual reason pdfjsLib is missing instead of
-    // the generic "refresh and try again." Pre-v3.63.388 the dynamic import
-    // in pdf-loader.mjs failed silently on file:// origins (browsers block
-    // ESM imports across file:// for CORS reasons), leaving the user with
-    // no clue. pdf-loader now catches the failure and stashes it on
-    // window._pdfjsLoadError; this branch reports it back. (v3.63.388's
-    // launcher-script recommendations were removed in v3.63.388 because
-    // not every corp laptop will run them.)
-    if (location.protocol === 'file:') {
-      throw new Error(
-        'PDF import isn\'t available when WaxFrame is opened directly from disk (file://). ' +
-        'Browsers block PDF.js\'s module loader in this mode. ' +
-        'Workarounds: convert your PDF to DOCX first (DOCX, XLSX, and text imports still work), ' +
-        'or use the hosted version at waxframe.com if your network allows it.'
-      );
-    }
+    // v3.63.389 — file:// now has a real fallback (UMD pdf.js 3.x via the
+    // hybrid bootstrap), so if pdfjsLib is STILL missing under file://, the
+    // most likely cause is that lib/pdf.min.js wasn't included in the
+    // portable copy. Point the user at that.
     if (window._pdfjsLoadError) {
+      const expectedFile = location.protocol === 'file:' ? 'lib/pdf.min.js' : 'lib/pdf.min.mjs';
       throw new Error(
         `PDF.js failed to load: ${window._pdfjsLoadError.message || window._pdfjsLoadError}. ` +
-        `Check that lib/pdf.min.mjs is present and your browser console for the underlying error.`
+        `Check that ${expectedFile} is present and your browser console for the underlying error.`
+      );
+    }
+    if (location.protocol === 'file:') {
+      throw new Error(
+        'PDF.js (UMD build) failed to load. Check that lib/pdf.min.js and lib/pdf.worker.min.js ' +
+        'are present in the WaxFrame folder alongside index.html.'
       );
     }
     throw new Error('PDF.js not loaded — refresh the page and try again');
   }
   // Self-hosted worker — set once per session.
   if (!window._pdfjsWorkerSet) {
-    // v3.63.16 — Upgraded to pdf.js 4.10.38 (was 3.11.174). 4.x ships ESM
-    // only, so the worker file is .mjs; pdf.js itself constructs the worker
-    // with type:'module' internally when the URL ends in .mjs.
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = './lib/pdf.worker.min.mjs';
+    // v3.63.389 — Worker file matches the pdf.js build the hybrid bootstrap
+    // picked. On http(s):// we ran pdf.js 4.10.38 (ESM, .mjs worker is a
+    // module worker pdf.js spawns with type:'module' when the URL ends .mjs).
+    // On file:// we fell back to pdf.js 3.11.174 (UMD, .js classic-script
+    // worker that works on file:// where module workers don't). Both code
+    // paths set window.pdfjsLib with the same public API surface so the rest
+    // of extractPDF doesn't care which one is live.
+    const isFile = (location.protocol === 'file:');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
+      ? './lib/pdf.worker.min.js'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs';  // 4.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 

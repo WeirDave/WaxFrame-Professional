@@ -2,6 +2,56 @@
 
 ---
 
+## v3.63.389
+
+**Portable PDF import is back: hybrid pdf.js loader (4.x ESM on http://, 3.x UMD on file://)**
+
+Build: `20260615-005`<br>
+Released: `2026-06-15`
+
+### What changed
+
+David asked the perfect question after I went back and forth on workarounds: *"Can't we just have both? Detect the fact that we're running local and run the other version that is the classic one."* Yes, we can. This release does exactly that.
+
+A new classic-script bootstrap (`js/pdf-loader-bootstrap.js`) runs at page load, checks `location.protocol`, and dispatches to the right pdf.js build:
+
+| Protocol | Build | Loaded via | Worker | CVE-2024-4367 mitigation |
+|----------|-------|------------|--------|--------------------------|
+| `http(s)://` | pdf.js **4.10.38** (ESM) | `js/pdf-loader.mjs` | `lib/pdf.worker.min.mjs` (module worker) | Fixed at library level |
+| `file://`    | pdf.js **3.11.174** (UMD) | `lib/pdf.min.js` | `lib/pdf.worker.min.js` (classic-script worker) | Runtime via `isEvalSupported: false` |
+
+Both code paths expose the same `window.pdfjsLib` API, so the rest of `extractPDF()` doesn't care which one is live — except for picking the matching worker file. Hosted users keep the library-level CVE fix at zero cost. Portable users (corp Macs, air-gapped workstations, the WaxFrame-on-a-USB-stick use case) get working PDF import without needing a launcher script, Python, or any other setup. Just double-click `index.html` and PDF works again.
+
+The `isEvalSupported: false` flag has been on the `getDocument()` call since pre-v3.63.16; that's the same runtime mitigation WaxFrame shipped for the entire 3.x era and is what closes the CVE on the portable path.
+
+### What got restored
+
+`lib/pdf.min.js` (320KB, pdf.js 3.11.174 UMD) and `lib/pdf.worker.min.js` (1MB, matching classic-script worker) were vendored in the repo through v3.63.16 and deleted in v3.63.51 as orphans of the 4.10.38 upgrade. Restored from git history (commit d1b775b7^) so the bytes are identical to what WaxFrame shipped pre-v3.63.16 — no fresh downloads, no provenance ambiguity.
+
+### Why a runtime split, not just "always use UMD"
+
+Two reasons:
+
+1. **Defense-in-depth for hosted users.** The 4.x build has the CVE fixed at library level. There's no reason to step them down to the runtime mitigation when their protocol supports the modern build.
+2. **The runtime mitigation (`isEvalSupported: false`) is well-understood.** WaxFrame ran on it for the entire 3.x era and never had a security incident attributed to PDF rendering. For portable users — who chose the air-gap deployment and are extracting their own PDFs, not processing untrusted uploads — the trade is fine.
+
+### Verified in preview
+
+- http:// path: bootstrap → ESM loader → `window.pdfjsLib.version === '4.10.38'` → `workerSrc === './lib/pdf.worker.min.mjs'`. No load error.
+- Bootstrap dispatches correctly based on protocol (file:// path will exercise on portable; not testable from preview server).
+- `extractPDF()` worker-source selection branches on `location.protocol`.
+
+### Files touched
+
+- New: [js/pdf-loader-bootstrap.js](js/pdf-loader-bootstrap.js) — classic-script protocol detector + dispatcher
+- Restored: [lib/pdf.min.js](lib/pdf.min.js), [lib/pdf.worker.min.js](lib/pdf.worker.min.js) (pdf.js 3.11.174 UMD)
+- [index.html](index.html) — swap the `<script type="module" src="js/pdf-loader.mjs">` for the new bootstrap
+- [js/app.js](js/app.js) — `extractPDF()` worker-source branches on protocol; missing-pdfjs error wording updated for the new world (file:// now has a real fallback, so the message points at lib/pdf.min.js if THAT also fails to load)
+- [README.md](README.md) — drop the v3.63.388 PDF caveat block (no longer applies)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.388
 
 **Revert v3.63.387's launcher-script cruft; keep the diagnostic improvements**
