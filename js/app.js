@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260615-007
+// Build: 20260615-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260615-007';         // build stamp — update each session
+const BUILD       = '20260615-008';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2551,7 +2551,7 @@ function goToScreen(id) {
     }
     renderAISetupGrid();
     setTimeout(updateBeesRequirements, 0);
-    // v3.63.391 — Fire connectivity probes for every server-mode AI on the
+    // v3.63.392 — Fire connectivity probes for every server-mode AI on the
     // hive. Throttled internally to 60s so revisiting the screen during a
     // single session doesn't spam endpoints; the click-the-pill path
     // bypasses throttle when the user wants a fresh answer.
@@ -5745,7 +5745,7 @@ function _buildCompactModelSelect(ai, currentModel) {
 //   green = working / healthy
 //   gold  = selected / active pick
 function _buildRowStatusPill(ai, hasKey) {
-  // v3.63.391 — Server-mode AIs (imported from a local/LAN model server —
+  // v3.63.392 — Server-mode AIs (imported from a local/LAN model server —
   // Alfredo, Ollama, LM Studio, OpenWebUI) don't carry an API key, so the
   // hasKey gate hid the pill entirely. Server AIs get a separate connectivity
   // pill driven by a live probe against _modelsEndpoint; see the helper below.
@@ -5769,7 +5769,7 @@ function _buildRowStatusPill(ai, hasKey) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.63.391 — Server-mode connectivity pill.
+// v3.63.392 — Server-mode connectivity pill.
 // Four states, all rendered into the same row-header slot as the
 // Internet-mode Ready pill:
 //
@@ -5814,7 +5814,7 @@ function _serverPillStateClass(state) {
   return 'is-checking';   // 'checking' and 'unknown' both render as in-flight
 }
 function _serverPillLabel(state) {
-  // v3.63.391 — "Connected" → "Ready" because the 84px pill clipped
+  // v3.63.392 — "Connected" → "Ready" because the 84px pill clipped
   // the longer word, and David's read: "it's not fitting in the pill and
   // basically means the same thing." Same semantic as the Internet-mode
   // Ready pill — both = "this AI is good to use right now."
@@ -11416,6 +11416,9 @@ function clearUploadedFile() {
   if (status) { status.classList.add('is-hidden'); status.textContent = ''; }
   const clearRow = document.getElementById('fileClearRow');
   if (clearRow) clearRow.classList.add('is-hidden');
+  // v3.63.392 — hide the 🔍 Review button alongside the clear row.
+  const reviewBtn = document.getElementById('fileReviewBtn');
+  if (reviewBtn) reviewBtn.classList.add('is-hidden');
   const fileInput = document.getElementById('fileInput');
   if (fileInput) fileInput.value = '';
   // Hide the now-stale re-extract banner if the work screen is mounted.
@@ -11753,9 +11756,9 @@ function getVisionCapableAI() {
 // v3.58.7 — Ordered list of ALL keyed vision-capable AIs, user pick first,
 // then VISION_PROVIDERS order. Used by runVisionWithFallback so OCR tries
 // every keyed provider instead of dying on the first one that returns empty.
-// v3.63.391 — Per-AI surfacing + server-AI inclusion.
+// v3.63.392 — Per-AI surfacing + server-AI inclusion.
 //
-// Pre-v3.63.391 this returned ONE entry per provider (chatgpt, claude,
+// Pre-v3.63.392 this returned ONE entry per provider (chatgpt, claude,
 // gemini, grok) and skipped server-imported AIs entirely. Two problems:
 //
 //   1. David at work has 2× ChatGPT + 2× Gemini variants — 4 AIs across
@@ -11948,6 +11951,14 @@ async function processFile(file) {
 
     const clearRow = document.getElementById('fileClearRow');
     if (clearRow) clearRow.classList.remove('is-hidden');
+    // v3.63.392 — Reveal the 🔍 Review button only for PDFs (where vision
+    // re-scan via the verify modal is meaningful). DOCX/XLSX/text starting
+    // docs hide it — their inline editing is enough.
+    const reviewBtn = document.getElementById('fileReviewBtn');
+    if (reviewBtn) {
+      const ext = (file.name || '').split('.').pop().toLowerCase();
+      reviewBtn.classList.toggle('is-hidden', ext !== 'pdf');
+    }
     updateLaunchRequirements();
     // v3.52.0 — Run source size check after the file is loaded. docText
     // is now populated with the extracted content so the helper can
@@ -12184,7 +12195,7 @@ async function extractPDF(file) {
   };
 
   if (!window.pdfjsLib) {
-    // v3.63.391 — file:// now has a real fallback (UMD pdf.js 3.x via the
+    // v3.63.392 — file:// now has a real fallback (UMD pdf.js 3.x via the
     // hybrid bootstrap), so if pdfjsLib is STILL missing under file://, the
     // most likely cause is that lib/pdf.min.js wasn't included in the
     // portable copy. Point the user at that.
@@ -12205,7 +12216,7 @@ async function extractPDF(file) {
   }
   // Self-hosted worker — set once per session.
   if (!window._pdfjsWorkerSet) {
-    // v3.63.391 — Worker file matches the pdf.js build the hybrid bootstrap
+    // v3.63.392 — Worker file matches the pdf.js build the hybrid bootstrap
     // picked. On http(s):// we ran pdf.js 4.10.38 (ESM, .mjs worker is a
     // module worker pdf.js spawns with type:'module' when the URL ends .mjs).
     // On file:// we fell back to pdf.js 3.11.174 (UMD, .js classic-script
@@ -12695,7 +12706,7 @@ function openVerifyPanelForRef(docId) {
 // wrapping around. Returns { provider, label, ai, aiId } or null if no
 // vision-capable AI is keyed at all.
 //
-// v3.63.391 — Tracks last-used by AI ID (`_verifyLastAiId`) instead of
+// v3.63.392 — Tracks last-used by AI ID (`_verifyLastAiId`) instead of
 // provider, because getVisionCapableAIs now surfaces per-variant entries
 // (2× ChatGPT + 2× Gemini = 4 list entries, not 2). Rotating by provider
 // would skip over variants. Falls back to provider-based matching for the
@@ -12718,9 +12729,9 @@ function _verifyNextVisionProvider() {
 // Proceed button is always labeled "✅ Proceed" — the older Save/Done toggle
 // is gone (v3.61.0 spec: single-purpose commit action).
 //
-// v3.63.391 — Changed from hide-when-unusable to show-disabled-with-reason.
-// David tested v3.63.391 on hosted waxframe.com and the button still wasn't
-// showing because no vision AI was keyed on that browser. Pre-v3.63.391 we
+// v3.63.392 — Changed from hide-when-unusable to show-disabled-with-reason.
+// David tested v3.63.392 on hosted waxframe.com and the button still wasn't
+// showing because no vision AI was keyed on that browser. Pre-v3.63.392 we
 // hid the button entirely in that case — but a hidden button gives the user
 // no signal about WHY vision isn't offered, and they can't act on what they
 // can't see. Now the button is always visible when there's a re-scan-able
@@ -13040,7 +13051,7 @@ async function verifyTryDifferentReader() {
   const ta   = document.getElementById('verifyText');
   const btn  = document.getElementById('verifyRereadBtn');
   const note = document.getElementById('verifyRereadNote');
-  // v3.63.391 — render pages on demand when text-extraction was used initially
+  // v3.63.392 — render pages on demand when text-extraction was used initially
   // (i.e. _lastPDFPages cache is empty) but the user wants to force a vision
   // pass anyway. The modal context's blobUrl points at the original PDF; fetch
   // its bytes, parse with pdf.js, rasterize to JPEG data-URLs. From the user's
@@ -13082,7 +13093,7 @@ async function verifyTryDifferentReader() {
   const _stopHbReread = _startStatusHeartbeat(note, () => `⏳ Re-scanning with ${nxt.label} vision —`);
   try {
     const t = await runVisionTranscription(window._lastPDFPages, nxt.ai.cfg, nxt.ai.key);
-    // v3.63.391 — advance the rotation anchor by AI ID (not provider) so
+    // v3.63.392 — advance the rotation anchor by AI ID (not provider) so
     // variants are properly cycled through. The provider anchor stays in
     // sync for the tech-details display.
     window._verifyLastAiId    = nxt.aiId || '';
@@ -14161,11 +14172,23 @@ function refCardMarkup(doc, index) {
                    data-input-action="call" data-fn="__wfUpdateRefDocText" data-arg-this="1" data-ref-id="${idAttr}">${esc(doc.text)}</textarea>
        </div>`;
 
-  // v3.61.0 — The per-card 🔍 verify button has been removed. Verify is a
-  // one-time gate at import time (handled by the new consolidated Verify
-  // modal), not a re-openable inline tool. The openVerifyPanelForRef
-  // function and its call site in openVerifyPanelFromImport() stay — that
-  // path is how the import-time modal opens for reference uploads.
+  // v3.61.0 — The per-card 🔍 verify button was removed. Verify was meant
+  // as a one-time gate at import time. But after v3.63.392 added the "Try
+  // vision with X" button to the verify modal, there's a legit reason to
+  // re-open it for text-extracted PDFs: forcing a vision pass when the
+  // text-extraction output is wonky. The auto-open path only fires for
+  // pdf-vision sourceType OR docs with warnings, so clean text-extracted
+  // PDFs (like David's WaxFrame-Getting-Started.pdf, parsed cleanly by
+  // pdf.js 4.x) silently import and the user has no way to reach the new
+  // vision re-scan affordance. v3.63.392 restores the per-card button, but
+  // gated to PDF uploads only — DOCX/XLSX/text don't need vision re-scan,
+  // their inline textareas are enough.
+  const isPdfRef = doc.source === 'upload'
+    && (/(^|\b)pdf(\b|$|-)/i.test(doc._sourceType || '')
+        || /\.pdf$/i.test(doc.filename || ''));
+  const reviewBtn = isPdfRef
+    ? `<button class="btn btn-sm ref-card-review" title="Open Verify & edit — review extracted text, re-scan with vision, or back up as .txt" data-action="call" data-fn="openVerifyPanelForRef" data-arg="${idAttr}">🔍</button>`
+    : '';
 
   return `
 <div class="ref-card" data-ref-id="${idAttr}">
@@ -14178,6 +14201,7 @@ function refCardMarkup(doc, index) {
            placeholder="Reference name…">
     <div class="ref-card-actions">
       ${upBtn}${positionLabel}${downBtn}
+      ${reviewBtn}
       <button class="btn btn-sm ref-card-remove" title="Remove" data-action="call" data-fn="removeReferenceDoc" data-arg="${idAttr}">✕</button>
     </div>
   </div>
@@ -14310,6 +14334,20 @@ function removeReferenceDoc(id) {
     renderReferenceCards();
     updateRefGrandTotals();
     saveProject();
+    // v3.63.392 — Sweep any stale "Review {filename}" banner buttons for
+    // this docId. David hit it on the resume PDF: he X'd the card and the
+    // deferred-review banner still showed "Review CandySimmons_Resume2023.pdf"
+    // even though the underlying doc was gone — clicking it would have
+    // opened the verify modal against a missing docId. Buttons carry
+    // data-ref-doc-id (set when _finishRefBatch creates them); we sweep
+    // by that and hide the banner entirely if nothing's left.
+    const banner = _refBannerRevEl && _refBannerRevEl();
+    if (banner) {
+      banner.querySelectorAll(`button[data-ref-doc-id="${CSS.escape(String(id))}"]`).forEach(b => b.remove());
+      if (!banner.querySelector('button') && typeof _hideRefBatchBanner === 'function') {
+        _hideRefBatchBanner();
+      }
+    }
   };
   // Empty / near-empty cards remove silently — no confirmation noise for trivial undo.
   if ((doc.text || '').trim().length <= 20) {
@@ -14599,6 +14637,20 @@ function _finishRefBatch() {
     }
     return;
   }
+  // v3.63.392 — Single-file uploads auto-open the verify modal directly,
+  // restoring the v3.63.10 contract that "a single add opens immediately"
+  // — the contract was broken when the batch wrapper started passing the
+  // collector array unconditionally on line 14587, so every upload (even
+  // a one-file drop) routed through this deferred-review path. David hit
+  // this on CandySimmons_Resume2023.pdf: the resume was vision-OCR'd but
+  // the modal didn't pop, only the "Review" banner button. For 2+ files
+  // we still surface click-to-review buttons so multiple modals don't
+  // stack on the user.
+  if (reviews.length === 1) {
+    _hideRefBatchBanner();
+    openVerifyModalForImport(reviews[0]);
+    return;
+  }
   if (t) t.textContent = `✓ All files added — ${reviews.length} need${reviews.length === 1 ? 's' : ''} a quick review:`;
   if (r) {
     r.innerHTML = '';
@@ -14606,6 +14658,9 @@ function _finishRefBatch() {
       const btn = document.createElement('button');
       btn.className = 'btn btn-sm ref-batch-review-btn';
       btn.textContent = `🔍 Review ${desc.file && desc.file.name ? desc.file.name : ('document ' + (idx + 1))}`;
+      // v3.63.392 — stamp the docId so removeReferenceDoc can sweep stale
+      // banner buttons when the underlying card is X'd before review.
+      if (desc.docId) btn.dataset.refDocId = desc.docId;
       btn.addEventListener('click', function () {
         openVerifyModalForImport(desc);
         btn.remove();

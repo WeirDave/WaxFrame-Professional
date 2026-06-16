@@ -1,8 +1,8 @@
 // ============================================================
 //  WaxFrame — pdf-loader-bootstrap.js
-// Build: 20260615-007
+// Build: 20260615-008
 //
-//  Hybrid pdf.js loader (added v3.63.391). Runtime-detects how
+//  Hybrid pdf.js loader (added v3.63.392). Runtime-detects how
 //  the page was served and loads the right pdf.js build:
 //
 //   http(s)://  →  ESM build (pdf.js 4.10.38 via pdf-loader.mjs)
@@ -35,7 +35,7 @@
     // to window.pdfjsLib automatically on load. The matching classic-
     // script worker (pdf.worker.min.js) is wired up by extractPDF()
     // via GlobalWorkerOptions.workerSrc when the first PDF is read.
-    s.src = 'lib/pdf.min.js?v=3.63.391';
+    s.src = 'lib/pdf.min.js?v=3.63.392';
     s.onerror = function () {
       window._pdfjsLoadError = new Error(
         'Failed to load lib/pdf.min.js (portable file:// path). ' +
@@ -46,7 +46,7 @@
     // ESM build via the existing pdf-loader.mjs (which catches its own
     // dynamic-import failure and stashes the error on window._pdfjsLoadError).
     s.type = 'module';
-    s.src = 'js/pdf-loader.mjs?v=3.63.391';
+    s.src = 'js/pdf-loader.mjs?v=3.63.392';
   }
 
   document.head.appendChild(s);

@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.392
+
+**Verify modal reachable for every PDF: single-file auto-open restored + per-card 🔍 Review button + Starting-doc Review button**
+
+Build: `20260615-008`<br>
+Released: `2026-06-15`
+
+### What changed
+
+v3.63.390 + v3.63.391 added the "🔁 Try vision with X" button inside the verify modal but missed the upstream problem: **the verify modal itself wasn't reachable for most PDFs**. Three connected fixes here, all about making the modal reachable so the vision rotation actually does something.
+
+**1. Single-file uploads auto-open the verify modal again.** David hit this on CandySimmons_Resume2023.pdf in v3.63.391 — even though the PDF was vision-OCR'd (sourceType='pdf-vision', should trigger auto-open), the modal didn't pop. Instead a "Review CandySimmons_Resume2023.pdf" banner button appeared and he had to click that to open the modal.
+
+Root cause: the v3.63.10 "batch deferred review" wrapper started passing `_refDeferredVerify` (the collector array) on EVERY call to `processRefFile()`, even for single-file uploads. The original v3.63.10 comment promised "a single add (no collector) opens immediately, as before" — but that contract was broken because the batch wrapper unconditionally supplies the collector. So every reference upload, even one file, deferred to the click-to-review banner.
+
+Fix: `_finishRefBatch()` now checks the collector size at end-of-batch. **Exactly 1 review → auto-open the modal directly** (restores the v3.63.10 contract). 2+ reviews → keep the click-to-review banner (so modals don't stack on the user).
+
+**2. Per-card 🔍 Review button on PDF reference cards.** v3.61.0 removed the per-card verify button on the grounds that "Verify is a one-time gate at import time." But text-extracted PDFs slip past the auto-open path entirely (they're not sourceType='pdf-vision' and they usually generate zero warnings), so there was no way to reach the verify modal at all after import. Even for the user's clean WaxFrame-Getting-Started.pdf or readme.pdf — silently imported, no review surface, no way to force a vision re-scan even when the text extraction came out wonky.
+
+Fix: every PDF reference card now carries a small 🔍 Review button in the header actions row, wired through `openVerifyPanelForRef(docId)`. Gated to PDFs only — DOCX/XLSX/text don't need vision re-scan, their inline textareas are enough. Pasted-text refs also skip it (no original file to render).
+
+**3. Starting-doc 🔍 Review button.** Same gap on the Starting Document side. The `#fileClearRow` previously held only the "✕ Remove file" button. Added a sibling `#fileReviewBtn` that's revealed alongside `fileClearRow` when the uploaded file is a PDF (and hidden when the file's cleared). Wired through the existing `openVerifyPanelFromImport` path that reads `window._lastImportVerify`.
+
+**4. Stale-banner sweep on doc removal.** David caught it: if you X-out a reference card while the deferred-review banner was still showing a button for that doc, the button stuck around — clicking it would have tried to open the verify modal against a docId that no longer exists. Fix: `_finishRefBatch` now stamps each banner button with `data-ref-doc-id`, and `removeReferenceDoc` sweeps any matching buttons before hiding the banner (or hiding it entirely if nothing's left).
+
+### Verified in preview
+
+- `refCardMarkup` for a PDF ref doc: contains `ref-card-review` class + `data-fn="openVerifyPanelForRef"` wired to the doc's id.
+- Same function for a DOCX ref: NO review button (correct — vision re-scan doesn't apply).
+- Same function for a pasted-text ref: NO review button (no original to render).
+- `_finishRefBatch` with a 1-item collector: calls `openVerifyModalForImport` exactly once with the right docId; does not show the banner. Restores the v3.63.10 "single add opens immediately" contract.
+- `#fileReviewBtn` exists in DOM, hidden by default. Reveal/hide branches live in the upload-success and clear-file paths.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `_finishRefBatch` single-file auto-open, `refCardMarkup` per-PDF Review button, starting-doc upload-success path reveals `#fileReviewBtn` for PDF only, clear-file hides it
+- [index.html](index.html) — `#fileReviewBtn` added to `#fileClearRow`
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.391
 
 **Vision re-scan rotates through EVERY variant + includes server-imported AIs (Alfredo, Ollama, LM Studio, OpenWebUI); disabled-with-reason button when prereqs missing**
