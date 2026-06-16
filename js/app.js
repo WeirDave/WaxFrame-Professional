@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260615-002
+// Build: 20260615-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260615-002';         // build stamp — update each session
+const BUILD       = '20260615-003';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2551,7 +2551,7 @@ function goToScreen(id) {
     }
     renderAISetupGrid();
     setTimeout(updateBeesRequirements, 0);
-    // v3.63.386 — Fire connectivity probes for every server-mode AI on the
+    // v3.63.387 — Fire connectivity probes for every server-mode AI on the
     // hive. Throttled internally to 60s so revisiting the screen during a
     // single session doesn't spam endpoints; the click-the-pill path
     // bypasses throttle when the user wants a fresh answer.
@@ -5745,7 +5745,7 @@ function _buildCompactModelSelect(ai, currentModel) {
 //   green = working / healthy
 //   gold  = selected / active pick
 function _buildRowStatusPill(ai, hasKey) {
-  // v3.63.386 — Server-mode AIs (imported from a local/LAN model server —
+  // v3.63.387 — Server-mode AIs (imported from a local/LAN model server —
   // Alfredo, Ollama, LM Studio, OpenWebUI) don't carry an API key, so the
   // hasKey gate hid the pill entirely. Server AIs get a separate connectivity
   // pill driven by a live probe against _modelsEndpoint; see the helper below.
@@ -5769,7 +5769,7 @@ function _buildRowStatusPill(ai, hasKey) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.63.386 — Server-mode connectivity pill.
+// v3.63.387 — Server-mode connectivity pill.
 // Four states, all rendered into the same row-header slot as the
 // Internet-mode Ready pill:
 //
@@ -5814,7 +5814,7 @@ function _serverPillStateClass(state) {
   return 'is-checking';   // 'checking' and 'unknown' both render as in-flight
 }
 function _serverPillLabel(state) {
-  // v3.63.386 — "Connected" → "Ready" because the 84px pill clipped
+  // v3.63.387 — "Connected" → "Ready" because the 84px pill clipped
   // the longer word, and David's read: "it's not fitting in the pill and
   // basically means the same thing." Same semantic as the Internet-mode
   // Ready pill — both = "this AI is good to use right now."
@@ -12145,6 +12145,29 @@ async function extractPDF(file) {
   };
 
   if (!window.pdfjsLib) {
+    // v3.63.387 — Portable-aware error. The most common cause of pdfjsLib
+    // being undefined is opening index.html via file:// (the "double-click
+    // index.html" portable path): browsers refuse to load ESM imports across
+    // file:// origins for CORS reasons, so pdf-loader.mjs's `import` fails
+    // silently. pdf-loader now catches that failure and stashes the underlying
+    // error on window._pdfjsLoadError, so we can surface it here with an
+    // actionable hint instead of "refresh and try again."
+    if (location.protocol === 'file:') {
+      throw new Error(
+        'PDF import not available in portable file:// mode. ' +
+        'Browsers block PDF.js\'s module loader when index.html is opened directly from disk. ' +
+        'Run WaxFrame via a local web server instead — double-click WaxFrame-Portable.bat (Windows) ' +
+        'or WaxFrame-Portable.command (Mac) included in the ZIP, or run "python -m http.server 8000" ' +
+        'in the WaxFrame folder and visit http://localhost:8000. ' +
+        'DOCX, XLSX, and plain-text imports still work in file:// mode.'
+      );
+    }
+    if (window._pdfjsLoadError) {
+      throw new Error(
+        `PDF.js failed to load: ${window._pdfjsLoadError.message || window._pdfjsLoadError}. ` +
+        `Check that lib/pdf.min.mjs is present and your browser console for the underlying error.`
+      );
+    }
     throw new Error('PDF.js not loaded — refresh the page and try again');
   }
   // Self-hosted worker — set once per session.

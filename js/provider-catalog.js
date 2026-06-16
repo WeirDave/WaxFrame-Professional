@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260615-002
+// Build: 20260615-003
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
