@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.384
+
+**Work-screen Hive header buttons: bee EMOJI removed from Setup, worker-bee IMAGE added; 🔨 added to Change Builder**
+
+Build: `20260614-042`<br>
+Released: `2026-06-14`
+
+### What changed
+
+User feedback on v3.63.381: "damn it take the bee emoji off the setup button on the worker page! Should be if anything it should be the worker on that one and the hammer on the builder one but not that bee emoji Ever."
+
+- **Setup button** — 🐝 emoji dropped; `<img src="images/WaxFrame_Worker_Bee_v2.png" class="label-bee">` added before the label. Uses the existing `.label-bee` utility class so size and vertical alignment match every other inline worker-bee accent across the app (modal titles, button labels, dev toolbar).
+- **Change Builder button** — `🔨` prefix added to match the WaxFrame Builder convention used everywhere else (per-row Builder chip, BUILDER tag, Builder picker buttons).
+
+No 🐝 emoji ever — neither here nor anywhere else added in this codebase. The repo's bee accent is always the worker-bee image; the bee emoji has the wrong visual weight and reads as decorative cruft next to the image-based accent.
+
+### Verified in preview
+
+- `.hive-setup-btn` innerHTML: `<img src="images/WaxFrame_Worker_Bee_v2.png" class="label-bee" alt="" title="Wally the Worker Bee">Setup` — zero `🐝` characters
+- Change Builder button textContent: `🔨 Change Builder`
+
+### Files touched
+
+- [index.html](index.html) — Setup button + Change Builder button in the work-screen Hive header
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.383
 
 **Hex-card hover tooltip on the work screen now shows the model alongside the AI name (was just the AI name)**
