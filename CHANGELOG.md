@@ -2,6 +2,48 @@
 
 ---
 
+## v3.63.393
+
+**Vision OCR works for server-imported AIs (Alfredo, Ollama, LM Studio, OpenWebUI): format-based dispatch + endpoint respected**
+
+Build: `20260615-009`<br>
+Released: `2026-06-15`
+
+### What changed
+
+David at work tested v3.63.392's vision rotation against his Alfredo hive — 6 variants, all serving different models on his local Alfredo server. Every single one failed with "Provider alfredo does not have a vision integration." v3.63.391 admitted server AIs to the rotation list (correctly), but `runVisionTranscription` was still hardcoded to match on four provider strings — `'chatgpt'`, `'claude'`, `'gemini'`, `'grok'` — and hit four hardcoded cloud URLs. Anything else fell through to the "no vision integration" throw.
+
+Rewrite dispatches by `cfg.format` and uses `cfg.endpoint` for the URL. Both fields are set at import time (catalog for cloud providers, Import Server modal for local servers) — no schema change, no migration needed.
+
+Three format branches:
+
+- **`format: 'openai'`** — ChatGPT, Grok, **Alfredo, Ollama, LM Studio, OpenWebUI**, and any future OpenAI-compatible server. URL falls back to `https://api.openai.com/v1/chat/completions` when `cfg.endpoint` isn't set, otherwise hits whatever server the user pointed at. Token param is `max_completion_tokens` when the final URL is the official OpenAI endpoint (gpt-5.x requires it) and `max_tokens` everywhere else (Grok, local servers, anything that hasn't adopted the new param yet).
+- **`format: 'anthropic'`** — Claude and any future Anthropic-compatible server. URL falls back to the WaxFrame Claude proxy, otherwise hits cfg.endpoint.
+- **`format: 'gemini'`** — Google Gemini and any future Gemini-compatible server. URL falls back to `generativelanguage.googleapis.com`, otherwise hits cfg.endpoint (with the model name still appended as `/models/{model}:generateContent`).
+
+**Auth is conditional now.** Local servers (Alfredo, Ollama, LM Studio) typically have no API key and shouldn't get a stray `Authorization: Bearer ` header — that empty-token header confuses some servers into auth failures. The fix: only set the auth header when `visionKey` is a non-empty string. Cloud providers fill it in normally.
+
+Error label now uses `cfg.label` (the AI's display name) instead of the provider id, so the failure note in the verify modal reads "Alfredo (Llama 3.2 Vision) failed: …" not "alfredo failed: …".
+
+### Verified in preview
+
+Stubbed `fetch` to capture what each format branch sends:
+
+| Input | URL hit | Token param | Auth header |
+|---|---|---|---|
+| Alfredo (`format: openai`, endpoint set, no key) | Alfredo's URL | `max_tokens` | absent ✓ |
+| ChatGPT (no endpoint, has key) | api.openai.com | `max_completion_tokens` | Bearer ✓ |
+| Claude | proxy URL | n/a | x-api-key ✓ |
+| Gemini | generativelanguage.googleapis.com/models/{model}:generateContent | n/a | x-goog-api-key ✓ |
+| Unsupported format `foobar` | (throws) | n/a | n/a — `"Mystery has format \"foobar\" which has no vision integration. Supported formats: openai, anthropic, gemini."` |
+
+### Files touched
+
+- [js/app.js](js/app.js) — `runVisionTranscription` rewritten to dispatch by `format`, use `cfg.endpoint`, conditional auth headers, AI label in errors
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.392
 
 **Verify modal reachable for every PDF: single-file auto-open restored + per-card 🔍 Review button + Starting-doc Review button**

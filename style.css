@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260615-008
+   Build: 20260615-009
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -18165,7 +18165,7 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   border: 1px solid var(--red, #e55a5a);
   color: var(--red, #e55a5a);
 }
-/* v3.63.392 — Server-mode connectivity pill states. ".is-checking"
+/* v3.63.393 — Server-mode connectivity pill states. ".is-checking"
    covers the in-flight / just-mounted state; ".is-warn" covers the
    "endpoint responded but the picked model isn't in the current
    list" case (server admin renamed or removed it). Connected reuses

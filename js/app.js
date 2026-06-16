@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260615-008
+// Build: 20260615-009
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260615-008';         // build stamp — update each session
+const BUILD       = '20260615-009';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2551,7 +2551,7 @@ function goToScreen(id) {
     }
     renderAISetupGrid();
     setTimeout(updateBeesRequirements, 0);
-    // v3.63.392 — Fire connectivity probes for every server-mode AI on the
+    // v3.63.393 — Fire connectivity probes for every server-mode AI on the
     // hive. Throttled internally to 60s so revisiting the screen during a
     // single session doesn't spam endpoints; the click-the-pill path
     // bypasses throttle when the user wants a fresh answer.
@@ -5745,7 +5745,7 @@ function _buildCompactModelSelect(ai, currentModel) {
 //   green = working / healthy
 //   gold  = selected / active pick
 function _buildRowStatusPill(ai, hasKey) {
-  // v3.63.392 — Server-mode AIs (imported from a local/LAN model server —
+  // v3.63.393 — Server-mode AIs (imported from a local/LAN model server —
   // Alfredo, Ollama, LM Studio, OpenWebUI) don't carry an API key, so the
   // hasKey gate hid the pill entirely. Server AIs get a separate connectivity
   // pill driven by a live probe against _modelsEndpoint; see the helper below.
@@ -5769,7 +5769,7 @@ function _buildRowStatusPill(ai, hasKey) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.63.392 — Server-mode connectivity pill.
+// v3.63.393 — Server-mode connectivity pill.
 // Four states, all rendered into the same row-header slot as the
 // Internet-mode Ready pill:
 //
@@ -5814,7 +5814,7 @@ function _serverPillStateClass(state) {
   return 'is-checking';   // 'checking' and 'unknown' both render as in-flight
 }
 function _serverPillLabel(state) {
-  // v3.63.392 — "Connected" → "Ready" because the 84px pill clipped
+  // v3.63.393 — "Connected" → "Ready" because the 84px pill clipped
   // the longer word, and David's read: "it's not fitting in the pill and
   // basically means the same thing." Same semantic as the Internet-mode
   // Ready pill — both = "this AI is good to use right now."
@@ -11416,7 +11416,7 @@ function clearUploadedFile() {
   if (status) { status.classList.add('is-hidden'); status.textContent = ''; }
   const clearRow = document.getElementById('fileClearRow');
   if (clearRow) clearRow.classList.add('is-hidden');
-  // v3.63.392 — hide the 🔍 Review button alongside the clear row.
+  // v3.63.393 — hide the 🔍 Review button alongside the clear row.
   const reviewBtn = document.getElementById('fileReviewBtn');
   if (reviewBtn) reviewBtn.classList.add('is-hidden');
   const fileInput = document.getElementById('fileInput');
@@ -11756,9 +11756,9 @@ function getVisionCapableAI() {
 // v3.58.7 — Ordered list of ALL keyed vision-capable AIs, user pick first,
 // then VISION_PROVIDERS order. Used by runVisionWithFallback so OCR tries
 // every keyed provider instead of dying on the first one that returns empty.
-// v3.63.392 — Per-AI surfacing + server-AI inclusion.
+// v3.63.393 — Per-AI surfacing + server-AI inclusion.
 //
-// Pre-v3.63.392 this returned ONE entry per provider (chatgpt, claude,
+// Pre-v3.63.393 this returned ONE entry per provider (chatgpt, claude,
 // gemini, grok) and skipped server-imported AIs entirely. Two problems:
 //
 //   1. David at work has 2× ChatGPT + 2× Gemini variants — 4 AIs across
@@ -11951,7 +11951,7 @@ async function processFile(file) {
 
     const clearRow = document.getElementById('fileClearRow');
     if (clearRow) clearRow.classList.remove('is-hidden');
-    // v3.63.392 — Reveal the 🔍 Review button only for PDFs (where vision
+    // v3.63.393 — Reveal the 🔍 Review button only for PDFs (where vision
     // re-scan via the verify modal is meaningful). DOCX/XLSX/text starting
     // docs hide it — their inline editing is enough.
     const reviewBtn = document.getElementById('fileReviewBtn');
@@ -12195,7 +12195,7 @@ async function extractPDF(file) {
   };
 
   if (!window.pdfjsLib) {
-    // v3.63.392 — file:// now has a real fallback (UMD pdf.js 3.x via the
+    // v3.63.393 — file:// now has a real fallback (UMD pdf.js 3.x via the
     // hybrid bootstrap), so if pdfjsLib is STILL missing under file://, the
     // most likely cause is that lib/pdf.min.js wasn't included in the
     // portable copy. Point the user at that.
@@ -12216,7 +12216,7 @@ async function extractPDF(file) {
   }
   // Self-hosted worker — set once per session.
   if (!window._pdfjsWorkerSet) {
-    // v3.63.392 — Worker file matches the pdf.js build the hybrid bootstrap
+    // v3.63.393 — Worker file matches the pdf.js build the hybrid bootstrap
     // picked. On http(s):// we ran pdf.js 4.10.38 (ESM, .mjs worker is a
     // module worker pdf.js spawns with type:'module' when the URL ends .mjs).
     // On file:// we fell back to pdf.js 3.11.174 (UMD, .js classic-script
@@ -12706,7 +12706,7 @@ function openVerifyPanelForRef(docId) {
 // wrapping around. Returns { provider, label, ai, aiId } or null if no
 // vision-capable AI is keyed at all.
 //
-// v3.63.392 — Tracks last-used by AI ID (`_verifyLastAiId`) instead of
+// v3.63.393 — Tracks last-used by AI ID (`_verifyLastAiId`) instead of
 // provider, because getVisionCapableAIs now surfaces per-variant entries
 // (2× ChatGPT + 2× Gemini = 4 list entries, not 2). Rotating by provider
 // would skip over variants. Falls back to provider-based matching for the
@@ -12729,9 +12729,9 @@ function _verifyNextVisionProvider() {
 // Proceed button is always labeled "✅ Proceed" — the older Save/Done toggle
 // is gone (v3.61.0 spec: single-purpose commit action).
 //
-// v3.63.392 — Changed from hide-when-unusable to show-disabled-with-reason.
-// David tested v3.63.392 on hosted waxframe.com and the button still wasn't
-// showing because no vision AI was keyed on that browser. Pre-v3.63.392 we
+// v3.63.393 — Changed from hide-when-unusable to show-disabled-with-reason.
+// David tested v3.63.393 on hosted waxframe.com and the button still wasn't
+// showing because no vision AI was keyed on that browser. Pre-v3.63.393 we
 // hid the button entirely in that case — but a hidden button gives the user
 // no signal about WHY vision isn't offered, and they can't act on what they
 // can't see. Now the button is always visible when there's a re-scan-able
@@ -13051,7 +13051,7 @@ async function verifyTryDifferentReader() {
   const ta   = document.getElementById('verifyText');
   const btn  = document.getElementById('verifyRereadBtn');
   const note = document.getElementById('verifyRereadNote');
-  // v3.63.392 — render pages on demand when text-extraction was used initially
+  // v3.63.393 — render pages on demand when text-extraction was used initially
   // (i.e. _lastPDFPages cache is empty) but the user wants to force a vision
   // pass anyway. The modal context's blobUrl points at the original PDF; fetch
   // its bytes, parse with pdf.js, rasterize to JPEG data-URLs. From the user's
@@ -13093,7 +13093,7 @@ async function verifyTryDifferentReader() {
   const _stopHbReread = _startStatusHeartbeat(note, () => `⏳ Re-scanning with ${nxt.label} vision —`);
   try {
     const t = await runVisionTranscription(window._lastPDFPages, nxt.ai.cfg, nxt.ai.key);
-    // v3.63.392 — advance the rotation anchor by AI ID (not provider) so
+    // v3.63.393 — advance the rotation anchor by AI ID (not provider) so
     // variants are properly cycled through. The provider anchor stays in
     // sync for the tech-details display.
     window._verifyLastAiId    = nxt.aiId || '';
@@ -13822,34 +13822,64 @@ async function visionErrorDetail(label, model, resp) {
 async function runVisionTranscription(pageImages, visionCfg, visionKey) {
   const prompt = 'Transcribe all text from these document pages exactly as it appears. Preserve paragraph breaks and section structure. Return only the plain text — no commentary, no formatting symbols.';
 
-  // ── ChatGPT (OpenAI) ──
-  if (visionCfg.provider === 'chatgpt') {
+  // v3.63.393 — Dispatch by FORMAT not PROVIDER, and respect visionCfg.endpoint
+  // for the URL. Pre-v3.63.393 this matched on hardcoded provider names
+  // ('chatgpt', 'claude', 'gemini', 'grok') and hit hardcoded URLs. That
+  // broke for any AI imported through the Import Server modal (Alfredo,
+  // Ollama, LM Studio, OpenWebUI) because:
+  //
+  //   1. Their provider string is the server name ('alfredo', etc.), not
+  //      one of the four cloud catalog ids → no branch matched → threw
+  //      "Provider X does not have a vision integration" (the error David
+  //      hit on every one of his 6 work AIs after v3.63.391 admitted them
+  //      to the vision rotation).
+  //
+  //   2. Even if the dispatch had matched, the request would have hit the
+  //      hardcoded cloud URL instead of the user's local Alfredo endpoint.
+  //
+  // Format-based dispatch fixes both. Server AIs carry `format: 'openai'`
+  // (Alfredo, Ollama, LM Studio, most local servers speak OpenAI-compatible)
+  // or 'anthropic' or 'gemini', and visionCfg.endpoint points at the right
+  // server. cfg.format and cfg.endpoint are existing fields set at import
+  // time by the catalog or the Import Server modal — no schema change.
+  const format    = visionCfg.format || '';
+  const endpoint  = visionCfg.endpoint || '';
+  // Auth header is optional — local servers (Alfredo, Ollama, LM Studio)
+  // typically have no key and shouldn't get a stray "Authorization: Bearer "
+  // header. Cloud providers fill it in normally.
+  const hasKey = !!(visionKey && String(visionKey).trim());
+
+  // ── OpenAI-format (ChatGPT, Grok, Alfredo, Ollama, LM Studio, etc.) ──
+  if (format === 'openai') {
     const model = visionCfg.model || VISION_DEFAULTS.chatgpt;
+    const url = endpoint || 'https://api.openai.com/v1/chat/completions';
+    // Check the FINAL URL (after defaulting) so the gpt-5 max_completion_tokens
+    // quirk still applies when cfg.endpoint is empty and we fall back to the
+    // official OpenAI URL.
+    const isOfficialOpenAI = /api\.openai\.com/i.test(url);
+    const tokenBody = isOfficialOpenAI
+      ? { max_completion_tokens: 4096 }   // gpt-5.x requires it
+      : { max_tokens: 4096 };              // Grok, local servers, etc.
     const body = JSON.stringify({
       model,
       messages: [{ role: 'user', content: [
         ...pageImages.map(b64 => ({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${b64}`, detail: 'high' } })),
         { type: 'text', text: prompt }
       ]}],
-      // v3.58.8 — gpt-5.x rejects `max_tokens` ("Unsupported parameter … use
-      // 'max_completion_tokens' instead"). max_completion_tokens is accepted by
-      // gpt-4o AND gpt-5.x, so it's a universal swap, not a conditional.
-      max_completion_tokens: 4096
+      ...tokenBody
     });
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${visionKey}` },
-      body
-    });
-    if (!resp.ok) throw new Error(await visionErrorDetail('ChatGPT', model, resp));
+    const headers = { 'Content-Type': 'application/json' };
+    if (hasKey) headers['Authorization'] = `Bearer ${visionKey}`;
+    const resp = await fetch(url, { method: 'POST', headers, body });
+    if (!resp.ok) throw new Error(await visionErrorDetail(visionCfg.label || 'OpenAI-format', model, resp));
     const data = await resp.json();
     const transcribed = data?.choices?.[0]?.message?.content || '';
-    if (!transcribed.trim()) throw new Error('ChatGPT vision returned no text (response was empty)');
+    if (!transcribed.trim()) throw new Error(`${visionCfg.label || 'Vision'} returned no text (response was empty)`);
     return transcribed;
   }
 
-  // ── Claude (Anthropic) — via WaxFrame proxy ──
-  if (visionCfg.provider === 'claude') {
+  // ── Anthropic-format (Claude, or any Anthropic-compatible server) ──
+  if (format === 'anthropic') {
     const model = visionCfg.model || VISION_DEFAULTS.claude;
     const body = JSON.stringify({
       model,
@@ -13859,20 +13889,19 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
         { type: 'text', text: prompt }
       ]}]
     });
-    const resp = await fetch(visionCfg.endpoint || 'https://waxframe-claude-proxy.weirdave.workers.dev', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': visionKey, 'anthropic-version': '2023-06-01' },
-      body
-    });
-    if (!resp.ok) throw new Error(await visionErrorDetail('Claude', model, resp));
+    const headers = { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' };
+    if (hasKey) headers['x-api-key'] = visionKey;
+    const url = endpoint || 'https://waxframe-claude-proxy.weirdave.workers.dev';
+    const resp = await fetch(url, { method: 'POST', headers, body });
+    if (!resp.ok) throw new Error(await visionErrorDetail(visionCfg.label || 'Claude', model, resp));
     const data = await resp.json();
     const transcribed = data?.content?.[0]?.text || '';
-    if (!transcribed.trim()) throw new Error('Claude vision returned no text (response was empty)');
+    if (!transcribed.trim()) throw new Error(`${visionCfg.label || 'Vision'} returned no text (response was empty)`);
     return transcribed;
   }
 
-  // ── Gemini (Google) ──
-  if (visionCfg.provider === 'gemini') {
+  // ── Gemini-format (Google Gemini, or any Gemini-compatible server) ──
+  if (format === 'gemini') {
     const model = visionCfg.model || VISION_DEFAULTS.gemini;
     const body = JSON.stringify({
       contents: [{ parts: [
@@ -13880,44 +13909,25 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
         { text: prompt }
       ]}]
     });
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': visionKey }, body }
-    );
-    if (!resp.ok) throw new Error(await visionErrorDetail('Gemini', model, resp));
+    // Gemini URL embeds the model name. Use cfg.endpoint as the base if
+    // present (Vertex AI, Gemini-compatible servers); fall back to the
+    // public Google generative-language endpoint.
+    const base = endpoint || 'https://generativelanguage.googleapis.com/v1beta';
+    const url = `${base.replace(/\/$/, '')}/models/${model}:generateContent`;
+    const headers = { 'Content-Type': 'application/json' };
+    if (hasKey) headers['x-goog-api-key'] = visionKey;
+    const resp = await fetch(url, { method: 'POST', headers, body });
+    if (!resp.ok) throw new Error(await visionErrorDetail(visionCfg.label || 'Gemini', model, resp));
     const data = await resp.json();
     const transcribed = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (!transcribed.trim()) throw new Error('Gemini vision returned no text (response was empty)');
+    if (!transcribed.trim()) throw new Error(`${visionCfg.label || 'Vision'} returned no text (response was empty)`);
     return transcribed;
   }
 
-  // ── Grok (xAI) — OpenAI-compatible ──
-  // NOTE: xAI still accepts `max_tokens` (not deprecated as of this build), so
-  // it is left as-is. If xAI later mirrors OpenAI's change, the surfaced error
-  // from visionErrorDetail() will name the exact param to swap.
-  if (visionCfg.provider === 'grok') {
-    const model = visionCfg.model || VISION_DEFAULTS.grok;
-    const body = JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: [
-        ...pageImages.map(b64 => ({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${b64}`, detail: 'high' } })),
-        { type: 'text', text: prompt }
-      ]}],
-      max_tokens: 4096
-    });
-    const resp = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${visionKey}` },
-      body
-    });
-    if (!resp.ok) throw new Error(await visionErrorDetail('Grok', model, resp));
-    const data = await resp.json();
-    const transcribed = data?.choices?.[0]?.message?.content || '';
-    if (!transcribed.trim()) throw new Error('Grok vision returned no text (response was empty)');
-    return transcribed;
-  }
-
-  throw new Error(`Provider ${visionCfg.provider} does not have a vision integration`);
+  throw new Error(
+    `${visionCfg.label || visionCfg.provider || 'Vision provider'} has format "${format || '(none)'}" ` +
+    `which has no vision integration. Supported formats: openai, anthropic, gemini.`
+  );
 }
 
 // v3.52.7 — loadScript helper removed. Was retained "for future on-demand
@@ -14173,14 +14183,14 @@ function refCardMarkup(doc, index) {
        </div>`;
 
   // v3.61.0 — The per-card 🔍 verify button was removed. Verify was meant
-  // as a one-time gate at import time. But after v3.63.392 added the "Try
+  // as a one-time gate at import time. But after v3.63.393 added the "Try
   // vision with X" button to the verify modal, there's a legit reason to
   // re-open it for text-extracted PDFs: forcing a vision pass when the
   // text-extraction output is wonky. The auto-open path only fires for
   // pdf-vision sourceType OR docs with warnings, so clean text-extracted
   // PDFs (like David's WaxFrame-Getting-Started.pdf, parsed cleanly by
   // pdf.js 4.x) silently import and the user has no way to reach the new
-  // vision re-scan affordance. v3.63.392 restores the per-card button, but
+  // vision re-scan affordance. v3.63.393 restores the per-card button, but
   // gated to PDF uploads only — DOCX/XLSX/text don't need vision re-scan,
   // their inline textareas are enough.
   const isPdfRef = doc.source === 'upload'
@@ -14334,7 +14344,7 @@ function removeReferenceDoc(id) {
     renderReferenceCards();
     updateRefGrandTotals();
     saveProject();
-    // v3.63.392 — Sweep any stale "Review {filename}" banner buttons for
+    // v3.63.393 — Sweep any stale "Review {filename}" banner buttons for
     // this docId. David hit it on the resume PDF: he X'd the card and the
     // deferred-review banner still showed "Review CandySimmons_Resume2023.pdf"
     // even though the underlying doc was gone — clicking it would have
@@ -14637,7 +14647,7 @@ function _finishRefBatch() {
     }
     return;
   }
-  // v3.63.392 — Single-file uploads auto-open the verify modal directly,
+  // v3.63.393 — Single-file uploads auto-open the verify modal directly,
   // restoring the v3.63.10 contract that "a single add opens immediately"
   // — the contract was broken when the batch wrapper started passing the
   // collector array unconditionally on line 14587, so every upload (even
@@ -14658,7 +14668,7 @@ function _finishRefBatch() {
       const btn = document.createElement('button');
       btn.className = 'btn btn-sm ref-batch-review-btn';
       btn.textContent = `🔍 Review ${desc.file && desc.file.name ? desc.file.name : ('document ' + (idx + 1))}`;
-      // v3.63.392 — stamp the docId so removeReferenceDoc can sweep stale
+      // v3.63.393 — stamp the docId so removeReferenceDoc can sweep stale
       // banner buttons when the underlying card is X'd before review.
       if (desc.docId) btn.dataset.refDocId = desc.docId;
       btn.addEventListener('click', function () {
