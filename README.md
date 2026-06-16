@@ -259,13 +259,11 @@ For corporate networks that block `github.io`, on-prem servers, internal-network
 1. Open the [Releases page](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
 2. Under **Assets**, download the **Source code (zip)**
 3. Extract into any folder — desktop, USB stick, network share, internal web server
-4. Double-click **`WaxFrame-Portable.bat`** (Windows) or **`WaxFrame-Portable.command`** (Mac/Linux) — this starts a tiny local web server in the WaxFrame folder and opens the app at `http://localhost:8765/`. Requires Python 3 (the launcher tells you where to get it if missing).
-
-> **Why a launcher, not `index.html`?** Modern browsers refuse to load ES-module imports across `file://` origins, which breaks PDF import for users who double-click `index.html` directly. DOCX/XLSX/text still work via `file://`, but PDF needs a real `http://` origin. The launcher gives you one with zero configuration.
->
-> If you're dropping WaxFrame on an internal web server (IIS, Apache, nginx), skip the launcher — just point your server at the folder. The launcher is only for people running it from their own machine.
+4. Open `index.html` in a browser
 
 That's it. Every dependency ships in the ZIP — fonts, libraries (PDF.js, Mammoth, JSZip, SheetJS), provider icons, the whole stack. No CDN calls, no `npm install`, no build step. Once loaded, WaxFrame only talks to whichever AI endpoints you point it at. Drop it on an internal server and the whole team can hit it.
+
+> **PDF caveat for portable users**: PDF import currently requires WaxFrame to be served via `http://` (a real web server). If you open `index.html` directly via `file://`, DOCX/XLSX/text still work, but PDF won't — browsers block PDF.js's module loader across `file://` origins. Workaround: convert PDFs to DOCX in your word processor first, or use the [hosted version](https://waxframe.com). A proper fix is on the roadmap (vendor a classic-script build of pdf.js so portable file:// works for PDF too).
 
 ### From `main` (bleeding edge)
 
