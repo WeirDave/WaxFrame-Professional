@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260615-001
+// Build: 20260615-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260615-001';         // build stamp — update each session
+const BUILD       = '20260615-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2551,7 +2551,7 @@ function goToScreen(id) {
     }
     renderAISetupGrid();
     setTimeout(updateBeesRequirements, 0);
-    // v3.63.385 — Fire connectivity probes for every server-mode AI on the
+    // v3.63.386 — Fire connectivity probes for every server-mode AI on the
     // hive. Throttled internally to 60s so revisiting the screen during a
     // single session doesn't spam endpoints; the click-the-pill path
     // bypasses throttle when the user wants a fresh answer.
@@ -5745,7 +5745,7 @@ function _buildCompactModelSelect(ai, currentModel) {
 //   green = working / healthy
 //   gold  = selected / active pick
 function _buildRowStatusPill(ai, hasKey) {
-  // v3.63.385 — Server-mode AIs (imported from a local/LAN model server —
+  // v3.63.386 — Server-mode AIs (imported from a local/LAN model server —
   // Alfredo, Ollama, LM Studio, OpenWebUI) don't carry an API key, so the
   // hasKey gate hid the pill entirely. Server AIs get a separate connectivity
   // pill driven by a live probe against _modelsEndpoint; see the helper below.
@@ -5769,7 +5769,7 @@ function _buildRowStatusPill(ai, hasKey) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.63.385 — Server-mode connectivity pill.
+// v3.63.386 — Server-mode connectivity pill.
 // Four states, all rendered into the same row-header slot as the
 // Internet-mode Ready pill:
 //
@@ -5814,7 +5814,11 @@ function _serverPillStateClass(state) {
   return 'is-checking';   // 'checking' and 'unknown' both render as in-flight
 }
 function _serverPillLabel(state) {
-  if (state === 'connected')      return '✓ Connected';
+  // v3.63.386 — "Connected" → "Ready" because the 84px pill clipped
+  // the longer word, and David's read: "it's not fitting in the pill and
+  // basically means the same thing." Same semantic as the Internet-mode
+  // Ready pill — both = "this AI is good to use right now."
+  if (state === 'connected')      return '✓ Ready';
   if (state === 'model-missing')  return '⚠ Model missing';
   if (state === 'unreachable')    return '✗ Unreachable';
   return '🔄 Checking…';
@@ -5822,7 +5826,7 @@ function _serverPillLabel(state) {
 function _serverPillTitle(state, ai, cache) {
   const picked = getModelForAI(ai) || '(no model picked)';
   if (state === 'connected') {
-    return `Endpoint responded. Picked model "${picked}" is in the current model list. Click to re-check.`;
+    return `Server endpoint reached and picked model "${picked}" is in the current model list — ready to use. Click to re-check.`;
   }
   if (state === 'model-missing') {
     const sample = (cache?.models || []).slice(0, 5).join(', ');
