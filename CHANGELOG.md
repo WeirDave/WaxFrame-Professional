@@ -2,6 +2,49 @@
 
 ---
 
+## v3.63.390
+
+**Verify-import modal: original PDF preview now renders + "Try vision" button always available for PDFs**
+
+Build: `20260615-006`<br>
+Released: `2026-06-15`
+
+### What changed
+
+David hit two real bugs in the PDF Verify & edit modal that had been silently broken for a while:
+
+1. **Left "Original" preview pane was always blank.** The iframe at `#verifyPdfFrame` gets `src=blob:...` pointing at the uploaded PDF so the browser can render it via its own built-in PDF viewer (Firefox's pdf.js / Chrome's PDF plugin). But the CSP had no `frame-src` directive, so the iframe load fell back to `default-src 'self'`, which doesn't whitelist `blob:`. Both Firefox and Chrome blocked the iframe load. Result: every user saw a blank gray pane labeled "Original" next to the extracted text. Fix: add `frame-src 'self' blob:` to the CSP. Same restriction surface as before — only `'self'` and `blob:`, no third-party iframes — just unblocks the local preview.
+2. **No way to force a vision pass on text-extracted PDFs.** David: *"at work it doesn't give me a chance to re-scan it with another vision version or model and at work I'm sure that with chat GPT or the Claude or the Gemini we would work."* The 🔁 Re-scan button was gated on `_lastPDFPages` (the page-image cache from a prior vision run), so for PDFs where pdf.js's text extraction succeeded — even with messy output — the button never appeared. Users were stuck with whatever pdf.js produced. Worst case: if extraction was wonky enough to be unusable, they had no in-app recovery path. Fix: button now also shows whenever we have a renderable PDF blob URL + at least one vision-capable AI keyed; clicking renders the pages on-demand (via pdf.js → JPEG data URLs) and sends them to vision. Same exact path that the initial OCR'd-PDF code already exercises.
+
+Also fixed in passing:
+
+- **Single-vision-AI users were blocked too.** Pre-v3.63.390 `_verifyNextVisionProvider` returned `null` whenever `ais.length <= 1`, hiding the button for users who only keyed ChatGPT (or only Claude, etc.). Relaxed to require ≥1 vision AI; rotating through a single provider just re-tries the same one, which is the right answer when the user wants a retry.
+- **Off-by-one in vision-provider rotation.** When there was no prior provider, the old code picked `ais[1]` (the SECOND vision AI) instead of `ais[0]`. So the first vision pass on a text-extracted PDF would skip the user's primary vision provider. Now picks `ais[0]` correctly on the first pass.
+
+### How it works
+
+- Button label adapts to context: shows **"🔁 Try vision with X"** when no vision has run yet (rendering on demand), **"🔁 Re-scan with X"** when pages are already cached. Both routes call `verifyTryDifferentReader`, which now lazy-renders pages via `pdfjsLib.getDocument({ data: ab })` → `renderPDFToImages(pdf)` if the cache is empty.
+- The CSP fix uses the minimum-permission shape: `frame-src 'self' blob:` allows only same-origin and locally-created blob URLs. No external iframe sources allowed.
+- The on-demand render path reuses the existing `renderPDFToImages` helper at scale=1.5 (same DPI the upload path uses), so the vision provider sees the same image quality whether it's the first pass or a force-pass after text extraction.
+
+### Verified in preview
+
+- CSP meta tag now contains `frame-src 'self' blob:`.
+- `_verifyNextVisionProvider`:
+  - 0 vision AIs → `null` (button stays hidden — correct)
+  - 1 vision AI, no prior → returns that AI (was `null` pre-v3.63.390)
+  - 2 vision AIs, no prior → returns the FIRST (was returning the second pre-v3.63.390)
+  - 2 vision AIs, prior = first → returns the SECOND (rotation works)
+- `_syncVerifyButtons` gate: text-extracted PDF + renderable blob URL + 1 vision AI → button label = `🔁 Try vision with FakeA` and `canReread = true`. Was hidden entirely pre-v3.63.390.
+
+### Files touched
+
+- [index.html](index.html) — CSP: add `frame-src 'self' blob:`
+- [js/app.js](js/app.js) — `_verifyNextVisionProvider`, `_syncVerifyButtons`, `verifyTryDifferentReader` (on-demand page rendering)
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.389
 
 **Portable PDF import is back: hybrid pdf.js loader (4.x ESM on http://, 3.x UMD on file://)**

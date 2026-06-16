@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260615-005
+// Build: 20260615-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260615-005';         // build stamp — update each session
+const BUILD       = '20260615-006';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2551,7 +2551,7 @@ function goToScreen(id) {
     }
     renderAISetupGrid();
     setTimeout(updateBeesRequirements, 0);
-    // v3.63.389 — Fire connectivity probes for every server-mode AI on the
+    // v3.63.390 — Fire connectivity probes for every server-mode AI on the
     // hive. Throttled internally to 60s so revisiting the screen during a
     // single session doesn't spam endpoints; the click-the-pill path
     // bypasses throttle when the user wants a fresh answer.
@@ -5745,7 +5745,7 @@ function _buildCompactModelSelect(ai, currentModel) {
 //   green = working / healthy
 //   gold  = selected / active pick
 function _buildRowStatusPill(ai, hasKey) {
-  // v3.63.389 — Server-mode AIs (imported from a local/LAN model server —
+  // v3.63.390 — Server-mode AIs (imported from a local/LAN model server —
   // Alfredo, Ollama, LM Studio, OpenWebUI) don't carry an API key, so the
   // hasKey gate hid the pill entirely. Server AIs get a separate connectivity
   // pill driven by a live probe against _modelsEndpoint; see the helper below.
@@ -5769,7 +5769,7 @@ function _buildRowStatusPill(ai, hasKey) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.63.389 — Server-mode connectivity pill.
+// v3.63.390 — Server-mode connectivity pill.
 // Four states, all rendered into the same row-header slot as the
 // Internet-mode Ready pill:
 //
@@ -5814,7 +5814,7 @@ function _serverPillStateClass(state) {
   return 'is-checking';   // 'checking' and 'unknown' both render as in-flight
 }
 function _serverPillLabel(state) {
-  // v3.63.389 — "Connected" → "Ready" because the 84px pill clipped
+  // v3.63.390 — "Connected" → "Ready" because the 84px pill clipped
   // the longer word, and David's read: "it's not fitting in the pill and
   // basically means the same thing." Same semantic as the Internet-mode
   // Ready pill — both = "this AI is good to use right now."
@@ -12145,7 +12145,7 @@ async function extractPDF(file) {
   };
 
   if (!window.pdfjsLib) {
-    // v3.63.389 — file:// now has a real fallback (UMD pdf.js 3.x via the
+    // v3.63.390 — file:// now has a real fallback (UMD pdf.js 3.x via the
     // hybrid bootstrap), so if pdfjsLib is STILL missing under file://, the
     // most likely cause is that lib/pdf.min.js wasn't included in the
     // portable copy. Point the user at that.
@@ -12166,7 +12166,7 @@ async function extractPDF(file) {
   }
   // Self-hosted worker — set once per session.
   if (!window._pdfjsWorkerSet) {
-    // v3.63.389 — Worker file matches the pdf.js build the hybrid bootstrap
+    // v3.63.390 — Worker file matches the pdf.js build the hybrid bootstrap
     // picked. On http(s):// we ran pdf.js 4.10.38 (ESM, .mjs worker is a
     // module worker pdf.js spawns with type:'module' when the URL ends .mjs).
     // On file:// we fell back to pdf.js 3.11.174 (UMD, .js classic-script
@@ -12653,14 +12653,27 @@ function openVerifyPanelForRef(docId) {
 }
 
 // v3.59.2 — compute the NEXT keyed vision provider after the last one used,
-// wrapping around. Returns { provider, label, ai } or null if there is no
-// *other* keyed vision provider to rotate to.
+// wrapping around. Returns { provider, label, ai } or null if no vision-
+// capable AI is keyed at all.
+//
+// v3.63.390 — pre-v3.63.390 this returned null when ais.length <= 1, which
+// blocked the re-scan button entirely for users who only had one vision
+// provider configured. That made David's "I want to force a vision pass
+// when text extraction came out wonky" use case impossible: with only
+// ChatGPT (or only Claude, etc.) keyed, no button. Now we allow rotation
+// through a single provider too — clicking again just re-runs the same one,
+// which is fine when the user wants to retry. We also fix a subtle off-by-
+// one: when there was no prior provider, the old code picked ais[1] (the
+// SECOND vision AI) instead of ais[0]. That meant the very first vision
+// pass on a text-extracted PDF skipped the user's primary vision provider.
 function _verifyNextVisionProvider() {
   const ais = (typeof getVisionCapableAIs === 'function') ? getVisionCapableAIs() : [];
-  if (ais.length <= 1) return null;          // nothing to rotate to
+  if (!ais.length) return null;
   const last = window._verifyLastProvider || '';
   let idx = ais.findIndex(a => a.provider === last);
-  if (idx < 0) idx = 0;                       // unknown → treat as if at first
+  // No prior provider → start at the first AI (idx=-1 makes (idx+1)%n = 0).
+  // Prior provider found → advance to the next, wrapping at the end.
+  if (idx < 0) idx = -1;
   const next = ais[(idx + 1) % ais.length];
   return { provider: next.provider, label: next.cfg.label, ai: next };
 }
@@ -12668,13 +12681,29 @@ function _verifyNextVisionProvider() {
 // Sync the re-scan button label to name the engine it will try NEXT. The
 // Proceed button is always labeled "✅ Proceed" — the older Save/Done toggle
 // is gone (v3.61.0 spec: single-purpose commit action).
+//
+// v3.63.390 — pre-v3.63.390 the button was gated on `_lastPDFPages` being
+// already-rendered, which meant text-extracted PDFs (pdf.js's regular path,
+// not vision) couldn't be re-scanned with vision even when the user wanted
+// to force one. David: "at work it doesn't give me a chance to re-scan it
+// with another vision version or model." Now the button also shows when we
+// have a renderable PDF blob URL — verifyTryDifferentReader will render
+// the pages on demand if the cache is empty.
 function _syncVerifyButtons() {
   const reread = document.getElementById('verifyRereadBtn');
   if (reread) {
     const nxt = _verifyNextVisionProvider();
-    const canReread = Array.isArray(window._lastPDFPages) && window._lastPDFPages.length > 0 && nxt;
+    const hasPagesCached = Array.isArray(window._lastPDFPages) && window._lastPDFPages.length > 0;
+    const canRenderOnDemand = !!(_verifyImportCtx
+      && _verifyImportCtx.blobUrl
+      && _verifyImportCtx.isRenderable
+      && /\.pdf$/i.test(_verifyImportCtx.name || ''));
+    const canReread = !!nxt && (hasPagesCached || canRenderOnDemand);
     reread.style.display = canReread ? 'inline-flex' : 'none';
-    if (canReread) reread.textContent = `🔁 Re-scan with ${nxt.label}`;
+    if (canReread) {
+      const verb = hasPagesCached ? 'Re-scan' : 'Try vision';
+      reread.textContent = `🔁 ${verb} with ${nxt.label}`;
+    }
   }
 }
 
@@ -12951,13 +12980,39 @@ async function verifyTryDifferentReader() {
   const ta   = document.getElementById('verifyText');
   const btn  = document.getElementById('verifyRereadBtn');
   const note = document.getElementById('verifyRereadNote');
+  // v3.63.390 — render pages on demand when text-extraction was used initially
+  // (i.e. _lastPDFPages cache is empty) but the user wants to force a vision
+  // pass anyway. The modal context's blobUrl points at the original PDF; fetch
+  // its bytes, parse with pdf.js, rasterize to JPEG data-URLs. From the user's
+  // perspective: clicking "Try vision with X" just works whether vision had
+  // already been tried or not.
   if (!Array.isArray(window._lastPDFPages) || !window._lastPDFPages.length) {
-    if (note) note.textContent = 'No rendered page images are available to re-scan.';
-    return;
+    if (!_verifyImportCtx || !_verifyImportCtx.blobUrl || !_verifyImportCtx.isRenderable) {
+      if (note) note.textContent = 'No page images are cached and the original PDF isn\'t accessible. Re-upload the file and try again.';
+      return;
+    }
+    if (!window.pdfjsLib) {
+      if (note) note.textContent = 'PDF.js isn\'t loaded — vision re-scan requires it. Refresh the page and try again.';
+      return;
+    }
+    if (note) note.textContent = '⏳ Rendering PDF pages for vision…';
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Rendering pages…'; }
+    try {
+      const resp = await fetch(_verifyImportCtx.blobUrl);
+      const ab = await resp.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: ab, isEvalSupported: false }).promise;
+      window._lastPDFPages = await renderPDFToImages(pdf);
+    } catch(e) {
+      if (note) note.textContent = `Could not render PDF for vision: ${e.message}`;
+      if (btn) { btn.disabled = false; }
+      _syncVerifyButtons();
+      return;
+    }
   }
   const nxt = _verifyNextVisionProvider();
   if (!nxt) {
-    if (note) note.textContent = 'No other vision-capable AI is keyed. Add a Claude, Gemini, or Grok key to try a different one.';
+    if (note) note.textContent = 'No vision-capable AI is keyed. Add a ChatGPT, Claude, Gemini, or Grok key to use vision.';
+    if (btn) { btn.disabled = false; }
     return;
   }
   if (btn) { btn.disabled = true; btn.textContent = `⏳ Re-scanning with ${nxt.label}…`; }
