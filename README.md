@@ -263,8 +263,6 @@ For corporate networks that block `github.io`, on-prem servers, internal-network
 
 That's it. Every dependency ships in the ZIP — fonts, libraries (PDF.js, Mammoth, JSZip, SheetJS), provider icons, the whole stack. No CDN calls, no `npm install`, no build step. Once loaded, WaxFrame only talks to whichever AI endpoints you point it at. Drop it on an internal server and the whole team can hit it.
 
-> **PDF caveat for portable users**: PDF import currently requires WaxFrame to be served via `http://` (a real web server). If you open `index.html` directly via `file://`, DOCX/XLSX/text still work, but PDF won't — browsers block PDF.js's module loader across `file://` origins. Workaround: convert PDFs to DOCX in your word processor first, or use the [hosted version](https://waxframe.com). A proper fix is on the roadmap (vendor a classic-script build of pdf.js so portable file:// works for PDF too).
-
 ### From `main` (bleeding edge)
 
 For the absolute latest dev work between tagged releases — accept that `main` may include in-flight features:
