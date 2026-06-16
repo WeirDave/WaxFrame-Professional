@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.391
+
+**Vision re-scan rotates through EVERY variant + includes server-imported AIs (Alfredo, Ollama, LM Studio, OpenWebUI); disabled-with-reason button when prereqs missing**
+
+Build: `20260615-007`<br>
+Released: `2026-06-15`
+
+### What changed
+
+Two structural problems with the verify-modal vision re-scan flow that v3.63.390 didn't address:
+
+**1. The rotation list was provider-keyed, not AI-keyed.** Pre-v3.63.391 `getVisionCapableAIs()` returned ONE entry per provider (chatgpt, claude, gemini, grok). For David's work setup (2× ChatGPT + 2× Gemini = 4 AIs across 2 providers), rotation only cycled between `[chatgpt, gemini]` and you could never reach the OTHER ChatGPT variant or the OTHER Gemini variant. Worse, the API call used the provider's DEFAULT model — not the variant's `ai.model` override — so vision ran against the wrong model even when it did fire.
+
+**2. Server-imported AIs (Alfredo, Ollama, LM Studio, OpenWebUI) were invisible.** The old filter required `cfg._key` to be set. Server AIs have `_modelsEndpoint` instead — they talk to a local model server, no API key — so they were dropped from rotation regardless of whether they were serving Llama 3.2 Vision, Qwen-VL, or any other vision-capable model.
+
+This release rewrites `getVisionCapableAIs()` to walk `activeAIs` directly and surface per-AI variant entries, including server-imported AIs. Each entry carries the AI's own `model` override and display name, so downstream `runVisionTranscription` hits the right model with the right label. Server AIs are admitted on `_modelsEndpoint` alone — trust-the-user semantics, same stance as the v3.63.385 connectivity pill (we can't query model capability so we don't try; if the user picked a text-only model the API call surfaces that error).
+
+Rotation now tracks last-used by `aiId` instead of `provider`, so variants are properly cycled. `_verifyLastProvider` is still updated alongside `_verifyLastAiId` so the tech-details "Vision provider used: X" line keeps working.
+
+**Disabled-with-reason button.** Pre-v3.63.391 the button was hidden entirely when prereqs weren't met (no vision AI keyed, original PDF inaccessible, etc.) — David couldn't tell WHY vision wasn't offered. Now the button is always visible for PDF imports, but disabled with a tooltip that names the specific blocker: "Add a vision key" / "Original unavailable" / etc. User sees the affordance and knows what's needed to enable it.
+
+### Verified in preview
+
+Stubbed a David-at-work-with-Alfredo setup (2 ChatGPT variants + 2 Gemini variants + 1 Alfredo, all in `activeAIs`):
+
+- `getVisionCapableAIs()` returns 5 entries (was 2 pre-v3.63.391).
+- Each entry has the variant's own model: `gpt-5`, `gpt-4o`, `gemini-2.5-pro`, `gemini-2.5-flash`, `qwen2.5-vl-7b`.
+- Each entry has its display label: `ChatGPT (GPT-5)`, `Gemini (2.5 Flash)`, `Alfredo`, etc.
+- Rotation cycles GPT-5 → GPT-4o → 2.5 Pro → 2.5 Flash → Alfredo → wraps to GPT-5. All 5 AIs reachable.
+- Alfredo admitted via `_modelsEndpoint` despite empty `_key`.
+
+### Files touched
+
+- [js/app.js](js/app.js) — `getVisionCapableAIs` rewritten (per-AI walk + server-AI inclusion), `_verifyNextVisionProvider` tracks by aiId, `verifyTryDifferentReader` writes both `_verifyLastAiId` and `_verifyLastProvider`, `_syncVerifyButtons` shows disabled-with-reason instead of hiding
+- [CHANGELOG.md](CHANGELOG.md), [js/version.js](js/version.js), [package.json](package.json), cache-bust + build stamps across all pages
+
+---
+
 ## v3.63.390
 
 **Verify-import modal: original PDF preview now renders + "Try vision" button always available for PDFs**

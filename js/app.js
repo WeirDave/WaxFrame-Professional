@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260615-006
+// Build: 20260615-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260615-006';         // build stamp — update each session
+const BUILD       = '20260615-007';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2551,7 +2551,7 @@ function goToScreen(id) {
     }
     renderAISetupGrid();
     setTimeout(updateBeesRequirements, 0);
-    // v3.63.390 — Fire connectivity probes for every server-mode AI on the
+    // v3.63.391 — Fire connectivity probes for every server-mode AI on the
     // hive. Throttled internally to 60s so revisiting the screen during a
     // single session doesn't spam endpoints; the click-the-pill path
     // bypasses throttle when the user wants a fresh answer.
@@ -5745,7 +5745,7 @@ function _buildCompactModelSelect(ai, currentModel) {
 //   green = working / healthy
 //   gold  = selected / active pick
 function _buildRowStatusPill(ai, hasKey) {
-  // v3.63.390 — Server-mode AIs (imported from a local/LAN model server —
+  // v3.63.391 — Server-mode AIs (imported from a local/LAN model server —
   // Alfredo, Ollama, LM Studio, OpenWebUI) don't carry an API key, so the
   // hasKey gate hid the pill entirely. Server AIs get a separate connectivity
   // pill driven by a live probe against _modelsEndpoint; see the helper below.
@@ -5769,7 +5769,7 @@ function _buildRowStatusPill(ai, hasKey) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.63.390 — Server-mode connectivity pill.
+// v3.63.391 — Server-mode connectivity pill.
 // Four states, all rendered into the same row-header slot as the
 // Internet-mode Ready pill:
 //
@@ -5814,7 +5814,7 @@ function _serverPillStateClass(state) {
   return 'is-checking';   // 'checking' and 'unknown' both render as in-flight
 }
 function _serverPillLabel(state) {
-  // v3.63.390 — "Connected" → "Ready" because the 84px pill clipped
+  // v3.63.391 — "Connected" → "Ready" because the 84px pill clipped
   // the longer word, and David's read: "it's not fitting in the pill and
   // basically means the same thing." Same semantic as the Internet-mode
   // Ready pill — both = "this AI is good to use right now."
@@ -11753,20 +11753,59 @@ function getVisionCapableAI() {
 // v3.58.7 — Ordered list of ALL keyed vision-capable AIs, user pick first,
 // then VISION_PROVIDERS order. Used by runVisionWithFallback so OCR tries
 // every keyed provider instead of dying on the first one that returns empty.
+// v3.63.391 — Per-AI surfacing + server-AI inclusion.
+//
+// Pre-v3.63.391 this returned ONE entry per provider (chatgpt, claude,
+// gemini, grok) and skipped server-imported AIs entirely. Two problems:
+//
+//   1. David at work has 2× ChatGPT + 2× Gemini variants — 4 AIs across
+//      2 providers. The old code returned just [chatgpt, gemini] and
+//      rotated between them, ignoring variant model overrides. Vision
+//      ran against the provider's DEFAULT model, not the variant's
+//      model. And rotation could never reach the OTHER ChatGPT variant.
+//
+//   2. Server-imported AIs (Alfredo, Ollama, LM Studio, OpenWebUI) have
+//      no `_key` — they carry `_modelsEndpoint` instead. The old filter
+//      required `_key` so server AIs were invisible to vision rotation
+//      even when serving a vision-capable model like Llama 3.2 Vision
+//      or Qwen-VL.
+//
+// New shape: walk `activeAIs`, surface each AI individually (variants
+// included), include server-imported AIs unconditionally (trust the
+// user's model pick — same stance as the connectivity pill). Each entry
+// carries the variant's model override in cfg.model so the downstream
+// runVisionTranscription call uses the right model, not the provider
+// default.
 function getVisionCapableAIs() {
-  const seen = new Set();
   const list = [];
+  const seenAiId = new Set();
+  const ais = Array.isArray(activeAIs) ? activeAIs : [];
+  for (const ai of ais) {
+    if (seenAiId.has(ai.id)) continue;
+    const cfg = API_CONFIGS[ai.provider];
+    if (!cfg) continue;
+    const isCloudVision = VISION_PROVIDERS.includes(ai.provider) && !!cfg._key;
+    const isServerAI   = !!cfg._modelsEndpoint;
+    if (!isCloudVision && !isServerAI) continue;
+    seenAiId.add(ai.id);
+    // Per-variant cfg: spread the provider config, then override model
+    // (variant's pick) and label (AI's display name carries variant info
+    // like "ChatGPT (GPT-5)" vs "ChatGPT (4o)"). cfg.label is the user-
+    // facing string the button uses; cfg.model is what API calls hit.
+    const variantModel = ai.model || cfg.model || '';
+    const variantLabel = ai.name || cfg.label || ai.provider;
+    list.push({
+      cfg:      { ...cfg, label: variantLabel, model: variantModel, provider: ai.provider },
+      key:      cfg._key || '',           // empty string for server-AIs (no key)
+      provider: ai.provider,
+      aiId:     ai.id,
+      ai
+    });
+  }
+  // Preferred provider first (Settings → Vision / OCR pick).
   const pref = getVisionProviderPref();
-  const order = pref && VISION_PROVIDERS.includes(pref)
-    ? [pref, ...VISION_PROVIDERS.filter(p => p !== pref)]
-    : VISION_PROVIDERS;
-  for (const provider of order) {
-    if (seen.has(provider)) continue;
-    const cfg = API_CONFIGS[provider];
-    if (cfg?._key) {
-      list.push({ cfg: { ...cfg, provider }, key: cfg._key, provider });
-      seen.add(provider);
-    }
+  if (pref) {
+    list.sort((a, b) => (a.provider === pref ? -1 : (b.provider === pref ? 1 : 0)));
   }
   return list;
 }
@@ -12145,7 +12184,7 @@ async function extractPDF(file) {
   };
 
   if (!window.pdfjsLib) {
-    // v3.63.390 — file:// now has a real fallback (UMD pdf.js 3.x via the
+    // v3.63.391 — file:// now has a real fallback (UMD pdf.js 3.x via the
     // hybrid bootstrap), so if pdfjsLib is STILL missing under file://, the
     // most likely cause is that lib/pdf.min.js wasn't included in the
     // portable copy. Point the user at that.
@@ -12166,7 +12205,7 @@ async function extractPDF(file) {
   }
   // Self-hosted worker — set once per session.
   if (!window._pdfjsWorkerSet) {
-    // v3.63.390 — Worker file matches the pdf.js build the hybrid bootstrap
+    // v3.63.391 — Worker file matches the pdf.js build the hybrid bootstrap
     // picked. On http(s):// we ran pdf.js 4.10.38 (ESM, .mjs worker is a
     // module worker pdf.js spawns with type:'module' when the URL ends .mjs).
     // On file:// we fell back to pdf.js 3.11.174 (UMD, .js classic-script
@@ -12653,56 +12692,77 @@ function openVerifyPanelForRef(docId) {
 }
 
 // v3.59.2 — compute the NEXT keyed vision provider after the last one used,
-// wrapping around. Returns { provider, label, ai } or null if no vision-
-// capable AI is keyed at all.
+// wrapping around. Returns { provider, label, ai, aiId } or null if no
+// vision-capable AI is keyed at all.
 //
-// v3.63.390 — pre-v3.63.390 this returned null when ais.length <= 1, which
-// blocked the re-scan button entirely for users who only had one vision
-// provider configured. That made David's "I want to force a vision pass
-// when text extraction came out wonky" use case impossible: with only
-// ChatGPT (or only Claude, etc.) keyed, no button. Now we allow rotation
-// through a single provider too — clicking again just re-runs the same one,
-// which is fine when the user wants to retry. We also fix a subtle off-by-
-// one: when there was no prior provider, the old code picked ais[1] (the
-// SECOND vision AI) instead of ais[0]. That meant the very first vision
-// pass on a text-extracted PDF skipped the user's primary vision provider.
+// v3.63.391 — Tracks last-used by AI ID (`_verifyLastAiId`) instead of
+// provider, because getVisionCapableAIs now surfaces per-variant entries
+// (2× ChatGPT + 2× Gemini = 4 list entries, not 2). Rotating by provider
+// would skip over variants. Falls back to provider-based matching for the
+// tech-details display, which still names the provider for human reading.
 function _verifyNextVisionProvider() {
   const ais = (typeof getVisionCapableAIs === 'function') ? getVisionCapableAIs() : [];
   if (!ais.length) return null;
-  const last = window._verifyLastProvider || '';
-  let idx = ais.findIndex(a => a.provider === last);
-  // No prior provider → start at the first AI (idx=-1 makes (idx+1)%n = 0).
-  // Prior provider found → advance to the next, wrapping at the end.
+  const lastAiId    = window._verifyLastAiId    || '';
+  const lastProvider = window._verifyLastProvider || '';
+  // Prefer aiId match (precise), fall back to provider match (legacy).
+  let idx = lastAiId ? ais.findIndex(a => a.aiId === lastAiId) : -1;
+  if (idx < 0 && lastProvider) idx = ais.findIndex(a => a.provider === lastProvider);
+  // No prior → start at the first AI (idx=-1 makes (idx+1)%n = 0).
   if (idx < 0) idx = -1;
   const next = ais[(idx + 1) % ais.length];
-  return { provider: next.provider, label: next.cfg.label, ai: next };
+  return { provider: next.provider, label: next.cfg.label, ai: next, aiId: next.aiId };
 }
 
 // Sync the re-scan button label to name the engine it will try NEXT. The
 // Proceed button is always labeled "✅ Proceed" — the older Save/Done toggle
 // is gone (v3.61.0 spec: single-purpose commit action).
 //
-// v3.63.390 — pre-v3.63.390 the button was gated on `_lastPDFPages` being
-// already-rendered, which meant text-extracted PDFs (pdf.js's regular path,
-// not vision) couldn't be re-scanned with vision even when the user wanted
-// to force one. David: "at work it doesn't give me a chance to re-scan it
-// with another vision version or model." Now the button also shows when we
-// have a renderable PDF blob URL — verifyTryDifferentReader will render
-// the pages on demand if the cache is empty.
+// v3.63.391 — Changed from hide-when-unusable to show-disabled-with-reason.
+// David tested v3.63.391 on hosted waxframe.com and the button still wasn't
+// showing because no vision AI was keyed on that browser. Pre-v3.63.391 we
+// hid the button entirely in that case — but a hidden button gives the user
+// no signal about WHY vision isn't offered, and they can't act on what they
+// can't see. Now the button is always visible when there's a re-scan-able
+// PDF in the modal; when prereqs aren't met it's disabled with a tooltip
+// that explains exactly what's missing (no vision key / no PDF accessible).
 function _syncVerifyButtons() {
   const reread = document.getElementById('verifyRereadBtn');
-  if (reread) {
-    const nxt = _verifyNextVisionProvider();
-    const hasPagesCached = Array.isArray(window._lastPDFPages) && window._lastPDFPages.length > 0;
-    const canRenderOnDemand = !!(_verifyImportCtx
-      && _verifyImportCtx.blobUrl
-      && _verifyImportCtx.isRenderable
-      && /\.pdf$/i.test(_verifyImportCtx.name || ''));
-    const canReread = !!nxt && (hasPagesCached || canRenderOnDemand);
-    reread.style.display = canReread ? 'inline-flex' : 'none';
-    if (canReread) {
-      const verb = hasPagesCached ? 'Re-scan' : 'Try vision';
-      reread.textContent = `🔁 ${verb} with ${nxt.label}`;
+  if (!reread) return;
+  const nxt = _verifyNextVisionProvider();
+  const hasPagesCached = Array.isArray(window._lastPDFPages) && window._lastPDFPages.length > 0;
+  const canRenderOnDemand = !!(_verifyImportCtx
+    && _verifyImportCtx.blobUrl
+    && _verifyImportCtx.isRenderable
+    && /\.pdf$/i.test(_verifyImportCtx.name || ''));
+  // Hide entirely only for non-PDF imports (DOCX, XLSX, images) where vision
+  // re-scan makes no sense. PDFs always get the affordance, even if disabled.
+  const isPdf = !!(_verifyImportCtx
+    && _verifyImportCtx.isRenderable
+    && /\.pdf$/i.test(_verifyImportCtx.name || ''));
+  if (!isPdf && !hasPagesCached) {
+    reread.style.display = 'none';
+    return;
+  }
+  reread.style.display = 'inline-flex';
+  if (nxt && (hasPagesCached || canRenderOnDemand)) {
+    reread.disabled = false;
+    const verb = hasPagesCached ? 'Re-scan' : 'Try vision';
+    reread.textContent = `🔁 ${verb} with ${nxt.label}`;
+    reread.title = hasPagesCached
+      ? `Re-runs the cached page images through ${nxt.label} for a fresh transcription.`
+      : `Renders the PDF pages and sends them to ${nxt.label} for vision OCR. Useful when the text-extracted output looks wonky.`;
+  } else {
+    reread.disabled = true;
+    if (!nxt) {
+      reread.textContent = '🔁 Re-scan (add a vision key)';
+      reread.title = 'Re-scan with vision needs an API key for ChatGPT, Claude, Gemini, or Grok. Open the Hive setup and add one, then come back here.';
+    } else if (!hasPagesCached && !canRenderOnDemand) {
+      reread.textContent = '🔁 Re-scan (original unavailable)';
+      reread.title = 'The original PDF is no longer accessible to re-render. Cancel and re-upload the file to enable vision re-scan.';
+    } else {
+      reread.textContent = '🔁 Re-scan (not available)';
+      reread.title = 'Re-scan is not available for this import.';
     }
   }
 }
@@ -12980,7 +13040,7 @@ async function verifyTryDifferentReader() {
   const ta   = document.getElementById('verifyText');
   const btn  = document.getElementById('verifyRereadBtn');
   const note = document.getElementById('verifyRereadNote');
-  // v3.63.390 — render pages on demand when text-extraction was used initially
+  // v3.63.391 — render pages on demand when text-extraction was used initially
   // (i.e. _lastPDFPages cache is empty) but the user wants to force a vision
   // pass anyway. The modal context's blobUrl points at the original PDF; fetch
   // its bytes, parse with pdf.js, rasterize to JPEG data-URLs. From the user's
@@ -13022,15 +13082,19 @@ async function verifyTryDifferentReader() {
   const _stopHbReread = _startStatusHeartbeat(note, () => `⏳ Re-scanning with ${nxt.label} vision —`);
   try {
     const t = await runVisionTranscription(window._lastPDFPages, nxt.ai.cfg, nxt.ai.key);
+    // v3.63.391 — advance the rotation anchor by AI ID (not provider) so
+    // variants are properly cycled through. The provider anchor stays in
+    // sync for the tech-details display.
+    window._verifyLastAiId    = nxt.aiId || '';
+    window._verifyLastProvider = nxt.provider;
     if (t && t.trim()) {
-      window._verifyLastProvider = nxt.provider;     // advance the rotation anchor
       if (ta) { ta.value = t.trim(); }
       if (note) note.textContent = `Re-scanned with ${nxt.label}. Compare against the original — Save if it's better, or re-scan again with the next AI.`;
     } else {
-      window._verifyLastProvider = nxt.provider;     // still advance, so next click tries a new one
       if (note) note.textContent = `${nxt.label} returned no text. Click again to try the next AI, or edit by hand.`;
     }
   } catch(e) {
+    window._verifyLastAiId    = nxt.aiId || '';
     window._verifyLastProvider = nxt.provider;
     if (note) note.textContent = `${nxt.label} failed: ${e.message}. Click again to try the next AI, or edit by hand.`;
   } finally {

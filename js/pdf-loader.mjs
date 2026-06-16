@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pdf-loader.mjs
-// Build: 20260615-006
+// Build: 20260615-007
 //  Bootstraps pdf.js 4.x by importing the ESM build and
 //  stashing it on window so the rest of app.js (which
 //  references window.pdfjsLib) keeps working unchanged.
@@ -10,11 +10,11 @@
 //  body runs after the document is parsed and well before
 //  any user interaction touches pdfjsLib.
 //
-//  v3.63.390 — Caught the dynamic-import failure path. The
+//  v3.63.391 — Caught the dynamic-import failure path. The
 //  portable install (downloaded ZIP, double-click index.html)
 //  loads via file:// protocol, and browsers REFUSE to load
 //  ESM imports across file:// origins (CORS-style block in
-//  the module loader). Pre-v3.63.390 this failed silently:
+//  the module loader). Pre-v3.63.391 this failed silently:
 //  window.pdfjsLib stayed undefined, and the first PDF the
 //  user tried to ingest threw the generic "PDF.js not loaded"
 //  error with no actionable hint. Now we surface the real
