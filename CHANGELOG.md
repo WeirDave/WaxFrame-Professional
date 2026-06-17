@@ -2,6 +2,62 @@
 
 ---
 
+## v3.63.401
+
+**Prompt modularization Release F (final): 6 dead consts in `js/app.js` swept — backlog item closed**
+
+Build: `20260616-008`<br>
+Released: `2026-06-16`
+
+### What changed
+
+Six const declarations in `js/app.js` — unreferenced since Releases B, C, and E — were deleted alongside their deprecation comments:
+
+| Const | Lines deleted | Lifecycle |
+|---|---|---|
+| `DEFAULT_PHASE_INSTRUCTIONS` | ~59 (object with 3 prompt blocks + section header) | Dead since Release C (v3.63.398) |
+| `BUILDER_INSTRUCTIONS` | ~164 (object with 3 prompt blocks + comments) | Dead since Release B (v3.63.397) |
+| `MODEL_RECOMMENDATION_PROMPT_REVIEWER` | ~26 (template literal + deprecation comment) | Dead since Release E (v3.63.400) |
+| `MODEL_RECOMMENDATION_PROMPT_BUILDER` | ~31 (template literal) | Dead since Release E |
+| `MODEL_RECOMMENDATION_PROMPT_DEFAULT` | 4 (alias + backwards-compat comment) | Dead since Release E |
+| `MODEL_TIER_CLASSIFICATION_PROMPT` | ~63 (template literal + deprecation comment) | Dead since Release E |
+
+Net delete: **349 lines** of dead prompt text + comments from `js/app.js`. Plus the ~130 lines that left `prompt-editor.js` in Release D. Total ~480 lines deleted across the refactor.
+
+`node --check js/app.js` passes. Release-check passes. The post-Release-F verifier (4 sanity checks) passes:
+
+1. `WF_PROMPTS` has all 10 expected keys with non-empty values
+2. `js/app.js` consumer sites all reference `WF_PROMPTS.*`
+3. `js/prompt-editor.js` `DEFAULTS` sources every value from `WF_PROMPTS` (body length 418 chars, under the 1000-char regression ceiling)
+4. No live code path references any of the 6 deleted consts (paper-trail historical comments at lines 8310, 8875, 9098 are allowed and left in place)
+
+### Backlog item — closed
+
+The **Prompt instruction modularization** entry in `docs/WaxFrame_Backlog_Master_v252.txt` is now fully delivered. The DONE criteria from the backlog:
+
+- ✅ Reviewer and Builder instructions live in separate named prompt modules/objects
+- ✅ The project/reference/document/history envelope is assembled independently
+- ✅ Generated prompts are byte-for-byte equivalent where no intentional wording change is made (proven via `tools/verify-prompts-equivalence.mjs` across Releases A through E)
+- ✅ Deep Dive still captures the final prompt sent to each AI (no Deep Dive change — the only change was the source of fallback text)
+- ✅ A future UI can point at these modules without parsing app.js (the entire `WF_PROMPTS` object is a single source of truth)
+
+The bonus side effect — the silent drift between runtime (`app.js`) and Prompt Editor (`prompt-editor.js`) for `refine`, `builder_refine`, and `recommend_model` is permanently fixed (Release D).
+
+### Release verifier
+
+`tools/verify-prompts-equivalence.mjs` was rewritten for the post-Release-F state. It now runs 4 sanity checks (WF_PROMPTS shape, consumer-site grep, Prompt Editor DEFAULTS check, deleted-const live-reference scan) and degrades gracefully if any of the historical consts are still present in `js/app.js` (e.g., on a rollback to Release ≤ E it falls through to byte-equivalence checks).
+
+### Files touched
+
+- `js/app.js` — 349 lines deleted (6 const blocks + deprecation comments + section header)
+- `tools/verify-prompts-equivalence.mjs` — rewritten as a post-Release-F sanity check; pre-Release-F equivalence sections retained as backward-compat fallback
+
+### Rollback
+
+Revert this commit. The 6 const declarations come back; consumers still reference `WF_PROMPTS` (no change there). The verifier's backward-compat section automatically engages.
+
+---
+
 ## v3.63.400
 
 **Prompt modularization Release E: recommendation + tier-classification consumers read from `WF_PROMPTS`**

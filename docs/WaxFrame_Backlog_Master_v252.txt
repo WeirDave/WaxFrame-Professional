@@ -93,45 +93,6 @@ OPEN FEATURES
            hides it or shows it disabled with a tooltip.
 
 
-2. Prompt instruction modularization
-   ─────────────────────────────────────────────────────────
-   WHAT:   The instructions WaxFrame sends to each AI are
-           still largely assembled inline in app.js. Reviewer
-           instructions, Builder instructions, project goal
-           fields, reference material, current document,
-           resolved decisions, warnings, notes, and required
-           response formats all flow through the same prompt
-           assembly paths. This feature would break the
-           role-specific instruction blocks out into explicit
-           prompt modules so Reviewer and Builder instructions
-           can be inspected, edited, tested, and versioned
-           separately from the per-round data envelope.
-   WHY:    Prompt changes are now core product changes. When
-           instructions are embedded inside long assembly
-           functions, it is too easy to accidentally nest
-           instructions inside examples, blur Reviewer vs
-           Builder roles, or change the data envelope while
-           trying to tune behavior. Separate instruction
-           modules reduce prompt regression risk and make the
-           Prompt Editor path more realistic later.
-   STATE:  OPEN — design direction understood; not started.
-   WHERE:  Reviewer prompt assembly:
-             buildPromptForAI(ai, []) in app.js
-           Builder instruction source:
-             BUILDER_INSTRUCTIONS in app.js
-           Builder send paths:
-             runBuilderOnly() and applyDecisions() in app.js
-           Full-round fan-out:
-             runRound() reviewer phase in app.js
-   DONE:   Reviewer and Builder instructions live in separate
-           named prompt modules/objects; the project/reference/
-           document/history envelope is assembled independently;
-           generated prompts are byte-for-byte equivalent where
-           no intentional wording change is made; Deep Dive still
-           captures the final prompt sent to each AI; a future UI
-           can point at these modules without parsing app.js.
-
-
 ════════════════════════════════════════════════════════════
 NOTES ON FORMAT
 ════════════════════════════════════════════════════════════
