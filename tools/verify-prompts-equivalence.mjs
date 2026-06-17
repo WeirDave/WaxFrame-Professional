@@ -152,6 +152,37 @@ for (const key of consumerKeys) {
 }
 
 // ──────────────────────────────────────────────────────────
+// Release-D check (added v3.63.399)
+// prompt-editor.js's DEFAULTS table should source every value from
+// WF_PROMPTS — no more hand-mirrored copies. Verify by static grep.
+// ──────────────────────────────────────────────────────────
+console.log('\nRelease-D: prompt-editor.js DEFAULTS sources from WF_PROMPTS:');
+{
+  const peSource = fs.readFileSync('js/prompt-editor.js', 'utf8');
+  const reBlock = /const\s+DEFAULTS\s*=\s*\{([\s\S]*?)\n\s*\};/;
+  const m = reBlock.exec(peSource);
+  if (!m) {
+    console.log('  prompt-editor.js DEFAULTS block NOT FOUND'); allOk = false;
+  } else {
+    const body = m[1];
+    const expected = ['draft_scratch', 'refine', 'builder_draft', 'builder_refine',
+                      'resolved_builder', 'resolved_reviewers', 'ai_warning', 'recommend_model'];
+    for (const key of expected) {
+      const re = new RegExp(`\\b${key}\\s*:\\s*WF_PROMPTS\\.\\w+`);
+      const hit = re.test(body);
+      console.log(`  ${key.padEnd(28)} ${hit ? 'WF_PROMPTS' : 'NOT_WF — INLINE STILL PRESENT'}`);
+      if (!hit) allOk = false;
+    }
+    // Hard ceiling on DEFAULTS body size — after Release D the block should
+    // be well under 1000 chars (pre-D it was ~7400 chars of inline prompt
+    // text). If it grew, something's drifted back.
+    const sz = body.length;
+    console.log(`  block-body length            ${sz} chars  ${sz < 1000 ? '(OK — under 1000-char ceiling)' : '(REGRESSION — was supposed to drop under 1000 chars)'}`);
+    if (sz >= 1000) allOk = false;
+  }
+}
+
+// ──────────────────────────────────────────────────────────
 // Release-C lookup-equivalence check (added v3.63.398)
 // All five Reviewer + envelope-prefix sites swapped to read fallbacks
 // from WF_PROMPTS. Compare against the previous inline + const fallbacks.

@@ -2,6 +2,74 @@
 
 ---
 
+## v3.63.399
+
+**Prompt modularization Release D: Prompt Editor reads from `WF_PROMPTS` — hand-sync mirror is dead**
+
+Build: `20260616-006`<br>
+Released: `2026-06-16`
+
+### What changed
+
+`js/prompt-editor.js`'s `DEFAULTS` table was replaced with a 9-line declaration that sources every default value from `WF_PROMPTS` (the canonical source in `js/prompts.js`):
+
+```js
+const DEFAULTS = {
+  draft_scratch:      WF_PROMPTS.draft_scratch,
+  refine:             WF_PROMPTS.refine,
+  builder_draft:      WF_PROMPTS.builder_draft,
+  builder_refine:     WF_PROMPTS.builder_refine,
+  resolved_builder:   WF_PROMPTS.resolved_builder,
+  resolved_reviewers: WF_PROMPTS.resolved_reviewers,
+  ai_warning:         WF_PROMPTS.ai_warning,
+  recommend_model:    WF_PROMPTS.recommend_model_reviewer
+};
+```
+
+This deletes ~130 lines of hand-mirrored prompt text from `prompt-editor.js`. The "keep them in sync by hand" maintenance trap is gone — `app.js` and `prompt-editor.js` now share a single source of truth, drift is no longer possible.
+
+### User-visible behavior change — IMPORTANT
+
+The Prompt Editor's defaults previously drifted from the runtime canonical for 3 of 8 keys (`refine`, `builder_refine`, `recommend_model` — see the v3.63.396 release notes for the full drift table). Concretely:
+
+- **If you have NEVER customized your prompts** — zero visible change. The Prompt Editor now displays the (more correct) runtime canonical defaults. The prompts sent to AIs are unchanged (that became byte-identical in Release C).
+- **If you customized `refine`, `builder_refine`, or `recommend_model`** — your saved customization in `localStorage` is UNCHANGED. Your custom prompt is still the prompt that gets sent. BUT the Prompt Editor's "modified" badge will start firing on those fields because the comparison baseline changed to the (newer) runtime canonical default. If you click "Reset to default" on a previously-customized field, you'll now get the newer canonical text instead of the older stale text.
+
+This is the correct end state: what the editor labels "default" is now actually what the runtime uses.
+
+### Equivalence proof
+
+```
+Release-D: prompt-editor.js DEFAULTS sources from WF_PROMPTS:
+  draft_scratch        WF_PROMPTS
+  refine               WF_PROMPTS
+  builder_draft        WF_PROMPTS
+  builder_refine       WF_PROMPTS
+  resolved_builder     WF_PROMPTS
+  resolved_reviewers   WF_PROMPTS
+  ai_warning           WF_PROMPTS
+  recommend_model      WF_PROMPTS
+  block-body length    386 chars  (OK — under 1000-char ceiling)
+```
+
+The 1000-char body-length ceiling is a regression guard: pre-Release-D the block was ~7400 chars of inline prompt text. If a future change accidentally inlines a prompt back into `DEFAULTS`, the verifier fails.
+
+### Files touched
+
+- `js/prompt-editor.js` — DEFAULTS block reduced from ~140 lines (inline prompt text) to 9 lines (WF_PROMPTS references); header comment updated to remove the "keep in sync by hand" warning
+- `tools/verify-prompts-equivalence.mjs` — added Release-D static-grep check + 1000-char ceiling regression guard
+
+### Rollback
+
+Revert this commit. The 140-line `DEFAULTS` block comes back; `WF_PROMPTS` references go away. Runtime is identical to v3.63.398 (the Prompt Editor was already cosmetic — your customizations live in `localStorage`, not in this file).
+
+### What's left in the refactor
+
+- **Release E** — migrate `MODEL_RECOMMENDATION_PROMPT_REVIEWER/BUILDER` + `MODEL_TIER_CLASSIFICATION_PROMPT` consumers in `app.js` to read from `WF_PROMPTS`.
+- **Release F** — delete the now-dead `BUILDER_INSTRUCTIONS` + `DEFAULT_PHASE_INSTRUCTIONS` + (post-E) recommend/tier consts from `app.js`.
+
+---
+
 ## v3.63.398
 
 **Prompt modularization Release C: app.js Reviewer + envelope-prefix lookups read from `WF_PROMPTS`**
