@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — prompt-editor.js
-// Build: 20260616-001
+// Build: 20260616-002
 //  Page-specific behavior for prompt-editor.html. Extracted from
 //  the formerly-inline <script> block at the bottom of that page
 //  in v3.63.350 so the page can drop 'unsafe-inline' from CSP.

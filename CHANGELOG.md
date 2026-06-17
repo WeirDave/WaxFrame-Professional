@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.395
+
+**Audit cleanup: 14 dead CSS classes pruned + 3 native alert() calls replaced with in-page toast**
+
+Build: `20260616-002`<br>
+Released: `2026-06-16`
+
+### What changed
+
+Quiet hygiene release that bundles two low-risk findings from the v3.63.393 code audit (dead-code + behavior-consistency categories).
+
+**Dead CSS pruning.** Verified zero references outside `style.css` and the historical CHANGELOG, then deleted the entire family for each:
+
+- `.applied-label` and `.applied-lock-btn-disabled` (paired-state variants of the per-row lock button that never shipped to runtime)
+- `.api-intro-strip`, `.api-intro-strip.honeycomb-header`, `.api-intro-title`, `.api-intro-desc`, light-theme overrides, the `prefers-color-scheme: light` media block, `.api-intro-bee-wrap`, `.api-intro-text` — superseded by `.wf-intro`, the unified intro panel documented at the relevant comment in `style.css`
+- `.ai-getkey-link-wrap` and the entire compound family (`.has-invalid`, `.is-invalid-only`, `.has-valid`, `.is-valid-only`, nested overrides), `.ai-getkey-prompt`, `.ai-getkey-link`, `.ai-getkey-link:hover`, `.ai-key-invalid-msg`, `.ai-key-valid-msg` — the "Don't have a key? Get one from <provider>" inline banner pattern from v3.31.0; the UX moved to other surfaces
+- `.ai-bfb-wrap`, `.ai-bfb-label`, `.ai-bfb-btn` and `:hover`, `.is-active`, `:focus-visible` variants — Best/Fast/Budget category buttons removed in v3.32.10
+- `.ai-hive-card-action` family — superseded long ago
+
+Net delete: ~214 lines. The audit subagent reported 14 selectors; on verification the actual scope was broader (compound selectors and `@media` blocks keyed off the dead base classes).
+
+**Native `alert()` → in-page toast.** `js/templates-page.js` was using three native `alert()` calls (export-library-missing, no-templates-to-export, export-failed). `templates.html` doesn't load `app.js`, so `toast()` from the main app isn't on the page. Added the same self-contained `tplShowToast()` pattern that `prompt-editor.js` uses — `<span class="status-toast" id="tplStatusToast">` injected inside the dynamically-rendered `.tpl-custom-actions` row, plus a `.status-toast.error` red variant alongside the existing `.saved` and `.reset`.
+
+### Dropped during verification
+
+A third audit finding flagged `console.info` calls in `js/app.js` (429 backoff trace, tier classification, recommendation engine, model recheck) for migration to `consoleLog()`. On re-verification the recommendation was wrong: `consoleLog()` writes to the in-app `#liveConsole` panel for power users, NOT to browser DevTools, and there is no `wfDebug` gate at all. The eight `console.info` survivors are intentional developer telemetry for DevTools and stay as-is.
+
+### Files touched
+
+- `style.css` — 14-class dead-code prune + `.status-toast.error` variant
+- `js/templates-page.js` — `tplShowToast()` helper, three `alert()` → `tplShowToast()` swaps, status-toast element injected into `.tpl-custom-actions`
+
+---
+
 ## v3.63.394
 
 **Prompt Editor: hardened against a corrupted `waxframe_v2_prompts` blob**

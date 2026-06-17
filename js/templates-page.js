@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates-page.js
-// Build: 20260616-001
+// Build: 20260616-002
 //  Catalog rendering for templates.html. Extracted from the
 //  formerly-inline <script> block in v3.63.352 so the page can
 //  drop 'unsafe-inline' from CSP. Pure renderer + ItemList JSON-LD
@@ -234,6 +234,7 @@ function renderCustom() {
           <h2 class="hp-section-title" id="cat-custom">Your Saved Templates <span class="tpl-cat-count">${list.length} template${list.length === 1 ? '' : 's'}</span></h2>
           <p class="hp-section-sub">Templates you've saved from your own finished WaxFrame projects, stored in this browser. Manage these inside the WaxFrame app from the Project setup screen.</p>
           <div class="tpl-custom-actions">
+            <span class="status-toast" id="tplStatusToast"></span>
             <button class="tpl-export-all-btn" id="tplExportAllBtn" type="button" title="Export every saved template as a single .zip">⬆ Export all as .zip</button>
           </div>
         </div>
@@ -334,15 +335,23 @@ function _wfSlugLocal(s) {
   return String(s || '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
 }
 
+function tplShowToast(msg, type) {
+  const t = document.getElementById('tplStatusToast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = 'status-toast show ' + (type || '');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
 async function exportAllCustomsAsZip() {
   const btn = document.getElementById('tplExportAllBtn');
   if (typeof JSZip === 'undefined') {
-    alert('Export library failed to load. Refresh the page and try again.');
+    tplShowToast('⚠️ Export library failed to load. Refresh and try again.', 'error');
     return;
   }
   const customs = loadCustomTemplates();
   if (!customs.length) {
-    alert('You have no saved custom templates to export yet.');
+    tplShowToast('No saved custom templates to export yet.', 'reset');
     return;
   }
 
@@ -388,7 +397,7 @@ async function exportAllCustomsAsZip() {
       URL.revokeObjectURL(url);
     }, 1000);
   } catch (e) {
-    alert('Export failed: ' + (e && e.message ? e.message : 'unknown error'));
+    tplShowToast('❌ Export failed: ' + (e && e.message ? e.message : 'unknown error'), 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = originalLabel || '⬆ Export all as .zip'; }
   }
