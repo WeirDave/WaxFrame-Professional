@@ -124,32 +124,54 @@ for (const [name, a, b] of checks) {
   if (!ok) allOk = false;
 }
 
-// Inline-string fallbacks (resolved_builder, resolved_reviewers, ai_warning) — these live
-// inside getPrompt() calls in app.js, not as named constants. Check them by source-grep.
-function findInlineFallback(src, key) {
-  // Pattern: getPrompt('KEY', '...TEXT...')
-  const re = new RegExp(`getPrompt\\('${key}',\\s*'([^']*(?:\\\\.[^']*)*)'\\)`, 's');
-  const m = re.exec(src);
-  if (!m) return null;
-  // Unescape JS string literal — handle \n and \\
-  return m[1].replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/\\\\/g, '\\');
+// As of Release C (v3.63.398) every consumer site reads its fallback from WF_PROMPTS
+// rather than an inline string literal. Confirm by grep: every getPrompt('KEY', ...)
+// site that previously used an inline string should now reference WF_PROMPTS.KEY.
+console.log('\nConsumer-site fallback patterns (post-Release-C):');
+const consumerKeys = ['draft_scratch', 'refine', 'resolved_builder', 'resolved_reviewers', 'ai_warning'];
+for (const key of consumerKeys) {
+  const re = new RegExp(`getPrompt\\('${key}',\\s*([^)]+)\\)`);
+  const m = re.exec(appSource);
+  if (!m) { console.log(`${key.padEnd(28)} NO_CONSUMER_FOUND`); continue; }
+  const fb = m[1].trim();
+  const usesWfPrompts = /^WF_PROMPTS\.\w+/.test(fb);
+  console.log(`  ${key.padEnd(28)} ${usesWfPrompts ? 'WF_PROMPTS' : 'NOT_WF'}  ${fb}`);
+  if (!usesWfPrompts) allOk = false;
+}
+// Builder consumer sites use a builderKey variable so check separately.
+{
+  const builderRe = /getPrompt\(builderKey,\s*([^)]+)\)/g;
+  let m, count = 0;
+  while ((m = builderRe.exec(appSource)) !== null) {
+    count++;
+    const fb = m[1].trim();
+    const usesWfPrompts = /^WF_PROMPTS\[builderKey\]/.test(fb);
+    console.log(`  builderKey site #${count}              ${usesWfPrompts ? 'WF_PROMPTS' : 'NOT_WF'}  ${fb}`);
+    if (!usesWfPrompts) allOk = false;
+  }
 }
 
-console.log('\nInline-fallback prefix strings (app.js getPrompt fallbacks):');
-const inlineChecks = [
-  ['resolved_builder',   pr.resolved_builder],
-  ['resolved_reviewers', pr.resolved_reviewers],
-  ['ai_warning',         pr.ai_warning]
-];
-for (const [key, prVal] of inlineChecks) {
-  const inline = findInlineFallback(appSource, key);
-  if (inline == null) { console.log(`${key.padEnd(28)} APP_NOT_FOUND`); allOk = false; continue; }
-  const ok = prVal === inline;
-  console.log(`${key.padEnd(28)} ${ok ? 'MATCH  ' : 'DRIFT  '} WF=${md5(prVal)}  APP=${md5(inline)}  ${prVal.length}/${inline.length}`);
-  if (!ok) {
-    console.log(`  --- WF -------\n${JSON.stringify(prVal)}`);
-    console.log(`  --- APP ------\n${JSON.stringify(inline)}`);
-    allOk = false;
+// ──────────────────────────────────────────────────────────
+// Release-C lookup-equivalence check (added v3.63.398)
+// All five Reviewer + envelope-prefix sites swapped to read fallbacks
+// from WF_PROMPTS. Compare against the previous inline + const fallbacks.
+// ──────────────────────────────────────────────────────────
+console.log('\nRelease-C lookup-equivalence:');
+{
+  const evalD = getConst(appSource, 'DEFAULT_PHASE_INSTRUCTIONS') + '\nreturn DEFAULT_PHASE_INSTRUCTIONS;';
+  const DEFAULT_PHASE_INSTRUCTIONS = (new Function(evalD))();
+  const WF = pr;
+  const checks = [
+    ['draft_scratch (Reviewer first-draft)',  DEFAULT_PHASE_INSTRUCTIONS.draft_scratch,  WF.draft_scratch],
+    ['refine (Reviewer refine)',              DEFAULT_PHASE_INSTRUCTIONS.refine,         WF.refine],
+    ['resolved_builder  (envelope prefix)',   pr.resolved_builder,                       WF.resolved_builder],
+    ['resolved_reviewers (envelope prefix)',  pr.resolved_reviewers,                     WF.resolved_reviewers],
+    ['ai_warning        (envelope prefix)',   pr.ai_warning,                             WF.ai_warning]
+  ];
+  for (const [name, oldFb, newFb] of checks) {
+    const ok = oldFb === newFb;
+    console.log(`  ${name.padEnd(40)} ${ok ? 'MATCH' : 'DRIFT'} old=${md5(oldFb).slice(0,8)} new=${md5(newFb).slice(0,8)}`);
+    if (!ok) allOk = false;
   }
 }
 
