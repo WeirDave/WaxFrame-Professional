@@ -2,6 +2,81 @@
 
 ---
 
+## v3.63.396
+
+**Prompt modularization Release A: `js/prompts.js` lands as the canonical prompt source (additive, no consumer change yet)**
+
+Build: `20260616-003`<br>
+Released: `2026-06-16`
+
+### What changed
+
+Backlog item: "Prompt instruction modularization." Multi-release refactor. This is Release A — the new module is created and wired into HTML script loads, but **no existing consumer was changed yet**. Pure infrastructure plumbing, byte-equivalence proven, zero behavior change.
+
+### What `js/prompts.js` contains
+
+A single top-level `const WF_PROMPTS = { ... }` object with every AI-facing prompt WaxFrame sends, keyed for both the runtime (`app.js`) and the Prompt Editor (`prompt-editor.js`):
+
+| Key | Used by |
+|---|---|
+| `draft_scratch` | Reviewer first-draft (no current doc) |
+| `refine` | Reviewer refine (existing doc → suggestions) |
+| `builder_draft` | Builder consolidating first drafts |
+| `builder_refine` | Builder refine with USER/BUILDER DECISION + APPLIED blocks |
+| `resolved_builder` | Builder prefix when prior decisions resolved |
+| `resolved_reviewers` | Reviewer prefix under same condition |
+| `ai_warning` | Per-AI repeated-violation warning prefix |
+| `recommend_model_reviewer` | Model recommendation prompt (Reviewer role) |
+| `recommend_model_builder` | Model recommendation prompt (Builder role) |
+| `tier_classification` | Hive-profile auto-tier classifier prompt |
+
+### Byte-equivalence vs `js/app.js` (runtime canonical) — **0 drift**
+
+Verified via `tools/verify-prompts-equivalence.mjs` — every `WF_PROMPTS` value is byte-identical to the existing runtime source:
+
+| Key | MD5 | Length |
+|---|---|---|
+| `draft_scratch` | `31ddd01c9322981c2efbd6df31ec8c46` | 1168 |
+| `refine` | `cd68620b70498c331b393ed24a41188c` | 1924 |
+| `builder_draft` | `94f911423da93a57f6eecd80c7991069` | 1877 |
+| `builder_refine` | `b01bba322dc9f44328033f2cc0e41516` | 11297 |
+| `recommend_model_reviewer` | `db8a25a4c232f55df1e0740ae123e9e8` | 1700 |
+| `recommend_model_builder` | `a2287e1f932c485e1085e54338097ffb` | 2039 |
+| `tier_classification` | `05abfbced300d0b3f1eb2155a1afc05f` | 3464 |
+| `resolved_builder` | `74f70030438d83db745a50c7b50316a7` | 230 |
+| `resolved_reviewers` | `2c3b0996588ed95a57d99c7627024af3` | 219 |
+| `ai_warning` | `2ee7cb4f2c9ed437da6f1e50e3d80639` | 205 |
+
+### Drift table — `js/prompt-editor.js` (Prompt Editor mirror) vs runtime canonical
+
+The motivating discovery: the Prompt Editor's `DEFAULTS` table — documented as "mirrors app.js, keep them in sync by hand when you bump either" — **had silently drifted from runtime for 3 of 8 keys**:
+
+| Key | Prompt Editor mirror | Runtime canonical | Status | Delta |
+|---|---|---|---|---|
+| `draft_scratch` | `31ddd01c` | `31ddd01c` | MATCH | 0 |
+| `refine` | `c313ab0b` | `cd68620b` | **DRIFT** | +149 chars (runtime newer) |
+| `builder_draft` | `94f91142` | `94f91142` | MATCH | 0 |
+| `builder_refine` | `eb0c330d` | `b01bba32` | **DRIFT** | +7655 chars (runtime adds the whole DECISION TREE + APPLIED CHANGES block + ANTI-HALLUCINATION RULES + MANDATORY SELF-CHECK + three-block output structure) |
+| `resolved_builder` | `74f70030` | `74f70030` | MATCH | 0 |
+| `resolved_reviewers` | `2c3b0996` | `2c3b0996` | MATCH | 0 |
+| `ai_warning` | `2ee7cb4f` | `2ee7cb4f` | MATCH | 0 |
+| `recommend_model` | `b581c5d4` | `db8a25a4` (reviewer) | **DRIFT** | +899 chars (runtime newer — NUMBER-based picking, reasoning-model rules) |
+
+Release D will switch the Prompt Editor to read from `WF_PROMPTS`, killing the mirror and ending the drift permanently. That change is user-visible: anyone who customized `refine`, `builder_refine`, or `recommend_model` will see the editor honestly reflect the runtime canonical default for the first time.
+
+### Files touched
+
+- **NEW** `js/prompts.js` — the module itself
+- **NEW** `tools/verify-prompts-equivalence.mjs` — the byte-check tool (runs the drift table on demand)
+- `index.html` — adds `<script src="js/prompts.js?v=…">` immediately before `js/app.js`
+- `prompt-editor.html` — adds `<script src="js/prompts.js?v=…">` immediately before `js/prompt-editor.js`
+
+### Rollback
+
+This release adds files and one script tag per consumer page. Reverting the commit removes them cleanly. No runtime code path reads `WF_PROMPTS` yet, so nothing breaks if the module fails to load.
+
+---
+
 ## v3.63.395
 
 **Audit cleanup: 14 dead CSS classes pruned + 3 native alert() calls replaced with in-page toast**
