@@ -2,6 +2,55 @@
 
 ---
 
+## v3.63.400
+
+**Prompt modularization Release E: recommendation + tier-classification consumers read from `WF_PROMPTS`**
+
+Build: `20260616-007`<br>
+Released: `2026-06-16`
+
+### What changed
+
+Three consumer sites in `js/app.js` switched to read from `WF_PROMPTS`:
+
+| Site | Before | After |
+|---|---|---|
+| `getRecommendationPrompt(role)` line 8434 | `MODEL_RECOMMENDATION_PROMPT_BUILDER` | `WF_PROMPTS.recommend_model_builder` |
+| `getRecommendationPrompt(role)` line 8435 | `MODEL_RECOMMENDATION_PROMPT_REVIEWER` | `WF_PROMPTS.recommend_model_reviewer` |
+| Tier-classify site line 9213 | `MODEL_TIER_CLASSIFICATION_PROMPT` | `WF_PROMPTS.tier_classification` |
+
+Every prompt-text consumer in the app — Reviewer prompts, Builder prompts, envelope prefixes, model recommendation, tier classification — now reads from `WF_PROMPTS`.
+
+### Equivalence proof
+
+```
+Release-E lookup-equivalence:
+  recommend_model_reviewer     MATCH  old=db8a25a4 new=db8a25a4
+  recommend_model_builder      MATCH  old=a2287e1f new=a2287e1f
+  tier_classification          MATCH  old=05abfbce new=05abfbce
+  getRecommendationPrompt() site   WF_PROMPTS
+  tier-classification site         WF_PROMPTS
+```
+
+### Dead-but-kept (rollback hedge)
+
+`const MODEL_RECOMMENDATION_PROMPT_REVIEWER` (line 8324), `MODEL_RECOMMENDATION_PROMPT_BUILDER` (line 8346), `MODEL_RECOMMENDATION_PROMPT_DEFAULT` (line 8430), and `MODEL_TIER_CLASSIFICATION_PROMPT` (line 8955) are now all **unreferenced** and kept in place this release as rollback hedges with deprecation comments. Release F sweeps all four alongside the `BUILDER_INSTRUCTIONS` + `DEFAULT_PHASE_INSTRUCTIONS` consts from Releases B and C.
+
+### Files touched
+
+- `js/app.js` — 3 consumer-site swaps + 2 deprecation comments
+- `tools/verify-prompts-equivalence.mjs` — added Release-E lookup-equivalence section
+
+### Rollback
+
+Revert this commit. The three consumer sites flip back to using the local consts; runtime is identical to v3.63.399. All four consts are still in place to receive the revert.
+
+### What's left
+
+- **Release F** — delete all 6 now-dead consts in `app.js` (`BUILDER_INSTRUCTIONS`, `DEFAULT_PHASE_INSTRUCTIONS`, `MODEL_RECOMMENDATION_PROMPT_REVIEWER`, `MODEL_RECOMMENDATION_PROMPT_BUILDER`, `MODEL_RECOMMENDATION_PROMPT_DEFAULT`, `MODEL_TIER_CLASSIFICATION_PROMPT`). Net ~250 lines of dead code removed.
+
+---
+
 ## v3.63.399
 
 **Prompt modularization Release D: Prompt Editor reads from `WF_PROMPTS` — hand-sync mirror is dead**

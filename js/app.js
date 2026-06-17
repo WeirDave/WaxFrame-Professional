@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260616-006
+// Build: 20260616-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260616-006';         // build stamp — update each session
+const BUILD       = '20260616-007';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -8317,6 +8317,11 @@ const RECOMMEND_CACHE_TTL = 24 * 60 * 60 * 1000;
 // The Builder role is structurally different — it owns the document
 // envelope — so it gets the stricter prompt.
 
+// v3.63.400 — getRecommendationPrompt() now reads from
+// WF_PROMPTS.recommend_model_reviewer / .recommend_model_builder
+// (js/prompts.js). The three consts below (REVIEWER / BUILDER /
+// DEFAULT) are unreferenced as of v3.63.400 and kept in place ONLY
+// as a one-release rollback hedge. Release F removes them.
 const MODEL_RECOMMENDATION_PROMPT_REVIEWER =
 `You are helping select one of YOUR available models for use as a Reviewer in WaxFrame, a multi-AI document refinement tool. Reviewers read documents and return numbered edit suggestions across multiple rounds. Reviewer output is consumed by another AI (the Builder), not directly parsed into a final envelope, so verbose preambles are tolerated but cost-inefficient.
 
@@ -8431,8 +8436,8 @@ function getRecommendationPrompt(role) {
   // For backwards compatibility, omitted role falls through to Reviewer.
   const r = role === 'builder' ? 'builder' : 'reviewer';
   const defaultPrompt = r === 'builder'
-    ? MODEL_RECOMMENDATION_PROMPT_BUILDER
-    : MODEL_RECOMMENDATION_PROMPT_REVIEWER;
+    ? WF_PROMPTS.recommend_model_builder
+    : WF_PROMPTS.recommend_model_reviewer;
   try {
     const saved = JSON.parse(localStorage.getItem('waxframe_v2_prompts') || '{}');
     const customKey = r === 'builder' ? 'recommend_model_builder' : 'recommend_model_reviewer';
@@ -8945,6 +8950,9 @@ async function _rearmLengthGuard() {
 //     and are refreshable on user demand.
 //   • Verification layer (step 2 — Perplexity cross-check) lands next.
 // ============================================================
+// v3.63.400 — Consumer at line ~9213 now reads from WF_PROMPTS.tier_classification
+// (js/prompts.js). This const is unreferenced as of v3.63.400 and kept in
+// place ONLY as a one-release rollback hedge. Release F removes it.
 const MODEL_TIER_CLASSIFICATION_PROMPT =
 `You are classifying YOUR OWN currently-available models so that a multi-AI document-refinement tool can build pre-set hive profiles ("Cheap", "Balanced", "Heavy thinkers", "Speed-first") that pick the right tier from each provider's lineup automatically.
 
@@ -9205,7 +9213,7 @@ async function classifyTiersForProvider(provider, opts) {
   // for built-in providers; custom AIs default to 'openai' (the historical
   // fallback). The provider-string ternary that used to live here is gone.
   const format = cfg.format || 'openai';
-  const prompt = MODEL_TIER_CLASSIFICATION_PROMPT.replace(
+  const prompt = WF_PROMPTS.tier_classification.replace(
     '{MODEL_LIST}',
     filtered.map((m, i) => `${i + 1}. ${m}`).join('\n')
   );

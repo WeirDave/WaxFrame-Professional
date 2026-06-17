@@ -152,6 +152,39 @@ for (const key of consumerKeys) {
 }
 
 // ──────────────────────────────────────────────────────────
+// Release-E lookup-equivalence (added v3.63.400)
+// getRecommendationPrompt() + the tier-classification consumer site
+// now read from WF_PROMPTS instead of the (now-dead) consts. Verify.
+// ──────────────────────────────────────────────────────────
+console.log('\nRelease-E lookup-equivalence:');
+{
+  const WF = pr;
+  // The const declarations still exist this release as rollback hedge.
+  const evalCode = ['MODEL_RECOMMENDATION_PROMPT_REVIEWER',
+                    'MODEL_RECOMMENDATION_PROMPT_BUILDER',
+                    'MODEL_TIER_CLASSIFICATION_PROMPT'].map(n => getConst(appSource, n)).join('\n');
+  const fn = new Function(evalCode + '\nreturn { R: MODEL_RECOMMENDATION_PROMPT_REVIEWER, B: MODEL_RECOMMENDATION_PROMPT_BUILDER, T: MODEL_TIER_CLASSIFICATION_PROMPT };');
+  const old = fn();
+  const checks = [
+    ['recommend_model_reviewer',  old.R, WF.recommend_model_reviewer],
+    ['recommend_model_builder',   old.B, WF.recommend_model_builder],
+    ['tier_classification',       old.T, WF.tier_classification]
+  ];
+  for (const [name, o, n] of checks) {
+    const ok = o === n;
+    console.log(`  ${name.padEnd(28)} ${ok ? 'MATCH' : 'DRIFT'}  old=${md5(o).slice(0,8)} new=${md5(n).slice(0,8)}`);
+    if (!ok) allOk = false;
+  }
+  // Static-grep: confirm the three consumer sites now reference WF_PROMPTS
+  const recReviewerSite = /\?\s*WF_PROMPTS\.recommend_model_builder\s*[\r\n]\s*:\s*WF_PROMPTS\.recommend_model_reviewer/;
+  console.log(`  getRecommendationPrompt() site   ${recReviewerSite.test(appSource) ? 'WF_PROMPTS' : 'NOT_WF'}`);
+  if (!recReviewerSite.test(appSource)) allOk = false;
+  const tierSite = /WF_PROMPTS\.tier_classification\.replace\(\s*['"]\{MODEL_LIST\}['"]/;
+  console.log(`  tier-classification site         ${tierSite.test(appSource) ? 'WF_PROMPTS' : 'NOT_WF'}`);
+  if (!tierSite.test(appSource)) allOk = false;
+}
+
+// ──────────────────────────────────────────────────────────
 // Release-D check (added v3.63.399)
 // prompt-editor.js's DEFAULTS table should source every value from
 // WF_PROMPTS — no more hand-mirrored copies. Verify by static grep.
