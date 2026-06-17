@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.394
+
+**Prompt Editor: hardened against a corrupted `waxframe_v2_prompts` blob**
+
+Build: `20260616-001`<br>
+Released: `2026-06-16`
+
+### What changed
+
+The Prompt Editor reads `waxframe_v2_prompts` from localStorage in two places: `loadPrompts()` on DOMContentLoaded (boot path) and `resetOne()` on the per-prompt reset click. Both called `JSON.parse(localStorage.getItem(LS_PROMPTS) || '{}')` with NO try/catch. If the blob ever became corrupted — partial write under quota pressure, manual edit in DevTools, mid-flight tab crash — the `SyntaxError` from `JSON.parse` would propagate uncaught and the Prompt Editor page would refuse to render or refuse to reset.
+
+Same key is properly guarded at [`app.js:8437`](js/app.js#L8437) in `getRecommendationPrompt`, where it's been wrapped in try/catch since v3.32.10. The Prompt Editor was an oversight from the v3.63.350 extraction of the formerly-inline script.
+
+Fix: factor out a single `readSavedPrompts()` helper with try/catch, fallback to `{}` on parse error. Both call sites switch to the helper.
+
+### Caught how
+
+Full code audit run against v3.63.393 — state-recovery category surfaced two unguarded `JSON.parse(localStorage.getItem(...))` calls in `js/prompt-editor.js`. Audit methodology Category 5.
+
+### Files touched
+
+- `js/prompt-editor.js` — new `readSavedPrompts()` helper, both unguarded reads switched to it
+
+---
+
 ## v3.63.393
 
 **Vision OCR works for server-imported AIs (Alfredo, Ollama, LM Studio, OpenWebUI): format-based dispatch + endpoint respected**

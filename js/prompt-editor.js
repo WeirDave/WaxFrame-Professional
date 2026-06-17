@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — prompt-editor.js
-// Build: 20260615-009
+// Build: 20260616-001
 //  Page-specific behavior for prompt-editor.html. Extracted from
 //  the formerly-inline <script> block at the bottom of that page
 //  in v3.63.350 so the page can drop 'unsafe-inline' from CSP.
@@ -167,8 +167,18 @@ If multiple models are roughly equivalent flagships, prefer the most recently re
   };
 
   // ── Behavior functions ──
+  function readSavedPrompts() {
+    // Guarded read: a corrupted waxframe_v2_prompts blob (partial write,
+    // quota error, manual edit) would otherwise crash the page on boot.
+    try {
+      return JSON.parse(localStorage.getItem(LS_PROMPTS) || '{}');
+    } catch (e) {
+      return {};
+    }
+  }
+
   function loadPrompts() {
-    const saved = JSON.parse(localStorage.getItem(LS_PROMPTS) || '{}');
+    const saved = readSavedPrompts();
     Object.keys(DEFAULTS).forEach(key => {
       const ta = document.getElementById('ta-' + key);
       if (ta) {
@@ -220,7 +230,7 @@ If multiple models are roughly equivalent flagships, prefer the most recently re
     ta.value = DEFAULTS[key];
     ta.classList.remove('modified');
     document.getElementById('badge-' + key)?.classList.remove('show');
-    const saved = JSON.parse(localStorage.getItem(LS_PROMPTS) || '{}');
+    const saved = readSavedPrompts();
     delete saved[key];
     localStorage.setItem(LS_PROMPTS, JSON.stringify(saved));
     showToast('↺ Prompt reset to default', 'reset');
