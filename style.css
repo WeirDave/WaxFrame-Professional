@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260616-001
+   Build: 20260616-002
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -7095,12 +7095,6 @@ kbd {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.applied-label {
-  font-weight: 700;
-  color: var(--text);
-  margin-right: var(--space-4);
-  font-style: normal;
-}
 .applied-actions {
   display: flex;
   gap: var(--space-6);
@@ -7133,16 +7127,6 @@ kbd {
 .applied-lock-btn:active {
   transform: translateY(1px);
   box-shadow: var(--shadow-3d-pill-active);
-}
-.applied-lock-btn-disabled,
-.applied-lock-btn-disabled:hover {
-  background: linear-gradient(180deg, var(--green-dim) 0%, rgba(0,0,0,0.05) 100%);
-  color: var(--green);
-  border-color: var(--green);
-  cursor: default;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.10);
-  opacity: 0.7;
-  transform: none;
 }
 .applied-lock-btn-locked {
   background: linear-gradient(180deg, var(--green-dim) 0%, rgba(0,0,0,0.10) 100%);
@@ -9766,50 +9750,6 @@ kbd {
 /* ── Helper page layout ── */
 .page-main { flex: 1; display: flex; flex-direction: column; }
 .helper-body .page-main { padding: var(--space-24) var(--space-32) var(--space-48); max-width: 1200px; width: 100%; margin: 0 auto; scroll-margin-top: 90px; }
-.api-intro-strip {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 20px 16px 0;
-  justify-content: center;
-}
-/* Honeycomb-header treatment for api-intro-strip — same dark translucent panel
-   as the work-screen WORKING DOCUMENT / CONFLICTS / LIVE CONSOLE headers.
-   Compound selector beats the .api-intro-strip base padding above. Block declared
-   isolated rather than refactoring .work-panel-header.honeycomb-header to avoid
-   any risk of regressing the work screen's panel header layout. */
-.api-intro-strip.honeycomb-header {
-  margin: var(--space-6) var(--space-8) var(--space-4);
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  padding: var(--space-16) var(--space-20);
-}
-.helper-body .api-intro-strip.honeycomb-header .api-intro-title {
-  font-family: var(--font);
-  font-size: var(--fs-15);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #ffffff;
-  text-shadow: none;
-  margin: 0 0 var(--space-6);
-}
-.helper-body .api-intro-strip.honeycomb-header .api-intro-desc {
-  color: rgba(255,255,255,0.85);
-}
-[data-theme="light"] .helper-body .api-intro-strip.honeycomb-header .api-intro-title { color: #ffffff; }
-[data-theme="light"] .helper-body .api-intro-strip.honeycomb-header .api-intro-desc { color: rgba(255,255,255,0.85); }
-@media (prefers-color-scheme: light) {
-  [data-theme="auto"] .helper-body .api-intro-strip.honeycomb-header .api-intro-title { color: #ffffff; }
-  [data-theme="auto"] .helper-body .api-intro-strip.honeycomb-header .api-intro-desc { color: rgba(255,255,255,0.85); }
-}
-.api-intro-bee-wrap {
-  flex-shrink: 0;
-}
-.api-intro-text { max-width: 520px; }
 .two-col {
   display: grid; grid-template-columns: 1fr 1fr;
   padding: var(--space-16) var(--space-16) var(--space-16); gap: var(--space-32);
@@ -10003,6 +9943,7 @@ kbd {
 .status-toast.show { display: inline-flex; }
 .status-toast.saved { background: var(--green-dim); border-color: var(--green); color: var(--green); }
 .status-toast.reset { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+.status-toast.error { background: var(--red-dim); border-color: var(--red); color: var(--red); }
 
 .hist-resp-panel { display: none; flex: 1; min-height: 0; }
 .hist-resp-panel.active { display: flex; flex-direction: column; }
@@ -15474,135 +15415,6 @@ kbd {
   gap: var(--space-8);
 }
 
-/* "Don't have a key? Get one from <provider>" link inside expanded
-   panel. v3.31.0 — replaces the small ⧉ icon next to the AI name
-   that was visible on every row in v3.30.x. Only renders when
-   hasKey === false AND the AI has a known apiConsole URL. */
-.ai-getkey-link-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  background: var(--accent-dim);
-  border: 1px dashed var(--accent, #f4b400);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-}
-.ai-getkey-prompt {
-  color: var(--text-dim);
-}
-.ai-getkey-link {
-  color: var(--accent, #f4b400);
-  text-decoration: none;
-  font-weight: 600;
-}
-.ai-getkey-link:hover {
-  text-decoration: underline;
-}
-
-/* v3.63.24 — Invalid-key banner styling, theme-aware.
-   Matches the existing error-banner pattern used by .file-status--error
-   and .bee-status-card.is-error: --red-dim background, --red border,
-   --red text for the actual error message. Prompt and link inside the
-   banner inherit --text so they read black in light mode and white in
-   dark mode (v3.63.23's hardcoded light-pink colors washed out against
-   the light-mode pinkish background).
-   .has-invalid kicks in when the manage-account link is present and
-   the key is invalid; .is-invalid-only is the standalone-banner
-   variant used when the AI has no console URL.
-   v3.63.25 — Parallel green success banner. Same structural logic,
-   --green / --green-dim palette. .has-valid is the inline variant,
-   .is-valid-only is the standalone fallback. Both reuse the same
-   theme-token approach so light/dark mode swap is automatic. */
-.ai-key-invalid-msg {
-  margin-left: auto;
-  color: var(--red);
-  font-weight: 600;
-  font-size: 13px;
-  white-space: nowrap;
-}
-.ai-key-valid-msg {
-  margin-left: auto;
-  color: var(--green);
-  font-weight: 600;
-  font-size: 13px;
-  white-space: nowrap;
-}
-.ai-getkey-link-wrap.has-invalid,
-.ai-getkey-link-wrap.is-invalid-only {
-  background: var(--red-dim);
-  border-color: var(--red);
-  border-style: solid;
-}
-.ai-getkey-link-wrap.has-valid,
-.ai-getkey-link-wrap.is-valid-only {
-  background: var(--green-dim);
-  border-color: var(--green);
-  border-style: solid;
-}
-/* Force prompt + link to the mode-aware text token in both invalid
-   and valid states. The default rules set prompt to --text-dim and
-   link to --accent (amber); neither plays well against red OR green
-   washes, so we override to --text for legibility. */
-.ai-getkey-link-wrap.has-invalid .ai-getkey-prompt,
-.ai-getkey-link-wrap.has-invalid .ai-getkey-link,
-.ai-getkey-link-wrap.has-valid .ai-getkey-prompt,
-.ai-getkey-link-wrap.has-valid .ai-getkey-link {
-  color: var(--text);
-}
-.ai-getkey-link-wrap.is-invalid-only,
-.ai-getkey-link-wrap.is-valid-only {
-  justify-content: flex-start;
-}
-.ai-getkey-link-wrap.is-invalid-only .ai-key-invalid-msg,
-.ai-getkey-link-wrap.is-valid-only .ai-key-valid-msg {
-  margin-left: 0;
-}
-
-/* ── Best / Fast / Budget category buttons ── */
-.ai-bfb-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-left: 110px;            /* aligns under the model dropdown */
-  flex-wrap: wrap;
-}
-.ai-bfb-label {
-  font-size: 12px;
-  color: var(--text-dim);
-}
-.ai-bfb-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  font-family: var(--font);
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
-  white-space: nowrap;
-}
-.ai-bfb-btn:hover {
-  border-color: var(--accent, #f4b400);
-  background: var(--accent-dim);
-}
-.ai-bfb-btn.is-active {
-  border-color: var(--accent, #f4b400);
-  background: var(--accent, #f4b400);
-  color: var(--bg);
-  font-weight: 600;
-  cursor: default;
-}
-.ai-bfb-btn:focus-visible {
-  outline: 2px solid var(--accent, #f4b400);
-  outline-offset: 2px;
-}
-
 /* =========================================================
  * v3.32.0 — Document Templates gallery modal
  * ─────────────────────────────────────────────────────────
@@ -17659,31 +17471,6 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   font-style: italic;
   color: var(--text-dim);
   font-family: inherit;
-}
-.ai-hive-card-action {
-  margin-top: var(--space-4);
-  align-self: flex-start;
-  background: transparent;
-  border: 1px solid var(--accent, #f4b400);
-  color: var(--accent, #f4b400);
-  border-radius: 4px;
-  padding: 2px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
-}
-.ai-hive-card-action:hover:not(:disabled) {
-  background: rgba(244, 180, 0, 0.08);
-}
-.ai-hive-card-action.is-active,
-.ai-hive-card-action:disabled {
-  border-color: #43a047;
-  color: #43a047;
-  cursor: default;
-}
-.ai-hive-card-action.is-active:hover {
-  background: transparent;
 }
 
 /* Why-each-pick expander. Collapsed by default; the toggle flips an
