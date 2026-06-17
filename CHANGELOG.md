@@ -2,6 +2,51 @@
 
 ---
 
+## v3.63.397
+
+**Prompt modularization Release B: app.js Builder lookups read from `WF_PROMPTS`**
+
+Build: `20260616-004`<br>
+Released: `2026-06-16`
+
+### What changed
+
+Two Builder-prompt lookup sites in `js/app.js` switched from `BUILDER_INSTRUCTIONS[phase]` to `WF_PROMPTS[builderKey]`:
+
+```diff
+- prompt += getPrompt(builderKey, BUILDER_INSTRUCTIONS[phase] || BUILDER_INSTRUCTIONS.refine);
++ prompt += getPrompt(builderKey, WF_PROMPTS[builderKey] || WF_PROMPTS.builder_refine);
+```
+
+- `js/app.js:16967` — Builder prompt inside `buildPromptForAI` (the per-AI prompt assembler used by `runRound`)
+- `js/app.js:17188` — Builder prompt inside the `runBuilderOnly` send path
+
+Both sites resolve to byte-identical strings under the new lookup. `builderKey` is set to `'builder_draft'` (when `phase === 'draft'`) or `'builder_refine'` (otherwise), and `WF_PROMPTS.builder_draft` / `WF_PROMPTS.builder_refine` are byte-identical to the previous `BUILDER_INSTRUCTIONS.draft` / `BUILDER_INSTRUCTIONS.refine` (verified by `tools/verify-prompts-equivalence.mjs`).
+
+### Equivalence proof
+
+The verifier was extended with a Release-B lookup-equivalence section that simulates both the OLD and NEW fallback resolution for both phase values and confirms byte-identical output:
+
+```
+phase=draft   builderKey=builder_draft   MATCH  old=94f91142 new=94f91142
+phase=refine  builderKey=builder_refine  MATCH  old=b01bba32 new=b01bba32
+```
+
+### Dead-but-kept (one-release rollback hedge)
+
+The `const BUILDER_INSTRUCTIONS = { ... }` block in `js/app.js` (around line 16720) is now **unreferenced** but kept in place for this release as a rollback hedge. A deprecation comment was added so a later sweep release can delete it cleanly. No code path reads it.
+
+### Files touched
+
+- `js/app.js` — 2 lookup-site swaps + 4-line deprecation comment on the now-unreachable `BUILDER_INSTRUCTIONS` const
+- `tools/verify-prompts-equivalence.mjs` — added Release-B lookup-equivalence section
+
+### Rollback
+
+Revert this commit. The two `getPrompt(...)` lines flip back to using `BUILDER_INSTRUCTIONS[phase]`, the deprecation comment goes away, and runtime is identical to v3.63.396. The `BUILDER_INSTRUCTIONS` const is still in place to receive the revert.
+
+---
+
 ## v3.63.396
 
 **Prompt modularization Release A: `js/prompts.js` lands as the canonical prompt source (additive, no consumer change yet)**
