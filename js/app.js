@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260616-003
+// Build: 20260616-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260616-003';         // build stamp — update each session
+const BUILD       = '20260616-004';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -16714,7 +16714,11 @@ RULES:
 
 };
 
-// Builder instructions — used when responses are present (Builder compiles the updated doc)
+// Builder instructions — used when responses are present (Builder compiles the updated doc).
+// v3.63.397 — Both consumer sites (line ~16967 and ~17188) now read from
+// WF_PROMPTS in js/prompts.js (builder_draft / builder_refine). This const
+// is unreferenced as of v3.63.397 and kept in place ONLY as a one-release
+// rollback hedge. Release F removes it after verification.
 const BUILDER_INSTRUCTIONS = {
   refine: `You are the Builder in this WaxFrame collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
@@ -16964,7 +16968,7 @@ function buildPromptForAI(ai, reviewerResponses, opts = {}) {
     });
     prompt += `${sep}\n⚠️ BUILDER: produce the complete updated document\n${sep}\n\n`;
     const builderKey = phase === 'draft' ? 'builder_draft' : 'builder_refine';
-    prompt += getPrompt(builderKey, BUILDER_INSTRUCTIONS[phase] || BUILDER_INSTRUCTIONS.refine);
+    prompt += getPrompt(builderKey, WF_PROMPTS[builderKey] || WF_PROMPTS.builder_refine);
   } else if (isScratch) {
     prompt += `${sep}\nSEND TO ALL AIs\n${sep}\n\n`;
     prompt += getPrompt('draft_scratch', DEFAULT_PHASE_INSTRUCTIONS.draft_scratch);
@@ -17185,7 +17189,7 @@ async function runBuilderOnly() {
   prompt += `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n`;
   prompt += `${sep}\n⚠️ BUILDER: produce the complete updated document\n${sep}\n\n`;
   const builderKey = phase === 'draft' ? 'builder_draft' : 'builder_refine';
-  prompt += getPrompt(builderKey, BUILDER_INSTRUCTIONS[phase] || BUILDER_INSTRUCTIONS.refine);
+  prompt += getPrompt(builderKey, WF_PROMPTS[builderKey] || WF_PROMPTS.builder_refine);
 
   let builderHadError = false;
   let _failedRoundReason = '';

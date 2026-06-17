@@ -153,4 +153,26 @@ for (const [key, prVal] of inlineChecks) {
   }
 }
 
+// ──────────────────────────────────────────────────────────
+// Release-B lookup-equivalence check (added v3.63.397)
+// Simulates the OLD pattern `BUILDER_INSTRUCTIONS[phase] || BUILDER_INSTRUCTIONS.refine`
+// vs the NEW pattern `WF_PROMPTS[builderKey] || WF_PROMPTS.builder_refine`
+// for both phase values. Must produce byte-identical fallback strings.
+// ──────────────────────────────────────────────────────────
+console.log('\nRelease-B lookup-equivalence:');
+{
+  const evalB = getConst(appSource, 'BUILDER_INSTRUCTIONS') + '\nreturn BUILDER_INSTRUCTIONS;';
+  const BUILDER_INSTRUCTIONS = (new Function(evalB))();
+  const WF = pr;
+  const phases = ['draft', 'refine'];
+  for (const phase of phases) {
+    const builderKey = phase === 'draft' ? 'builder_draft' : 'builder_refine';
+    const oldFb = BUILDER_INSTRUCTIONS[phase] || BUILDER_INSTRUCTIONS.refine;
+    const newFb = WF[builderKey] || WF.builder_refine;
+    const ok = oldFb === newFb;
+    console.log(`  phase=${phase}  builderKey=${builderKey}  ${ok ? 'MATCH' : 'DRIFT'}  old=${md5(oldFb).slice(0,8)} new=${md5(newFb).slice(0,8)}`);
+    if (!ok) allOk = false;
+  }
+}
+
 process.exit(allOk ? 0 : 1);
