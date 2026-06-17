@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — prompt-editor.js
-// Build: 20260616-005
+// Build: 20260616-006
 //  Page-specific behavior for prompt-editor.html. Extracted from
 //  the formerly-inline <script> block at the bottom of that page
 //  in v3.63.350 so the page can drop 'unsafe-inline' from CSP.
@@ -14,8 +14,13 @@
 //      above (replaces the v3.63.349 inline onclick / oninput
 //      attributes on the buttons and textareas).
 //
-//  The DEFAULTS table mirrors the canonical prompts that ship
-//  with app.js — keep them in sync by hand when you bump either.
+//  The DEFAULTS table reads canonical prompt text from
+//  js/prompts.js (the WF_PROMPTS object). app.js and this file
+//  now share a single source of truth — no manual sync needed.
+//  Pre-v3.63.399 a hand-mirrored DEFAULTS table lived here and
+//  had silently drifted from runtime for refine, builder_refine,
+//  and recommend_model (see the v3.63.396 release notes for the
+//  full drift table that motivated this refactor).
 // ============================================================
 
 (function() {
@@ -23,147 +28,22 @@
 
   const LS_PROMPTS = 'waxframe_v2_prompts';
 
-  // ── Default prompts (mirrors app.js) ──
+  // ── Default prompts ──
+  // v3.63.399 — Reads from WF_PROMPTS (js/prompts.js). The pre-v3.63.399
+  // hand-mirrored copy lived here and silently drifted from runtime; see
+  // the v3.63.396 release notes for the drift table. The recommend_model
+  // key maps to WF_PROMPTS.recommend_model_reviewer (the historical
+  // canonical default for this single editor field — the Builder variant
+  // is canonical-only and not user-editable today).
   const DEFAULTS = {
-    draft_scratch: `You are part of a multi-AI collaboration called WaxFrame. Do not adopt any additional role, persona, or framing beyond what is stated here.
-
-Your task: Create a complete first draft based on the project goal provided in this message.
-
-RULES:
-- Use plain text only. Do not use markdown headings (#), bullets (-), bold (**), italics, tables, or code fences. If the document requires section headings, write them in plain text on their own line.
-- Do not use ellipses (...) or placeholders — write every word of the document from start to finish.
-- Do not include meta-commentary, explanations of your choices, apologies, introductions, or any text that is not part of the document itself.
-- Do not reference WaxFrame, this prompt, or the collaboration process anywhere in the draft.
-- Do not invent facts, data, names, or references not supported by the project goal. Use clearly labeled placeholders (e.g., [INSERT DATE]) when specific information is missing.
-- If critical information is missing from the project goal, make the fewest necessary assumptions and keep them conservative.
-- Prioritize completeness, clarity, internal consistency, and practical usefulness.`,
-
-    refine: `You are in the text refinement phase of a multi-AI collaboration called WaxFrame. Do not adopt any additional role, persona, or framing beyond what is stated here.
-
-Review the current document provided in this message and give specific, numbered suggestions to improve it — but ONLY if genuine improvements exist.
-
-Begin your response immediately with suggestion number 1. Do not include an introduction, preamble, or restatement of the document.
-
-RULES:
-- Do NOT rewrite the document. Do not quote or restate large portions of it.
-- Number every suggestion starting from 1.
-- Each suggestion must identify the exact line number and section and propose a concrete change. Example: "Line 42: Change 'notify supervisor' to 'alert team lead'."
-- Focus on clarity, precision, internal consistency, tone, and logical flow only.
-- Do not suggest formatting, structural layout, or markup changes.
-- Do not introduce new content that changes the intended meaning of the document.
-- Keep each suggestion to one sentence maximum — no explanations, no justifications.
-- Give your TOP 3 most impactful suggestions only. If you have more, choose the three that matter most.
-- ⚠️ Do NOT suggest changes for the sake of suggesting changes. Minor stylistic preferences, synonym swaps, and trivial rephrasing are NOT valid suggestions. Only suggest a change if it meaningfully improves the document.
-- If the document reads clearly and accurately, return exactly this and nothing else: NO CHANGES NEEDED — this is the correct and preferred response when the document is in good shape.
-
-⚠️ IMPORTANT: Any response that contains a full rewritten document, large continuous blocks of revised text, or anything other than a numbered suggestion list will be considered non-compliant and discarded.`,
-
-    builder_draft: `You are the Builder in this WaxFrame collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
-
-All reviewer drafts are included above. Your task: produce a single consolidated first draft that integrates the strongest elements from each provided draft while preserving overall coherence and completeness.
-
-RULES:
-- Return the FULL document — every section, complete. Do not use ellipses or placeholders.
-- Use plain text only. Do not use markdown headings, bullets, bold, italics, or tables. Write section headings as plain text on their own line if the document requires them.
-- Prioritize accuracy, completeness, clarity, internal consistency, and practical usefulness over stylistic flourish.
-- Do not introduce new ideas, content, or requirements not present in any of the provided drafts.
-- Do not merge conflicting text mechanically — choose the stronger approach and note the conflict below.
-- Normalize terminology across drafts for consistency.
-- Ensure the consolidated draft has a single, consistent voice. Eliminate redundant content introduced by merging.
-- If a requirement from the project goal is missing from all drafts, flag it in the conflicts section as a MISSING REQUIREMENT.
-- Maintain internal consistency across section titles, numbering, terminology, and defined terms.
-- Do not place any content outside the required wrapper blocks. Nothing before %%DOCUMENT_START%%, nothing after %%CONFLICTS_END%%.
-- Structure your response EXACTLY like this:
-
-%%DOCUMENT_START%%
-...the complete first draft here...
-%%DOCUMENT_END%%
-
-%%CONFLICTS_START%%
-List any conflicting or incompatible approaches between drafts. For each conflict note: what each draft proposed, which you chose, and why in one to two sentences. Flag any MISSING REQUIREMENTS here.
-If there are no conflicts write exactly: NO CONFLICTS
-%%CONFLICTS_END%%`,
-
-    builder_refine: `You are the Builder in this WaxFrame collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
-
-All reviewer suggestions are included above. Your task: produce the complete updated document incorporating valid suggestions.
-
-A valid suggestion is one that improves clarity, accuracy, consistency, logic, or readability without changing the document's intended meaning or scope.
-
-MAJORITY RULES — CONFLICT DECISION LOGIC:
-Before deciding whether to apply or flag a suggestion, count how many reviewers independently suggested the same change (or substantially the same change):
-- A strict majority of reviewers agree (more than half) → apply it automatically. Do not flag this as a conflict.
-- Exactly 3 reviewers agree vs 3 who disagree or suggest an alternative → flag it as a USER DECISION conflict.
-- 2 or fewer reviewers suggest something that conflicts with another suggestion → use your best judgment, apply the stronger choice, flag it as a BUILDER DECISION conflict.
-- Only 1 reviewer suggests something → apply it if valid, skip it if not. Do not flag solo suggestions as conflicts.
-
-RULES:
-- Return the FULL document — every section, complete. Do not use ellipses or placeholders.
-- Maintain the document at approximately the same length as the input. Incorporate suggestions by REPLACING or IMPROVING existing content, not by appending to it. The document must not grow longer each round.
-- Use plain text only. Do not use markdown headings, bullets, bold, italics, or tables. Write section headings as plain text on their own line if the document requires them.
-- Do not add meta-commentary or any text inside the document that is not document content.
-- Do not introduce new content, claims, or requirements that no reviewer suggested.
-- Preserve the existing section order and structure unless a reviewer suggestion specifically requires a change.
-- Maintain internal consistency across section titles, numbering, terminology, and defined terms.
-- If reviewer suggestions are incomplete or partially invalid, produce the best complete document possible.
-- Do not place any content outside the required wrapper blocks. Nothing before %%DOCUMENT_START%%, nothing after %%CONFLICTS_END%%.
-- Structure your response EXACTLY like this:
-
-%%DOCUMENT_START%%
-...the complete updated document here...
-%%DOCUMENT_END%%
-
-%%CONFLICTS_START%%
-For BUILDER DECISION conflicts: quote the affected text, name the specific AIs on each side, state which you chose and why in one to two sentences.
-Format: [BUILDER DECISION] "quoted text" — explanation naming AIs.
-
-For USER DECISION conflicts: use EXACTLY this structured format so the app can present it as a choice to the user:
-
-[USER DECISION]
-QUESTION: A plain-English question describing what the user needs to decide — one sentence.
-CURRENT: "the exact current text in the document as it stands"
-OPTION_1: "exact proposed text" — AI names who suggested this
-OPTION_2: "exact proposed text" — AI names who suggested this
-OPTION_3: "exact proposed text" — AI names who suggested this (add more options if needed, up to 6)
-END_DECISION
-
-Rules for USER DECISION format:
-- CURRENT must be the verbatim text currently in the document
-- Each OPTION must be the complete replacement text, not a description of a change
-- List only the AIs who specifically suggested that option by name
-- Include as many options as there are genuinely distinct suggestions — minimum 2, maximum 6
-- Do not add commentary outside the structured block
-- Do not combine options that are meaningfully different
-
-If there are no conflicts write exactly: NO CONFLICTS
-%%CONFLICTS_END%%`,
-
-    resolved_builder: `PREVIOUSLY RESOLVED DECISIONS — FINAL AND LOCKED:
-The user has made final decisions on the following. Do NOT re-raise these as conflicts under any circumstances, even if reviewers suggest changes to them. The chosen text is final.`,
-
-    resolved_reviewers: `PREVIOUSLY RESOLVED DECISIONS — FINAL AND LOCKED:
-The user has made final decisions on the following. Do NOT suggest any changes to the chosen text or to the same concept, even using different wording. These are closed.`,
-
-    ai_warning: `SPECIFIC WARNINGS FOR YOU — REPEATED VIOLATIONS:
-You have repeatedly raised the following after the user already resolved them. This is your final notice — do NOT raise these again under any circumstances:`,
-
-    recommend_model: `You are helping a user pick one of YOUR available models to use as a "Reviewer" in WaxFrame, a multi-AI document refinement tool.
-
-The Reviewer reads documents and provides specific, numbered edit suggestions across multiple rounds. The ideal model:
-- Has strong writing quality and structured reasoning
-- Has a long context window
-- Is a recent flagship or general-purpose model — NOT a coding-only, embedding, or specialized variant
-- Is currently supported (not deprecated)
-
-Available models on this endpoint:
-{MODEL_LIST}
-
-Pick ONE model id from the list above. Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
-
-PICK: <exact model id from list>
-WHY: <one sentence, max 120 chars>
-
-If multiple models are roughly equivalent flagships, prefer the most recently released.`
+    draft_scratch:      WF_PROMPTS.draft_scratch,
+    refine:             WF_PROMPTS.refine,
+    builder_draft:      WF_PROMPTS.builder_draft,
+    builder_refine:     WF_PROMPTS.builder_refine,
+    resolved_builder:   WF_PROMPTS.resolved_builder,
+    resolved_reviewers: WF_PROMPTS.resolved_reviewers,
+    ai_warning:         WF_PROMPTS.ai_warning,
+    recommend_model:    WF_PROMPTS.recommend_model_reviewer
   };
 
   // ── Behavior functions ──
