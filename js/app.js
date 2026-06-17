@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260616-004
+// Build: 20260616-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260616-004';         // build stamp — update each session
+const BUILD       = '20260616-005';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -16659,6 +16659,11 @@ function setBeeStatus(id, state, summary) {
 }
 
 // ── PROMPTS ──
+// v3.63.398 — All five consumer sites (draft_scratch + refine + the three
+// envelope-prefix strings resolved_builder / resolved_reviewers /
+// ai_warning) now read fallbacks from WF_PROMPTS in js/prompts.js.
+// This const is unreferenced as of v3.63.398 and kept in place ONLY as a
+// one-release rollback hedge. Release F removes it after verification.
 const DEFAULT_PHASE_INSTRUCTIONS = {
 
   draft_scratch: `You are part of a multi-AI collaboration called WaxFrame. Do not adopt any additional role, persona, or framing beyond what is stated here.
@@ -16953,7 +16958,7 @@ function buildPromptForAI(ai, reviewerResponses, opts = {}) {
 
     // Inject previously resolved decisions so the Builder doesn't re-raise them
     if (window._resolvedDecisions && window._resolvedDecisions.length > 0) {
-      prompt += `${getPrompt('resolved_builder', 'PREVIOUSLY RESOLVED DECISIONS — FINAL AND LOCKED:\nThe user has made final decisions on the following. Do NOT re-raise these as conflicts under any circumstances, even if reviewers suggest changes to them. The chosen text is final.')}\n${sep}\n`;
+      prompt += `${getPrompt('resolved_builder', WF_PROMPTS.resolved_builder)}\n${sep}\n`;
       window._resolvedDecisions.forEach((rd, i) => {
         prompt += `${i + 1}. Original: "${rd.original}" → User chose: "${rd.chosen}" — THIS IS FINAL. Do not flag or change.\n`;
       });
@@ -16971,13 +16976,13 @@ function buildPromptForAI(ai, reviewerResponses, opts = {}) {
     prompt += getPrompt(builderKey, WF_PROMPTS[builderKey] || WF_PROMPTS.builder_refine);
   } else if (isScratch) {
     prompt += `${sep}\nSEND TO ALL AIs\n${sep}\n\n`;
-    prompt += getPrompt('draft_scratch', DEFAULT_PHASE_INSTRUCTIONS.draft_scratch);
+    prompt += getPrompt('draft_scratch', WF_PROMPTS.draft_scratch);
   } else {
     prompt += doc ? `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n` : '';
 
     // Inject previously resolved decisions so reviewers don't re-raise them
     if (window._resolvedDecisions && window._resolvedDecisions.length > 0) {
-      prompt += `${getPrompt('resolved_reviewers', 'PREVIOUSLY RESOLVED DECISIONS — FINAL AND LOCKED:\nThe user has made final decisions on the following. Do NOT suggest any changes to the chosen text or to the same concept, even using different wording. These are closed.')}\n${sep}\n`;
+      prompt += `${getPrompt('resolved_reviewers', WF_PROMPTS.resolved_reviewers)}\n${sep}\n`;
       window._resolvedDecisions.forEach((rd, i) => {
         prompt += `${i + 1}. Original: "${rd.original}" → User chose: "${rd.chosen}" — do NOT suggest changing "${rd.chosen}" or any equivalent phrasing.\n`;
       });
@@ -16987,7 +16992,7 @@ function buildPromptForAI(ai, reviewerResponses, opts = {}) {
     // Inject targeted per-AI warnings for repeat offenders
     const aiWarnings = window._aiWarnings?.[ai.id];
     if (aiWarnings && aiWarnings.length > 0) {
-      prompt += `${getPrompt('ai_warning', 'SPECIFIC WARNINGS FOR YOU — REPEATED VIOLATIONS:\nYou have repeatedly raised the following after the user already resolved them. This is your final notice — do NOT raise these again under any circumstances:')}\n${sep}\n`;
+      prompt += `${getPrompt('ai_warning', WF_PROMPTS.ai_warning)}\n${sep}\n`;
       aiWarnings.forEach((w, i) => {
         prompt += `${i + 1}. "${w.original}" — the user has chosen "${w.chosen}" and this is final. Stop suggesting alternatives to this.\n`;
       });
@@ -16995,7 +17000,7 @@ function buildPromptForAI(ai, reviewerResponses, opts = {}) {
     }
 
     prompt += `${sep}\nSEND TO ALL AIs\n${sep}\n\n`;
-    prompt += getPrompt('refine', DEFAULT_PHASE_INSTRUCTIONS.refine);
+    prompt += getPrompt('refine', WF_PROMPTS.refine);
   }
 
   return prompt;

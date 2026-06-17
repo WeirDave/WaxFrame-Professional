@@ -2,6 +2,70 @@
 
 ---
 
+## v3.63.398
+
+**Prompt modularization Release C: app.js Reviewer + envelope-prefix lookups read from `WF_PROMPTS`**
+
+Build: `20260616-005`<br>
+Released: `2026-06-16`
+
+### What changed
+
+Five `getPrompt(KEY, fallback)` sites in `js/app.js` switched their fallback from inline-const/inline-string to `WF_PROMPTS.KEY`:
+
+| Key | Old fallback | New fallback |
+|---|---|---|
+| `draft_scratch` | `DEFAULT_PHASE_INSTRUCTIONS.draft_scratch` | `WF_PROMPTS.draft_scratch` |
+| `refine` | `DEFAULT_PHASE_INSTRUCTIONS.refine` | `WF_PROMPTS.refine` |
+| `resolved_builder` | inline 230-char string | `WF_PROMPTS.resolved_builder` |
+| `resolved_reviewers` | inline 219-char string | `WF_PROMPTS.resolved_reviewers` |
+| `ai_warning` | inline 205-char string | `WF_PROMPTS.ai_warning` |
+
+The three envelope-prefix swaps eliminate ~650 chars of duplicated literal-string text from `app.js` — these strings now exist exactly once, in `WF_PROMPTS`.
+
+### Equivalence proof
+
+```
+draft_scratch (Reviewer first-draft)     MATCH old=31ddd01c new=31ddd01c
+refine (Reviewer refine)                 MATCH old=cd68620b new=cd68620b
+resolved_builder  (envelope prefix)      MATCH old=74f70030 new=74f70030
+resolved_reviewers (envelope prefix)     MATCH old=2c3b0996 new=2c3b0996
+ai_warning        (envelope prefix)      MATCH old=2ee7cb4f new=2ee7cb4f
+```
+
+Plus a static-grep check that every `getPrompt(KEY, ...)` site now references `WF_PROMPTS.KEY`:
+
+```
+draft_scratch                WF_PROMPTS  WF_PROMPTS.draft_scratch
+refine                       WF_PROMPTS  WF_PROMPTS.refine
+resolved_builder             WF_PROMPTS  WF_PROMPTS.resolved_builder
+resolved_reviewers           WF_PROMPTS  WF_PROMPTS.resolved_reviewers
+ai_warning                   WF_PROMPTS  WF_PROMPTS.ai_warning
+builderKey site #1           WF_PROMPTS  WF_PROMPTS[builderKey] || WF_PROMPTS.builder_refine
+builderKey site #2           WF_PROMPTS  WF_PROMPTS[builderKey] || WF_PROMPTS.builder_refine
+```
+
+### Dead-but-kept (rollback hedge)
+
+`const DEFAULT_PHASE_INSTRUCTIONS = { ... }` at `app.js:16662` is now **unreferenced** and kept in place this release with a matching deprecation comment alongside the `BUILDER_INSTRUCTIONS` const from Release B. Release F sweeps both.
+
+### What's left in the refactor
+
+- **Release D** — switch `prompt-editor.js`'s `DEFAULTS` table to read from `WF_PROMPTS`, killing the hand-sync mirror that had silently drifted for `refine` / `builder_refine` / `recommend_model`. User-visible: the Prompt Editor will start honestly displaying the runtime canonical defaults.
+- **Release E** — migrate `MODEL_RECOMMENDATION_PROMPT_REVIEWER/BUILDER` + `MODEL_TIER_CLASSIFICATION_PROMPT` to read from `WF_PROMPTS`.
+- **Release F** — delete the now-dead `BUILDER_INSTRUCTIONS` + `DEFAULT_PHASE_INSTRUCTIONS` + recommend/tier consts from `app.js` once everything has shipped clean.
+
+### Files touched
+
+- `js/app.js` — 5 lookup-site swaps + deprecation comment on `DEFAULT_PHASE_INSTRUCTIONS`
+- `tools/verify-prompts-equivalence.mjs` — added Release-C lookup-equivalence + consumer-site grep check; removed obsolete pre-Release-C inline-fallback check
+
+### Rollback
+
+Revert this commit. The five `getPrompt(...)` lines flip back to their inline/const fallbacks; runtime is identical to v3.63.397. `DEFAULT_PHASE_INSTRUCTIONS` is still in place to receive the revert.
+
+---
+
 ## v3.63.397
 
 **Prompt modularization Release B: app.js Builder lookups read from `WF_PROMPTS`**
