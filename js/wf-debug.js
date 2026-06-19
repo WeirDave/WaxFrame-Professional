@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260616-008
+// Build: 20260619-001
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -1167,13 +1167,14 @@ function renderTroubleshootingCard(entry, ctx) {
           const usageUrl = window.API_USAGE_URLS[ctx.provider];
           if (usageUrl) url = usageUrl;
         }
+        url = _safeTroubleshootingActionUrl(url);
         if (!url) { btn.style.display = 'none'; }
         else      { btn.onclick = () => window.open(url, '_blank', 'noopener,noreferrer'); }
       } else if (a.kind === 'docs-link') {
         // v3.56.6 — provider documentation link; reads ctx.aiDocsUrl
         // (ai.apiDocs). Auto-hides when the AI has no docs URL on file,
         // same graceful behavior as the console-link button.
-        const url = ctx?.aiDocsUrl || null;
+        const url = _safeTroubleshootingActionUrl(ctx?.aiDocsUrl || null);
         if (!url) { btn.style.display = 'none'; }
         else      { btn.onclick = () => window.open(url, '_blank', 'noopener,noreferrer'); }
       } else if (a.kind === 'retry') {
@@ -1304,6 +1305,15 @@ function renderTroubleshootingCard(entry, ctx) {
       }
       actionsEl.appendChild(btn);
     });
+  }
+
+  function _safeTroubleshootingActionUrl(url) {
+    try {
+      const parsed = new URL(String(url || ''));
+      return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.href : '';
+    } catch (_) {
+      return '';
+    }
   }
 
   // Technical details (collapsed by default)
