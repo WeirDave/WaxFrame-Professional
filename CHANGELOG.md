@@ -2,6 +2,57 @@
 
 ---
 
+## v3.63.403
+
+**Documentation audit: six docs reconciled against current code and release ceremony**
+
+Build: `20260619-002`<br>
+Released: `2026-06-19`
+
+### What changed
+
+Full sweep of the project's `.md`, `.txt`, and `.yml` documentation against the v3.63.402 source tree. Six files had drifted; all reconciled in one pass:
+
+1. **`SECURITY.md`** — line 40 parenthetical "(A full PDF.js upgrade to a patched release is tracked separately.)" was stale. Replaced with the actual post-v3.63.389 reality: hosted users load pdf.js 4.10.38 (CVE-2024-4367 fixed at library level); portable `file://` users load the classic-script pdf.js 3.11.174 build with `isEvalSupported: false` as the runtime mitigation. Bootstrap dispatcher cited.
+
+2. **`docs/WaxFrame_Prompts_Reference_v3.txt`** — described a `draft_refine` reviewer prompt that no longer exists. The runtime routes "document exists" → `refine` regardless of phase. Removed PROMPT 2 (`draft_refine`) entirely, renumbered subsequent prompts (refine → Prompt 2, builder_draft → Prompt 3, builder_refine → Prompt 4), corrected the routing section, and updated the overview to point at `WF_PROMPTS` in `js/prompts.js` as the single source of truth (Release F state).
+
+3. **`docs/WaxFrame_Audit_Methodology_v1.txt`** — header version stamps refreshed from v3.63.280 (~120 versions stale) to v3.63.403.
+
+4. **`docs/WaxFrame_Rules_Reference.txt`** — heaviest drift, multiple sections rewritten:
+   - "current production: v3.63.190" → v3.63.403
+   - JS file list: 14 files → 28 files (full enumeration)
+   - lib/ count: 6 → 8 (the restored pdf.min.js + pdf.worker.min.js UMD pair for file:// fallback)
+   - HTML count: 9 → 16
+   - Release ceremony steps 5-9: the old ZIP + sibling `release-notes-vX.Y.Z.md` + `present_files` workflow was retired. Rewrote to match the current ceremony: narrow 4-pattern version sweep → `git push origin HEAD:main` → wait for Pages → `gh release create` with the changelog section as `--notes-file`. Cross-references to the memory rules that lock each constraint (no release-notes-*.md in repo, no ZIP, wait-for-Pages-before-release, single-branch workflow).
+   - `BUILDER_INSTRUCTIONS.refine` reference → `WF_PROMPTS.builder_refine` (post-Release-F).
+
+5. **`docs/WaxFrame_Storage_Schema_v1.txt`** — line anchors refreshed against the current `js/storage.js`. The keys, shapes, and migration model were already correct; only the file:line pointers had drifted (saveHive 776 → 892, saveProject 800 → 916, saveSession 324 → 531, LS_SETTINGS migration 839-855 → 968-984, hive_recovery 874 → 1003, app.js call site 2267 → 2549).
+
+6. **`.github/workflows/release-check.yml`** — header comment marker bumped from v3.63.190 to "last reviewed v3.63.403" (cosmetic, the workflow itself was already current).
+
+### Verification
+
+- `node tools/release-check.mjs` — pass
+- All version stamps now read v3.63.403 across the 4-pattern sweep
+- Build stamp 20260619-002 consistent across all 28 js/* files
+
+### Files touched
+
+- `SECURITY.md` — PDF.js parenthetical
+- `docs/WaxFrame_Prompts_Reference_v3.txt` — dead PROMPT 2 removed, routing fixed
+- `docs/WaxFrame_Audit_Methodology_v1.txt` — version stamps
+- `docs/WaxFrame_Rules_Reference.txt` — file counts + release ceremony rewrite
+- `docs/WaxFrame_Storage_Schema_v1.txt` — line anchors
+- `.github/workflows/release-check.yml` — header comment
+- `CHANGELOG.md`, `js/version.js`, `package.json`, narrow 4-pattern cache-bust + build-stamp sweep across all 16 HTML, 28 JS, style.css, and tools/verify-prompts-equivalence.mjs
+
+### Rollback
+
+Revert this commit. The six doc files return to their stale pre-audit state; the version stamps step back to v3.63.402.
+
+---
+
 ## v3.63.402
 
 **Audit cleanup: custom endpoint URL validation and troubleshooting-link hardening**

@@ -1,5 +1,5 @@
 WaxFrame Professional — Project Rules Reference
-Last updated: 2026-06-06 (current production: v3.63.190)
+Last updated: 2026-06-19 (current production: v3.63.403)
 
 Living reference of the conventions and hard rules this project runs under.
 Update when a rule changes; this is the onboarding/consistency anchor for any
@@ -91,25 +91,23 @@ PRE-SURGERY CHECKLIST (before any risky code change)
 RELEASE CEREMONY (every release)
 ====================================================================
 
-1. Four version stamps:
-   - meta name="waxframe-build" in index.html
+1. Four version stamps (the canonical pinpoints — the sweep below catches
+   the rest by pattern):
    - APP_VERSION in js/version.js
-   - BUILD constant in js/app.js
-   - app.js?v= cache-bust query string in index.html
+   - "version": "X.Y.Z" in package.json
+   - // Build: YYYYMMDD-NNN header in js/version.js
+   - app.js?v=X.Y.Z cache-bust in index.html
 
-2. Full cache-bust + build-stamp sweep, run EVERY release even on unchanged
-   files (they drift silently):
-   - 9 HTML (index + api-details + document-playbooks + help +
-     prompt-editor + waxframe-user-manual + what-are-tokens + privacy + terms)
-   - ALL 14 JS — including version.js AND templates.js
-   - style.css
-   RETIRED RULE (v3.63.45): the old "sweep 10 JS, NOT templates.js" exclusion
-   is GONE. version.js and templates.js now each carry a "//  Build:
-   20260529-NNN" header line and are swept like every other file, so an audit
-   reads ONE identical build stamp across all 24 source files. Leaving any
-   file off the sweep is what produced the version-drift Codex flagged.
-   Cache-bust ?v=X.Y.Z on all 9 HTML covers every CSS/JS/lib reference.
-   Build stamp format: 20260529-NNN (date + zero-padded session sequence).
+2. NARROW VERSION SWEEP — 4 patterns, NEVER bare version numbers (locked
+   feedback after a bare-3.63.393 sweep clobbered historical comments):
+   - ?v=                 — cache-bust query strings across HTML/JS
+   - "X.Y.Z"             — package.json + JSON-LD softwareVersion
+   - 'vX.Y.Z Pro'        — APP_VERSION in js/version.js
+   - Build: 20260619-NNN — build-stamp header lines in every js/*.js
+   The narrow patterns sweep all 16 HTML pages and all 28 js/*.js files
+   (every JS file carries a "// Build: YYYYMMDD-NNN" header so an audit
+   reads ONE identical build stamp across the source tree). Build stamp
+   format: YYYYMMDD-NNN (date + zero-padded session sequence).
 
 2a. Pre-flight: tools/release-check.mjs runs in CI on every push and PR,
     and locally via `node tools/release-check.mjs`. Four checks:
@@ -133,30 +131,35 @@ RELEASE CEREMONY (every release)
 3. CHANGELOG.md entry prepended (every commit gets a CHANGELOG line). The
    Build/Released metadata lives HERE, not in the release notes.
 
-4. Backlog version bump (docs/WaxFrame_Backlog_Master_vN.txt).
+4. Backlog version bump (docs/WaxFrame_Backlog_Master_vN.txt) — kept inside
+   a 3-version margin (rule: feedback_release_repo_hygiene).
 
-5. Single ZIP of ALL deployment files (~34) preserving directory structure:
-   9 HTML, style.css, CHANGELOG.md, README.md, 14 js/*, 6 lib/* vendor files
-   (docx.min, jszip.min, mammoth.browser.min, pdf.min.mjs, pdf.worker.min.mjs,
-   xlsx.full.min), plus the docs/ folder. Never individual files. images/ and
-   fonts/ are NOT in the zip — they overlay onto the repo and rarely change.
-   Zip cmd pattern:
-     zip -rq <out>/WaxFrame-Professional-vX.Y.Z.zip *.html style.css \
-       CHANGELOG.md README.md js/ lib/ docs/ -x "_*.py" "*.tmp"
+5. NO release-notes-vX.Y.Z.md files in the repo, ever (rule:
+   feedback_release_repo_hygiene). The GitHub Release body is generated at
+   release time and pasted directly into `gh release create --notes`; no
+   sibling .md artifact stays in the tree afterward. NO ZIP build either —
+   the old single-deployment-zip workflow was retired with the move to
+   `git push origin HEAD:main`. GitHub auto-generates the source ZIP on the
+   release; portable users grab it from the Releases page.
 
-6. docs/ ships IN the zip: the LATEST backlog only + WaxFrame_Rules_Reference
-   .txt. NOT older backlogs. (David may keep a few prior backlog versions
-   locally for rollback; the zip carries just the latest + this reference.)
+6. Single-branch workflow (rule: feedback_single_branch_workflow). Exactly
+   one branch lives in the repo: main. Worktree branches auto-created by
+   Claude Code (claude/...) are LOCAL-ONLY and never pushed; they get
+   cleaned up at session end. Releases ship straight to main via
+   `git push origin HEAD:main` from the worktree (rule:
+   feedback_push_to_main_not_feature_branch).
 
-7. Sibling release-notes-vX.Y.Z.md — EXCLUDED from the ZIP, presented as a
-   separate artifact for pasting into the GitHub Release body.
-
-8. present_files with the ZIP FIRST, then the release notes. End the message
-   with the commit summary + description as plain code blocks.
-
-9. GitHub release timing: commit and push FIRST, verify the new version
-   appears in version.js on GitHub web, THEN create the release. Creating the
-   release before pushing produces wrong-version archives.
+7. RELEASE TIMING — three ordered gates, NEVER reorder:
+   (a) `git push origin HEAD:main` from the worktree
+   (b) WAIT for pages-build-deployment to finish AND a live curl confirms
+       waxframe.com serves the new version (rule:
+       feedback_wait_for_pages_before_release). The release-ceremony GitHub
+       Action ≠ Pages — they're independent jobs.
+   (c) `gh release create vX.Y.Z --target <full-commit-hash> --notes-file
+       <changelog-section-file>` — every version gets a GitHub Release
+       (rule: feedback_release_ceremony_github_release).
+   Skipping step (b) ships releases pointing at commits the Pages CDN
+   hasn't picked up yet.
 
 
 ====================================================================
@@ -281,11 +284,19 @@ TEMPLATES (built-in + custom)
 ARCHITECTURE NOTES (load-bearing)
 ====================================================================
 
-- JS lives in js/ (14 files): app.js, version.js, templates.js, storage.js,
-  api.js, api-links.js, audio.js, scenes.js, theme.js, nav-helper.js,
-  license-helper.js, wf-debug.js, docs-scrollspy.js, docx-export.js.
-  6 vendor libs in lib/ (self-hosted for air-gap): docx.min.js, jszip.min.js,
-  mammoth.browser.min.js, pdf.min.mjs, pdf.worker.min.mjs, xlsx.full.min.js.
+- JS lives in js/ (28 files): app.js, app-bootstrap.js, version.js,
+  templates.js, templates-page.js, storage.js, prompts.js, prompt-editor.js,
+  provider-catalog.js, provider-models.js, api.js, api-links.js,
+  api-details-page.js, audio.js, scenes.js, theme.js, nav-helper.js,
+  helper-handlers.js, help-page.js, license-helper.js, wf-debug.js,
+  docs-scrollspy.js, docx-export.js, mobile-share.js, min-screen-viewport.js,
+  pricing-renderer.js, pdf-loader.mjs, pdf-loader-bootstrap.js.
+  8 vendor libs in lib/ (self-hosted for air-gap): docx.min.js, jszip.min.js,
+  mammoth.browser.min.js, pdf.min.mjs, pdf.worker.min.mjs, pdf.min.js,
+  pdf.worker.min.js, xlsx.full.min.js. The pdf.min.js + pdf.worker.min.js
+  pair (UMD pdf.js 3.11.174 build) was restored in v3.63.389 for the file://
+  portable fallback path; pdf-loader-bootstrap.js dispatches between the
+  two builds at page load based on location.protocol.
 - Session storage: IndexedDB (waxframe_v2_db / session store, key 'current').
   navigator.storage.persist() at DOMContentLoaded. localStorage LS_SESSION
   kept as defense-in-depth fallback only. LS_PROJECT holds the project recipe.
@@ -297,7 +308,9 @@ ARCHITECTURE NOTES (load-bearing)
   pre-fetches and EMBEDS images) backed by vendored lib/docx.min.js. The old
   @media print rules remain (harmless; manual Ctrl+P still works).
 - Builder hallucination defense ships in TWO layers (both needed):
-  (1) ANTI-HALLUCINATION RULES block in BUILDER_INSTRUCTIONS.refine;
+  (1) ANTI-HALLUCINATION RULES block in WF_PROMPTS.builder_refine
+      (js/prompts.js); historically lived in BUILDER_INSTRUCTIONS.refine
+      until Release F (v3.63.401) when that const was deleted.
   (2) validateUserDecisions() runtime verification after extractConflicts().
 - Auto mode: "attempts" = nudge-then-hive cycles, not solo Builder grinds.
   One Builder nudge, then re-enter the hive. You can't let the Builder make

@@ -1,5 +1,5 @@
 # ============================================================
-# WaxFrame — release-check.yml (v3.63.190)
+# WaxFrame — release-check.yml (last reviewed v3.63.403)
 #
 # Runs on every push to main and every pull request targeting main.
 # Invokes tools/release-check.mjs to validate:

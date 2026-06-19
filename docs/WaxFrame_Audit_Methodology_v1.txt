@@ -2,8 +2,8 @@
 WAXFRAME — CODE AUDIT METHODOLOGY (v1)
 ════════════════════════════════════════════════════════════
 Created:             2026-05-16
-Last reviewed:       2026-06-11 against v3.63.280 Pro
-WaxFrame version:    v3.63.280 Pro
+Last reviewed:       2026-06-19 against v3.63.403 Pro
+WaxFrame version:    v3.63.403 Pro
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Audit_Methodology_v1.txt
 

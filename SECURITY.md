@@ -37,5 +37,5 @@ WaxFrame self-hosts its front-end libraries as minified files in `lib/` (for air
 
 ## Known mitigations in place
 
-- **PDF parsing** runs with `isEvalSupported: false`, closing the CVE-2024-4367 eval code path. (A full PDF.js upgrade to a patched release is tracked separately.)
+- **PDF parsing** runs with `isEvalSupported: false` as defense-in-depth on the eval code path that CVE-2024-4367 targeted. Hosted users (`http(s)://`) load pdf.js **4.10.38** (CVE fixed at library level); portable users (`file://`) load the classic-script pdf.js **3.11.174** build and rely on the runtime `isEvalSupported: false` mitigation. The runtime split is dispatched at page load by [`js/pdf-loader-bootstrap.js`](js/pdf-loader-bootstrap.js).
 - **Imported data** (custom AIs, reference material, backups) passes through import-time validation before it reaches any render path.
