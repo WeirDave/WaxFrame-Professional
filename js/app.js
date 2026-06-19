@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260616-008
+// Build: 20260619-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260616-008';         // build stamp — update each session
+const BUILD       = '20260619-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -10014,7 +10014,8 @@ async function fetchCustomAIModels() {
   const textInput = document.getElementById('customAIModel');
   const selectEl  = document.getElementById('customAIModelSelect');
 
-  if (!url || !url.startsWith('http')) { toast('⚠️ Enter a URL first'); return; }
+  const urlError = validateCustomAIEndpoint(url);
+  if (urlError) { toast(urlError, 5000); return; }
 
   fetchBtn.textContent = '…';
   fetchBtn.disabled = true;
@@ -10164,19 +10165,8 @@ function addCustomAI() {
   const model  = (modelSelect && !modelSelect.classList.contains('is-hidden') ? modelSelect.value : document.getElementById('customAIModel').value.trim()) || 'default';
   let   name   = document.getElementById('customAIName').value.trim();
 
-  // v3.57.4 — P3: validate the endpoint the same way the Import-Server path
-  // does, instead of the weak startsWith('http') check (which accepted junk
-  // like "httpfoo" and ignored the mixed-content trap). Parse it, require an
-  // absolute http/https URL, and pre-flight the http://-from-https:// case the
-  // browser would otherwise block silently.
-  let _parsedUrl = null;
-  try { _parsedUrl = new URL(url); } catch (_) { _parsedUrl = null; }
-  if (!_parsedUrl || (_parsedUrl.protocol !== 'http:' && _parsedUrl.protocol !== 'https:')) {
-    toast('⚠️ Enter a valid http:// or https:// endpoint URL'); return;
-  }
-  if (!IS_LOCAL_RUNTIME && _parsedUrl.protocol === 'http:') {
-    toast('⚠️ WaxFrame is served over https — an http:// endpoint is blocked by the browser. Use https://, or run WaxFrame locally.', 5000); return;
-  }
+  const urlError = validateCustomAIEndpoint(url);
+  if (urlError) { toast(urlError, 5000); return; }
 
   // Auto-detect name from URL if not provided
   if (!name) {
@@ -10326,6 +10316,18 @@ function addCustomAI() {
       try { recheckModelForAI(id, handoffModels?.length ? { models: handoffModels } : undefined); } catch (e) { /* non-fatal — user can manually run Recommend on the row */ }
     }, 50);
   }
+}
+
+function validateCustomAIEndpoint(url) {
+  let parsed = null;
+  try { parsed = new URL(String(url || '').trim()); } catch (_) { parsed = null; }
+  if (!parsed || (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')) {
+    return '⚠️ Enter a valid http:// or https:// endpoint URL';
+  }
+  if (!IS_LOCAL_RUNTIME && parsed.protocol === 'http:') {
+    return '⚠️ WaxFrame is served over https — an http:// endpoint is blocked by the browser. Use https://, or run WaxFrame locally.';
+  }
+  return '';
 }
 
 // ── VARIANT SIBLINGS OF DEFAULT AIS ─────────────────────────────────
@@ -10827,18 +10829,36 @@ async function fetchImportServerModels() {
   const status    = document.getElementById('importServerFetchStatus');
   const fetchBtn  = document.getElementById('importServerFetchBtn');
 
-  if (!modelsUrl || !modelsUrl.startsWith('http')) {
+  const modelsUrlError = validateImportServerUrl(modelsUrl);
+  if (modelsUrlError) {
     showImportServerError('Enter a Models Endpoint URL',
-      'The Models Endpoint field is empty or does not start with http:// or https://.',
+      modelsUrlError,
       ['Use Quick Add to pre-fill a known pattern, then adjust the server portion to match yours.',
        'The Models Endpoint is the URL that returns the list of available models (for Open WebUI that is /api/models).']
     );
     return;
   }
-  // Mixed-content pre-flight: browser will block http:// from an https:// page
-  if (!IS_LOCAL_RUNTIME && modelsUrl.startsWith('http://')) {
+  const chatUrlError = validateImportServerUrl(chatUrl);
+  if (chatUrlError) {
+    showImportServerError('Enter a Chat Endpoint URL',
+      chatUrlError,
+      ['Use Quick Add to pre-fill a known pattern, then adjust the server portion to match yours.',
+       'The Chat Endpoint is the OpenAI-compatible URL WaxFrame posts prompts to, usually /v1/chat/completions or /api/chat/completions.']
+    );
+    return;
+  }
+  // Mixed-content pre-flight: browser will block http:// from an https:// page.
+  if (!IS_LOCAL_RUNTIME && new URL(modelsUrl).protocol === 'http:') {
     showImportServerError('Mixed-content blocked by the browser',
       `WaxFrame is served over https, so requests to ${modelsUrl} will be blocked by the browser before they leave your machine.`,
+      ['Use an https:// endpoint served by your server.',
+       'Or open WaxFrame locally from the file:// URL (download the build and open index.html) if you need to reach http://localhost.']
+    );
+    return;
+  }
+  if (!IS_LOCAL_RUNTIME && new URL(chatUrl).protocol === 'http:') {
+    showImportServerError('Mixed-content blocked by the browser',
+      `WaxFrame is served over https, so requests to ${chatUrl} will be blocked by the browser before they leave your machine.`,
       ['Use an https:// endpoint served by your server.',
        'Or open WaxFrame locally from the file:// URL (download the build and open index.html) if you need to reach http://localhost.']
     );
@@ -10948,6 +10968,15 @@ async function fetchImportServerModels() {
        `Underlying error: ${esc(e.message || String(e))}`]
     );
   }
+}
+
+function validateImportServerUrl(url) {
+  let parsed = null;
+  try { parsed = new URL(String(url || '').trim()); } catch (_) { parsed = null; }
+  if (!parsed || (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')) {
+    return 'The field is empty or is not a valid http:// or https:// URL.';
+  }
+  return '';
 }
 
 function showImportServerError(title, desc, hints) {
@@ -11095,7 +11124,14 @@ function addImportServerModels() {
   const modelsUrl = document.getElementById('importServerUrl').value.trim();
   const key       = document.getElementById('importServerKey').value.trim();
 
-  if (!chatUrl) { toast('⚠️ Enter a Chat Endpoint URL'); return; }
+  const chatUrlError = validateImportServerUrl(chatUrl);
+  if (chatUrlError) { toast('⚠️ Enter a valid Chat Endpoint URL', 5000); return; }
+  const modelsUrlError = validateImportServerUrl(modelsUrl);
+  if (modelsUrlError) { toast('⚠️ Enter a valid Models Endpoint URL', 5000); return; }
+  if (!IS_LOCAL_RUNTIME && (new URL(chatUrl).protocol === 'http:' || new URL(modelsUrl).protocol === 'http:')) {
+    toast('⚠️ WaxFrame is served over https — http:// server endpoints are blocked by the browser. Use https://, or run WaxFrame locally.', 7000);
+    return;
+  }
 
   const checked = document.querySelectorAll('.import-server-check:checked');
   // Zero-selected = user's escape hatch, behaves like Cancel (no hive changes)

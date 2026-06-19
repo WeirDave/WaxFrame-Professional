@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.402
+
+**Audit cleanup: custom endpoint URL validation and troubleshooting-link hardening**
+
+Build: `20260619-001`<br>
+Released: `2026-06-19`
+
+### What changed
+
+This release closes the concrete findings from the full code audit:
+
+1. **Troubleshooting card links now reject unsafe custom URLs.** The "Open provider console" and "Open provider docs" actions in `js/wf-debug.js` now pass through a local http/https-only URL guard before binding `window.open()`. Imported custom AIs also sanitize `apiDocs` at the storage load chokepoint, matching the existing `apiConsole` hardening.
+
+2. **Custom AI model fetch uses the same URL validator as Add to Hive.** The "Fetch Models" button no longer accepts loose `startsWith('http')` input. It now shares the absolute http/https + mixed-content preflight used by the final Add path, so the test and save paths agree.
+
+3. **Import Server validates both endpoint URLs before saving.** The Models Endpoint and Chat Endpoint now both require valid absolute http/https URLs, and the hosted HTTPS app blocks `http://` server endpoints up front instead of persisting a URL that fails later during a round.
+
+### Verification
+
+- `node --check js/app.js`
+- `node --check js/storage.js`
+- `node --check js/wf-debug.js`
+- `node tools/release-check.mjs`
+
+### Files touched
+
+- `js/app.js` — shared custom-AI endpoint validator; Import Server chat/models URL validation
+- `js/storage.js` — imported custom-AI `apiDocs` sanitization
+- `js/wf-debug.js` — http/https-only guard for troubleshooting action links
+- `CHANGELOG.md`, `js/version.js`, `package.json`, cache-bust + build stamps across pages/source files
+- `docs/WaxFrame_Backlog_Master_v253.txt` — canonical backlog version bump
+
+### Rollback
+
+Revert this commit. Custom endpoints return to the prior permissive validation behavior, and troubleshooting card console/docs actions return to opening the stored URL directly.
+
+---
+
 ## v3.63.401
 
 **Prompt modularization Release F (final): 6 dead consts in `js/app.js` swept — backlog item closed**
