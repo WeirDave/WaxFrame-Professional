@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260616-008
+// Build: 20260619-001
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -942,6 +942,7 @@ function _normalizeImportedAI(ai) {
   ai.name      = String(ai.name ?? ai.id).slice(0, 200);
   ai.url       = _safeImportUrl(ai.url);
   ai.apiConsole = _safeImportUrl(ai.apiConsole);
+  ai.apiDocs    = _safeImportUrl(ai.apiDocs);
   // v3.63.307 — Variants of default AIs ride sibling rows in the hive
   // grid sharing one parent key (see addAIVariant() in app.js). Persist
   // parentId + model on the way through normalize so reload survives.
