@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — scenes.js
-// Build: 20260619-001
+// Build: 20260619-002
 //
 //  Celebration scene orchestrators — three multi-step UI sequences
 //  that combine DOM animation + timing + canvas rendering + audio
