@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260619-002
+// Build: 20260720-001
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1690,7 +1690,13 @@ async function confirmSaveCheckpoint() {
       const writable   = await fileHandle.createWritable();
       await writable.write(env.json);
       await writable.close();
-      toast(`📁 Checkpoint saved — ${env.filename}`, 5500);
+      toast(`📁 Checkpoint saved — ${env.filename} · returning to your work`, 5500);
+      // Auto-return to prior screen after a beat so the user sees the toast
+      // land on the Checkpoint screen (confirms the save) before we navigate.
+      // Toast duration (5500ms) outlives the 900ms delay so it stays visible
+      // on the destination screen. Only fires on success — errors keep the
+      // user on the Checkpoint screen to retry.
+      setTimeout(() => { try { exitCheckpointScreen(); } catch(_) {} }, 900);
     } catch(e) {
       console.warn('[checkpoint] FSA write failed:', e);
       toast(`⚠️ Save to folder failed — ${e.message || e}`, 6000);
@@ -1842,7 +1848,9 @@ async function _writeCheckpoint(scope) {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 30000);
-  toast(`💾 Checkpoint saved — ${env.tags.join(', ')}`, 5000);
+  toast(`💾 Checkpoint saved — ${env.tags.join(', ')} · returning to your work`, 5000);
+  // Auto-return to prior screen after a beat — matches the FSA branch above.
+  setTimeout(() => { try { exitCheckpointScreen(); } catch(_) {} }, 900);
 }
 
 // ── FILE SYSTEM ACCESS API SUPPORT (v3.63.316) ──
