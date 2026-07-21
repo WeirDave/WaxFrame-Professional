@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.405
+
+**Change Builder: work-screen BUILDER pill now moves to the new card immediately**
+
+Build: `20260721-001`<br>
+Released: `2026-07-21`
+
+### What changed
+
+Picking a new Builder from the "Change Builder" modal (launched from the work screen) persisted the change correctly — reopening the modal or returning to Setup 2 showed the new pick — but the visible `BUILDER` pill on the work-screen bee grid stayed on the previous card until something else forced a redraw (next round completing, or leaving and re-entering the work screen). The state ↔ UI contract at `setBuilder()` was incomplete: the setter refreshed the Setup-2 picker (`renderBuilderPicker()`) but never the work-screen grid (`renderBeeStatusGrid()`). Only the special-case "disable current Builder → pick replacement" path routed through `setBuilderFromModal()`, which happened to also refresh the work-screen grid; the normal "click 🔨 Builder button on a row" path skipped it.
+
+`setBuilder()` now calls `renderBeeStatusGrid()` unconditionally (guarded by `typeof === 'function'`). The renderer already no-ops when its container isn't in the DOM, so this is safe to call from any screen. Every current and future caller of `setBuilder()` — the Change Builder modal pick (`_cbPickBuilder`), auto-mode failover promotion (`app.js:3749`), and stale-builder reassignment (`app.js:17670`) — now gets the pill refresh for free with no additional call-site work.
+
+### Verification
+
+- `node tools/release-check.mjs` — SKIPPED (node not available in the release environment). Run locally before publishing if desired.
+- Manual smoke: on the work screen, open Change Builder from the header button, click 🔨 Builder on a different AI's row, and confirm the `BUILDER` pill on the bee-status grid moves to the new card at the moment the modal closes — no round-completion or screen re-entry required.
+
+### Files touched
+
+- `js/app.js` — `setBuilder()` now also calls `renderBeeStatusGrid()` so the `.hex-builder-tag` pill moves to the new card immediately
+- Narrow 4-pattern cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `style.css`, `package.json`, and `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. The work-screen BUILDER pill returns to the prior behavior — the new Builder is persisted and the Setup-2 picker updates, but the pill on the bee-status grid doesn't move until the next round or screen re-entry.
+
+---
+
 ## v3.63.404
 
 **Checkpoint screen UX: auto-return to prior screen after successful save**
