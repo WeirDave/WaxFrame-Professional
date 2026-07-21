@@ -7,6 +7,9 @@ tools/pricing-worker/.wrangler/
 # Claude Code worktrees + dev tooling (local-only audit servers, etc.)
 .claude/
 
+# Claude Code standing-orders brief — local only, not for GitHub
+CLAUDE.md
+
 # Generated release bundles/staging folders
 release-artifacts/
 

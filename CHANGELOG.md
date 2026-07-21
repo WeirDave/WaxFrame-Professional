@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.404
+
+**Checkpoint screen UX: auto-return to prior screen after successful save**
+
+Build: `20260720-001`<br>
+Released: `2026-07-20`
+
+### What changed
+
+After a successful Save Checkpoint, users were being stranded on the Checkpoint screen with no visible cue that they needed to hit the ← Back button to return to work. Both save paths — the File System Access folder-write (Chrome/Edge/Opera) and the legacy download fallback (Firefox/Safari) — now:
+
+1. Append ` · returning to your work` to the success toast so the user sees where they're going next.
+2. Fire `exitCheckpointScreen()` 900ms after the toast so the confirmation registers visually on the Checkpoint screen before the navigation. The toast's 5000–5500ms duration outlives the delay, so the confirmation stays visible on the destination screen too.
+
+Failure paths are unchanged — a folder-permission denial or write error keeps the user on the Checkpoint screen so they can retry without losing their scope-checkbox selections.
+
+Repo hygiene bundled: `CLAUDE.md` (Claude Code standing-orders brief, local only) was never tracked but was cluttering `git status` as untracked; added to `.gitignore` this release.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass
+- Manual smoke: FSA save path, download-fallback save path, and the deny-permission failure path all behave per the change.
+
+### Files touched
+
+- `js/storage.js` — `confirmSaveCheckpoint()` FSA branch (success toast + auto-return), `_writeCheckpoint()` download branch (success toast + auto-return)
+- `.gitignore` — ignore `CLAUDE.md`
+- Narrow 4-pattern cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `style.css`, and `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Save Checkpoint returns to the prior UX — user stays on the Checkpoint screen after save with only a toast to signal completion.
+
+---
+
 ## v3.63.403
 
 **Documentation audit: six docs reconciled against current code and release ceremony**
