@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260720-001
+// Build: 20260721-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260720-001';         // build stamp — update each session
+const BUILD       = '20260721-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -7377,6 +7377,14 @@ function setBuilder(id) {
   // so the round trip is complete.
   saveHive();
   renderBuilderPicker();
+  // Refresh the work-screen bee grid so the BUILDER pill moves to the
+  // new card immediately. Without this, opening Change Builder from
+  // screen-work and picking a new Builder persisted state correctly
+  // (reopening showed the new pick) but the visible pill stayed on
+  // the old card until the next round or screen re-entry redrew the
+  // grid. renderBeeStatusGrid() is a no-op when its container isn't
+  // in the DOM, so this is safe to call from any screen.
+  if (typeof renderBeeStatusGrid === 'function') renderBeeStatusGrid();
   const ai = aiList.find(a => a.id === id);
   toast(`🔨 ${ai?.name} is now the Builder`);
 }
