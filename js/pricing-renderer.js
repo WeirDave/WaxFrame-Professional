@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing-renderer.js
-// Build: 20260720-001
+// Build: 20260721-001
 //  Dynamic pricing renderer for ai-api-pricing.html. Fetches
 //  live data from the waxframe-pricing Cloudflare Worker;
 //  falls back to the embedded snapshot if the Worker is
