@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260725-001
+     Build: 20260725-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -19,8 +19,14 @@
        'unsafe-eval' stays on script-src for vendored SheetJS / mammoth /
        pdf.js (new Function internals). style-src 'unsafe-inline' stays
        because we emit per-element style="..." attributes and the
-       inline <style> on the next line. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+       inline <style> on the next line. v3.63.407 --
+       connect-src carries http://localhost:* and http://127.0.0.1:* so the
+       Server Based AI / Import from Model Server flow can reach a locally
+       running Ollama, LM Studio, or Open WebUI instance. Scoped to loopback
+       only -- no blanket http: allowance. Remote server-mode endpoints
+       (enterprise Alfredo/Open WebUI, etc.) already work via the https:
+       source and need no exception. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <!-- v3.63.345 — Clickjacking guard + CSP violation listener.
        Frame-busting: GitHub Pages cannot set the HTTP frame-ancestors
        directive, so this client-side check hides the page if we detect
@@ -59,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260725-001">
+  <meta name="waxframe-build" content="20260725-002">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -73,7 +79,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.406">
+  <link rel="stylesheet" href="style.css?v=3.63.407">
 </head>
 <body class="helper-body">
 
@@ -1820,6 +1826,10 @@
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
         <div class="wf-tip-body"><p>If a fetch fails, the right region switches to an error panel that explains what likely went wrong and suggests next steps. Common causes: an incorrect Models Endpoint path, an invalid or missing API Key, CORS restrictions on the server, or mixed-content blocking when WaxFrame is loaded from <code>https://</code> but the server URL is <code>http://localhost</code>. For the mixed-content case, download WaxFrame and open it from a <code>file://</code> URL instead, or serve it from a local web server on the same origin as your model server.</p></div>
       </div>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p><strong>Ollama specifically will reject WaxFrame by default</strong> — even with a correct Chat/Models Endpoint and WaxFrame opened as a downloaded <code>file://</code> page. Ollama has its own separate CORS allowlist, and a <code>file://</code> page's requests carry an <code>Origin: null</code> header that Ollama refuses out of the box (you'll see "Network / CORS error" in the panel above, or a flat <code>403</code> if you check with a tool like curl). The fix is on Ollama's side, not WaxFrame's: before starting Ollama, set the environment variable <code>OLLAMA_ORIGINS=*</code>, then (re)start it. On Windows (PowerShell): <code>[Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS","*","User")</code>, then restart Ollama. On Mac/Linux: <code>export OLLAMA_ORIGINS=*</code> before running <code>ollama serve</code>, or add it to your shell profile so it's always set. This tells Ollama to accept requests from any origin — reasonable for a personal machine, but be aware it means any website open in your browser could also reach your local Ollama while it's running. LM Studio and Open WebUI do not have this restriction by default and need no equivalent setting.</p></div>
+      </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
@@ -2213,13 +2223,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.406"></script>
-<script src="lib/docx.min.js?v=3.63.406"></script>
-<script src="js/docx-export.js?v=3.63.406"></script>
-<script src="js/nav-helper.js?v=3.63.406"></script>
-<script src="js/license-helper.js?v=3.63.406"></script>
-<script src="js/helper-handlers.js?v=3.63.406"></script>
-<script src="js/version.js?v=3.63.406"></script>
-<script src="js/docs-scrollspy.js?v=3.63.406"></script>
+<script src="js/theme.js?v=3.63.407"></script>
+<script src="lib/docx.min.js?v=3.63.407"></script>
+<script src="js/docx-export.js?v=3.63.407"></script>
+<script src="js/nav-helper.js?v=3.63.407"></script>
+<script src="js/license-helper.js?v=3.63.407"></script>
+<script src="js/helper-handlers.js?v=3.63.407"></script>
+<script src="js/version.js?v=3.63.407"></script>
+<script src="js/docs-scrollspy.js?v=3.63.407"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260725-001
+  Build: 20260725-002
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -33,8 +33,14 @@
        'unsafe-eval' stays on script-src for vendored SheetJS / mammoth /
        pdf.js (new Function internals). style-src 'unsafe-inline' stays
        because we emit per-element style="..." attributes and the
-       inline <style> on the next line. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+       inline <style> on the next line. v3.63.407 --
+       connect-src carries http://localhost:* and http://127.0.0.1:* so the
+       Server Based AI / Import from Model Server flow can reach a locally
+       running Ollama, LM Studio, or Open WebUI instance. Scoped to loopback
+       only -- no blanket http: allowance. Remote server-mode endpoints
+       (enterprise Alfredo/Open WebUI, etc.) already work via the https:
+       source and need no exception. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <!-- v3.63.345 — Clickjacking guard + CSP violation listener.
        Frame-busting: GitHub Pages cannot set the HTTP frame-ancestors
        directive, so this client-side check hides the page if we detect
@@ -73,7 +79,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260725-001">
+  <meta name="waxframe-build" content="20260725-002">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
   <link rel="canonical" href="https://waxframe.com/help.html">
@@ -495,10 +501,10 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.406"></script>
-  <script src="js/storage.js?v=3.63.406"></script>
-  <script src="js/provider-models.js?v=3.63.406"></script>
-  <script src="js/provider-catalog.js?v=3.63.406"></script>
-  <script src="js/help-page.js?v=3.63.406"></script>
+  <script src="js/version.js?v=3.63.407"></script>
+  <script src="js/storage.js?v=3.63.407"></script>
+  <script src="js/provider-models.js?v=3.63.407"></script>
+  <script src="js/provider-catalog.js?v=3.63.407"></script>
+  <script src="js/help-page.js?v=3.63.407"></script>
 </body>
 </html>

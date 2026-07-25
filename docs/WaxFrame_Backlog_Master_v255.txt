@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v254
-2026-07-20
+WaxFrame Backlog Master v255
+2026-07-25
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -91,6 +91,40 @@ OPEN FEATURES
            goes on the list; recommendation engine excludes
            it from Builder picks; Builder dropdown either
            hides it or shows it disabled with a tooltip.
+
+
+2. Direct outreach to AI-document-workflow writers/bloggers
+   ─────────────────────────────────────────────────────────
+   WHAT:   David found articles/posts from people who write
+           about AI document creation/refinement workflows
+           while searching that topic. Idea: reach out to
+           those specific authors directly (not a cold mass
+           blast) with a link/access to WaxFrame so they can
+           personally evaluate it — a targeted alternative to
+           the passive discoverability plumbing shipped in
+           v3.63.406 (llms.txt, IndexNow, sitemap).
+   WHY:    On-page SEO is now healthy but the site still has
+           zero authority/backlinks (see SEO campaign context,
+           v3.63.406). A credible writer who already covers
+           this space trying the product and mentioning it
+           gets both a backlink and real user evaluation —
+           faster than waiting on index/authority to build
+           organically.
+   STATE:  OPEN — idea captured, no target list or outreach
+           copy drafted yet. David to identify specific
+           authors/articles found; this is his call on who
+           and how (personal email vs. commenting on their
+           post vs. something else).
+   WHERE:  N/A — outside the codebase. Related SEO backlog
+           items already open: r/SideProject post, GitHub
+           repo topics, AlternativeTo/SaaSHub/self-hosted
+           directory listings, full URL in YouTube description
+           (see prior backlog SEO P1 section / CLAUDE.md
+           PENDING WORK §8B history).
+   DONE:   At least one direct outreach sent to an identified
+           author with a working access link (Pro trial link
+           or Free edition link); response or non-response
+           logged here or in project notes either way.
 
 
 ════════════════════════════════════════════════════════════

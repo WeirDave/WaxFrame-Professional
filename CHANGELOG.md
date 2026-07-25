@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.407
+
+**Server Based AI: local model servers (Ollama, LM Studio) could never actually connect**
+
+Build: `20260725-002`<br>
+Released: `2026-07-25`
+
+### What changed
+
+Setting up a local Ollama instance to test the Server Based AI flow end-to-end surfaced two independent, previously-undiscovered defects that together made the flagship local-server presets non-functional for every user, on every platform — not a local environment quirk.
+
+1. **CSP `connect-src` had no loopback allowance.** The directive was `'self' https:` — no bare `http:` token at all, scoped or otherwise. Ollama and LM Studio's Quick-Add presets both point at plain `http://localhost:...` URLs, so the browser refused the connection before Ollama's own CORS handling was ever relevant, regardless of how the page was hosted (`file://` or otherwise). Fixed by adding `http://localhost:* http://127.0.0.1:*` — scoped strictly to loopback, no blanket `http:` source added. Remote server-mode endpoints (enterprise Alfredo/Open WebUI deployments, which serve over `https:`) were never affected and needed no change.
+2. **The server-AI connectivity health-check silently mis-parsed Ollama's native model-list response.** `js/provider-catalog.js`'s `fetchModelsByFormat()` — used by the periodic "🔄 Checking… / ✓ Ready / ⚠ Model missing" pill (`_checkServerAIConnectivity`) and by the "Add Custom AI" single-model fetch — only recognized OpenAI's `{data:[...]}` wrapper and a bare array. Ollama's native `/api/tags` (exactly what the Ollama Quick-Add preset's Models Endpoint field points at) returns `{models:[...]}` instead, so the parser always saw an empty list. Every Ollama server AI, once added, permanently showed **"⚠ Model missing"** even when working correctly. The separate "Import from Model Server" modal already had a correct three-shape parser (`app.js:10916`) — this fix brings the health-check parser's shape coverage and field-name flexibility (`m.id || m.name`) up to match it.
+
+Both fixes shipped together because the second bug was only reachable, and only diagnosable, once the first one was fixed and a local server AI could actually be added and probed.
+
+### Verification
+
+- Reproduced live in-browser (not just by reading the CSP/JS): confirmed a plain `https://` fetch succeeded from a `file://`-hosted page while `http://localhost:11434` failed with `TypeError: Failed to fetch`, isolating the CSP layer from Ollama's CORS layer.
+- Ran the actual "Import from Model Server" → Ollama Quick-Add → Fetch Models → Add to Hive flow end-to-end against a real local Ollama instance (`llama3.1:8b`) — model list fetched, added to hive, connectivity pill confirmed **"✓ Ready"** after the fix (was "⚠ Model missing" before, "✗ Unreachable" before the CSP fix).
+- `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `index.html` and 15 other HTML pages — `connect-src` gains `http://localhost:* http://127.0.0.1:*`; explanatory comment added above the CSP meta tag
+- `js/provider-catalog.js` — `fetchModelsByFormat()` OpenAI-shape branch now also accepts `{models:[...]}` and falls back to `m.name` when `m.id` is absent
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, and `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. The Server Based AI feature returns to its previous (non-functional for local Ollama/LM Studio) state; no data migration involved.
+
+---
+
 ## v3.63.406
 
 **SEO index plumbing + audit fixes: sitemap gap, llms.txt, IndexNow, stale .mjs header**
