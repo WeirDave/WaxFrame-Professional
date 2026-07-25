@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — privacy.html
-     Build: 20260725-003
+     Build: 20260725-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,9 +65,10 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260725-003">
+  <meta name="waxframe-build" content="20260725-004">
   <title>Privacy Policy — WaxFrame</title>
   <meta name="description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
+  <meta name="keywords" content="WaxFrame privacy policy, no tracking AI tool, air-gap safe AI writing, self-hosted document tool">
   <link rel="canonical" href="https://waxframe.com/privacy.html">
   <meta property="og:title" content="Privacy Policy — WaxFrame">
   <meta property="og:description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
@@ -79,7 +80,47 @@
   <meta name="twitter:description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.408">
+  <link rel="stylesheet" href="style.css?v=3.63.409">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is WaxFrame self-hosted or air-gap safe?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. WaxFrame is vanilla HTML/CSS/JS with no build step, no application server, and no database — it runs entirely as static files, either from GitHub Pages or from a downloaded ZIP opened directly in your browser (file://). On an air-gapped machine with no internet access at all, the app itself loads and runs fine; you'd only lose the ability to call AI providers, since those requests need a live connection to each provider's API."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need to create an account?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. There is no WaxFrame account, login, or signup at any point. You bring your own API keys for the AI providers you want to use, and everything else — your projects, documents, and settings — is stored locally in your browser."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there a subscription?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. WaxFrame Pro is a one-time $19 lifetime license, not a subscription — sold once through Gumroad with no recurring charge. The only ongoing cost is pay-as-you-go usage billed directly by whichever AI providers you connect, typically around $0.30 per full hive review."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need my own AI provider API keys?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, for the paid Pro edition — WaxFrame connects directly to each AI provider (OpenAI, Anthropic, Google, and others) using API keys you obtain and control yourself, so there's no markup on top of provider costs and no WaxFrame-operated backend in between. The free WaxFrame edition works without any API keys at all, using a manual copy-paste workflow instead."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body class="helper-body">
 
@@ -177,6 +218,28 @@
       <h3 class="wf-card-title">No backend, no database, no tracking</h3>
       <p>WaxFrame has no application server and no database. The entire app runs in your browser. There is no WaxFrame account to create, and no analytics, telemetry, advertising, or cookies for tracking. Because there is no server collecting anything, there is nothing for WaxFrame to sell, share, or leak.</p>
       <p>The one piece of data that ever leaves your browser to a service operated by WaxFrame's developer is Claude traffic, which passes through a relay that does not log or store it. That single exception is detailed below.</p>
+    </div>
+
+    <h2>Frequently Asked</h2>
+
+    <div class="wf-card">
+      <h3 class="wf-card-title">Is WaxFrame self-hosted or air-gap safe?</h3>
+      <p>Yes. WaxFrame is vanilla HTML/CSS/JS with no build step, no application server, and no database — it runs entirely as static files, either from GitHub Pages or from a downloaded ZIP opened directly in your browser (<code>file://</code>). On an air-gapped machine with no internet access at all, the app itself loads and runs fine; you'd only lose the ability to call AI providers, since those requests need a live connection to each provider's API.</p>
+    </div>
+
+    <div class="wf-card">
+      <h3 class="wf-card-title">Do I need to create an account?</h3>
+      <p>No. There is no WaxFrame account, login, or signup at any point. You bring your own API keys for the AI providers you want to use, and everything else — your projects, documents, and settings — is stored locally in your browser.</p>
+    </div>
+
+    <div class="wf-card">
+      <h3 class="wf-card-title">Is there a subscription?</h3>
+      <p>No. WaxFrame Pro is a one-time $19 lifetime license, not a subscription — sold once through Gumroad with no recurring charge. The only ongoing cost is pay-as-you-go usage billed directly by whichever AI providers you connect, typically around $0.30 per full hive review.</p>
+    </div>
+
+    <div class="wf-card">
+      <h3 class="wf-card-title">Do I need my own AI provider API keys?</h3>
+      <p>Yes, for the paid Pro edition — WaxFrame connects directly to each AI provider (OpenAI, Anthropic, Google, and others) using API keys you obtain and control yourself, so there's no markup on top of provider costs and no WaxFrame-operated backend in between. The free WaxFrame edition works without any API keys at all, using a manual copy-paste workflow instead.</p>
     </div>
 
     <h2>What WaxFrame stores, and where</h2>
@@ -340,12 +403,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.408"></script>
-<script src="lib/docx.min.js?v=3.63.408"></script>
-<script src="js/docx-export.js?v=3.63.408"></script>
-<script src="js/nav-helper.js?v=3.63.408"></script>
-<script src="js/license-helper.js?v=3.63.408"></script>
-<script src="js/helper-handlers.js?v=3.63.408"></script>
-<script src="js/version.js?v=3.63.408"></script>
+<script src="js/theme.js?v=3.63.409"></script>
+<script src="lib/docx.min.js?v=3.63.409"></script>
+<script src="js/docx-export.js?v=3.63.409"></script>
+<script src="js/nav-helper.js?v=3.63.409"></script>
+<script src="js/license-helper.js?v=3.63.409"></script>
+<script src="js/helper-handlers.js?v=3.63.409"></script>
+<script src="js/version.js?v=3.63.409"></script>
 </body>
 </html>
