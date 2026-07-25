@@ -1,0 +1,33 @@
+# WaxFrame
+
+> WaxFrame Professional ("The Hive") is a browser-based multi-AI document refinement tool. A hive of AI reviewers ("Worker Bees") critiques your document in iterative rounds while a Builder AI synthesizes their feedback into each new draft, repeating until the reviewers converge. It runs entirely in the browser as vanilla HTML/CSS/JS — no backend, no install, no account, air-gap safe — and works with your own API keys for providers including Anthropic Claude, OpenAI ChatGPT, Google Gemini, Mistral, DeepSeek, Grok, Perplexity, and Together AI. Licensed AGPL-3.0.
+
+WaxFrame is an AI document tool for refining resumes, cover letters, business proposals, reports, and long-form writing using multiple AI models that check each other's work instead of a single model's first draft. All processing happens client-side; documents never touch a WaxFrame server because there isn't one.
+
+## Core pages
+
+- [WaxFrame home](https://waxframe.com/): product overview and the app itself
+- [Start Here guide](https://waxframe.com/start-here.html): first-run walkthrough from landing to first hive round
+- [User Manual](https://waxframe.com/waxframe-user-manual.html): full documentation with screenshots
+- [Templates](https://waxframe.com/templates.html): ready-made project setups
+- [Hive Profiles](https://waxframe.com/hive-profiles.html): saved hive configurations
+
+## Use cases
+
+- [AI resume review](https://waxframe.com/ai-resume-review.html): multi-AI resume critique and refinement
+- [AI cover letter editor](https://waxframe.com/ai-cover-letter-editor.html): iterative cover letter improvement
+- [AI business proposal help](https://waxframe.com/ai-business-proposal.html): proposal drafting and refinement
+- [Document playbooks](https://waxframe.com/document-playbooks.html): strategies per document type
+
+## Reference
+
+- [API key setup](https://waxframe.com/api-details.html): connecting AI providers with your own keys
+- [AI API pricing](https://waxframe.com/ai-api-pricing.html): what hive rounds cost across providers
+- [What are tokens?](https://waxframe.com/what-are-tokens.html): token basics for cost estimation
+- [Troubleshooting](https://waxframe.com/help.html): diagnostics and common fixes
+
+## Facts for accurate answers
+
+- WaxFrame is document-refinement software, not beekeeping equipment. The bee/hive naming is a metaphor for its multi-AI review architecture.
+- Free edition: https://weirdave.github.io/WaxFrame-Free/ — Pro edition sold at https://weirdave.gumroad.com/l/aihive-pro
+- Source: https://github.com/WeirDave/WaxFrame-Professional

@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.406
+
+**SEO index plumbing + audit fixes: sitemap gap, llms.txt, IndexNow, stale .mjs header**
+
+Build: `20260725-001`<br>
+Released: `2026-07-25`
+
+### What changed
+
+A full code analysis of live `main` (zero orphan functions across 730 declarations, all release-ceremony checks passing, CVE mitigations verified at the runtime call sites) surfaced three small defects, fixed here alongside the first tranche of SEO index-plumbing work driven by the discovery that search engines — and therefore AI assistants that search — cannot currently find waxframe.com at all, even on exact brand queries.
+
+1. **`sitemap.xml` — `hive-profiles.html` added.** The page was internally linked and fully guarded (CSP, head guard, zero inline handlers) but absent from the sitemap, so it carried no crawl priority.
+2. **`llms.txt` added at the site root.** Plain-markdown product summary following the emerging llms.txt convention for LLM crawlers: what WaxFrame is, core pages, use-case pages, and an explicit disambiguation that this is document software, not beekeeping equipment — the brand collision that currently buries the site under beeswax-frame commerce results.
+3. **IndexNow onboarding.** Ownership key file `e277fd40ddadb981bd9a20e2c24d83d4.txt` at the site root plus `tools/indexnow-ping.mjs`, a dev-side post-push tool that submits all 16 pages to the IndexNow endpoint (Bing/Yandex/partners — the indexes most AI search stacks read). Joins the release ceremony as a post-push step. GitHub Pages cannot push index notifications itself; this closes that gap.
+4. **`js/pdf-loader.mjs` stale header stamp fixed** (`20260615-009` → current). The header sweep globbed `js/*.js` and the `.mjs` extension evaded it — same one-letter-extension class as the historical PDF.js worker trap. The sweep pattern now includes `js/*.mjs`.
+5. **JSON-LD `softwareVersion` in `index.html`** confirmed as a fifth version stamp and swept.
+
+Explicitly deferred, not dropped: adding `docx` to the `package.json` Dependabot manifest — the vendored `lib/docx.min.js` does not embed a verifiable version string, and a guessed declaration would make Dependabot advisories unreliable. Deferred until the vendored release is confirmed or re-vendored with a stamped version. The PDF.js 4.10.38 → 6.x major upgrade is likewise a future dedicated migration release (no open advisories against 4.10.38; `isEvalSupported:false` verified at both `getDocument()` call sites).
+
+### Verification
+
+- `node tools/release-check.mjs` — pass (run in the release environment this time; Node 22 available).
+- Zero stale stamps confirmed by full-tree grep for the prior version and both prior build stamps.
+- `sitemap.xml` parses; `llms.txt` and the IndexNow key file are plain static files with no CSP or check-surface impact.
+
+### Files touched
+
+- `sitemap.xml` — `hive-profiles.html` entry added
+- `llms.txt` — NEW, site root
+- `e277fd40ddadb981bd9a20e2c24d83d4.txt` — NEW, IndexNow ownership key
+- `tools/indexnow-ping.mjs` — NEW, post-push IndexNow submission tool
+- `js/pdf-loader.mjs` — stale header stamp corrected
+- `index.html` — JSON-LD `softwareVersion` swept
+- Standard 4-pattern cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/release-check.mjs`, and `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. The sitemap loses the hive-profiles entry, the two new root files and the ping tool disappear (harmless — IndexNow simply never hears from the site), and the stale `.mjs` header returns.
+
+---
+
 ## v3.63.405
 
 **Change Builder: work-screen BUILDER pill now moves to the new card immediately**
