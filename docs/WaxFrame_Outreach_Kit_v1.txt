@@ -1,0 +1,164 @@
+WaxFrame Outreach Kit v1
+2026-07-25
+
+ABOUT THIS DOCUMENT
+────────────────────────────────────────────────────────────
+Copy-paste-ready material for driving authority/backlinks to
+waxframe.com — directory listing copy, a reviewer/newsletter
+target list, and an outreach email template. On-page SEO is
+healthy (see v3.63.406, v3.63.409); the remaining gap is zero
+backlinks/authority, which only outreach fixes.
+
+Everything in this file is meant to be EXECUTED BY DAVID, not
+an AI assistant — directory submissions need his own accounts,
+and outreach messages need his voice and his email address.
+Log results (submitted / live / response) back into
+WaxFrame_Backlog_Master as they happen.
+
+
+════════════════════════════════════════════════════════════
+POSITIONING — lead with this, not a feature list
+════════════════════════════════════════════════════════════
+Every competitor (Jasper, Copy.ai, Grammarly) is single-model,
+subscription-locked, and server-side. WaxFrame is adversarial
+multi-model refinement — Claude, ChatGPT, Gemini and others
+critique the SAME document across rounds until they converge,
+synthesized by a separate Builder AI. No backend, no account,
+runs in-browser with your own API keys. No subscription — a
+one-time $19 lifetime license, and the only ongoing cost is
+pay-as-you-go provider usage (~$0.30/review).
+
+
+════════════════════════════════════════════════════════════
+DIRECTORY LISTING COPY
+════════════════════════════════════════════════════════════
+
+--- Product Hunt ---
+Tagline (60 char max):
+  Multi-AI document refinement — models review each other
+
+Short description:
+  WaxFrame runs a "hive" of AI models (Claude, ChatGPT, Gemini,
+  and more) that critique your document across iterative
+  rounds until they converge, synthesized by a separate
+  Builder AI. No backend, no account, runs entirely in your
+  browser with your own API keys. Free trial, $19 lifetime —
+  no subscription.
+
+First comment (maker comment, post at launch):
+  Built this because every AI writing tool I tried gave me one
+  model's first draft with no second opinion. WaxFrame instead
+  puts multiple AI models in the same room to critique a
+  document, round after round, until they agree it's done.
+  Zero backend — it's a static HTML/CSS/JS app, air-gap safe,
+  AGPL-3.0 open source. Happy to answer anything about the
+  convergence mechanic or the API cost model.
+
+--- AlternativeTo ---
+Category: Writing / AI Writing Assistants
+Also tag: Self-Hosted (see separate angle below)
+Description:
+  WaxFrame Professional is a browser-based multi-AI document
+  refinement tool. Multiple AI reviewers ("Worker Bees")
+  critique your document in iterative rounds while a Builder
+  AI synthesizes the feedback into each new draft, repeating
+  until the reviewers converge. No backend, no install, no
+  account — works with your own API keys for Claude, ChatGPT,
+  Gemini, Mistral, DeepSeek, Grok, Perplexity, and Together AI.
+  AGPL-3.0 open source. Alternative to: Jasper, Copy.ai,
+  Grammarly (multi-model instead of single-model review).
+
+--- SaaSHub ---
+Same description as AlternativeTo above. List as alternative
+to: Jasper AI, Copy.ai, Sudowrite, Grammarly.
+
+--- There's An AI For That ---
+One-liner: Multi-AI document refinement that runs entirely in
+your browser — no account, no subscription.
+Category: Writing Assistant / Productivity
+
+--- Futurepedia ---
+Same one-liner as above. Category: Writing Tools.
+
+
+════════════════════════════════════════════════════════════
+SELF-HOSTED / LOCAL-AI ANGLE (r/selfhosted, AlternativeTo tag)
+════════════════════════════════════════════════════════════
+This audience cares about air-gap/no-backend more than the
+general audience — lead differently:
+
+  WaxFrame is a genuinely self-hosted AI writing tool — vanilla
+  HTML/CSS/JS, no build step, no server, no database. Clone the
+  repo or download the release ZIP and open index.html directly
+  (file://) — it works completely offline except for the actual
+  AI provider calls. Also supports local model servers (Ollama,
+  LM Studio) as reviewers, so a fully local/offline hive is
+  possible with no cloud AI provider at all. AGPL-3.0, source at
+  github.com/WeirDave/WaxFrame-Professional.
+
+r/selfhosted post: lead with the paragraph above, not the "hive"
+metaphor — this audience wants the technical facts (no backend,
+static files, local model support) up front, mascot/bee framing
+second if at all.
+
+
+════════════════════════════════════════════════════════════
+REVIEWER / NEWSLETTER TARGETS
+════════════════════════════════════════════════════════════
+
+Categories to target (identify specific channels/newsletters
+under each — David's call on which specific ones, per backlog
+item "Direct outreach to AI-document-workflow writers/bloggers"):
+
+  - Résumé/career-advice YouTube channels — these review resume
+    tools constantly; a multi-AI resume critique angle is a
+    natural fit for an episode/short.
+  - "AI tools weekly roundup" YouTube channels — general tech
+    reviewers gloss over the differentiator, roundup-format
+    channels don't.
+  - AI-tools newsletters: Ben's Bites, There's An AI For That
+    (newsletter, not just the directory), Superhuman AI — these
+    run reader-submitted tool blurbs, low barrier to entry.
+  - Individual bloggers/writers already covering AI document
+    workflows (David to identify specific authors/articles he's
+    found searching this space — targeted outreach, not a cold
+    mass blast).
+
+Cold outreach email template:
+
+  Subject: Multi-AI tool that makes ChatGPT and Claude review
+  each other's work
+
+  [Name] — saw your [piece/channel] on AI writing tools.
+  WaxFrame is different from the Jasper/Copy.ai pattern: it
+  runs a "hive" of AI models (Claude, ChatGPT, Gemini, etc.)
+  that critique a document across rounds until they converge,
+  synthesized by a separate Builder AI. No backend, no account
+  — runs in-browser with your own API keys, so it's air-gap
+  safe and there's no subscription markup on top of provider
+  costs. Free trial + $19 lifetime. Happy to send a demo doc
+  or answer questions: [link].
+
+Keep under 100 words, one link, no attachment.
+
+
+════════════════════════════════════════════════════════════
+REDDIT — ORGANIC ANSWERS, NOT LINK-DROPS
+════════════════════════════════════════════════════════════
+r/resumes, r/writingwithai, r/ArtificialIntelligence: answer
+real threads where someone's asking "how do I get my resume
+past ATS/AI screening" and mention WaxFrame as one option —
+don't lead with a link, don't post the same pitch repeatedly.
+
+r/SideProject: a proper launch post is a separate, one-time
+thing — plain text, no markdown, link to the free
+weirdave.github.io/WaxFrame-Free edition, NEVER the Gumroad
+link directly (per existing SEO P1 backlog rule).
+
+
+════════════════════════════════════════════════════════════
+NOT IN SCOPE FOR THIS DOC
+════════════════════════════════════════════════════════════
+Google Search Console / Bing Webmaster Tools verification and
+sitemap submission are David's one-time account-bound to-dos,
+tracked separately in CLAUDE.md — not repeated here.

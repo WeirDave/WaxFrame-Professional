@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v255
+WaxFrame Backlog Master v256
 2026-07-25
 
 ABOUT THIS DOCUMENT
@@ -110,21 +110,77 @@ OPEN FEATURES
            gets both a backlink and real user evaluation —
            faster than waiting on index/authority to build
            organically.
-   STATE:  OPEN — idea captured, no target list or outreach
-           copy drafted yet. David to identify specific
-           authors/articles found; this is his call on who
-           and how (personal email vs. commenting on their
-           post vs. something else).
-   WHERE:  N/A — outside the codebase. Related SEO backlog
-           items already open: r/SideProject post, GitHub
-           repo topics, AlternativeTo/SaaSHub/self-hosted
-           directory listings, full URL in YouTube description
-           (see prior backlog SEO P1 section / CLAUDE.md
-           PENDING WORK §8B history).
+   STATE:  OPEN — target list still not drafted (David to
+           identify specific authors/articles found; his call
+           on who and how). A ready-to-send email template and
+           positioning angle now exist in
+           docs/WaxFrame_Outreach_Kit_v1.txt (added v3.63.409)
+           — reduces this to "pick a name, paste the template."
+   WHERE:  N/A — outside the codebase. See
+           docs/WaxFrame_Outreach_Kit_v1.txt for copy + related
+           SEO P1 items (r/SideProject, GitHub repo topics,
+           directory listings — folded into backlog entry #3
+           below as of v3.63.409).
    DONE:   At least one direct outreach sent to an identified
            author with a working access link (Pro trial link
            or Free edition link); response or non-response
            logged here or in project notes either way.
+
+
+3. Submit to AI tool directories + self-hosted listings
+   ─────────────────────────────────────────────────────────
+   WHAT:   Submit WaxFrame to AI-tool discovery directories
+           (Product Hunt, AlternativeTo, SaaSHub, There's An AI
+           For That, Futurepedia) and self-hosted-specific
+           listings (AlternativeTo's self-hosted tag,
+           r/selfhosted) using the copy already drafted per
+           directory. Also: full URL in the YouTube demo
+           description (youtu.be/89w9ROd3jIE), GitHub repo
+           topics, r/SideProject launch post.
+   WHY:    Same zero-authority/zero-backlink problem as entry
+           #2 — directory listings are lower-effort than direct
+           outreach and several (AlternativeTo, SaaSHub) are
+           evergreen backlink sources once live.
+   STATE:  OPEN — all listing copy is drafted and ready in
+           docs/WaxFrame_Outreach_Kit_v1.txt (added v3.63.409).
+           Needs David's own accounts to actually submit; no
+           submissions made yet.
+   WHERE:  docs/WaxFrame_Outreach_Kit_v1.txt (directory copy +
+           self-hosted angle sections).
+   DONE:   Each directory listing is live with a working link;
+           log per-directory as submitted/live here (or delete
+           this entry once all are live and move to CHANGELOG-
+           style notes, per normal backlog hygiene).
+
+
+4. Custom AI key paste doesn't auto-fetch models (Enter-only)
+   ─────────────────────────────────────────────────────────
+   WHAT:   On the Add Custom AI modal, pasting an API key into
+           the key field does not trigger a model fetch — only
+           pressing Enter does. David wants parity with how the
+           built-in provider AI rows feel: paste the key and
+           it's handled, no extra keystroke required.
+   WHY:    v3.63.408 fixed Enter-to-fetch-models after it broke
+           silently (duplicate data-fn attribute), but that fix
+           only restored the Enter path. A user who pastes a key
+           and clicks/tabs away without pressing Enter gets a
+           silently reset model field and never sees fetched
+           models — a discoverability trap, not just a missing
+           nicety.
+   STATE:  OPEN — surfaced by David 2026-07-25, captured
+           mid-task per standing process (no silent deferral).
+           Not yet implemented.
+   WHERE:  index.html:1958 — the customAIKey input currently
+           wires data-input-action="call" data-fn="resetModelField"
+           for the input event (fires on paste) and a separate
+           data-key-action="enter-call" data-fn-key=
+           "fetchCustomAIModels" for Enter only. fetchCustomAIModels()
+           itself is at js/app.js:10017.
+   DONE:   Pasting (or typing) a key into the Custom AI key
+           field triggers the same model-fetch flow Enter
+           already triggers (debounced, not one fetch per
+           keystroke) — without requiring the user to press
+           Enter. Existing Enter behavior stays intact.
 
 
 ════════════════════════════════════════════════════════════
