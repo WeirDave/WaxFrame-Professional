@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260725-002
+// Build: 20260725-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260725-002';         // build stamp — update each session
+const BUILD       = '20260725-003';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -19010,7 +19010,21 @@ function _noopRelease() { /* no-op for uncapped providers */ }
 
 async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
   const cfg = API_CONFIGS[ai.provider];
-  if (!cfg || !cfg._key) throw new Error('No API key');
+  // v3.63.408 — isCustomEndpoint must be known BEFORE the key gate: server-
+  // imported AIs (Alfredo, Ollama, LM Studio, unauth'd Open WebUI) are
+  // documented and UI-supported as keyless (headersFn below already omits
+  // Authorization when no key is set; the Setup screen, connectivity probe,
+  // and user manual all treat this as the intended air-gapped/self-hosted
+  // case). This function never got the same treatment: the blanket
+  // `!cfg._key` guard threw "No API key" for every keyless custom AI before
+  // a request was ever attempted, and the unguarded `cfg._key.length` below
+  // would have thrown a second, different error even if the guard were
+  // simply removed. Every OTHER keyHint call site in this file already uses
+  // `cfg?._key?.length` for exactly this reason — this was the one place
+  // that hadn't caught up. Net effect: a correctly-configured keyless local
+  // server AI could never complete a single round call.
+  const isCustomEndpoint = !!cfg?._isCustom || !!cfg?._modelsEndpoint;
+  if (!cfg || (!cfg._key && !isCustomEndpoint)) throw new Error('No API key');
 
   // v3.63.250 — Acquire a per-provider concurrency slot BEFORE timing
   // starts. The internal "completed in Xs" log measures only actual
@@ -19022,9 +19036,8 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
   const _slotRelease = await _acquireProviderSlot(ai.provider);
   try {
 
-  const keyHint = cfg._key.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
+  const keyHint = cfg._key?.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
   const t0 = Date.now();
-  const isCustomEndpoint = !!cfg._isCustom || !!cfg._modelsEndpoint;
 
   let response;
   // v3.57.3 — bound the request with a role-aware timeout (see constants above).

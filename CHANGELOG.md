@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.408
+
+**Two round-blocking bugs: keyless server AIs could never complete a call; Enter-to-fetch-models silently broken**
+
+Build: `20260725-003`<br>
+Released: `2026-07-25`
+
+### What changed
+
+Continued local-Ollama testing (the same effort that produced v3.63.407) surfaced two more defects, both confirmed live rather than just read in the source.
+
+1. **`callAPI()` — the function that actually fires every reviewer/Builder request — threw `"No API key"` for any keyless server AI, before ever attempting a request.** `js/app.js`'s `callAPI()` opened with `if (!cfg || !cfg._key) throw new Error('No API key')`, applied unconditionally to every provider. But server-imported AIs (Alfredo, Ollama, LM Studio, unauthenticated Open WebUI) are documented and UI-supported as keyless — the Import from Model Server flow's own `headersFn` already omits `Authorization` entirely when no key is set, and the user manual explicitly says to leave the key field blank for these. `callAPI()` never got the same treatment. A second, related crash was one line below it: `cfg._key.length` with no optional chaining, while every *other* `keyHint` call site in the file already used `cfg?._key?.length` for exactly this reason — a clear sign this function was the one place that hadn't caught up. Net effect: a correctly-configured keyless local server AI could never complete a single round call, cloud AIs unaffected. Fixed by computing `isCustomEndpoint` before the guard and exempting keyless custom/server AIs from it; verified live against a real local Ollama call (`"Pong."` came back).
+2. **Enter-to-fetch-models on the Add Custom AI key field silently stopped working.** The field's placeholder still reads "Paste key, then press Enter to load models," but the `<input>` carried two `data-fn` attributes — `data-fn="resetModelField"` for input events and a second `data-fn="fetchCustomAIModels"` for the Enter-key action. Two attributes of the same name on one element is invalid HTML; the browser silently keeps only the first and drops the second, so Enter re-ran `resetModelField` instead of fetching models. The codebase already has an established pattern for exactly this collision — `data-fn-key` overrides `data-fn` for keydown, used by `key-call-multi` elsewhere in this file — but the `enter-call` key-action never supported that override. Extended `enter-call` to check `data-fn-key` first (temporarily swapping it into `data-fn` and back so it reuses `callAction`'s full arg-resolution logic rather than duplicating it), and corrected the one broken input to use `data-fn-key`. Verified live: Enter now dispatches `fetchCustomAIModels`, confirmed `resetModelField` no longer intercepts it.
+
+### Verification
+
+- `callAPI()` fix: called directly in a live browser session against a real local Ollama AI with no key configured — failed with `"No API key"` before the fix, returned `"Pong."` after.
+- Enter-key fix: dispatched a synthetic Enter `keydown` on the live `customAIKey` element with both target functions instrumented — confirmed `fetchCustomAIModels` fires and `resetModelField` does not, after only firing `resetModelField` before the fix.
+- `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `js/app.js` — `callAPI()` no longer requires a key for custom/server-imported AIs; `keyHint` computation uses safe optional chaining matching every other call site
+- `js/helper-handlers.js` — `enter-call` KEY_ACTIONS entry now honors a `data-fn-key` override, mirroring the existing `key-call-multi` convention
+- `index.html` — Add Custom AI key field's Enter-action `data-fn` corrected to `data-fn-key`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, and `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Keyless server AIs return to always failing round calls with "No API key"; Enter-to-fetch-models on the Custom AI key field returns to silently doing nothing useful.
+
+---
+
 ## v3.63.407
 
 **Server Based AI: local model servers (Ollama, LM Studio) could never actually connect**

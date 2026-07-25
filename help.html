@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260725-002
+  Build: 20260725-003
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -33,7 +33,7 @@
        'unsafe-eval' stays on script-src for vendored SheetJS / mammoth /
        pdf.js (new Function internals). style-src 'unsafe-inline' stays
        because we emit per-element style="..." attributes and the
-       inline <style> on the next line. v3.63.407 --
+       inline <style> on the next line. v3.63.408 --
        connect-src carries http://localhost:* and http://127.0.0.1:* so the
        Server Based AI / Import from Model Server flow can reach a locally
        running Ollama, LM Studio, or Open WebUI instance. Scoped to loopback
@@ -79,7 +79,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260725-002">
+  <meta name="waxframe-build" content="20260725-003">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
   <link rel="canonical" href="https://waxframe.com/help.html">
@@ -501,10 +501,10 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.407"></script>
-  <script src="js/storage.js?v=3.63.407"></script>
-  <script src="js/provider-models.js?v=3.63.407"></script>
-  <script src="js/provider-catalog.js?v=3.63.407"></script>
-  <script src="js/help-page.js?v=3.63.407"></script>
+  <script src="js/version.js?v=3.63.408"></script>
+  <script src="js/storage.js?v=3.63.408"></script>
+  <script src="js/provider-models.js?v=3.63.408"></script>
+  <script src="js/provider-catalog.js?v=3.63.408"></script>
+  <script src="js/help-page.js?v=3.63.408"></script>
 </body>
 </html>
