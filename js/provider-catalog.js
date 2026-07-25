@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260725-001
+// Build: 20260725-002
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -587,14 +587,20 @@
         .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1; })
         .map(function (m) { return String(m.name || '').replace('models/', ''); });
     } else {
-      // OpenAI-shape: accept both wrappers (OpenAI's { data: [...] } and
-      // Together AI's bare array). When entries carry a `type` field
+      // OpenAI-shape: accept three wrappers — OpenAI's { data: [...] },
+      // Ollama's native { models: [...] } (the Quick-Add Ollama preset points
+      // Models Endpoint at /api/tags, which returns this shape, not {data:[]}),
+      // and a bare array (Together AI). When entries carry a `type` field
       // (Together AI's mixed catalog), keep only chat; providers without
-      // it (OpenAI, Mistral, DeepSeek) pass through unchanged.
-      var arr = Array.isArray(data) ? data : ((data && data.data) || []);
+      // it (OpenAI, Mistral, DeepSeek, Ollama) pass through unchanged.
+      // v3.63.407 — added the {models:[]} branch: without it, every Ollama
+      // server AI's periodic connectivity probe (this same function, called
+      // from _checkServerAIConnectivity) saw an empty list and permanently
+      // flagged a working model as "⚠ Model missing".
+      var arr = Array.isArray(data) ? data : ((data && data.data) || (data && data.models) || []);
       models = arr
         .filter(function (m) { return !m.type || m.type === 'chat'; })
-        .map(function (m) { return m.id; })
+        .map(function (m) { return m.id || m.name; })
         .sort();
     }
 
