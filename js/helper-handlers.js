@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260725-002
+// Build: 20260725-003
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -389,9 +389,27 @@
     // optionally with data-arg / data-arg-this / data-arg-event.
     // data-prevent-default="1" calls e.preventDefault() (used by the
     // Custom-AI fetch-models input).
+    // v3.63.408 — data-fn-key overrides data-fn for this dispatch, same
+    // convention callMultiActionPrefixed uses for 'Key'-prefixed pairs.
+    // Needed when the element ALSO carries a data-input-action="call"
+    // data-fn pair for oninput (the Custom-AI key field: input resets the
+    // model field via data-fn, Enter should fetch models). Two data-fn
+    // attributes on one element is invalid HTML — the browser silently
+    // keeps only the first and drops the second, which is exactly what
+    // broke Enter-to-fetch-models here: only the input-action's data-fn
+    // survived, so Enter fired resetModelField again instead of
+    // fetchCustomAIModels. The temporary swap reuses callAction's full
+    // arg-resolution logic rather than duplicating it.
     'enter-call': function(el, e) {
       if (e.key !== 'Enter') return;
       if (el.dataset.preventDefault === '1') e.preventDefault();
+      if (el.dataset.fnKey) {
+        var _prevFn = el.dataset.fn;
+        el.dataset.fn = el.dataset.fnKey;
+        callAction(el, e);
+        el.dataset.fn = _prevFn;
+        return;
+      }
       callAction(el, e);
     },
     // Two-key dispatch for the inline wfPrompt input (Enter to OK,
