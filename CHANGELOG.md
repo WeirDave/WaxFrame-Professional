@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.409
+
+**SEO keyword coverage + self-hosted/no-subscription FAQ**
+
+Build: `20260725-004`<br>
+Released: `2026-07-25`
+
+### What changed
+
+On-page SEO covered title/description phrases well but had two real gaps: no `keywords` meta tag anywhere, and the product's actual differentiators against subscription-based competitors (Jasper, Grammarly, Copy.ai) — self-hosted, air-gap safe, no account, no subscription, bring-your-own API key — were stated in body copy but never targeted as their own searchable content.
+
+1. **`<meta name="keywords">` added to all 16 HTML pages.** Each tag is tailored per page, derived from that page's own title/description (e.g. `ai-resume-review.html` targets "AI resume review, ATS resume checker"; `ai-api-pricing.html` targets "ChatGPT API pricing, Claude API pricing, Gemini API cost"). Costless for Bing/Yandex, which still weight this tag even though Google doesn't.
+2. **New "Frequently Asked" section on `privacy.html`**, with a matching `FAQPage` JSON-LD block, answering the four questions this site never explicitly targeted: "Is WaxFrame self-hosted or air-gap safe?", "Do I need to create an account?", "Is there a subscription?", "Do I need my own AI provider API keys?" Reuses the exact `.wf-card` / `FAQPage` pattern already proven live on `ai-api-pricing.html` — no new CSS, no new JS.
+3. **`llms.txt` tightened** to state "self-hosted" and "no subscription" explicitly (previously implied via "no backend, no account"), so an LLM crawler paraphrasing the page surfaces those exact terms.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass (all 16 pages carry the CSP meta tag, clickjacking guard, 0 inline handlers, exactly 1 inline `<script>`; version stamps consistent at 3.63.409 / build 20260725-004).
+- Manually confirmed all 16 HTML files carry a `keywords` meta tag.
+- New `privacy.html` FAQ section verified against the same JSON-LD shape already live on `ai-api-pricing.html`.
+
+### Files touched
+
+- All 16 HTML pages — new `<meta name="keywords">` tag
+- `privacy.html` — new "Frequently Asked" section (4 Q&A) + `FAQPage` JSON-LD block
+- `llms.txt` — self-hosted / no-subscription wording added
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. No functional behavior changes — pure SEO/content addition, safe to roll back without side effects.
+
+---
+
 ## v3.63.408
 
 **Two round-blocking bugs: keyless server AIs could never complete a call; Enter-to-fetch-models silently broken**
