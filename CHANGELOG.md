@@ -2,6 +2,48 @@
 
 ---
 
+## v3.63.413
+
+**Pricing auto-refresh hardened against confidently-wrong answers, plus push email alerts**
+
+Build: `20260725-008`<br>
+Released: `2026-07-25`
+
+### What changed
+
+v3.63.412 shipped the scheduled Perplexity-driven pricing refresh, verified with a real dry run before deploy. That dry run's own results, re-examined, exposed a real gap: the original validation (all four fields present and well-formed) let a *complete, well-formed but wrong* answer through untouched. Perplexity returned a fully valid price for Mistral ($0.50/$1.50 per M) that turned out to be a different model tier — confirmed wrong against Mistral's own official pricing page. If that had been a real run instead of a dry run, it would have shipped live, unattended, silently overwriting correct data.
+
+Two guardrails added, both verified against the real Perplexity API before trusting them:
+
+1. **Source citation required.** The prompt now requires a `source` URL for every field; the response is rejected unless that URL's hostname matches the provider's own official domain (new `SOURCE_DOMAINS` allowlist in `src/index.js`). A same-provider tier mix-up is far more likely to cite a different page than the one for the exact model asked about.
+2. **Delta threshold (40%).** Even a fully valid, correctly-sourced price gets held as `flagged` — not auto-applied — if it moved more than 40% from the current value. Old value stays live; the proposed new value is recorded in the run log for a human glance. Real price cuts that large happen occasionally, but that's also exactly the shape of a tier-mismatch error.
+
+A second, separate problem surfaced testing the fix: requiring `contextWindow`/`maxOutput` alongside price meant the feature would near-never successfully update anything — Perplexity reliably nails the price but frequently can't confirm max-output-tokens specifically, a much less consistently published number than $/M pricing. Re-tested live: with all four required, 8 of 9 providers got rejected outright even when price + source were solid. Fixed by making price + trusted source the hard gate, and letting `contextWindow`/`maxOutput` independently fall back to the existing value when unconfirmed instead of vetoing an otherwise-good price update. Re-verified: Mistral now correctly confirms unchanged (this run's real price matched), Together AI's real 18% price increase now correctly auto-applies, and ChatGPT's consistently-suspicious 275% price jump correctly gets flagged rather than applied or silently dropped.
+
+**Push email alerts.** The run-log status page is pull — exactly the "someone has to remember to check" problem this whole feature exists to eliminate. Added a `send_email` Worker binding (Cloudflare Email Routing, `[[send_email]]` in `wrangler.toml`) that emails `weirdave@aol.com` when: the whole run throws, any provider gets `flagged`, or a provider that was working last run suddenly can't be read this run (the "their page probably changed" signal). Deliberately silent on routine `retained` — Gemini's free tier, Together, and Grok consistently come back incomplete most runs in practice; alerting on that every week would just become noise. Set up `waxframe.com`'s Email Routing from scratch for this (previously completely unconfigured — confirmed no existing MX/SPF records to conflict with before adding any); the destination address auto-verified since it's the Cloudflare account's own login email. Delivery verified for real: sent 4 live test emails (one an accidental duplicate from a redeploy-propagation-timing curl during verification, confirmed harmless and disclosed), all 4 confirmed received.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Both guardrails verified against the real Perplexity API via a read-only dry-run script before trusting them — confirmed the source-domain + delta-threshold combination would have caught the original Mistral false-positive.
+- The price-required/size-optional redesign re-verified against the real API afterward — confirmed it stopped near-universally rejecting valid price data while keeping the two new guardrails intact.
+- Email delivery verified end-to-end via a temporary test route (removed before final deploy) hitting the real `send_email` binding — not simulated. `wrangler tail` confirmed `send()` resolved without error server-side; David confirmed actual inbox delivery.
+- Checked `waxframe.com`'s existing DNS before adding Email Routing records — only an unrelated Google Search Console TXT record existed, Cloudflare's own recommendations banner independently confirmed no MX/SPF/DKIM was configured. Clean addition, nothing to conflict with.
+
+### Files touched
+
+- `tools/pricing-worker/src/index.js` — `SOURCE_DOMAINS` allowlist, `isTrustedSource()`, `relativeDelta()`, `DELTA_THRESHOLD`; validation redesigned to price-required/size-optional; `buildRawEmail()` + `sendAlertEmail()` (hand-rolled RFC5322, no mimetext/nodemailer dependency); alert-trigger logic in `refreshPricing()`
+- `tools/pricing-worker/wrangler.toml` — `[[send_email]]` binding added
+- `tools/pricing-worker/README.md` — "Scheduled auto-refresh" section rewritten with the new validation model and a new "Email alerts" section
+- Cloudflare account: `waxframe.com` Email Routing enabled (MX + SPF + DKIM records added), destination address `weirdave@aol.com` verified, `waxframe-pricing-deploy` API token scope unchanged (already covered this)
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit and redeploy (`cd tools/pricing-worker && npx wrangler deploy`) to remove the new guardrails and email alerts — falls back to v3.63.412's all-four-fields-required validation (which, per this release's own testing, would resume near-never successfully updating anything, so this is a functional regression, not a neutral rollback). `waxframe.com`'s Email Routing DNS records can stay in place harmlessly even if the Worker-side alert code is reverted — they don't affect anything else about the domain.
+
+---
+
 ## v3.63.412
 
 **Pricing page now self-refreshes weekly via a web-grounded AI lookup, not just manual curation**

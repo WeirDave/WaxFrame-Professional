@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20260726-001
+//  Build: 20260726-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -31,19 +31,57 @@
 //  tier1Rpm/Tpm) stay human-curated — editorial judgment and exact-URL
 //  correctness aren't things to hand to a scheduled LLM call.
 //
-//  Safety: any provider whose response fails to parse, or whose fields
-//  fail validation (non-numeric price, negative price, malformed size
-//  string), keeps its PREVIOUS values untouched — never overwritten with
-//  a guess. The prior full payload is also kept under KV key `previous`
-//  as a one-step rollback. Every run appends a compact entry to KV key
-//  `run-log` (last 10 kept) showing which providers updated/confirmed/
-//  retained-old-value-and-why — rendered on the `/` status page so a
-//  human can glance at it before trusting the number, e.g. before a demo.
+//  v3.63.413 — Two guardrails added after a real dry-run test caught a
+//  gap: the original validation (complete + well-formed fields) let a
+//  fully-formed but WRONG answer through untouched — Perplexity returned
+//  a complete, validating price for Mistral that turned out to be a
+//  different model tier than the one asked for, confirmed wrong against
+//  Mistral's own pricing page. Neither guardrail below is foolproof, but
+//  together they'd have caught that specific failure:
+//    1. Source citation. The prompt now requires a `source` URL field;
+//       the response is rejected unless that URL's hostname matches the
+//       provider's own official domain (SOURCE_DOMAINS below). Doesn't
+//       prove the number is right, but a same-provider-family tier mix-up
+//       is far more likely to cite a different page than the one for the
+//       exact model asked about.
+//    2. Delta threshold. Even with a valid, correctly-sourced answer, if
+//       inputPerM or outputPerM moves more than DELTA_THRESHOLD (40%)
+//       from the current value, the change is held as `flagged` instead
+//       of applied — old value stays live, the proposed new value is
+//       recorded in the run log for a human to glance at. Real price
+//       cuts that large do happen occasionally, but that's also exactly
+//       the shape of a tier-mismatch error, so it's worth a human's eyes
+//       either way rather than auto-publishing unattended.
+//
+//  Safety: any provider whose response fails to parse, fails validation
+//  (non-numeric/negative price, malformed size string, wrong-domain
+//  source), or trips the delta threshold keeps its PREVIOUS values
+//  untouched — never overwritten with a guess. The prior full payload is
+//  also kept under KV key `previous` as a one-step rollback. Every run
+//  appends a compact entry to KV key `run-log` (last 10 kept) showing
+//  which providers were updated/confirmed/flagged/retained-and-why —
+//  rendered on the `/` status page so a human can glance at it before
+//  trusting the number, e.g. before a demo.
 //
 //  Requires a `PERPLEXITY_API_KEY` Worker secret:
 //    wrangler secret put PERPLEXITY_API_KEY
 //  If unset, refreshPricing() is a silent no-op — manual KV updates keep
 //  working exactly as before, the page never breaks either way.
+//
+//  v3.63.413 follow-up — email alerts. The run-log/status-page mechanism
+//  above is pull (you have to remember to check it), which recreates the
+//  exact problem this whole feature exists to fix. A `send_email` binding
+//  (Cloudflare Email Routing — see wrangler.toml [[send_email]]) pushes an
+//  email to David whenever a run has something worth a human look:
+//    - the whole run throws (KV unreachable, catastrophic failure)
+//    - any provider gets `flagged` this run (valid + sourced but the price
+//      swung past DELTA_THRESHOLD)
+//    - a provider that succeeded (updated/confirmed) on the PREVIOUS run
+//      now can't be read at all — the "their page probably changed" signal
+//  Deliberately does NOT email on routine `retained` (a handful of
+//  providers — Gemini free tier, Together, Grok — consistently come back
+//  incomplete most runs; that's expected LLM behavior, not a fault).
+//  Emailing on every retained would just be noise David learns to ignore.
 // ============================================================
 
 const CORS = {
@@ -70,11 +108,58 @@ const MAX_LOG_ENTRIES = 10;
 const PERPLEXITY_URL   = 'https://api.perplexity.ai/chat/completions';
 const PERPLEXITY_MODEL = 'sonar-pro'; // matches the model WaxFrame's own grounded-asker uses (js/app.js _PERPLEXITY_GROUNDED_PROVIDERS) — sonar-pro's format-following is noticeably tighter for strict-JSON asks than base sonar.
 
+// From-address just needs to be a valid-looking address on a domain
+// Email Routing controls (waxframe.com) — it isn't a real receivable
+// mailbox, nothing needs to route TO it.
+const ALERT_FROM = 'pricing-worker@waxframe.com';
+const ALERT_TO   = 'weirdave@aol.com';
+
+// v3.63.413 — a response is only trusted if its cited source URL's
+// hostname matches (or is a subdomain of) one of these per-provider
+// official domains. Deliberately generous within a provider (docs/
+// console/dashboard/app subdomains all count) but strict across
+// providers — the whole point is catching "right provider, wrong page".
+const SOURCE_DOMAINS = {
+  'gemini-free':  ['google.dev', 'google.com'],
+  'gemini-paid':  ['google.dev', 'google.com'],
+  'grok':         ['x.ai'],
+  'deepseek':     ['deepseek.com'],
+  'together':     ['together.ai', 'together.xyz'],
+  'mistral':      ['mistral.ai'],
+  'chatgpt':      ['openai.com'],
+  'cohere':       ['cohere.com'],
+  'claude':       ['anthropic.com', 'claude.com'],
+  'perplexity':   ['perplexity.ai']
+};
+
+// Relative price movement beyond this on EITHER inputPerM or outputPerM
+// holds the change for manual review instead of auto-applying it.
+const DELTA_THRESHOLD = 0.40;
+
+function hostnameMatchesDomain(hostname, domain) {
+  return hostname === domain || hostname.endsWith('.' + domain);
+}
+
+function isTrustedSource(providerId, sourceUrl) {
+  const allowed = SOURCE_DOMAINS[providerId];
+  if (!allowed || !allowed.length) return true; // no allowlist configured — don't block
+  if (typeof sourceUrl !== 'string' || !sourceUrl) return false;
+  let hostname;
+  try { hostname = new URL(sourceUrl).hostname.toLowerCase(); } catch (e) { return false; }
+  return allowed.some(d => hostnameMatchesDomain(hostname, d));
+}
+
+function relativeDelta(oldVal, newVal) {
+  if (!(oldVal > 0)) return newVal === oldVal ? 0 : Infinity; // old was 0 (free tier) — any nonzero new value is an infinite relative jump, correctly always flagged
+  return Math.abs(newVal - oldVal) / oldVal;
+}
+
 function buildStatusHtml(log) {
   const rows = (log || []).map(entry => {
     const items = (entry.changes || []).map(c => {
       const label = c.status === 'updated' ? `<strong style="color:#0a7d2c">${c.id}: updated</strong>`
         : c.status === 'confirmed' ? `${c.id}: confirmed unchanged`
+        : c.status === 'flagged' ? `<strong style="color:#b3261e">${c.id}: flagged for review</strong> — ${c.reason || 'large price delta'}`
         : `<span style="color:#a15c00">${c.id}: retained old value (${c.reason || 'unknown reason'})</span>`;
       return `<li>${label}</li>`;
     }).join('');
@@ -93,9 +178,9 @@ function buildResearchPrompt(provider) {
   return `For the AI API provider "${provider.name}", model "${provider.model}": look up the CURRENT, officially published API pricing as of today from the provider's own pricing/billing documentation.${tierNote}
 
 Return ONLY a compact JSON object, no markdown, no explanation, no extra text:
-{"inputPerM": <number, USD per 1M input tokens, or null if you cannot verify it from an authoritative current source>, "outputPerM": <number, USD per 1M output tokens, or null>, "contextWindow": <string like "1M" or "256K", or null>, "maxOutput": <string like "8K", or null>}
+{"inputPerM": <number, USD per 1M input tokens, or null if you cannot verify it from an authoritative current source>, "outputPerM": <number, USD per 1M output tokens, or null>, "contextWindow": <string like "1M" or "256K", or null>, "maxOutput": <string like "8K", or null>, "source": <string, the exact URL of the official page you found this pricing on, or null>}
 
-Do not guess or estimate a field you cannot verify — return null for it instead.`;
+The "source" URL MUST be a page on the provider's own official domain — not a third-party aggregator, comparison site, or news article. Do not guess or estimate any field you cannot verify — return null for it instead.`;
 }
 
 function extractJson(text) {
@@ -135,11 +220,59 @@ async function researchProvider(provider, apiKey) {
   const parsed = extractJson(text);
   if (!parsed) return { ok: false, reason: 'unparseable response' };
 
-  const { inputPerM, outputPerM, contextWindow, maxOutput } = parsed;
-  if (!isValidPrice(inputPerM) || !isValidPrice(outputPerM) || !isValidSizeString(contextWindow) || !isValidSizeString(maxOutput)) {
-    return { ok: false, reason: 'invalid or incomplete fields in response' };
+  // v3.63.413 follow-up: inputPerM/outputPerM (the actual PRICE — the
+  // entire point of this feature) are hard-required. contextWindow and
+  // maxOutput are real-world unreliable — Perplexity frequently nails the
+  // price and cites a solid source but comes back null on max-output-
+  // tokens specifically, since it's a less consistently published number
+  // than $/M pricing. Requiring all four as a block meant this feature
+  // would near-never successfully update anything in practice (confirmed
+  // against live test runs). So: price + trusted source gate the whole
+  // response; contextWindow/maxOutput are independently optional and
+  // fall back to the provider's existing value when unconfirmed, rather
+  // than vetoing an otherwise-good price update.
+  const { inputPerM, outputPerM, contextWindow, maxOutput, source } = parsed;
+  if (!isValidPrice(inputPerM) || !isValidPrice(outputPerM)) {
+    return { ok: false, reason: 'invalid or missing price fields in response' };
   }
-  return { ok: true, inputPerM, outputPerM, contextWindow: String(contextWindow).trim(), maxOutput: String(maxOutput).trim() };
+  if (!isTrustedSource(provider.id, source)) {
+    return { ok: false, reason: `untrusted or missing source (got: ${source || 'none'})` };
+  }
+  return {
+    ok: true, inputPerM, outputPerM, source,
+    contextWindow: isValidSizeString(contextWindow) ? String(contextWindow).trim() : null,
+    maxOutput: isValidSizeString(maxOutput) ? String(maxOutput).trim() : null
+  };
+}
+
+// Hand-rolled raw RFC5322 message — deliberately no mimetext/nodemailer
+// dependency, matches this project's no-build-step, no-npm-deps stance
+// everywhere else. A plain-text alert email doesn't need more than this.
+function buildRawEmail(subject, bodyLines) {
+  const body = bodyLines.join('\r\n');
+  return [
+    `From: WaxFrame Pricing Worker <${ALERT_FROM}>`,
+    `To: ${ALERT_TO}`,
+    `Subject: ${subject}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'MIME-Version: 1.0',
+    '',
+    body
+  ].join('\r\n');
+}
+
+async function sendAlertEmail(env, subject, bodyLines) {
+  if (!env.PRICING_ALERTS) return; // send_email binding not configured — don't block the run over it
+  try {
+    const { EmailMessage } = await import('cloudflare:email');
+    const raw = buildRawEmail(subject, bodyLines);
+    await env.PRICING_ALERTS.send(new EmailMessage(ALERT_FROM, ALERT_TO, raw));
+  } catch (e) {
+    // Email is a nice-to-have alert channel, not the source of truth (the
+    // run-log/status page is) — a failure to send shouldn't be treated as
+    // a refreshPricing() failure. Nothing else to do here; there's no
+    // second alert channel to report an alert-channel failure to.
+  }
 }
 
 // Same formula as the rest of the app already assumes for this field
@@ -155,45 +288,96 @@ async function refreshPricing(env) {
   const apiKey = env.PERPLEXITY_API_KEY;
   if (!apiKey) return; // not configured yet — manual KV updates keep working unaffected
 
-  const currentRaw = await env.PRICING_DATA.get('latest');
-  if (!currentRaw) return; // KV not seeded yet, nothing to refresh against
+  try {
+    const currentRaw = await env.PRICING_DATA.get('latest');
+    if (!currentRaw) return; // KV not seeded yet, nothing to refresh against
 
-  let current;
-  try { current = JSON.parse(currentRaw); } catch (e) { return; }
-  if (!current || !Array.isArray(current.providers)) return;
+    let current;
+    try { current = JSON.parse(currentRaw); } catch (e) { return; }
+    if (!current || !Array.isArray(current.providers)) return;
 
-  const results = await Promise.allSettled(current.providers.map(p => researchProvider(p, apiKey)));
-
-  const nextProviders = [];
-  const changes = [];
-  current.providers.forEach((p, i) => {
-    const r = results[i];
-    if (r.status === 'fulfilled' && r.value.ok) {
-      const { inputPerM, outputPerM, contextWindow, maxOutput } = r.value;
-      const priceMoved = inputPerM !== p.inputPerM || outputPerM !== p.outputPerM;
-      nextProviders.push({
-        ...p,
-        inputPerM, outputPerM, contextWindow, maxOutput,
-        estPerRound: computeEstPerRound(inputPerM, outputPerM, current.tokensPerRound)
-      });
-      changes.push({ id: p.id, status: priceMoved ? 'updated' : 'confirmed' });
-    } else {
-      nextProviders.push(p);
-      const reason = r.status === 'fulfilled' ? r.value.reason : String(r.reason && r.reason.message || r.reason);
-      changes.push({ id: p.id, status: 'retained', reason });
+    // Prior run's per-provider status, read BEFORE this run's entry is
+    // pushed, so "was this provider OK last time" reflects the run before
+    // this one, not this one.
+    let log = [];
+    const logRaw = await env.PRICING_DATA.get(RUN_LOG_KEY);
+    if (logRaw) { try { log = JSON.parse(logRaw) || []; } catch (e) { log = []; } }
+    const prevStatusById = {};
+    if (log[0] && Array.isArray(log[0].changes)) {
+      log[0].changes.forEach(c => { prevStatusById[c.id] = c.status; });
     }
-  });
+    const wasHealthy = status => status === 'updated' || status === 'confirmed';
 
-  await env.PRICING_DATA.put(PREVIOUS_KEY, currentRaw);
+    const results = await Promise.allSettled(current.providers.map(p => researchProvider(p, apiKey)));
 
-  const next = { ...current, lastUpdated: new Date().toISOString(), providers: nextProviders };
-  await env.PRICING_DATA.put('latest', JSON.stringify(next));
+    const nextProviders = [];
+    const changes = [];
+    const alertLines = [];
+    current.providers.forEach((p, i) => {
+      const r = results[i];
+      if (r.status === 'fulfilled' && r.value.ok) {
+        const { inputPerM, outputPerM, contextWindow, maxOutput, source } = r.value;
+        const inDelta  = relativeDelta(p.inputPerM, inputPerM);
+        const outDelta = relativeDelta(p.outputPerM, outputPerM);
+        if (inDelta > DELTA_THRESHOLD || outDelta > DELTA_THRESHOLD) {
+          // Valid, well-sourced answer — but the swing is big enough to hold
+          // for a human look rather than auto-apply. Old values stay live.
+          const reason = `proposed $${inputPerM}/$${outputPerM} per M (was $${p.inputPerM}/$${p.outputPerM}) — ${source || 'no source'}`;
+          nextProviders.push(p);
+          changes.push({ id: p.id, status: 'flagged', reason });
+          alertLines.push(`FLAGGED  ${p.id} (${p.name}): ${reason}`);
+          return;
+        }
+        const priceMoved = inputPerM !== p.inputPerM || outputPerM !== p.outputPerM;
+        nextProviders.push({
+          ...p,
+          inputPerM, outputPerM,
+          contextWindow: contextWindow || p.contextWindow, // Perplexity often can't confirm this even when price+source are solid — keep old rather than block the price update
+          maxOutput: maxOutput || p.maxOutput,
+          estPerRound: computeEstPerRound(inputPerM, outputPerM, current.tokensPerRound)
+        });
+        changes.push({ id: p.id, status: priceMoved ? 'updated' : 'confirmed' });
+      } else {
+        nextProviders.push(p);
+        const reason = r.status === 'fulfilled' ? r.value.reason : String(r.reason && r.reason.message || r.reason);
+        changes.push({ id: p.id, status: 'retained', reason });
+        // Only alert-worthy if this provider was working last run and
+        // isn't now — a provider that's ALWAYS incomplete (Gemini free
+        // tier, Together, Grok in practice) is expected, not a regression.
+        if (wasHealthy(prevStatusById[p.id])) {
+          alertLines.push(`NEWLY FAILING  ${p.id} (${p.name}): was OK last run, now: ${reason}`);
+        }
+      }
+    });
 
-  let log = [];
-  const logRaw = await env.PRICING_DATA.get(RUN_LOG_KEY);
-  if (logRaw) { try { log = JSON.parse(logRaw) || []; } catch (e) { log = []; } }
-  log.unshift({ ts: next.lastUpdated, changes });
-  await env.PRICING_DATA.put(RUN_LOG_KEY, JSON.stringify(log.slice(0, MAX_LOG_ENTRIES)));
+    await env.PRICING_DATA.put(PREVIOUS_KEY, currentRaw);
+
+    const next = { ...current, lastUpdated: new Date().toISOString(), providers: nextProviders };
+    await env.PRICING_DATA.put('latest', JSON.stringify(next));
+
+    log.unshift({ ts: next.lastUpdated, changes });
+    await env.PRICING_DATA.put(RUN_LOG_KEY, JSON.stringify(log.slice(0, MAX_LOG_ENTRIES)));
+
+    if (alertLines.length) {
+      await sendAlertEmail(env, `WaxFrame pricing refresh — ${alertLines.length} item(s) need a look`, [
+        `Run at ${next.lastUpdated}:`,
+        '',
+        ...alertLines,
+        '',
+        `Full log: https://waxframe-pricing.weirdave.workers.dev/`
+      ]);
+    }
+  } catch (e) {
+    await sendAlertEmail(env, 'WaxFrame pricing refresh FAILED', [
+      `The scheduled pricing refresh threw an unhandled error at ${new Date().toISOString()}:`,
+      '',
+      String(e && e.stack || e),
+      '',
+      'Live pricing data is unaffected (this run made no writes) — manual',
+      'wrangler kv key put still works as a fallback. See tools/pricing-worker/README.md.'
+    ]);
+    throw e; // still surface in Cloudflare's own cron-event log
+  }
 }
 
 export default {
