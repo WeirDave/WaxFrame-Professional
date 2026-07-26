@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.415
+
+**Two process-verification backlog items closed: prompt-equivalence now actually enforced, pricing cron gets a liveness check**
+
+Build: `20260725-010`<br>
+Released: `2026-07-25`
+
+### What changed
+
+Continuing off tonight's process-verification audit (docs/WaxFrame_Backlog_Master_v258.txt), closed the two most tractable, highest-value findings.
+
+**`tools/verify-prompts-equivalence.mjs` is now actually run by the release gate.** It existed, was documented in CLAUDE.md's release sweep, and was never invoked by anything automated — the closest structural twin to the pricing-worker deploy bug found tonight (a real check, trusted by habit, never enforced). `tools/release-check.mjs` now shells out to it as Check 10 (not imported in-process — the tool calls its own `process.exit()`, which would have killed release-check.mjs before every other check got to run). A future prompt-const drift between `js/prompts.js` and `js/prompt-editor.js`'s DEFAULTS now fails CI instead of shipping silently.
+
+**Pricing Worker cron gets a second, independent liveness check.** The email-alert system from v3.63.413 fires when a scheduled *run* finds something wrong — it can't fire if the cron simply stops firing at all (disabled, misconfigured, account issue), since there's no run to alert on. Added a second daily cron trigger (`checkCronLiveness()`, distinct from the weekly refresh) that checks the run-log's own timestamp for staleness (>9 days) independent of whether the weekly job is even executing, and emails a distinct alert if so. Fires once per staleness episode, not once per day — a KV-backed flag prevents repeat alerts until a fresh run lands and clears it.
+
+### Verification
+
+- `node --check` clean on all touched files.
+- `node tools/release-check.mjs` — pass, confirmed the new Check 10 actually runs (not just added and untested).
+- Liveness check tested for real, not just deployed and trusted: seeded a synthetic 10-day-stale run-log entry via `wrangler kv key put`, added a temporary test route, triggered it twice via curl. First hit sent exactly one alert email (confirmed received); second hit correctly did NOT re-send (dedup flag verified both server-side via KV and by confirming only one email arrived). Test KV entries, local scratch file, and the temporary route all cleaned up before final deploy.
+
+### Files touched
+
+- `tools/release-check.mjs` — new Check 10, shells out to `verify-prompts-equivalence.mjs`
+- `tools/pricing-worker/src/index.js` — `checkCronLiveness()`, `LIVENESS_ALERT_KEY`/`LIVENESS_STALE_DAYS`, `scheduled()` now branches on `event.cron`
+- `tools/pricing-worker/wrangler.toml` — second daily cron trigger added
+- `docs/WaxFrame_Backlog_Master_v258.txt` — items 5 and 7 to be removed (shipped, not deferred)
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit and redeploy the Worker. Both changes are additive checks with no effect on the actual pricing data path — reverting removes the safety nets, not any live functionality.
+
+---
+
 ## v3.63.414
 
 **Full codebase audit for the two bug classes found today, fixed: OpenAI response-shape trust (8 sites) + a distinct custom-AI format bug found along the way**
