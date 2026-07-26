@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260725-004
+// Build: 20260725-005
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -183,11 +183,41 @@
     }
   };
 
+  // v3.63.410 — Extended-thinking models put a {type:"thinking"} block at
+  // content[0] and the real answer in a later {type:"text"} block. Reading
+  // content[0].text unconditionally returned '' for those models (thinking
+  // blocks carry .thinking, not .text), which the app then reported as a
+  // false "empty response" even though the model had answered. Scan for the
+  // first text-typed block instead of assuming index 0.
+  function firstAnthropicTextBlock(d) {
+    var blocks = (d && d.content) || [];
+    for (var i = 0; i < blocks.length; i++) {
+      if (blocks[i] && blocks[i].type === 'text' && blocks[i].text) return blocks[i].text;
+    }
+    return '';
+  }
+
+  // v3.63.410 — Same latent risk as Anthropic, applied preemptively: Gemini
+  // marks reasoning/thought-summary parts with `thought: true` when a
+  // thinking model surfaces them, ahead of the real answer part. WaxFrame's
+  // request body never sets generationConfig.thinkingConfig.includeThoughts,
+  // so thought parts shouldn't appear today — but that's an API default we
+  // don't control, exactly the kind of silent upstream shift that just broke
+  // Anthropic extraction with zero WaxFrame-side change. Skip thought parts
+  // defensively instead of trusting parts[0].
+  function firstGeminiTextPart(d) {
+    var parts = (d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || [];
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i] && !parts[i].thought && parts[i].text) return parts[i].text;
+    }
+    return '';
+  }
+
   // Response extractors — one per WaxFrame format.
   var EXTRACTORS = {
     'openai-chat':         function (d) { return (d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || ''; },
-    'anthropic-messages':  function (d) { return (d && d.content && d.content[0] && d.content[0].text) || ''; },
-    'gemini-generate':     function (d) { return (d && d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0] && d.candidates[0].content.parts[0].text) || ''; }
+    'anthropic-messages':  firstAnthropicTextBlock,
+    'gemini-generate':     firstGeminiTextPart
   };
 
   // Auth header builders.
@@ -640,6 +670,13 @@
   //                                 filter only, alphabetic sort for openai)
   //   • diagnosticModelsUrl,
   //     diagnosticModelsHeaders   — called by help.html's diagnostic dump
+  //   • extractAnthropicText      — called by app.js's other hand-rolled
+  //                                 Anthropic fetch call sites (tier-asker,
+  //                                 recommend-models, vision/OCR) so they
+  //                                 share the extended-thinking-safe scan
+  //                                 instead of re-hardcoding content[0]
+  //   • extractGeminiText         — same rationale, Gemini's equivalent
+  //                                 thought-part-safe scan
   // The other 9 helpers (FORMATS, BODY_BUILDERS, EXTRACTORS, AUTH_HEADERS,
   // authFor, bodyBuilderFor, extractorFor, buildModelFilters,
   // buildModelFallbacks) are module-internals — buildModelFilters and
@@ -654,6 +691,8 @@
     fetchModelsList: fetchModelsList,
     fetchModelsByFormat: fetchModelsByFormat,
     diagnosticModelsUrl: diagnosticModelsUrl,
-    diagnosticModelsHeaders: diagnosticModelsHeaders
+    diagnosticModelsHeaders: diagnosticModelsHeaders,
+    extractAnthropicText: firstAnthropicTextBlock,
+    extractGeminiText: firstGeminiTextPart
   };
 })(typeof window !== 'undefined' ? window : this);

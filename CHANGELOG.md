@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.410
+
+**Extended-thinking Claude responses falsely reported as "empty response" across all 5 Anthropic call sites**
+
+Build: `20260725-005`<br>
+Released: `2026-07-25`
+
+### What changed
+
+David hit this live while recording a demo: Claude (claude-sonnet-5) failed every round with "Provider returned an empty response," even though the Deep Dive raw payload showed Claude had answered correctly in full.
+
+Root cause: Claude 5 models return extended-thinking output as a `{type:"thinking"}` content block at `content[0]`, with the actual answer in a later `{type:"text"}` block. Every Anthropic-response reader in the codebase hardcoded `content[0].text` — thinking blocks carry `.thinking`, not `.text`, so that read `undefined`, fell back to `''`, and the app reported a false empty-response error even on a fully successful call. This wasn't specific to the Builder/Reviewer round path; the same hardcoded-index bug existed independently in 5 places:
+
+1. `js/provider-catalog.js` — `EXTRACTORS['anthropic-messages']`, which backs the built-in Claude provider and any catalog Anthropic-format entry (the one that fired in David's demo).
+2. `js/app.js` — the model-tier-detection asker (used by "Recommend Models" tier classification).
+3. `js/app.js` — the Recommend Models asker's own response reader.
+4. `js/app.js` — `baseConfigs.anthropic` in the custom/imported-AI Add flow (any user-added Anthropic-compatible provider).
+5. `js/app.js` — the vision/OCR document-transcription path when using Claude for image-based extraction.
+
+Fixed all 5 by scanning for the first `type:"text"` block instead of assuming index 0. Consolidated into one shared helper, `WFProviderCatalog.extractAnthropicText()`, exported from `provider-catalog.js` (loads before `app.js`), so the other 4 call sites in app.js delegate to it instead of re-hardcoding the same logic 4 more times.
+
+Same release: preemptively hardened the mirror-image risk on Gemini. WaxFrame's 5 Gemini response readers had the identical shape — `candidates[0].content.parts[0].text` — and Gemini's API can mark reasoning/thought-summary parts with `thought: true` ahead of the real answer part when a thinking model surfaces them. WaxFrame's request body never sets `generationConfig.thinkingConfig.includeThoughts`, so thought parts shouldn't appear today, but that's an API default outside WaxFrame's control — exactly the kind of silent upstream shift that just broke Anthropic extraction with zero code change on our side. Added `WFProviderCatalog.extractGeminiText()` alongside the Anthropic helper, skipping any part flagged `thought: true` instead of trusting `parts[0]`, and routed all 5 Gemini call sites through it.
+
+### Verification
+
+- `node tools/release-check.mjs` — **could not be run.** Node.js is not installed / not on PATH in this session's shell (confirmed via `Get-Command`, `where.exe`, and a filesystem search of standard install locations — genuinely absent, not skipped). David: please run this yourself before or right after this lands as the mechanical final check; I have no way to execute it in this environment.
+- Manual substitute checks performed in its place: every edited line in `js/provider-catalog.js` and `js/app.js` re-read for balanced braces/parens; the 5-stamp version sweep (APP_VERSION, `js/app.js` `BUILD` const, index.html `?v=` busts, JSON-LD `softwareVersion`, `<meta name="waxframe-build">`) verified via grep across all 47 swept files — `3.63.410` / `20260725-005` present everywhere in scope, zero stray `3.63.409` / `20260725-004` remaining outside historical `CHANGELOG.md` entries and `docs/` citations; `package.json` re-read to confirm still valid JSON. CSS tokens, CSP, clickjacking guard, inline-handler budget, and inline-script-count checks are unaffected by this change (no CSS/HTML-structure edits) and were not re-verified beyond that reasoning.
+- Not yet re-tested against a live extended-thinking Claude response post-fix (blocked on David's demo recording) — logically verified against the exact raw payload from his error report, which contains both a `thinking` block at index 0 and the real answer at index 1.
+
+### Files touched
+
+- `js/provider-catalog.js` — new `firstAnthropicTextBlock()` + `firstGeminiTextPart()` helpers; `EXTRACTORS['anthropic-messages']` and `EXTRACTORS['gemini-generate']` now use them; exported as `WFProviderCatalog.extractAnthropicText` / `.extractGeminiText`
+- `js/app.js` — 8 call sites total (tier-detection asker, Recommend Models asker, custom-AI `baseConfigs` for both formats, vision/OCR transcription for both formats) now call the shared extractors instead of reading `content[0].text` / `parts[0].text` directly
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. The 5 Anthropic call sites return to reading `content[0].text` only — any Claude response that leads with an extended-thinking block will again be misreported as an empty response even when the model answered correctly. The 5 Gemini call sites return to reading `parts[0].text` only — no known live failure today, but no protection either if Google starts surfacing thought parts under current WaxFrame request bodies.
+
+---
+
 ## v3.63.409
 
 **SEO keyword coverage + self-hosted/no-subscription FAQ**

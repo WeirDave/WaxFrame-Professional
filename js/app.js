@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260725-004
+// Build: 20260725-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260725-004';         // build stamp — update each session
+const BUILD       = '20260725-005';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -9178,8 +9178,8 @@ async function classifyTiersForProvider(provider, opts) {
     }
     const data = await resp.json();
     let text = '';
-    if (askerFormat === 'anthropic')   text = data?.content?.[0]?.text || '';
-    else if (askerFormat === 'google') text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (askerFormat === 'anthropic')   text = WFProviderCatalog.extractAnthropicText(data);
+    else if (askerFormat === 'google') text = WFProviderCatalog.extractGeminiText(data);
     else                               text = data?.choices?.[0]?.message?.content || '';
     if (!text) {
       _recordTierError(provider, 'empty-response', `Empty response body from ${askerModel}`);
@@ -9368,8 +9368,8 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
     const data = await resp.json();
 
     let text = '';
-    if (format === 'anthropic')   text = data?.content?.[0]?.text || '';
-    else if (format === 'google') text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (format === 'anthropic')   text = WFProviderCatalog.extractAnthropicText(data);
+    else if (format === 'google') text = WFProviderCatalog.extractGeminiText(data);
     else                          text = data?.choices?.[0]?.message?.content || '';
 
     if (!text) {
@@ -10231,12 +10231,12 @@ function addCustomAI() {
     anthropic: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
       bodyFn: (m, prompt) => JSON.stringify({ model: m, max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }),
-      extractFn: d => d?.content?.[0]?.text || ''
+      extractFn: d => WFProviderCatalog.extractAnthropicText(d)
     },
     google: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k }),
       bodyFn: (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-      extractFn: d => d?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      extractFn: d => WFProviderCatalog.extractGeminiText(d)
     }
   };
 
@@ -13823,7 +13823,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     const resp = await fetch(url, { method: 'POST', headers, body });
     if (!resp.ok) throw new Error(await visionErrorDetail(visionCfg.label || 'Claude', model, resp));
     const data = await resp.json();
-    const transcribed = data?.content?.[0]?.text || '';
+    const transcribed = WFProviderCatalog.extractAnthropicText(data);
     if (!transcribed.trim()) throw new Error(`${visionCfg.label || 'Vision'} returned no text (response was empty)`);
     return transcribed;
   }
@@ -13847,7 +13847,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     const resp = await fetch(url, { method: 'POST', headers, body });
     if (!resp.ok) throw new Error(await visionErrorDetail(visionCfg.label || 'Gemini', model, resp));
     const data = await resp.json();
-    const transcribed = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const transcribed = WFProviderCatalog.extractGeminiText(data);
     if (!transcribed.trim()) throw new Error(`${visionCfg.label || 'Vision'} returned no text (response was empty)`);
     return transcribed;
   }

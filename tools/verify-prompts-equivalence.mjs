@@ -1,6 +1,6 @@
 // ============================================================
 //  tools/verify-prompts-equivalence.mjs
-//  Build: 20260725-004
+//  Build: 20260725-005
 //
 //  Post-Release-F (v3.63.401) the prompt consts (DEFAULT_PHASE_INSTRUCTIONS,
 //  BUILDER_INSTRUCTIONS, MODEL_RECOMMENDATION_PROMPT_*, MODEL_TIER_CLASSIFICATION_PROMPT)
