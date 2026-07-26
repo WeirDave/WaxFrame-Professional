@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20260726-004
+//  Build: 20260726-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -284,6 +284,50 @@ function computeEstPerRound(inputPerM, outputPerM, tokensPerRound) {
   return Math.round(est * 1000) / 1000;
 }
 
+const LIVENESS_ALERT_KEY  = 'liveness-alert-sent';
+const LIVENESS_STALE_DAYS = 9; // weekly cadence (7 days) + 2-day buffer before alerting
+
+// v3.63.415 — The email-alert system above fires when a scheduled run
+// finds something wrong. It CANNOT fire if the cron simply never triggers
+// at all (disabled, misconfigured, account issue) — no run means nothing
+// to alert on, so pricing could silently revert to fully-manual with zero
+// symptom. This runs on a SEPARATE, more frequent cron (daily — see
+// wrangler.toml) and checks the run-log's own timestamp for staleness,
+// independent of whether refreshPricing() itself is even executing.
+async function checkCronLiveness(env) {
+  let log = [];
+  const logRaw = await env.PRICING_DATA.get(RUN_LOG_KEY);
+  if (logRaw) { try { log = JSON.parse(logRaw) || []; } catch (e) { log = []; } }
+  if (!log.length) return; // no runs yet (fresh deploy) — nothing to judge staleness against
+
+  const lastRunMs = new Date(log[0].ts).getTime();
+  if (!isFinite(lastRunMs)) return;
+  const daysSince = (Date.now() - lastRunMs) / 86400000;
+
+  const alertSentAt = await env.PRICING_DATA.get(LIVENESS_ALERT_KEY);
+  if (daysSince > LIVENESS_STALE_DAYS) {
+    if (!alertSentAt) {
+      // Fires once per staleness episode, not once per day it stays stale —
+      // the flag below prevents repeat alerts until a fresh run clears it.
+      await sendAlertEmail(env, 'WaxFrame pricing refresh — weekly cron has not run', [
+        `The weekly pricing refresh hasn't run in ${daysSince.toFixed(1)} days (last run: ${log[0].ts}).`,
+        '',
+        'This is different from a run that fired and found a problem (that',
+        'alerts separately) — this means the cron trigger itself may be',
+        'disabled, misconfigured, or hitting an account-level issue. Check',
+        'Workers & Pages > waxframe-pricing > Settings > Trigger events in',
+        'the Cloudflare dashboard for the real "Next" scheduled time.',
+        '',
+        'This alert will not repeat until a fresh run happens and then goes',
+        'stale again.'
+      ]);
+      await env.PRICING_DATA.put(LIVENESS_ALERT_KEY, new Date().toISOString());
+    }
+  } else if (alertSentAt) {
+    await env.PRICING_DATA.delete(LIVENESS_ALERT_KEY);
+  }
+}
+
 async function refreshPricing(env) {
   const apiKey = env.PERPLEXITY_API_KEY;
   if (!apiKey) return; // not configured yet — manual KV updates keep working unaffected
@@ -412,11 +456,19 @@ export default {
     return new Response('Not Found', { status: 404, headers: CORS });
   },
 
-  // Weekly cron (see wrangler.toml [triggers]). ctx.waitUntil keeps the
-  // invocation alive past the trigger's own return so the 9 provider
-  // lookups + KV writes can finish even though nothing is "waiting" on
-  // the response the way a fetch handler's caller would.
+  // Two cron patterns share this handler (see wrangler.toml [triggers]):
+  // the weekly refresh, and a daily liveness check that verifies the
+  // weekly one is actually still firing (see checkCronLiveness header
+  // comment for why that needs a separate trigger). event.cron carries
+  // which pattern matched. ctx.waitUntil keeps the invocation alive past
+  // the trigger's own return so the async work can finish even though
+  // nothing is "waiting" on the response the way a fetch handler's caller
+  // would.
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(refreshPricing(env));
+    if (event.cron === '0 13 * * *') {
+      ctx.waitUntil(checkCronLiveness(env));
+    } else {
+      ctx.waitUntil(refreshPricing(env));
+    }
   }
 };

@@ -676,6 +676,27 @@ for (const file of htmlFiles) {
   }
 }
 
+// ── Check 10: Prompt/DEFAULTS equivalence ───────────────────
+
+section('Prompt equivalence (tools/verify-prompts-equivalence.mjs)');
+
+// v3.63.415 — This tool existed, was documented in CLAUDE.md's release
+// sweep, and was never actually invoked by anything automated — the same
+// "trusted by habit, never enforced" gap that let the pricing Worker's
+// deploy step get silently skipped for 6 weeks (v3.63.251), found via a
+// full-codebase audit hunting for more instances of exactly that pattern.
+// Shell out rather than import — the tool calls its own process.exit(),
+// which would kill this script before every other check gets to run and
+// report if it were imported in-process instead.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/verify-prompts-equivalence.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/verify-prompts-equivalence.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.includes('MISSING') || l.includes('DRIFT') || l.includes('NOT FOUND') || l.includes('REGRESSION') || l.includes('LIVE REF') || l.includes('EVAL_ERROR'));
+  fail('tools/verify-prompts-equivalence.mjs', `prompt/DEFAULTS drift detected — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
 // ── Report ──────────────────────────────────────────────────
 
 console.log('');

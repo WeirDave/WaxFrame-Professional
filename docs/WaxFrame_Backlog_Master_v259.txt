@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v258
+WaxFrame Backlog Master v259
 2026-07-25
 
 ABOUT THIS DOCUMENT
@@ -212,41 +212,7 @@ OPEN FEATURES
            it (`node tools/test-provider-extractors.mjs`).
 
 
-5. tools/verify-prompts-equivalence.mjs is documented but never automated
-   ─────────────────────────────────────────────────────────
-   WHAT:   The tool exists, is well-documented, and is listed in
-           CLAUDE.md's release sweep — but that only means its
-           version-stamp comment gets bumped each release like
-           any other JS file. Nothing (not release-check.mjs, not
-           the GitHub Action, not package.json — no scripts block
-           exists) ever actually executes it. It only runs when a
-           human remembers to type the command by hand.
-   WHY:    This is the closest structural twin to the v3.63.251
-           pricing bug: a real verification script exists and is
-           trusted by habit instead of enforced. If a future
-           prompt refactor reintroduces drift between
-           js/prompts.js's WF_PROMPTS and js/prompt-editor.js's
-           DEFAULTS (the exact class of bug this tool exists to
-           catch, per its own header), release-check.mjs and CI
-           both pass anyway — neither parses prompt semantics.
-           Found via a full-codebase audit prompted by the
-           pricing bug, specifically hunting for more instances
-           of "step 1 done, step 2 silently skipped, nothing
-           detects it."
-   STATE:  OPEN — not started.
-   WHERE:  tools/verify-prompts-equivalence.mjs (the tool itself);
-           tools/release-check.mjs and .github/workflows/
-           release-check.yml (where a call to it is missing).
-   DONE:   Either release-check.mjs invokes it directly (in-
-           process import + call, matching how the other checks
-           work) or the GitHub Action adds a dedicated step
-           running `node tools/verify-prompts-equivalence.mjs`
-           and fails the build on a nonzero exit. A silently-
-           skipped run is no longer possible — CI either ran it
-           and passed, or the build is red.
-
-
-6. Release ceremony has two steps with no automated verification they ran
+5. Release ceremony has two steps with no automated verification they ran
    ─────────────────────────────────────────────────────────
    WHAT:   Two CLAUDE.md-documented release-ceremony steps —
            "create the GitHub release immediately, every single
@@ -282,34 +248,7 @@ OPEN FEATURES
            printing to a terminal nobody's watching.
 
 
-7. Pricing Worker cron has no liveness check if it stops firing entirely
-   ─────────────────────────────────────────────────────────
-   WHAT:   v3.63.413's email-alert system fires when a scheduled
-           run finds something wrong. It cannot fire if the cron
-           simply never triggers at all (disabled, misconfigured,
-           quota issue) — no run means nothing to alert on.
-   WHY:    A wrangler.toml edit or dashboard change could
-           accidentally disable/misconfigure the cron trigger
-           with zero symptom: no alert (nothing "failed", nothing
-           ran), pricing silently reverts to fully-manual-only.
-           Detection requires proactively visiting the status
-           page and noticing the run log has gone stale — the
-           same pull problem the email-alert feature was built to
-           solve for individual run failures, just not for "no
-           runs at all."
-   STATE:  OPEN — not started.
-   WHERE:  tools/pricing-worker/src/index.js (scheduled handler);
-           tools/pricing-worker/wrangler.toml ([triggers]).
-   DONE:   Some independent liveness signal exists — e.g. a
-           second, less-frequent cron (or an external uptime-
-           style check) that verifies the run-log's most recent
-           timestamp is within the expected window (~8 days) and
-           alerts if not, catching "the weekly job stopped
-           running" as distinct from "the weekly job ran and
-           found a problem."
-
-
-8. waxframe-claude-proxy Worker source lives entirely outside version control
+6. waxframe-claude-proxy Worker source lives entirely outside version control
    ─────────────────────────────────────────────────────────
    WHAT:   Unlike tools/pricing-worker/ (src/, wrangler.toml,
            README all committed here), the Claude CORS-proxy
@@ -326,9 +265,9 @@ OPEN FEATURES
            there's no structural guarantee of that, and zero
            audit trail of what's actually deployed there today
            versus what any given historical CHANGELOG entry
-           claims. Lower urgency than items 5-7 (more likely to
-           fail loud than silent) but flagged since it's the
-           single biggest "not even in git" gap found.
+           claims. Lower urgency than item 5 (more likely to fail
+           loud than silent) but flagged since it's the single
+           biggest "not even in git" gap found.
    STATE:  OPEN — not started. Scope/ownership call: does this
            Worker's source get imported into this repo (matching
            the pricing-worker precedent), or does it stay

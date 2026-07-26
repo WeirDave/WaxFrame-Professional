@@ -10,13 +10,18 @@ compatibility_date = "2026-06-03"
 binding = "PRICING_DATA"
 id = "2a06447c94914b699778a87511cee795"
 
-# Weekly numeric-pricing refresh via Perplexity Sonar (web-grounded).
-# Sundays 12:00 UTC (Cloudflare's cron day-of-week field: 1 = Sunday, not
-# Monday — verified against the deployed schedule, not assumed). See
-# src/index.js's scheduled() handler + header comment for what this does
-# and its safety guardrails.
+# Two schedules:
+#  - Weekly numeric-pricing refresh via Perplexity Sonar (web-grounded).
+#    Sundays 12:00 UTC (Cloudflare's cron day-of-week field: 1 = Sunday,
+#    not Monday — verified against the deployed schedule, not assumed).
+#  - Daily liveness check (13:00 UTC, distinct hour from the weekly one)
+#    that verifies the weekly refresh is actually still firing at all —
+#    the email-alert system can't alert on "the cron never ran", only on
+#    "a run happened and found a problem", so this covers that gap
+#    independently. See src/index.js's scheduled()/checkCronLiveness()
+#    for what each does and their safety guardrails.
 [triggers]
-crons = ["0 12 * * 1"]
+crons = ["0 12 * * 1", "0 13 * * *"]
 
 # Push email alerts (via Cloudflare Email Routing) when a refresh needs a
 # human look — see src/index.js sendAlertEmail() + the v3.63.413-follow-up
