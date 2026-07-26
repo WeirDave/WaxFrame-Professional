@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260725-008
+// Build: 20260725-009
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260725-008';         // build stamp — update each session
+const BUILD       = '20260725-009';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -9180,7 +9180,7 @@ async function classifyTiersForProvider(provider, opts) {
     let text = '';
     if (askerFormat === 'anthropic')   text = WFProviderCatalog.extractAnthropicText(data);
     else if (askerFormat === 'google') text = WFProviderCatalog.extractGeminiText(data);
-    else                               text = data?.choices?.[0]?.message?.content || '';
+    else                               text = WFProviderCatalog.extractOpenAIText(data);
     if (!text) {
       _recordTierError(provider, 'empty-response', `Empty response body from ${askerModel}`);
       return null;
@@ -9370,7 +9370,7 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
     let text = '';
     if (format === 'anthropic')   text = WFProviderCatalog.extractAnthropicText(data);
     else if (format === 'google') text = WFProviderCatalog.extractGeminiText(data);
-    else                          text = data?.choices?.[0]?.message?.content || '';
+    else                          text = WFProviderCatalog.extractOpenAIText(data);
 
     if (!text) {
       console.warn('[recommend] empty response from provider:', data);
@@ -10226,7 +10226,7 @@ function addCustomAI() {
         return h;
       },
       bodyFn: (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
-      extractFn: d => d?.choices?.[0]?.message?.content || ''
+      extractFn: d => WFProviderCatalog.extractOpenAIText(d)
     },
     anthropic: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
@@ -11212,7 +11212,7 @@ function addImportServerModels() {
         return h;
       },
       bodyFn:    (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
-      extractFn: d => d?.choices?.[0]?.message?.content || ''
+      extractFn: d => WFProviderCatalog.extractOpenAIText(d)
     };
     if (key) API_CONFIGS[id]._key = key;
 
@@ -13801,7 +13801,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     const resp = await fetch(url, { method: 'POST', headers, body });
     if (!resp.ok) throw new Error(await visionErrorDetail(visionCfg.label || 'OpenAI-format', model, resp));
     const data = await resp.json();
-    const transcribed = data?.choices?.[0]?.message?.content || '';
+    const transcribed = WFProviderCatalog.extractOpenAIText(data);
     if (!transcribed.trim()) throw new Error(`${visionCfg.label || 'Vision'} returned no text (response was empty)`);
     return transcribed;
   }

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260725-008
+// Build: 20260725-009
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1030,12 +1030,33 @@ function loadSettings() {
         if (!API_CONFIGS[ai.provider] && h.customAIConfigs?.[ai.provider]) {
           API_CONFIGS[ai.provider] = h.customAIConfigs[ai.provider];
         }
-        // Functions don't survive JSON — rebuild them if missing
+        // Functions don't survive JSON — rebuild them if missing.
+        // v3.63.414 — this rebuild ignored cfg.format entirely and always
+        // installed OpenAI-shape functions, even for a custom AI originally
+        // added as format:'anthropic' or 'google' — wrong auth header AND
+        // wrong response extraction for any such AI on every app reload
+        // (functions never survive the JSON round-trip, so this branch runs
+        // every time). Found during the same audit that caught the
+        // OpenAI-shape extraction bug in provider-catalog.js/app.js — same
+        // root cause (an unguarded assumption never revisited once other
+        // formats existed), different symptom. Now respects cfg.format,
+        // mirroring the same three shapes app.js's baseConfigs already uses
+        // for the Add Custom AI modal.
         const cfg = API_CONFIGS[ai.provider];
         if (cfg && typeof cfg.headersFn !== 'function') {
-          cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` });
-          cfg.bodyFn    = (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] });
-          cfg.extractFn = d => d?.choices?.[0]?.message?.content || '';
+          if (cfg.format === 'anthropic') {
+            cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' });
+            cfg.bodyFn    = (m, prompt) => JSON.stringify({ model: m, max_tokens: 4096, messages: [{ role: 'user', content: prompt }] });
+            cfg.extractFn = d => WFProviderCatalog.extractAnthropicText(d);
+          } else if (cfg.format === 'google') {
+            cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k });
+            cfg.bodyFn    = (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+            cfg.extractFn = d => WFProviderCatalog.extractGeminiText(d);
+          } else {
+            cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` });
+            cfg.bodyFn    = (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] });
+            cfg.extractFn = d => WFProviderCatalog.extractOpenAIText(d);
+          }
         }
       });
     }
