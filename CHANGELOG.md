@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.411
+
+**Live pricing page had been serving 6-week-stale provider data — deployment step was skipped, not a code bug**
+
+Build: `20260725-006`<br>
+Released: `2026-07-25`
+
+### What changed
+
+David flagged `ai-api-pricing.html` showing a "last updated" stamp of June 3rd while prepping a demo video. Investigation traced it to a deployment gap, not a rendering bug: `v3.63.251` (2026-06-10) refreshed 4 providers' default model IDs across the app, including `tools/pricing-worker/data/pricing-seed.json` — but per that Worker's own documented process, updating live pricing is a two-step operation: edit the seed file, then run `wrangler kv key put ... --remote` to actually push it to the Cloudflare KV namespace backing the live endpoint. The second step never happened. Confirmed by hitting `https://waxframe-pricing.weirdave.workers.dev/api/pricing` directly: it was still serving the pre-refresh data (gpt-4.1, gemini-2.5-flash, grok-4-fast-non-reasoning, deepseek-chat) with `lastUpdated` frozen at the original 2026-06-04 seed date. Because the Worker itself is healthy, the page's live fetch always succeeded, so its "stale fallback" warning banner never fired — visitors have been served incorrect pricing/model data silently for six weeks with zero visible indication anything was wrong.
+
+Fixed by pushing the already-correct (but never-deployed) seed data live via `wrangler kv key put`, and bumping `lastUpdated` in both `tools/pricing-worker/data/pricing-seed.json` and the embedded `FALLBACK_DATA` snapshot in `js/pricing-renderer.js` to the actual push timestamp, keeping them in lockstep per the file's own header comment. Live endpoint reverified post-push: correct model names, current timestamp.
+
+Separately, `wrangler login`'s OAuth browser-callback flow crashed twice in a row on this machine with a Windows-specific Node/libuv assertion (`UV_HANDLE_CLOSING`, `src/win/async.c:94`) corrupting the OAuth state parameter — unrelated to WaxFrame's own code, but worth a note here since it blocked the fix path. Worked around by creating a narrowly-scoped Cloudflare API token (`waxframe-pricing-kv`, Account → Workers KV Storage: Edit only, no other permissions) instead of using interactive OAuth login, and saved it as a persistent `CLOUDFLARE_API_TOKEN` user environment variable on this machine so future pricing pushes don't need to repeat either the OAuth dance or the token creation.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass (ran successfully this time; node is now installed on this machine, see prior release's note).
+- Live endpoint re-fetched post-push with a cache-busting query param: confirmed `lastUpdated` reflects the push timestamp and provider model IDs match the current in-app defaults (gemini-3.5-flash, grok-4.1-fast, deepseek-v4-flash, gpt-5.5, claude-sonnet-4-6).
+- Cloudflare API token verified active via `curl https://api.cloudflare.com/client/v4/user/tokens/verify` before use.
+- Underlying provider prices themselves were last hand-verified 2026-06-10 (same data, just finally deployed) — not freshly re-checked against providers' current billing pages in this release. Flagging that explicitly: the deployment gap is closed, but a fresh pricing accuracy pass is a separate, not-yet-done task if needed before the demo.
+
+### Files touched
+
+- `tools/pricing-worker/data/pricing-seed.json` — `lastUpdated` bumped to `2026-07-26T02:39:09Z`; pushed live to the `PRICING_DATA` KV namespace (no other content changes — the provider data itself was already correct, just undeployed)
+- `js/pricing-renderer.js` — embedded `FALLBACK_DATA.lastUpdated` bumped to match, per the file's lockstep-with-seed convention
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit for the fallback-timestamp change. Note this does NOT roll back the live Cloudflare KV push (that's a separate, already-applied operational change outside git) — reverting the seed JSON in git and re-running `wrangler kv key put --remote` would be needed to also revert the live data, but there's no reason to: the deployed data is objectively more current than what was live before.
+
+---
+
 ## v3.63.410
 
 **Extended-thinking Claude responses falsely reported as "empty response" across all 5 Anthropic call sites**
