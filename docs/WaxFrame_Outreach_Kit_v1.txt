@@ -166,6 +166,23 @@ piece they published:
      listed here because it's newsletter-adjacent, but it's a
      submission, not a cold email.
 
+  7. Docupilot blog — published "AI Document Generator" roundup
+     (docupilot.com/blog/ai-document-generator), surveying 7
+     competing AI document-generation tools and positioning
+     Docupilot itself as a leading solution. Different in kind
+     from candidates 1-4: this is a company blog (Docupilot,
+     Inc.), not an individual writer — no author byline, and the
+     listed contact email is Cloudflare-obfuscated on the page
+     (couldn't extract a working address programmatically). Also
+     worth noting Docupilot is itself a template-based AI
+     document-generation SaaS — closer to an adjacent-competitor
+     inclusion pitch ("here's a genuinely different approach —
+     multi-model critique vs. single-model template fill") than
+     the personal-blogger angle the rest of this list targets.
+     Outreach here would go through their general contact
+     channel/contact form on docupilot.com, not a cold email to
+     a named person — added to the list, not yet pitched.
+
 Not yet researched: no verified "AI tools weekly roundup"
 YouTube channel was confirmed as an active, current-year fit in
 this pass — revisit if the above candidates don't pan out.
