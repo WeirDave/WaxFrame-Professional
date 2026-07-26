@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v256
+WaxFrame Backlog Master v257
 2026-07-25
 
 ABOUT THIS DOCUMENT
@@ -110,17 +110,22 @@ OPEN FEATURES
            gets both a backlink and real user evaluation —
            faster than waiting on index/authority to build
            organically.
-   STATE:  OPEN — target list still not drafted (David to
-           identify specific authors/articles found; his call
-           on who and how). A ready-to-send email template and
-           positioning angle now exist in
-           docs/WaxFrame_Outreach_Kit_v1.txt (added v3.63.409)
-           — reduces this to "pick a name, paste the template."
+   STATE:  PARTIAL — first 3 of 6 researched candidates sent
+           2026-07-25 from rdpaineiii@gmail.com (drafted same
+           day, David reviewed and sent them himself): eesel.ai
+           (hi@eesel.app), tiiny.host (help@tiiny.host),
+           resumeoptimizerpro.com (support@resumeoptimizerpro.com).
+           Awaiting response on all three — check back and log
+           reply/no-reply per DONE below once something lands.
+           Neeraj Mathrani has no verified email — needs a
+           LinkedIn DM or his site's contact form instead, not
+           drafted. There's An AI For That + Ben's Bites are
+           self-serve submission boards, not email — see entry #3.
+           No "AI tools weekly roundup" YouTube channel confirmed
+           yet; revisit if the current 3 don't land.
    WHERE:  N/A — outside the codebase. See
-           docs/WaxFrame_Outreach_Kit_v1.txt for copy + related
-           SEO P1 items (r/SideProject, GitHub repo topics,
-           directory listings — folded into backlog entry #3
-           below as of v3.63.409).
+           docs/WaxFrame_Outreach_Kit_v1.txt for the full
+           candidate list + copy.
    DONE:   At least one direct outreach sent to an identified
            author with a working access link (Pro trial link
            or Free edition link); response or non-response
@@ -153,34 +158,54 @@ OPEN FEATURES
            style notes, per normal backlog hygiene).
 
 
-4. Custom AI key paste doesn't auto-fetch models (Enter-only)
+4. Fixture-based regression test for provider response-shape drift
    ─────────────────────────────────────────────────────────
-   WHAT:   On the Add Custom AI modal, pasting an API key into
-           the key field does not trigger a model fetch — only
-           pressing Enter does. David wants parity with how the
-           built-in provider AI rows feel: paste the key and
-           it's handled, no extra keystroke required.
-   WHY:    v3.63.408 fixed Enter-to-fetch-models after it broke
-           silently (duplicate data-fn attribute), but that fix
-           only restored the Enter path. A user who pastes a key
-           and clicks/tabs away without pressing Enter gets a
-           silently reset model field and never sees fetched
-           models — a discoverability trap, not just a missing
-           nicety.
-   STATE:  OPEN — surfaced by David 2026-07-25, captured
-           mid-task per standing process (no silent deferral).
-           Not yet implemented.
-   WHERE:  index.html:1958 — the customAIKey input currently
-           wires data-input-action="call" data-fn="resetModelField"
-           for the input event (fires on paste) and a separate
-           data-key-action="enter-call" data-fn-key=
-           "fetchCustomAIModels" for Enter only. fetchCustomAIModels()
-           itself is at js/app.js:10017.
-   DONE:   Pasting (or typing) a key into the Custom AI key
-           field triggers the same model-fetch flow Enter
-           already triggers (debounced, not one fetch per
-           keystroke) — without requiring the user to press
-           Enter. Existing Enter behavior stays intact.
+   WHAT:   A standalone, node-runnable test (no live API calls)
+           that feeds canned multi-block/multi-part response
+           JSON — including an extended-thinking-shaped
+           Anthropic payload (thinking block at index 0, text
+           block after) and a thought-part-shaped Gemini
+           payload (thought:true part before the real part) —
+           through WFProviderCatalog.extractAnthropicText() /
+           .extractGeminiText() and asserts the correct text
+           comes out, not ''.
+   WHY:    v3.63.410 fixed a live bug where Claude's extended-
+           thinking responses were misread as empty because
+           every Anthropic extractor hardcoded content[0].text.
+           Nothing in WaxFrame changed to cause this — Anthropic
+           started returning a leading thinking block server-
+           side with zero notice. The exact same class of drift
+           is plausible for Gemini (thought:true parts) and, in
+           principle, any provider whose response shape isn't a
+           flat single value. A fixture test converts "we found
+           out live, mid-demo, from a customer-facing error
+           modal" into "release-check catches it before ship."
+           Provider-catalog.js's extractors are plain functions
+           now (v3.63.410's firstAnthropicTextBlock /
+           firstGeminiTextPart), so they're testable in
+           isolation without a browser or a live key.
+   STATE:  OPEN — not started. Natural fit as the first flow
+           under the proposed tools/flow-check.mjs harness (see
+           entry below / CLAUDE.md §8-C), but doesn't need to
+           wait for that full E2E rig — a standalone
+           tools/test-provider-extractors.mjs that requires
+           provider-catalog.js's IIFE and reads
+           WFProviderCatalog off the resulting global would
+           work today and could optionally be wired into
+           release-check.mjs as an additional check later.
+   WHERE:  js/provider-catalog.js — firstAnthropicTextBlock()
+           and firstGeminiTextPart() (~line 186-205),
+           WFProviderCatalog.extractAnthropicText /
+           .extractGeminiText exports (~line 685).
+   DONE:   A node-runnable test file exists with fixtures for:
+           (a) plain single-block Anthropic response, (b)
+           thinking-block-then-text Anthropic response, (c)
+           thinking-only Anthropic response (genuinely empty —
+           should still report empty, not throw), (d)-(f) the
+           same three shapes for Gemini using thought:true.
+           All six assert the extractor returns the expected
+           string. Documented in README or a comment how to run
+           it (`node tools/test-provider-extractors.mjs`).
 
 
 ════════════════════════════════════════════════════════════
