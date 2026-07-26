@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260725-008
+// Build: 20260725-009
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -723,6 +723,32 @@ window.WF_ERROR_CATALOG = [
     ]
   },
   {
+    // v3.63.414 — Match BEFORE the generic EMPTY_RESPONSE, same rationale as
+    // CONTENT_FILTERED above. OpenAI's Structured Outputs / strict-JSON mode
+    // can return message.content: null with the actual reason in
+    // message.refusal instead — a different, more specific cause than a
+    // generic empty response, and worth telling the user which one happened.
+    // Found via the same audit that caught the OpenAI-shape extraction bug
+    // in provider-catalog.js/app.js (see firstOpenAIMessage there).
+    code: 'PROVIDER_REFUSED',
+    matches: (err, ctx, msg) => {
+      if (!(msg === 'empty response' || (msg || '').includes('empty response'))) return false;
+      try {
+        const raw = ctx && ctx.raw;
+        return typeof raw === 'string' && /"refusal"\s*:\s*"[^"]+"/.test(raw);
+      } catch { return false; }
+    },
+    title: '{ai} — Provider declined to respond ({refusal})',
+    meaning: "{ai} returned success (200 OK) but declined to answer — its own moderation/policy layer flagged the request or the requested output format and explained why: \"{refusal}\". This is different from a content filter block (no output attempted at all): the model saw the request and actively chose not to respond. Try rephrasing the prompt or reference material, or switch Builder to another provider.",
+    actions: [
+      { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' },
+      { label: 'Retry round',    kind: 'retry' }
+    ]
+  },
+  {
     code: 'EMPTY_RESPONSE',
     matches: (err, ctx, msg) => msg === 'empty response' || msg.includes('empty response'),
     title: '{ai} — Provider returned an empty response',
@@ -964,13 +990,30 @@ function renderTroubleshootingCard(entry, ctx) {
     } catch { /* not JSON — fine */ }
     return 'unknown';
   };
+  // v3.63.414 — {refusal} for the PROVIDER_REFUSED card. Mirrors
+  // parseBlockReason's regex-first-then-parse approach for OpenAI's
+  // choices[N].message.refusal field.
+  const parseRefusal = (raw) => {
+    if (typeof raw !== 'string' || !raw) return 'unknown';
+    const m = raw.match(/"refusal"\s*:\s*"([^"]+)"/);
+    if (m) return m[1];
+    try {
+      const j = JSON.parse(raw);
+      const choices = (j && j.choices) || [];
+      for (const c of choices) {
+        if (c && c.message && typeof c.message.refusal === 'string') return c.message.refusal;
+      }
+    } catch { /* not JSON — fine */ }
+    return 'unknown';
+  };
   const subst = (s) => String(s || '')
     .replace(/\{ai\}/g,          ctx.aiName   ?? 'AI')
     .replace(/\{elapsed\}/g,     ctx.elapsed  ?? '?')
     .replace(/\{avg\}/g,         ctx.avg      ?? '?')
     .replace(/\{filename\}/g,    ctx.filename ?? 'this file')
     .replace(/\{warnings\}/g,    fmtWarnings(ctx.warnings))
-    .replace(/\{blockReason\}/g, parseBlockReason(ctx.raw));
+    .replace(/\{blockReason\}/g, parseBlockReason(ctx.raw))
+    .replace(/\{refusal\}/g,     parseRefusal(ctx.raw));
 
   if (titleEl)   titleEl.textContent   = subst(entry.title) || 'Something went wrong';
   if (meaningEl) meaningEl.textContent = subst(entry.meaning) || '';
