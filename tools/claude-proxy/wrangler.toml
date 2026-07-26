@@ -1,0 +1,12 @@
+name = "waxframe-claude-proxy"
+main = "src/index.js"
+compatibility_date = "2026-04-14"
+
+# No bindings — confirmed empty via the Cloudflare API's
+# /workers/scripts/waxframe-claude-proxy/settings endpoint at import time
+# (2026-07-25). No KV, no secrets, no env vars. The Anthropic API key
+# travels through per-request from the browser's x-api-key header and is
+# never stored server-side.
+#
+# Served on the default *.workers.dev subdomain only — no custom route or
+# domain configured (confirmed via the /subdomain endpoint at import time).

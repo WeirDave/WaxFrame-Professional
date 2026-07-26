@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.416
+
+**Claude CORS-proxy Worker imported into version control; a flawed check design caught and corrected before shipping**
+
+Build: `20260725-011`<br>
+Released: `2026-07-25`
+
+### What changed
+
+Closes the last actionable item from tonight's process-verification audit. `waxframe-claude-proxy` — the Cloudflare Worker every Claude API call routes through (browsers can't call `api.anthropic.com` directly, no permissive CORS headers) — had lived entirely in the Cloudflare dashboard since it was first deployed, with zero version history, zero diff trail, and zero linkage to which WaxFrame release depended on which proxy behavior.
+
+Pulled its actual live source directly via the Cloudflare API (`GET /workers/scripts/waxframe-claude-proxy`) and committed it verbatim — not rewritten, not "cleaned up" — to `tools/claude-proxy/`, mirroring `tools/pricing-worker/`'s structure (`src/index.js`, `wrangler.toml`, `README.md`). Confirmed via the API's `/settings` and `/subdomain` endpoints that it has zero bindings (no KV, no secrets, no env vars — the Anthropic key travels through per-request from the browser and is never stored server-side) and no custom route, so the imported `wrangler.toml` documents fact, not assumption. **Import only — the live Worker was not redeployed.** It's already running this exact code; there was no functional reason to touch it, and touching a Worker every Claude call depends on, for zero benefit, wasn't a risk worth taking tonight.
+
+**Also corrected a design mistake before it shipped.** The other open backlog item — automated verification that the GitHub release-creation step didn't get silently skipped (it already has, once: v3.63.408) — was originally planned as a check inside `release-check.mjs`. Realized before writing it that this doesn't work: by the ceremony's own design, the tag is created *after* the commit is pushed, so a push-triggered synchronous check would see "no tag yet" during the entirely normal in-progress window and false-positive on every single release. That would train everyone to ignore it within a week. Backlog entry corrected to describe what actually works (a delayed, scheduled check) instead of shipping the broken version — better to catch your own mistake than ship it and walk it back later.
+
+### Verification
+
+- `node --check` clean on the imported `tools/claude-proxy/src/index.js`.
+- `node tools/release-check.mjs` — pass.
+- Bindings/subdomain config verified via direct Cloudflare API calls (not assumed from memory or the dashboard UI) before writing `wrangler.toml`.
+- No redeploy performed — confirmed intentionally, not an oversight.
+
+### Files touched
+
+- `tools/claude-proxy/src/index.js`, `wrangler.toml`, `README.md` — new, faithful import of the live Worker
+- `docs/WaxFrame_Backlog_Master_v260.txt` — Claude-proxy item removed (shipped); release-ceremony-verification item corrected to the right design instead of the flawed one
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit to remove the imported source from git — the live Cloudflare Worker is completely unaffected either way, since it was never redeployed as part of this change.
+
+---
+
 ## v3.63.415
 
 **Two process-verification backlog items closed: prompt-equivalence now actually enforced, pricing cron gets a liveness check**
