@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pdf-loader.mjs
-// Build: 20260725-006
+// Build: 20260725-007
 //  Bootstraps pdf.js 4.x by importing the ESM build and
 //  stashing it on window so the rest of app.js (which
 //  references window.pdfjsLib) keeps working unchanged.

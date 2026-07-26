@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260725-006
+// Build: 20260725-007
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:

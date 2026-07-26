@@ -9,3 +9,11 @@ compatibility_date = "2026-06-03"
 [[kv_namespaces]]
 binding = "PRICING_DATA"
 id = "2a06447c94914b699778a87511cee795"
+
+# Weekly numeric-pricing refresh via Perplexity Sonar (web-grounded).
+# Sundays 12:00 UTC (Cloudflare's cron day-of-week field: 1 = Sunday, not
+# Monday — verified against the deployed schedule, not assumed). See
+# src/index.js's scheduled() handler + header comment for what this does
+# and its safety guardrails.
+[triggers]
+crons = ["0 12 * * 1"]

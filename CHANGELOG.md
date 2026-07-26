@@ -2,6 +2,50 @@
 
 ---
 
+## v3.63.412
+
+**Pricing page now self-refreshes weekly via a web-grounded AI lookup, not just manual curation**
+
+Build: `20260725-007`<br>
+Released: `2026-07-25`
+
+### What changed
+
+Follow-up to v3.63.411's deployment-gap fix. David's original expectation for `ai-api-pricing.html` was that it stayed live on its own, not that a human had to remember to re-check and push numbers by hand — that's what v3.63.411 restored to working order, but it was still 100% manual underneath. This release closes that gap for real.
+
+`tools/pricing-worker/src/index.js` gains a `scheduled()` handler wired to a weekly Cloudflare cron trigger (Sundays 12:00 UTC — Cloudflare's cron day-of-week field counts differently than assumed on first pass; corrected in the code comments after checking the actual deployed schedule rather than trusting the assumption). Each run asks Perplexity Sonar — the same web-grounded model this codebase already uses for Together AI's tier-classification asker (v3.63.333) — for each provider's current `inputPerM`, `outputPerM`, `contextWindow`, and `maxOutput`. `estPerRound` is recomputed with plain arithmetic from those (verified the existing formula against every seed-data row before relying on it), never asked of the model. Scope is deliberately narrow: prose fields (rate-limit notes, recommendation copy, billing URLs) stay human-curated — those are editorial judgment and exact-link correctness, not something to hand to a scheduled LLM call.
+
+**Safety guardrails, because this writes to a public page automatically:**
+- Any provider whose response fails to parse, or whose fields fail validation (non-numeric/negative price, malformed size string), keeps its previous values untouched — never overwritten with a guess.
+- The prior full payload is kept under a `previous` KV key as a one-step rollback.
+- Every run appends a compact entry to a `run-log` KV key (last 10 kept), rendered on the Worker's `/` status page, so a human can glance at what changed/confirmed/retained before trusting a number — e.g. right before a demo recording.
+- If `PERPLEXITY_API_KEY` isn't set, `refreshPricing()` is a silent no-op — manual KV updates keep working exactly as before either way.
+
+**Verified against the real Perplexity API before trusting the schedule** (dry-run script, read-only, no writes): DeepSeek, Cohere, and Perplexity's own pricing all came back confirmed-unchanged. Gemini (both tiers), Together, Grok, ChatGPT, and Claude all got safely rejected by validation (incomplete or tier-ambiguous responses) rather than writing something wrong. Mistral came back with a complete, valid answer that differs from the current data ($0.50/$1.50 per M vs the current $2.00/$6.00, 262K context vs 128K) — flagged for David to independently verify rather than assumed correct, since Perplexity itself can be wrong.
+
+**Cloudflare account housekeeping:** the narrowly-scoped `waxframe-pricing-kv` API token from v3.63.411 (KV-edit only) is superseded by a new `waxframe-pricing-deploy` token (Workers Scripts:Edit + Workers KV Storage:Edit — needed the broader scope to actually deploy this release) and was deleted rather than left lying around unused. Confirmed via the account's Workers & Pages list that only two Workers exist total — this one and `waxframe-claude-proxy` (the active Claude API CORS proxy, untouched) — nothing else orphaned to clean up.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- New Cloudflare token verified active via `curl .../user/tokens/verify` before use.
+- `wrangler secret put PERPLEXITY_API_KEY` + `wrangler deploy` both succeeded; deployed schedule confirmed live via the Cloudflare dashboard (`schedule: 0 12 * * 1`).
+- `/api/pricing` and `/` endpoints both re-checked post-deploy — unchanged public behavior, new status-page section renders correctly (shows "No scheduled refresh has run yet" pre-first-run).
+- Dry-run of the exact prompt/parse/validate pipeline against the live Perplexity API (see above) — confirms the logic works end-to-end and the safety net actually rejects bad data instead of writing it.
+- Not yet verified: an actual scheduled (not dry-run) invocation, since Cloudflare's dashboard has no manual "trigger now" for deployed cron triggers — the real first run happens at the next scheduled Sunday 12:00 UTC.
+
+### Files touched
+
+- `tools/pricing-worker/src/index.js` — new `scheduled()` handler, `refreshPricing()`, `researchProvider()`, `buildResearchPrompt()`, validation helpers, `computeEstPerRound()`; `/` status page extended to render the run-log
+- `tools/pricing-worker/wrangler.toml` — `[triggers]` cron added
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs` (no functional changes outside `tools/pricing-worker/`)
+
+### Rollback
+
+Revert this commit and redeploy the Worker (`cd tools/pricing-worker && npx wrangler deploy`) to remove the cron trigger and scheduled handler — the `/api/pricing` and manual KV-update paths are completely unaffected either way, so a rollback here is low-risk. The `PERPLEXITY_API_KEY` secret can stay in place harmlessly if a future re-deploy wants it back.
+
+---
+
 ## v3.63.411
 
 **Live pricing page had been serving 6-week-stale provider data — deployment step was skipped, not a code bug**
