@@ -45,6 +45,14 @@ No Worker redeploy needed. The page picks up the new data on its next fetch (Clo
 
 Bump the `lastUpdated` field in the JSON so the page displays the new timestamp.
 
+**Verify the push actually landed** — don't trust the local edit alone:
+
+```sh
+curl -s "https://waxframe-pricing.weirdave.workers.dev/api/pricing?cachebust=$(date +%s)" | grep lastUpdated
+```
+
+Confirm the returned `lastUpdated` matches what you just set. v3.63.251 (2026-06-10) edited this seed file correctly but the `wrangler kv key put --remote` step silently never ran — the live page kept serving 6-week-old pricing data with no visible failure (the fetch still succeeded, so the "stale fallback" banner never triggered) until v3.63.411 caught it. This one curl check would have caught that immediately.
+
 ---
 
 ## Page fallback behavior
