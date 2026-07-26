@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260725-005
+// Build: 20260725-006
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -183,7 +183,7 @@
     }
   };
 
-  // v3.63.410 — Extended-thinking models put a {type:"thinking"} block at
+  // v3.63.411 — Extended-thinking models put a {type:"thinking"} block at
   // content[0] and the real answer in a later {type:"text"} block. Reading
   // content[0].text unconditionally returned '' for those models (thinking
   // blocks carry .thinking, not .text), which the app then reported as a
@@ -197,7 +197,7 @@
     return '';
   }
 
-  // v3.63.410 — Same latent risk as Anthropic, applied preemptively: Gemini
+  // v3.63.411 — Same latent risk as Anthropic, applied preemptively: Gemini
   // marks reasoning/thought-summary parts with `thought: true` when a
   // thinking model surfaces them, ahead of the real answer part. WaxFrame's
   // request body never sets generationConfig.thinkingConfig.includeThoughts,
