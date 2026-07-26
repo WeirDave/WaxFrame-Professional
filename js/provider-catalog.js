@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260725-008
+// Build: 20260725-009
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -183,7 +183,7 @@
     }
   };
 
-  // v3.63.413 — Extended-thinking models put a {type:"thinking"} block at
+  // v3.63.410 — Extended-thinking models put a {type:"thinking"} block at
   // content[0] and the real answer in a later {type:"text"} block. Reading
   // content[0].text unconditionally returned '' for those models (thinking
   // blocks carry .thinking, not .text), which the app then reported as a
@@ -197,7 +197,7 @@
     return '';
   }
 
-  // v3.63.413 — Same latent risk as Anthropic, applied preemptively: Gemini
+  // v3.63.410 — Same latent risk as Anthropic, applied preemptively: Gemini
   // marks reasoning/thought-summary parts with `thought: true` when a
   // thinking model surfaces them, ahead of the real answer part. WaxFrame's
   // request body never sets generationConfig.thinkingConfig.includeThoughts,
@@ -213,9 +213,40 @@
     return '';
   }
 
+  // v3.63.414 — Same latent risk class as the two above, for the OpenAI
+  // response shape that backs 8 of 10 built-in providers (chatgpt, copilot,
+  // grok, perplexity, mistral, deepseek, together, cohere) plus every
+  // custom/local server AI (Ollama, LM Studio, Open WebUI, Alfredo). A full
+  // codebase audit (prompted by finding the Anthropic/Gemini bugs above)
+  // found this exact "trust index 0 unconditionally" pattern duplicated
+  // across 8 call sites, never fixed. Two real gaps closed here:
+  //   1. Trusted choices[0] unconditionally — a provider ever returning
+  //      multiple choices with the usable one not first would silently
+  //      miss it. Now scans all choices for the first one with content.
+  //   2. OpenAI's Structured Outputs / strict-JSON mode can return
+  //      message.content: null with the actual explanation in
+  //      message.refusal instead — same "false empty response" symptom as
+  //      the Anthropic bug, different trigger. firstOpenAIMessage() surfaces
+  //      which one happened (refusal vs genuinely empty) so wf-debug.js's
+  //      PROVIDER_REFUSED catalog entry can give a specific diagnosis
+  //      instead of the generic "Empty response" card.
+  function firstOpenAIMessage(d) {
+    var choices = (d && d.choices) || [];
+    for (var i = 0; i < choices.length; i++) {
+      var msg = choices[i] && choices[i].message;
+      if (msg && msg.content) return { text: msg.content, refusal: null };
+    }
+    for (var j = 0; j < choices.length; j++) {
+      var m = choices[j] && choices[j].message;
+      if (m && m.refusal) return { text: '', refusal: m.refusal };
+    }
+    return { text: '', refusal: null };
+  }
+  function firstOpenAIText(d) { return firstOpenAIMessage(d).text; }
+
   // Response extractors — one per WaxFrame format.
   var EXTRACTORS = {
-    'openai-chat':         function (d) { return (d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || ''; },
+    'openai-chat':         firstOpenAIText,
     'anthropic-messages':  firstAnthropicTextBlock,
     'gemini-generate':     firstGeminiTextPart
   };
@@ -504,7 +535,7 @@
       });
       if (!resp.ok) return null;
       var data = await resp.json();
-      var text = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      var text = firstOpenAIText(data);
       // Defensive: one id per line, ^sonar only. Strip bullets/numbering
       // the model may add despite instructions. The catalog's filter (which
       // requires ^sonar AND blocks structural non-chat) acts as the safety
@@ -677,6 +708,12 @@
   //                                 instead of re-hardcoding content[0]
   //   • extractGeminiText         — same rationale, Gemini's equivalent
   //                                 thought-part-safe scan
+  //   • extractOpenAIText,
+  //     extractOpenAIRefusal      — same rationale, OpenAI's equivalent:
+  //                                 scans all choices instead of trusting
+  //                                 index 0, and surfaces a refusal
+  //                                 message distinctly from a genuinely
+  //                                 empty response (see firstOpenAIMessage)
   // The other 9 helpers (FORMATS, BODY_BUILDERS, EXTRACTORS, AUTH_HEADERS,
   // authFor, bodyBuilderFor, extractorFor, buildModelFilters,
   // buildModelFallbacks) are module-internals — buildModelFilters and
@@ -693,6 +730,8 @@
     diagnosticModelsUrl: diagnosticModelsUrl,
     diagnosticModelsHeaders: diagnosticModelsHeaders,
     extractAnthropicText: firstAnthropicTextBlock,
-    extractGeminiText: firstGeminiTextPart
+    extractGeminiText: firstGeminiTextPart,
+    extractOpenAIText: firstOpenAIText,
+    extractOpenAIRefusal: function (d) { return firstOpenAIMessage(d).refusal; }
   };
 })(typeof window !== 'undefined' ? window : this);

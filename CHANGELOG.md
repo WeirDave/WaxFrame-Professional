@@ -2,6 +2,45 @@
 
 ---
 
+## v3.63.414
+
+**Full codebase audit for the two bug classes found today, fixed: OpenAI response-shape trust (8 sites) + a distinct custom-AI format bug found along the way**
+
+Build: `20260725-009`<br>
+Released: `2026-07-25`
+
+### What changed
+
+After fixing today's Claude extended-thinking bug (v3.63.410) and the pricing deployment gap (v3.63.411), David asked for an actual audit rather than trusting the two fixes were isolated incidents. Two parallel Explore agents searched the codebase for more instances of each bug *class* — every response-shape assumption for any AI provider, and every documented multi-step process with an unverified step. Findings were spot-verified directly (not taken on the agents' word) before acting.
+
+**Confirmed and fixed: the OpenAI-format twin of the Anthropic bug, never fixed, backing 8 of 10 built-in providers.** `EXTRACTORS['openai-chat']` (`d.choices[0].message.content`) unconditionally trusted index 0 with no fallback — the exact same flaw as the Anthropic bug, just for the format used by ChatGPT, Copilot, Grok, Perplexity, Mistral, DeepSeek, Together, and Cohere, plus every custom/local server AI (Ollama, LM Studio, Open WebUI, Alfredo). Concrete real trigger: OpenAI's Structured Outputs / strict-JSON mode can return `message.content: null` with the actual reason in `message.refusal` instead — same false-"empty response" symptom as this morning's Claude bug, different cause. The same hardcoded pattern was also duplicated instead of shared across 4 more call sites (Add Custom AI modal, Import Server flow, tier-classifier/recommender askers, vision/OCR transcription) plus the Perplexity self-discovery model-list fetch.
+
+Fixed with `firstOpenAIMessage()`/`firstOpenAIText()` in `js/provider-catalog.js`, mirroring the Anthropic/Gemini fix pattern exactly: scans all `choices` instead of trusting index 0, and — new — surfaces *which* kind of empty response happened (refusal vs. genuinely empty) so the error card can give a specific diagnosis instead of a generic one. Added a `PROVIDER_REFUSED` entry to `wf-debug.js`'s error catalog (matches before the generic `EMPTY_RESPONSE`, same pattern as the existing `CONTENT_FILTERED` entry for Gemini's `blockReason`) that shows the actual refusal text inline instead of making the user dig through raw JSON to find it. All 6 duplicate call sites now route through the one shared `WFProviderCatalog.extractOpenAIText()`.
+
+**Second, distinct bug found in the same code neighborhood while fixing the first: custom-AI hive-reload ignored the AI's actual format.** `storage.js`'s `loadSettings()` rebuilds a custom AI's `headersFn`/`bodyFn`/`extractFn` on every app load (functions never survive the JSON round-trip through localStorage) — but the rebuild always installed OpenAI-shape functions regardless of `cfg.format`, meaning any custom AI originally added as Anthropic or Google format got the *wrong auth header and wrong response parsing* on every single reload. Same root cause as the extraction bugs (an unguarded assumption never revisited once other formats existed), different symptom. Fixed to branch on `cfg.format`, mirroring the same three shapes `app.js`'s `baseConfigs` already uses for the Add Custom AI modal.
+
+### Verification
+
+- `node --check` clean on all 4 touched files (`provider-catalog.js`, `app.js`, `storage.js`, `wf-debug.js`).
+- `node tools/release-check.mjs` — pass.
+- Grep-confirmed zero remaining raw `choices[0].message.content` (or equivalent unguarded) patterns anywhere in `js/` after the fix — down from 8 sites.
+- Both audit agents' top findings independently re-verified by hand (direct `grep`/`Read`, not just trusting the agent report) before any code was touched — see the conversation for the raw verification output.
+- Not yet re-tested live against an actual OpenAI refusal response (no reliable way to trigger one on demand) — the fix mirrors the exact, already-proven pattern from the Anthropic fix, and the `PROVIDER_REFUSED` catalog entry follows the exact existing `CONTENT_FILTERED` pattern already live in production.
+
+### Files touched
+
+- `js/provider-catalog.js` — new `firstOpenAIMessage()`/`firstOpenAIText()`; `EXTRACTORS['openai-chat']` and the Perplexity self-discovery fetch now use it; exported as `WFProviderCatalog.extractOpenAIText`/`.extractOpenAIRefusal`; also corrected two `v3.63.413` comment mislabels (bulk version-sweep side effect) back to the `v3.63.410` release they actually document
+- `js/app.js` — 5 call sites now route through the shared extractor
+- `js/storage.js` — hive-reload custom-AI rebuild now branches on `cfg.format` instead of always assuming OpenAI shape
+- `js/wf-debug.js` — new `PROVIDER_REFUSED` error-catalog entry + `{refusal}` placeholder substitution
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. The 6 OpenAI-format call sites return to reading `choices[0].message.content` only — any OpenAI-compatible provider returning a refusal or a non-first valid choice would again be misreported as a generic empty response. The `storage.js` fix reverting means custom AIs added as Anthropic/Google format go back to getting OpenAI-shape auth+parsing on every reload.
+
+---
+
 ## v3.63.413
 
 **Pricing auto-refresh hardened against confidently-wrong answers, plus push email alerts**
