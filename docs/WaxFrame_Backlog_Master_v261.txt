@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v260
+WaxFrame Backlog Master v261
 2026-07-25
 
 ABOUT THIS DOCUMENT
@@ -26,40 +26,12 @@ ships.
 OPEN BUGS
 ════════════════════════════════════════════════════════════
 
-1. Lock button one-way — does not unlock
-   ─────────────────────────────────────────────────────────
-   WHAT:   In the Conflicts panel each applied change has a
-           per-row lock button. Clicking it once locks the
-           change (prevents Builder from overwriting it on
-           later rounds). Clicking it again is supposed to
-           unlock — but currently does nothing visible.
-   WHY:    Users get stuck with a permanently locked change
-           and have to clear the whole conflicts panel to
-           recover. Removes a piece of fine-grained user
-           control during refinement.
-   STATE:  DEFERRED — waiting on user repro with the
-           v3.63.165 diagnostic console line captured.
-   WHERE:  lockAppliedChange()       at app.js:18485
-           diagnostic console.log    at app.js:18504
-                                     ('[wf:lock]', ...)
-           silent return on empty    at app.js:18514
-           renderConflicts target    document.getElementById(
-                                     'conflictsPanel')
-   DONE:   Clicking a locked lock button toggles it back to
-           unlocked state in both the data model AND the
-           rendered UI; subsequent Builder rounds can edit
-           that line again.
-   HYPOTHESES (ranked by likelihood):
-     a. change.locked is false at click time — rendered
-        state and data state have diverged, most likely if
-        the history array got reassigned between renders.
-     b. The UNLOCK branch enters correctly but the silent
-        return at app.js:18514 fires because change.new
-        became an empty string.
-     c. The UNLOCK branch runs cleanly but
-        getElementById('conflictsPanel') returned null
-        inside renderConflicts() and the function silently
-        bailed without re-rendering.
+None currently open. (Lock-button one-way-unlock entry removed
+2026-07-25 — David: not encountered in a long time, killing it
+rather than carrying a stale repro-blocked entry indefinitely.
+If it resurfaces, re-add fresh rather than resurrecting this
+one — the old hypotheses may no longer be relevant to whatever
+the current code looks like.)
 
 
 ════════════════════════════════════════════════════════════
