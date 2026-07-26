@@ -106,9 +106,9 @@ second if at all.
 REVIEWER / NEWSLETTER TARGETS
 ════════════════════════════════════════════════════════════
 
-Categories to target (identify specific channels/newsletters
-under each — David's call on which specific ones, per backlog
-item "Direct outreach to AI-document-workflow writers/bloggers"):
+Categories to target — David's call on which specific ones, per
+backlog item "Direct outreach to AI-document-workflow writers/
+bloggers":
 
   - Résumé/career-advice YouTube channels — these review resume
     tools constantly; a multi-AI resume critique angle is a
@@ -120,9 +120,55 @@ item "Direct outreach to AI-document-workflow writers/bloggers"):
     (newsletter, not just the directory), Superhuman AI — these
     run reader-submitted tool blurbs, low barrier to entry.
   - Individual bloggers/writers already covering AI document
-    workflows (David to identify specific authors/articles he's
-    found searching this space — targeted outreach, not a cold
-    mass blast).
+    workflows.
+
+IDENTIFIED CANDIDATES (researched 2026-07-25) — real, live,
+verified to exist at research time. Most of what search surfaces
+in this niche is SEO-roundup publishers who periodically refresh
+"best AI tools" lists, not individual bloggers — being upfront
+about that rather than overselling these as personal contacts.
+Pitch each with the email template below, swap in the specific
+piece they published:
+
+  1. Neeraj Mathrani — career coach / YouTuber, resume + AI
+     content ("I've Reviewed 1,000+ Resumes — Here's How to Use
+     AI to Land More Interviews"). Site: neerajmathrani.com.
+     Best fit for a personal outreach email — closest thing to
+     an individual voice on this list.
+
+  2. eesel.ai blog — actively publishes and refreshes multiple
+     "best AI writing tools" / "best AI blog writer tools"
+     roundup posts (e.g. eesel.ai/blog/best-ai-writing-tools).
+     Staff writers by name: Stevia Putri, Rama, Riell. Pitch via
+     their site contact form for inclusion in the next refresh —
+     this is a content-mill-style operation, not a personal
+     blogger, but their posts do get cited/indexed.
+
+  3. tiiny.host blog — published "The Only Honest AI Resume
+     Review Tool Test: Tested Top 7 Tools"
+     (tiiny.host/blog/ai-resume-review-tools/). Contact via
+     tiiny.host/help. A multi-AI angle is a genuine gap in a
+     post that only tested single-model tools (Jobscan, Rezi).
+
+  4. resumeoptimizerpro.com — published "AI Resume Review: 8
+     Best Tools Tested + Free ChatGPT Prompts (2026)". Same
+     pitch angle as tiiny.host — multi-AI review is missing from
+     their tested lineup.
+
+  5. There's An AI For That — self-serve submission, not
+     personal outreach: taaft.com/submit. 2.5M+ newsletter
+     readers. Belongs equally under backlog entry #3 (directory
+     submissions) — needs David's own account either way.
+
+  6. Ben's Bites News — self-serve submission board (Hacker-
+     News-style, top-voted posts feed the daily newsletter):
+     news.bensbites.com. Also needs David's own account —
+     listed here because it's newsletter-adjacent, but it's a
+     submission, not a cold email.
+
+Not yet researched: no verified "AI tools weekly roundup"
+YouTube channel was confirmed as an active, current-year fit in
+this pass — revisit if the above candidates don't pan out.
 
 Cold outreach email template:
 
