@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v259
+WaxFrame Backlog Master v260
 2026-07-25
 
 ABOUT THIS DOCUMENT
@@ -234,55 +234,35 @@ OPEN FEATURES
            "attempted but failed silently" look identical after
            the fact, compounding a project that's already
            SEO-index-starved (CLAUDE.md §8B).
-   STATE:  OPEN — not started.
-   WHERE:  .github/workflows/release-check.yml (no tag/release
-           check exists); tools/indexnow-ping.mjs (no persisted
-           result); CLAUDE.md §5 items 9-10 (the procedural-only
-           instructions).
-   DONE:   A CI step (or a `gh` check run as part of the release
-           workflow) verifies the pushed commit has a
-           corresponding tag/release within some reasonable
-           window, and flags/fails if not. indexnow-ping.mjs logs
-           its result somewhere checkable (a KV entry, a repo
-           file, anything with history) instead of only ever
-           printing to a terminal nobody's watching.
-
-
-6. waxframe-claude-proxy Worker source lives entirely outside version control
-   ─────────────────────────────────────────────────────────
-   WHAT:   Unlike tools/pricing-worker/ (src/, wrangler.toml,
-           README all committed here), the Claude CORS-proxy
-           Worker's source, its wrangler deploy history, and its
-           API-token scoping exist nowhere in this repository —
-           only scattered CHANGELOG.md mentions reference proxy-
-           side changes shipping "alongside" a given release.
-   WHY:    Zero automated linkage between "this app.js commit
-           assumes new proxy behavior" and "the proxy was
-           actually redeployed to match." A proxy-side change
-           being forgotten before its dependent app.js release
-           ships would likely surface as a hard CORS/404 error
-           (self-limiting, unlike the silent pricing bug) — but
-           there's no structural guarantee of that, and zero
-           audit trail of what's actually deployed there today
-           versus what any given historical CHANGELOG entry
-           claims. Lower urgency than item 5 (more likely to fail
-           loud than silent) but flagged since it's the single
-           biggest "not even in git" gap found.
-   STATE:  OPEN — not started. Scope/ownership call: does this
-           Worker's source get imported into this repo (matching
-           the pricing-worker precedent), or does it stay
-           external with at least a dated snapshot/changelog
-           committed here for audit-trail purposes? David's call.
-   WHERE:  N/A within this repo — the gap IS the absence.
-           Referenced by URL only: waxframe-claude-proxy.
-           weirdave.workers.dev (js/app.js vision/OCR fallback
-           endpoint, CLAUDE.md §3).
-   DONE:   Either the Worker's source lives in this repo under
-           tools/claude-proxy/ (or similar) with the same
-           README/wrangler.toml pattern as tools/pricing-worker/,
-           or a documented decision that it stays external plus a
-           committed pointer to wherever its real source of truth
-           lives, so a future session isn't left guessing.
+   STATE:  OPEN — not started. Design correction from the first
+           pass at this: a check added to release-check.mjs
+           (push-triggered, synchronous) CANNOT correctly catch
+           "the tag/release step got skipped" — by the ceremony's
+           own design, the tag is created AFTER the commit is
+           pushed, so a synchronous check would false-positive on
+           every single normal release (it'd see "no tag yet"
+           during the completely normal in-progress window,
+           before step 9 has had a chance to run). A real
+           implementation needs to run on a DELAY — a scheduled
+           GitHub Action (daily, or the pricing Worker's own
+           daily-cron pattern) checking "is the newest CHANGELOG
+           entry's version tag more than N hours old and still
+           missing" — not a check wired into the push-triggered
+           gate. Caught before shipping the wrong version of this
+           (v3.63.415's CHANGELOG has the reasoning).
+   WHERE:  A NEW scheduled workflow (e.g.
+           .github/workflows/release-tag-check.yml, on: schedule)
+           would own the tag-staleness check; tools/indexnow-
+           ping.mjs still needs a persisted result (a repo file,
+           a KV entry — anywhere with history) instead of only
+           ever printing to a terminal nobody's watching.
+   DONE:   A scheduled (not push-triggered) check verifies
+           CHANGELOG.md's newest "## vX.Y.Z" entry has a matching
+           git tag once enough time has passed for the ceremony to
+           reasonably have completed, and surfaces somewhere
+           visible (a failed scheduled Action run, a `gh issue
+           create`, etc.) if not. indexnow-ping.mjs logs its
+           result somewhere checkable instead of only stdout.
 
 
 ════════════════════════════════════════════════════════════
