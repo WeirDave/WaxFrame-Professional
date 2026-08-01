@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.417
+
+**Gemini API-key link fixed after a community bug report**
+
+Build: `20260801-001`<br>
+Released: `2026-08-01`
+
+### What changed
+
+Google moved the Gemini API-key page from `aistudio.google.com/apikey` to `aistudio.google.com/api-keys`. The old URL still 301-redirects today, but a community member (Liam O'Brien, filed via the in-app Troubleshooting auto-report as [GitHub #4](https://github.com/WeirDave/WaxFrame-Professional/issues/4)) flagged it so we're not depending on Google's redirect staying up. He'd already found all six affected files and pointed at `js/api-links.js` as the source of truth — confirmed there's no build step generating the HTML copies, so each site needed a direct edit.
+
+Updated: `js/api-links.js` (`API_CONSOLE_URLS.gemini`, the single source of truth `app.js` hydrates from), `js/pricing-renderer.js` (both Gemini `FALLBACK_DATA` entries), `tools/pricing-worker/data/pricing-seed.json` (both Gemini seed entries, kept in lockstep with the fallback per the file's own header comment), and the static links/visible link text in `api-details.html` (JSON-LD HowTo step + guide link), `what-are-tokens.html`, and `waxframe-user-manual.html`.
+
+### Verification
+
+- `grep -r "aistudio.google.com/apikey"` across the repo — zero remaining hits.
+- `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `js/api-links.js`, `js/pricing-renderer.js`, `tools/pricing-worker/data/pricing-seed.json`, `api-details.html`, `what-are-tokens.html`, `waxframe-user-manual.html` — Gemini API-key URL updated
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit — the old `aistudio.google.com/apikey` URL still redirects, so no functional break in the interim either way.
+
+---
+
 ## v3.63.416
 
 **Claude CORS-proxy Worker imported into version control; a flawed check design caught and corrected before shipping**

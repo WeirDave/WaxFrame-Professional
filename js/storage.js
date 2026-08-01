@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260725-011
+// Build: 20260801-001
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1031,7 +1031,7 @@ function loadSettings() {
           API_CONFIGS[ai.provider] = h.customAIConfigs[ai.provider];
         }
         // Functions don't survive JSON — rebuild them if missing.
-        // v3.63.416 — this rebuild ignored cfg.format entirely and always
+        // v3.63.417 — this rebuild ignored cfg.format entirely and always
         // installed OpenAI-shape functions, even for a custom AI originally
         // added as format:'anthropic' or 'google' — wrong auth header AND
         // wrong response extraction for any such AI on every app reload
