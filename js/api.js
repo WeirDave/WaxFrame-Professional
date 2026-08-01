@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260801-011
+// Build: 20260801-012
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -92,13 +92,13 @@ window.API_CONFIGS = window.WFProviderCatalog.buildApiConfigs();
 var WFPM = (typeof window !== 'undefined' && window.WFProviderModels) || {};
 window.MODEL_FALLBACKS          = WFPM.MODEL_FALLBACKS;
 const MODEL_FALLBACKS           = window.MODEL_FALLBACKS;
-const STRUCTURAL_NON_CHAT_RE    = WFPM.STRUCTURAL_NON_CHAT_RE;
-const CHATGPT_RESPONSES_ONLY_RE = WFPM.CHATGPT_RESPONSES_ONLY_RE;
-const DATED_SNAPSHOT_RE         = WFPM.DATED_SNAPSHOT_RE;
 const MODEL_FILTERS             = WFPM.MODEL_FILTERS;
-const normalizePerplexityModels = WFPM.normalizePerplexityModels;
-// Custom AI Add flow uses the same structural filter (was duplicated as NON_CHAT_RE).
-const NON_CHAT_RE               = STRUCTURAL_NON_CHAT_RE;
+// v3.63.428 — Dropped 5 re-export bindings (STRUCTURAL_NON_CHAT_RE,
+// CHATGPT_RESPONSES_ONLY_RE, DATED_SNAPSHOT_RE, normalizePerplexityModels,
+// and NON_CHAT_RE, an alias for the first) — a full-codebase audit found
+// none of them read anywhere as bare identifiers; every real consumer
+// (provider-catalog.js, help-page.js) pulls its own binding straight off
+// window.WFProviderModels instead of through api.js.
 
 // v3.63.31 — Runtime model quarantine (self-healing incapable-model filter).
 //

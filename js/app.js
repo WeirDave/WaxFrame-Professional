@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260801-011
+// Build: 20260801-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260801-011';         // build stamp — update each session
+const BUILD       = '20260801-012';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -5808,7 +5808,7 @@ function _buildRowStatusPill(ai, hasKey) {
 // touching the rest of the row (preserves expand state, focus, etc.).
 // ════════════════════════════════════════════════════════════════════
 window._serverConnectivity = window._serverConnectivity || {};
-// v3.63.427 — Per-AI sequence token so overlapping _checkServerAIConnectivity
+// v3.63.426 — Per-AI sequence token so overlapping _checkServerAIConnectivity
 // calls resolve safely. See that function for the race it guards against.
 window._serverConnectivityGen = window._serverConnectivityGen || {};
 const SERVER_PROBE_THROTTLE_MS = 60 * 1000;
@@ -5864,7 +5864,7 @@ async function _checkServerAIConnectivity(ai, opts) {
   if (!force && cache && cache.lastChecked && (now - cache.lastChecked < SERVER_PROBE_THROTTLE_MS)) {
     return;   // throttled
   }
-  // v3.63.427 — Sequence guard: two overlapping probes for the same ai.id
+  // v3.63.426 — Sequence guard: two overlapping probes for the same ai.id
   // (auto-probe on screen-bees entry racing a forced click-driven recheck)
   // resolve in completion order, not initiation order. Each call claims a
   // fresh token; a write is dropped if a newer call has since claimed it,
@@ -8311,8 +8311,8 @@ function populateQuickAddOptions() {
 }
 
 // Models that should never appear as Hive reviewers regardless of provider.
-// (NON_CHAT_RE is defined alongside MODEL_FILTERS at the top of this file —
-// see STRUCTURAL_NON_CHAT_RE. Custom AI uses the same filter as default 6.)
+// (The structural filter lives in js/provider-models.js — see
+// STRUCTURAL_NON_CHAT_RE. Custom AI uses the same filter as default 6.)
 
 // ── v3.26.0: Model recommendation pipeline ────────────────────────────────
 // The Recommend pipeline asks a provider's own API which of its available
@@ -9817,7 +9817,7 @@ async function migrateRecommendOnStartup() {
     // have a hardcoded MODEL_FALLBACKS list to feed the recommend call.
     // Perplexity is the canonical case — chat completions work, but no
     // models endpoint exists, so we use the sonar-* fallback list.
-    // v3.63.427 — was `!== null`. buildModelFilters() SKIPS discovery:null
+    // v3.63.424 — was `!== null`. buildModelFilters() SKIPS discovery:null
     // entries (Together, Cohere) rather than setting them to null, so the
     // map value there is undefined, not null — `undefined !== null` is
     // true, silently treating those providers as having a dynamic endpoint
@@ -11070,7 +11070,7 @@ function renderImportServerChecklist() {
   if (!items) return;
 
   // Build a set of model IDs already in the hive from this same Chat Endpoint
-  // v3.63.427 — normalize trailing slashes before comparing, matching
+  // v3.63.426 — normalize trailing slashes before comparing, matching
   // populateQuickAddOptions/fetchCustomAIModels elsewhere in this file. Was a
   // raw === compare: a stored endpoint with (or without) a trailing slash
   // that the user's re-entered URL didn't match byte-for-byte silently broke
@@ -11168,7 +11168,7 @@ function importServerSelectNone() {
 }
 
 function addImportServerModels() {
-  // v3.63.427 — strip trailing slash so the endpoint persisted here matches
+  // v3.63.426 — strip trailing slash so the endpoint persisted here matches
   // what renderImportServerChecklist's dedupe (also normalized this release)
   // will compare against on the next import from this same server.
   const chatUrl   = document.getElementById('importServerChatUrl').value.trim().replace(/\/+$/, '');
@@ -12434,7 +12434,7 @@ async function extractPDF(file) {
     setFileStatusState(status, 'loading');
   }
 
-  // v3.63.427 — was the stale singular getVisionCapableAI(), which requires
+  // v3.63.426 — was the stale singular getVisionCapableAI(), which requires
   // cfg._key and so is blind to server-imported vision models (Ollama, LM
   // Studio, OpenWebUI). This gate only checks availability — the actual
   // rotation below already goes through runVisionWithFallback, which uses
@@ -13937,7 +13937,7 @@ async function reExtractWithVision() {
   const banner = document.getElementById('reExtractBanner');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Extracting — this may take 15–30 seconds…'; }
 
-  // v3.63.427 — was the stale singular getVisionCapableAI() (cloud-key-only,
+  // v3.63.426 — was the stale singular getVisionCapableAI() (cloud-key-only,
   // invisible to server-imported vision AIs). Use the plural function's
   // first candidate — same server-AI-aware selection runVisionWithFallback
   // already uses elsewhere, so this button and the automatic OCR path agree
@@ -16923,11 +16923,11 @@ async function runBuilderOnly() {
   // bails cleanly if they don't match.
   const _runGen = window._projectGen || 0;
 
-  // Build prompt — no reviewer responses, just the doc + notes → Builder instructions
-  const builderPrompt = buildPromptForAI(builderAI, []);
-  // Swap in builder instructions directly (no reviewer suggestions to compile)
-  // We reuse buildPromptForAI with an empty array which gives reviewer prompt —
-  // instead build the builder prompt manually with empty reviews so notes drive it
+  // Build prompt manually — no reviewer responses, just the doc + notes →
+  // Builder instructions. v3.63.428 — removed a dead
+  // `buildPromptForAI(builderAI, [])` call that used to sit here: it built a
+  // full reviewer-shaped prompt string that was never read (the manual build
+  // below always wins), wasting the work on every Builder-Only round.
   const sep = '─'.repeat(60);
   const eq  = '═'.repeat(60);
   const goal  = assembleProjectGoal();
@@ -19671,7 +19671,7 @@ function stripBuilderEnvelope(text) {
   let result = text;
   // Remove leading ══...══ / WAXFRAME — ... / Round ... header block
   result = result.replace(/^[═\s]*WAXFRAME\s*—[^\n]*\n[^\n]*\n[═\s]*\n?/i, '');
-  // v3.63.427 — these four all carried /m, so '^' matched the start of ANY
+  // v3.63.426 — these four all carried /m, so '^' matched the start of ANY
   // line in the document, not just the echoed envelope's front. A document
   // that legitimately contained a mid-document "PROJECT GOAL:" or
   // "REFERENCE MATERIAL" heading (e.g. WaxFrame's own business-proposal/

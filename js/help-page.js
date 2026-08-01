@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — help-page.js
-// Build: 20260801-011
+// Build: 20260801-012
 //  Self-contained break-glass help screen behavior. Renders the
 //  version line, environment capture, copy-to-clipboard buttons,
 //  and Slack/email links. Deliberately does NOT depend on app.js
@@ -120,17 +120,15 @@
     // shared js/provider-models.js module (loaded above), so the Help page and
     // the main app use ONE definition and can't drift. These bindings alias the
     // shared pieces under the names the dump code below already uses.
+    // v3.63.428 — Dropped 8 aliases a full-codebase audit found unused as bare
+    // identifiers anywhere in this file (STRUCTURAL_NON_CHAT_RE,
+    // CHATGPT_RESPONSES_ONLY_RE, DATED_SNAPSHOT_RE, filterModelForProvider,
+    // normalizePerplexityModels, baseProviderId, PERPLEXITY_SONAR_MODELS, and
+    // MODEL_FALLBACKS — which was itself only feeding the now-removed
+    // PERPLEXITY_SONAR_MODELS). Kept the two still read below.
     var _WFPM = (window.WFProviderModels) || {};
-    var STRUCTURAL_NON_CHAT_RE    = _WFPM.STRUCTURAL_NON_CHAT_RE;
-    var CHATGPT_RESPONSES_ONLY_RE = _WFPM.CHATGPT_RESPONSES_ONLY_RE;
-    var DATED_SNAPSHOT_RE         = _WFPM.DATED_SNAPSHOT_RE;
-    var MODEL_FALLBACKS           = _WFPM.MODEL_FALLBACKS;
-    var filterModelForProvider    = _WFPM.filterModelForProvider;
-    var normalizePerplexityModels = _WFPM.normalizePerplexityModels;
     var parseModelsResponse       = _WFPM.parseModelsResponse;
-    var baseProviderId            = _WFPM.baseProviderId;
     var dedup                     = _WFPM.dedup;
-    var PERPLEXITY_SONAR_MODELS   = (MODEL_FALLBACKS && MODEL_FALLBACKS.perplexity) || ['sonar', 'sonar-pro', 'sonar-deep-research', 'sonar-reasoning-pro'];
     // v3.63.274 — Built-in providers come from the catalog (one source of
     // truth lives in js/provider-catalog.js). Pre-catalog, this table was
     // hand-maintained AND drifted vs api.js — adding a provider meant
@@ -296,9 +294,9 @@
       return url;
     }
 
-    // parseModelsResponse + normalizePerplexityModels + filterModelForProvider
-    // + dedup + baseProviderId are provided by js/provider-models.js (aliased at
-    // the top of this script). No local copies — single source of truth.
+    // parseModelsResponse + dedup are provided by js/provider-models.js
+    // (aliased at the top of this script). No local copies — single source
+    // of truth.
 
     async function fetchLiveModelsNoCache(entry) {
       if (!entry || !entry.endpoint) throw new Error('No endpoint saved for this provider.');

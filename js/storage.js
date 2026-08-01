@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260801-011
+// Build: 20260801-012
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1693,9 +1693,9 @@ async function confirmSaveCheckpoint() {
   // Safari drops to Downloads).
   //
   // v3.63.319 — User-activation timing fix. v3.63.318 called
-  // _buildCheckpointEnvelope FIRST, then _fsaWriteEnvelopeToFolder
-  // (which calls _fsaEnsureSyncDir → requestPermission / show
-  // DirectoryPicker). Problem: _buildCheckpointEnvelope awaits a
+  // _buildCheckpointEnvelope FIRST, then wrote it to the folder second
+  // (via _fsaEnsureSyncDir → requestPermission / show DirectoryPicker).
+  // Problem: _buildCheckpointEnvelope awaits a
   // saveSession flush + IDB read, which consumes Edge's transient user
   // activation. By the time _fsaEnsureSyncDir runs, user-gesture is
   // gone; requestPermission and showDirectoryPicker both require
@@ -1975,25 +1975,6 @@ async function _fsaEnsureSyncDir(forceRePick = false) {
     }
   }
   return handle;
-}
-// Write the v3.63.316 checkpoint envelope to the synced folder. Same
-// filename pattern as the download path (timestamped, never overwrites
-// a prior save). Returns the relative filename on success or null on
-// failure.
-async function _fsaWriteEnvelopeToFolder(env) {
-  const dir = await _fsaEnsureSyncDir(false);
-  if (!dir) return null;
-  try {
-    const fileHandle = await dir.getFileHandle(env.filename, { create: true });
-    const writable   = await fileHandle.createWritable();
-    await writable.write(env.json);
-    await writable.close();
-    return env.filename;
-  } catch(e) {
-    console.warn('[fsa] write failed:', e);
-    if (typeof toast === 'function') toast(`⚠️ Save to folder failed — ${e.message || e}`, 6000);
-    return null;
-  }
 }
 // ── AUTO-BACKUP (v3.63.320) ──────────────────────────────────────────
 // Backlog FEATURE #3 Phase 2. Settings-driven loop that drops a fresh
@@ -2507,13 +2488,13 @@ function _checkpointSecretHTML(rawValue) {
    v3.63.262 — Added the { html, compareKey } object shape used by
    sensitive-row summarizers; the html field renders, the compareKey is
    read separately by the match-detector.
-   v3.63.427 — Removed the leading-'<' sniff on plain strings. It let a
+   v3.63.425 — Removed the leading-'<' sniff on plain strings. It let a
    crafted checkpoint file's projectName/projectVersion/builder field
    (plain-string summarizer output, not escaped by the summarizer) opt
    into innerHTML just by starting with '<'. */
 function _setCheckpointPreviewValue(el, val) {
   if (!el) return;
-  // Object form: { html, compareKey } — render the html branch. v3.63.427 —
+  // Object form: { html, compareKey } — render the html branch. v3.63.425 —
   // this is now the ONLY path that renders as markup. The old leading-'<'
   // sniff on plain strings assumed every summarizer generated its own HTML
   // internally with escaped values, but the plain-string summarizers
@@ -2698,7 +2679,7 @@ function _detailRender(key, data, fromFile) {
 function _esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 }
-// v3.63.427 — Explicit marker for values that are deliberately pre-built
+// v3.63.425 — Explicit marker for values that are deliberately pre-built
 // HTML (e.g. a `<strong>` name + `_checkpointSecretHTML` reveal button).
 // _detailDL/_detailUL used to sniff for a leading '<' to make this call,
 // which let raw checkpoint-file fields (projectInfo.projectName, license
@@ -3139,7 +3120,7 @@ async function _applyCheckpoint(data, scope) {
         if (rs.aiWarnings)        localStorage.setItem('waxframe_ai_warnings',        rs.aiWarnings);
         else localStorage.removeItem('waxframe_ai_warnings');
       }
-      // v3.63.427 — Explicit clear when the checkpoint's legacy LS_SESSION
+      // v3.63.425 — Explicit clear when the checkpoint's legacy LS_SESSION
       // slot is empty, mirroring the IDB_SESSION branch below. LS_SESSION is
       // legacy (loadSession() only reads it when IDB comes back empty), so a
       // stale local key surviving a restore that wipes IDB (the

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — docx-export.js
-// Build: 20260801-011
+// Build: 20260801-012
 //  Real .docx export for helper/document pages. Builds a true
 //  OOXML document through the vendored `docx` library, walking
 //  WaxFrame's page primitives into Word paragraphs, tables,
@@ -237,7 +237,11 @@
     }));
   }
 
-  function calloutBlocks(el, out, imgMap, fill, border) {
+  // v3.63.428 — Dropped the imgMap param: callout content only ever goes
+  // through inlineRuns(), which renders any <img> inside as alt-text (or
+  // drops it if decorative) and never consults imgMap/emitImage — so it was
+  // accepted from every call site and never read.
+  function calloutBlocks(el, out, fill, border) {
     var docx = docxLib();
     var runs = [textRun('Note: ', { bold: true, color: COLOR_ACCENT })];
     push(runs, inlineRuns(el, {}));
@@ -352,11 +356,11 @@
       if (cl.contains('kyh-badges') || cl.contains('kyh-pills')) {
         if (emitBadgeLine(el, out)) return;
       }
-      if (cl.contains('wf-tip') || cl.contains('wh-tip')) { calloutBlocks(el, out, imgMap, 'FFFBEA', 'E5C84A'); return; }
-      if (cl.contains('wh-warn') || cl.contains('is-amber')) { calloutBlocks(el, out, imgMap, 'FFF4E5', 'C99A2B'); return; }
-      if (cl.contains('is-green')) { calloutBlocks(el, out, imgMap, 'ECFDF3', '5CB85C'); return; }
-      if (cl.contains('is-blue')) { calloutBlocks(el, out, imgMap, 'EEF6FF', '5AA2E8'); return; }
-      if (cl.contains('is-red')) { calloutBlocks(el, out, imgMap, 'FFF0F0', 'D99A9A'); return; }
+      if (cl.contains('wf-tip') || cl.contains('wh-tip')) { calloutBlocks(el, out, 'FFFBEA', 'E5C84A'); return; }
+      if (cl.contains('wh-warn') || cl.contains('is-amber')) { calloutBlocks(el, out, 'FFF4E5', 'C99A2B'); return; }
+      if (cl.contains('is-green')) { calloutBlocks(el, out, 'ECFDF3', '5CB85C'); return; }
+      if (cl.contains('is-blue')) { calloutBlocks(el, out, 'EEF6FF', '5AA2E8'); return; }
+      if (cl.contains('is-red')) { calloutBlocks(el, out, 'FFF0F0', 'D99A9A'); return; }
       if (cl.contains('wf-card') || cl.contains('kyh-card') || cl.contains('prompt-group') || cl.contains('prompt-block')) {
         blocksFromNode(el, out, imgMap, ctx);
         out.push(para({ text: '' }));
