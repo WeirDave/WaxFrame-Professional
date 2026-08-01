@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.434
+
+**Add Custom Worker Bee modal: Recommend Models now tags the dropdown itself, not just the note below it**
+
+Build: `20260801-018`<br>
+Released: `2026-08-01`
+
+### What changed
+
+David tested v3.63.432's new Recommend Models button live (re-adding Together AI) and confirmed the core flow worked — button appears, note shows the picks, Reviewer model gets pre-selected. But he caught a real gap: the dropdown's own option list carried none of the ✨ Reviewer / 🔨 Builder markers `buildModelSelector` uses everywhere else the app shows a model picker (Worker Bees row, Change Builder modal, Troubleshooting card). Pre-selecting the Reviewer pick made it invisible next to every other plain option, and the Builder pick had no marker in the dropdown at all — only the note text below mentioned it.
+
+`buildModelSelector` is a custom div combobox specifically *because* native `<option>` elements can't be background-tinted in Chrome — that's why the tagging there uses colored `<span>` rows. The Add Custom Worker Bee modal's model field is a plain native `<select>`, so that approach doesn't transfer directly. But a plain-text emoji prefix works fine on a real `<option>`, and this exact select already uses that convention — `fetchCustomAIModels` tags already-in-hive models with a `✓ ... — already in your hive` suffix. Applied the same idea as a prefix: `recommendCustomAIModelInModal()` now walks the dropdown's options after a successful recommend and prepends `✨ ` / `🔨 ` / `✨🔨 ` to whichever option(s) match the Reviewer and/or Builder pick, stripping any prior tag first so re-clicking Recommend never stacks duplicates.
+
+Tier classification (💰 Cheap / ⚖️ Balanced / 🧠 Thinker / ⚡ Fast) is intentionally NOT part of this — that's a separate, heavier feature (`classifyTiersForProvider`, its own call) scoped to AIs already in the hive, not per-model tags in a picker. Flagging the scoping call explicitly rather than leaving it unsaid.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-tested with stubbed provider calls: dropdown options render `🔨 meta-llama/...` and `✨ Qwen/...` correctly; re-clicking Recommend re-tags cleanly with no duplicate prefixes.
+
+### Files touched
+
+- `js/app.js` — `recommendCustomAIModelInModal()`: options now get inline ✨/🔨 tags matching `buildModelSelector`'s convention
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Purely additive text-prefix logic on existing option elements; no storage, cache-key, or handoff behavior touched from v3.63.432.
+
+---
+
 ## v3.63.433
 
 **Bulk-select toolbar on the Worker Bees screen now visually stands out instead of blending into the page**

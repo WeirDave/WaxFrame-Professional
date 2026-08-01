@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260801-017
+// Build: 20260801-018
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260801-017';         // build stamp — update each session
+const BUILD       = '20260801-018';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -9601,7 +9601,7 @@ async function recheckModelForAI(id, opts) {
   const _handedOffModels = (opts && Array.isArray(opts.models) && opts.models.length)
     ? opts.models
     : null;
-  // v3.63.433 — opts.reviewerResult / opts.builderResult let addCustomAI hand
+  // v3.63.434 — opts.reviewerResult / opts.builderResult let addCustomAI hand
   // off recommendation results the modal's manual Recommend button already
   // produced (see recommendCustomAIModelInModal), so the post-Add recheck
   // below writes them into the canonical cache instead of asking the
@@ -9647,7 +9647,7 @@ async function recheckModelForAI(id, opts) {
       if (!_handedOffModels) localStorage.removeItem(`waxframe_models_${ai.provider}`);
     } else {
       localStorage.removeItem(`waxframe_recommend_custom-${id}`); // legacy
-      // v3.63.433 — skip clearing what we're about to overwrite with the
+      // v3.63.434 — skip clearing what we're about to overwrite with the
       // handed-off result a few lines down (same "don't clear what we're
       // about to leave/rewrite" convention as the models cache below).
       if (!_handedOffReviewer) localStorage.removeItem(`waxframe_recommend_custom-${id}-reviewer`);
@@ -9697,7 +9697,7 @@ async function recheckModelForAI(id, opts) {
       // Open WebUI / Alfredo / non-`/v1/` servers fetch the correct URL
       // instead of the broken derive path.
       const format = cfg.format || 'openai';
-      // v3.63.433 — Both role recommendations already produced by the modal's
+      // v3.63.434 — Both role recommendations already produced by the modal's
       // manual Recommend button (recommendCustomAIModelInModal). Write them
       // straight into the canonical cache instead of re-asking the provider —
       // second half of the modal→row handoff; models-list handoff has worked
@@ -9901,7 +9901,7 @@ async function migrateRecommendOnStartup() {
 // cached the result under cacheId=url (a key nothing else read), then got
 // silently overwritten seconds later by the post-Add recheckModelForAI's
 // canonical custom-{id}-reviewer/-builder cache. Wasted POST for a ~3-second
-// visual effect. v3.63.433 restores the surface as a MANUAL button instead
+// visual effect. v3.63.434 restores the surface as a MANUAL button instead
 // (#customAIRecommendBtn → recommendCustomAIModelInModal): it only fires on
 // click, never automatically, and its result is handed off to the post-Add
 // recheckModelForAI call (see opts.reviewerResult/builderResult above)
@@ -9941,7 +9941,7 @@ function updateModelAids() {
   }
 
   // Recommend Models: shown whenever the dropdown has a fetched list.
-  // v3.63.433 — gated to format 'openai' for now, matching the same gate
+  // v3.63.434 — gated to format 'openai' for now, matching the same gate
   // addCustomAI's post-Add auto-recommend already uses (see addCustomAI):
   // keeps the modal button's result always handoff-eligible instead of
   // silently landing a recommendation that never gets persisted to the
@@ -10032,7 +10032,7 @@ function applyQuickAdd(value) {
   refreshCustomAIIconPreview();
 }
 
-// v3.63.433 — In-memory handoff for the Add Custom Worker Bee modal's manual
+// v3.63.434 — In-memory handoff for the Add Custom Worker Bee modal's manual
 // Recommend button (recommendCustomAIModelInModal). Holds the Reviewer +
 // Builder picks it just produced so addCustomAI can pass them straight to
 // recheckModelForAI instead of re-asking the provider right after Add to
@@ -10115,7 +10115,7 @@ async function fetchCustomAIModels() {
 
   fetchBtn.textContent = '…';
   fetchBtn.disabled = true;
-  // v3.63.433 — A fresh fetch invalidates any recommendation the manual
+  // v3.63.434 — A fresh fetch invalidates any recommendation the manual
   // Recommend button produced for the PRIOR model list.
   _customAIPendingRecommendation = null;
   const note = document.getElementById('customAIRecommendNote');
@@ -10210,7 +10210,7 @@ async function fetchCustomAIModels() {
     }
 
     // v3.63.337 retired the auto-fire recommend that used to run here (see
-    // updateModelAids's history comment above). v3.63.433 re-adds Recommend
+    // updateModelAids's history comment above). v3.63.434 re-adds Recommend
     // as a manual button instead — updateRecommendBtn() just above already
     // reveals #customAIRecommendBtn now that the dropdown is populated. No
     // auto-fire call belongs here; see recommendCustomAIModelInModal below.
@@ -10251,7 +10251,7 @@ async function fetchCustomAIModels() {
 }
 
 
-// v3.63.433 — Manual "🤖 Recommend Models" button in the Add Custom Worker
+// v3.63.434 — Manual "🤖 Recommend Models" button in the Add Custom Worker
 // Bee modal. Fires only on click (never automatically — see updateModelAids
 // history comment for why v3.63.337 killed the auto-fire version), asks the
 // provider for its best Reviewer + Builder pick from the already-fetched
@@ -10304,6 +10304,25 @@ async function recommendCustomAIModelInModal() {
   }
 
   _customAIPendingRecommendation = { url, key, models, reviewerResult, builderResult };
+
+  // v3.63.434 — Tag the dropdown OPTIONS themselves with the same ✨ Reviewer /
+  // 🔨 Builder markers buildModelSelector uses on every other surface (Worker
+  // Bees row, Change Builder modal, Troubleshooting card). That widget is a
+  // custom div combobox specifically BECAUSE native <option> can't be
+  // background-tinted in Chrome — but a plain-text prefix works fine on a
+  // real <select>, and this exact select already uses that convention for its
+  // "✓ already in your hive" suffix. Without this, the pre-selected Reviewer
+  // pick looked identical to every other option, and the Builder pick had NO
+  // marker in the dropdown at all — only the note below showed it. David
+  // caught this live after testing against Together AI.
+  Array.from(selectEl.options).forEach(opt => {
+    if (!opt.value) return;
+    const isRev = reviewerResult?.model === opt.value;
+    const isBld = builderResult?.model  === opt.value;
+    const tag = (isRev && isBld) ? '✨🔨 ' : isRev ? '✨ ' : isBld ? '🔨 ' : '';
+    const base = opt.textContent.replace(/^(✨🔨|✨|🔨) /, '');
+    opt.textContent = tag + base;
+  });
 
   // Pre-select the Reviewer pick — new Worker Bees start as Reviewers; the
   // Builder pick surfaces later on the Bee row / Change Builder modal.
@@ -10461,7 +10480,7 @@ function addCustomAI() {
   aiList.push(ai);
   activeAIs.push(ai);
 
-  // v3.63.433 — CAPTURE the handoff BEFORE the "Close modal and clear form"
+  // v3.63.434 — CAPTURE the handoff BEFORE the "Close modal and clear form"
   // section below wipes modelSelect. This was the real bug behind the
   // "duplicate GET /v1/models" v3.63.337 thought it had fixed: the handoff
   // read used to happen AFTER resetModelField() already ran
@@ -10473,7 +10492,7 @@ function addCustomAI() {
   const handoffModels = modelSelect && !modelSelect.classList.contains('is-hidden')
     ? Array.from(modelSelect.options).filter(o => o.value && !o.disabled).map(o => o.value)
     : null;
-  // v3.63.433 — If the user clicked Recommend Models in the modal before Add
+  // v3.63.434 — If the user clicked Recommend Models in the modal before Add
   // to Hive, the reviewer/builder picks are already sitting in
   // _customAIPendingRecommendation for this exact url+key+model list. Hand
   // them to recheckModelForAI too, so it writes the canonical cache instead
