@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.419
+
+**Together AI and AI21 links updated — confirmed stale against their own docs, not just guessed**
+
+Build: `20260801-003`<br>
+Released: `2026-08-01`
+
+### What changed
+
+v3.63.418 flagged Together AI and AI21 console links as showing the same redirect-drift pattern as the Gemini bug, but didn't touch them — no authenticated session to confirm the new paths actually resolved. Verified this release by reading each provider's own developer docs instead of relying on redirect-chasing:
+
+- **Together AI** — their quickstart and billing docs link directly to `api.together.ai/settings/projects/~current/api-keys` and `api.together.ai/settings/organization/~current/billing`. Confirmed current, not session-scoped artifacts. Updated all 5 occurrences: `api-details.html` (JSON-LD HowTo step + visible guide link), `js/api-links.js` (`API_USAGE_URLS['together-ai']` + `_GUIDE_EXTRA_CONSOLES`), `js/app.js` (Quick Add provider preset `keyLink`), `js/pricing-renderer.js` and `tools/pricing-worker/data/pricing-seed.json` (`billingUrl`, kept in lockstep per that file's own header comment).
+- **AI21** — their quickstart docs link to `studio.ai21.com/v2/...`, confirming the `/v2/` prefix seen in the redirect is their real current base path. Updated `js/api-links.js` (`API_USAGE_URLS.jamba`) and `js/app.js` (Jamba Quick Add preset `keyLink`).
+
+### Verification
+
+- Cross-checked each new URL against the provider's own published documentation (not just redirect target inspection).
+- `grep` for the old paths across the live tree — zero remaining hits (worktrees and frozen `release-artifacts/` snapshots intentionally excluded, per policy of never editing historical artifacts).
+- `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `api-details.html`, `js/api-links.js`, `js/app.js`, `js/pricing-renderer.js`, `tools/pricing-worker/data/pricing-seed.json` — Together AI and AI21 URLs updated
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit — the old paths still redirect correctly today, so no functional break in the interim either way.
+
+---
+
 ## v3.63.418
 
 **Second stale Gemini link found during a full endpoint audit — this one was actually wrong, not just outdated**

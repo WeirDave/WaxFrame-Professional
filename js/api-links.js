@@ -1,5 +1,5 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260801-002
+// Build: 20260801-003
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that
@@ -50,8 +50,8 @@ window.API_USAGE_URLS = {
   // Common custom providers
   deepseek:    'https://platform.deepseek.com/usage',
   cohere:      'https://dashboard.cohere.com/billing',
-  'together-ai': 'https://api.together.ai/settings/billing',
-  jamba:       'https://studio.ai21.com/account/usage'
+  'together-ai': 'https://api.together.ai/settings/organization/~current/billing',
+  jamba:       'https://studio.ai21.com/v2/account/usage'
 };
 
 // ── "Get an API key" drawer ───────────────────────────────────────────
@@ -77,7 +77,7 @@ const _DEFAULT_CONSOLE_NAMES = {
 const _GUIDE_EXTRA_CONSOLES = [
   { name: 'DeepSeek',    url: 'https://platform.deepseek.com/api_keys' },
   { name: 'Cohere',      url: 'https://dashboard.cohere.com/api-keys' },
-  { name: 'Together AI', url: 'https://api.together.ai/settings/api-keys' }
+  { name: 'Together AI', url: 'https://api.together.ai/settings/projects/~current/api-keys' }
 ];
 
 function _clEsc(s) {

@@ -86,7 +86,7 @@
       "contextWindow": "128K",
       "maxOutput": "4K",
       "estPerRound": 0.006,
-      "billingUrl": "https://api.together.ai/settings/billing",
+      "billingUrl": "https://api.together.ai/settings/organization/~current/billing",
       "tier1Rpm": "~600",
       "tier1Tpm": "varies",
       "freeTier": "Trial credits",

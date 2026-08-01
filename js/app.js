@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260801-002
+// Build: 20260801-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260801-002';         // build stamp — update each session
+const BUILD       = '20260801-003';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -8140,7 +8140,7 @@ const QUICK_ADD_PROVIDERS = {
     name: 'Jamba',
     url: 'https://api.ai21.com/studio/v1/chat/completions',
     format: 'openai',
-    keyLink: 'https://studio.ai21.com/account/api-key',
+    keyLink: 'https://studio.ai21.com/v2/account/api-key',
     keyLinkLabel: 'Get your AI21 API key →',
     defaultModel: 'jamba-mini',
     chooseModelLink: 'https://docs.ai21.com/docs/jamba-foundation-models'
@@ -8158,7 +8158,7 @@ const QUICK_ADD_PROVIDERS = {
     name: 'Together AI',
     url: 'https://api.together.xyz/v1/chat/completions',
     format: 'openai',
-    keyLink: 'https://api.together.ai/settings/api-keys',
+    keyLink: 'https://api.together.ai/settings/projects/~current/api-keys',
     keyLinkLabel: 'Get your Together AI key →',
     defaultModel: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
     chooseModelLink: 'https://docs.together.ai/docs/serverless-models'
