@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.433
+
+**Bulk-select toolbar on the Worker Bees screen now visually stands out instead of blending into the page**
+
+Build: `20260801-017`<br>
+Released: `2026-08-01`
+
+### What changed
+
+David's live feedback: the "N of N custom AIs selected / All / None / Remove" toolbar above the custom-AI list read as just another flat card — easy to scroll straight past without noticing it's a distinct, actionable control bar.
+
+Went through three passes live with David watching the Browser pane preview before landing on the final look:
+
+1. First pass: rounded corners + full 1px border + accent-tinted background. Rejected — same shape language as the AI row cards, so it still just read as "another card."
+2. Second pass: square corners, no full border, just a left accent edge + bottom divider (the "note/callout" pattern used elsewhere in the app). Rejected — the left "tip" still echoed the cards' own left-accent-tip styling.
+3. Final: square corners, full `3px solid var(--accent)` border on all four sides, `var(--accent-dim)` tinted background. Distinct from the cards' rounded-corner + left-tip look, reads as its own header/toolbar element.
+
+`.bulk-select-toolbar` previously used a plain `var(--surface2)` background and thin 1px `var(--border)` — visually identical to the AI row cards above and below it. Both tokens used in the final version (`--accent`, `--accent-dim`) already exist and already have light/dark variants defined, so no new colors were introduced and the fix is theme-aware automatically.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Verified live in the Browser pane at each of the three passes, both themes: toggled `data-theme` and confirmed computed `border` and `background-color` matched each theme's `--accent` / `--accent-dim` values (dark: `rgb(245,166,35)` / `rgba(245,166,35,0.10)`; light: `rgb(201,124,6)` / `rgba(201,124,6,0.12)`).
+
+### Files touched
+
+- `style.css` — `.bulk-select-toolbar`: `border-radius` removed, full `border: 3px solid var(--accent)` added, background switched to `var(--accent-dim)`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Pure CSS, one selector, no markup or JS behavior touched.
+
+---
+
 ## v3.63.432
 
 **Add Custom Worker Bee modal: manual Recommend Models button re-added — plus a real fix for the v3.63.337 handoff that never actually worked**
