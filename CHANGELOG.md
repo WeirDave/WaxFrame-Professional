@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.432
+
+**Add Custom Worker Bee modal: manual Recommend Models button re-added — plus a real fix for the v3.63.337 handoff that never actually worked**
+
+Build: `20260801-016`<br>
+Released: `2026-08-01`
+
+### What changed
+
+David was re-adding Together AI as a Worker Bee (removed earlier for an unrelated test) and flagged the gap live: paste a key, hit Enter, the model dropdown populates — Together alone ships 100+ ids — and the modal gives no help picking one. The recommendation only ever shows up on the Bee row *after* Add to Hive, by which point you've already had to guess a starting model.
+
+This exact surface was removed twice before: v3.29.9 killed a manual button in favor of auto-firing on Fetch Models, then v3.63.337 killed the auto-fire too because it cached the pick under `cacheId=url` — a key nothing on the Bee row read — so it was a wasted `POST /v1/chat/completions` for a ~3-second cosmetic effect. Simply re-adding the old surface would repeat that mistake.
+
+**Fix: manual button + handoff, not auto-fire.** New `🤖 Recommend Models` button in the modal's aids row (`#customAIRecommendBtn`, next to Browse models), visible once Fetch Models populates the dropdown, gated to `format: openai` for now (same gate the post-Add auto-recommend already used). It fires the provider's Reviewer + Builder recommend calls once, pre-selects the Reviewer pick in the dropdown, and shows both picks with their reasons in a note underneath. Critically, the result is stashed in `_customAIPendingRecommendation` and handed to the post-Add `recheckModelForAI(id, opts)` call via new `opts.reviewerResult` / `opts.builderResult` — so clicking it costs the *same single* recommend call Add to Hive already makes, just moved earlier. Skipping the button costs nothing extra either; Add to Hive still auto-recommends exactly as before.
+
+**Bug found while wiring the handoff, confirmed live, not something this release introduced:** the v3.63.337 "hand off the model list so recheckModelForAI skips its own GET /v1/models" fix read `modelSelect` for the handoff **after** the modal's "Close and clear form" block had already run `resetModelField()` — which sets `selectEl.classList.add('is-hidden')` and empties `selectEl.innerHTML`. So the handoff's own visibility check (`!modelSelect.classList.contains('is-hidden')`) was always false, `handoffModels` was always `null`, and every single Add Custom AI since v3.63.337 has been re-fetching the model list from the endpoint a second time anyway — the exact duplicate call that release claimed to eliminate. Caught it live: stubbed the provider calls, watched `recheckModelForAI` fire a real `fetchModelsByFormat` GET (401, expected with a fake key) when the handoff should have made that impossible. Fixed by capturing `handoffModels` (and the new pending-recommendation match) **before** the clear-form block runs, right after `aiList.push`, instead of after.
+
+**Housekeeping:** the inert HTML/CSS scaffold for this (button markup + a style rule) landed a few releases early — v3.63.426 through v3.63.431 all shipped it hidden and unreachable (no matching JS existed yet) after a cross-session working-tree collision during development. No functional effect (nothing removed the `is-hidden` class), but flagging it for the record since those releases' notes didn't mention it.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-tested against a local static server (stubbed `recommendModel` to avoid spending real API credits): clicking Recommend fires exactly 2 calls (reviewer + builder), pre-selects the Reviewer pick, renders the note. Clicking Add to Hive afterward fires **zero** additional recommend calls — confirmed via call-count instrumentation — and the canonical `custom-{id}-reviewer` / `-builder` cache keys land with the handed-off data, matching what `getReviewerRecommendation` / `getBuilderRecommendation` read on the Bee row.
+- Regression-tested the skip-Recommend path: Add to Hive without clicking the new button still hands off only `{ models }` (unchanged v3.63.337 behavior, now actually working) and lets `recheckModelForAI` run its own recommend call.
+
+### Files touched
+
+- `js/app.js` — `recheckModelForAI` accepts `opts.reviewerResult`/`opts.builderResult`; `updateModelAids` shows/hides the new button; `resetModelField` + `fetchCustomAIModels` invalidate the pending recommendation on any endpoint-identity change; new `recommendCustomAIModelInModal()`; `addCustomAI` captures the handoff before clearing the form (bug fix) and passes the pending recommendation through
+- `index.html` — `#customAIRecommendBtn` + `#customAIRecommendNote` added to the Add Custom Worker Bee modal
+- `style.css` — `.custom-ai-recommend-note` styling
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. The button is additive and format-gated; the handoff-timing fix only changes *when* two existing local variables are read (moved earlier in the same function), not what they contain. Worst case of a bad revert is losing the in-modal recommend affordance and going back to the (still-present) post-Add auto-recommend.
+
+---
+
 ## v3.63.431
 
 **Session transcript export silently dropped every AI's model name — fixed to use the same resolver as everywhere else**
