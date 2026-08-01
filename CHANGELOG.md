@@ -2,6 +2,38 @@
 
 ---
 
+## v3.63.424
+
+**Fixed inert null-vs-undefined check in the startup recommend-migration candidate filter**
+
+Build: `20260801-008`<br>
+Released: `2026-08-01`
+
+### What changed
+
+Found while reviewing the surrounding `MODEL_FILTERS` machinery for v3.63.423's Auto-Update fix: `migrateRecommendOnStartup()`'s candidate filter checked `MODEL_FILTERS[ai.provider] !== null` to detect whether a default AI has a dynamic (live-discovery) model endpoint. `buildModelFilters()` in `js/provider-catalog.js` *skips* `discovery: null` catalog entries (Together, Cohere) rather than setting their map value to `null` — so the lookup returns `undefined` for those two, and `undefined !== null` evaluates `true`. The check silently treated Together/Cohere as having a dynamic endpoint they don't have.
+
+Zero behavior change today: both Together and Cohere carry populated `MODEL_FALLBACKS` entries, and the surrounding gate (`if (!hasDynamicEndpoint && !hasFallbackList) return false`) only rejects a candidate when *both* signals are false — so the wrong `hasDynamicEndpoint` value never flipped an outcome. It was a latent footgun: a future `discovery: null` provider added without a fallback list would have silently passed this filter and gone on to call `recommendForDefault` against a provider with no way to discover or fall back to a model list.
+
+Fixed to `!!MODEL_FILTERS[ai.provider]` — matches the truthiness check already used correctly at every other `MODEL_FILTERS[...]` read site in `api.js` and the new `app.js` line from v3.63.423.
+
+### Verification
+
+- Grepped every `MODEL_FILTERS[...]` read site across `js/api.js` and `js/app.js` — confirmed this was the only one using `!== null` instead of a truthiness check.
+- Traced the current provider catalog (Together, Cohere are the only two `discovery: null` entries) and confirmed both carry non-empty `fallback` arrays, so today's candidate set is unaffected — this is a preventive fix, not a live-bug fix.
+- `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `js/app.js` — `migrateRecommendOnStartup()`: `hasDynamicEndpoint` check corrected from `!== null` to `!!`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. No observable behavior changes for any provider in the current catalog — safe no-op revert either direction.
+
+---
+
 ## v3.63.423
 
 **Auto-Update model refresh: fixed guaranteed Perplexity NetworkError, unified default-AI discovery path**
