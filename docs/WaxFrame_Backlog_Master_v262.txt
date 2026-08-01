@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v261
-2026-07-25
+WaxFrame Backlog Master v262
+2026-08-01
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -235,6 +235,48 @@ OPEN FEATURES
            visible (a failed scheduled Action run, a `gh issue
            create`, etc.) if not. indexnow-ping.mjs logs its
            result somewhere checkable instead of only stdout.
+
+
+6. Evaluate GPT-5.6 family (Sol/Terra/Luna) as ChatGPT catalog options
+   ─────────────────────────────────────────────────────────
+   WHAT:   OpenAI announced GPT-5.6 on 2026-08-01 with three
+           tiers: Sol ($5/$30 per M — same price as the
+           currently-configured gpt-5.5, likely its successor),
+           Terra ($2/$12 per M, 20% cut), and Luna ($0.20/$1.20
+           per M, 80% cut — frontier-adjacent capability at
+           roughly 1/25th Sol's cost per OpenAI's own framing).
+           Also new: Fast mode for Sol (up to 2.5x faster, 2x
+           price, service_tier="fast").
+   WHY:    WaxFrame's ChatGPT catalog entry still hardcodes
+           model: 'gpt-5.5' with fallback chain ['gpt-5.5',
+           'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']. Terra/Luna
+           could be meaningfully cheaper hive options (Luna in
+           particular undercuts even DeepSeek, currently the
+           cheapest paid Builder in ai-api-pricing.html). Worth
+           evaluating as catalog additions, not just a pricing
+           update — need to confirm actual API model id strings
+           (gpt-5.6-sol / -terra / -luna unconfirmed, OpenAI's
+           pricing page uses marketing names not necessarily the
+           literal API id) and whether Terra/Luna hold up as
+           Builder-capable (see backlog item 1's filter list).
+   STATE:  OPEN — surfaced 2026-08-01 while fixing an unrelated
+           flagged pricing alert for gpt-5.5 (see CHANGELOG
+           v3.63.420). No catalog change made yet; gpt-5.5's own
+           $5/$30 pricing was independently verified as still
+           correct and unaffected by this announcement.
+   WHERE:  js/provider-catalog.js:286-296 (chatgpt catalog entry,
+           model + fallback array). Any new tier would also need
+           an ai-api-pricing.html row (tools/pricing-worker/data/
+           pricing-seed.json + js/pricing-renderer.js
+           FALLBACK_DATA, same lockstep convention as every other
+           provider).
+   DONE:   API model id strings confirmed against OpenAI docs
+           (not guessed from marketing names). Decision made on
+           whether to add Terra/Luna as selectable model variants
+           under the existing chatgpt provider, or leave gpt-5.5
+           as-is. If added: catalog entry updated, Builder-
+           capability smoke-tested, pricing row added, full
+           release ceremony run.
 
 
 ════════════════════════════════════════════════════════════
