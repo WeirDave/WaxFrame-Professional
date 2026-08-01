@@ -78,7 +78,7 @@
 //      swung past DELTA_THRESHOLD)
 //    - a provider that succeeded (updated/confirmed) on the PREVIOUS run
 //      now can't be read at all — the "their page probably changed" signal
-//    - a provider's price actually moved and was auto-applied (v3.63.421,
+//    - a provider's price actually moved and was auto-applied (v3.63.422,
 //      see below — previously silent whenever the swing landed under
 //      DELTA_THRESHOLD, which is exactly how a wrong-but-plausible answer
 //      gets through undetected)
@@ -88,7 +88,7 @@
 //  `confirmed` (price genuinely unchanged — nothing to look at).
 //  Emailing on every retained would just be noise David learns to ignore.
 //
-//  v3.63.421 — Two guardrails added after Claude's live price silently
+//  v3.63.422 — Two guardrails added after Claude's live price silently
 //  drifted to the wrong number: a prior scheduled run got back $2/$10 for
 //  claude-sonnet-4-6 (confirmed against Anthropic's own docs to actually be
 //  claude-sonnet-5's INTRODUCTORY rate, a different model entirely) — a
@@ -267,7 +267,7 @@ async function researchProvider(provider, apiKey) {
   if (!isTrustedSource(provider.id, source)) {
     return { ok: false, reason: `untrusted or missing source (got: ${source || 'none'})` };
   }
-  // v3.63.421 — require an affirmative model-version claim rather than
+  // v3.63.422 — require an affirmative model-version claim rather than
   // trusting that a valid price + valid source means it's for the right
   // model. Doesn't string-match it (naming conventions vary too much
   // across providers to do that reliably); just refuses to auto-apply a
@@ -420,7 +420,7 @@ async function refreshPricing(env) {
           estPerRound: computeEstPerRound(inputPerM, outputPerM, current.tokensPerRound)
         });
         if (priceMoved) {
-          // v3.63.421 — previously silent whenever the swing landed under
+          // v3.63.422 — previously silent whenever the swing landed under
           // DELTA_THRESHOLD. That's exactly how the Claude introductory-
           // rate mix-up went unnoticed for weeks. Every applied price
           // change now gets a line in the email, not just the big ones.

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260801-005
+// Build: 20260801-006
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -213,7 +213,7 @@
     return '';
   }
 
-  // v3.63.421 — Same latent risk class as the two above, for the OpenAI
+  // v3.63.422 — Same latent risk class as the two above, for the OpenAI
   // response shape that backs 8 of 10 built-in providers (chatgpt, copilot,
   // grok, perplexity, mistral, deepseek, together, cohere) plus every
   // custom/local server AI (Ollama, LM Studio, Open WebUI, Alfredo). A full
@@ -292,7 +292,14 @@
       vision: true,
       // -pro / -codex are Responses-API-only; dated snapshots clutter.
       filterExtras: [CHATGPT_RESPONSES_ONLY_RE, DATED_SNAPSHOT_RE],
-      fallback: ['gpt-5.5', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']
+      // gpt-5.6-sol/-terra/-luna added 2026-08-01 (OpenAI announcement) —
+      // fallback-list-only, NOT the default. Live discovery already
+      // surfaces them for any keyed user regardless of this list; this
+      // just covers the no-discovery case. Default stays gpt-5.5 until
+      // gpt-5.6-sol is smoke-tested as Builder (see backlog item 6) —
+      // new model generations have broken the Builder marker format
+      // before (see backlog item 1), can't verify that without a live key.
+      fallback: ['gpt-5.5', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']
     },
     {
       id: 'copilot', label: 'Microsoft (Copilot)',

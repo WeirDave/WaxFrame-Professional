@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.422
+
+**GPT-5.6 Sol/Terra/Luna added to the ChatGPT fallback list — selectable now, not yet the default**
+
+Build: `20260801-006`<br>
+Released: `2026-08-01`
+
+### What changed
+
+OpenAI announced the GPT-5.6 family (Sol/Terra/Luna) on 2026-08-01. Because the `chatgpt` catalog entry uses live model discovery (`discovery: 'openai-models'`), any user with a valid key could already manually select these models today with zero WaxFrame changes — confirmed the existing filter regexes (`CHATGPT_RESPONSES_ONLY_RE`, `DATED_SNAPSHOT_RE`, `STRUCTURAL_NON_CHAT_RE`) don't block any of the three literal API ids (`gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` — confirmed against OpenAI's own docs, not the marketing names).
+
+Added all three to `js/provider-catalog.js`'s `fallback` array, so they're also selectable in the no-discovery case (keyless preview, API hiccup). Deliberately did NOT flip the default model (still `gpt-5.5`) or add a GPT-5.6 row to the pricing page — new model generations have broken WaxFrame's `%%CONFLICTS_START%%` Builder marker format before (see backlog item 1's incapable-family list), and verifying that requires a live hive round with a real OpenAI key, which isn't something to do unattended. Backlog item 6 updated to PARTIAL with the specific next step: David runs one hive round with gpt-5.6-sol as Builder; if it holds format, the default gets bumped and a pricing row gets added in a follow-up release.
+
+### Verification
+
+- `gpt-5.6-sol` / `-terra` / `-luna` checked against `CHATGPT_RESPONSES_ONLY_RE` (`/-pro(\b|-)|-codex(\b|-)/i`), `DATED_SNAPSHOT_RE` (`/-\d{4}-\d{2}-\d{2}$/`), and `STRUCTURAL_NON_CHAT_RE` — none match, so live discovery already surfaces all three unfiltered.
+- Literal API model ids confirmed against `developers.openai.com/api/docs/models`, not inferred from the Sol/Terra/Luna marketing names.
+- `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `js/provider-catalog.js` — chatgpt catalog entry `fallback` array: added `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`; default `model` field untouched
+- `docs/WaxFrame_Backlog_Master_v263.txt` — item 6 updated OPEN → PARTIAL with the specific Builder-test blocker
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Purely additive to a fallback array that only matters when live discovery is unavailable — no behavior change for any existing user's saved configuration, and no default changed.
+
+---
+
 ## v3.63.421
 
 **Pricing-worker guardrails: alert on every applied price change, require model-version confirmation**

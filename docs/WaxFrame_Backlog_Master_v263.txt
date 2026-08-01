@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v262
+WaxFrame Backlog Master v263
 2026-08-01
 
 ABOUT THIS DOCUMENT
@@ -247,36 +247,46 @@ OPEN FEATURES
            roughly 1/25th Sol's cost per OpenAI's own framing).
            Also new: Fast mode for Sol (up to 2.5x faster, 2x
            price, service_tier="fast").
-   WHY:    WaxFrame's ChatGPT catalog entry still hardcodes
-           model: 'gpt-5.5' with fallback chain ['gpt-5.5',
-           'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']. Terra/Luna
-           could be meaningfully cheaper hive options (Luna in
-           particular undercuts even DeepSeek, currently the
-           cheapest paid Builder in ai-api-pricing.html). Worth
-           evaluating as catalog additions, not just a pricing
-           update — need to confirm actual API model id strings
-           (gpt-5.6-sol / -terra / -luna unconfirmed, OpenAI's
-           pricing page uses marketing names not necessarily the
-           literal API id) and whether Terra/Luna hold up as
-           Builder-capable (see backlog item 1's filter list).
-   STATE:  OPEN — surfaced 2026-08-01 while fixing an unrelated
-           flagged pricing alert for gpt-5.5 (see CHANGELOG
-           v3.63.420). No catalog change made yet; gpt-5.5's own
-           $5/$30 pricing was independently verified as still
-           correct and unaffected by this announcement.
-   WHERE:  js/provider-catalog.js:286-296 (chatgpt catalog entry,
-           model + fallback array). Any new tier would also need
-           an ai-api-pricing.html row (tools/pricing-worker/data/
-           pricing-seed.json + js/pricing-renderer.js
-           FALLBACK_DATA, same lockstep convention as every other
-           provider).
-   DONE:   API model id strings confirmed against OpenAI docs
-           (not guessed from marketing names). Decision made on
-           whether to add Terra/Luna as selectable model variants
-           under the existing chatgpt provider, or leave gpt-5.5
-           as-is. If added: catalog entry updated, Builder-
-           capability smoke-tested, pricing row added, full
-           release ceremony run.
+   WHY:    Terra/Luna could be meaningfully cheaper hive options
+           (Luna in particular undercuts even DeepSeek, currently
+           the cheapest paid Builder in ai-api-pricing.html).
+           Since chatgpt uses live model discovery
+           (discovery: 'openai-models'), any keyed user could
+           already manually select gpt-5.6-sol/-terra/-luna today
+           with zero WaxFrame changes — confirmed the filter
+           regexes (CHATGPT_RESPONSES_ONLY_RE, DATED_SNAPSHOT_RE,
+           STRUCTURAL_NON_CHAT_RE) don't block any of the three
+           ids. What's still open is making them the CURATED
+           experience: the default model, a recommended pricing-
+           page row, confirmed Builder-safe.
+   STATE:  PARTIAL — 2026-08-01. Done: API model ids confirmed
+           against OpenAI's own docs (gpt-5.6-sol / gpt-5.6-terra /
+           gpt-5.6-luna, not the marketing names), added to the
+           chatgpt fallback array (js/provider-catalog.js) so
+           they're selectable even without live discovery. NOT
+           done, and deliberately not attempted solo: flipping the
+           DEFAULT model to gpt-5.6-sol, or promoting Terra/Luna on
+           the pricing page, needs a live Builder-role smoke test
+           first — new model generations have broken WaxFrame's
+           %%CONFLICTS_START%% marker format before (see backlog
+           item 1), and that can only be verified with a real
+           OpenAI key in the live app, which isn't something an AI
+           assistant should be entering. David: run one hive round
+           with gpt-5.6-sol as Builder when convenient; if it holds
+           format, come back to this item to flip the default.
+   WHERE:  js/provider-catalog.js:286-303 (chatgpt catalog entry —
+           fallback array updated, model default untouched). Any
+           promoted tier would also need an ai-api-pricing.html row
+           (tools/pricing-worker/data/pricing-seed.json +
+           js/pricing-renderer.js FALLBACK_DATA, same lockstep
+           convention as every other provider).
+   DONE:   gpt-5.6-sol live-tested as Builder (format-compliant,
+           converges normally). If it passes: default model bumped
+           to gpt-5.6-sol, pricing row added/updated, full release
+           ceremony run. Terra/Luna get the same Builder test
+           before being promoted past "manually selectable" —
+           if either fails Builder, add to the backlog item 1
+           incapable-family list instead of promoting.
 
 
 ════════════════════════════════════════════════════════════
