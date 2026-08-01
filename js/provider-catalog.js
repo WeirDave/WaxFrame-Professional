@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260801-001
+// Build: 20260801-002
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -213,7 +213,7 @@
     return '';
   }
 
-  // v3.63.417 — Same latent risk class as the two above, for the OpenAI
+  // v3.63.418 — Same latent risk class as the two above, for the OpenAI
   // response shape that backs 8 of 10 built-in providers (chatgpt, copilot,
   // grok, perplexity, mistral, deepseek, together, cohere) plus every
   // custom/local server AI (Ollama, LM Studio, Open WebUI, Alfredo). A full

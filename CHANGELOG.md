@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.418
+
+**Second stale Gemini link found during a full endpoint audit — this one was actually wrong, not just outdated**
+
+Build: `20260801-002`<br>
+Released: `2026-08-01`
+
+### What changed
+
+After v3.63.417 fixed the reported `aistudio.google.com/apikey` link, David asked for a full audit of every provider endpoint in the app to catch anything else stale. Live-checked all 19 provider URLs referenced across `js/api-links.js`, `api-details.html`, `js/app.js`, `js/pricing-renderer.js`, and `index.html` (HTTP status + redirect target for each). Two categories of finding:
+
+- **A real bug, fixed here:** `index.html`'s "Provider billing & console links" panel (shown on HTTP 403 troubleshooting) linked Gemini to `aistudio.google.com/app/apikey` — a third, even older URL variant that the v3.63.417 grep (which searched only for the literal `aistudio.google.com/apikey` string) never matched. Worse, it pointed at the API-key page while every sibling row in that panel (Anthropic, OpenAI, DeepSeek, Grok, Perplexity) points at a billing/usage page — wrong destination for a 403/billing context, not just a stale one. Changed to `aistudio.google.com/usage`, label updated from "API key" to "Usage" to match the pattern.
+- **Not changed, flagged for awareness only:** Together AI (`api.together.ai/settings/api-keys` and `/settings/billing`) and AI21 (`studio.ai21.com/account/usage` and `/account/api-key`) both now 302/307-redirect to restructured paths (`/settings/projects/~current/...`, `/v2/account/...`). Same drift pattern as the Gemini report — old URL still works via redirect — but I can't verify the redirect targets resolve correctly once authenticated (no test account), so I didn't guess-edit working links. Everything else checked out clean: OpenAI, Claude, Grok, Perplexity, Mistral, Cohere, and DeepSeek's key/usage/billing pages all resolve directly or preserve their return-to target through a standard auth gate.
+
+### Verification
+
+- Live HTTP check (curl, following redirects) against all 19 provider URLs in the codebase.
+- Browser-verified DeepSeek's `/api_keys` and `/usage` routes specifically — curl saw 403/202 from CloudFront bot-blocking, but both are valid client-routed 200s in a real browser.
+- `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `index.html` — Gemini billing-panel link and label corrected
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit — the old `aistudio.google.com/app/apikey` URL still redirects today, so no functional break in the interim either way.
+
+---
+
 ## v3.63.417
 
 **Gemini API-key link fixed after a community bug report**
