@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v263
+WaxFrame Backlog Master v264
 2026-08-01
 
 ABOUT THIS DOCUMENT
@@ -287,6 +287,70 @@ OPEN FEATURES
            before being promoted past "manually selectable" —
            if either fails Builder, add to the backlog item 1
            incapable-family list instead of promoting.
+
+7. Three duplicate-logic cleanups deferred from the 2026-08-01 code audit
+   ─────────────────────────────────────────────────────────
+   WHAT:   A full multi-agent code audit (v3.63.425 through
+           v3.63.430) found and fixed 21 confirmed issues across
+           security, logic footguns, dead code, and low-risk
+           duplication. Three duplication findings remain
+           deliberately unfixed — each is a real "same logic in
+           multiple places" case, but none has a live bug behind
+           it (everything audited works correctly today), and each
+           has a blast radius too large to push through without a
+           live browser regression pass:
+             a. Shared length-gate helper — runBuilderOnly and
+                runRound's Builder phase carry ~150 lines of
+                byte-for-byte-identical bloat/undersized length-gate
+                logic (computation, override check, per-round modal
+                prompt, fail-path). Their SUCCESS paths genuinely
+                diverge (runRound restores gold-star reviewer state
+                and picks between two completion sounds based on
+                conflict state; runBuilderOnly doesn't) — so this
+                is a real extraction candidate, not a false-positive
+                duplicate, but it's core round-completion logic
+                every Builder round runs through.
+             b. Modal open/close consolidation — roughly 19 near-
+                identical modal show/hide functions (getElementById
+                + classList.add/remove('active')) with no shared
+                openModal(id)/closeModal(id) helper. Several layer
+                extra logic (focus, sound, animation-pause) on top
+                of the shared core, so this isn't a safe blind
+                regex swap — each of the 19 needs individual review.
+             c. Confirm-modal triad merge — wfConfirm, showRefConfirm,
+                and openDiscardConfirm are three independently-built
+                confirm-modal systems doing the same job with
+                different feature sets (suppressKey short-circuit,
+                checkbox mode, destructive-styling, sound). Highest
+                risk of the three: merging distinct feature sets is
+                exactly where subtle UX regressions hide.
+   WHY:    Duplication = drift risk (a fix to one copy silently
+           missing its sibling), but these three don't justify
+           touching live, working, revenue-critical code without a
+           bug driving it. David explicitly chose "leave as
+           documented duplication" over executing any of the three
+           when asked during the audit fix-up work.
+   STATE:  PARKED — 2026-08-01. All three already carry "mirror of
+           X" / "see the runRound site above" comments at their
+           duplicate sites, so a future editor touching one copy
+           will see the pointer to its sibling. Revisit only if (1)
+           a real bug surfaces in one of these three areas that
+           makes fixing-in-place awkward, or (2) David wants to
+           spend a dedicated session with live browser regression
+           testing across every affected screen.
+   WHERE:  (a) js/app.js — runBuilderOnly's length-gate block and
+           runRound's Builder-phase length-gate block (grep
+           "_lcGate" for both sites). (b) js/app.js — every
+           close*Modal/hide*Modal/open*Modal/show*Modal function
+           (grep "classList.add('active')" / "classList.remove
+           ('active')"). (c) js/app.js — wfConfirm (+wfConfirmOk/
+           wfConfirmCancel), showRefConfirm/closeRefConfirmModal/
+           executeRefConfirm, openDiscardConfirm/closeDiscardConfirm.
+   DONE:   Either explicitly closed as "not worth it" or executed
+           with a live browser walkthrough of every affected screen
+           (all round-completion paths for (a); every modal on every
+           page for (b); every confirm-dialog call site for (c))
+           before shipping.
 
 
 ════════════════════════════════════════════════════════════
