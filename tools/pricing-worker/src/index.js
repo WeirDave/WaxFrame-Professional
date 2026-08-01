@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20260726-005
+//  Build: 20260801-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -78,10 +78,37 @@
 //      swung past DELTA_THRESHOLD)
 //    - a provider that succeeded (updated/confirmed) on the PREVIOUS run
 //      now can't be read at all — the "their page probably changed" signal
+//    - a provider's price actually moved and was auto-applied (v3.63.421,
+//      see below — previously silent whenever the swing landed under
+//      DELTA_THRESHOLD, which is exactly how a wrong-but-plausible answer
+//      gets through undetected)
 //  Deliberately does NOT email on routine `retained` (a handful of
 //  providers — Gemini free tier, Together, Grok — consistently come back
-//  incomplete most runs; that's expected LLM behavior, not a fault).
+//  incomplete most runs; that's expected LLM behavior, not a fault) or on
+//  `confirmed` (price genuinely unchanged — nothing to look at).
 //  Emailing on every retained would just be noise David learns to ignore.
+//
+//  v3.63.421 — Two guardrails added after Claude's live price silently
+//  drifted to the wrong number: a prior scheduled run got back $2/$10 for
+//  claude-sonnet-4-6 (confirmed against Anthropic's own docs to actually be
+//  claude-sonnet-5's INTRODUCTORY rate, a different model entirely) — a
+//  ~33% swing on each field, under DELTA_THRESHOLD, so it auto-applied with
+//  no flag and no email. Caught only by manual reconciliation weeks later.
+//    1. Alert on every applied price change, not just flagged ones (see
+//       above) — the delta threshold is a REVIEW gate for big swings, it
+//       was never meant to also be the ALERT gate for small ones. Small
+//       wrong answers need eyes just as much as big ones; they just don't
+//       need to block auto-apply while waiting for those eyes.
+//    2. Model-version confirmation. buildResearchPrompt() now requires a
+//       `confirmedModel` field — the exact model name/version as it
+//       literally appears on the source page — and explicitly warns about
+//       introductory/promotional rates and sibling model-family tiers.
+//       researchProvider() rejects (falls back to `retained`, same path as
+//       a missing price) any response that doesn't include it. This won't
+//       catch every tier mix-up, but it forces an affirmative claim instead
+//       of a silent guess, which is what actually failed here — Perplexity
+//       answered for "Claude Sonnet" generically instead of confirming the
+//       specific 4.6 release the source page named.
 // ============================================================
 
 const CORS = {
@@ -157,7 +184,7 @@ function relativeDelta(oldVal, newVal) {
 function buildStatusHtml(log) {
   const rows = (log || []).map(entry => {
     const items = (entry.changes || []).map(c => {
-      const label = c.status === 'updated' ? `<strong style="color:#0a7d2c">${c.id}: updated</strong>`
+      const label = c.status === 'updated' ? `<strong style="color:#0a7d2c">${c.id}: updated</strong> — ${c.reason || ''}`
         : c.status === 'confirmed' ? `${c.id}: confirmed unchanged`
         : c.status === 'flagged' ? `<strong style="color:#b3261e">${c.id}: flagged for review</strong> — ${c.reason || 'large price delta'}`
         : `<span style="color:#a15c00">${c.id}: retained old value (${c.reason || 'unknown reason'})</span>`;
@@ -178,9 +205,11 @@ function buildResearchPrompt(provider) {
   return `For the AI API provider "${provider.name}", model "${provider.model}": look up the CURRENT, officially published API pricing as of today from the provider's own pricing/billing documentation.${tierNote}
 
 Return ONLY a compact JSON object, no markdown, no explanation, no extra text:
-{"inputPerM": <number, USD per 1M input tokens, or null if you cannot verify it from an authoritative current source>, "outputPerM": <number, USD per 1M output tokens, or null>, "contextWindow": <string like "1M" or "256K", or null>, "maxOutput": <string like "8K", or null>, "source": <string, the exact URL of the official page you found this pricing on, or null>}
+{"inputPerM": <number, USD per 1M input tokens, or null if you cannot verify it from an authoritative current source>, "outputPerM": <number, USD per 1M output tokens, or null>, "contextWindow": <string like "1M" or "256K", or null>, "maxOutput": <string like "8K", or null>, "source": <string, the exact URL of the official page you found this pricing on, or null>, "confirmedModel": <string, the exact model name/version EXACTLY as written on the source page next to the price you're reporting, or null if the page doesn't clearly label it>}
 
-The "source" URL MUST be a page on the provider's own official domain — not a third-party aggregator, comparison site, or news article. Do not guess or estimate any field you cannot verify — return null for it instead.`;
+The "source" URL MUST be a page on the provider's own official domain — not a third-party aggregator, comparison site, or news article. Do not guess or estimate any field you cannot verify — return null for it instead.
+
+IMPORTANT — this model family may have multiple pricing rows that look similar: different version numbers, an introductory/promotional rate that later reverts to a higher standard rate, or different size tiers (mini/nano/pro/flash/etc). Make sure the price you report is for EXACTLY "${provider.model}" and not a sibling row. If the page shows both an introductory and a standard rate for this exact model, report whichever is CURRENTLY active today. If you are not fully certain the price and "confirmedModel" you're returning both refer to exactly this model, return null for inputPerM and outputPerM rather than guessing.`;
 }
 
 function extractJson(text) {
@@ -231,15 +260,25 @@ async function researchProvider(provider, apiKey) {
   // response; contextWindow/maxOutput are independently optional and
   // fall back to the provider's existing value when unconfirmed, rather
   // than vetoing an otherwise-good price update.
-  const { inputPerM, outputPerM, contextWindow, maxOutput, source } = parsed;
+  const { inputPerM, outputPerM, contextWindow, maxOutput, source, confirmedModel } = parsed;
   if (!isValidPrice(inputPerM) || !isValidPrice(outputPerM)) {
     return { ok: false, reason: 'invalid or missing price fields in response' };
   }
   if (!isTrustedSource(provider.id, source)) {
     return { ok: false, reason: `untrusted or missing source (got: ${source || 'none'})` };
   }
+  // v3.63.421 — require an affirmative model-version claim rather than
+  // trusting that a valid price + valid source means it's for the right
+  // model. Doesn't string-match it (naming conventions vary too much
+  // across providers to do that reliably); just refuses to auto-apply a
+  // price the model wasn't willing to explicitly attribute to a specific
+  // version, since a confident guess and an unconfirmed one look identical
+  // in the JSON otherwise.
+  if (typeof confirmedModel !== 'string' || !confirmedModel.trim()) {
+    return { ok: false, reason: 'no confirmed model-version attribution in response' };
+  }
   return {
-    ok: true, inputPerM, outputPerM, source,
+    ok: true, inputPerM, outputPerM, source, confirmedModel: confirmedModel.trim(),
     contextWindow: isValidSizeString(contextWindow) ? String(contextWindow).trim() : null,
     maxOutput: isValidSizeString(maxOutput) ? String(maxOutput).trim() : null
   };
@@ -360,13 +399,13 @@ async function refreshPricing(env) {
     current.providers.forEach((p, i) => {
       const r = results[i];
       if (r.status === 'fulfilled' && r.value.ok) {
-        const { inputPerM, outputPerM, contextWindow, maxOutput, source } = r.value;
+        const { inputPerM, outputPerM, contextWindow, maxOutput, source, confirmedModel } = r.value;
         const inDelta  = relativeDelta(p.inputPerM, inputPerM);
         const outDelta = relativeDelta(p.outputPerM, outputPerM);
         if (inDelta > DELTA_THRESHOLD || outDelta > DELTA_THRESHOLD) {
           // Valid, well-sourced answer — but the swing is big enough to hold
           // for a human look rather than auto-apply. Old values stay live.
-          const reason = `proposed $${inputPerM}/$${outputPerM} per M (was $${p.inputPerM}/$${p.outputPerM}) — ${source || 'no source'}`;
+          const reason = `proposed $${inputPerM}/$${outputPerM} per M (was $${p.inputPerM}/$${p.outputPerM}) — confirmed as "${confirmedModel}" — ${source || 'no source'}`;
           nextProviders.push(p);
           changes.push({ id: p.id, status: 'flagged', reason });
           alertLines.push(`FLAGGED  ${p.id} (${p.name}): ${reason}`);
@@ -380,7 +419,17 @@ async function refreshPricing(env) {
           maxOutput: maxOutput || p.maxOutput,
           estPerRound: computeEstPerRound(inputPerM, outputPerM, current.tokensPerRound)
         });
-        changes.push({ id: p.id, status: priceMoved ? 'updated' : 'confirmed' });
+        if (priceMoved) {
+          // v3.63.421 — previously silent whenever the swing landed under
+          // DELTA_THRESHOLD. That's exactly how the Claude introductory-
+          // rate mix-up went unnoticed for weeks. Every applied price
+          // change now gets a line in the email, not just the big ones.
+          const reason = `$${inputPerM}/$${outputPerM} per M (was $${p.inputPerM}/$${p.outputPerM}) — confirmed as "${confirmedModel}" — ${source || 'no source'}`;
+          changes.push({ id: p.id, status: 'updated', reason });
+          alertLines.push(`UPDATED  ${p.id} (${p.name}): ${reason}`);
+        } else {
+          changes.push({ id: p.id, status: 'confirmed' });
+        }
       } else {
         nextProviders.push(p);
         const reason = r.status === 'fulfilled' ? r.value.reason : String(r.reason && r.reason.message || r.reason);
