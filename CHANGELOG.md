@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.423
+
+**Auto-Update model refresh: fixed guaranteed Perplexity NetworkError, unified default-AI discovery path**
+
+Build: `20260801-007`<br>
+Released: `2026-08-01`
+
+### What changed
+
+David reported console spam on startup: `⚠️ Perplexity: model-list refresh failed — NetworkError when attempting to fetch resource` and `⚠️ mistral: model-list refresh failed — no models returned` from the Auto-Update sweep.
+
+Root cause: `_autoUpdateRefreshOneAI` (the per-AI worker behind Auto-Update Model Lists) called the generic `fetchModelsFromEndpoint` — a raw `GET {origin}/v1/models` intended for custom AIs with no catalog entry. For Perplexity specifically, that endpoint is documented in `js/provider-catalog.js` (v3.63.143) as NetworkError-prone from browser origins — which is exactly why the catalog's `perplexity-self` discovery method exists (asks Perplexity itself for its current Sonar lineup via a chat-completion call instead of hitting `/v1/models` directly). Every OTHER default-AI fetch path in the app (Recommend Models, tier classification, the deprecation watchdog) already routes through the catalog-aware `fetchModelsForProviderLive`, which knows about `perplexity-self`. Auto-Update was the one path that never got wired up when v3.63.143 shipped the fix elsewhere — so its Perplexity refresh was deterministically broken every single run, not intermittent.
+
+Fix: `_autoUpdateRefreshOneAI` now checks `MODEL_FILTERS[ai.provider]` — true for any default AI with a catalog `discovery` method (Perplexity, ChatGPT, Claude, Gemini, Grok, DeepSeek, Mistral) — and if so calls `fetchModelsForProviderLive(ai.provider)` instead of the generic path. Customs and the two catalog entries with `discovery: null` (Together, Cohere) are unaffected — they keep riding the original generic path, which is what it was actually designed for.
+
+Side benefits from unifying onto the shared path: `fetchModelsForProviderLive` already retries once on transient transport failures (the exact "CORS-shaped blip, works on manual retry" pattern documented for Mistral in v3.63.145) and applies each catalog entry's `filterExtras`/`filterRequire` (e.g. ChatGPT's Responses-API/dated-snapshot exclusion), neither of which the generic path did. For Claude and Gemini, behavior is identical to before — their generic-path derivation already happened to match the catalog's discovery logic byte-for-byte, verified by inspection, not just assumption.
+
+Mistral's "no models returned" was investigated separately: its code path was already identical to Claude/Gemini's (no divergence bug), consistent with it being a transient Mistral-side blip rather than a WaxFrame defect. The retry-once now picked up via the shared path should absorb most of these going forward; no further action taken since there was no reproducible defect to fix.
+
+### Verification
+
+- Traced `_autoUpdateRefreshOneAI` → `fetchModelsFromEndpoint` → `WFProviderCatalog.fetchModelsByFormat` and confirmed it has no branch for `discovery: 'perplexity-self'` — it falls through to a plain GET on Perplexity's real `/v1/models`, matching the exact failure text reported.
+- Confirmed via inspection that `fetchModelsByFormat`'s derivation for `format: 'anthropic'` (Claude, via the CF Worker proxy) and `format: 'google'` (Gemini) already matched `fetchModelsList`'s `anthropic-via-proxy` / `gemini-list` branches exactly — no behavior change for those two providers from this fix.
+- `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `js/app.js` — `_autoUpdateRefreshOneAI`: routes default AIs with catalog discovery through `fetchModelsForProviderLive` instead of the generic `fetchModelsFromEndpoint`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. The changed branch only affects which transport function fetches a default AI's model list during Auto-Update / connectivity checks — no storage schema, cache key, or UI surface changed. Worst case of a bad revert is Perplexity's Auto-Update refresh going back to always-NetworkError (cosmetic console warning; cached/fallback models still serve the dropdown).
+
+---
+
 ## v3.63.422
 
 **GPT-5.6 Sol/Terra/Luna added to the ChatGPT fallback list — selectable now, not yet the default**
