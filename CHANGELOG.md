@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.430
+
+**License-removal modal wording aligned between app.js and license-helper.js**
+
+Build: `20260801-014`<br>
+Released: `2026-08-01`
+
+### What changed
+
+Sixth batch from the code audit — the last low-risk item from the duplicate-logic findings. `license-helper.js`'s `confirmRemoveLicense()` is a documented, deliberate mirror of `app.js`'s function (minus trial-rounds tracking, per its own header comment — helper pages are an intentional subset, not a byte-identical copy). The audit flagged that the mirror had drifted: the confirm-modal title read "Remove License" on helper pages vs. "Remove license key?" in the main app. Aligned the title wording. Left the toast-vs-modal feedback difference after removal as-is — that's a legitimate page-context distinction (the main app has a persistent toast system; helper pages confirm via their own modal), not drift.
+
+The other three items originally scoped for this release — extracting a shared length-gate helper from `runBuilderOnly`/`runRound` (~150 duplicated lines), consolidating ~19 modal open/close functions, and merging three independent confirm-modal subsystems — are **not included here**. All three are pure duplicate-logic cleanup with no live bug behind them (every audited function works correctly today), and all three have a blast radius spanning core round-completion logic or dozens of UI surfaces across many pages. Flagged for a scoped decision rather than pushed through solo.
+
+### Verification
+
+- `node --check js/license-helper.js`, `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `js/license-helper.js` — `confirmRemoveLicense()` title wording
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Single-string wording change, no behavior or data impact either direction.
+
+---
+
 ## v3.63.429
 
 **Fifth batch from the code audit: safe duplicate-logic fixes (escapeHtml null guard, import-server https gap, shared template category order)**
