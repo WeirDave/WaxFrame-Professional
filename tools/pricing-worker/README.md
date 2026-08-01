@@ -91,14 +91,21 @@ A real dry-run test caught a gap in the original design: requiring `inputPerM`/`
 
 None of this is a guarantee of correctness — it catches the *big, obvious* failure modes (bad source, big swing), not a subtle misread that lands on a plausible, correctly-sourced, but still-wrong number. The run log and email alerts (below) are the backstop for that residual risk, not redundant belt-and-suspenders.
 
-### Email alerts (v3.63.413)
+### Model-version confirmation (v3.63.421)
+
+The 40%-delta and trusted-source guardrails above weren't enough: a scheduled run once returned a fully-formed, correctly-sourced, *plausible* price for `claude-sonnet-4-6` that was actually `claude-sonnet-5`'s introductory rate — a different model, ~33% off on each field, under the delta threshold, so it auto-applied with no flag. The live page quoted the wrong Claude price for weeks before it was caught by manual reconciliation, not by any guardrail.
+
+Fix: the prompt now requires a `confirmedModel` field — the exact model name/version as it literally appears next to the price on the source page — and explicitly warns about introductory/promotional rates and sibling model-family tiers (mini/nano/pro/flash/version-number siblings). `researchProvider()` rejects any response missing that field, same rejection path as a missing price. This doesn't string-match `confirmedModel` against the provider's own model id — naming conventions vary too much across providers (`gpt-5.5` vs `gpt-4.1-mini` vs `mistral-large-latest`) to do that reliably — it just refuses to auto-apply a price the model wasn't willing to explicitly attribute to a specific version. A confident guess and an honestly-unconfirmed one look identical in the raw JSON otherwise; this forces the model to commit to one or the other.
+
+### Email alerts (v3.63.413, widened v3.63.421)
 
 The run log is pull — you have to remember to check `https://waxframe-pricing.weirdave.workers.dev/`. An email alert (via Cloudflare Email Routing's `send_email` binding, `[[send_email]]` in `wrangler.toml`, destination `weirdave@aol.com`) pushes instead, but only when something's actually worth a look:
 - the whole run threw (KV unreachable, catastrophic failure)
 - any provider got `flagged` this run
+- **any provider's price actually moved and was auto-applied (`updated`) — added v3.63.421.** Previously silent whenever the swing landed under the 40% delta threshold, which is exactly how the Claude introductory-rate mix-up went unnoticed. The delta threshold is a gate on auto-*applying*, not a gate on whether it's worth a human glance — small wrong answers deserve eyes just as much as big ones, they just don't need to block on getting them.
 - a provider that was working last run (`updated`/`confirmed`) can't be read at all this run — the "their page probably changed" signal
 
-Deliberately silent on routine `retained` — Gemini's free tier, Together, and Grok consistently come back incomplete most runs in practice, which is expected Perplexity behavior, not a fault. Emailing on that every week would just be noise you'd learn to ignore.
+Deliberately still silent on routine `retained` (Gemini's free tier, Together, and Grok consistently come back incomplete most runs in practice — expected Perplexity behavior, not a fault) and on `confirmed` (price genuinely unchanged, nothing to look at). Emailing on either every week would just be noise you'd learn to ignore.
 
 Requires `waxframe.com`'s Email Routing enabled with a verified destination address (done 2026-07-25 — `weirdave@aol.com` auto-verified since it's the Cloudflare account's own login email, no confirmation click needed). If the `send_email` binding is ever missing/misconfigured, `sendAlertEmail()` no-ops silently rather than breaking the actual pricing refresh — email is a nice-to-have alert channel, not the source of truth.
 

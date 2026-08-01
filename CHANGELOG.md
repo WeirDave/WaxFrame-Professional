@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.421
+
+**Pricing-worker guardrails: alert on every applied price change, require model-version confirmation**
+
+Build: `20260801-005`<br>
+Released: `2026-08-01`
+
+### What changed
+
+Follow-up to v3.63.420, which fixed a live pricing error but not the mechanism that let it happen unnoticed: Claude's price silently drifted to a different model's rate (a ~33% swing, under the 40% delta threshold that gates auto-apply) with no flag and no email. The delta threshold was doing double duty as both the auto-apply gate AND the alert gate — it should only ever have been the first.
+
+Two guardrails added to `tools/pricing-worker/src/index.js`:
+
+1. **Alert on every applied price change, not just flagged ones.** `refreshPricing()` now pushes an `UPDATED` line (with the confirmed model, old/new price, and source) to the alert email whenever a price is auto-applied, regardless of how small the swing was. Still silent on `confirmed` (no actual change) and routine `retained` (Gemini free tier / Together / Grok — expected incomplete-response behavior, not a fault).
+2. **Model-version confirmation.** `buildResearchPrompt()` now requires a `confirmedModel` field — the exact model name/version as it literally appears on the source page next to the price — and explicitly warns the model about introductory/promotional rates and sibling model-family tiers. `researchProvider()` rejects any response missing that field (same fallback path as a missing price: old value retained, nothing overwritten). Deliberately not a string-match against the provider's own model id — naming conventions vary too much across providers to do that reliably; this just forces an affirmative claim instead of a silent guess.
+
+Neither guardrail is a complete fix — a model could still fabricate a plausible `confirmedModel` string, and the alert widening doesn't stop a wrong number from applying, just stops it applying *silently*. That residual gap (a model that's simultaneously wrong on the price AND confident about a fabricated version string) is real but has no cheap mechanical fix; it's what the widened alerting is for — a human glancing at every change catches what validation can't.
+
+### Verification
+
+- `node --check tools/pricing-worker/src/index.js` — syntax clean.
+- `npx wrangler deploy` — Worker redeployed, both cron triggers (`0 12 * * 1`, `0 13 * * *`) confirmed still attached post-deploy.
+- `/` status page and `/api/pricing` re-fetched post-deploy: both HTTP 200, pricing data unchanged (this release touches refresh logic, not the KV payload) — `lastUpdated` still `2026-08-01T19:25:30Z` from the v3.63.420 push, 10 providers present.
+- `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `tools/pricing-worker/src/index.js` — `buildResearchPrompt()` now requires `confirmedModel`; `researchProvider()` validates it; `refreshPricing()` emails on every applied `updated` change, not just `flagged`; `buildStatusHtml()` shows the reason on `updated` rows too; header comment documents both guardrails; deployed live
+- `tools/pricing-worker/README.md` — new "Model-version confirmation" section; "Email alerts" section updated to describe the widened trigger
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit and redeploy the Worker (`cd tools/pricing-worker && npx wrangler deploy`) to remove both guardrails. Low-risk either way — this release touches only the scheduled-refresh validation/alerting path, not the `/api/pricing` data endpoint or the KV payload itself, so a rollback has no effect on what the live pricing page currently shows.
+
+---
+
 ## v3.63.420
 
 **ChatGPT price hike approved live + Claude pricing found silently wrong on the live endpoint since its last auto-refresh**
