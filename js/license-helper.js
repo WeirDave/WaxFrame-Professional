@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — license-helper.js
-// Build: 20260801-008
+// Build: 20260801-009
 //  Self-contained license badge + modal logic for helper pages.
 //  Mirrors the in-app license functions in app.js, minus the
 //  trial-rounds tracking (helper pages don't run rounds, so the
@@ -154,7 +154,10 @@ function showLicenseManageModal() {
   const keyEl = document.getElementById('licenseManageKey');
   if (keyEl) {
     const key = getLicenseKey();
-    if (key && key.length >= 8) {
+    // v3.63.425 — was `>= 8`: for a key of exactly 8 chars, slice(0,-8) is ''
+    // so nothing gets masked and the full plaintext key displayed. Require a
+    // char beyond the visible tail before taking this branch.
+    if (key && key.length > 8) {
       const masked = key.slice(0, -8).replace(/[A-Za-z0-9]/g, '•') + key.slice(-8);
       keyEl.textContent = masked;
     } else {

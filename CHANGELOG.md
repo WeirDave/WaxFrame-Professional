@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.425
+
+**Checkpoint-restore XSS (two paths), license-key display bug, and a stale-session restore gap — from a full multi-agent code audit**
+
+Build: `20260801-009`<br>
+Released: `2026-08-01`
+
+### What changed
+
+First release out of a full-codebase audit (dead code / orphan functions / logic footguns / duplicate logic), cross-checked against an independent second-opinion pass. Four confirmed, security-relevant issues, all in checkpoint-restore and license display code:
+
+1. **Checkpoint Restore preview panel XSS** — `_setCheckpointPreviewValue()` decided whether to `innerHTML` a value by sniffing whether the string's first character was `<`. That heuristic assumed only deliberately-HTML-building summarizers could ever produce a leading `<`, but the plain-string summarizers (`_restoreSummarizeProjectInfo`, `_restoreSummarizeBuilder`) pass `projectName`/`projectVersion`/`builder` straight out of a user-chosen checkpoint JSON file with no escaping. A checkpoint file with `projectName` crafted to start with `<` executed as markup the instant the file was chosen — no confirm click required. Fixed by removing the sniff entirely: only the explicit `{ html }` object shape (used solely by the license-key reveal renderer, which does escape internally) renders via innerHTML now; every plain string always goes through `textContent`.
+2. **Checkpoint row detail-expand panel, same root cause** — `_detailDL`/`_detailUL` used an identical leading-`<` sniff, and `_detailProjectInfo`/`_detailLicense` fed them raw `projectName`/`goalDocType`/`purchaseId`/`email` fields with no escaping (unlike `_detailAIList`/`_detailModels`/`_detailKeys`/`_detailBuilder`, which already wrapped their values in `_esc()`). Fixed the same way as #1, but since some real callers here *do* legitimately pass pre-built HTML (e.g. the key-reveal button), sniffing couldn't just be deleted — replaced with an explicit `_rawHtml()` marker. Every raw field is now always escaped; the four callers that build real markup wrap it in `_rawHtml()` to opt in explicitly.
+3. **License key display bug** — `showLicenseManageModal()` masked a key via `key.slice(0, -8)` for the "hidden" portion, but for a key of *exactly* 8 characters that slice is `''` — nothing gets masked and the full plaintext key displays. Changed the guard from `length >= 8` to `length > 8`; an 8-char key now falls into the fully-generic-placeholder branch instead of showing itself unmasked.
+4. **Checkpoint restore can resurrect a stale session** — `_applyCheckpoint`'s session-restore branch wrote `LS_SESSION` only `if (data.LS_SESSION)`, with no `else`, unlike the `IDB_SESSION` handling two lines below it which explicitly wipes IDB when the checkpoint's session was intentionally captured empty (pre-Round-1). `LS_SESSION` is a legacy fallback — `loadSession()` only reads it when IDB comes back empty — so restoring a pre-Round-1 checkpoint (which wipes IDB by design) while a stale `LS_SESSION` key survived locally from before the restore would silently resurrect that old session on next load instead of showing the fresh/empty state the checkpoint intended. Added the missing `else localStorage.removeItem(LS_SESSION)`.
+
+### Verification
+
+- Independently re-traced every finding against the live code (not the audit agents' claims) before fixing: read every call site of `_setCheckpointPreviewValue`, `_detailDL`/`_detailUL`, `showLicenseManageModal`, and `_applyCheckpoint`'s session branch.
+- Confirmed the four `_detailUL`/`_detailDL` callers that legitimately build HTML (`_detailRefMaterial`, `_detailAIList`, `_detailModels`, `_detailKeys`, and `_detailLicense`'s Key row) still render correctly under the new explicit-marker scheme — none silently double-escaped.
+- Confirmed `loadSession()`'s IDB-first / LS_SESSION-fallback order so the `else removeItem` doesn't clobber a session still legitimately relying on the legacy key mid-migration — it only fires inside the checkpoint-restore path when the checkpoint's own captured session was empty.
+- `node --check` on both touched files, `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `js/storage.js` — `_setCheckpointPreviewValue()`, `_detailDL()`/`_detailUL()` (+ new `_rawHtml()` marker and its 5 call sites), `_applyCheckpoint()` session-restore branch
+- `js/license-helper.js` — `showLicenseManageModal()` masking guard
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. All four fixes are narrowly scoped to checkpoint-restore/license-display rendering paths — no storage schema or cache-key changes. Worst case of a bad revert is checkpoint restore/detail panels and the license-manage modal going back to their pre-fix (vulnerable) behavior; no data loss either direction.
+
+---
+
 ## v3.63.424
 
 **Fixed inert null-vs-undefined check in the startup recommend-migration candidate filter**
