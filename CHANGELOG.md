@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.420
+
+**ChatGPT price hike approved live + Claude pricing found silently wrong on the live endpoint since its last auto-refresh**
+
+Build: `20260801-004`<br>
+Released: `2026-08-01`
+
+### What changed
+
+The pricing-worker's weekly auto-refresh flagged a ChatGPT (gpt-5.5) price change on 2026-07-26 for human review: proposed $5/$30 per M tokens, up from $2/$8 — a jump past the 40% auto-apply threshold, held correctly rather than pushed live. Verified directly against OpenAI's own pricing docs (`developers.openai.com/api/docs/pricing`): $5/$30 is confirmed current standard-tier pricing for GPT-5.5. Approved and pushed live.
+
+While reconciling the pricing seed file against the live KV endpoint before that push (per the file's own "sync in lockstep" convention), found a second, unrelated problem: Claude's live pricing had already drifted to $2/$10 per M — the *Sonnet 5 introductory* rate, not Sonnet 4.6's actual $3/$15 — apparently swapped in by a prior auto-refresh run. That move was only ~33% on each field, under the 40% delta threshold, so it auto-applied silently with no flag and no alert email; the live page has been quoting a lower-than-real ChatGPT-comparable cost for Claude with nothing to catch it. Verified against Anthropic's own pricing docs (`platform.claude.com/docs/en/about-claude/pricing`) and corrected back to $3/$15. Same source also confirmed Claude 4.6+ genuinely ships the full 1M-token context window at standard pricing — the git-tracked seed's `200K` for Claude was itself stale on that field, unrelated to the price bug; corrected to `1M` to match reality (and what the live endpoint already had right).
+
+Net effect: this class of bug (a wrong-but-plausible number landing inside the delta threshold) isn't something the worker's own validation can catch — it needs a periodic human spot-check against source docs, not just delta-threshold gating. Flagging that as a gap, not fixing it this release.
+
+### Verification
+
+- OpenAI GPT-5.5 pricing confirmed live against `developers.openai.com/api/docs/pricing`: $5/$30 per M (standard, <272K context).
+- Anthropic Claude Sonnet 4.6 pricing confirmed live against `platform.claude.com/docs/en/about-claude/pricing`: $3/$15 per M, full 1M context window included at standard pricing.
+- Cloudflare API token verified active (`user/tokens/verify`) before use; `wrangler kv key put --binding=PRICING_DATA latest --remote` pushed the corrected payload.
+- Live endpoint re-fetched post-push with a cache-busting query param: `chatgpt 5 30 1M 0.085` / `claude 3 15 1M 0.045`, `lastUpdated` matches the push timestamp.
+- `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `tools/pricing-worker/data/pricing-seed.json` — chatgpt price+estPerRound corrected to $5/$30/0.085; claude contextWindow corrected to `1M`; `lastUpdated` bumped; pushed live to the `PRICING_DATA` KV namespace
+- `js/pricing-renderer.js` — `FALLBACK_DATA` chatgpt and claude entries + `lastUpdated` updated in lockstep with the seed file
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit for the git-tracked fallback/seed change. The live KV push is a separate, already-applied operational change outside git — reverting here does not touch it. To also roll back the live data: `wrangler kv key get --binding=PRICING_DATA previous --remote > rollback.json` (captures the pre-this-run payload), review it, then `wrangler kv key put --binding=PRICING_DATA latest --path=rollback.json --remote`. There's no reason to — both corrections are independently source-verified against the providers' own current docs.
+
+---
+
 ## v3.63.419
 
 **Together AI and AI21 links updated — confirmed stale against their own docs, not just guessed**
