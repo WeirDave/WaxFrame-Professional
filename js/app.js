@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260801-006
+// Build: 20260801-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260801-006';         // build stamp — update each session
+const BUILD       = '20260801-007';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -1447,8 +1447,21 @@ async function _autoUpdateRefreshOneAI(ai) {
   // provider, customs key by AI id.
   const cacheKey = isDefault ? `waxframe_models_${ai.provider}` : `waxframe_models_${ai.id}`;
   const prevModel = cfg.model || '';
+  // v3.63.423 — default AIs with catalog-registered discovery (MODEL_FILTERS
+  // truthy) ride fetchModelsForProviderLive instead of the generic
+  // fetchModelsFromEndpoint GET. That generic path always NetworkError'd for
+  // Perplexity: its /v1/models is documented in provider-catalog.js as
+  // unreliable from browser origins, which is exactly why the catalog's
+  // perplexity-self discovery (a self-report chat-completion call) exists —
+  // it just wasn't wired into Auto-Update. Riding the catalog path also
+  // picks up its retry-once-on-transient-failure policy (helps flaky
+  // providers like Mistral) and per-provider filters (e.g. ChatGPT's
+  // Responses-API/dated-snapshot exclusion) that the generic path skips.
+  const usesCatalogDiscovery = isDefault && !!MODEL_FILTERS[ai.provider];
   try {
-    const models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
+    const models = usesCatalogDiscovery
+      ? await fetchModelsForProviderLive(ai.provider)
+      : await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
     if (!Array.isArray(models) || !models.length) {
       return { id: ai.id, error: 'no models returned' };
     }
