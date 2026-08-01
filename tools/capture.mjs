@@ -38,6 +38,18 @@ const SERVER_PORT = 8731;
 const DEBUG_PORT = 9222;
 const THEMES = THEME_ARG === 'both' ? ['dark', 'light'] : [THEME_ARG];
 
+// JSON.stringify() alone is not a safe way to splice a value into a JS code
+// string for Runtime.evaluate — it doesn't escape </script>, U+2028/U+2029,
+// or a bare '<'. THEME_ARG is CLI-controlled (process.argv), so route theme
+// values through this before embedding them in any `expression` string.
+const LS = String.fromCharCode(0x2028);
+const PS = String.fromCharCode(0x2029);
+const JS_LITERAL_ESCAPES = { '<': '\\u003C', '>': '\\u003E', '/': '\\u002F', [LS]: '\\u2028', [PS]: '\\u2029' };
+const JS_UNSAFE_CHARS_RE = new RegExp('[<>/' + LS + PS + ']', 'g');
+function jsLiteral(value) {
+  return JSON.stringify(value).replace(JS_UNSAFE_CHARS_RE, (ch) => JS_LITERAL_ESCAPES[ch]);
+}
+
 // ============ shot manifest ============
 // ============ seed payloads ============
 // Hardcoded, sanitized of real API keys (replaced with 'sk-CAPTURE-DEMO') and
@@ -349,7 +361,7 @@ function readyExpr(screenId) {
 }
 function driveExpr(screenId, theme) {
   return `(function(){
-    try { if (typeof setTheme === 'function') setTheme(${JSON.stringify(theme)}); } catch(e){}
+    try { if (typeof setTheme === 'function') setTheme(${jsLiteral(theme)}); } catch(e){}
     try { if (typeof goToScreen === 'function') goToScreen(${JSON.stringify(screenId)}); } catch(e){}
   })()`;
 }
@@ -492,7 +504,7 @@ for (const s of shots) {
       // pages don't have screens.
       if (s.helper) {
         try { await cdp('Runtime.evaluate', {
-          expression: `(function(){ try { if (typeof setTheme === 'function') setTheme(${JSON.stringify(th)}); } catch(e){} })()`,
+          expression: `(function(){ try { if (typeof setTheme === 'function') setTheme(${jsLiteral(th)}); } catch(e){} })()`,
           awaitPromise: false
         }); } catch {}
 
