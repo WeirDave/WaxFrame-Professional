@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates-page.js
-// Build: 20260801-012
+// Build: 20260801-013
 //  Catalog rendering for templates.html. Extracted from the
 //  formerly-inline <script> block in v3.63.352 so the page can
 //  drop 'unsafe-inline' from CSP. Pure renderer + ItemList JSON-LD
@@ -17,14 +17,8 @@
 'use strict';
 
 const CUSTOM_TEMPLATES_KEY = 'waxframe_custom_templates';
-const CATEGORY_ORDER = [
-  'Quick Start',
-  'Career & Hiring',
-  'Business & Sales',
-  'Content & Marketing',
-  'Personal & Everyday',
-  'Reviews & Recommendations'
-];
+// v3.63.429 — CATEGORY_ORDER moved to templates.js (loaded before this
+// file on templates.html), shared with app.js's identical copy.
 
 const CATEGORY_BLURBS = {
   'Quick Start':
