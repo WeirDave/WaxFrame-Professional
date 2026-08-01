@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260801-011
+// Build: 20260801-012
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -729,7 +729,10 @@ window.WF_ERROR_CATALOG = [
     // message.refusal instead — a different, more specific cause than a
     // generic empty response, and worth telling the user which one happened.
     // Found via the same audit that caught the OpenAI-shape extraction bug
-    // in provider-catalog.js/app.js (see firstOpenAIMessage there).
+    // in provider-catalog.js/app.js (see firstOpenAIText there). This card's
+    // {refusal} text comes from parseRefusal() below, not from that path —
+    // it needs to work on ctx.raw (a raw, possibly-non-JSON string), while
+    // firstOpenAIText expects an already-parsed response object.
     code: 'PROVIDER_REFUSED',
     matches: (err, ctx, msg) => {
       if (!(msg === 'empty response' || (msg || '').includes('empty response'))) return false;

@@ -2,6 +2,48 @@
 
 ---
 
+## v3.63.428
+
+**Fourth batch from the code audit: dead-code cleanup (orphaned function, unused re-export aliases, discarded computation), plus a self-inflicted comment-corruption fix**
+
+Build: `20260801-012`<br>
+Released: `2026-08-01`
+
+### What changed
+
+Fourth batch from the full-codebase audit — dead code this time: one orphaned function, thirteen unused re-export aliases across two files, one discarded computation, and one unused parameter.
+
+1. **`extractOpenAIRefusal` orphan removed** — exported from `WFProviderCatalog` as public API, zero callers anywhere. `wf-debug.js`'s `PROVIDER_REFUSED` troubleshooting card gets its refusal text through its own independent raw-string parser (`parseRefusal`, needs to work on possibly-non-JSON raw response text) instead, so this path never got wired up. Removed the export and the now-fully-dead refusal-scanning half of its internal helper (`firstOpenAIMessage`, simplified back into `firstOpenAIText`); updated the stale cross-file comment in `wf-debug.js` that pointed at it.
+2. **13 unused re-export aliases removed** — `js/api.js` re-exported `STRUCTURAL_NON_CHAT_RE`, `CHATGPT_RESPONSES_ONLY_RE`, `DATED_SNAPSHOT_RE`, `normalizePerplexityModels`, and `NON_CHAT_RE` (an alias for the first) from `WFProviderModels`, none read anywhere as bare identifiers — every real consumer pulls its own binding straight off `window.WFProviderModels`. `js/help-page.js` had the same pattern with 7 aliases (the same 3 regexes plus `filterModelForProvider`, `normalizePerplexityModels`, `baseProviderId`, `PERPLEXITY_SONAR_MODELS`) — and `MODEL_FALLBACKS` turned out to be transitively dead too, since its only read was feeding the now-removed `PERPLEXITY_SONAR_MODELS`. Cleaned up the stale comments in both files (and one in `app.js`) that referenced the removed names.
+3. **Discarded prompt-build computation** — `runBuilderOnly` called `buildPromptForAI(builderAI, [])`, building a full reviewer-shaped prompt string, then immediately ignored it — the function always manually builds its own prompt a few lines below. Wasted real work (not just a dead read) on every Builder-Only round. Removed the dead call.
+4. **Unused `imgMap` parameter** — `docx-export.js`'s `calloutBlocks()` accepted an `imgMap` argument from all 5 call sites but never read it; callout content only goes through `inlineRuns()`, which handles any `<img>` inside via alt-text and never consults `imgMap`. Dropped the parameter and updated all 5 call sites.
+
+**Also fixed this release:** the version-stamp sweep script used in v3.63.425–v3.63.427 did a blanket string replace of the old version number across each file's full text, which also rewrote the version number inside the "why" comments those same releases had just added (e.g. a v3.63.425 fix's explanatory comment got silently relabeled v3.63.426, then v3.63.427, by each subsequent sweep) — and, worse, one **pre-existing** comment from the original v3.63.424 fix (predating this audit) got dragged along the same way. Traced and corrected every mislabeled comment back to the version it actually shipped in; the sweep itself is now scoped to the actual stamp patterns (`?v=`, `Build:`, `APP_VERSION =`, etc.) instead of a blanket replace, so this can't recur.
+
+### Verification
+
+- Every dead-code claim re-verified with a repo-wide grep for the removed name as a bare identifier before deletion, excluding `lib/`, `release-artifacts/`, and a stray old worktree under `.claude/worktrees/` that would have produced false "still used" hits.
+- After each removal, re-grepped for any comment elsewhere in the codebase that name-drops the removed binding/function and updated those too (found and fixed one in `wf-debug.js`, one in `app.js`).
+- Re-derived which version each corrected historical comment actually belongs to by cross-referencing this session's own edit order, not guessed.
+- `node --check` on all 10 touched files, `node tools/release-check.mjs` — pass (caught one real miss: `js/app.js`'s own `const BUILD` stamp uses a different format than the `// Build:` header comment and needed a separate fix).
+
+### Files touched
+
+- `js/provider-catalog.js` — removed `extractOpenAIRefusal` export, simplified `firstOpenAIMessage`/`firstOpenAIText`
+- `js/api.js` — removed 5 unused re-export aliases
+- `js/help-page.js` — removed 7 unused aliases + the transitively-dead `MODEL_FALLBACKS`
+- `js/app.js` — removed discarded `buildPromptForAI` call in `runBuilderOnly`, stale comment cleanup, `const BUILD` stamp fix
+- `js/docx-export.js` — removed unused `imgMap` parameter from `calloutBlocks()` and its 5 call sites
+- `js/wf-debug.js` — stale cross-file comment fix
+- `js/storage.js`, `js/license-helper.js`, `js/scenes.js`, `js/helper-handlers.js` — comment-corruption correction only, no logic changes
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. All removals were confirmed zero-caller before deletion; worst case of a bad revert is the dead code/aliases reappearing, which is behaviorally inert either way. The comment-text corrections carry no runtime risk at all.
+
+---
+
 ## v3.63.427
 
 **Third batch from the code audit: null-guard crash, a TypeError branch, an event-listener leak, a corrupted-attribute footgun, and two docx-export gaps**
