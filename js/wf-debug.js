@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260801-001
+// Build: 20260801-002
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -723,7 +723,7 @@ window.WF_ERROR_CATALOG = [
     ]
   },
   {
-    // v3.63.417 — Match BEFORE the generic EMPTY_RESPONSE, same rationale as
+    // v3.63.418 — Match BEFORE the generic EMPTY_RESPONSE, same rationale as
     // CONTENT_FILTERED above. OpenAI's Structured Outputs / strict-JSON mode
     // can return message.content: null with the actual reason in
     // message.refusal instead — a different, more specific cause than a
@@ -990,7 +990,7 @@ function renderTroubleshootingCard(entry, ctx) {
     } catch { /* not JSON — fine */ }
     return 'unknown';
   };
-  // v3.63.417 — {refusal} for the PROVIDER_REFUSED card. Mirrors
+  // v3.63.418 — {refusal} for the PROVIDER_REFUSED card. Mirrors
   // parseBlockReason's regex-first-then-parse approach for OpenAI's
   // choices[N].message.refusal field.
   const parseRefusal = (raw) => {
