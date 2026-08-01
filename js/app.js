@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260801-009
+// Build: 20260801-010
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260801-009';         // build stamp — update each session
+const BUILD       = '20260801-010';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -5808,6 +5808,9 @@ function _buildRowStatusPill(ai, hasKey) {
 // touching the rest of the row (preserves expand state, focus, etc.).
 // ════════════════════════════════════════════════════════════════════
 window._serverConnectivity = window._serverConnectivity || {};
+// v3.63.426 — Per-AI sequence token so overlapping _checkServerAIConnectivity
+// calls resolve safely. See that function for the race it guards against.
+window._serverConnectivityGen = window._serverConnectivityGen || {};
 const SERVER_PROBE_THROTTLE_MS = 60 * 1000;
 
 function _buildServerConnectivityPill(ai) {
@@ -5861,6 +5864,14 @@ async function _checkServerAIConnectivity(ai, opts) {
   if (!force && cache && cache.lastChecked && (now - cache.lastChecked < SERVER_PROBE_THROTTLE_MS)) {
     return;   // throttled
   }
+  // v3.63.426 — Sequence guard: two overlapping probes for the same ai.id
+  // (auto-probe on screen-bees entry racing a forced click-driven recheck)
+  // resolve in completion order, not initiation order. Each call claims a
+  // fresh token; a write is dropped if a newer call has since claimed it,
+  // so a slow probe finishing after a faster later one can't clobber the
+  // newer/correct state with stale data.
+  const myGen = (window._serverConnectivityGen[ai.id] || 0) + 1;
+  window._serverConnectivityGen[ai.id] = myGen;
   window._serverConnectivity[ai.id] = { state: 'checking', lastChecked: now, models: cache?.models || [], error: '' };
   _refreshServerConnectivityPillInDom(ai.id);
   let models = [];
@@ -5868,6 +5879,7 @@ async function _checkServerAIConnectivity(ai, opts) {
     models = await fetchModelsFromEndpoint(cfg.endpoint, cfg.format, cfg._key || '', cfg._modelsEndpoint);
     if (!Array.isArray(models)) models = [];
   } catch (e) {
+    if (window._serverConnectivityGen[ai.id] !== myGen) return; // superseded by a newer probe
     window._serverConnectivity[ai.id] = {
       state:       'unreachable',
       lastChecked: Date.now(),
@@ -5877,6 +5889,7 @@ async function _checkServerAIConnectivity(ai, opts) {
     _refreshServerConnectivityPillInDom(ai.id);
     return;
   }
+  if (window._serverConnectivityGen[ai.id] !== myGen) return; // superseded by a newer probe
   const picked = getModelForAI(ai);
   const inList = !!(picked && models.some(m => m === picked));
   window._serverConnectivity[ai.id] = {
@@ -9804,7 +9817,7 @@ async function migrateRecommendOnStartup() {
     // have a hardcoded MODEL_FALLBACKS list to feed the recommend call.
     // Perplexity is the canonical case — chat completions work, but no
     // models endpoint exists, so we use the sonar-* fallback list.
-    // v3.63.425 — was `!== null`. buildModelFilters() SKIPS discovery:null
+    // v3.63.426 — was `!== null`. buildModelFilters() SKIPS discovery:null
     // entries (Together, Cohere) rather than setting them to null, so the
     // map value there is undefined, not null — `undefined !== null` is
     // true, silently treating those providers as having a dynamic endpoint
@@ -11057,12 +11070,18 @@ function renderImportServerChecklist() {
   if (!items) return;
 
   // Build a set of model IDs already in the hive from this same Chat Endpoint
-  const chatUrl = document.getElementById('importServerChatUrl').value.trim();
+  // v3.63.426 — normalize trailing slashes before comparing, matching
+  // populateQuickAddOptions/fetchCustomAIModels elsewhere in this file. Was a
+  // raw === compare: a stored endpoint with (or without) a trailing slash
+  // that the user's re-entered URL didn't match byte-for-byte silently broke
+  // this dedupe, letting duplicate AI entries get created for the same server.
+  const norm = u => (u || '').replace(/\/+$/, '').trim();
+  const chatUrl = norm(document.getElementById('importServerChatUrl').value);
   const existingForThisServer = new Set(
     aiList
       .filter(ai => {
         const cfg = API_CONFIGS[ai.provider];
-        return cfg && cfg.endpoint === chatUrl;
+        return cfg && norm(cfg.endpoint) === chatUrl;
       })
       .map(ai => API_CONFIGS[ai.provider]?.model)
       .filter(Boolean)
@@ -11149,7 +11168,10 @@ function importServerSelectNone() {
 }
 
 function addImportServerModels() {
-  const chatUrl   = document.getElementById('importServerChatUrl').value.trim();
+  // v3.63.426 — strip trailing slash so the endpoint persisted here matches
+  // what renderImportServerChecklist's dedupe (also normalized this release)
+  // will compare against on the next import from this same server.
+  const chatUrl   = document.getElementById('importServerChatUrl').value.trim().replace(/\/+$/, '');
   const modelsUrl = document.getElementById('importServerUrl').value.trim();
   const key       = document.getElementById('importServerKey').value.trim();
 
@@ -12412,8 +12434,14 @@ async function extractPDF(file) {
     setFileStatusState(status, 'loading');
   }
 
-  const visionAI = getVisionCapableAI();
-  if (!visionAI) {
+  // v3.63.426 — was the stale singular getVisionCapableAI(), which requires
+  // cfg._key and so is blind to server-imported vision models (Ollama, LM
+  // Studio, OpenWebUI). This gate only checks availability — the actual
+  // rotation below already goes through runVisionWithFallback, which uses
+  // the plural getVisionCapableAIs() internally, so the two were already
+  // out of sync: a server-only-vision user could pass here as unavailable
+  // then have the fallback succeed anyway (or vice versa on a real gap).
+  if (!getVisionCapableAIs().length) {
     result.text = assembledText;
     result.warnings.push('Text may be garbled — no vision-capable AI key available (ChatGPT, Claude, Gemini, or Grok). Use the Re-extract button on the work screen after adding one, or paste the text manually.');
     return result;
@@ -13909,7 +13937,12 @@ async function reExtractWithVision() {
   const banner = document.getElementById('reExtractBanner');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Extracting — this may take 15–30 seconds…'; }
 
-  const visionAI = getVisionCapableAI();
+  // v3.63.426 — was the stale singular getVisionCapableAI() (cloud-key-only,
+  // invisible to server-imported vision AIs). Use the plural function's
+  // first candidate — same server-AI-aware selection runVisionWithFallback
+  // already uses elsewhere, so this button and the automatic OCR path agree
+  // on what counts as "a vision AI is available."
+  const visionAI = getVisionCapableAIs()[0] || null;
   if (!visionAI) {
     toast('⚠️ No vision AI available — add a ChatGPT, Claude, Gemini, or Grok API key first');
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Re-extract with AI Vision'; }
@@ -19638,14 +19671,23 @@ function stripBuilderEnvelope(text) {
   let result = text;
   // Remove leading ══...══ / WAXFRAME — ... / Round ... header block
   result = result.replace(/^[═\s]*WAXFRAME\s*—[^\n]*\n[^\n]*\n[═\s]*\n?/i, '');
+  // v3.63.426 — these four all carried /m, so '^' matched the start of ANY
+  // line in the document, not just the echoed envelope's front. A document
+  // that legitimately contained a mid-document "PROJECT GOAL:" or
+  // "REFERENCE MATERIAL" heading (e.g. WaxFrame's own business-proposal/
+  // playbook templates) had that section silently deleted. Dropped /m and
+  // added \s* after ^ so each strip only fires at the true start of the
+  // (already partially stripped) string, tolerating the incidental blank
+  // line a prior strip may have left, matching the WAXFRAME header regex
+  // above.
   // Remove PROJECT CONTEXT: ... block (up to next blank line or section)
-  result = result.replace(/^PROJECT CONTEXT:[^\n]*\n?(\n)?/im, '');
+  result = result.replace(/^\s*PROJECT CONTEXT:[^\n]*\n?(\n)?/i, '');
   // Remove PROJECT GOAL: ... block
-  result = result.replace(/^PROJECT GOAL:[^\n]*(\n[\s\S]*?)?(?=\n\n|\nCURRENT DOCUMENT|\nLENGTH|\nUSER NOTES|\nREFERENCE MATERIAL|$)/im, '');
+  result = result.replace(/^\s*PROJECT GOAL:[^\n]*(\n[\s\S]*?)?(?=\n\n|\nCURRENT DOCUMENT|\nLENGTH|\nUSER NOTES|\nREFERENCE MATERIAL|$)/i, '');
   // Remove REFERENCE MATERIAL block (v3.21.0) — strip if echoed by non-compliant AIs
-  result = result.replace(/^REFERENCE MATERIAL[^\n]*\n[─\s]*\n?[\s\S]*?\n[─\s]*\n?/im, '');
+  result = result.replace(/^\s*REFERENCE MATERIAL[^\n]*\n[─\s]*\n?[\s\S]*?\n[─\s]*\n?/i, '');
   // Remove CURRENT DOCUMENT (line numbers for reference): header and separator line
-  result = result.replace(/^CURRENT DOCUMENT \(line numbers for reference\):\s*\n[─\s]*\n?/im, '');
+  result = result.replace(/^\s*CURRENT DOCUMENT \(line numbers for reference\):\s*\n[─\s]*\n?/i, '');
   // Remove line-numbered lines: "   1  text" — only if they appear as a leading block
   // Detect: lines starting with optional spaces, 1-4 digits, 2 spaces, then content
   const lineNumPattern = /^(\s{0,4}\d{1,4}\s{2,}.*\n?)+/m;
