@@ -653,7 +653,17 @@ section('Inline <script> count (strict-CSP migration ratchet)');
 const SCRIPT_OPEN_TAG = /<script(\s[^>]*)?>/gi;
 // Strip <!-- ... --> comments first so example markup inside an HTML
 // comment doesn't get counted as a real inline script. Multiline-safe.
-const stripComments = (text) => text.replace(/<!--[\s\S]*?-->/g, '');
+// Looped to a fixed point: a single pass can leave a fresh '<!--' exposed
+// when comments are malformed/overlapping (e.g. '<!--<!-- -->'), which
+// would otherwise slip an unstripped comment marker past this sanitizer.
+const stripComments = (text) => {
+  let prev;
+  do {
+    prev = text;
+    text = text.replace(/<!--[\s\S]*?-->/g, '');
+  } while (text !== prev);
+  return text;
+};
 
 for (const file of htmlFiles) {
   const r = rel(file);
