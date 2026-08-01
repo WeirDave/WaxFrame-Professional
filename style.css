@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260801-009
+   Build: 20260801-010
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4423,9 +4423,22 @@ body.helper-body .page-main {
 }
 .custom-ai-model-aids.is-visible { display: flex; }
 
-/* v3.29.9 — .custom-ai-recommend-btn rules removed. Manual Recommend a Model
-   button no longer exists; the recommendation runs automatically after a
-   successful Fetch Models. */
+/* v3.29.9 removed the manual Recommend button in favor of auto-fire on Fetch
+   Models; v3.63.337 then killed the auto-fire too because it cached under a
+   key nothing on the Bee row read (wasted POST). Re-added here as a manual
+   button (#customAIRecommendBtn, reuses .ai-recheck-btn below) — fires only
+   on click, and its result is handed off to the post-Add recheckModelForAI
+   call instead of being discarded, so clicking it costs the same single
+   recommend call Add to Hive already makes, just moved earlier so the user
+   can act on it before adding. David's ask: the modal fetches the model
+   list but gives no help picking one. */
+.custom-ai-recommend-note {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin-top: 6px;
+  flex-basis: 100%;
+}
 
 .custom-ai-choose-model-link {
   display: inline-flex;

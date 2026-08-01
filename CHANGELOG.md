@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.426
+
+**Second batch from the code audit: a connectivity-probe race, stale vision-AI gates, import-server dedupe, and an over-eager envelope stripper**
+
+Build: `20260801-010`<br>
+Released: `2026-08-01`
+
+### What changed
+
+Continuing the full-codebase audit from v3.63.425. Four confirmed logic footguns in `app.js`, all inert-today-but-wrong-under-different-timing/data — the same class as the `MODEL_FILTERS` null-vs-undefined bug fixed in v3.63.424.
+
+1. **Server-AI connectivity probe race** — `_checkServerAIConnectivity()` wrote `window._serverConnectivity[ai.id]` with no guard against overlapping calls. The auto-probe on screen-bees entry and a forced click-driven recheck (which explicitly bypasses the throttle) can both be in flight for the same AI; since they resolve in completion order, not initiation order, a slow probe finishing after a faster later one could silently overwrite the newer/correct connectivity state with stale data. Added a per-AI sequence token — a probe's result is only written if no newer probe has since claimed that AI's token.
+2. **Stale vision-AI gates** — `extractPDF`'s full-document OCR gate and the work-screen "Re-extract with AI Vision" button both still called the old `getVisionCapableAI()` (singular, requires a cloud `_key`), while the sparse-page OCR pass a few lines above already uses the newer `getVisionCapableAIs()` (plural, added to also recognize server-imported vision AIs — Ollama, LM Studio, OpenWebUI). A user with only a server-imported vision model would pass the sparse-page check but fail the full-document gate and the manual re-extract button. Both stale call sites now use the plural, server-AI-aware function.
+3. **Import-server dedupe missed trailing-slash variants** — `renderImportServerChecklist`'s "already in your hive" check compared `cfg.endpoint === chatUrl` with raw strict equality, while two other endpoint comparisons in this same file (`populateQuickAddOptions`, `fetchCustomAIModels`) both normalize trailing slashes first. A URL entered with (or without) a trailing slash that didn't byte-match the stored endpoint silently defeated the dedupe, letting duplicate AI entries get created for the same server. Normalized both sides of the comparison, and normalized the endpoint at write time too (`addImportServerModels`) so future comparisons stay consistent.
+4. **`stripBuilderEnvelope` stripped legitimate mid-document content** — the four section-stripping regexes (PROJECT CONTEXT, PROJECT GOAL, REFERENCE MATERIAL, CURRENT DOCUMENT) all carried the `/m` flag, so `^` matched the start of *any* line in the document, not just an echoed envelope at the very front. A document that legitimately contained one of these headings mid-document (WaxFrame's own business-proposal and playbook templates use "PROJECT GOAL" language) had that section silently deleted. Dropped `/m` on all four and added `\s*` after `^` so each strip only fires at the true start of the (partially-stripped) string — matching how the WAXFRAME header regex above them was already written.
+
+### Verification
+
+- Every finding re-traced against the live code (not the audit agents' claims) before fixing.
+- Reproduced the `stripBuilderEnvelope` fix with two Node cases: a document with a legitimate mid-document "PROJECT GOAL:" section now survives unchanged; a real echoed envelope at the front (PROJECT CONTEXT + PROJECT GOAL) still strips correctly, leaving the actual document body intact.
+- Confirmed the plural `getVisionCapableAIs()`'s first-entry shape (`{cfg, key, provider, aiId, ai}`) is a drop-in replacement everywhere the singular function's `{cfg, key, provider}` shape was consumed (`.cfg.label`, `.cfg`, `.key`).
+- `node --check` on `js/app.js`, `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `js/app.js` — `_checkServerAIConnectivity()` (+ new `window._serverConnectivityGen`), `extractPDF()`'s vision gate, `reExtractWithVision()`, `renderImportServerChecklist()`, `addImportServerModels()`, `stripBuilderEnvelope()`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. All four fixes are narrowly scoped and additive (a sequence-check guard, a function swap with an identical return shape, a normalize-before-compare, and two regex-flag tweaks) — no storage schema or cache-key changes. Worst case of a bad revert is a return to the pre-fix inert-but-latent behavior described above.
+
+---
+
 ## v3.63.425
 
 **Checkpoint-restore XSS (two paths), license-key display bug, and a stale-session restore gap — from a full multi-agent code audit**
