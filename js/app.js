@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260801-012
+// Build: 20260801-013
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260801-012';         // build stamp — update each session
+const BUILD       = '20260801-013';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -4171,7 +4171,11 @@ function renderTemplateGalleryBody() {
     const unknownAlpha = actualCats.filter(c => !CANONICAL_CUSTOM_ORDER.includes(c)).sort((a, b) => a.localeCompare(b));
     order = [...knownInOrder, ...unknownAlpha];
   } else {
-    order = ['Quick Start', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
+    // v3.63.429 — was an inline literal duplicating templates-page.js's
+    // identical CATEGORY_ORDER; both now read the shared constant from
+    // js/templates.js (loaded before this file), which two independently-
+    // maintained copies made drift-prone.
+    order = CATEGORY_ORDER;
   }
   const buckets = {};
   visibleTemplates.forEach(t => {
@@ -11018,6 +11022,16 @@ function validateImportServerUrl(url) {
   if (!parsed || (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')) {
     return 'The field is empty or is not a valid http:// or https:// URL.';
   }
+  // v3.63.429 — was missing the https-enforcement branch its sibling
+  // validateCustomAIEndpoint has always had; addImportServerModels
+  // duplicated this exact check ad-hoc after calling this function instead
+  // of it living here, and fetchImportServerModels (the earlier "fetch
+  // models" step) had no such check at all — an http:// endpoint entered
+  // there would silently proceed to a browser-blocked fetch with a generic
+  // network error instead of this clear message.
+  if (!IS_LOCAL_RUNTIME && parsed.protocol === 'http:') {
+    return 'WaxFrame is served over https — an http:// server endpoint is blocked by the browser. Use https://, or run WaxFrame locally.';
+  }
   return '';
 }
 
@@ -11175,14 +11189,15 @@ function addImportServerModels() {
   const modelsUrl = document.getElementById('importServerUrl').value.trim();
   const key       = document.getElementById('importServerKey').value.trim();
 
+  // v3.63.429 — https-enforcement now lives inside validateImportServerUrl
+  // itself (was duplicated here ad-hoc); the two toasts below already
+  // covered the http:// case with their own generic wording, so no
+  // behavior change for the invalid/http:// paths, just one less place for
+  // this check to drift from its validateCustomAIEndpoint sibling.
   const chatUrlError = validateImportServerUrl(chatUrl);
   if (chatUrlError) { toast('⚠️ Enter a valid Chat Endpoint URL', 5000); return; }
   const modelsUrlError = validateImportServerUrl(modelsUrl);
   if (modelsUrlError) { toast('⚠️ Enter a valid Models Endpoint URL', 5000); return; }
-  if (!IS_LOCAL_RUNTIME && (new URL(chatUrl).protocol === 'http:' || new URL(modelsUrl).protocol === 'http:')) {
-    toast('⚠️ WaxFrame is served over https — http:// server endpoints are blocked by the browser. Use https://, or run WaxFrame locally.', 7000);
-    return;
-  }
 
   const checked = document.querySelectorAll('.import-server-check:checked');
   // Zero-selected = user's escape hatch, behaves like Cancel (no hive changes)
@@ -13760,7 +13775,13 @@ function showSheetPickerModal(wb, visibleSheets, hiddenSheets, mode, fileName) {
 }
 
 // Lightweight HTML escape for the sheet picker labels.
+// v3.63.429 — added the null guard pricing-renderer.js's and
+// templates-page.js's copies of this function already carry (they never
+// share runtime scope with this one — each loads on a different page — so
+// this was a silent behavioral gap, not a collision). Without it,
+// escapeHtml(null) rendered the literal text "null" instead of nothing.
 function escapeHtml(s) {
+  if (s == null) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
