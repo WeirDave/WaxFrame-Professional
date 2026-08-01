@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260801-010
+// Build: 20260801-011
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -407,7 +407,13 @@
         var _prevFn = el.dataset.fn;
         el.dataset.fn = el.dataset.fnKey;
         callAction(el, e);
-        el.dataset.fn = _prevFn;
+        // v3.63.427 — was `el.dataset.fn = _prevFn`. DOMStringMap setters
+        // coerce via ToString, so when an element has no original data-fn
+        // (_prevFn undefined), that assignment wrote the literal string
+        // "undefined" instead of clearing the attribute — permanently
+        // corrupting the element for any future dispatch through it.
+        if (_prevFn === undefined) delete el.dataset.fn;
+        else el.dataset.fn = _prevFn;
         return;
       }
       callAction(el, e);

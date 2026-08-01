@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — help-page.js
-// Build: 20260801-010
+// Build: 20260801-011
 //  Self-contained break-glass help screen behavior. Renders the
 //  version line, environment capture, copy-to-clipboard buttons,
 //  and Slack/email links. Deliberately does NOT depend on app.js
@@ -398,7 +398,11 @@
         } else if (_lastLiveDump.modelsSource === 'documented-sonar-fallback' && cmp.same) {
           setDumpStatus('⚠ Cached list matches the documented Sonar fallback. Raw Perplexity live list had ' + ((_lastLiveDump.rawLiveModels || []).length) + ' model(s).', 'warn');
         } else if (_lastLiveDump.modelsSource === 'documented-sonar-fallback') {
-          setDumpStatus('⚠ Cached list differs from the documented Sonar fallback. Only in cache: ' + (cmp.onlyA.join(', ') || 'none') + '. Only in fallback: ' + (cmp.onlyB.join(', ') || 'none') + '. Raw Perplexity live list had ' + ((_lastLiveDump.rawLiveModels || []).length) + ' model(s).', 'warn');
+          // v3.63.427 — was cmp.onlyA/cmp.onlyB, properties compareDumps()
+          // never sets (it returns onlyCached/onlyLive/same); threw a
+          // TypeError on this branch (documented-sonar-fallback differs from
+          // cache) every time it was actually reached.
+          setDumpStatus('⚠ Cached list differs from the documented Sonar fallback. Only in cache: ' + (cmp.onlyCached.join(', ') || 'none') + '. Only in fallback: ' + (cmp.onlyLive.join(', ') || 'none') + '. Raw Perplexity live list had ' + ((_lastLiveDump.rawLiveModels || []).length) + ' model(s).', 'warn');
         } else if (cmp.same) {
           setDumpStatus('✓ Cached and live model lists match.', 'ok');
         } else {

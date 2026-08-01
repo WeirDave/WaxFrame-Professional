@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — scenes.js
-// Build: 20260801-010
+// Build: 20260801-011
 //
 //  Celebration scene orchestrators — three multi-step UI sequences
 //  that combine DOM animation + timing + canvas rendering + audio
@@ -580,6 +580,7 @@ function hiveRand(min, max) {
 
 let _unanimousTimers = [];
 let _unanimousKeyHandler = null;
+let _unanimousClickHandler = null;
 
 function playUnanimousScene() {
   const scene     = document.getElementById('unanimousScene');
@@ -619,9 +620,16 @@ function playUnanimousScene() {
   ctx.clearRect(0, 0, sw, sh);
 
   // Escape/click to skip
+  // v3.63.427 — was an inline arrow fired {once:true} with no stored
+  // reference, so a play that gets dismissed any way OTHER than a click
+  // (Escape, the T+12s auto-close, or a fresh play() call) left that
+  // listener attached to the scene forever — every subsequent play added
+  // another. Store the reference so closeUnanimousScene can always remove
+  // it, mirroring the keydown handler just above.
   _unanimousKeyHandler = (e) => { if (e.key === 'Escape') closeUnanimousScene(); };
   document.addEventListener('keydown', _unanimousKeyHandler);
-  scene.addEventListener('click', () => closeUnanimousScene(), { once: true });
+  _unanimousClickHandler = () => closeUnanimousScene();
+  scene.addEventListener('click', _unanimousClickHandler, { once: true });
 
   // T+0.8s — worker bee flies left → right + Kai's whirr
   _unanimousTimers.push(setTimeout(() => {
@@ -699,6 +707,10 @@ function closeUnanimousScene(silent = false) {
   if (_unanimousKeyHandler) {
     document.removeEventListener('keydown', _unanimousKeyHandler);
     _unanimousKeyHandler = null;
+  }
+  if (scene && _unanimousClickHandler) {
+    scene.removeEventListener('click', _unanimousClickHandler);
+    _unanimousClickHandler = null;
   }
   if (!scene) return;
   if (silent) {

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — docx-export.js
-// Build: 20260801-010
+// Build: 20260801-011
 //  Real .docx export for helper/document pages. Builds a true
 //  OOXML document through the vendored `docx` library, walking
 //  WaxFrame's page primitives into Word paragraphs, tables,
@@ -103,7 +103,10 @@
     )) return 'icon';
     if (/\/icon-[^/]+\.png(\?|#|$)/i.test(src) || /google\.com\/s2\/favicons/i.test(src)) return 'icon';
     if (!alt && cl && cl.contains('wf-tip-icon')) return 'decorative';
-    return alt ? 'content' : 'content';
+    // v3.63.427 — was `alt ? 'content' : 'content'`, an inert ternary; both
+    // branches returned the identical string and no caller distinguishes
+    // alt-less vs alt-having content images.
+    return 'content';
   }
 
   function isDecorativeImage(img) {
@@ -235,14 +238,27 @@
   }
 
   function calloutBlocks(el, out, imgMap, fill, border) {
+    var docx = docxLib();
     var runs = [textRun('Note: ', { bold: true, color: COLOR_ACCENT })];
     push(runs, inlineRuns(el, {}));
     if (runs.length < 2) return;
-    out.push(para({
+    var opts = {
       children: runs,
       shading: { fill: fill || 'FFFBEA' },
       spacing: { before: 80, after: 140 }
-    }));
+    };
+    // v3.63.427 — border was accepted from all 5 call sites (each callout
+    // type's accent color: tip/warn/green/blue/red) but never applied — the
+    // exported doc rendered every callout with the same flat fill and no
+    // border, losing the color-coded `border: 1px solid <color>` the
+    // on-screen .wf-tip/.wf-tip-good/.wf-tip-warn variants use (style.css).
+    // Mirror it as a thin border on all four sides, matching the color the
+    // caller already computed for exactly this purpose.
+    if (border) {
+      var edge = { style: docx.BorderStyle.SINGLE, size: 4, color: border };
+      opts.border = { top: edge, bottom: edge, left: edge, right: edge };
+    }
+    out.push(para(opts));
   }
 
   function buildTable(tableEl, imgMap) {

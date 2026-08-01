@@ -2,6 +2,46 @@
 
 ---
 
+## v3.63.427
+
+**Third batch from the code audit: null-guard crash, a TypeError branch, an event-listener leak, a corrupted-attribute footgun, and two docx-export gaps**
+
+Build: `20260801-011`<br>
+Released: `2026-08-01`
+
+### What changed
+
+Third batch from the full-codebase audit. Six confirmed logic footguns across storage.js, help-page.js, scenes.js, helper-handlers.js, and docx-export.js.
+
+1. **`loadSettings()` could crash on a null `activeAIIds`** — the restore gate checked `h.activeAIIds !== undefined`, which lets `null` straight through into `null.map()` (`null !== undefined` is `true`) — a TypeError, silently swallowed by the outer catch, which also skips the project-field restore that runs later in the same function. Every other read of this field in storage.js already guards with `Array.isArray`; this one now does too, and correctly falls into the existing "no activeAIIds" else-branch (activate everything) instead of crashing.
+2. **`compareDumps()` status branch threw a TypeError** — the "documented Sonar fallback differs from cache" status line read `cmp.onlyA`/`cmp.onlyB`, properties `compareDumps()` never sets (it returns `{onlyCached, onlyLive, same}`). Fixed the property names.
+3. **Unanimous-convergence scene leaked click listeners** — each play added a fresh `click` listener to the persistent scene element, but the close path only ever removed the tracked `keydown` listener. Any play dismissed by something other than a click (Escape, the 12-second auto-close, or a fresh play starting mid-scene) left that listener attached forever, compounding on every subsequent play. Now stored and removed the same way the keydown handler already was.
+4. **Helper-page Enter-key dispatcher could corrupt an element's `data-fn`** — the two-attribute swap-and-restore (`enter-call`, used where an element needs different Enter-key vs input-event behavior) restored `el.dataset.fn = _prevFn` unconditionally; when the element had no original `data-fn`, that assignment wrote the literal string `"undefined"` instead of clearing the attribute (DOMStringMap setters coerce via `ToString`). Inert on today's one live caller (which always has an original `data-fn`), but permanently corrupts the next element wired through this dispatcher without one. Now deletes the attribute when there was nothing to restore.
+5. **Word export dropped every callout's border** — `calloutBlocks()` accepted a `border` argument from all 5 call sites (each callout type's accent color — tip/warn/green/blue/red) but never applied it; exported callouts all rendered with the same flat fill and no border, losing the color-coded `border: 1px solid <color>` the on-screen `.wf-tip`/`.wf-tip-good`/`.wf-tip-warn` styles use. Now renders it as a thin border on all four sides using the color the caller already computed for exactly this purpose.
+6. **Inert ternary in the Word export's image classifier** — `imageRole()` ended with `return alt ? 'content' : 'content'`; both branches return the identical string, so the `alt` check did nothing. Collapsed to the literal return.
+
+### Verification
+
+- Every finding re-traced against the live code before fixing.
+- Confirmed `.wf-tip`/`.wf-tip-good`/`.wf-tip-warn` in style.css actually do use a full colored border (not just a background tint) before wiring the docx border fix, so the export now matches the on-screen callout styling rather than inventing new behavior.
+- Confirmed the null-guard fix routes into the pre-existing "no activeAIIds" else-branch (`activeAIs = [...aiList]`) rather than needing a new fallback path.
+- `node --check` on all 5 touched files, `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `js/storage.js` — `loadSettings()` activeAIIds guard
+- `js/help-page.js` — `compareDumps()` status-branch property names
+- `js/scenes.js` — `playUnanimousScene()`/`closeUnanimousScene()` click-listener tracking
+- `js/helper-handlers.js` — `enter-call` action's data-fn restore
+- `js/docx-export.js` — `calloutBlocks()` border rendering, `imageRole()` inert ternary
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. All six fixes are narrowly scoped; the riskiest is the docx-export border (a new visual element in exported Word docs, cosmetic only, no data changes) — worst case of a bad revert there is callouts exporting without a border again, same as today.
+
+---
+
 ## v3.63.426
 
 **Second batch from the code audit: a connectivity-probe race, stale vision-AI gates, import-server dedupe, and an over-eager envelope stripper**
