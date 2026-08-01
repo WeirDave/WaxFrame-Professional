@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260801-008
+// Build: 20260801-009
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -2495,28 +2495,32 @@ function _checkpointSecretHTML(rawValue) {
 }
 
 /* v3.63.261 — Set a preview-value element from a summarizer's return.
-   Most summarizers return plain text — use textContent for safety.
-   The license (and future sensitive rows) return an HTML string with
-   masked value + reveal button — detect via leading '<' and switch
-   to innerHTML. Defense-in-depth: summarizers are the only source of
-   HTML strings here, and they generate their HTML internally with
-   escaped values, so we're not handing user-supplied HTML to innerHTML.
-   v3.63.262 — Now also accepts the { html, compareKey } object shape
-   used by sensitive-row summarizers; the html field renders, the
-   compareKey is read separately by the match-detector. */
+   Plain-string summarizer returns always use textContent — safe
+   regardless of content. The license (and future sensitive rows) return
+   the { html, compareKey } object shape instead, which is the only
+   input that renders via innerHTML.
+   v3.63.262 — Added the { html, compareKey } object shape used by
+   sensitive-row summarizers; the html field renders, the compareKey is
+   read separately by the match-detector.
+   v3.63.425 — Removed the leading-'<' sniff on plain strings. It let a
+   crafted checkpoint file's projectName/projectVersion/builder field
+   (plain-string summarizer output, not escaped by the summarizer) opt
+   into innerHTML just by starting with '<'. */
 function _setCheckpointPreviewValue(el, val) {
   if (!el) return;
-  // Object form: { html, compareKey } — render the html branch.
+  // Object form: { html, compareKey } — render the html branch. v3.63.425 —
+  // this is now the ONLY path that renders as markup. The old leading-'<'
+  // sniff on plain strings assumed every summarizer generated its own HTML
+  // internally with escaped values, but the plain-string summarizers
+  // (project name/version, builder id) pass attacker-controlled checkpoint-
+  // file fields straight through unescaped — a crafted projectName
+  // beginning with '<' rode that heuristic into innerHTML. Every plain
+  // string now goes through textContent regardless of its content.
   if (val && typeof val === 'object' && typeof val.html === 'string') {
     el.innerHTML = val.html;
     return;
   }
-  const s = String(val == null ? '' : val);
-  if (s.length > 0 && s.charCodeAt(0) === 60 /* < */) {
-    el.innerHTML = s;
-  } else {
-    el.textContent = s;
-  }
+  el.textContent = String(val == null ? '' : val);
 }
 
 /* v3.63.262 — Extract a stable comparison string from a summarizer's
@@ -2689,16 +2693,25 @@ function _detailRender(key, data, fromFile) {
 function _esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 }
+// v3.63.425 — Explicit marker for values that are deliberately pre-built
+// HTML (e.g. a `<strong>` name + `_checkpointSecretHTML` reveal button).
+// _detailDL/_detailUL used to sniff for a leading '<' to make this call,
+// which let raw checkpoint-file fields (projectInfo.projectName, license
+// extras.purchaseId/email — attacker-controlled, never escaped by their
+// callers) opt into innerHTML just by starting with '<'. Callers that
+// genuinely build HTML now wrap it in _rawHtml(); everything else is
+// always escaped, no sniffing.
+function _rawHtml(s) { return { __wfRawHtml: true, html: String(s) }; }
 function _detailDL(rows) {
   if (!rows.length) return '<p class="checkpoint-detail-empty">(none)</p>';
   return '<dl class="checkpoint-detail-dl">' + rows.map(([k, v]) =>
-    `<dt>${_esc(k)}</dt><dd>${typeof v === 'string' && v.startsWith('<') ? v : _esc(v)}</dd>`
+    `<dt>${_esc(k)}</dt><dd>${(v && typeof v === 'object' && v.__wfRawHtml) ? v.html : _esc(v)}</dd>`
   ).join('') + '</dl>';
 }
 function _detailUL(items) {
   if (!items.length) return '<p class="checkpoint-detail-empty">(none)</p>';
   return '<ul class="checkpoint-detail-ul">' + items.map(it =>
-    `<li>${typeof it === 'string' && it.startsWith('<') ? it : _esc(it)}</li>`
+    `<li>${(it && typeof it === 'object' && it.__wfRawHtml) ? it.html : _esc(it)}</li>`
   ).join('') + '</ul>';
 }
 
@@ -2734,7 +2747,7 @@ function _detailRefMaterial(p) {
     const text = (typeof d?.text === 'string') ? d.text
                 : (typeof d?.content === 'string') ? d.content : '';
     const src = d?.source ? ` · ${d.source}` : '';
-    return `<strong>${_esc(name)}</strong> — ${text.length.toLocaleString()} chars${_esc(src)}`;
+    return _rawHtml(`<strong>${_esc(name)}</strong> — ${text.length.toLocaleString()} chars${_esc(src)}`);
   }));
 }
 
@@ -2773,7 +2786,7 @@ function _detailAIList(hive) {
     const name = c ? (c.label || c.name || id) : id;
     const star = (id === builder) ? ' 🔨' : '';
     const isCustom = !!c;
-    return `<strong>${_esc(name)}</strong>${isCustom ? ' <span class="checkpoint-detail-tag">custom</span>' : ''}${star}`;
+    return _rawHtml(`<strong>${_esc(name)}</strong>${isCustom ? ' <span class="checkpoint-detail-tag">custom</span>' : ''}${star}`);
   });
   const head = `<p class="checkpoint-detail-meta">${active.length} active${mode ? ' · ' + _esc(mode) + ' mode' : ''}${customs.length ? ' · ' + customs.length + ' custom defined' : ''}</p>`;
   return head + _detailUL(items);
@@ -2783,7 +2796,7 @@ function _detailModels(hive) {
   if (!hive || typeof hive !== 'object' || !hive.models) return '<p class="checkpoint-detail-empty">No model picks.</p>';
   const entries = Object.entries(hive.models).filter(([, v]) => typeof v === 'string' && v.trim());
   if (!entries.length) return '<p class="checkpoint-detail-empty">No model picks set.</p>';
-  return _detailUL(entries.map(([id, model]) => `<strong>${_esc(id)}</strong> → <code>${_esc(model)}</code>`));
+  return _detailUL(entries.map(([id, model]) => _rawHtml(`<strong>${_esc(id)}</strong> → <code>${_esc(model)}</code>`)));
 }
 
 function _detailKeys(hive) {
@@ -2793,7 +2806,7 @@ function _detailKeys(hive) {
   // Each key gets a masked-display + 👁 reveal — reuses the v3.63.261
   // .checkpoint-secret pattern. Per-AI rows are read-only inline list items.
   return _detailUL(entries.map(([id, val]) =>
-    `<strong>${_esc(id)}</strong> ${_checkpointSecretHTML(val)}`
+    _rawHtml(`<strong>${_esc(id)}</strong> ${_checkpointSecretHTML(val)}`)
   ));
 }
 
@@ -2818,7 +2831,7 @@ function _detailLicense(raw) {
     if (typeof raw === 'string') key = raw.trim();
   }
   const rows = [];
-  rows.push(['Key', key ? _checkpointSecretHTML(key) : '(not readable)']);
+  rows.push(['Key', key ? _rawHtml(_checkpointSecretHTML(key)) : '(not readable)']);
   if (extras.valid != null) rows.push(['Validated', extras.valid ? 'Yes' : 'No']);
   if (extras.purchaseId)    rows.push(['Purchase ID', extras.purchaseId]);
   if (extras.email)         rows.push(['Email', extras.email]);
@@ -3121,7 +3134,15 @@ async function _applyCheckpoint(data, scope) {
         if (rs.aiWarnings)        localStorage.setItem('waxframe_ai_warnings',        rs.aiWarnings);
         else localStorage.removeItem('waxframe_ai_warnings');
       }
+      // v3.63.425 — Explicit clear when the checkpoint's legacy LS_SESSION
+      // slot is empty, mirroring the IDB_SESSION branch below. LS_SESSION is
+      // legacy (loadSession() only reads it when IDB comes back empty), so a
+      // stale local key surviving a restore that wipes IDB (the
+      // wipedToScratch branch, below) would get picked up as the "restored"
+      // session on next load instead of the fresh/empty state the checkpoint
+      // intended.
       if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
+      else localStorage.removeItem(LS_SESSION);
       if (data.IDB_SESSION) {
         try {
           await idbSet(data.IDB_SESSION);

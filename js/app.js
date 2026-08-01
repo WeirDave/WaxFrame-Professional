@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260801-008
+// Build: 20260801-009
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260801-008';         // build stamp — update each session
+const BUILD       = '20260801-009';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -9804,7 +9804,7 @@ async function migrateRecommendOnStartup() {
     // have a hardcoded MODEL_FALLBACKS list to feed the recommend call.
     // Perplexity is the canonical case — chat completions work, but no
     // models endpoint exists, so we use the sonar-* fallback list.
-    // v3.63.424 — was `!== null`. buildModelFilters() SKIPS discovery:null
+    // v3.63.425 — was `!== null`. buildModelFilters() SKIPS discovery:null
     // entries (Together, Cohere) rather than setting them to null, so the
     // map value there is undefined, not null — `undefined !== null` is
     // true, silently treating those providers as having a dynamic endpoint
