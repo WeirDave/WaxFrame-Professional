@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260801-011
+// Build: 20260801-012
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -219,30 +219,28 @@
   // custom/local server AI (Ollama, LM Studio, Open WebUI, Alfredo). A full
   // codebase audit (prompted by finding the Anthropic/Gemini bugs above)
   // found this exact "trust index 0 unconditionally" pattern duplicated
-  // across 8 call sites, never fixed. Two real gaps closed here:
-  //   1. Trusted choices[0] unconditionally — a provider ever returning
-  //      multiple choices with the usable one not first would silently
-  //      miss it. Now scans all choices for the first one with content.
-  //   2. OpenAI's Structured Outputs / strict-JSON mode can return
-  //      message.content: null with the actual explanation in
-  //      message.refusal instead — same "false empty response" symptom as
-  //      the Anthropic bug, different trigger. firstOpenAIMessage() surfaces
-  //      which one happened (refusal vs genuinely empty) so wf-debug.js's
-  //      PROVIDER_REFUSED catalog entry can give a specific diagnosis
-  //      instead of the generic "Empty response" card.
-  function firstOpenAIMessage(d) {
+  // across 8 call sites, never fixed. Fixed here: trusted choices[0]
+  // unconditionally — a provider ever returning multiple choices with the
+  // usable one not first would silently miss it. Now scans all choices for
+  // the first one with content.
+  //
+  // v3.63.428 — Dropped the refusal-detection half (OpenAI's Structured
+  // Outputs / strict-JSON mode can return message.content: null with the
+  // explanation in message.refusal instead) and its extractOpenAIRefusal
+  // export. It was built so wf-debug.js's PROVIDER_REFUSED card could give
+  // a specific diagnosis instead of a generic "Empty response," but nothing
+  // ever called it — the card gets its refusal text through its own
+  // independent raw-string parser (wf-debug.js's parseRefusal), which needs
+  // to work on the raw un-parsed response text rather than an already-
+  // parsed object, so it never routed through here.
+  function firstOpenAIText(d) {
     var choices = (d && d.choices) || [];
     for (var i = 0; i < choices.length; i++) {
       var msg = choices[i] && choices[i].message;
-      if (msg && msg.content) return { text: msg.content, refusal: null };
+      if (msg && msg.content) return msg.content;
     }
-    for (var j = 0; j < choices.length; j++) {
-      var m = choices[j] && choices[j].message;
-      if (m && m.refusal) return { text: '', refusal: m.refusal };
-    }
-    return { text: '', refusal: null };
+    return '';
   }
-  function firstOpenAIText(d) { return firstOpenAIMessage(d).text; }
 
   // Response extractors — one per WaxFrame format.
   var EXTRACTORS = {
@@ -715,12 +713,9 @@
   //                                 instead of re-hardcoding content[0]
   //   • extractGeminiText         — same rationale, Gemini's equivalent
   //                                 thought-part-safe scan
-  //   • extractOpenAIText,
-  //     extractOpenAIRefusal      — same rationale, OpenAI's equivalent:
+  //   • extractOpenAIText         — same rationale, OpenAI's equivalent:
   //                                 scans all choices instead of trusting
-  //                                 index 0, and surfaces a refusal
-  //                                 message distinctly from a genuinely
-  //                                 empty response (see firstOpenAIMessage)
+  //                                 index 0
   // The other 9 helpers (FORMATS, BODY_BUILDERS, EXTRACTORS, AUTH_HEADERS,
   // authFor, bodyBuilderFor, extractorFor, buildModelFilters,
   // buildModelFallbacks) are module-internals — buildModelFilters and
@@ -738,7 +733,6 @@
     diagnosticModelsHeaders: diagnosticModelsHeaders,
     extractAnthropicText: firstAnthropicTextBlock,
     extractGeminiText: firstGeminiTextPart,
-    extractOpenAIText: firstOpenAIText,
-    extractOpenAIRefusal: function (d) { return firstOpenAIMessage(d).refusal; }
+    extractOpenAIText: firstOpenAIText
   };
 })(typeof window !== 'undefined' ? window : this);
