@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
-// Build: 20260801-012
+// Build: 20260801-013
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -88,6 +88,21 @@
 //                      now routed to Reference Material as a
 //                      card on apply (scratch path).
 // ============================================================
+
+// v3.63.429 — Canonical category display order, shared by both consumers
+// of this file: templates-page.js (templates.html's standalone gallery)
+// and app.js (the in-app Use Template picker on the Project screen).
+// Previously each carried its own identical copy — a full-codebase audit
+// flagged the duplication risk. templates.js loads before both on their
+// respective pages, so this is the natural single source of truth.
+const CATEGORY_ORDER = [
+  'Quick Start',
+  'Career & Hiring',
+  'Business & Sales',
+  'Content & Marketing',
+  'Personal & Everyday',
+  'Reviews & Recommendations'
+];
 
 const WAXFRAME_TEMPLATES = [
 

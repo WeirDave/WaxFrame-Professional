@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.429
+
+**Fifth batch from the code audit: safe duplicate-logic fixes (escapeHtml null guard, import-server https gap, shared template category order)**
+
+Build: `20260801-013`<br>
+Released: `2026-08-01`
+
+### What changed
+
+Fifth batch from the full-codebase audit — the lower-risk duplication findings. Each of the three `escapeHtml()` implementations, and the two URL validators, were investigated first to confirm what kind of duplication they actually are before deciding how to fix them; not every "3 copies of a function" finding calls for the same remedy.
+
+1. **`escapeHtml` null-guard gap (app.js)** — three separate implementations exist (`app.js`, `pricing-renderer.js`, `templates-page.js`), but they never share runtime scope: each loads on a different page (index.html / ai-api-pricing.html / templates.html respectively), and `pricing-renderer.js`'s copy is already IIFE-scoped. So this wasn't a collision risk, just a silent behavioral gap — `app.js`'s copy had no null guard, so `escapeHtml(null)` rendered the literal text `"null"` instead of nothing, unlike the other two. Added the guard. Left the three implementations separate: they're genuinely page-scoped, and standing up a new shared script file for one 1-line utility across pages that don't otherwise share code would be more infrastructure than the actual gap justified.
+2. **Import-server https enforcement gap** — `validateCustomAIEndpoint` has always blocked plaintext `http://` when not running locally (the browser blocks it anyway once WaxFrame is served over https; better to catch it with a clear message first). Its sibling `validateImportServerUrl` never had that branch — instead, `addImportServerModels` (the "add to hive" step) duplicated the check ad-hoc *after* calling the validator, and the earlier "fetch models" step (`fetchImportServerModels`) had no such check at all, so an `http://` endpoint entered there would silently proceed to a browser-blocked fetch with a generic network error instead of a clear message. Moved the check into `validateImportServerUrl` itself (matching its sibling) and removed the now-redundant duplicate in `addImportServerModels` — same behavior at the later step, and the earlier step now catches it too.
+3. **`CATEGORY_ORDER` duplicated between app.js and templates-page.js** — the six-category template ordering list was independently hand-maintained in both files. Unlike the `escapeHtml` case, `js/templates.js` (home of `WAXFRAME_TEMPLATES`) is already loaded on both index.html and templates.html before either consumer, so it's a genuine pre-existing shared home — moved `CATEGORY_ORDER` there and pointed both call sites at it. Confirmed neither consumer ever mutates the array (only `.filter()`/`.includes()`), so a shared reference is safe.
+
+### Verification
+
+- For each duplication finding, first checked whether the "duplicate" files actually share a page/runtime scope before deciding whether real consolidation was warranted or would just add infrastructure for no behavioral benefit.
+- Confirmed script load order on both index.html and templates.html puts `js/templates.js` before its two consumers, so the shared `CATEGORY_ORDER` reference resolves correctly on both pages.
+- Confirmed the import-server https check produces identical wording/behavior at the point it already fired (`addImportServerModels`), and additionally now fires earlier (`fetchImportServerModels`) where it previously didn't exist at all.
+- `node --check` on all 3 touched files, `node tools/release-check.mjs` — pass.
+
+### Files touched
+
+- `js/app.js` — `escapeHtml()` null guard, `validateImportServerUrl()`/`addImportServerModels()` https-check consolidation, `CATEGORY_ORDER` now references the shared constant
+- `js/templates.js` — added shared `CATEGORY_ORDER` constant
+- `js/templates-page.js` — removed its now-redundant local `CATEGORY_ORDER`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. All three fixes are additive or reference-only changes with no data/schema impact; worst case of a bad revert is the pre-fix behavior (missing null guard, missing early https check, two hand-maintained category lists) returning, not new breakage.
+
+---
+
 ## v3.63.428
 
 **Fourth batch from the code audit: dead-code cleanup (orphaned function, unused re-export aliases, discarded computation), plus a self-inflicted comment-corruption fix**
