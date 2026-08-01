@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.431
+
+**Session transcript export silently dropped every AI's model name — fixed to use the same resolver as everywhere else**
+
+Build: `20260801-015`<br>
+Released: `2026-08-01`
+
+### What changed
+
+Found live: David was comparing GPT-5.6 Sol vs. Terra as Builder for a hive test and exported a session transcript to check which model actually ran — the "HIVE COMPOSITION" header showed `Builder: ChatGPT` with no model name at all, for every single AI in the roster, not just ChatGPT.
+
+`exportTranscript()`'s code already had the "(model: ...)" display logic wired up (added v3.52.7), but it read the bare `ai.model` field directly. That field is only ever populated for *variant* AIs — a variant's model rides on the AI object itself because it needs to stay independent of its parent. Every standard AI (the built-in chatgpt/claude/gemini/etc. entries) keeps its current model on `API_CONFIGS[provider].model` instead, so `ai.model` was always empty for them and the suffix silently never rendered — not a rare edge case, this was 100% of every non-variant transcript export since the feature was added.
+
+The rest of the codebase has a correct resolver for exactly this — `getModelForAI(ai)`, which checks `ai.model` first (variants) and falls back to `API_CONFIGS[ai.provider].model` (standard AIs). It's already the single source of truth for model display everywhere else: the bee-dot hover tooltip, in-app console model labels, hive-profile apply-matching. `exportTranscript()` was the one holdout still using the narrower pattern. Switched both the Builder line and the reviewer loop to `getModelForAI()`.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Confirmed the broken pattern by tracing `getModelForAI()`'s 9 existing call sites against `exportTranscript()`'s two — all 9 others already used the resolver; only this function didn't.
+
+### Files touched
+
+- `js/app.js` — `exportTranscript()`: Builder line and reviewer loop switched from bare `.model` to `getModelForAI()`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Two-line logic change in one export function; no storage schema, round-execution, or Builder-parsing behavior touched. Worst case of a bad revert is the transcript export going back to showing no model names.
+
+---
+
 ## v3.63.430
 
 **License-removal modal wording aligned between app.js and license-helper.js**
