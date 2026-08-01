@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — license-helper.js
-// Build: 20260801-014
+// Build: 20260801-015
 //  Self-contained license badge + modal logic for helper pages.
 //  Mirrors the in-app license functions in app.js, minus the
 //  trial-rounds tracking (helper pages don't run rounds, so the
@@ -262,7 +262,7 @@ function lhNotice(title, message, okText) {
 }
 
 async function confirmRemoveLicense() {
-  // v3.63.430 — title wording aligned with app.js's confirmRemoveLicense
+  // v3.63.431 — title wording aligned with app.js's confirmRemoveLicense
   // (a full-codebase audit flagged the drift). The toast-vs-modal feedback
   // difference below is left as-is — a deliberate page-context distinction,
   // not drift: this file mirrors app.js's license functions minus the

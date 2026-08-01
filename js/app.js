@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260801-014
+// Build: 20260801-015
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260801-014';         // build stamp — update each session
+const BUILD       = '20260801-015';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -21894,13 +21894,16 @@ function exportTranscript() {
     ? (activeAIs.find(a => a.id === builder) || { id: builder, name: builder, model: '?' })
     : null;
   if (builderAI) {
-    // v3.52.7 — Simplified from `builderAI.model || MODEL_LABELS[builderAI.id] || ''`.
-    // The MODEL_LABELS fallback was broken-shaped: MODEL_LABELS is keyed
-    // by model id (e.g. 'gemini-2.5-flash'), but `builderAI.id` is the
-    // AI id (e.g. 'gemini'), so the lookup always returned undefined.
-    // Removed the dead branch; matches the reviewer block below (L13547)
-    // which has always used the bare `a.model || ''` pattern.
-    const builderModel = builderAI.model || '';
+    // v3.63.425 — Was reading the bare `.model` field, which is only ever
+    // populated for variant AIs (model rides on the ai object). Standard
+    // AIs (the chatgpt/claude/etc DEFAULT_AIS entries) keep their current
+    // model on API_CONFIGS[provider].model instead, so this always came
+    // back empty and the "(model: ...)" suffix silently never rendered.
+    // getModelForAI() is the resolver every other model-display call site
+    // in this file already uses (bee-dot tooltip, console labels, hive-
+    // profile matching) — switched to match instead of duplicating the
+    // fallback logic here.
+    const builderModel = getModelForAI(builderAI) || '';
     out += `Builder: ${builderAI.name}${builderModel ? ` (model: ${builderModel})` : ''}\n`;
   } else {
     out += `Builder: (not set)\n`;
@@ -21912,7 +21915,7 @@ function exportTranscript() {
   const reviewers = _activeForSession.filter(a => a.id !== builder);
   out += `Reviewers (${reviewers.length} of ${_activeForSession.length} total):\n`;
   reviewers.forEach(a => {
-    const m = a.model || '';
+    const m = getModelForAI(a) || '';
     out += `  • ${a.name}${m ? ` (model: ${m})` : ''}\n`;
   });
   out += `\n`;
