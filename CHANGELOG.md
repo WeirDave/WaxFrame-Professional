@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.438
+
+**AI API Pricing: "All tracked models" table was bleeding off the right edge of its card**
+
+Build: `20260802-002`<br>
+Released: `2026-08-02`
+
+### What changed
+
+David caught this live right after v3.63.437 shipped: the new "All tracked models" section's table (9 columns, including long provider-namespaced model ids like `meta-llama/Llama-3.3-70B-Instruct-Turbo`) was wider than the `wf-card` it lived in, and had no horizontal-scroll container — so its right-most columns (Verified, Source) visually spilled past the card's border instead of scrolling. Root cause: the table used `.ai-table.is-stack`, which only gets a horizontal-scroll fallback below WaxFrame's supported viewport floor (desktop-only, min 1366×768) via `.ai-table:not(.is-stack)`'s media-query rule — `is-stack` tables are assumed to always fit their card at desktop widths, which the Defaults/Rate-Limits tables do, but this new 9-column table with long monospace ids doesn't.
+
+Fix: dropped the unneeded `is-stack` modifier (nothing about this table needs mobile card-view — it's desktop-only same as the rest of the app) and wrapped it in a new `.pricing-all-models-table-wrap` container with `overflow-x: auto`, applied unconditionally rather than gated behind a mobile media query, since the overflow happens at supported desktop widths too. Also added `overflow-wrap: anywhere` to the table's `<code>` cells so long namespaced model ids don't force extra width on their own.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-tested via local static server: measured the wrap container's `scrollWidth` (820px) against its `clientWidth` (765px at the reported viewport) and confirmed `getBoundingClientRect()` shows the wrap's right edge inside the card's right edge — the table now scrolls inside its own box instead of overflowing the card. No console errors.
+
+### Files touched
+
+- `ai-api-pricing.html` — "All tracked models" table wrapped in `.pricing-all-models-table-wrap`, dropped `is-stack`
+- `style.css` — new `.pricing-all-models-table-wrap` rule (unconditional `overflow-x: auto`) + `overflow-wrap: anywhere` on its `<code>` cells
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Purely additive markup/CSS — no JS behavior changed, no schema/data changes.
+
+---
+
 ## v3.63.437
 
 **AI API Pricing page now tracks every curated model per provider, not just the default — with a review-before-publish gate on the scheduled price refresh**
