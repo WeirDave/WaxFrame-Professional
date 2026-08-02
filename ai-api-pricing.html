@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260802-001
+     Build: 20260802-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260802-001">
+  <meta name="waxframe-build" content="20260802-002">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="keywords" content="ChatGPT API pricing, Claude API pricing, Gemini API cost, AI token pricing, AI API cost calculator">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.437">
+  <link rel="stylesheet" href="style.css?v=3.63.438">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -322,22 +322,24 @@
               <input type="text" id="allModelsSearch" class="pricing-filter-input" placeholder="Model or provider name">
             </label>
           </div>
-          <table class="ai-table is-stack">
-            <thead>
-              <tr>
-                <th>Provider</th>
-                <th>Model</th>
-                <th>Input $/M</th>
-                <th>Output $/M</th>
-                <th>Context</th>
-                <th>Max output</th>
-                <th>Status</th>
-                <th>Verified</th>
-                <th>Source</th>
-              </tr>
-            </thead>
-            <tbody id="allModelsBody"></tbody>
-          </table>
+          <div class="pricing-all-models-table-wrap">
+            <table class="ai-table">
+              <thead>
+                <tr>
+                  <th>Provider</th>
+                  <th>Model</th>
+                  <th>Input $/M</th>
+                  <th>Output $/M</th>
+                  <th>Context</th>
+                  <th>Max output</th>
+                  <th>Status</th>
+                  <th>Verified</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody id="allModelsBody"></tbody>
+            </table>
+          </div>
           <p id="allModelsEmpty" class="pricing-all-models-empty" hidden>No models match the current filters.</p>
         </div>
       </details>
@@ -528,13 +530,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.437"></script>
-<script src="lib/docx.min.js?v=3.63.437"></script>
-<script src="js/docx-export.js?v=3.63.437"></script>
-<script src="js/nav-helper.js?v=3.63.437"></script>
-<script src="js/license-helper.js?v=3.63.437"></script>
-<script src="js/helper-handlers.js?v=3.63.437"></script>
-<script src="js/version.js?v=3.63.437"></script>
+<script src="js/theme.js?v=3.63.438"></script>
+<script src="lib/docx.min.js?v=3.63.438"></script>
+<script src="js/docx-export.js?v=3.63.438"></script>
+<script src="js/nav-helper.js?v=3.63.438"></script>
+<script src="js/license-helper.js?v=3.63.438"></script>
+<script src="js/helper-handlers.js?v=3.63.438"></script>
+<script src="js/version.js?v=3.63.438"></script>
 
 <!-- ========================================================
      Dynamic pricing renderer.
@@ -545,6 +547,6 @@
      release we should refresh it from data/pricing-seed.json
      in tools/pricing-worker.
      ======================================================== -->
-<script src="js/pricing-renderer.js?v=3.63.437"></script>
+<script src="js/pricing-renderer.js?v=3.63.438"></script>
 </body>
 </html>
