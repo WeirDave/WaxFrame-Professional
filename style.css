@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260802-001
+   Build: 20260802-002
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -17390,6 +17390,20 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 .pricing-all-models-body {
   margin-top: var(--space-12);
+}
+.pricing-all-models-table-wrap {
+  /* 9 columns plus long provider-namespaced model ids (e.g.
+     meta-llama/Llama-3.3-70B-Instruct-Turbo) are wider than the card at
+     any viewport this app supports — scroll horizontally inside this box
+     instead of the table bleeding past the wf-card border. */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.pricing-all-models-table-wrap .ai-table {
+  min-width: 820px;
+}
+.pricing-all-models-table-wrap .ai-table code {
+  overflow-wrap: anywhere;
 }
 .pricing-all-models-filters {
   display: flex;
