@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.446
+
+**Together AI: dropped two retired models from the catalog itself, not just the pricing page**
+
+Build: `20260802-010`<br>
+Released: `2026-08-02`
+
+### What changed
+
+David caught the actual problem after v3.63.445 marked `Qwen/Qwen2.5-72B-Instruct-Turbo` and `mistralai/Mixtral-8x7B-Instruct-v0.1` as `unsupported` on the pricing page: if these models aren't functionally usable through Together's API anymore, why were they still sitting in WaxFrame's own model picker as selectable options? Marking them `unsupported` on the reference page treated the symptom; the actual bug was in `js/provider-catalog.js`.
+
+Removed both from Together's `fallback` array. `together`'s `discovery` is `null` (it rides the custom-AI live-discovery path — see the entry's existing comment), so this only affects the no-live-discovery fallback case; a keyed user's live model list was never touched by this. But before this fix, a user without live discovery working could still have these two surfaced as selectable options with no working serverless endpoint behind either of them.
+
+Removed the two now-orphaned rows from the pricing seed entirely (not `deprecated` — they're not real options at all anymore, so there's nothing to track). `tools/check-pricing-coverage.mjs` — the check built specifically to catch catalog/seed drift in either direction — flagged both rows the moment the catalog changed, exactly as designed.
+
+### Verification
+
+- `node tools/check-pricing-coverage.mjs` — confirmed it flagged the drift before the fix, confirmed clean after.
+- `node tools/release-check.mjs` — pass.
+- Live-tested via local static server with the fallback path forced: Together AI now shows exactly one tracked model (`meta-llama/Llama-3.3-70B-Instruct-Turbo`) in the "All tracked models" list — the two retired ones are gone entirely, not just hidden.
+
+### Files touched
+
+- `js/provider-catalog.js` — Together's `fallback` array trimmed to the one working model
+- `tools/pricing-worker/data/pricing-seed.json` — the two now-orphaned rows removed
+- `js/pricing-renderer.js` — regenerated `FALLBACK_DATA`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit, then re-push the prior seed to KV. No behavior change for any user with a working Together API key and live discovery — only affects the no-key/no-discovery fallback model list.
+
+---
+
 ## v3.63.445
 
 **AI API Pricing: second verification pass using David's own live provider consoles — 2 more Mistral models verified, 2 Together models resolved, Mistral free-tier copy corrected**

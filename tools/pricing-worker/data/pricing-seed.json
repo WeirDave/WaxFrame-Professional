@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-02T22:00:00Z",
+  "lastUpdated": "2026-08-02T23:00:00Z",
   "schemaVersion": 3,
   "tokensPerRound": {
     "input": 5000,
@@ -222,30 +222,6 @@
           "sourceUrl": "https://api.together.ai/settings/organization/~current/billing",
           "verifiedAt": "2026-08-01T19:25:30Z",
           "status": "verified"
-        },
-        {
-          "id": "Qwen/Qwen2.5-72B-Instruct-Turbo",
-          "inputPerM": null,
-          "outputPerM": null,
-          "contextWindow": null,
-          "maxOutput": null,
-          "estPerRound": null,
-          "estNote": "No longer listed in Together AI's serverless model catalog as of 2026-08-02 (confirmed via account model search) -- likely retired in favor of newer Qwen 3.x generations.",
-          "sourceUrl": null,
-          "verifiedAt": null,
-          "status": "unsupported"
-        },
-        {
-          "id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
-          "inputPerM": null,
-          "outputPerM": null,
-          "contextWindow": null,
-          "maxOutput": null,
-          "estPerRound": null,
-          "estNote": "Still listed in Together AI's catalog but serverless pricing shows \"n/a\" as of 2026-08-02 (confirmed via account model search) -- appears to be dedicated-endpoint only now, no serverless per-token rate to track.",
-          "sourceUrl": null,
-          "verifiedAt": null,
-          "status": "unsupported"
         }
       ]
     },
