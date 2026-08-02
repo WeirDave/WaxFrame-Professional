@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.454
+
+**Gemini model-list compatibility and Test-button self-healing — fixes #5**
+
+Build: `20260802-018`<br>
+Released: `2026-08-02`
+
+### What changed
+
+Investigated Liam OBrien's Gemini model matrix from issue #5 against WaxFrame's live-discovery and Test-button paths plus Google's current API documentation. The report exposed one deterministic catalog bug and two account-specific outcomes that must not be conflated:
+
+- Gemini Deep Research entries were leaking into WaxFrame's dropdown because Google's `models.list` metadata advertises `generateContent`, even though Google documents Deep Research as an Interactions-API-only agent and rejects `generateContent` with HTTP 400. Gemini now has a provider-specific `deep-research-*` filter. The filter is deliberately not global because Perplexity's `sonar-deep-research` does work through its normal chat-completions endpoint.
+- A model returning 404 because it is retired or unavailable to new users is account/model availability, not a bad Gemini endpoint. Explicit Test and Test All failures now reuse WaxFrame's round-error classifier; provider-confirmed deprecated, wrong-endpoint, or instruction-incompatible models are quarantined from future dropdowns and recommendations. The visible Test result says the model was removed and directs the user to pick another model.
+- HTTP 429 remains a visible, transient rate/usage-tier failure and is never quarantined. Test hints now distinguish 400 request incompatibility, 404 model-or-endpoint unavailability, and 429 quota/tier exhaustion instead of labeling every 404 as a wrong URL.
+
+### Verification
+
+- `node --check` passed for `js/app.js`, `js/provider-catalog.js`, and `js/wf-debug.js`.
+- `node tools/test-provider-extractors.mjs` — all 11 fixtures pass, including new Gemini Deep Research exclusion and standard-model survival checks.
+- Direct classifier fixtures confirm an Interactions-only HTTP 400 maps to `MODEL_NEEDS_DIFFERENT_ENDPOINT`, while HTTP 429 maps to `RATE_LIMITED`.
+- Local browser load confirmed the Test-key modal remains present and the updated application boots without console errors.
+- `node tools/release-check.mjs` — full pass.
+
+### Files touched
+
+- `js/provider-catalog.js` — provider-specific Gemini Deep Research exclusion
+- `js/wf-debug.js` — Interactions API / `generateContent` incompatibility classification
+- `js/app.js` — Test and Test All self-healing plus precise 400/404/429 guidance
+- `tools/test-provider-extractors.mjs` — two provider-filter regression fixtures
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+`git revert` this commit. The only persistent state change is an existing local model-quarantine entry created after the provider explicitly rejects a tested model; users can recover by selecting any available model.
+
+---
+
 ## v3.63.453
 
 **Fixture-based regression test for provider response-shape drift — backlog item 4**

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260802-017
+// Build: 20260802-018
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -318,6 +318,12 @@
       format: 'google',
       discovery: 'gemini-list',
       vision: true,
+      // Deep Research entries currently leak through Google's models.list
+      // metadata with generateContent advertised, but Google documents them
+      // as Interactions-API-only agents and generateContent returns HTTP 400.
+      // Keep this provider-specific: Perplexity's sonar-deep-research really
+      // does use its normal chat-completions endpoint.
+      filterExtras: [/^deep-research(?:-|$)/i],
       fallback: ['gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3.1-flash-lite']
     },
     {

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260802-017
+// Build: 20260802-018
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -532,7 +532,11 @@ window.WF_ERROR_CATALOG = [
       msg.includes('not a chat model') ||
       msg.includes('not supported in the v1/chat/completions') ||
       msg.includes('use v1/completions') ||
-      msg.includes('use v1/responses'),
+      msg.includes('use v1/responses') ||
+      msg.includes('only supports interactions api') ||
+      msg.includes('only supports the interactions api') ||
+      msg.includes('cannot access it through generate_content') ||
+      msg.includes('cannot access it through generatecontent'),
     title: '{ai} — This model needs a different endpoint',
     meaning: 'The provider rejected this model on the chat-completions endpoint because it requires a different API (e.g. OpenAI\'s pro and reasoning models like gpt-5.5-pro use /v1/responses, not /v1/chat/completions). Pick a different model — the ones WaxFrame can call directly are listed in the dropdown.',
     actions: [
