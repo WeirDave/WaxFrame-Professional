@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.436
+
+**Checkpoints screen: Select all / Select none now also live in the footer, next to Cancel**
+
+Build: `20260801-020`<br>
+Released: `2026-08-01`
+
+### What changed
+
+David flagged that the Checkpoints screen often opens already scrolled down near the Save/Restore footer buttons — but the "Select all" / "Select none" bulk-toggle buttons only existed at the top of the panel, above the section checkboxes. Wanting to tick everything meant scrolling back up first.
+
+Fix: added a second copy of the Select all / Select none pair directly into the footer action row (`.checkpoint-actions`), on the Save panel and the Restore diff panel — the two views that actually have checkbox rows to bulk-toggle. The Restore intro footer (shown before a file is picked, with no rows yet) is unchanged. Both button pairs call the existing `checkpointSelectAll(mode)` / `checkpointSelectNone(mode)` functions, which look sections up by ID rather than by button reference, so no JS changes were needed — just markup plus a small CSS rule (`margin-right: auto` on the new footer group) to pin it to the left edge of the flex-end action row without disturbing the existing Cancel/primary button alignment.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-tested in-browser: navigated to the Checkpoints screen, confirmed the footer "Select all" button on the Save panel correctly checks all section checkboxes; confirmed the same pair renders and is positioned correctly (left-aligned, Cancel/primary right-aligned) on both the Save-panel footer and the Restore-diff footer; confirmed the Restore-intro footer (pre-file-pick) is untouched.
+
+### Files touched
+
+- `index.html` — added `.checkpoint-actions-bulk` button group (Select all/Select none) to the Save-panel and Restore-diff footers
+- `style.css` — new `.checkpoint-actions-bulk` rule
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Purely additive markup/CSS — no JS behavior changed.
+
+---
+
 ## v3.63.435
 
 **Setup screens' "← Back" button now returns to wherever you actually came from, not a hardcoded step in the wizard**
