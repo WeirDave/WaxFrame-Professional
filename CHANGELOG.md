@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.453
+
+**Fixture-based regression test for provider response-shape drift — backlog item 4**
+
+Build: `20260802-017`<br>
+Released: `2026-08-02`
+
+### What changed
+
+Added `tools/test-provider-extractors.mjs`, a standalone node-runnable test (no live API calls, no browser) that feeds canned response JSON through the real extractor functions in `js/provider-catalog.js` — `extractAnthropicText`, `extractGeminiText`, `extractOpenAIText` — and asserts the correct text comes out.
+
+This closes backlog item 4. v3.63.410 fixed a live bug where Claude's extended-thinking responses were misread as empty because every Anthropic extractor hardcoded `content[0].text` — Anthropic started returning a leading thinking block server-side with zero notice, no WaxFrame-side change involved. The same class of drift is plausible for any provider whose response shape isn't a flat single value: Gemini's `thought: true` reasoning parts, OpenAI's refusal/empty-choices shapes. Nine fixtures cover plain / reasoning-then-answer / reasoning-only for all three providers, converting "found out live, mid-demo, from a customer-facing error modal" into "release-check catches it before ship."
+
+Wired into `tools/release-check.mjs` as Check 13, shelling out the same way Checks 10-12 (prompt equivalence, pricing coverage, pricing Worker review-gate) already do.
+
+### Verification
+
+- `node tools/test-provider-extractors.mjs` — all 9 fixtures pass standalone.
+- `node tools/release-check.mjs` — full pass, including the new Check 13.
+
+### Files touched
+
+- `tools/test-provider-extractors.mjs` — new file, 9 fixtures
+- `tools/release-check.mjs` — Check 13 added
+- `docs/WaxFrame_Backlog_Master_v267.txt` — item 4 marked done
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+`git revert` this commit — no storage/schema changes, no runtime behavior change (test-only + gate addition).
+
+---
+
 ## v3.63.452
 
 **ChatGPT default bumped to gpt-5.6-sol — backlog item 6 decided**
