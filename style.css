@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260801-019
+   Build: 20260801-020
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12012,6 +12012,16 @@ kbd {
   justify-content: flex-end;
   gap: var(--space-10);
   margin: var(--space-16) 0 var(--space-8);
+}
+
+/* v3.63.436 — Footer mirror of the top-of-panel Select all/none pair.
+   margin-right: auto pins it to the left edge of the flex-end row,
+   pushing Cancel/primary to the right without touching footers that
+   don't include this group (e.g. the pre-file-pick restore intro). */
+.checkpoint-actions-bulk {
+  display: flex;
+  gap: var(--space-8);
+  margin-right: auto;
 }
 
 /* v3.63.316 / 318 — FSA toggle CSS retired. v3.63.316 used a `.fsa-only`
