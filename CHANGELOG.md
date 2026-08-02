@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.441
+
+**AI API Pricing modal: fixed header text wrapping mid-word, reworded AI-sounding copy**
+
+Build: `20260802-005`<br>
+Released: `2026-08-02`
+
+### What changed
+
+David flagged the v3.63.440 modal on sight: "Input $/M" and "Context" were wrapping mid-word into things like "INPUT $/\nM" and "CONTEX\nT". He also asked that CSS work get verified in-browser going forward, not just reasoned about — a fair correction, since v3.63.439's overflow check only confirmed the whole table fit, never checked whether individual header cells wrapped.
+
+Root cause: the column-width percentages were sized by rough estimate, not measured against actual rendered text. Fixed by measuring for real: `canvas.measureText()` against the live computed header font (600 13px DM Sans + letter-spacing) for exact unwrapped header widths, and `Range.getClientRects()` against actual body cells for the longest real content per column (the Model column's 257px for `meta-llama/Llama-3.3-70B-Instruct-Turbo`). New percentages are `max(header, body) + padding` for every column. Also had to fix the verification method itself mid-check — a naive "does this cell produce more than one client rect" test threw false positives on any cell with a nested element (status pill, source-link icon), since those produce a separate rect for their own padded box independent of whether the text actually wraps. Switched to checking the nested element's own `scrollWidth` vs `clientWidth` instead, which is immune to that.
+
+Verified in-browser (not just reasoned): all 9 headers single-line, Model/Status/Source columns clean across all 38 rows. Provider still wraps to 2 lines on long names (ChatGPT (OpenAI), Claude (Anthropic)) — same as before this fix and not the mid-word breakage that was flagged; accepted as a normal table pattern rather than chasing a fully wrap-free layout that would come at the cost of re-breaking Model or Status.
+
+Also reworded the two intro paragraph — David flagged the original ("Every model WaxFrame curates per provider — not just the one shown above... it's tracked, not missing.") as reading AI-generated. Replaced with plainer copy in both the card teaser and the modal.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-measured in-browser at the real 1366px viewport: all 9 header cells confirmed single-line via `Range.getClientRects()` distinct-top-count; Model/Status/Source columns confirmed zero wraps across all 38 body rows via `scrollWidth`/`clientWidth` checks on their nested elements; no console errors. Pixel screenshot capture was unavailable this session (Browser pane wasn't compositing) — verification relied on direct DOM/layout measurement instead of a visual screenshot.
+
+### Files touched
+
+- `ai-api-pricing.html` — reworded the teaser paragraph and the modal's intro paragraph
+- `style.css` — `.pricing-all-models-fixed` column-width percentages recomputed from measured header/body widths instead of estimated
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit (returns to v3.63.440's estimated column widths, which had the header-wrapping bug). Purely CSS/copy — no JS or data changes.
+
+---
+
 ## v3.63.440
 
 **AI API Pricing: "All tracked models" moved out of the card into its own wide modal — full 9-column table, no abbreviation**
