@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-02T23:05:00Z",
+  "lastUpdated": "2026-08-02T23:20:00Z",
   "schemaVersion": 3,
   "tokensPerRound": {
     "input": 5000,
@@ -112,7 +112,7 @@
       "id": "grok",
       "name": "Grok (xAI)",
       "shortName": "Grok",
-      "defaultModel": "grok-4.1-fast",
+      "defaultModel": "grok-4.5",
       "billingUrl": "https://console.x.ai",
       "tier1Rpm": "~60",
       "tier1Tpm": "varies",
@@ -121,6 +121,18 @@
       "recommendationTag": null,
       "recommendationNote": null,
       "models": [
+        {
+          "id": "grok-4.5",
+          "inputPerM": 2,
+          "outputPerM": 6,
+          "contextWindow": "500K",
+          "maxOutput": null,
+          "estPerRound": 0.022,
+          "estNote": null,
+          "sourceUrl": "https://console.x.ai",
+          "verifiedAt": "2026-08-02T23:20:00Z",
+          "status": "verified"
+        },
         {
           "id": "grok-4.1-fast",
           "inputPerM": 0.2,
@@ -146,16 +158,16 @@
           "status": "verified"
         },
         {
-          "id": "grok-4.20-reasoning",
-          "inputPerM": null,
-          "outputPerM": null,
-          "contextWindow": null,
+          "id": "grok-4.20-0309-reasoning",
+          "inputPerM": 1.25,
+          "outputPerM": 2.5,
+          "contextWindow": "1M",
           "maxOutput": null,
-          "estPerRound": null,
-          "estNote": null,
-          "sourceUrl": null,
-          "verifiedAt": null,
-          "status": "needs-verification"
+          "estPerRound": 0.011,
+          "estNote": "long-context pricing: $2.50/$5.00 per M once a request's prompt passes 200K tokens",
+          "sourceUrl": "https://console.x.ai",
+          "verifiedAt": "2026-08-02T23:20:00Z",
+          "status": "verified"
         }
       ]
     },

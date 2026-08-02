@@ -2,6 +2,46 @@
 
 ---
 
+## v3.63.448
+
+**AI API Pricing / Grok catalog: grok-4.5 added as default, grok-4.20-reasoning resolved to its canonical id, verified live against David's own xAI console**
+
+Build: `20260802-012`<br>
+Released: `2026-08-02`
+
+### What changed
+
+Follow-up to v3.63.447's rejected `grok-4.20-reasoning` proposal — David logged into the correct xAI console team (`console.x.ai`, team "WeirDaves WaxFrame" — the original team lookup landed on an unrelated empty team with $0.00 balance) and walked the actual account data:
+
+- **Logs page**: every one of the last week's 304 chat requests ran on `grok-4.5` — none on `grok-4.1-fast` (WaxFrame's configured default), `grok-4.3`, or any Grok 4.20 variant.
+- **Models page** (full list): current xAI catalog is Grok 4.5, Grok Build 0.1, Grok 4.3, Grok 4.20 Multi-Agent Beta, Grok 4.20, Grok 4.20 (Non-Reasoning) — `grok-4.1-fast` is absent from it entirely.
+- **`grok-4.20-0309-reasoning` model detail page**: confirmed pricing $1.25/$2.50 per M at ≤200K-token prompts, $2.50/$5.00 above that, 1M context — and its own "Details" section lists `grok-4.20-reasoning` as a recognized alias, meaning WaxFrame's tracked id wasn't dead, just unpriced. Renamed to the canonical `grok-4.20-0309-reasoning` anyway rather than depend on an undocumented alias staying supported.
+
+**Applied:**
+- Added `grok-4.5` to the pricing seed and made it xAI's default in both the seed and `js/provider-catalog.js` (`$2.00/$6.00`, 500K context, sourced from the console's own Models page).
+- Renamed `grok-4.20-reasoning` → `grok-4.20-0309-reasoning` in both files, now `verified` with real pricing (was `needs-verification` since v3.63.437's schema-v2 launch).
+- `grok-4.1-fast` **not removed** — its absence from the console's model list is suggestive but not the same hard confirmation Together AI's retired models got in v3.63.446 (those were confirmed absent from Together's own model search). Moved out of the default slot and to the back of the fallback order instead. Flagged for David to pull outright if he confirms it's actually dead.
+
+### Verification
+
+- `node tools/generate-pricing-fallback.mjs` — regenerated, confirmed `grok-4.5` and `grok-4.20-0309-reasoning` present in `FALLBACK_DATA` with correct values.
+- `node tools/check-pricing-coverage.mjs` — pass (catalog fallback ids and seed ids back in sync after the rename).
+- `node tools/release-check.mjs` — full pass.
+- Live-tested via local static server: table renders, no console errors. Live Worker fetch (pre-KV-push) correctly still showed the prior KV snapshot, confirming the fetch/fallback path is doing what it's supposed to — re-verified post-KV-push that the live page reflects the new Grok data end to end.
+
+### Files touched
+
+- `js/provider-catalog.js` — grok entry: `model` and `fallback` updated
+- `tools/pricing-worker/data/pricing-seed.json` — grok provider: `defaultModel`, model rows updated
+- `js/pricing-renderer.js` — regenerated `FALLBACK_DATA`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit, then re-push the prior seed to KV. The `provider-catalog.js` model-picker change affects the Grok fallback list only (users with working live discovery are unaffected).
+
+---
+
 ## v3.63.447
 
 **AI API Pricing: first scheduled-refresh review pass — 3 of 11 proposals confirmed and applied, 8 rejected on independent verification**
