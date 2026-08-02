@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-02T23:00:00Z",
+  "lastUpdated": "2026-08-02T23:05:00Z",
   "schemaVersion": 3,
   "tokensPerRound": {
     "input": 5000,
@@ -72,14 +72,14 @@
       "models": [
         {
           "id": "gemini-3.5-flash",
-          "inputPerM": 0.075,
-          "outputPerM": 0.3,
+          "inputPerM": 1.5,
+          "outputPerM": 9,
           "contextWindow": "1M",
           "maxOutput": "8K",
-          "estPerRound": 0.001,
+          "estPerRound": 0.026,
           "estNote": null,
-          "sourceUrl": "https://aistudio.google.com/api-keys",
-          "verifiedAt": "2026-08-01T19:25:30Z",
+          "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+          "verifiedAt": "2026-08-02T23:00:00Z",
           "status": "verified"
         },
         {
@@ -213,14 +213,14 @@
       "models": [
         {
           "id": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-          "inputPerM": 0.88,
-          "outputPerM": 0.88,
+          "inputPerM": 1.04,
+          "outputPerM": 1.04,
           "contextWindow": "128K",
           "maxOutput": "4K",
-          "estPerRound": 0.006,
+          "estPerRound": 0.007,
           "estNote": null,
-          "sourceUrl": "https://api.together.ai/settings/organization/~current/billing",
-          "verifiedAt": "2026-08-01T19:25:30Z",
+          "sourceUrl": "https://www.together.ai/models/llama-3-3-70b",
+          "verifiedAt": "2026-08-02T23:00:00Z",
           "status": "verified"
         }
       ]
@@ -240,14 +240,14 @@
       "models": [
         {
           "id": "mistral-large-latest",
-          "inputPerM": 2,
-          "outputPerM": 6,
+          "inputPerM": 0.5,
+          "outputPerM": 1.5,
           "contextWindow": "128K",
           "maxOutput": "8K",
-          "estPerRound": 0.022,
+          "estPerRound": 0.006,
           "estNote": null,
-          "sourceUrl": "https://admin.mistral.ai/organization/billing",
-          "verifiedAt": "2026-08-01T19:25:30Z",
+          "sourceUrl": "https://mistral.ai/pricing/api/",
+          "verifiedAt": "2026-08-02T23:00:00Z",
           "status": "verified"
         },
         {
