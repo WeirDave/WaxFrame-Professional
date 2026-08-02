@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260802-009
+// Build: 20260802-010
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -365,7 +365,17 @@
       endpoint: 'https://api.together.xyz/v1/chat/completions',
       format: 'openai',
       discovery: null,
-      fallback: ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Qwen/Qwen2.5-72B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1']
+      // v3.63.446 — Qwen/Qwen2.5-72B-Instruct-Turbo and mistralai/Mixtral-
+      // 8x7B-Instruct-v0.1 dropped. Confirmed against David's own Together
+      // AI account 2026-08-02: Qwen2.5-72B no longer appears anywhere in
+      // the model catalog search, and Mixtral-8x7B is still listed but
+      // shows "n/a" for serverless pricing (dedicated-endpoint only now).
+      // Only matters for the no-live-discovery fallback case (discovery is
+      // null here — a keyed user's live model list is unaffected either
+      // way) but leaving retired/inaccessible models in the fallback list
+      // meant WaxFrame could still surface them as selectable options with
+      // no working serverless endpoint behind them.
+      fallback: ['meta-llama/Llama-3.3-70B-Instruct-Turbo']
     },
     {
       // Cohere's OpenAI-compat endpoint — same body, same extract, same auth.
