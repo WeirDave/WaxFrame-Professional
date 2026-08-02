@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.443
+
+**AI API Pricing: a live schema-v2 response now falls back instead of rendering empty tables**
+
+Build: `20260802-007`<br>
+Released: `2026-08-02`
+
+### What changed
+
+`loadPricing()`'s live-fetch success check only verified `data.providers` was an array — true of both the old flat schema (v2, one model per provider) and the new `models[]`/`defaultModel` schema (v3). A successful fetch of an old-schema payload (e.g. a KV rollback to a pre-v3 snapshot, or any transitional window where the Worker serves stale data) would pass that check, get treated as `source: 'live'`, and then silently render empty — `getDefaultRows()` requires `provider.defaultModel`, which old-schema payloads don't have, so every provider gets skipped. No fallback banner shows either, since that only fires on the `.catch` path, which a successful-but-wrong-shape response never reaches.
+
+Fix: `loadPricing()` now also checks `data.schemaVersion >= 3` and throws if not, routing an incompatible-schema response through the same fallback path as a network failure — the page falls back to the embedded snapshot and shows the "Live pricing service unreachable" banner, same as any other fetch failure.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Verified the exact accept/reject logic in isolation against three payload shapes (schema v2, schema v3, missing `schemaVersion`) — only v3 is accepted.
+- Full end-to-end test: pointed `PRICING_API` at a local mock endpoint serving a real old-schema-v2 JSON payload, confirmed the page correctly fell back to the embedded v3 snapshot (10 Defaults rows, matching FALLBACK_DATA) and displayed the "unreachable" banner — not the old broken behavior of empty tables with no warning. Reverted the test changes before shipping.
+
+### Files touched
+
+- `js/pricing-renderer.js` — `loadPricing()` schema-version guard
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Single guard clause; no data or schema changes.
+
+---
+
 ## v3.63.442
 
 **AI API Pricing: teaser paragraph reworded to David's own wording**
