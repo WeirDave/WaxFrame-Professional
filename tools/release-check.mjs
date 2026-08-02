@@ -741,6 +741,28 @@ try {
   fail('tools/pricing-worker/test-refresh-logic.mjs', `review-gate behavior test failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
+// ── Check 13: Provider extractor fixtures (tools/test-provider-extractors.mjs) ──
+
+section('Provider extractor fixtures (tools/test-provider-extractors.mjs)');
+
+// v3.63.453 — backlog item 4. v3.63.410 fixed a live bug where Claude's
+// extended-thinking responses were misread as empty because every Anthropic
+// extractor hardcoded content[0].text — Anthropic started returning a
+// leading thinking block server-side with zero notice, no WaxFrame-side
+// change involved. Same drift class is plausible for any provider whose
+// response shape isn't a flat single value (Gemini thought parts, OpenAI
+// refusal/empty-choices shapes). Fixture-feeds canned JSON through the real
+// extractors in js/provider-catalog.js so the next silent shape change gets
+// caught here instead of live. Shell out for the same reason as Checks 10-12.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/test-provider-extractors.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/test-provider-extractors.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.trim().startsWith('✗'));
+  fail('tools/test-provider-extractors.mjs', `provider extractor fixture failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
 // ── Report ──────────────────────────────────────────────────
 
 console.log('');

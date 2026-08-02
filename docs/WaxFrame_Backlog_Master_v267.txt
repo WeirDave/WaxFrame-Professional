@@ -188,32 +188,33 @@ OPEN FEATURES
            now (v3.63.410's firstAnthropicTextBlock /
            firstGeminiTextPart), so they're testable in
            isolation without a browser or a live key.
-   STATE:  OPEN — not started. Natural fit as the first flow
-           under the proposed tools/flow-check.mjs harness (see
-           entry below / CLAUDE.md §8-C), but doesn't need to
-           wait for that full E2E rig — a standalone
-           tools/test-provider-extractors.mjs that requires
-           provider-catalog.js's IIFE and reads
-           WFProviderCatalog off the resulting global would
-           work today and could optionally be wired into
-           release-check.mjs as an additional check later.
-   WHERE:  js/provider-catalog.js — firstAnthropicTextBlock()
-           and firstGeminiTextPart() (~line 186-205),
-           WFProviderCatalog.extractAnthropicText /
-           .extractGeminiText exports (~line 685).
-   DONE:   A node-runnable test file exists with fixtures for:
-           (a) plain single-block Anthropic response, (b)
-           thinking-block-then-text Anthropic response, (c)
-           thinking-only Anthropic response (genuinely empty —
-           should still report empty, not throw), (d)-(f) the
-           same three shapes for Gemini using thought:true, (g)-
-           (i) the same three for OpenAI using firstOpenAIMessage
-           (plain content, refusal-only, empty choices array) —
-           added to scope v3.63.414 after the OpenAI-format twin
-           of this exact bug was found in a full-codebase audit.
-           All nine assert the extractor returns the expected
-           string. Documented in README or a comment how to run
-           it (`node tools/test-provider-extractors.mjs`).
+   STATE:  DONE — shipped v3.63.452, same day as the backlog item
+           6 default-model decision. tools/test-provider-
+           extractors.mjs requires provider-catalog.js via Node's
+           CommonJS interop (createRequire) and reads
+           WFProviderCatalog off the resulting module.exports —
+           the file's `(function(root){...})(typeof window !==
+           'undefined' ? window : this)` IIFE binds to
+           module.exports when there's no window global, no
+           browser/DOM shim needed. Wired into release-check.mjs
+           as Check 13, same shell-out pattern as Checks 10-12.
+   WHERE:  js/provider-catalog.js — firstAnthropicTextBlock(),
+           firstGeminiTextPart(), firstOpenAIText() (~line
+           192-243), WFProviderCatalog.extractAnthropicText /
+           .extractGeminiText / .extractOpenAIText exports
+           (~line 753-755). Test: tools/test-provider-
+           extractors.mjs. Gate wiring: tools/release-check.mjs
+           Check 13.
+   DONE:   All nine fixtures pass: (a) plain single-block
+           Anthropic response, (b) thinking-block-then-text
+           Anthropic response, (c) thinking-only Anthropic
+           response (genuinely empty — reports empty, doesn't
+           throw), (d)-(f) the same three shapes for Gemini using
+           thought:true, (g)-(i) the same three for OpenAI via
+           extractOpenAIText (plain content, refusal-only, empty
+           choices array). Run: `node tools/test-provider-
+           extractors.mjs`. Entry closed — remove this item on
+           next backlog touch.
 
 
 5. Release ceremony has two steps with no automated verification they ran
