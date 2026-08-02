@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260802-013
+     Build: 20260802-014
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260802-013">
+  <meta name="waxframe-build" content="20260802-014">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="keywords" content="WaxFrame user manual, multi-AI document refinement guide, hive setup guide">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.449">
+  <link rel="stylesheet" href="style.css?v=3.63.450">
 </head>
 <body class="helper-body">
 
@@ -1218,6 +1218,11 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The Checkpoints screen — Restore mode</div>
+      <figure class="ss-shot">
+        <img class="ss-dark" src="screenshots/screenshot_checkpoint-restore_dark.png" alt="Checkpoints screen — Restore mode showing the side-by-side comparison of current local state versus the checkpoint file" loading="lazy">
+        <img class="ss-light" src="screenshots/screenshot_checkpoint-restore_light.png" alt="Checkpoints screen — Restore mode showing the side-by-side comparison of current local state versus the checkpoint file" loading="lazy">
+        <figcaption>The Checkpoints screen in Restore mode — the same nine sections, now compared side by side: what's in your current local state versus what the checkpoint file carries for that section.</figcaption>
+      </figure>
       <p>From the <strong>☰</strong> menu, <strong>📂 Checkpoint - Restore</strong> opens the same screen in Restore mode. After the trust warning, click <strong>📂 Choose Checkpoint File</strong> and pick the JSON. The screen swaps to a side-by-side comparison with the same nine sections — each row shows what's in your <em>current local state</em> and what's <em>in this checkpoint file</em>, side by side, so you see exactly what each ticked section would replace.</p>
       <p>Defaults are conservative: project sub-sections and session are pre-ticked when the file carries them; everything hive-related is unticked by default (you usually keep your local hive); license is unticked by default (you don't re-import a license you already have locally). Tick what you want to bring forward, untick what to keep local. Click <strong>🔄 Restore Selected</strong> and the page reloads with the merged state.</p>
       <p>Sections the file doesn't carry are shown but disabled, with a label that says <em>(not in checkpoint)</em> in the comparison column — so the missing rows are explicit rather than mysterious.</p>
@@ -1348,6 +1353,17 @@
     <div class="wh-block">
       <div class="wh-block-title">The rhythm of a session</div>
       <p>After your first round, the process repeats: click <strong>Smoke the Hive</strong>, wait for the round to complete, read the updated document, resolve any conflicts, make any direct edits you want, and decide whether to run another round. Most documents reach a high quality in three to five rounds. Some need more; some need fewer. The right time to stop is when the document reads the way you want it to.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Round History — reviewing and restoring past versions</div>
+      <p>Open the <strong>Menu</strong> and click <strong>⏱ Round History</strong> to see every version of the document saved so far, newest first, including the <em>Original</em> pre-Round-1 state. Each entry shows a badge for the round number, the phase label and timestamp it was saved at, and a word count plus reviewer response count. A round that was rejected (bloated output, malformed structure, an API error) shows as <strong>Failed</strong> instead, with the reason — the document was left unchanged and the attempt is kept for reference, not silently dropped.</p>
+      <p>Two buttons sit on each entry: <strong>View Doc</strong> opens a modal with that round's full document snapshot alongside tabs for each reviewer's response from that round, and <strong>↩ Restore</strong> replaces your current working document with that version (add a Note afterward telling the Builder you reverted, so the next round doesn't fight the older text).</p>
+      <figure class="ss-shot">
+        <img class="ss-dark" src="screenshots/screenshot_work-history-modal_dark.png" alt="Round History — View Doc modal showing a past round's document snapshot and reviewer response tabs" loading="lazy">
+        <img class="ss-light" src="screenshots/screenshot_work-history-modal_light.png" alt="Round History — View Doc modal showing a past round's document snapshot and reviewer response tabs" loading="lazy">
+        <figcaption>The View Doc modal, opened from a Round History entry — the document as it stood after that round, with each reviewer's full response one tab away.</figcaption>
+      </figure>
     </div>
 
     <div class="wh-block">
@@ -1725,6 +1741,11 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The Add Custom AI form — every field explained</div>
+      <figure class="ss-shot">
+        <img class="ss-dark" src="screenshots/screenshot_bees-add-custom-ai_dark.png" alt="The Add Custom AI form open on the Setup screen, showing the URL, Name, API Format, Model, and API Key fields" loading="lazy">
+        <img class="ss-light" src="screenshots/screenshot_bees-add-custom-ai_light.png" alt="The Add Custom AI form open on the Setup screen, showing the URL, Name, API Format, Model, and API Key fields" loading="lazy">
+        <figcaption>The Add Custom AI form, opened from the Setup screen toolbar. Fill in the fields below, then Fetch Models and Test Connection before Add to Hive appears.</figcaption>
+      </figure>
       <div class="goal-info-row">
         <span class="info-label">Quick Add (optional)</span>
         <span class="goal-info-desc">A dropdown with presets for Jamba, DeepSeek, Together AI, Cohere, Ollama (local), and LM Studio (local). Selecting a preset auto-fills the endpoint URL and API format fields. You can then fill in the remaining fields manually. If your provider is not listed, leave this on the default and fill all fields manually.</span>
@@ -2098,8 +2119,9 @@
           <tr><td><strong>ChatGPT</strong></td><td><code>gpt-5.5</code></td><td><a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.openai.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
           <tr><td><strong>Claude</strong></td><td><code>claude-sonnet-4-6</code></td><td><a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.claude.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
           <tr><td><strong>Gemini</strong></td><td><code>gemini-3.5-flash</code></td><td><a href="https://aistudio.google.com/api-keys" target="_blank" rel="noopener noreferrer" class="link-accent external-link">aistudio.google.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
-          <tr><td><strong>Grok</strong></td><td><code>grok-4.1-fast</code></td><td><a href="https://console.x.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.x.ai<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
+          <tr><td><strong>Grok</strong></td><td><code>grok-4.5</code></td><td><a href="https://console.x.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.x.ai<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
           <tr><td><strong>Perplexity</strong></td><td><code>sonar-pro</code></td><td><a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.perplexity.ai<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
+          <tr><td><strong>Mistral</strong></td><td><code>mistral-large-latest</code></td><td><a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.mistral.ai<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
           <tr><td><strong>DeepSeek</strong></td><td><code>deepseek-v4-flash</code></td><td><a href="https://platform.deepseek.com/top_up" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.deepseek.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
         </tbody>
       </table>
@@ -2224,13 +2246,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.449"></script>
-<script src="lib/docx.min.js?v=3.63.449"></script>
-<script src="js/docx-export.js?v=3.63.449"></script>
-<script src="js/nav-helper.js?v=3.63.449"></script>
-<script src="js/license-helper.js?v=3.63.449"></script>
-<script src="js/helper-handlers.js?v=3.63.449"></script>
-<script src="js/version.js?v=3.63.449"></script>
-<script src="js/docs-scrollspy.js?v=3.63.449"></script>
+<script src="js/theme.js?v=3.63.450"></script>
+<script src="lib/docx.min.js?v=3.63.450"></script>
+<script src="js/docx-export.js?v=3.63.450"></script>
+<script src="js/nav-helper.js?v=3.63.450"></script>
+<script src="js/license-helper.js?v=3.63.450"></script>
+<script src="js/helper-handlers.js?v=3.63.450"></script>
+<script src="js/version.js?v=3.63.450"></script>
+<script src="js/docs-scrollspy.js?v=3.63.450"></script>
 </body>
 </html>

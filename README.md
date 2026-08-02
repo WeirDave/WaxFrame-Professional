@@ -204,7 +204,7 @@ WaxFrame ships with default configurations for these providers:
 | Anthropic (Claude) | `claude-sonnet-4-6` |
 | OpenAI (ChatGPT) | `gpt-5.5` |
 | Google (Gemini) | `gemini-3.5-flash` |
-| xAI (Grok) | `grok-4.1-fast` |
+| xAI (Grok) | `grok-4.5` |
 | Mistral | `mistral-large-latest` |
 | Perplexity | `sonar-pro` |
 
@@ -223,7 +223,6 @@ WaxFrame also works with any OpenAI-compatible endpoint via **Add Custom AI** (s
 | **Jamba** | Hosted | First-party AI21 API. Hybrid Transformer-Mamba (SSM) models, 256K context, OpenAI-compatible. Quick Add preset. |
 | **DeepSeek** | Hosted | First-party DeepSeek API. OpenAI-compatible; the most cost-effective Builder option. Quick Add preset. |
 | **Together AI** | Hosted | OpenAI-compatible inference cloud. Quick Add preset. |
-| **Mistral** | Hosted | First-party Mistral API. |
 | **Cohere** | Hosted | First-party Cohere API. Quick Add preset. |
 
 Anything else that speaks the OpenAI chat-completions shape will work too — point WaxFrame at the endpoint and it'll fetch the model list.
