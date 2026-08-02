@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260802-003
+   Build: 20260802-004
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -17369,41 +17369,49 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   color: var(--accent);
 }
 
-/* v3.63.437 — "All tracked models" expandable section. Every model
-   WaxFrame curates per provider (js/provider-catalog.js fallback lists),
-   not just the one shown in the Defaults table above. Sits in its own
-   wf-card as a native <details> — no JS needed for the expand/collapse
-   itself, only for filtering + populating the rows. */
-.pricing-all-models-summary {
-  cursor: pointer;
-  user-select: none;
-  font-weight: 700;
-  color: var(--text);
-  font-size: var(--fs-15);
-  padding: var(--space-4) 0;
+/* v3.63.440 — "All tracked models" now lives in its own wide modal
+   instead of a card-embedded expandable section. Two earlier attempts
+   (v3.63.438's overflow-x:auto scroll, v3.63.439's merged-column
+   table-layout:fixed squeeze) both kept the data crammed into the
+   ~765-864px width available inside the doc-layout's content column —
+   fine for the 8-column Defaults table, not enough for 9 columns of a
+   38-row catalog without abbreviating headers or merging cells, which
+   read as a step down from the rest of the site's polish. A modal sized
+   to --modal-w-2xl (1320px, the widest size already used elsewhere in
+   the app — see CLAUDE.md's "modals stay inside 1318px usable") gives
+   the table room to breathe with the SAME column vocabulary as the
+   Defaults table above it, no abbreviation needed. */
+.pricing-all-models-teaser {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-12);
 }
-.pricing-all-models-summary:hover { color: var(--accent); }
 .pricing-all-models-count {
   font-weight: 400;
-  color: var(--text-dim);
-  margin-left: var(--space-6);
+  opacity: 0.85;
+  margin-left: var(--space-4);
+}
+.pricing-all-models-modal {
+  max-width: var(--modal-w-2xl);
+  max-height: 92vh;
+  text-align: left;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-28) 36px var(--space-28);
+  align-items: flex-start;
 }
 .pricing-all-models-body {
-  margin-top: var(--space-12);
+  width: 100%;
 }
 .pricing-all-models-table-wrap {
-  /* v3.63.439 — kept as a last-resort safety net only (WaxFrame is
-     desktop-only, min 1366x768, so this shouldn't normally trigger).
-     The real fix is .pricing-all-models-fixed below: table-layout:fixed
-     with explicit column widths (percentages sum to 100) means the table
-     is ALWAYS exactly its container's width — long content (e.g. the
-     meta-llama/Llama-3.3-70B-Instruct-Turbo model id) wraps inside its
-     column instead of forcing the table wider than the wf-card. The
-     original version of this fix just added overflow-x:auto, which
-     "worked" but pushed the actual sizing problem onto the reader instead
-     of solving it. */
+  /* Last-resort safety net only — WaxFrame is desktop-only, min
+     1366x768, and .pricing-all-models-fixed's explicit column widths
+     below mean the table shouldn't need this in practice. */
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 .pricing-all-models-fixed {
   table-layout: fixed;
@@ -17413,46 +17421,33 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
    elements — the strict CSP's style-src has no 'unsafe-inline' (see
    CLAUDE.md's inline-CSS constraint), so an inline style attribute on
    <col> is silently dropped by the browser: present in the DOM, never
-   applied to layout. First tried inline widths and every column rendered
-   equal-width as a result — this is the actual fix. Percentages sum to
-   100: Provider 15, Model 26, $/M 12, Ctx·Max 12, Status 16, Verified 11, Src 8. */
-.pricing-all-models-fixed col:nth-child(1) { width: 15%; }
-.pricing-all-models-fixed col:nth-child(2) { width: 26%; }
-.pricing-all-models-fixed col:nth-child(3) { width: 12%; }
-.pricing-all-models-fixed col:nth-child(4) { width: 12%; }
-.pricing-all-models-fixed col:nth-child(5) { width: 16%; }
-.pricing-all-models-fixed col:nth-child(6) { width: 11%; }
-.pricing-all-models-fixed col:nth-child(7) { width: 8%; }
+   applied to layout. Percentages sum to 100: Provider 12, Model 25,
+   Input 8, Output 8, Context 7, Max output 7, Status 15, Verified 10,
+   Source 8. */
+.pricing-all-models-fixed col:nth-child(1) { width: 12%; }
+.pricing-all-models-fixed col:nth-child(2) { width: 25%; }
+.pricing-all-models-fixed col:nth-child(3) { width: 8%; }
+.pricing-all-models-fixed col:nth-child(4) { width: 8%; }
+.pricing-all-models-fixed col:nth-child(5) { width: 7%; }
+.pricing-all-models-fixed col:nth-child(6) { width: 7%; }
+.pricing-all-models-fixed col:nth-child(7) { width: 15%; }
+.pricing-all-models-fixed col:nth-child(8) { width: 10%; }
+.pricing-all-models-fixed col:nth-child(9) { width: 8%; }
 .pricing-all-models-fixed th,
 .pricing-all-models-fixed td {
-  /* Tighter than the shared .ai-table padding (--space-12/--space-14) —
-     7 columns of price/status/date data don't need as much breathing
-     room as a 10-row provider-comparison table, and every pixel matters
-     at the 1366px viewport floor. */
-  padding: var(--space-8) var(--space-8);
+  padding: var(--space-10) var(--space-10);
   overflow-wrap: anywhere;
-  font-size: var(--fs-12);
+  font-size: var(--fs-13);
 }
 .pricing-all-models-fixed code {
-  font-size: var(--fs-11);
-  /* overflow-wrap:anywhere alone breaks at natural points first (the
-     '/' and '-' in ids like meta-llama/Llama-3.3-70B-Instruct-Turbo are
-     real line-break opportunities per the Unicode line-breaking algorithm)
-     and only forces a mid-word break as a last resort. word-break:break-all
-     was tried first and looked worse — it ignores those natural points and
-     chops every line at a uniform character count regardless of word
-     shape. */
+  font-size: var(--fs-12);
+  /* overflow-wrap:anywhere breaks at natural points first (the '/' and
+     '-' in ids like meta-llama/Llama-3.3-70B-Instruct-Turbo are real
+     line-break opportunities per the Unicode line-breaking algorithm)
+     and only forces a mid-word break as a last resort — reads cleaner
+     than word-break:break-all, which chops every line at a uniform
+     character count regardless of word shape. */
   overflow-wrap: anywhere;
-}
-.pricing-source-link {
-  display: inline-flex;
-  align-items: center;
-  color: var(--text-dim);
-}
-.pricing-source-link:hover { color: var(--accent); }
-.pricing-source-link .external-link-icon {
-  width: 14px;
-  height: 14px;
 }
 .pricing-all-models-filters {
   display: flex;
