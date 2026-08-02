@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.449
+
+**Grok: grok-4.1-fast dropped from the catalog — retired on xAI's side, confirmed against David's own account twice over**
+
+Build: `20260802-013`<br>
+Released: `2026-08-02`
+
+### What changed
+
+Follow-up to v3.63.448. David checked WaxFrame's own live model picker for the Grok provider — the literal discovery response from xAI's `/v1/models` endpoint for his account — and it lists `grok-4.5`, `grok-4.3`, `grok-build-0.1`, `grok-4.20-0309-non-reasoning`, `grok-4.20-0309-reasoning`, `grok-4.20-multi-agent-0309`. No `grok-4.1-fast`. Combined with its absence from the console's Models page in v3.63.448, that's the same two-source confirmation bar Together AI's retired models cleared in v3.63.446 (not on the account's live discovery, not on the provider's own models listing).
+
+That live discovery response also validates two v3.63.448 calls: `grok-4.20-0309-reasoning` is confirmed as the literal API id (not a guess off the docs page), and `grok-4.5` is confirmed as a real, currently-offered model.
+
+Dropped `grok-4.1-fast` from `js/provider-catalog.js`'s Grok `fallback` array and removed its now-orphaned row from the pricing seed entirely (not `deprecated` — same convention as the Together AI cleanup: it's not a real option anymore, nothing to track).
+
+### Verification
+
+- `node tools/check-pricing-coverage.mjs` — pass, no drift between catalog and seed after the removal.
+- `node tools/release-check.mjs` — full pass.
+
+### Files touched
+
+- `js/provider-catalog.js` — Grok's `fallback` array trimmed to `['grok-4.5', 'grok-4.3', 'grok-4.20-0309-reasoning']`
+- `tools/pricing-worker/data/pricing-seed.json` — `grok-4.1-fast` row removed
+- `js/pricing-renderer.js` — regenerated `FALLBACK_DATA`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit, then re-push the prior seed to KV. Only affects Grok users relying on the fallback list (live-discovery users select from xAI's real list directly, unaffected).
+
+---
+
 ## v3.63.448
 
 **AI API Pricing / Grok catalog: grok-4.5 added as default, grok-4.20-reasoning resolved to its canonical id, verified live against David's own xAI console**
