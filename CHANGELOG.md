@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.440
+
+**AI API Pricing: "All tracked models" moved out of the card into its own wide modal — full 9-column table, no abbreviation**
+
+Build: `20260802-004`<br>
+Released: `2026-08-02`
+
+### What changed
+
+David pushed back a second time on v3.63.439: even with `table-layout:fixed` genuinely fitting the table inside its card, the result — abbreviated headers (`$/M in·out`, `Ctx·Max`, `Src`), a tiny fs-11/fs-12 font, an icon-only source link — still read as a degraded, cramped experience next to the rest of the site's polish. He asked for it to "pop out": a companion document, a modal, or a separate page, mindful of the 1366×768 laptop floor.
+
+Went with a modal, reusing the app's existing wide-modal pattern instead of inventing a new one. `ai-api-pricing.html` already had a `.finish-modal.goal-info-modal` family (used for its "Open Source" and "About" info panels) and `style.css` already defined `--modal-w-2xl` (1320px) as the widest sanctioned modal size in the app — the same number behind CLAUDE.md's "modals stay inside 1318px usable" note. That's dramatically more room than the ~765-864px available inside the card (the doc-layout sidebar eats real width): the same 9-column table that needed merging and abbreviation to fit the card renders at full size inside the modal with the longest model id (`meta-llama/Llama-3.3-70B-Instruct-Turbo`) fitting on a single line — no wrapping at all.
+
+The inline card section is now a single teaser paragraph + a "View all tracked models (38)" button (`.btn`, the same style as the page's existing "Download as Word" button) that opens the modal via the app's existing generic `data-action="modal-open"` dispatch — no new JS wiring needed, it's the same mechanism every other modal on this page already uses.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-tested at the real 1366×768 viewport floor: modal renders at 1200px wide (capped by the viewport, under the 1320px ceiling), table renders all 9 unabbreviated columns with generous per-column widths (Model column alone got 281px), zero overflow, and the previously-worst-case model id now fits on one line instead of wrapping. Confirmed open/close both work via the existing modal dispatch (`modal-open` / `modal-close` / backdrop-click) with no new JS. No console errors.
+
+### Files touched
+
+- `ai-api-pricing.html` — replaced the inline `<details>` section with a teaser + trigger button; added the new `#allModelsModal` modal (filters + full 9-column table) alongside the page's existing info modals
+- `js/pricing-renderer.js` — `renderAllModelsTable()` reverted to unmerged 9-column row markup (full Input $/M / Output $/M / Context / Max output / text-link Source, matching the Defaults table's vocabulary)
+- `style.css` — new `.pricing-all-models-modal` (`--modal-w-2xl`), `.pricing-all-models-teaser`; `.pricing-all-models-fixed` column widths recomputed for 9 columns at modal width instead of 7 at card width; removed the now-unused icon-only `.pricing-source-link` styling from v3.63.439
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit (returns to v3.63.439's card-embedded, column-merged version — still functional, just less polished per David's feedback). Purely additive/structural markup and CSS — no JS behavior beyond the row-rendering template changed, no data/schema changes.
+
+---
+
 ## v3.63.439
 
 **AI API Pricing: "All tracked models" table now actually fits its card — no horizontal scroll needed**
