@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260802-017
+// Build: 20260802-018
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -570,7 +570,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260802-017';         // build stamp — update each session
+const BUILD = '20260802-018';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -7457,6 +7457,30 @@ if (typeof window !== 'undefined') {
   window.setBuilder = setBuilder;
 }
 
+// A model-list 200 only proves the provider advertised the model; it does not
+// prove the selected key can call that model on WaxFrame's endpoint. Google in
+// particular can list retired-for-new-users models and Interactions-only agents.
+// Reuse the round-error classifier so an explicit Test gets the same self-healing
+// behavior as a failed round: permanently hide only provider-confirmed retired /
+// wrong-endpoint models. Never quarantine 429s — quota and tier limits are
+// account-specific and transient.
+function classifyModelProbeFailure(ai, cfg, status, errMsg) {
+  const entry = WF_DEBUG.classify(new Error(errMsg), { status, message: errMsg });
+  const quarantineCodes = new Set([
+    'MODEL_DEPRECATED',
+    'MODEL_NEEDS_DIFFERENT_ENDPOINT',
+    'MODEL_REJECTS_INSTRUCTIONS'
+  ]);
+  const quarantined = !!(cfg?.model && quarantineCodes.has(entry.code));
+  if (quarantined && typeof quarantineModel === 'function') {
+    quarantineModel(cfg.model, entry.code);
+    // Refresh the setup row so the failed model is visibly marked as absent
+    // from the current list while the test-detail modal remains open.
+    if (ai?.id && typeof renderAIRow === 'function') renderAIRow(ai.id, false);
+  }
+  return { entry, quarantined };
+}
+
 async function testApiKey(id) {
   const ai = aiList.find(a => a.id === id);
   const cfg = API_CONFIGS[ai?.provider];
@@ -7507,7 +7531,10 @@ async function testApiKey(id) {
     if (!response.ok) {
       let errMsg = `HTTP ${response.status}`;
       try { const j = JSON.parse(rawText); errMsg = j?.error?.message || errMsg; } catch { /* ignore */ }
-      const hint = { 401:'Bad or missing API key.', 403:'Access denied — check key permissions.', 404:'Wrong endpoint URL.', 405:'Method not allowed — endpoint may not support chat completions.', 429:'Rate limited — wait and retry.', 500:'Server error on the provider side.', 503:'Service unavailable — provider may be down.' }[response.status] || '';
+      const result = classifyModelProbeFailure(ai, cfg, response.status, errMsg);
+      const hint = result.quarantined
+        ? 'This model was removed from future model lists. Pick another model.'
+        : ({ 400:'The selected model may not support this request type.', 401:'Bad or missing API key.', 403:'Access denied — check key permissions.', 404:'The selected model or endpoint is unavailable.', 405:'Method not allowed — endpoint may not support chat completions.', 429:'Rate or usage limit reached — wait, check your tier, or try another model.', 500:'Server error on the provider side.', 503:'Service unavailable — provider may be down.' }[response.status] || '');
       if (subEl) subEl.textContent = `❌ ${errMsg}${hint ? ' — ' + hint : ''}`;
       if (statEl) statEl.textContent = `HTTP ${response.status} — ${ms}ms  ❌`;
       if (rowStatusEl) { rowStatusEl.textContent = '✕'; rowStatusEl.className = 'tkp-status tkp-fail'; rowStatusEl.title = errMsg; }
@@ -7755,13 +7782,10 @@ async function runSingleKeyTest(ai) {
       // v3.29.0 — classify so the tooltip/detail message matches the rest
       // of the app's error language. Old code just dumped the raw API
       // message without context; classify adds a human-readable title.
-      const entry = WF_DEBUG.classify(new Error(errMsg), {
-        status: response.status,
-        message: errMsg
-      });
+      const { entry, quarantined } = classifyModelProbeFailure(ai, cfg, response.status, errMsg);
       const tooltip = `${entry.title} — ${errMsg}`;
       if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = tooltip; }
-      rec.status = `${entry.title} (HTTP ${response.status}) — ${ms}ms`;
+      rec.status = `${entry.title} (HTTP ${response.status}) — ${ms}ms${quarantined ? ' — model removed from future lists' : ''}`;
       rec.ok = false;
     } else {
       let extracted = '';
