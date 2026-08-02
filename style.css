@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260802-004
+   Build: 20260802-005
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -17421,17 +17421,30 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
    elements — the strict CSP's style-src has no 'unsafe-inline' (see
    CLAUDE.md's inline-CSS constraint), so an inline style attribute on
    <col> is silently dropped by the browser: present in the DOM, never
-   applied to layout. Percentages sum to 100: Provider 12, Model 25,
-   Input 8, Output 8, Context 7, Max output 7, Status 15, Verified 10,
-   Source 8. */
-.pricing-all-models-fixed col:nth-child(1) { width: 12%; }
-.pricing-all-models-fixed col:nth-child(2) { width: 25%; }
-.pricing-all-models-fixed col:nth-child(3) { width: 8%; }
-.pricing-all-models-fixed col:nth-child(4) { width: 8%; }
-.pricing-all-models-fixed col:nth-child(5) { width: 7%; }
-.pricing-all-models-fixed col:nth-child(6) { width: 7%; }
-.pricing-all-models-fixed col:nth-child(7) { width: 15%; }
-.pricing-all-models-fixed col:nth-child(8) { width: 10%; }
+   applied to layout.
+   v3.63.441 — the first pass (Provider 12/Model 25/Input 8/Output 8/
+   Context 7/Max 7/Status 15/Verified 10/Source 8) was sized by guess and
+   passed a scrollWidth-vs-clientWidth overflow check, but that check only
+   proves the TABLE doesn't overflow — it says nothing about whether an
+   individual HEADER's text wraps inside its own cell. Input $/M, Output
+   $/M, Context, and Max output all wrapped (Context wrapped mid-word into
+   "CONTEX"/"T"). Re-measured with canvas.measureText() against the actual
+   computed th font (600 13px DM Sans, +0.78px letter-spacing) for exact
+   unwrapped header widths, and Range.getClientRects() against real body
+   cells for the longest actual content per column (e.g. the Model column's
+   257px for meta-llama/Llama-3.3-70B-Instruct-Turbo). Widths below are
+   max(header, body) + the cell's ~20px horizontal padding, converted to
+   percentages of the modal's own table width. Provider 12, Model 24,
+   Input 8, Output 10, Context 8, Max output 10, Status 13, Verified 8,
+   Source 7 — sums to 100. */
+.pricing-all-models-fixed col:nth-child(1) { width: 10%; }
+.pricing-all-models-fixed col:nth-child(2) { width: 24%; }
+.pricing-all-models-fixed col:nth-child(3) { width: 9%; }
+.pricing-all-models-fixed col:nth-child(4) { width: 10%; }
+.pricing-all-models-fixed col:nth-child(5) { width: 8%; }
+.pricing-all-models-fixed col:nth-child(6) { width: 10%; }
+.pricing-all-models-fixed col:nth-child(7) { width: 13%; }
+.pricing-all-models-fixed col:nth-child(8) { width: 8%; }
 .pricing-all-models-fixed col:nth-child(9) { width: 8%; }
 .pricing-all-models-fixed th,
 .pricing-all-models-fixed td {
