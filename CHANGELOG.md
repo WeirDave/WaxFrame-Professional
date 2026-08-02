@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.442
+
+**AI API Pricing: teaser paragraph reworded to David's own wording**
+
+Build: `20260802-006`<br>
+Released: `2026-08-02`
+
+### What changed
+
+David gave exact replacement wording for the teaser paragraph above the "View all tracked models" button. Applied verbatim (one em dash added in place of a run-on comma splice, matching the site's existing punctuation convention): "The table above was the default information for each provider. WaxFrame supports several models for each of those providers — you can see them by clicking the button below."
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-tested via local static server: confirmed the exact new copy renders in place, no layout regression, screenshot-verified.
+
+### Files touched
+
+- `ai-api-pricing.html` — teaser paragraph copy
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. Copy-only change.
+
+---
+
 ## v3.63.441
 
 **AI API Pricing modal: fixed header text wrapping mid-word, reworded AI-sounding copy**
