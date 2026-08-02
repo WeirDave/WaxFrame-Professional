@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260802-017
+// Build: 20260802-018
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -144,6 +144,21 @@ check(
   'empty choices array (genuinely empty)',
   WFProviderCatalog.extractOpenAIText({ choices: [] }),
   ''
+);
+
+console.log('▶ Provider-specific model filters');
+
+const geminiEntry = WFProviderCatalog.CATALOG.find(entry => entry.id === 'gemini');
+const geminiExtraFilters = geminiEntry?.filterExtras || [];
+check(
+  'Gemini Deep Research agents are excluded from generateContent model lists',
+  geminiExtraFilters.some(pattern => pattern.test('deep-research-preview-04-2026')),
+  true
+);
+check(
+  'standard Gemini models survive the Deep Research filter',
+  geminiExtraFilters.some(pattern => pattern.test('gemini-3.5-flash')),
+  false
 );
 
 console.log('');
