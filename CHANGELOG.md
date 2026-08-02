@@ -2,6 +2,50 @@
 
 ---
 
+## v3.63.445
+
+**AI API Pricing: second verification pass using David's own live provider consoles — 2 more Mistral models verified, 2 Together models resolved, Mistral free-tier copy corrected**
+
+Build: `20260802-009`<br>
+Released: `2026-08-02`
+
+### What changed
+
+Follow-up to v3.63.444. David checked his own Mistral, Together AI, and Cohere consoles directly — first-party account data, higher confidence than any public marketing page.
+
+**Verified (2):**
+- `mistral-small-latest` — $0.15/$0.60 (mistral.ai/pricing/api/, confirmed as "Mistral Small 4" / dated id `mistral-small-2603` via David's own Mistral Limits page)
+- `ministral-8b-latest` — $0.15/$0.15 (same source, dated id `ministral-8b-2512`)
+
+**Resolved as `unsupported` (2)** — real findings from David's Together AI account search, not guesses:
+- `Qwen/Qwen2.5-72B-Instruct-Turbo` — no longer appears anywhere in Together's model catalog search; likely retired in favor of the newer Qwen 3.x generations
+- `mistralai/Mixtral-8x7B-Instruct-v0.1` — still listed, but serverless pricing shows "n/a"; appears to be dedicated-endpoint only now, no serverless per-token rate to track
+
+**Copy fix:** Mistral's `freeTier` field changed from generic "Trial credits" to "$10/mo included" — David's own Subscription page confirmed the Free plan carries a recurring $10/month allowance (Studio + Vibe Code + API combined, resets every 30 days), not a one-time signup trial. `rateLimitNotes` updated to match.
+
+**Also investigated, confirmed as genuinely unresolvable for now (not applied):**
+- `command-r`, `command-a-03-2025` — Cohere's Billing & Usage page only reports aggregate "Default" model-type usage, not broken out per-model. The one real transaction visible worked out (via token-count math) to exactly `command-r-plus`'s existing verified rate ($2.50/$10) — useful as a cross-check that entry is still accurate, but it doesn't isolate pricing for the two still-unverified Command models, since WaxFrame's default never calls them.
+- `mistral-large-latest`'s public pricing page now shows a newer "Mistral Large 3" at $0.50/$1.50, a large drop from the currently-verified $2.00/$6.00. Flagged, not applied — outside this pass's scope (wasn't a `needs-verification` row) and a swing that size deserves a deliberate look rather than a silent overwrite.
+
+**Remaining `needs-verification` (6):** `grok-4.20-reasoning`, `sonar-reasoning`, `command-r`, `command-a-03-2025`, plus the two Together models above are now resolved — so 6 genuinely open rows remain, down from 8. These pick up on the next scheduled Sonar refresh (Sundays 12:00 UTC).
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-tested via local static server with the fallback path forced: confirmed all 4 changed rows (`ministral-8b-latest`, `mistral-small-latest`, both Together `unsupported` rows) render correctly with the right prices/status in the "All tracked models" modal.
+
+### Files touched
+
+- `tools/pricing-worker/data/pricing-seed.json` — 4 model rows updated, Mistral provider `freeTier`/`rateLimitNotes` copy corrected
+- `js/pricing-renderer.js` — regenerated `FALLBACK_DATA`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit, then re-push the prior seed to KV. Data-only change — no schema or code changes.
+
+---
+
 ## v3.63.444
 
 **AI API Pricing: manual verification pass — 18 of 27 `needs-verification` models now priced from official sources**
