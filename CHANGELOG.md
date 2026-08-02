@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.451
+
+**Dead Gumroad link fixed in llms.txt — found while auditing marketing links, every actual page already had the correct URL**
+
+Build: `20260802-015`<br>
+Released: `2026-08-02`
+
+### What changed
+
+While working through the SEO/directory-submission backlog, checked every live purchase link referenced from the site and its metadata. Every HTML page (`index.html`, all 15 helper pages) correctly points to `weirdave.gumroad.com/l/WaxFrame` — but `llms.txt`, served at the site root for AI crawlers and assistants, still had a stale `weirdave.gumroad.com/l/aihive-pro`, which 404s. Confirmed the dead slug in-browser before fixing. Same stale slug also existed in `docs/WaxFrame_Rules_Reference.txt`, a reference doc, not live-served but corrected for accuracy. A YouTube video description external to the repo had the same dead link and was corrected separately.
+
+### Verification
+
+- Manually loaded `weirdave.gumroad.com/l/aihive-pro` and `l/aihive` in-browser — both 404. `weirdave.gumroad.com/l/WaxFrame` loads the live product page.
+- `node tools/release-check.mjs` — full pass.
+
+### Files touched
+
+- `llms.txt` — Pro edition link corrected to `l/WaxFrame`
+- `docs/WaxFrame_Rules_Reference.txt` — same correction
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+`git revert` this commit — no storage/schema changes.
+
+---
+
 ## v3.63.450
 
 **User Manual: Checkpoint Restore, Round History, and Add Custom AI screenshots added; stray grok-4.1-fast references corrected**

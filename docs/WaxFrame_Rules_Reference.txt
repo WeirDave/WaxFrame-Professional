@@ -385,7 +385,7 @@ ENVIRONMENT
   (Open WebUI proxy). Air-gapped work laptop requires manual file transfer via
   GitHub releases — which is part of why docs/ now ships in the zip.
 - Two editions: Pro (github.com/WeirDave/WaxFrame-Professional, live at
-  waxframe.com, sold via weirdave.gumroad.com/l/aihive-pro) and Free
+  waxframe.com, sold via weirdave.gumroad.com/l/WaxFrame) and Free
   (weirdave.github.io/WaxFrame-Free/).
 - IP/legal: AGPL-3.0. Multi-AI workflow is not patentable (Alice + prior art);
   shipping velocity and brand are the practical moat.

@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v266
+WaxFrame Backlog Master v267
 2026-08-02
 
 ABOUT THIS DOCUMENT
@@ -118,10 +118,36 @@ OPEN FEATURES
            #2 — directory listings are lower-effort than direct
            outreach and several (AlternativeTo, SaaSHub) are
            evergreen backlink sources once live.
-   STATE:  OPEN — all listing copy is drafted and ready in
-           docs/WaxFrame_Outreach_Kit_v1.txt (added v3.63.409).
-           Needs David's own accounts to actually submit; no
-           submissions made yet.
+   STATE:  PARTIAL — Product Hunt and SaaSHub listings are live
+           and complete (submitted 2026-08-02; SaaSHub free tier,
+           pending approval — full profile: description, 2
+           categories, 3 competitors, pricing, 6 screenshots, 4
+           feature specs, 5 of 6 Q&A answered — skipped "biggest
+           customers" as not for public disclosure — plus the
+           YouTube demo video). AlternativeTo (blocked — new
+           submissions paused on weekends, retry on a weekday).
+           There's An AI For That is no longer free to submit —
+           now $49 (Website Only) / $347 (Maximum Exposure) / a
+           custom paid plan, no free tier found; David declined
+           to pay 2026-08-02, skipped pending a decision on
+           whether it's worth the spend. Futurepedia is the same
+           story — $247 Basic (sold out) / $497 Verified Listing
+           / custom Enterprise, no free tier found either;
+           skipped 2026-08-02 for the same reason. Both kit entries
+           assumed free self-serve submission when drafted
+           (v3.63.409) — that's stale now, worth a repricing pass
+           on WaxFrame_Outreach_Kit_v1.txt next time it's touched.
+           r/selfhosted and r/SideProject are DONE (2026-08-02):
+           r/selfhosted's standalone-post rule blocks new-project
+           threads outright and the "younger than 3 months" New
+           Project Megathread exception doesn't even apply (repo
+           is ~4.5 months old) — posted as a top-level comment in
+           the current megathread anyway per David's call, using
+           their template incl. an honest AI-involvement
+           disclosure. r/SideProject post went up standalone,
+           links only to the free edition per the no-Gumroad-link
+           rule. GitHub repo topics and the YouTube demo
+           description edit still open.
    WHERE:  docs/WaxFrame_Outreach_Kit_v1.txt (directory copy +
            self-hosted angle sections).
    DONE:   Each directory listing is live with a working link;

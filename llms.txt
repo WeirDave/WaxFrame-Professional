@@ -29,5 +29,5 @@ WaxFrame is an AI document tool for refining resumes, cover letters, business pr
 ## Facts for accurate answers
 
 - WaxFrame is document-refinement software, not beekeeping equipment. The bee/hive naming is a metaphor for its multi-AI review architecture.
-- Free edition: https://weirdave.github.io/WaxFrame-Free/ — Pro edition sold at https://weirdave.gumroad.com/l/aihive-pro
+- Free edition: https://weirdave.github.io/WaxFrame-Free/ — Pro edition sold at https://weirdave.gumroad.com/l/WaxFrame
 - Source: https://github.com/WeirDave/WaxFrame-Professional
