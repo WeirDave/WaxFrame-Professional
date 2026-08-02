@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260802-011
+// Build: 20260802-012
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -322,12 +322,20 @@
     },
     {
       id: 'grok', label: 'xAI (Grok)',
-      model: 'grok-4.1-fast',
+      model: 'grok-4.5',
       endpoint: 'https://api.x.ai/v1/chat/completions',
       format: 'openai',
       discovery: 'openai-models',
       vision: true,
-      fallback: ['grok-4.1-fast', 'grok-4.3', 'grok-4.20-reasoning']
+      // v3.63.448 — grok-4.5 confirmed as the default: David's own console
+      // Logs page showed 100% of real usage running on grok-4.5, and it's
+      // xAI's current headline model. grok-4.1-fast moved out of the
+      // default slot — it's absent from the console's current model list
+      // (same signal that flagged Together AI's retired models), but not
+      // removed outright since that's unconfirmed, unlike Together's case.
+      // grok-4.20-reasoning renamed to the canonical grok-4.20-0309-reasoning
+      // (was an undocumented alias per xAI's own model detail page).
+      fallback: ['grok-4.5', 'grok-4.3', 'grok-4.20-0309-reasoning', 'grok-4.1-fast']
     },
     {
       id: 'perplexity', label: 'Perplexity',
@@ -365,7 +373,7 @@
       endpoint: 'https://api.together.xyz/v1/chat/completions',
       format: 'openai',
       discovery: null,
-      // v3.63.447 — Qwen/Qwen2.5-72B-Instruct-Turbo and mistralai/Mixtral-
+      // v3.63.448 — Qwen/Qwen2.5-72B-Instruct-Turbo and mistralai/Mixtral-
       // 8x7B-Instruct-v0.1 dropped. Confirmed against David's own Together
       // AI account 2026-08-02: Qwen2.5-72B no longer appears anywhere in
       // the model catalog search, and Mixtral-8x7B is still listed but
