@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing-renderer.js
-// Build: 20260802-006
+// Build: 20260802-007
 //  Dynamic pricing renderer for ai-api-pricing.html. Fetches
 //  live data from the waxframe-pricing Cloudflare Worker;
 //  falls back to the embedded snapshot if the Worker is
@@ -451,6 +451,20 @@
       })
       .then(function(data) {
         if (!data || !Array.isArray(data.providers)) throw new Error('malformed payload');
+        // v3.63.443 — a successful fetch of an OLD schema (v2 or earlier —
+        // flat model/inputPerM/outputPerM per provider, no models[]/
+        // defaultModel) used to pass straight through here: it has a
+        // providers array, so the check above alone accepted it as 'live'.
+        // getDefaultRows()/getAllModelRows() then found no defaultModel on
+        // any provider and rendered EMPTY tables — with no fallback banner,
+        // since this path never reaches the catch below. A KV rollback to
+        // a pre-v3 snapshot, or any transitional moment where the Worker
+        // serves stale schema, would silently blank the page instead of
+        // falling back to the embedded snapshot. Treat an incompatible
+        // schema as a fetch failure so it takes the same fallback path.
+        if (!data.schemaVersion || data.schemaVersion < 3) {
+          throw new Error('incompatible schema v' + data.schemaVersion + ' (page requires v3+)');
+        }
         return { data: data, source: 'live' };
       })
       .catch(function(err) {
