@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.439
+
+**AI API Pricing: "All tracked models" table now actually fits its card — no horizontal scroll needed**
+
+Build: `20260802-003`<br>
+Released: `2026-08-02`
+
+### What changed
+
+David pushed back on the v3.63.438 fix, correctly: wrapping the table in a horizontal-scroll container "worked" but was cheesy — it pushed the sizing problem onto the reader instead of solving it, and he asked for a table that actually fits (or a page/modal redesign if it genuinely couldn't, mindful of the 1366×768 laptop floor).
+
+It could fit. Two changes:
+
+1. **Merged columns.** 9 columns down to 7 — Input $/M + Output $/M became one `$/M in·out` cell (`$0.88 / $0.88`), Context + Max output became one `Ctx·Max` cell (`128K / 4K`), and the Source column dropped its "source" text link for an icon-only external-link glyph (reusing the same SVG the Defaults table's Billing column already uses).
+2. **`table-layout: fixed` with explicit percentage column widths**, so the table is always exactly its container's width regardless of content — long model ids (`meta-llama/Llama-3.3-70B-Instruct-Turbo`) wrap inside their column instead of forcing the table wider. Measured at the real 1366px viewport floor: table content now sits at exactly the container width with zero overflow, versus needing an internal scrollbar under the v3.63.438 approach.
+
+**Caught and fixed a real bug along the way:** the first attempt at fixed-width columns used `<col style="width:X%">` — an inline `style="..."` attribute, which this project's strict CSP (`style-src` has no `'unsafe-inline'`) silently drops. The attribute was present in the DOM but never applied to layout, so every column silently rendered equal-width regardless of the percentages. Root-caused via `getComputedStyle`/`getAttribute` comparison on the `<col>` elements, not visually — the equal-width symptom looked like a CSS specificity issue at first glance. Fixed by moving the widths to `nth-child` rules in `style.css` instead of inline attributes, which is also just the correct pattern here per this project's existing "no inline `style=`" constraint.
+
+Also tried `word-break: break-all` for wrapping the long model ids first — it ignored natural break points (`/`, `-`) and chopped every line at a uniform character count, which read as sloppier than the overflow it was fixing. Dropped in favor of `overflow-wrap: anywhere` alone, which prefers natural break points and only forces an arbitrary break as a last resort — cut the worst-case id from 5 choppy lines down to 2 clean ones.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-tested at the actual 1366×768 minimum supported viewport (not just a comfortable desktop width): confirmed `table.scrollWidth === table.clientWidth` (no overflow, no internal scroll triggered) and per-column widths matched the specified percentages (Model column measured 199px of 765px total, proportionally the widest as intended). Confirmed the `meta-llama/Llama-3.3-70B-Instruct-Turbo` id wraps to 2 lines at natural break points, not mid-word. Confirmed status pills and the Verified date aren't clipped in their narrower columns. No console errors.
+
+### Files touched
+
+- `ai-api-pricing.html` — merged column headers (`$/M in·out`, `Ctx·Max`, `Src`), `<colgroup>` with plain (unstyled) `<col>` elements
+- `js/pricing-renderer.js` — `renderAllModelsTable()` emits the merged-column row markup, icon-only source link
+- `style.css` — `.pricing-all-models-fixed` (table-layout:fixed + nth-child column widths), tighter cell padding/font-size for this table, `.pricing-source-link` icon styling; `.pricing-all-models-table-wrap`'s `overflow-x:auto` kept only as a last-resort safety net, not the primary fix
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit (returns to v3.63.438's scroll-based fix, still functional, just not as clean). Purely additive markup/CSS — no JS behavior or data changes.
+
+---
+
 ## v3.63.438
 
 **AI API Pricing: "All tracked models" table was bleeding off the right edge of its card**

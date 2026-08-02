@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing-renderer.js
-// Build: 20260802-002
+// Build: 20260802-003
 //  Dynamic pricing renderer for ai-api-pricing.html. Fetches
 //  live data from the waxframe-pricing Cloudflare Worker;
 //  falls back to the embedded snapshot if the Worker is
@@ -356,23 +356,33 @@
     }
     if (emptyEl) emptyEl.hidden = true;
 
+    // v3.63.439 — columns merged (Input+Output -> one $/M cell, Context+Max
+    // output -> one Ctx·Max cell, Source -> icon-only) so the table fits the
+    // card at table-layout:fixed widths instead of relying on horizontal
+    // scroll. See style.css .pricing-all-models-fixed.
+    var EXTERNAL_LINK_SVG = '<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg>';
+
     tbody.innerHTML = rows.map(function(r) {
       var hasPrice = typeof r.inputPerM === 'number' && typeof r.outputPerM === 'number';
       var statusLabel = STATUS_LABELS[r.status] || r.status;
       var pillClass = 'status-pill status-pill-' + r.status;
+      var priceCell = hasPrice
+        ? '$' + Number(r.inputPerM).toFixed(2) + ' / $' + Number(r.outputPerM).toFixed(2)
+        : '—';
+      var ctxCell = (r.contextWindow || r.maxOutput)
+        ? escapeHtml(r.contextWindow || '—') + ' / ' + escapeHtml(r.maxOutput || '—')
+        : '—';
       var sourceCell = r.sourceUrl
-        ? '<a href="' + escapeHtml(r.sourceUrl) + '" target="_blank" rel="noopener noreferrer" class="link-accent">source</a>'
+        ? '<a href="' + escapeHtml(r.sourceUrl) + '" target="_blank" rel="noopener noreferrer" class="pricing-source-link" aria-label="Pricing source for ' + escapeHtml(r.modelId) + '">' + EXTERNAL_LINK_SVG + '</a>'
         : '—';
       return '<tr>' +
         '<td data-label="Provider">' + escapeHtml(r.providerName) + '</td>' +
         '<td data-label="Model"><code>' + escapeHtml(r.modelId) + '</code></td>' +
-        '<td data-label="Input $/M">' + (hasPrice ? '$' + Number(r.inputPerM).toFixed(2) : '—') + '</td>' +
-        '<td data-label="Output $/M">' + (hasPrice ? '$' + Number(r.outputPerM).toFixed(2) : '—') + '</td>' +
-        '<td data-label="Context">' + (r.contextWindow ? escapeHtml(r.contextWindow) : '—') + '</td>' +
-        '<td data-label="Max output">' + (r.maxOutput ? escapeHtml(r.maxOutput) : '—') + '</td>' +
+        '<td data-label="$/M in·out">' + priceCell + '</td>' +
+        '<td data-label="Ctx·Max">' + ctxCell + '</td>' +
         '<td data-label="Status"><span class="' + pillClass + '">' + escapeHtml(statusLabel) + '</span></td>' +
         '<td data-label="Verified">' + formatVerifiedDate(r.verifiedAt) + '</td>' +
-        '<td data-label="Source">' + sourceCell + '</td>' +
+        '<td data-label="Src">' + sourceCell + '</td>' +
       '</tr>';
     }).join('');
   }
