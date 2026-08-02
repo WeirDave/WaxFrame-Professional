@@ -146,8 +146,14 @@ OPEN FEATURES
            their template incl. an honest AI-involvement
            disclosure. r/SideProject post went up standalone,
            links only to the free edition per the no-Gumroad-link
-           rule. GitHub repo topics and the YouTube demo
-           description edit still open.
+           rule. GitHub repo topics were already done (20/20
+           topics, already includes self-hosted/ai/llm/vanilla-
+           javascript — at GitHub's cap, nothing to add). YouTube
+           demo description fixed 2026-08-02 — while checking it,
+           found its Gumroad link was pointing at a dead
+           l/aihive slug (shipped in v3.63.451, see CHANGELOG).
+           This backlog entry is now fully closed; all 5
+           directories attempted, all free-tier options taken.
    WHERE:  docs/WaxFrame_Outreach_Kit_v1.txt (directory copy +
            self-hosted angle sections).
    DONE:   Each directory listing is live with a working link;
