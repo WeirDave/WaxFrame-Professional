@@ -2,6 +2,40 @@
 
 ---
 
+## v3.63.450
+
+**User Manual: Checkpoint Restore, Round History, and Add Custom AI screenshots added; stray grok-4.1-fast references corrected**
+
+Build: `20260802-014`<br>
+Released: `2026-08-02`
+
+### What changed
+
+`waxframe-user-manual.html` gets three new screenshot figures Kai's capture pass produced: the Checkpoints screen in Restore mode (side-by-side current-vs-checkpoint comparison), the Round History "View Doc" modal (past-round snapshot + reviewer tabs), and the Add Custom AI form on the Setup screen. Each ships with alt text and a caption, following the existing `ss-shot`/`ss-dark`/`ss-light` figure pattern used elsewhere in the manual.
+
+While in there, caught a stray `grok-4.1-fast` reference in the manual's "know your hive" default-models table that the v3.63.449 catalog cleanup missed — the manual isn't scanned by `check-pricing-coverage.mjs`, only `js/provider-catalog.js` and the pricing seed are. Same stray reference existed in `api-details.html`'s two "know your hive" model badges; both corrected to `grok-4.5`.
+
+`README.md` picked up the same Grok correction in its default-models table, plus removed a duplicate Mistral row from the custom-provider table (Mistral already has a first-party entry above it — the second row was a leftover).
+
+### Verification
+
+- `node tools/release-check.mjs` — full pass.
+- Manual grep for `grok-4.1-fast` across the repo returns zero hits post-fix.
+
+### Files touched
+
+- `waxframe-user-manual.html` — 3 new screenshot figures, grok-4.5 correction
+- `api-details.html` — grok-4.5 correction (2 spots)
+- `README.md` — grok-4.5 correction, duplicate Mistral row removed
+- `screenshots/screenshot_checkpoint-restore_{dark,light}.png`, `screenshot_work-history-modal_{dark,light}.png`, `screenshot_bees-add-custom-ai_{dark,light}.png` — new captures
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+`git revert` this commit — no storage/schema changes, no orphaned references left behind.
+
+---
+
 ## v3.63.449
 
 **Grok: grok-4.1-fast dropped from the catalog — retired on xAI's side, confirmed against David's own account twice over**
