@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v267
+WaxFrame Backlog Master v268
 2026-08-02
 
 ABOUT THIS DOCUMENT
@@ -162,62 +162,7 @@ OPEN FEATURES
            style notes, per normal backlog hygiene).
 
 
-4. Fixture-based regression test for provider response-shape drift
-   ─────────────────────────────────────────────────────────
-   WHAT:   A standalone, node-runnable test (no live API calls)
-           that feeds canned multi-block/multi-part response
-           JSON — including an extended-thinking-shaped
-           Anthropic payload (thinking block at index 0, text
-           block after) and a thought-part-shaped Gemini
-           payload (thought:true part before the real part) —
-           through WFProviderCatalog.extractAnthropicText() /
-           .extractGeminiText() and asserts the correct text
-           comes out, not ''.
-   WHY:    v3.63.410 fixed a live bug where Claude's extended-
-           thinking responses were misread as empty because
-           every Anthropic extractor hardcoded content[0].text.
-           Nothing in WaxFrame changed to cause this — Anthropic
-           started returning a leading thinking block server-
-           side with zero notice. The exact same class of drift
-           is plausible for Gemini (thought:true parts) and, in
-           principle, any provider whose response shape isn't a
-           flat single value. A fixture test converts "we found
-           out live, mid-demo, from a customer-facing error
-           modal" into "release-check catches it before ship."
-           Provider-catalog.js's extractors are plain functions
-           now (v3.63.410's firstAnthropicTextBlock /
-           firstGeminiTextPart), so they're testable in
-           isolation without a browser or a live key.
-   STATE:  DONE — shipped v3.63.452, same day as the backlog item
-           6 default-model decision. tools/test-provider-
-           extractors.mjs requires provider-catalog.js via Node's
-           CommonJS interop (createRequire) and reads
-           WFProviderCatalog off the resulting module.exports —
-           the file's `(function(root){...})(typeof window !==
-           'undefined' ? window : this)` IIFE binds to
-           module.exports when there's no window global, no
-           browser/DOM shim needed. Wired into release-check.mjs
-           as Check 13, same shell-out pattern as Checks 10-12.
-   WHERE:  js/provider-catalog.js — firstAnthropicTextBlock(),
-           firstGeminiTextPart(), firstOpenAIText() (~line
-           192-243), WFProviderCatalog.extractAnthropicText /
-           .extractGeminiText / .extractOpenAIText exports
-           (~line 753-755). Test: tools/test-provider-
-           extractors.mjs. Gate wiring: tools/release-check.mjs
-           Check 13.
-   DONE:   All nine fixtures pass: (a) plain single-block
-           Anthropic response, (b) thinking-block-then-text
-           Anthropic response, (c) thinking-only Anthropic
-           response (genuinely empty — reports empty, doesn't
-           throw), (d)-(f) the same three shapes for Gemini using
-           thought:true, (g)-(i) the same three for OpenAI via
-           extractOpenAIText (plain content, refusal-only, empty
-           choices array). Run: `node tools/test-provider-
-           extractors.mjs`. Entry closed — remove this item on
-           next backlog touch.
-
-
-5. Release ceremony has two steps with no automated verification they ran
+4. Release ceremony has two steps with no automated verification they ran
    ─────────────────────────────────────────────────────────
    WHAT:   Two CLAUDE.md-documented release-ceremony steps —
            "create the GitHub release immediately, every single
@@ -233,126 +178,50 @@ OPEN FEATURES
            release list`. The live site (GitHub Pages serving
            main directly) shows zero symptom when either step is
            skipped, so detection is accidental, not systematic.
-           indexnow-ping's failure mode is worse — even a run
-           that WAS attempted just prints an HTTP status to
-           stdout with nothing persisted, so "skipped" and
-           "attempted but failed silently" look identical after
-           the fact, compounding a project that's already
-           SEO-index-starved (CLAUDE.md §8B).
-   STATE:  OPEN — not started. Design correction from the first
-           pass at this: a check added to release-check.mjs
-           (push-triggered, synchronous) CANNOT correctly catch
-           "the tag/release step got skipped" — by the ceremony's
-           own design, the tag is created AFTER the commit is
-           pushed, so a synchronous check would false-positive on
-           every single normal release (it'd see "no tag yet"
-           during the completely normal in-progress window,
-           before step 9 has had a chance to run). A real
-           implementation needs to run on a DELAY — a scheduled
-           GitHub Action (daily, or the pricing Worker's own
-           daily-cron pattern) checking "is the newest CHANGELOG
-           entry's version tag more than N hours old and still
-           missing" — not a check wired into the push-triggered
-           gate. Caught before shipping the wrong version of this
-           (v3.63.415's CHANGELOG has the reasoning).
+   STATE:  DEFERRED — 2026-08-02, David's call: rather than build
+           the scheduled GitHub Action right now, the mitigation
+           for now is making sure CLAUDE.md's §5 release ceremony
+           is itself complete and accurate — so ANY assistant
+           (Claude Code, Codex, a fresh session after a reset)
+           can pick up the ceremony correctly from the doc alone,
+           without David having to re-explain it. That doc pass
+           happened this same session — see CLAUDE.md §4 and §5,
+           refreshed to current state (v3.63.453) and corrected
+           to list all 13 release-check gate checks (was missing
+           checks 10-13: prompt equivalence, pricing coverage,
+           pricing-worker review-gate, provider-extractor
+           fixtures). The automated scheduled-check idea below is
+           still valid design if a release actually gets missed
+           again — don't build it preemptively, revisit if it
+           happens.
    WHERE:  A NEW scheduled workflow (e.g.
            .github/workflows/release-tag-check.yml, on: schedule)
            would own the tag-staleness check; tools/indexnow-
            ping.mjs still needs a persisted result (a repo file,
            a KV entry — anywhere with history) instead of only
-           ever printing to a terminal nobody's watching.
-   DONE:   A scheduled (not push-triggered) check verifies
-           CHANGELOG.md's newest "## vX.Y.Z" entry has a matching
-           git tag once enough time has passed for the ceremony to
-           reasonably have completed, and surfaces somewhere
-           visible (a failed scheduled Action run, a `gh issue
-           create`, etc.) if not. indexnow-ping.mjs logs its
-           result somewhere checkable instead of only stdout.
+           ever printing to a terminal nobody's watching. Design
+           note preserved from the first pass at this: a check
+           added to release-check.mjs (push-triggered,
+           synchronous) CANNOT correctly catch "the tag/release
+           step got skipped" — the tag is created AFTER the
+           commit is pushed, so a synchronous check would
+           false-positive on every normal release's in-progress
+           window. Needs a DELAY — daily scheduled Action checking
+           "is the newest CHANGELOG entry's version tag more than
+           N hours old and still missing."
+   DONE:   Either (a) documentation-only mitigation holds — no
+           further release/tag gets missed for N months, entry
+           can be closed as resolved-by-process; or (b) another
+           release gets missed despite the doc pass, at which
+           point build the scheduled check: CHANGELOG.md's newest
+           "## vX.Y.Z" entry has a matching git tag once enough
+           time has passed, surfaced visibly if not (failed
+           scheduled Action run, `gh issue create`, etc.); plus
+           indexnow-ping.mjs logging its result somewhere checkable
+           instead of only stdout.
 
 
-6. Evaluate GPT-5.6 family (Sol/Terra/Luna) as ChatGPT catalog options
-   ─────────────────────────────────────────────────────────
-   WHAT:   OpenAI announced GPT-5.6 on 2026-08-01 with three
-           tiers: Sol ($5/$30 per M — same price as the
-           currently-configured gpt-5.5, likely its successor),
-           Terra ($2/$12 per M, 20% cut), and Luna ($0.20/$1.20
-           per M, 80% cut — frontier-adjacent capability at
-           roughly 1/25th Sol's cost per OpenAI's own framing).
-           Also new: Fast mode for Sol (up to 2.5x faster, 2x
-           price, service_tier="fast").
-   WHY:    Terra/Luna could be meaningfully cheaper hive options
-           (Luna in particular undercuts even DeepSeek, currently
-           the cheapest paid Builder in ai-api-pricing.html).
-           Since chatgpt uses live model discovery
-           (discovery: 'openai-models'), any keyed user could
-           already manually select gpt-5.6-sol/-terra/-luna today
-           with zero WaxFrame changes — confirmed the filter
-           regexes (CHATGPT_RESPONSES_ONLY_RE, DATED_SNAPSHOT_RE,
-           STRUCTURAL_NON_CHAT_RE) don't block any of the three
-           ids. What's still open is making them the CURATED
-           experience: the default model, a recommended pricing-
-           page row, confirmed Builder-safe.
-   STATE:  PARTIAL — 2026-08-01. Done: API model ids confirmed
-           against OpenAI's own docs, added to the chatgpt fallback
-           array (js/provider-catalog.js) so all three are
-           selectable even without live discovery. Also done as of
-           today: David live-tested all three tiers as Builder on
-           the same chocolate-chip-cookie recipe project. None
-           broke the %%CONFLICTS_START%% marker format — all three
-           are Builder-safe, so none go on the backlog item 1
-           incapable-family list. Results differ on judgment/
-           convergence quality, not format safety:
-             • Sol — cleanest judgment. Hit a genuine yield-vs-
-               portion-size ambiguity and correctly stopped, raising
-               it as a clean two-option USER DECISION rather than
-               guessing. Run was still pending that decision when
-               captured (4 rounds, not yet converged).
-             • Terra — converged in 9 rounds (majority convergence).
-               Hit the same kind of yield tension but never
-               elevated it to a decision — let the stated yield
-               silently drift (24 → 48 → 36–48 → 48–60 cookies)
-               across rounds while ingredient quantities never
-               changed.
-             • Luna — fastest convergence (4 rounds, majority
-               convergence, holdouts present). But converged around
-               an unflagged real error: Round 2 doubled the dough
-               portion size (1 tbsp → 2 tbsp) while the stated yield
-               stayed "about 24 cookies" through the final document.
-               No reviewer or Builder pass caught it.
-           NOT done: the actual default-model decision. This is now
-           a judgment call (cost vs. Builder judgment quality), not
-           a technical blocker — see DONE below for the tradeoff.
-   WHERE:  js/provider-catalog.js:286-303 (chatgpt catalog entry —
-           fallback array updated, model default untouched).
-   UPDATE (v3.63.437, 2026-08-02): the "needs a recommended pricing-
-           page row" half of this is now moot regardless of which
-           tier wins the default decision below — the pricing page
-           schema changed from one-row-per-provider-default to
-           tracking every curated fallback model. All three
-           (gpt-5.6-sol/-terra/-luna) already have rows in
-           tools/pricing-worker/data/pricing-seed.json today, status
-           needs-verification (visible in ai-api-pricing.html's new
-           "All tracked models" section), independent of which one
-           (if any) becomes the chatgpt default. Promoting one to
-           default still means bumping js/provider-catalog.js's
-           chatgpt `model` field AND that row's status/price in the
-           seed once a real price is verified (the scheduled Sonar
-           refresh will propose one automatically, held for review —
-           see tools/pricing-worker/README.md's "Review-before-
-           publish" section) — but there's no separate "add the row"
-           step left to do.
-   DONE:   DECIDED 2026-08-02, shipped v3.63.452: default bumped to
-           gpt-5.6-sol. Same price as prior default gpt-5.5, smoke-
-           tested Builder-safe, and the only one of the three that
-           surfaced its yield ambiguity as a clean decision instead
-           of silently drifting (terra) or converging around an
-           uncaught error (luna) — correctness over cost savings for
-           an unattended/Auto-mode-safe default. js/provider-
-           catalog.js's chatgpt model + fallback order and the
-           pricing seed's chatgpt defaultModel both updated. Entry
-           closed — remove this item on next backlog touch.
-
-7. Three duplicate-logic cleanups deferred from the 2026-08-01 code audit
+6. Three duplicate-logic cleanups deferred from the 2026-08-01 code audit
    ─────────────────────────────────────────────────────────
    WHAT:   A full multi-agent code audit (v3.63.425 through
            v3.63.430) found and fixed 21 confirmed issues across
