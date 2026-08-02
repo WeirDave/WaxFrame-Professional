@@ -707,6 +707,40 @@ try {
   fail('tools/verify-prompts-equivalence.mjs', `prompt/DEFAULTS drift detected — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
+// ── Check 11: Pricing coverage (tools/check-pricing-coverage.mjs) ──
+
+section('Pricing coverage (tools/check-pricing-coverage.mjs)');
+
+// v3.63.437 — every model curated in js/provider-catalog.js's fallback
+// arrays must have a tracked row in tools/pricing-worker/data/pricing-seed.json,
+// even if its pricing status is needs-verification. Shell out for the same
+// reason as Check 10 — the tool calls its own process.exit().
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/check-pricing-coverage.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/check-pricing-coverage.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.trim().startsWith('•'));
+  fail('tools/check-pricing-coverage.mjs', `pricing coverage drift detected — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
+// ── Check 12: Pricing Worker review-gate behavior (tools/pricing-worker/test-refresh-logic.mjs) ──
+
+section('Pricing Worker review-gate behavior (tools/pricing-worker/test-refresh-logic.mjs)');
+
+// v3.63.437 — pure-function unit tests for decideModelUpdate() (the logic
+// that decides whether a Sonar-researched price auto-confirms or holds for
+// human review). No KV/network involved, so this runs fast and in-process
+// via a plain node --check-style invocation.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/pricing-worker/test-refresh-logic.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/pricing-worker/test-refresh-logic.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.includes('FAIL'));
+  fail('tools/pricing-worker/test-refresh-logic.mjs', `review-gate behavior test failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
 // ── Report ──────────────────────────────────────────────────
 
 console.log('');

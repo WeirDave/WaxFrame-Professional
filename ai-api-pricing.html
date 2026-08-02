@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260801-020
+     Build: 20260802-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260801-020">
+  <meta name="waxframe-build" content="20260802-001">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="keywords" content="ChatGPT API pricing, Claude API pricing, Gemini API cost, AI token pricing, AI API cost calculator">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.436">
+  <link rel="stylesheet" href="style.css?v=3.63.437">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -301,6 +301,48 @@
       <p class="hp-section-sub"><em>* Gemini free tier only while billing is <strong>disabled</strong> on your Google AI Studio account. Adding a credit card flips routing to paid tier even on the same model name. See <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens?</a> for the full caveat.</em></p>
     </div>
 
+    <div class="wf-card">
+      <details id="allModelsDetails" class="pricing-all-models">
+        <summary class="pricing-all-models-summary">All tracked models <span id="allModelsCount" class="pricing-all-models-count"></span></summary>
+        <div class="pricing-all-models-body">
+          <p class="hp-section-sub">Every model WaxFrame curates per provider — not just the one shown above. A model with no verified price yet still gets a row: it's tracked, not missing.</p>
+          <div class="pricing-all-models-filters">
+            <label class="pricing-filter-label">Provider
+              <select id="allModelsProviderFilter" class="pricing-filter-select"></select>
+            </label>
+            <label class="pricing-filter-label">Status
+              <select id="allModelsStatusFilter" class="pricing-filter-select">
+                <option value="">All statuses</option>
+                <option value="verified">Verified</option>
+                <option value="needs-verification">Needs verification</option>
+                <option value="unsupported">Unsupported</option>
+              </select>
+            </label>
+            <label class="pricing-filter-label">Search
+              <input type="text" id="allModelsSearch" class="pricing-filter-input" placeholder="Model or provider name">
+            </label>
+          </div>
+          <table class="ai-table is-stack">
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>Model</th>
+                <th>Input $/M</th>
+                <th>Output $/M</th>
+                <th>Context</th>
+                <th>Max output</th>
+                <th>Status</th>
+                <th>Verified</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody id="allModelsBody"></tbody>
+          </table>
+          <p id="allModelsEmpty" class="pricing-all-models-empty" hidden>No models match the current filters.</p>
+        </div>
+      </details>
+    </div>
+
     <hr class="wf-section-divider">
 
     <h2 id="rate-limits">Rate Limits & Free-Tier Caps</h2>
@@ -486,13 +528,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.436"></script>
-<script src="lib/docx.min.js?v=3.63.436"></script>
-<script src="js/docx-export.js?v=3.63.436"></script>
-<script src="js/nav-helper.js?v=3.63.436"></script>
-<script src="js/license-helper.js?v=3.63.436"></script>
-<script src="js/helper-handlers.js?v=3.63.436"></script>
-<script src="js/version.js?v=3.63.436"></script>
+<script src="js/theme.js?v=3.63.437"></script>
+<script src="lib/docx.min.js?v=3.63.437"></script>
+<script src="js/docx-export.js?v=3.63.437"></script>
+<script src="js/nav-helper.js?v=3.63.437"></script>
+<script src="js/license-helper.js?v=3.63.437"></script>
+<script src="js/helper-handlers.js?v=3.63.437"></script>
+<script src="js/version.js?v=3.63.437"></script>
 
 <!-- ========================================================
      Dynamic pricing renderer.
@@ -503,6 +545,6 @@
      release we should refresh it from data/pricing-seed.json
      in tools/pricing-worker.
      ======================================================== -->
-<script src="js/pricing-renderer.js?v=3.63.436"></script>
+<script src="js/pricing-renderer.js?v=3.63.437"></script>
 </body>
 </html>
