@@ -2,6 +2,51 @@
 
 ---
 
+## v3.63.444
+
+**AI API Pricing: manual verification pass — 18 of 27 `needs-verification` models now priced from official sources**
+
+Build: `20260802-008`<br>
+Released: `2026-08-02`
+
+### What changed
+
+Manual research pass against each provider's official pricing documentation (`WebFetch`/`WebSearch` against official domains only — same trust bar as the automated Sonar refresh's `SOURCE_DOMAINS` list), standing in for the scheduled refresh's normal role since no run had fired yet. 18 models moved from `needs-verification` to `verified` with real price, source URL, and confirmed model name; 1 more (`gemini-3.1-pro` on the free tier) moved to `unsupported` — confirmed directly from Google's own docs that no free tier exists for that model, which is a resolved fact, not an open question.
+
+**Verified (source in parentheses):**
+- OpenAI — `gpt-5.6-sol` $5.00/$30.00, `gpt-5.6-terra` $2.00/$12.00, `gpt-5.6-luna` $0.20/$1.20, `gpt-5.4` $2.50/$15.00, `gpt-5.4-mini` $0.75/$4.50, `gpt-5.4-nano` $0.20/$1.25 (developers.openai.com/api/docs/pricing)
+- Anthropic — `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6` all $5.00/$25.00, `claude-haiku-4-5` $1.00/$5.00 (platform.claude.com/docs)
+- Google — `gemini-3.1-pro` (paid) $2.00/$12.00, `gemini-3.1-flash-lite` $0/$0 free, $0.25/$1.50 paid (ai.google.dev)
+- DeepSeek — `deepseek-v4-pro` $0.435/$0.87, 1M context, 384K max output (api-docs.deepseek.com)
+- xAI — `grok-4.3` $1.25/$2.50, 1M context (docs.x.ai)
+- Perplexity — `sonar` $1.00/$1.00, `sonar-reasoning-pro` $2.00/$8.00, `sonar-deep-research` $2.00/$8.00 base rate (docs.perplexity.ai — deep-research also carries per-search and citation/reasoning-token surcharges not modeled here, noted in `estNote`)
+
+**Still `needs-verification` (8 remaining) — official pages checked but didn't expose current pricing for these specific models, so nothing was guessed:**
+- `grok-4.20-reasoning` — xAI's docs only listed `grok-4.20-0309-reasoning`; left unresolved rather than assume that's the same model under a dated snapshot id
+- `sonar-reasoning` — Perplexity's pricing page lists Sonar, Sonar Pro, Sonar Reasoning *Pro*, and Sonar Deep Research, but not plain Sonar Reasoning
+- `mistral-small-latest`, `ministral-8b-latest` — Mistral's public pricing page only surfaces Mistral Large by example in an FAQ; no per-model table found
+- `command-r`, `command-a-03-2025` — Cohere's pricing page only exposed legacy (2024-dated) model pricing, not current
+- `Qwen/Qwen2.5-72B-Instruct-Turbo`, `mistralai/Mixtral-8x7B-Instruct-v0.1` — not present on Together AI's current serverless models/pricing pages (may no longer be offered)
+
+These 8 will get picked up by the next scheduled Sonar refresh (Sundays 12:00 UTC) same as any other tracked model, held for review per the v3.63.437 policy.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-tested via local static server: forced the fallback path, confirmed all 28 verified + 2 unsupported rows render with correct prices, sources, and dates in the "All tracked models" modal.
+
+### Files touched
+
+- `tools/pricing-worker/data/pricing-seed.json` — 19 model rows updated (18 verified, 1 unsupported)
+- `js/pricing-renderer.js` — regenerated `FALLBACK_DATA`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit, then re-push the prior seed to KV (`wrangler kv key put --binding=PRICING_DATA latest --path=tools/pricing-worker/data/pricing-seed.json --remote` after reverting). Data-only change — no schema or code changes.
+
+---
+
 ## v3.63.443
 
 **AI API Pricing: a live schema-v2 response now falls back instead of rendering empty tables**
