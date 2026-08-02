@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v265
-2026-08-01
+WaxFrame Backlog Master v266
+2026-08-02
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -290,11 +290,24 @@ OPEN FEATURES
            a judgment call (cost vs. Builder judgment quality), not
            a technical blocker — see DONE below for the tradeoff.
    WHERE:  js/provider-catalog.js:286-303 (chatgpt catalog entry —
-           fallback array updated, model default untouched). Any
-           promoted tier would also need an ai-api-pricing.html row
-           (tools/pricing-worker/data/pricing-seed.json +
-           js/pricing-renderer.js FALLBACK_DATA, same lockstep
-           convention as every other provider).
+           fallback array updated, model default untouched).
+   UPDATE (v3.63.437, 2026-08-02): the "needs a recommended pricing-
+           page row" half of this is now moot regardless of which
+           tier wins the default decision below — the pricing page
+           schema changed from one-row-per-provider-default to
+           tracking every curated fallback model. All three
+           (gpt-5.6-sol/-terra/-luna) already have rows in
+           tools/pricing-worker/data/pricing-seed.json today, status
+           needs-verification (visible in ai-api-pricing.html's new
+           "All tracked models" section), independent of which one
+           (if any) becomes the chatgpt default. Promoting one to
+           default still means bumping js/provider-catalog.js's
+           chatgpt `model` field AND that row's status/price in the
+           seed once a real price is verified (the scheduled Sonar
+           refresh will propose one automatically, held for review —
+           see tools/pricing-worker/README.md's "Review-before-
+           publish" section) — but there's no separate "add the row"
+           step left to do.
    DONE:   David picks: (a) keep gpt-5.5 default, do nothing further;
            (b) bump default to gpt-5.6-sol — safest judgment, same
            price as gpt-5.5; (c) bump to gpt-5.6-terra — 20% cheaper,
@@ -305,10 +318,8 @@ OPEN FEATURES
            around an internal-consistency error uncaught by the full
            reviewer panel — riskiest pick for unattended/Auto-mode
            use. Whichever is chosen: bump js/provider-catalog.js's
-           chatgpt default, add/update the ai-api-pricing.html row,
-           run full release ceremony. Terra/Luna can also be
-           promoted as *selectable-but-not-default* options on the
-           pricing page independent of which becomes default.
+           chatgpt default and defaultModel in the pricing seed, run
+           full release ceremony.
 
 7. Three duplicate-logic cleanups deferred from the 2026-08-01 code audit
    ─────────────────────────────────────────────────────────

@@ -1,188 +1,210 @@
 {
-  "lastUpdated": "2026-08-01T19:25:30Z",
-  "schemaVersion": 2,
+  "lastUpdated": "2026-08-02T00:00:00Z",
+  "schemaVersion": 3,
   "tokensPerRound": { "input": 5000, "output": 2000 },
   "providers": [
     {
       "id": "gemini-free",
       "name": "Gemini (Google) — free tier",
       "shortName": "Gemini Flash (free tier)",
-      "model": "gemini-3.5-flash",
-      "inputPerM": 0.00,
-      "outputPerM": 0.00,
-      "contextWindow": "1M",
-      "maxOutput": "8K",
-      "estPerRound": 0.000,
-      "estNote": "free while AI Studio billing is disabled",
+      "defaultModel": "gemini-3.5-flash",
       "billingUrl": "https://aistudio.google.com/api-keys",
       "tier1Rpm": "15",
       "tier1Tpm": "—",
       "freeTier": "1500 RPD",
       "rateLimitNotes": "Free while billing disabled. Daily quota resets at midnight Pacific.",
       "recommendationTag": "cheapest",
-      "recommendationNote": "Free while AI Studio billing is disabled. 1M-token context window, 1500 requests/day quota, synthesizes Builder output reliably. Catch: enable billing on AI Studio and routing can quietly flip to paid tier on the same model name."
+      "recommendationNote": "Free while AI Studio billing is disabled. 1M-token context window, 1500 requests/day quota, synthesizes Builder output reliably. Catch: enable billing on AI Studio and routing can quietly flip to paid tier on the same model name.",
+      "models": [
+        { "id": "gemini-3.5-flash", "inputPerM": 0.00, "outputPerM": 0.00, "contextWindow": "1M", "maxOutput": "8K", "estPerRound": 0.000, "estNote": "free while AI Studio billing is disabled", "sourceUrl": "https://aistudio.google.com/api-keys", "verifiedAt": "2026-08-01T19:25:30Z", "status": "verified" },
+        { "id": "gemini-3.1-pro", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "gemini-3.1-flash-lite", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" }
+      ]
     },
     {
       "id": "gemini-paid",
       "name": "Gemini (Google) — paid",
       "shortName": "Gemini Flash (paid)",
-      "model": "gemini-3.5-flash",
-      "inputPerM": 0.075,
-      "outputPerM": 0.30,
-      "contextWindow": "1M",
-      "maxOutput": "8K",
-      "estPerRound": 0.001,
+      "defaultModel": "gemini-3.5-flash",
       "billingUrl": "https://aistudio.google.com/api-keys",
       "tier1Rpm": "2K",
       "tier1Tpm": "4M",
       "freeTier": "n/a",
       "rateLimitNotes": "Paid-tier limits are very generous; cost discipline matters more than RPM.",
       "recommendationTag": null,
-      "recommendationNote": null
+      "recommendationNote": null,
+      "models": [
+        { "id": "gemini-3.5-flash", "inputPerM": 0.075, "outputPerM": 0.30, "contextWindow": "1M", "maxOutput": "8K", "estPerRound": 0.001, "estNote": null, "sourceUrl": "https://aistudio.google.com/api-keys", "verifiedAt": "2026-08-01T19:25:30Z", "status": "verified" },
+        { "id": "gemini-3.1-pro", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "gemini-3.1-flash-lite", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" }
+      ]
     },
     {
       "id": "grok",
       "name": "Grok (xAI)",
       "shortName": "Grok",
-      "model": "grok-4.1-fast",
-      "inputPerM": 0.20,
-      "outputPerM": 0.50,
-      "contextWindow": "256K",
-      "maxOutput": "8K",
-      "estPerRound": 0.002,
+      "defaultModel": "grok-4.1-fast",
       "billingUrl": "https://console.x.ai",
       "tier1Rpm": "~60",
       "tier1Tpm": "varies",
       "freeTier": "Limited",
       "rateLimitNotes": "API availability and quotas vary; check console for current tier.",
       "recommendationTag": null,
-      "recommendationNote": null
+      "recommendationNote": null,
+      "models": [
+        { "id": "grok-4.1-fast", "inputPerM": 0.20, "outputPerM": 0.50, "contextWindow": "256K", "maxOutput": "8K", "estPerRound": 0.002, "estNote": null, "sourceUrl": "https://console.x.ai", "verifiedAt": "2026-08-01T19:25:30Z", "status": "verified" },
+        { "id": "grok-4.3", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "grok-4.20-reasoning", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" }
+      ]
     },
     {
       "id": "deepseek",
       "name": "DeepSeek",
       "shortName": "DeepSeek",
-      "model": "deepseek-v4-flash",
-      "inputPerM": 0.14,
-      "outputPerM": 0.28,
-      "contextWindow": "1M",
-      "maxOutput": "384K",
-      "estPerRound": 0.001,
+      "defaultModel": "deepseek-v4-flash",
       "billingUrl": "https://platform.deepseek.com/top_up",
       "tier1Rpm": "~60",
       "tier1Tpm": "varies",
       "freeTier": "None",
       "rateLimitNotes": "Cheapest paid option, but consistently the slowest responder in the hive (60–90s/round).",
       "recommendationTag": "cheapest",
-      "recommendationNote": "Cheapest reliable paid Builder — roughly 10x cheaper per token than Claude or ChatGPT. Caveat: consistently the slowest responder in the hive, often 60–90 seconds per round. If you don't mind the wait, it's the best value."
+      "recommendationNote": "Cheapest reliable paid Builder — roughly 10x cheaper per token than Claude or ChatGPT. Caveat: consistently the slowest responder in the hive, often 60–90 seconds per round. If you don't mind the wait, it's the best value.",
+      "models": [
+        { "id": "deepseek-v4-flash", "inputPerM": 0.14, "outputPerM": 0.28, "contextWindow": "1M", "maxOutput": "384K", "estPerRound": 0.001, "estNote": null, "sourceUrl": "https://platform.deepseek.com/top_up", "verifiedAt": "2026-08-01T19:25:30Z", "status": "verified" },
+        { "id": "deepseek-v4-pro", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" }
+      ]
     },
     {
       "id": "together",
       "name": "Together AI",
       "shortName": "Together AI",
-      "model": "Llama-3.3-70B-Instruct-Turbo",
-      "inputPerM": 0.88,
-      "outputPerM": 0.88,
-      "contextWindow": "128K",
-      "maxOutput": "4K",
-      "estPerRound": 0.006,
+      "defaultModel": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
       "billingUrl": "https://api.together.ai/settings/organization/~current/billing",
       "tier1Rpm": "~600",
       "tier1Tpm": "varies",
       "freeTier": "Trial credits",
       "rateLimitNotes": "Open-weight model gateway; generous limits, not yet hive-tested in production.",
       "recommendationTag": null,
-      "recommendationNote": null
+      "recommendationNote": null,
+      "models": [
+        { "id": "meta-llama/Llama-3.3-70B-Instruct-Turbo", "inputPerM": 0.88, "outputPerM": 0.88, "contextWindow": "128K", "maxOutput": "4K", "estPerRound": 0.006, "estNote": null, "sourceUrl": "https://api.together.ai/settings/organization/~current/billing", "verifiedAt": "2026-08-01T19:25:30Z", "status": "verified" },
+        { "id": "Qwen/Qwen2.5-72B-Instruct-Turbo", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "mistralai/Mixtral-8x7B-Instruct-v0.1", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" }
+      ]
     },
     {
       "id": "mistral",
       "name": "Mistral",
       "shortName": "Mistral",
-      "model": "mistral-large-latest",
-      "inputPerM": 2.00,
-      "outputPerM": 6.00,
-      "contextWindow": "128K",
-      "maxOutput": "8K",
-      "estPerRound": 0.022,
+      "defaultModel": "mistral-large-latest",
       "billingUrl": "https://admin.mistral.ai/organization/billing",
       "tier1Rpm": "~30",
       "tier1Tpm": "varies",
       "freeTier": "Trial credits",
       "rateLimitNotes": "Low RPS on paid Tier 1. A parallel 6-bee hive can trigger 429 even with token budget remaining. Contact Mistral support for tier raise.",
       "recommendationTag": "balanced",
-      "recommendationNote": "Similar territory to ChatGPT — fast, reliable, with a distinct European model lineage that adds genuine diversity to the hive. Watch the low Tier 1 RPM on paid accounts."
+      "recommendationNote": "Similar territory to ChatGPT — fast, reliable, with a distinct European model lineage that adds genuine diversity to the hive. Watch the low Tier 1 RPM on paid accounts.",
+      "models": [
+        { "id": "mistral-large-latest", "inputPerM": 2.00, "outputPerM": 6.00, "contextWindow": "128K", "maxOutput": "8K", "estPerRound": 0.022, "estNote": null, "sourceUrl": "https://admin.mistral.ai/organization/billing", "verifiedAt": "2026-08-01T19:25:30Z", "status": "verified" },
+        { "id": "mistral-small-latest", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "ministral-8b-latest", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" }
+      ]
     },
     {
       "id": "chatgpt",
       "name": "ChatGPT (OpenAI)",
       "shortName": "ChatGPT",
-      "model": "gpt-5.5",
-      "inputPerM": 5.00,
-      "outputPerM": 30.00,
-      "contextWindow": "1M",
-      "maxOutput": "32K",
-      "estPerRound": 0.085,
+      "defaultModel": "gpt-5.5",
       "billingUrl": "https://platform.openai.com/settings/organization/billing/overview",
       "tier1Rpm": "500",
       "tier1Tpm": "30K",
       "freeTier": "None",
       "rateLimitNotes": "Tiers scale with usage history; $5 credit unlocks most user needs.",
       "recommendationTag": "balanced",
-      "recommendationNote": "Strong all-rounder — fast, reliable formatting compliance, consistent convergence behavior. A good default for long-form documents where Builder speed matters."
+      "recommendationNote": "Strong all-rounder — fast, reliable formatting compliance, consistent convergence behavior. A good default for long-form documents where Builder speed matters.",
+      "models": [
+        { "id": "gpt-5.5", "inputPerM": 5.00, "outputPerM": 30.00, "contextWindow": "1M", "maxOutput": "32K", "estPerRound": 0.085, "estNote": null, "sourceUrl": "https://platform.openai.com/settings/organization/billing/overview", "verifiedAt": "2026-08-01T19:25:30Z", "status": "verified" },
+        { "id": "gpt-5.6-sol", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "gpt-5.6-terra", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "gpt-5.6-luna", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "gpt-5.4", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "gpt-5.4-mini", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "gpt-5.4-nano", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" }
+      ]
     },
     {
       "id": "cohere",
       "name": "Cohere",
       "shortName": "Cohere",
-      "model": "command-r-plus",
-      "inputPerM": 2.50,
-      "outputPerM": 10.00,
-      "contextWindow": "128K",
-      "maxOutput": "4K",
-      "estPerRound": 0.033,
+      "defaultModel": "command-r-plus",
       "billingUrl": "https://dashboard.cohere.com/billing",
       "tier1Rpm": "~100",
       "tier1Tpm": "varies",
       "freeTier": "Trial credits",
       "rateLimitNotes": "Generous trial credits; not yet hive-tested in production.",
       "recommendationTag": null,
-      "recommendationNote": null
+      "recommendationNote": null,
+      "models": [
+        { "id": "command-r-plus", "inputPerM": 2.50, "outputPerM": 10.00, "contextWindow": "128K", "maxOutput": "4K", "estPerRound": 0.033, "estNote": null, "sourceUrl": "https://dashboard.cohere.com/billing", "verifiedAt": "2026-08-01T19:25:30Z", "status": "verified" },
+        { "id": "command-r", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "command-a-03-2025", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" }
+      ]
     },
     {
       "id": "claude",
       "name": "Claude (Anthropic)",
       "shortName": "Claude",
-      "model": "claude-sonnet-4-6",
-      "inputPerM": 3.00,
-      "outputPerM": 15.00,
-      "contextWindow": "1M",
-      "maxOutput": "8K",
-      "estPerRound": 0.045,
+      "defaultModel": "claude-sonnet-4-6",
       "billingUrl": "https://platform.claude.com/settings/billing",
       "tier1Rpm": "50",
       "tier1Tpm": "50K",
       "freeTier": "None",
       "rateLimitNotes": "Tiers progress automatically with paid spend over time.",
       "recommendationTag": "highest-capability",
-      "recommendationNote": "Frequently the best at nuanced voice, precise instruction-following, and detailed reasoning on complex documents. For high-stakes documents (RFP responses, executive summaries, board memos), the premium pays off in fewer rounds to converge."
+      "recommendationNote": "Frequently the best at nuanced voice, precise instruction-following, and detailed reasoning on complex documents. For high-stakes documents (RFP responses, executive summaries, board memos), the premium pays off in fewer rounds to converge.",
+      "models": [
+        { "id": "claude-sonnet-4-6", "inputPerM": 3.00, "outputPerM": 15.00, "contextWindow": "1M", "maxOutput": "8K", "estPerRound": 0.045, "estNote": null, "sourceUrl": "https://platform.claude.com/settings/billing", "verifiedAt": "2026-08-01T19:25:30Z", "status": "verified" },
+        { "id": "claude-opus-4-8", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "claude-opus-4-7", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "claude-opus-4-6", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "claude-haiku-4-5", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" }
+      ]
     },
     {
       "id": "perplexity",
       "name": "Perplexity",
       "shortName": "Perplexity",
-      "model": "sonar-pro",
-      "inputPerM": 3.00,
-      "outputPerM": 15.00,
-      "contextWindow": "200K",
-      "maxOutput": "8K",
-      "estPerRound": 0.045,
+      "defaultModel": "sonar-pro",
       "billingUrl": "https://console.perplexity.ai",
       "tier1Rpm": "~50",
       "tier1Tpm": "varies",
       "freeTier": "None",
       "rateLimitNotes": "$5/month recurring subscription tier (enable auto-pay at signup) covers most usage; $50/month otherwise.",
       "recommendationTag": null,
-      "recommendationNote": null
+      "recommendationNote": null,
+      "models": [
+        { "id": "sonar", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "sonar-pro", "inputPerM": 3.00, "outputPerM": 15.00, "contextWindow": "200K", "maxOutput": "8K", "estPerRound": 0.045, "estNote": null, "sourceUrl": "https://console.perplexity.ai", "verifiedAt": "2026-08-01T19:25:30Z", "status": "verified" },
+        { "id": "sonar-reasoning", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "sonar-reasoning-pro", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" },
+        { "id": "sonar-deep-research", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "needs-verification" }
+      ]
+    },
+    {
+      "id": "copilot",
+      "name": "Microsoft (Copilot)",
+      "shortName": "Copilot",
+      "defaultModel": null,
+      "billingUrl": null,
+      "tier1Rpm": null,
+      "tier1Tpm": null,
+      "freeTier": null,
+      "rateLimitNotes": "Copilot API is not available for personal Microsoft 365 accounts — no per-token pricing to track. Use Copilot in free/manual mode.",
+      "recommendationTag": null,
+      "recommendationNote": null,
+      "models": [
+        { "id": "gpt-4o", "inputPerM": null, "outputPerM": null, "contextWindow": null, "maxOutput": null, "estPerRound": null, "estNote": null, "sourceUrl": null, "verifiedAt": null, "status": "unsupported" }
+      ]
     }
   ]
 }
