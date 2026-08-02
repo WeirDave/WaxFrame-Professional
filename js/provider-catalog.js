@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260802-015
+// Build: 20260802-016
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -283,21 +283,21 @@
     },
     {
       id: 'chatgpt', label: 'OpenAI (ChatGPT)',
-      model: 'gpt-5.5',
+      model: 'gpt-5.6-sol',
       endpoint: 'https://api.openai.com/v1/chat/completions',
       format: 'openai',
       discovery: 'openai-models',
       vision: true,
       // -pro / -codex are Responses-API-only; dated snapshots clutter.
       filterExtras: [CHATGPT_RESPONSES_ONLY_RE, DATED_SNAPSHOT_RE],
-      // gpt-5.6-sol/-terra/-luna added 2026-08-01 (OpenAI announcement) —
-      // fallback-list-only, NOT the default. Live discovery already
-      // surfaces them for any keyed user regardless of this list; this
-      // just covers the no-discovery case. Default stays gpt-5.5 until
-      // gpt-5.6-sol is smoke-tested as Builder (see backlog item 6) —
-      // new model generations have broken the Builder marker format
-      // before (see backlog item 1), can't verify that without a live key.
-      fallback: ['gpt-5.5', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']
+      // gpt-5.6-sol promoted to default 2026-08-02 (backlog item 6) — same
+      // price as prior default gpt-5.5, smoke-tested as Builder with no
+      // marker-format breakage, and showed the best judgment of the three
+      // gpt-5.6 tiers (raised a real yield ambiguity as a clean decision
+      // instead of silently drifting or converging around an error, as
+      // terra/luna did in the same test). Terra/luna stay fallback-only —
+      // cheaper but each showed a correctness miss under test.
+      fallback: ['gpt-5.6-sol', 'gpt-5.5', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']
     },
     {
       id: 'copilot', label: 'Microsoft (Copilot)',

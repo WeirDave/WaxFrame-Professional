@@ -280,7 +280,7 @@
       "id": "chatgpt",
       "name": "ChatGPT (OpenAI)",
       "shortName": "ChatGPT",
-      "defaultModel": "gpt-5.5",
+      "defaultModel": "gpt-5.6-sol",
       "billingUrl": "https://platform.openai.com/settings/organization/billing/overview",
       "tier1Rpm": "500",
       "tier1Tpm": "30K",

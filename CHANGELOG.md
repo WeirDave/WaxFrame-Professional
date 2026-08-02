@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.452
+
+**ChatGPT default bumped to gpt-5.6-sol — backlog item 6 decided**
+
+Build: `20260802-016`<br>
+Released: `2026-08-02`
+
+### What changed
+
+Closed out the open decision from the 2026-08-01 GPT-5.6 evaluation (backlog item 6): the chatgpt provider's default model in `js/provider-catalog.js` moves from `gpt-5.5` to `gpt-5.6-sol`, with the pricing seed's `defaultModel` field updated to match.
+
+Same price as the prior default ($5/$30 per M), so this is a straight upgrade with no cost tradeoff. The deciding factor was Builder judgment quality under the 2026-08-01 live test: sol was the only one of the three gpt-5.6 tiers that raised a genuine yield ambiguity as a clean USER DECISION instead of quietly resolving it — terra let a yield figure silently drift across rounds, luna converged around an unflagged doubled-portion error. For an unattended/Auto-mode-safe default, correctness over cost. gpt-5.5, terra, and luna all remain selectable via the fallback list and live discovery.
+
+### Verification
+
+- `node tools/release-check.mjs` — full pass.
+- Confirmed no other hardcoded chatgpt-default references in the codebase (checked `js/app.js`'s `VISION_DEFAULTS` map — that's a separate OCR-fallback concern, intentionally untouched; `gpt-5.5` remains a valid, priced, selectable model there).
+
+### Files touched
+
+- `js/provider-catalog.js` — chatgpt `model` field + fallback order, comment updated
+- `tools/pricing-worker/data/pricing-seed.json` — chatgpt `defaultModel` field
+- `docs/WaxFrame_Backlog_Master_v267.txt` — item 6 marked decided
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+`git revert` this commit — no storage/schema changes.
+
+---
+
 ## v3.63.451
 
 **Dead Gumroad link fixed in llms.txt — found while auditing marketing links, every actual page already had the correct URL**

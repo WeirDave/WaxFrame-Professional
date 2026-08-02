@@ -340,18 +340,16 @@ OPEN FEATURES
            see tools/pricing-worker/README.md's "Review-before-
            publish" section) — but there's no separate "add the row"
            step left to do.
-   DONE:   David picks: (a) keep gpt-5.5 default, do nothing further;
-           (b) bump default to gpt-5.6-sol — safest judgment, same
-           price as gpt-5.5; (c) bump to gpt-5.6-terra — 20% cheaper,
-           converges, but needs the "surface silent drift as a
-           decision instead of averaging through it" caveat weighed;
-           (d) bump to gpt-5.6-luna — cheapest by far (~1/25th Sol),
-           fastest convergence, but this test showed it can converge
-           around an internal-consistency error uncaught by the full
-           reviewer panel — riskiest pick for unattended/Auto-mode
-           use. Whichever is chosen: bump js/provider-catalog.js's
-           chatgpt default and defaultModel in the pricing seed, run
-           full release ceremony.
+   DONE:   DECIDED 2026-08-02, shipped v3.63.452: default bumped to
+           gpt-5.6-sol. Same price as prior default gpt-5.5, smoke-
+           tested Builder-safe, and the only one of the three that
+           surfaced its yield ambiguity as a clean decision instead
+           of silently drifting (terra) or converging around an
+           uncaught error (luna) — correctness over cost savings for
+           an unattended/Auto-mode-safe default. js/provider-
+           catalog.js's chatgpt model + fallback order and the
+           pricing seed's chatgpt defaultModel both updated. Entry
+           closed — remove this item on next backlog touch.
 
 7. Three duplicate-logic cleanups deferred from the 2026-08-01 code audit
    ─────────────────────────────────────────────────────────
