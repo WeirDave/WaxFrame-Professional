@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.447
+
+**AI API Pricing: first scheduled-refresh review pass — 3 of 11 proposals confirmed and applied, 8 rejected on independent verification**
+
+Build: `20260802-011`<br>
+Released: `2026-08-02`
+
+### What changed
+
+First `needs-review` batch from the Sunday scheduled Sonar refresh (run 2026-08-02T12:00:26Z, 11 flagged rows). Each proposal was independently checked against the provider's own official pricing page before applying anything — not just relayed from the alert email.
+
+**Applied (3) — confirmed live against official sources:**
+- `gemini-paid/gemini-3.5-flash` — $1.50/$9.00 (was $0.075/$0.3), confirmed at ai.google.dev/gemini-api/docs/pricing
+- `together/meta-llama/Llama-3.3-70B-Instruct-Turbo` — $1.04/$1.04 (was $0.88/$0.88), confirmed at together.ai/models/llama-3-3-70b
+- `mistral/mistral-large-latest` — $0.50/$1.50 "Mistral Large 3" (was $2/$6), confirmed at mistral.ai/pricing/api/ — the same drop v3.63.445 found and deliberately held for a second look; now independently corroborated by the automated run, so applied
+
+**Rejected (4) — already re-verified today from a higher-trust source, contradicting the proposal:**
+- `claude/claude-opus-4-7` (proposed $2/$10; platform.claude.com confirmed $5/$25 earlier today in v3.63.444)
+- `chatgpt/gpt-5.6-terra` (proposed $2.5/$15; developers.openai.com confirmed $2/$12 earlier today in v3.63.444)
+- `chatgpt/gpt-5.6-luna` (proposed $1/$6; same source confirmed $0.2/$1.2 earlier today)
+- `mistral/ministral-8b-latest` (proposed $0.1/$0.1; David's own Mistral console confirmed $0.15/$0.15 earlier today in v3.63.445 — first-party account data outranks a Sonar-sourced proposal)
+
+**Rejected (4) — proposal didn't hold up on inspection:**
+- `perplexity/sonar-reasoning` (proposed $2/$8): Perplexity's own pricing page lists Sonar, Sonar Pro, Sonar Reasoning **Pro**, and Sonar Deep Research — no standalone "Sonar Reasoning" tier exists. $2/$8 is Sonar Reasoning Pro's exact price, attributed to the wrong model id.
+- `cohere/command-r` and `cohere/command-a-03-2025` (proposed $0.15/$0.6 and $2.5/$10): the cited docs.cohere.com pages are feature docs with no pricing on them at all — checked directly, nothing there. cohere.com/pricing only exposes legacy 2024-dated Command R pricing. Not applying a number with no real source.
+- `grok/grok-4.20-reasoning` (proposed $1.25/$2.5): xAI's docs only expose `grok-4.20-0309-reasoning`, not `grok-4.20-reasoning` — same unresolved model-id mismatch v3.63.444 already declined to guess past.
+
+**Open follow-up, not part of this release:** `grok-4.20-reasoning` and `sonar-reasoning` are live entries in `js/provider-catalog.js`'s fallback model lists (real selectable options, not just pricing rows). If those ids don't actually resolve against the providers' live model endpoints, that's a functional bug of the same shape as the Together AI retired-models fix in v3.63.446 — flagged for David to decide on, not acted on here since it's a catalog change, not a pricing one.
+
+### Verification
+
+- `node tools/generate-pricing-fallback.mjs` — regenerated, `js/pricing-renderer.js` FALLBACK_DATA matches seed.
+- `node tools/check-pricing-coverage.mjs` — pass.
+- `node tools/release-check.mjs` — full pass, all gates green.
+
+### Files touched
+
+- `tools/pricing-worker/data/pricing-seed.json` — 3 model rows updated (price, estPerRound, sourceUrl, verifiedAt)
+- `js/pricing-renderer.js` — regenerated `FALLBACK_DATA`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit, then re-push the prior seed to KV (`wrangler kv key put --binding=PRICING_DATA latest --path=tools/pricing-worker/data/pricing-seed.json --remote` after reverting). Data-only change — no schema or code changes.
+
+---
+
 ## v3.63.446
 
 **Together AI: dropped two retired models from the catalog itself, not just the pricing page**
