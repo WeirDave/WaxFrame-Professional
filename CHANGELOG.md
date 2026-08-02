@@ -2,6 +2,58 @@
 
 ---
 
+## v3.63.437
+
+**AI API Pricing page now tracks every curated model per provider, not just the default — with a review-before-publish gate on the scheduled price refresh**
+
+Build: `20260802-001`<br>
+Released: `2026-08-02`
+
+### What changed
+
+David asked Codex (a separate AI) for its read on making `ai-api-pricing.html` "full and complete" for all makes/models WaxFrame tracks, after finding a prior Claude-chat proposal's direction too heavy. Codex's diagnosis was accurate: the pricing Worker only ever priced each provider's *default* model, even though `js/provider-catalog.js` curates 3-7 fallback models per provider that were never priced or shown anywhere. Codex's first pass at a fix was a full billing-platform rearchitecture (canonical model keys, alias tables, per-field provenance, five deterministic scraper adapters, a candidate/promotion KV service) — reviewed and scoped down to what a solo-dev reference page for two paying customers actually needs. A second pass then correctly caught two real gaps in that scoped-down plan: `confirmedModel` (the v3.63.421 guardrail) is required but never compared against the requested model id, and the old 40%-delta gate auto-applied any smaller price move — which is exactly the shape the real claude-sonnet-4-6/sonnet-5 mix-up took.
+
+**Seed schema v3.** `tools/pricing-worker/data/pricing-seed.json` now carries a `models[]` array per provider (every model in that provider's `js/provider-catalog.js` `fallback` list) plus a `defaultModel` pointer, instead of one flat model/price pair per provider row. A model with no verified price yet still gets a row (`status: "needs-verification"`) — nothing curated is silently absent. Fixed a real drift bug in the process: the seed's old Together AI id (`Llama-3.3-70B-Instruct-Turbo`) didn't match the catalog's actual namespaced id (`meta-llama/Llama-3.3-70B-Instruct-Turbo`) — now they match. Added Copilot as an explicit `status: "unsupported"` row (API unavailable to personal M365 accounts) instead of being absent with no explanation.
+
+**Review-before-publish, replacing the 40%-delta auto-apply gate.** The scheduled Worker refresh (`tools/pricing-worker/src/index.js`) now researches every tracked model (~38, up from ~10) with a small concurrency cap, but a changed or first-time price is *always* held for human review — no threshold, no auto-apply, regardless of delta size. The old live value stays exactly as it was in KV; the proposal (requested model, `confirmedModel`, old/proposed prices, source URL, timestamp) lands as a structured entry in the run log and the alert email. Applying a reviewed proposal is still a manual `wrangler kv key put` edit — no new candidate/promotion service was built, since this data has never been high-enough-stakes to justify one. The decision logic is now a pure, exported function (`decideModelUpdate()`) covered by a dedicated behavior-test suite.
+
+**Page UI.** The existing "Defaults" comparison table is visually unchanged (reads each provider's `defaultModel` out of the new `models[]` shape). A new expandable "All tracked models" section below it lists every curated model with provider/status filters and text search, null-safe price display ("Needs verification" instead of `$NaN`), and a source link + verified date per row.
+
+**Closed a real drift risk in passing:** `js/pricing-renderer.js`'s embedded `FALLBACK_DATA` snapshot used to be hand-pasted in lockstep with the seed on each pricing release — a discipline problem waiting to happen. `tools/generate-pricing-fallback.mjs` now generates it from the seed directly; the renderer file carries marker comments so the script can't drift from the seed's actual shape.
+
+**New release gates:** `tools/check-pricing-coverage.mjs` (diffs `provider-catalog.js` fallback lists against the seed's `models[]` ids — catches drift in either direction) and `tools/pricing-worker/test-refresh-logic.mjs` (pure-function tests for the review-gate decision logic) are both wired into `tools/release-check.mjs` as Checks 11 and 12.
+
+**Not deployed yet.** This release ships the code and local tooling; the live Cloudflare Worker still serves the old schema v2 payload until `wrangler deploy` (Worker code) and `wrangler kv key put --binding=PRICING_DATA latest --path=tools/pricing-worker/data/pricing-seed.json --remote` (new seed) are run against production — see `tools/pricing-worker/README.md`. The page's fallback path (verified working in this release) means nothing breaks in the meantime; it just keeps showing the current live data until deployed.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass (12 checks, including the two new ones).
+- `node tools/check-pricing-coverage.mjs` — pass; manually verified it actually catches drift (temporarily dropped a model from the seed, confirmed the check failed with the right message, restored).
+- `node tools/pricing-worker/test-refresh-logic.mjs` — pass (unchanged-price silent confirm, changed-price hold at both small and large deltas, first-time-price hold, failed-research retain, healthy-then-failing regression alert, bounded-concurrency ordering).
+- Live-browser-tested via a local static server (`python -m http.server`, since raw `file://` in the preview pane hit the live Worker instead of the local fallback): Defaults table renders identically to before; "All tracked models" section renders all 38 rows with correct status badges, null-safe pricing, and working provider/status/search filters; verified in both light and dark themes; no console errors.
+
+### Files touched
+
+- `tools/pricing-worker/data/pricing-seed.json` — restructured to schema v3 (`models[]` per provider)
+- `tools/pricing-worker/src/index.js` — per-model research loop, bounded concurrency, `decideModelUpdate()` review-gate logic, structured run-log entries
+- `tools/pricing-worker/package.json` — new, `{"type":"module"}` so Node resolves the Worker's ESM exports cleanly for local testing
+- `tools/pricing-worker/test-refresh-logic.mjs` — new, review-gate behavior tests
+- `tools/pricing-worker/README.md` — updated for the v3 schema, review-before-publish policy, and new test tooling
+- `tools/check-pricing-coverage.mjs` — new, catalog-vs-seed coverage check
+- `tools/generate-pricing-fallback.mjs` — new, generates `pricing-renderer.js`'s `FALLBACK_DATA` from the seed
+- `tools/release-check.mjs` — two new checks (11, 12) wiring the above into the release gate
+- `js/pricing-renderer.js` — `getDefaultRows()`/`getAllModelRows()` for the new schema, "All tracked models" render/filter logic, generated `FALLBACK_DATA`
+- `ai-api-pricing.html` — new "All tracked models" markup (filters, table)
+- `style.css` — new `.pricing-all-models*`, `.status-pill*`, `.pricing-filter-*` rules
+- `docs/WaxFrame_Backlog_Master_v265.txt` → renamed `v266.txt` — updated the GPT-5.6-family backlog item's WHERE note (the "needs a pricing-page row" sub-task is now moot; the default-model decision itself is still open)
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. The live Cloudflare Worker/KV are untouched by this release (not yet deployed — see "Not deployed yet" above), so a revert has zero production blast radius; it only affects files in this repo.
+
+---
+
 ## v3.63.436
 
 **Checkpoints screen: Select all / Select none now also live in the footer, next to Cancel**

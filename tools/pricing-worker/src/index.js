@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20260801-001
+//  Build: 20260802-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -8,13 +8,17 @@
 //  so pricing can be refreshed without redeploying the site.
 //  KV key:  `latest`
 //  Value:   JSON matching the schema in data/pricing-seed.json
+//           (schemaVersion 3 — each provider carries a `models[]`
+//           array covering every model WaxFrame curates for that
+//           provider in js/provider-catalog.js, not just the default)
 //
 //  Endpoint:
 //    GET /api/pricing  -> { lastUpdated, providers: [...] }
 //    GET /             -> status page (HTML) + recent scheduled-refresh log
 //
 //  Manual pricing update (still supported, still the source of truth for
-//  prose fields — rate-limit notes, recommendation copy, billing URLs):
+//  prose fields — rate-limit notes, recommendation copy, billing URLs, and
+//  for actually APPLYING a reviewed price proposal — see below):
 //    wrangler kv key put --binding=PRICING_DATA latest --path=../data/pricing-seed.json --remote
 //
 //  v3.63.412 — Scheduled numeric-pricing refresh. A weekly cron trigger
@@ -22,93 +26,88 @@
 //  day-of-week field counts differently than assumed on first pass, this
 //  is the corrected label) calls refreshPricing(), which asks
 //  Perplexity Sonar (web-grounded, so answers are anchored to a live
-//  search rather than training-data recall) for each provider's CURRENT
-//  inputPerM / outputPerM / contextWindow / maxOutput. estPerRound is
-//  recomputed from those via plain math (same formula the rest of the
-//  app already uses), never asked of the model. Scope is deliberately
-//  narrow: only those four numeric fields move automatically. Prose
-//  fields (rateLimitNotes, recommendationNote, billingUrl, freeTier,
+//  search rather than training-data recall) for CURRENT pricing. Scope is
+//  deliberately narrow: only numeric pricing fields move automatically.
+//  Prose fields (rateLimitNotes, recommendationNote, billingUrl, freeTier,
 //  tier1Rpm/Tpm) stay human-curated — editorial judgment and exact-URL
 //  correctness aren't things to hand to a scheduled LLM call.
 //
-//  v3.63.413 — Two guardrails added after a real dry-run test caught a
-//  gap: the original validation (complete + well-formed fields) let a
-//  fully-formed but WRONG answer through untouched — Perplexity returned
-//  a complete, validating price for Mistral that turned out to be a
-//  different model tier than the one asked for, confirmed wrong against
-//  Mistral's own pricing page. Neither guardrail below is foolproof, but
-//  together they'd have caught that specific failure:
-//    1. Source citation. The prompt now requires a `source` URL field;
-//       the response is rejected unless that URL's hostname matches the
-//       provider's own official domain (SOURCE_DOMAINS below). Doesn't
-//       prove the number is right, but a same-provider-family tier mix-up
-//       is far more likely to cite a different page than the one for the
-//       exact model asked about.
-//    2. Delta threshold. Even with a valid, correctly-sourced answer, if
-//       inputPerM or outputPerM moves more than DELTA_THRESHOLD (40%)
-//       from the current value, the change is held as `flagged` instead
-//       of applied — old value stays live, the proposed new value is
-//       recorded in the run log for a human to glance at. Real price
-//       cuts that large do happen occasionally, but that's also exactly
-//       the shape of a tier-mismatch error, so it's worth a human's eyes
-//       either way rather than auto-publishing unattended.
+//  v3.63.413 — Two guardrails: a `source` URL is required and must match
+//  the provider's own official domain (SOURCE_DOMAINS below); Perplexity's
+//  response must be well-formed (valid numeric prices).
 //
-//  Safety: any provider whose response fails to parse, fails validation
-//  (non-numeric/negative price, malformed size string, wrong-domain
-//  source), or trips the delta threshold keeps its PREVIOUS values
+//  v3.63.422 — `confirmedModel` required (the exact model name/version as
+//  written on the source page) after a scheduled run once returned a
+//  fully-formed, correctly-sourced, plausible price for claude-sonnet-4-6
+//  that was actually claude-sonnet-5's introductory rate — a different
+//  model, caught only by manual reconciliation weeks later. This doesn't
+//  string-match confirmedModel against the requested model id (naming
+//  conventions vary too much across providers to do that reliably); it
+//  just refuses to auto-apply a price Sonar wasn't willing to explicitly
+//  attribute to a specific version.
+//
+//  v3.63.437 — REVIEW-BEFORE-PUBLISH, and per-model instead of
+//  per-provider-default. Two changes prompted by a closer look at the
+//  confirmedModel guardrail above: it reduces the risk of a tier/version
+//  mix-up, it doesn't eliminate it, since the returned confirmedModel is
+//  never compared against the requested model id. The previous design
+//  also auto-applied any price move under a 40%-delta threshold — which
+//  is exactly the shape the claude-sonnet-4-6/sonnet-5 mix-up took (a
+//  ~33% swing, under threshold, auto-applied with no review). So:
+//    1. Every provider's CURATED MODEL LIST (not just its default) is now
+//       tracked — pulled 1:1 from js/provider-catalog.js's `fallback`
+//       arrays (see tools/check-pricing-coverage.mjs for the drift check
+//       that keeps them in sync). A model with no known price still gets
+//       a row, status `needs-verification` — it's never silently absent.
+//    2. ANY changed or first-time price is now held for human review
+//       instead of auto-applied, no matter how small the delta. The old
+//       verified value (or `needs-verification` null) stays live in KV
+//       untouched; the proposed number lives only in the structured
+//       run-log entry (providerId, modelId, requestedModel, confirmedModel,
+//       old/proposed inputPerM+outputPerM, sourceUrl, timestamp) and in
+//       the alert email. Applying a reviewed proposal is still the
+//       existing manual step: hand-edit data/pricing-seed.json and
+//       `wrangler kv key put ... --remote`. No candidate/promotion KV
+//       service was added — the run-log already carries everything a
+//       human needs to review and apply by hand.
+//    3. Research calls now run per-model, not per-provider-default —
+//       35-40 model rows instead of ~10 provider rows. A small
+//       concurrency cap (mapWithConcurrency, 4 at a time) replaces the
+//       unbounded Promise.allSettled fan-out to stay polite to Perplexity.
+//
+//  Safety: any provider/model whose response fails to parse, fails
+//  validation (non-numeric/negative price, malformed size string, wrong-
+//  domain source, missing confirmedModel), keeps its PREVIOUS values
 //  untouched — never overwritten with a guess. The prior full payload is
 //  also kept under KV key `previous` as a one-step rollback. Every run
 //  appends a compact entry to KV key `run-log` (last 10 kept) showing
-//  which providers were updated/confirmed/flagged/retained-and-why —
-//  rendered on the `/` status page so a human can glance at it before
-//  trusting the number, e.g. before a demo.
+//  which provider/model rows were confirmed/needs-review/retained-and-why
+//  — rendered on the `/` status page so a human can glance at it before
+//  trusting a number, e.g. before a demo, and before manually applying any
+//  needs-review proposal.
 //
 //  Requires a `PERPLEXITY_API_KEY` Worker secret:
 //    wrangler secret put PERPLEXITY_API_KEY
 //  If unset, refreshPricing() is a silent no-op — manual KV updates keep
 //  working exactly as before, the page never breaks either way.
 //
-//  v3.63.413 follow-up — email alerts. The run-log/status-page mechanism
-//  above is pull (you have to remember to check it), which recreates the
-//  exact problem this whole feature exists to fix. A `send_email` binding
-//  (Cloudflare Email Routing — see wrangler.toml [[send_email]]) pushes an
-//  email to David whenever a run has something worth a human look:
+//  Email alerts. The run-log/status-page mechanism above is pull (you have
+//  to remember to check it). A `send_email` binding (Cloudflare Email
+//  Routing — see wrangler.toml [[send_email]]) pushes an email to David
+//  whenever a run has something worth a human look:
 //    - the whole run throws (KV unreachable, catastrophic failure)
-//    - any provider gets `flagged` this run (valid + sourced but the price
-//      swung past DELTA_THRESHOLD)
-//    - a provider that succeeded (updated/confirmed) on the PREVIOUS run
-//      now can't be read at all — the "their page probably changed" signal
-//    - a provider's price actually moved and was auto-applied (v3.63.422,
-//      see below — previously silent whenever the swing landed under
-//      DELTA_THRESHOLD, which is exactly how a wrong-but-plausible answer
-//      gets through undetected)
-//  Deliberately does NOT email on routine `retained` (a handful of
-//  providers — Gemini free tier, Together, Grok — consistently come back
-//  incomplete most runs; that's expected LLM behavior, not a fault) or on
-//  `confirmed` (price genuinely unchanged — nothing to look at).
-//  Emailing on every retained would just be noise David learns to ignore.
-//
-//  v3.63.422 — Two guardrails added after Claude's live price silently
-//  drifted to the wrong number: a prior scheduled run got back $2/$10 for
-//  claude-sonnet-4-6 (confirmed against Anthropic's own docs to actually be
-//  claude-sonnet-5's INTRODUCTORY rate, a different model entirely) — a
-//  ~33% swing on each field, under DELTA_THRESHOLD, so it auto-applied with
-//  no flag and no email. Caught only by manual reconciliation weeks later.
-//    1. Alert on every applied price change, not just flagged ones (see
-//       above) — the delta threshold is a REVIEW gate for big swings, it
-//       was never meant to also be the ALERT gate for small ones. Small
-//       wrong answers need eyes just as much as big ones; they just don't
-//       need to block auto-apply while waiting for those eyes.
-//    2. Model-version confirmation. buildResearchPrompt() now requires a
-//       `confirmedModel` field — the exact model name/version as it
-//       literally appears on the source page — and explicitly warns about
-//       introductory/promotional rates and sibling model-family tiers.
-//       researchProvider() rejects (falls back to `retained`, same path as
-//       a missing price) any response that doesn't include it. This won't
-//       catch every tier mix-up, but it forces an affirmative claim instead
-//       of a silent guess, which is what actually failed here — Perplexity
-//       answered for "Claude Sonnet" generically instead of confirming the
-//       specific 4.6 release the source page named.
+//    - any provider/model needs review this run (changed or first-time
+//      price, valid + sourced + model-confirmed but held rather than
+//      applied)
+//    - a provider/model that succeeded (confirmed/needs-review) on the
+//      PREVIOUS run now can't be read at all — the "their page probably
+//      changed" signal
+//  Deliberately does NOT email on routine `retained` for rows that
+//  consistently come back incomplete (Gemini free tier's non-default
+//  models, Together, Grok in practice — expected LLM behavior, not a
+//  fault) or on `confirmed` (price genuinely unchanged — nothing to look
+//  at). Emailing on every retained/confirmed would just be noise David
+//  learns to ignore.
 // ============================================================
 
 const CORS = {
@@ -135,6 +134,11 @@ const MAX_LOG_ENTRIES = 10;
 const PERPLEXITY_URL   = 'https://api.perplexity.ai/chat/completions';
 const PERPLEXITY_MODEL = 'sonar-pro'; // matches the model WaxFrame's own grounded-asker uses (js/app.js _PERPLEXITY_GROUNDED_PROVIDERS) — sonar-pro's format-following is noticeably tighter for strict-JSON asks than base sonar.
 
+// v3.63.437 — how many researchModel() calls run at once. 35-40 tracked
+// models (up from ~10 provider-default rows) against a single external API
+// warrants a cap instead of firing every request simultaneously.
+const RESEARCH_CONCURRENCY = 4;
+
 // From-address just needs to be a valid-looking address on a domain
 // Email Routing controls (waxframe.com) — it isn't a real receivable
 // mailbox, nothing needs to route TO it.
@@ -159,10 +163,6 @@ const SOURCE_DOMAINS = {
   'perplexity':   ['perplexity.ai']
 };
 
-// Relative price movement beyond this on EITHER inputPerM or outputPerM
-// holds the change for manual review instead of auto-applying it.
-const DELTA_THRESHOLD = 0.40;
-
 function hostnameMatchesDomain(hostname, domain) {
   return hostname === domain || hostname.endsWith('.' + domain);
 }
@@ -176,19 +176,14 @@ function isTrustedSource(providerId, sourceUrl) {
   return allowed.some(d => hostnameMatchesDomain(hostname, d));
 }
 
-function relativeDelta(oldVal, newVal) {
-  if (!(oldVal > 0)) return newVal === oldVal ? 0 : Infinity; // old was 0 (free tier) — any nonzero new value is an infinite relative jump, correctly always flagged
-  return Math.abs(newVal - oldVal) / oldVal;
-}
-
 function buildStatusHtml(log) {
   const rows = (log || []).map(entry => {
     const items = (entry.changes || []).map(c => {
-      const label = c.status === 'updated' ? `<strong style="color:#0a7d2c">${c.id}: updated</strong> — ${c.reason || ''}`
-        : c.status === 'confirmed' ? `${c.id}: confirmed unchanged`
-        : c.status === 'flagged' ? `<strong style="color:#b3261e">${c.id}: flagged for review</strong> — ${c.reason || 'large price delta'}`
-        : `<span style="color:#a15c00">${c.id}: retained old value (${c.reason || 'unknown reason'})</span>`;
-      return `<li>${label}</li>`;
+      const label = `${c.providerId}/${c.modelId}`;
+      const style = c.status === 'needs-review' ? `<strong style="color:#b3261e">${label}: needs review</strong> — ${c.reason || ''}`
+        : c.status === 'confirmed' ? `${label}: confirmed unchanged`
+        : `<span style="color:#a15c00">${label}: retained old value (${c.reason || 'unknown reason'})</span>`;
+      return `<li>${style}</li>`;
     }).join('');
     return `<details><summary>${entry.ts}</summary><ul>${items}</ul></details>`;
   }).join('') || '<p>No scheduled refresh has run yet.</p>';
@@ -196,20 +191,20 @@ function buildStatusHtml(log) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>WaxFrame Pricing Worker</title><style>body{font-family:system-ui,sans-serif;max-width:640px;margin:2rem auto;padding:0 1rem;color:#222;background:#fafafa}code{background:#eee;padding:.1rem .3rem;border-radius:3px}a{color:#0366d6}details{margin-bottom:.5rem}summary{cursor:pointer;font-weight:600}</style></head><body><h1>WaxFrame Pricing Worker</h1><p>Live data endpoint: <code><a href="/api/pricing">/api/pricing</a></code></p><p>Source: <a href="https://github.com/WeirDave/WaxFrame-Professional/tree/main/tools/pricing-worker">github.com/WeirDave/WaxFrame-Professional</a></p><h2>Scheduled refresh log</h2>${rows}</body></html>`;
 }
 
-function buildResearchPrompt(provider) {
+function buildResearchPrompt(provider, model) {
   const tierNote = provider.id === 'gemini-free'
     ? ' This is Google AI Studio’s FREE tier — confirm pricing is still $0 per token, or note if the free tier has been discontinued or changed.'
     : provider.id === 'gemini-paid'
     ? ' This is the PAID tier, not the free tier.'
     : '';
-  return `For the AI API provider "${provider.name}", model "${provider.model}": look up the CURRENT, officially published API pricing as of today from the provider's own pricing/billing documentation.${tierNote}
+  return `For the AI API provider "${provider.name}", model "${model.id}": look up the CURRENT, officially published API pricing as of today from the provider's own pricing/billing documentation.${tierNote}
 
 Return ONLY a compact JSON object, no markdown, no explanation, no extra text:
 {"inputPerM": <number, USD per 1M input tokens, or null if you cannot verify it from an authoritative current source>, "outputPerM": <number, USD per 1M output tokens, or null>, "contextWindow": <string like "1M" or "256K", or null>, "maxOutput": <string like "8K", or null>, "source": <string, the exact URL of the official page you found this pricing on, or null>, "confirmedModel": <string, the exact model name/version EXACTLY as written on the source page next to the price you're reporting, or null if the page doesn't clearly label it>}
 
 The "source" URL MUST be a page on the provider's own official domain — not a third-party aggregator, comparison site, or news article. Do not guess or estimate any field you cannot verify — return null for it instead.
 
-IMPORTANT — this model family may have multiple pricing rows that look similar: different version numbers, an introductory/promotional rate that later reverts to a higher standard rate, or different size tiers (mini/nano/pro/flash/etc). Make sure the price you report is for EXACTLY "${provider.model}" and not a sibling row. If the page shows both an introductory and a standard rate for this exact model, report whichever is CURRENTLY active today. If you are not fully certain the price and "confirmedModel" you're returning both refer to exactly this model, return null for inputPerM and outputPerM rather than guessing.`;
+IMPORTANT — this model family may have multiple pricing rows that look similar: different version numbers, an introductory/promotional rate that later reverts to a higher standard rate, or different size tiers (mini/nano/pro/flash/etc). Make sure the price you report is for EXACTLY "${model.id}" and not a sibling row. If the page shows both an introductory and a standard rate for this exact model, report whichever is CURRENTLY active today. If you are not fully certain the price and "confirmedModel" you're returning both refer to exactly this model, return null for inputPerM and outputPerM rather than guessing.`;
 }
 
 function extractJson(text) {
@@ -227,7 +222,7 @@ function isValidSizeString(s) {
   return typeof s === 'string' && /^~?\s*[0-9]*\.?[0-9]+\s*[KMGB]?$/i.test(s.trim());
 }
 
-async function researchProvider(provider, apiKey) {
+async function researchModel(provider, model, apiKey) {
   let resp;
   try {
     resp = await fetch(PERPLEXITY_URL, {
@@ -235,7 +230,7 @@ async function researchProvider(provider, apiKey) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: PERPLEXITY_MODEL,
-        messages: [{ role: 'user', content: buildResearchPrompt(provider) }]
+        messages: [{ role: 'user', content: buildResearchPrompt(provider, model) }]
       })
     });
   } catch (e) {
@@ -249,17 +244,6 @@ async function researchProvider(provider, apiKey) {
   const parsed = extractJson(text);
   if (!parsed) return { ok: false, reason: 'unparseable response' };
 
-  // v3.63.413 follow-up: inputPerM/outputPerM (the actual PRICE — the
-  // entire point of this feature) are hard-required. contextWindow and
-  // maxOutput are real-world unreliable — Perplexity frequently nails the
-  // price and cites a solid source but comes back null on max-output-
-  // tokens specifically, since it's a less consistently published number
-  // than $/M pricing. Requiring all four as a block meant this feature
-  // would near-never successfully update anything in practice (confirmed
-  // against live test runs). So: price + trusted source gate the whole
-  // response; contextWindow/maxOutput are independently optional and
-  // fall back to the provider's existing value when unconfirmed, rather
-  // than vetoing an otherwise-good price update.
   const { inputPerM, outputPerM, contextWindow, maxOutput, source, confirmedModel } = parsed;
   if (!isValidPrice(inputPerM) || !isValidPrice(outputPerM)) {
     return { ok: false, reason: 'invalid or missing price fields in response' };
@@ -267,13 +251,6 @@ async function researchProvider(provider, apiKey) {
   if (!isTrustedSource(provider.id, source)) {
     return { ok: false, reason: `untrusted or missing source (got: ${source || 'none'})` };
   }
-  // v3.63.422 — require an affirmative model-version claim rather than
-  // trusting that a valid price + valid source means it's for the right
-  // model. Doesn't string-match it (naming conventions vary too much
-  // across providers to do that reliably); just refuses to auto-apply a
-  // price the model wasn't willing to explicitly attribute to a specific
-  // version, since a confident guess and an unconfirmed one look identical
-  // in the JSON otherwise.
   if (typeof confirmedModel !== 'string' || !confirmedModel.trim()) {
     return { ok: false, reason: 'no confirmed model-version attribution in response' };
   }
@@ -282,6 +259,98 @@ async function researchProvider(provider, apiKey) {
     contextWindow: isValidSizeString(contextWindow) ? String(contextWindow).trim() : null,
     maxOutput: isValidSizeString(maxOutput) ? String(maxOutput).trim() : null
   };
+}
+
+// ── decideModelUpdate ────────────────────────────────────────────────
+// Pure function: (provider, model, researchOutcome, wasHealthyLastRun,
+// nowIso) -> { nextModel, change, alertLine }. No KV/network access, so
+// tools/pricing-worker/test-refresh-logic.mjs can exercise every branch
+// without touching Cloudflare or Perplexity. This is the v3.63.437
+// review-gate: a changed or first-time price NEVER lands in nextModel —
+// it only appears in `change` (the structured run-log/proposal record).
+// Only a genuinely-unchanged confirmed price refreshes the live model
+// (and only its verifiedAt/contextWindow/maxOutput, never its price).
+function decideModelUpdate(provider, model, result, wasHealthyLastRun, nowIso) {
+  const label = `${provider.id}/${model.id}`;
+
+  if (!result.ok) {
+    return {
+      nextModel: model,
+      change: { providerId: provider.id, modelId: model.id, requestedModel: model.id, status: 'retained', reason: result.reason, ts: nowIso },
+      alertLine: wasHealthyLastRun ? `NEWLY FAILING  ${label} (${provider.name}): was OK last run, now: ${result.reason}` : null
+    };
+  }
+
+  const { inputPerM, outputPerM, contextWindow, maxOutput, source, confirmedModel } = result;
+  const hadPrice = isValidPrice(model.inputPerM) && isValidPrice(model.outputPerM);
+
+  if (!hadPrice) {
+    // First price ever found for this model. Model stays exactly as-is
+    // (still needs-verification, still null) — the proposal is reviewed
+    // and applied by hand, same as any other needs-review row.
+    const reason = `first price found: $${inputPerM}/$${outputPerM} per M — confirmed as "${confirmedModel}" — ${source || 'no source'}`;
+    return {
+      nextModel: model,
+      change: {
+        providerId: provider.id, modelId: model.id, requestedModel: model.id, status: 'needs-review',
+        confirmedModel, oldInputPerM: model.inputPerM, proposedInputPerM: inputPerM,
+        oldOutputPerM: model.outputPerM, proposedOutputPerM: outputPerM,
+        sourceUrl: source || null, ts: nowIso, reason
+      },
+      alertLine: `NEEDS REVIEW  ${label} (${provider.name}): ${reason}`
+    };
+  }
+
+  const priceMoved = inputPerM !== model.inputPerM || outputPerM !== model.outputPerM;
+  if (!priceMoved) {
+    return {
+      nextModel: {
+        ...model,
+        contextWindow: contextWindow || model.contextWindow, // Perplexity often can't confirm this even when price+source are solid — keep old rather than lose it
+        maxOutput: maxOutput || model.maxOutput,
+        verifiedAt: nowIso
+      },
+      change: { providerId: provider.id, modelId: model.id, requestedModel: model.id, status: 'confirmed', ts: nowIso },
+      alertLine: null
+    };
+  }
+
+  // Price moved from an already-verified value — held for review no matter
+  // how large or small the delta. The old verified value stays live.
+  const reason = `proposed $${inputPerM}/$${outputPerM} per M (was $${model.inputPerM}/$${model.outputPerM}) — confirmed as "${confirmedModel}" — ${source || 'no source'}`;
+  return {
+    nextModel: model,
+    change: {
+      providerId: provider.id, modelId: model.id, requestedModel: model.id, status: 'needs-review',
+      confirmedModel, oldInputPerM: model.inputPerM, proposedInputPerM: inputPerM,
+      oldOutputPerM: model.outputPerM, proposedOutputPerM: outputPerM,
+      sourceUrl: source || null, ts: nowIso, reason
+    },
+    alertLine: `NEEDS REVIEW  ${label} (${provider.name}): ${reason}`
+  };
+}
+
+// ── mapWithConcurrency ───────────────────────────────────────────────
+// Same result shape as Promise.allSettled (array of {status, value} or
+// {status, reason}) so callers don't care which one ran. Bounded worker
+// pool instead of firing every task at once — see RESEARCH_CONCURRENCY.
+async function mapWithConcurrency(items, limit, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    for (;;) {
+      const i = next++;
+      if (i >= items.length) return;
+      try {
+        results[i] = { status: 'fulfilled', value: await fn(items[i], i) };
+      } catch (e) {
+        results[i] = { status: 'rejected', reason: e };
+      }
+    }
+  }
+  const workerCount = Math.max(1, Math.min(limit, items.length));
+  await Promise.all(Array.from({ length: workerCount }, worker));
+  return results;
 }
 
 // Hand-rolled raw RFC5322 message — deliberately no mimetext/nodemailer
@@ -312,15 +381,6 @@ async function sendAlertEmail(env, subject, bodyLines) {
     // a refreshPricing() failure. Nothing else to do here; there's no
     // second alert channel to report an alert-channel failure to.
   }
-}
-
-// Same formula as the rest of the app already assumes for this field
-// (verified against every existing seed-data row before this was written).
-function computeEstPerRound(inputPerM, outputPerM, tokensPerRound) {
-  const inTok  = (tokensPerRound && tokensPerRound.input)  || 5000;
-  const outTok = (tokensPerRound && tokensPerRound.output) || 2000;
-  const est = (inputPerM / 1e6) * inTok + (outputPerM / 1e6) * outTok;
-  return Math.round(est * 1000) / 1000;
 }
 
 const LIVENESS_ALERT_KEY  = 'liveness-alert-sent';
@@ -379,81 +439,64 @@ async function refreshPricing(env) {
     try { current = JSON.parse(currentRaw); } catch (e) { return; }
     if (!current || !Array.isArray(current.providers)) return;
 
-    // Prior run's per-provider status, read BEFORE this run's entry is
-    // pushed, so "was this provider OK last time" reflects the run before
+    // Prior run's per-provider/model status, read BEFORE this run's entry
+    // is pushed, so "was this row OK last time" reflects the run before
     // this one, not this one.
     let log = [];
     const logRaw = await env.PRICING_DATA.get(RUN_LOG_KEY);
     if (logRaw) { try { log = JSON.parse(logRaw) || []; } catch (e) { log = []; } }
-    const prevStatusById = {};
+    const prevStatusByKey = {};
     if (log[0] && Array.isArray(log[0].changes)) {
-      log[0].changes.forEach(c => { prevStatusById[c.id] = c.status; });
+      log[0].changes.forEach(c => { prevStatusByKey[`${c.providerId}::${c.modelId}`] = c.status; });
     }
-    const wasHealthy = status => status === 'updated' || status === 'confirmed';
+    const wasHealthy = status => status === 'confirmed' || status === 'needs-review';
 
-    const results = await Promise.allSettled(current.providers.map(p => researchProvider(p, apiKey)));
+    // Flatten to (provider, model) tasks. `unsupported` models (e.g.
+    // Copilot's — API unavailable to personal M365 accounts) are never
+    // researched; there's nothing to look up.
+    const tasks = [];
+    current.providers.forEach(p => {
+      (p.models || []).forEach(m => {
+        if (m.status === 'unsupported') return;
+        tasks.push({ provider: p, model: m });
+      });
+    });
 
-    const nextProviders = [];
+    const results = await mapWithConcurrency(tasks, RESEARCH_CONCURRENCY, t => researchModel(t.provider, t.model, apiKey));
+
+    const nowIso = new Date().toISOString();
     const changes = [];
     const alertLines = [];
-    current.providers.forEach((p, i) => {
+    const overridesByProvider = {}; // providerId -> { modelId -> nextModel }
+
+    tasks.forEach((t, i) => {
       const r = results[i];
-      if (r.status === 'fulfilled' && r.value.ok) {
-        const { inputPerM, outputPerM, contextWindow, maxOutput, source, confirmedModel } = r.value;
-        const inDelta  = relativeDelta(p.inputPerM, inputPerM);
-        const outDelta = relativeDelta(p.outputPerM, outputPerM);
-        if (inDelta > DELTA_THRESHOLD || outDelta > DELTA_THRESHOLD) {
-          // Valid, well-sourced answer — but the swing is big enough to hold
-          // for a human look rather than auto-apply. Old values stay live.
-          const reason = `proposed $${inputPerM}/$${outputPerM} per M (was $${p.inputPerM}/$${p.outputPerM}) — confirmed as "${confirmedModel}" — ${source || 'no source'}`;
-          nextProviders.push(p);
-          changes.push({ id: p.id, status: 'flagged', reason });
-          alertLines.push(`FLAGGED  ${p.id} (${p.name}): ${reason}`);
-          return;
-        }
-        const priceMoved = inputPerM !== p.inputPerM || outputPerM !== p.outputPerM;
-        nextProviders.push({
-          ...p,
-          inputPerM, outputPerM,
-          contextWindow: contextWindow || p.contextWindow, // Perplexity often can't confirm this even when price+source are solid — keep old rather than block the price update
-          maxOutput: maxOutput || p.maxOutput,
-          estPerRound: computeEstPerRound(inputPerM, outputPerM, current.tokensPerRound)
-        });
-        if (priceMoved) {
-          // v3.63.422 — previously silent whenever the swing landed under
-          // DELTA_THRESHOLD. That's exactly how the Claude introductory-
-          // rate mix-up went unnoticed for weeks. Every applied price
-          // change now gets a line in the email, not just the big ones.
-          const reason = `$${inputPerM}/$${outputPerM} per M (was $${p.inputPerM}/$${p.outputPerM}) — confirmed as "${confirmedModel}" — ${source || 'no source'}`;
-          changes.push({ id: p.id, status: 'updated', reason });
-          alertLines.push(`UPDATED  ${p.id} (${p.name}): ${reason}`);
-        } else {
-          changes.push({ id: p.id, status: 'confirmed' });
-        }
-      } else {
-        nextProviders.push(p);
-        const reason = r.status === 'fulfilled' ? r.value.reason : String(r.reason && r.reason.message || r.reason);
-        changes.push({ id: p.id, status: 'retained', reason });
-        // Only alert-worthy if this provider was working last run and
-        // isn't now — a provider that's ALWAYS incomplete (Gemini free
-        // tier, Together, Grok in practice) is expected, not a regression.
-        if (wasHealthy(prevStatusById[p.id])) {
-          alertLines.push(`NEWLY FAILING  ${p.id} (${p.name}): was OK last run, now: ${reason}`);
-        }
-      }
+      const outcome = r.status === 'fulfilled' ? r.value : { ok: false, reason: String((r.reason && r.reason.message) || r.reason) };
+      const key = `${t.provider.id}::${t.model.id}`;
+      const decision = decideModelUpdate(t.provider, t.model, outcome, wasHealthy(prevStatusByKey[key]), nowIso);
+      changes.push(decision.change);
+      if (decision.alertLine) alertLines.push(decision.alertLine);
+      if (!overridesByProvider[t.provider.id]) overridesByProvider[t.provider.id] = {};
+      overridesByProvider[t.provider.id][t.model.id] = decision.nextModel;
+    });
+
+    const nextProviders = current.providers.map(p => {
+      const overrides = overridesByProvider[p.id] || {};
+      const nextModels = (p.models || []).map(m => overrides[m.id] || m);
+      return { ...p, models: nextModels };
     });
 
     await env.PRICING_DATA.put(PREVIOUS_KEY, currentRaw);
 
-    const next = { ...current, lastUpdated: new Date().toISOString(), providers: nextProviders };
+    const next = { ...current, lastUpdated: nowIso, providers: nextProviders };
     await env.PRICING_DATA.put('latest', JSON.stringify(next));
 
-    log.unshift({ ts: next.lastUpdated, changes });
+    log.unshift({ ts: nowIso, changes });
     await env.PRICING_DATA.put(RUN_LOG_KEY, JSON.stringify(log.slice(0, MAX_LOG_ENTRIES)));
 
     if (alertLines.length) {
       await sendAlertEmail(env, `WaxFrame pricing refresh — ${alertLines.length} item(s) need a look`, [
-        `Run at ${next.lastUpdated}:`,
+        `Run at ${nowIso}:`,
         '',
         ...alertLines,
         '',
@@ -521,3 +564,8 @@ export default {
     }
   }
 };
+
+// Named exports alongside the default Worker export — consumed only by
+// tools/pricing-worker/test-refresh-logic.mjs (pure-function unit tests,
+// no KV/network). Cloudflare's runtime ignores exports it doesn't call.
+export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain };

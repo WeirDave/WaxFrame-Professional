@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260801-020
+   Build: 20260802-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -17367,6 +17367,88 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 .pricing-status-banner.is-warning {
   border-left-color: var(--accent);
   color: var(--accent);
+}
+
+/* v3.63.437 — "All tracked models" expandable section. Every model
+   WaxFrame curates per provider (js/provider-catalog.js fallback lists),
+   not just the one shown in the Defaults table above. Sits in its own
+   wf-card as a native <details> — no JS needed for the expand/collapse
+   itself, only for filtering + populating the rows. */
+.pricing-all-models-summary {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+  color: var(--text);
+  font-size: var(--fs-15);
+  padding: var(--space-4) 0;
+}
+.pricing-all-models-summary:hover { color: var(--accent); }
+.pricing-all-models-count {
+  font-weight: 400;
+  color: var(--text-dim);
+  margin-left: var(--space-6);
+}
+.pricing-all-models-body {
+  margin-top: var(--space-12);
+}
+.pricing-all-models-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-14);
+  margin-bottom: var(--space-14);
+}
+.pricing-filter-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+}
+.pricing-filter-select,
+.pricing-filter-input {
+  font-family: var(--font);
+  font-size: var(--fs-13);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-6) var(--space-8);
+  min-width: 180px;
+}
+.pricing-filter-select:focus,
+.pricing-filter-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.status-pill {
+  display: inline-block;
+  font-size: var(--fs-11);
+  font-weight: 700;
+  padding: var(--space-4) var(--space-8);
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.status-pill-verified {
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  color: var(--green);
+}
+.status-pill-needs-verification {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.status-pill-unsupported {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+}
+.pricing-all-models-empty {
+  color: var(--text-dim);
+  font-style: italic;
+  padding: var(--space-14) 0;
 }
 
 /* ============================================================
