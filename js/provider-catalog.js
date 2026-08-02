@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260802-010
+// Build: 20260802-011
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -365,7 +365,7 @@
       endpoint: 'https://api.together.xyz/v1/chat/completions',
       format: 'openai',
       discovery: null,
-      // v3.63.446 — Qwen/Qwen2.5-72B-Instruct-Turbo and mistralai/Mixtral-
+      // v3.63.447 — Qwen/Qwen2.5-72B-Instruct-Turbo and mistralai/Mixtral-
       // 8x7B-Instruct-v0.1 dropped. Confirmed against David's own Together
       // AI account 2026-08-02: Qwen2.5-72B no longer appears anywhere in
       // the model catalog search, and Mixtral-8x7B is still listed but
