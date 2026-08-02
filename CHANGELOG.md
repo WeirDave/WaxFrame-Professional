@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.435
+
+**Setup screens' "← Back" button now returns to wherever you actually came from, not a hardcoded step in the wizard**
+
+Build: `20260801-019`<br>
+Released: `2026-08-01`
+
+### What changed
+
+David hit this live: mid-session on the Working Console, he'd forgotten to switch ChatGPT's model to `gpt-5.6-luna`, so he clicked the "Setup" shortcut button to jump to Setup 1, fixed the model, then clicked "← Back" — and landed on the Welcome/Home screen instead of back on his Working Console.
+
+Root cause: each of the 4 Setup screens' "← Back" buttons was hardcoded to the previous step in the LINEAR first-time wizard (Setup1 → Welcome, Setup2 → Setup1, Setup3 → Setup2, Setup4 → Setup3). That's correct only if you arrived by going forward through the wizard in order. But `screen-bees` (Setup 1) has a second entry point — the Working Console's "Setup" shortcut button — and every Setup screen is *also* reachable directly from the nav-menu ("Setup 1/2/3/4" links) from anywhere, including mid-session from the Work screen. None of those side-door entries update where Back should go; the buttons just always pointed at their wizard-order default.
+
+**Fix: a small screen back-stack**, not a one-off flag. `goToScreen()` is the single chokepoint for every screen transition in the app (forward and backward alike), so it now pushes the screen you're leaving onto `_screenBackStack` before switching. The four "← Back" buttons call a new `goBackScreen(fallbackId)` instead of `goToScreen(fallbackId)` directly — it pops the real previous screen off the stack, falling back to the old hardcoded target only when the stack is empty (e.g. a very first, direct entry). This fixes David's exact case AND the same class of bug for every other nav-menu shortcut into a Setup screen, since the stack reflects wherever you actually came from rather than assuming the wizard order.
+
+`_currentScreenId` tracks "where am I now" as a plain variable rather than reading it back off the DOM (`.screen.active`) — that class is applied inside a `requestAnimationFrame` callback, so querying it synchronously at the top of the next `goToScreen()` call is a race that can silently no-op the push. Caught this during testing before it shipped.
+
+### Verification
+
+- `node tools/release-check.mjs` — pass.
+- Live-tested David's exact repro: Working Console → "Setup" shortcut → Setup 1 → "← Back" → correctly lands back on the Working Console (confirmed via instrumented screen-state checks, not just visually).
+- Regression-tested the normal first-time wizard sequence end to end (Welcome → Setup1 → Setup2 → Setup3 → Setup4, back-clicking at each step) — every Back button lands exactly where it did before this change.
+
+### Files touched
+
+- `js/app.js` — new `_screenBackStack` / `_currentScreenId` / `goBackScreen()`; `goToScreen()` pushes the outgoing screen before switching
+- `index.html` — all 4 Setup-screen "← Back" buttons switched from `data-fn="goToScreen"` to `data-fn="goBackScreen"` (same `data-arg` fallback as before, so behavior is unchanged on direct/first-time entry)
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
+
+### Rollback
+
+Revert this commit. The 4 button changes and the stack logic are additive; reverting restores the exact previous hardcoded-target behavior with no other side effects.
+
+---
+
 ## v3.63.434
 
 **Add Custom Worker Bee modal: Recommend Models now tags the dropdown itself, not just the note below it**
