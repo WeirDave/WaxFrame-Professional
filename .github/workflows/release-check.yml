@@ -62,8 +62,10 @@ jobs:
           # Match a modern LTS; WaxFrame is plain-script vanilla JS so any
           # current Node will parse it the same way. No npm install — the
           # validator is pure Node stdlib by design (matches the project's
-          # "vanilla, no build step" stance).
-          node-version: '20'
+          # "vanilla, no build step" stance). Bumped 20 -> 22 (matches the
+          # smoke job below) after GitHub flagged Node 20 as deprecated on
+          # Actions runners (github.com/WeirDave/WaxFrame-Professional#6).
+          node-version: '22'
 
       - name: Run release-ceremony validator
         run: node tools/release-check.mjs
