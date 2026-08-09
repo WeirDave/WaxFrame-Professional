@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20260802-001
+//  Build: 20260809-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -108,6 +108,38 @@
 //  fault) or on `confirmed` (price genuinely unchanged — nothing to look
 //  at). Emailing on every retained/confirmed would just be noise David
 //  learns to ignore.
+//
+//  Build 20260809-001 — SOURCE CORROBORATION. Prompted by two real
+//  needs-review proposals in one run that didn't hold up on manual check:
+//  Sonar cited docs.cohere.com/docs/command-a as the source for a price,
+//  but that page has no pricing on it at all; separately it reported a
+//  price for "ministral-8b-latest" that actually belonged to its 3B
+//  sibling. The confirmedModel guardrail (build history above) reduces
+//  version mix-ups but was never designed to catch a source citation that
+//  simply doesn't contain the number it's credited with.
+//
+//  Every `needs-review` proposal (changed or first-time price only — never
+//  routine `confirmed`/`retained` rows, so this doesn't add cost to a
+//  normal run) now gets its cited sourceUrl fetched server-side and
+//  scanned for the proposed inputPerM/outputPerM numbers
+//  (corroborateProposal / corroboratesSource below). Three outcomes:
+//    - both numbers found on the page  -> stays `needs-review`, unchanged
+//    - page fetched fine but the numbers AREN'T on it -> downgraded to
+//      `unverified-source`, alert line reprefixed from "NEEDS REVIEW" to
+//      "UNVERIFIED SOURCE" so the email makes the distinction obvious
+//    - fetch fails or returns too little text to judge (common for
+//      JS-rendered pricing pages that need a browser to hydrate — Cohere's
+//      own marketing pricing page gave three different scraped readings
+//      across three manual fetches in the incident that prompted this) ->
+//      INCONCLUSIVE, left as ordinary `needs-review`. A site being hard to
+//      scrape server-side is not evidence the price is wrong, and treating
+//      it as such would flag most JS-heavy provider pages every single
+//      week — pure noise. This check only ever adds confidence signal on
+//      top of `needs-review`; it never manufactures false alarms out of a
+//      fetch failure.
+//  The live model value in KV is never touched either way — same as any
+//  other needs-review row, this only changes what the human sees before
+//  deciding whether to trust it.
 // ============================================================
 
 const CORS = {
@@ -180,7 +212,8 @@ function buildStatusHtml(log) {
   const rows = (log || []).map(entry => {
     const items = (entry.changes || []).map(c => {
       const label = `${c.providerId}/${c.modelId}`;
-      const style = c.status === 'needs-review' ? `<strong style="color:#b3261e">${label}: needs review</strong> — ${c.reason || ''}`
+      const style = c.status === 'unverified-source' ? `<strong style="color:#b3261e">${label}: needs review — UNVERIFIED SOURCE</strong> — ${c.reason || ''}`
+        : c.status === 'needs-review' ? `<strong style="color:#b3261e">${label}: needs review</strong> — ${c.reason || ''}`
         : c.status === 'confirmed' ? `${label}: confirmed unchanged`
         : `<span style="color:#a15c00">${label}: retained old value (${c.reason || 'unknown reason'})</span>`;
       return `<li>${style}</li>`;
@@ -259,6 +292,72 @@ async function researchModel(provider, model, apiKey) {
     contextWindow: isValidSizeString(contextWindow) ? String(contextWindow).trim() : null,
     maxOutput: isValidSizeString(maxOutput) ? String(maxOutput).trim() : null
   };
+}
+
+// ── Source corroboration (Build 20260809-001) ───────────────────────
+// A `needs-review` proposal names a sourceUrl on the provider's own
+// domain (isTrustedSource above already checked that), but nothing until
+// now checked that the page at that URL actually contains the price it's
+// credited with. corroboratesSource is the pure, testable half: given
+// already-fetched page text and the two proposed numbers, does the text
+// contain both? Returns true/false, or null if there isn't enough text to
+// judge fairly (too short to be a real rendered page — see MIN_TEXT_LEN).
+const MIN_CORROBORATION_TEXT_LEN = 200;
+
+function priceTextVariants(n) {
+  const raw = String(n);
+  // Never round below the number's own precision — toFixed(0) on 0.6 gives
+  // "1", a single generic digit that false-matches almost any page (this
+  // is exactly what the first version of this function got wrong: it
+  // matched "1" against "1M tokens" and corroborated a price that wasn't
+  // actually on the page). Only widen toward MORE trailing-zero precision.
+  const minDecimals = raw.includes('.') ? raw.split('.')[1].length : 0;
+  const variants = new Set([raw]);
+  for (let decimals = minDecimals; decimals <= 4; decimals++) variants.add(n.toFixed(decimals));
+  return Array.from(variants);
+}
+
+function corroboratesSource(pageText, inputPerM, outputPerM) {
+  if (typeof pageText !== 'string' || pageText.length < MIN_CORROBORATION_TEXT_LEN) return null;
+  const normalized = pageText.replace(/[$,]/g, '');
+  const inputFound = priceTextVariants(inputPerM).some(v => normalized.includes(v));
+  const outputFound = priceTextVariants(outputPerM).some(v => normalized.includes(v));
+  return inputFound && outputFound;
+}
+
+// Crude HTML-to-text: strips script/style blocks and tags, collapses
+// whitespace. Good enough to find a "$0.15" or "0.15" substring in a
+// server-rendered page; a JS-hydrated page will just come back short and
+// fall through the MIN_CORROBORATION_TEXT_LEN guard into "inconclusive"
+// rather than a false "unverified" — see the build-header note on why
+// that's the deliberate choice, not an oversight.
+async function fetchSourcePageText(sourceUrl) {
+  try {
+    const resp = await fetch(sourceUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; WaxFramePricingBot/1.0; +https://waxframe.com)' }
+    });
+    if (!resp.ok) return null;
+    const html = await resp.text();
+    return html
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  } catch (e) {
+    return null;
+  }
+}
+
+// true = corroborated, false = fetched fine but numbers absent (real
+// signal), null = inconclusive (fetch failed or too little text) — see
+// corroboratesSource. Network-touching, so deliberately kept separate
+// from the pure decideModelUpdate() path; only called for needs-review
+// proposals in refreshPricing() below, never for confirmed/retained rows.
+async function corroborateProposal(sourceUrl, inputPerM, outputPerM) {
+  const text = await fetchSourcePageText(sourceUrl);
+  return corroboratesSource(text, inputPerM, outputPerM);
 }
 
 // ── decideModelUpdate ────────────────────────────────────────────────
@@ -469,11 +568,32 @@ async function refreshPricing(env) {
     const alertLines = [];
     const overridesByProvider = {}; // providerId -> { modelId -> nextModel }
 
-    tasks.forEach((t, i) => {
+    const decisions = tasks.map((t, i) => {
       const r = results[i];
       const outcome = r.status === 'fulfilled' ? r.value : { ok: false, reason: String((r.reason && r.reason.message) || r.reason) };
       const key = `${t.provider.id}::${t.model.id}`;
-      const decision = decideModelUpdate(t.provider, t.model, outcome, wasHealthy(prevStatusByKey[key]), nowIso);
+      return { task: t, decision: decideModelUpdate(t.provider, t.model, outcome, wasHealthy(prevStatusByKey[key]), nowIso) };
+    });
+
+    // Build 20260809-001 — corroborate every needs-review proposal's cited
+    // source before it reaches David. Only needs-review rows do a fetch
+    // (a handful per run, not all 35-40 tracked models), and a fetch that
+    // fails or comes back too thin to judge leaves the row as ordinary
+    // needs-review rather than manufacturing a false alarm — see
+    // corroborateProposal/corroboratesSource above.
+    await mapWithConcurrency(decisions, RESEARCH_CONCURRENCY, async d => {
+      const c = d.decision.change;
+      if (c.status !== 'needs-review' || !c.sourceUrl) return;
+      const corroborated = await corroborateProposal(c.sourceUrl, c.proposedInputPerM, c.proposedOutputPerM);
+      if (corroborated === false) {
+        c.status = 'unverified-source';
+        c.reason = `${c.reason} — WARNING: proposed price not found on the cited source page text, verify manually before applying`;
+        if (d.decision.alertLine) d.decision.alertLine = d.decision.alertLine.replace('NEEDS REVIEW', 'UNVERIFIED SOURCE');
+      }
+    });
+
+    decisions.forEach(d => {
+      const { task: t, decision } = d;
       changes.push(decision.change);
       if (decision.alertLine) alertLines.push(decision.alertLine);
       if (!overridesByProvider[t.provider.id]) overridesByProvider[t.provider.id] = {};
@@ -568,4 +688,4 @@ export default {
 // Named exports alongside the default Worker export — consumed only by
 // tools/pricing-worker/test-refresh-logic.mjs (pure-function unit tests,
 // no KV/network). Cloudflare's runtime ignores exports it doesn't call.
-export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain };
+export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource };
