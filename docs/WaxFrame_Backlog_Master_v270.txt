@@ -303,21 +303,25 @@ OPEN FEATURES
            above). Right now the only signal is asking
            individual customers by hand, which doesn't scale
            and isn't logged anywhere consistent.
-   STATE:  DECIDED 2026-08-09 — David chose the Gumroad checkout
-           question over an in-app popup, exactly the lower-risk
-           starting point flagged in the original entry: zero
-           code, no conflict with the offline/air-gapped,
-           no-telemetry CSP posture. In-app popup idea is
-           shelved, not dead — revisit only if Gumroad-side data
-           proves too thin (misses existing users and Free-
-           edition downloads by design).
-   WHERE:  Gumroad product (aihive-pro) settings only, no repo
-           changes — add a custom checkout question/field (e.g.
-           "How did you find WaxFrame?") under the product's
-           Content/Settings → Custom Fields. David to set this
-           up directly in his Gumroad dashboard.
-   DONE:   Question is live on the Gumroad checkout page and
-           confirmed capturing answers on a real sale.
+   STATE:  SHIPPED 2026-08-09 — optional text custom field "How
+           did you find WaxFrame? (optional)" is live on the
+           Gumroad checkout form (Checkout → Checkout form →
+           Custom fields), scoped to WaxFrame Professional
+           License, not required. Chose Gumroad checkout
+           question over an in-app popup, the lower-risk option
+           flagged in the original entry: zero code, no conflict
+           with the offline/air-gapped, no-telemetry CSP
+           posture. In-app popup idea is shelved, not dead —
+           revisit only if Gumroad-side answers prove too thin
+           (misses existing users and Free-edition downloads by
+           design, and it's opt-in so some buyers will skip it).
+   WHERE:  Gumroad account settings only (Checkout → Checkout
+           form → Custom fields) — no repo changes, nothing to
+           verify in this codebase.
+   DONE:   Remaining bar is just real-world confirmation — check
+           that the next sale's Gumroad order details actually
+           show an answer in this field. Safe to drop from the
+           backlog once that's confirmed once.
 
 
 ════════════════════════════════════════════════════════════
