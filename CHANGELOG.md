@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.455
+
+**Pricing worker: reviewed price corrections and a source-corroboration guardrail**
+
+Build: `20260809-001`<br>
+Released: `2026-08-09`
+
+### What changed
+
+The 2026-08-09 scheduled pricing refresh flagged four `needs-review` proposals. Manual verification against each provider's own pricing page found two were correct and two weren't:
+
+- Applied: Cohere `command-r` → $0.15/$0.60 (confirmed live on cohere.com/pricing) and Perplexity `sonar-reasoning` → $1/$5 (first-ever price for a previously-unverified model).
+- Rejected: Mistral `ministral-8b-latest`'s proposed $0.1/$0.1 was actually its 3B sibling's price — the live $0.15/$0.15 value is correct and untouched. Cohere `command-a-03-2025`'s proposed $2.5/$10 cited `docs.cohere.com/docs/command-a` as its source, but that page carries no pricing at all; left `needs-verification` rather than write in an unconfirmed number.
+
+That second rejection is what a scheduled run couldn't have caught on its own, so `tools/pricing-worker/src/index.js` now corroborates every `needs-review` proposal before it reaches the alert email: the cited `sourceUrl` is fetched server-side and scanned for the proposed price numbers. A page that loads but doesn't contain them gets flagged `unverified-source` instead of a plain `needs-review`. A page that can't be scraped at all (most modern JS-rendered pricing tables, including Cohere's own — three separate manual fetches of the same URL returned three different readings during this investigation) is left as ordinary `needs-review` rather than manufacturing a false alarm; a fetch failure is not evidence the price is wrong.
+
+### Verification
+
+- `node tools/pricing-worker/test-refresh-logic.mjs` — full pass, including 6 new `corroboratesSource` assertions. Caught a real bug pre-ship: the first cut of the price-matching helper used `toFixed(0)`, which rounds `0.6` down to `"1"` — a single generic digit that false-matched almost any page text. Fixed to never round below the number's own decimal precision.
+- `node tools/check-pricing-coverage.mjs` — pass, seed/catalog still in sync.
+- `wrangler deploy` confirmed live; `/api/pricing` and `/` status page both verified responding post-deploy.
+- `curl` against the live KV endpoint confirmed `lastUpdated` landed after the `wrangler kv key put --remote` push (the exact silent-failure mode called out in `tools/pricing-worker/README.md` from the v3.63.251 incident).
+- `node tools/release-check.mjs` — full pass.
+
+### Files touched
+
+- `tools/pricing-worker/data/pricing-seed.json` — command-r and sonar-reasoning prices applied
+- `tools/pricing-worker/src/index.js` — source-corroboration check (`corroboratesSource`, `fetchSourcePageText`, `corroborateProposal`), wired into `refreshPricing()` and the status-page renderer
+- `tools/pricing-worker/test-refresh-logic.mjs` — 6 new assertions covering corroboration outcomes
+- `js/pricing-renderer.js` — `FALLBACK_DATA` regenerated from the updated seed
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`, `tools/test-provider-extractors.mjs`
+
+### Rollback
+
+`git revert` this commit for the app-side files. The pricing Worker itself was already deployed and its KV write already applied before this release commit was made — if the Cohere/Perplexity price edits need reverting, use the KV `previous` key (`wrangler kv key get --binding=PRICING_DATA previous --remote`) per the Worker README's rollback steps, and `wrangler deploy` the prior `src/index.js` revision if the corroboration check itself needs to come out.
+
+---
+
 ## v3.63.454
 
 **Gemini model-list compatibility and Test-button self-healing — fixes #5**
