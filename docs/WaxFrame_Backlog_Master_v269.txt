@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v268
-2026-08-02
+WaxFrame Backlog Master v269
+2026-08-08
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -284,6 +284,51 @@ OPEN FEATURES
            (all round-completion paths for (a); every modal on every
            page for (b); every confirm-dialog call site for (c))
            before shipping.
+
+
+7. "How did you find us" / usage questionnaire for customers
+   ─────────────────────────────────────────────────────────
+   WHAT:   Some mechanism to ask customers two things going
+           forward: how they found WaxFrame, and what they're
+           using it for. David's own framing: something like
+           the periodic surveys mobile/PC games pop up
+           mid-session. Floated in chat 2026-08-08 right after
+           asking Liam (issue #6) the same question by hand —
+           he's only the 2nd Pro purchase and the first to find
+           WaxFrame on his own rather than via direct outreach,
+           and David has zero structured data on acquisition
+           channel or use case beyond one-off asks like that.
+   WHY:    Discovery/acquisition is the thing David is actively
+           stuck on (see SEO campaign context, entry #2/#3
+           above). Right now the only signal is asking
+           individual customers by hand, which doesn't scale
+           and isn't logged anywhere consistent.
+   STATE:  PARKED — idea only, not scoped or committed. Open
+           design question flagged same day, not yet decided:
+           an in-app popup cuts against WaxFrame's offline/
+           air-gapped, no-telemetry-by-default posture (no
+           backend to send responses to, no CDN/analytics
+           allowed under current CSP) — any in-app version
+           would need a no-network answer path (e.g. compose a
+           mailto:, or export to a file the user sends
+           themselves), plus a dismissible/don't-nag-again flag
+           in storage.js. Cheapest alternative: Gumroad supports
+           a custom question at checkout natively, zero code,
+           but only captures new purchases, not existing users
+           or Free-edition downloads. Manual ask-per-customer
+           (current approach) is arguably still fine at n=2
+           purchasers.
+   WHERE:  N/A — nothing built. If in-app: a new modal + a
+           storage.js flag to suppress re-showing, respecting
+           the Worker Bee/API Bee mascot-modal split (§3) and
+           the CSP's no-external-endpoint constraint. If
+           Gumroad-side: product settings only, no repo changes.
+   DONE:   Explicit decision logged either way — (a) declined
+           for now with reasoning (e.g. volume too low to
+           justify), or (b) a specific mechanism chosen and
+           shipped (Gumroad checkout question is the lower-risk
+           starting point over an in-app popup given the
+           offline-first constraint).
 
 
 ════════════════════════════════════════════════════════════
