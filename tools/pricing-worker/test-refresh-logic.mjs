@@ -18,7 +18,7 @@
 // Exit 0 if every assertion passes; exit 1 with FAIL lines otherwise.
 // ============================================================
 
-import { decideModelUpdate, mapWithConcurrency, isTrustedSource, isValidSizeString } from './src/index.js';
+import { decideModelUpdate, mapWithConcurrency, isTrustedSource, isValidSizeString, corroboratesSource } from './src/index.js';
 
 let failures = 0;
 function assertEqual(actual, expected, label) {
@@ -137,6 +137,28 @@ console.log('\nSanity checks on unchanged validation helpers');
   assert(isTrustedSource('mistral', 'https://some-blog.example.com/mistral-pricing') === false, 'third-party domain is rejected even if the URL mentions the provider name');
   assert(isValidSizeString('256K') === true, '"256K" is a valid size string');
   assert(isValidSizeString('a lot') === false, 'free-text is not a valid size string');
+}
+
+// ── corroboratesSource (Build 20260809-001) ──────────────────────────
+console.log('\ncorroboratesSource — checks a proposed price actually appears on the cited page text');
+{
+  const goodPage = 'Command R pricing: Input $0.15 / 1M tokens. Output $0.60 / 1M tokens. '.repeat(4);
+  assert(corroboratesSource(goodPage, 0.15, 0.6) === true, 'both prices present on a real-length page -> corroborated');
+
+  // This is the exact shape of the incident that prompted this feature:
+  // Sonar cited docs.cohere.com/docs/command-a as its source, but that
+  // page has no pricing on it at all.
+  const wrongPage = 'Command A is our most performant model to date, excelling at tool use, agents, retrieval augmented generation (RAG), and multilingual use cases. '.repeat(4);
+  assert(corroboratesSource(wrongPage, 2.5, 10) === false, 'page fetched fine but neither number appears -> false (real signal), not inconclusive');
+
+  const partialPage = ('Input $0.15 / 1M tokens. No output pricing shown on this page. ').repeat(4);
+  assert(corroboratesSource(partialPage, 0.15, 0.6) === false, 'only one of the two numbers present -> false, not a pass');
+
+  assert(corroboratesSource('short stub, likely a JS shell', 0.15, 0.6) === null, 'page text too short to judge fairly -> null (inconclusive), never treated as a false alarm');
+  assert(corroboratesSource(null, 0.15, 0.6) === null, 'failed fetch (null text) -> null (inconclusive)');
+
+  const dollarFormatted = ('Command R+ costs $2.50 per million input tokens and $10.00 per million output tokens. ').repeat(4);
+  assert(corroboratesSource(dollarFormatted, 2.5, 10) === true, '$-prefixed, comma-free decimal formatting still matches');
 }
 
 console.log('');
