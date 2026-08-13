@@ -763,6 +763,58 @@ try {
   fail('tools/test-provider-extractors.mjs', `provider extractor fixture failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
+// ── Check 14: Update-WaxFrame.ps1 presence + repo reference ────
+
+section('Update-WaxFrame.ps1 presence + repo reference');
+
+// Companion updater for the portable install (see js/update-check.js for
+// the in-app half that points users at it). No execution-based check is
+// possible here — CI runs on ubuntu-latest, which can't run .ps1 — so
+// this is presence/shape only, mirroring Check 2's in-process regex
+// style rather than Checks 10-13's execFileSync pattern.
+
+const updaterPath = join(ROOT, 'Update-WaxFrame.ps1');
+let updaterContent = null;
+try {
+  updaterContent = read(updaterPath);
+} catch (e) {
+  fail('Update-WaxFrame.ps1', 'file missing at repo root');
+}
+
+if (updaterContent) {
+  if (!updaterContent.includes('WeirDave/WaxFrame-Professional')) {
+    fail('Update-WaxFrame.ps1', 'does not reference the repo slug WeirDave/WaxFrame-Professional — check for a copy-paste typo (e.g. a sibling project\'s repo slug)');
+  } else {
+    ok('references correct repo slug');
+  }
+
+  // Must never hardcode a version literal — it reads js/version.js live
+  // at runtime instead (see script header comment), which is what keeps
+  // it exempt from the release-ceremony version-stamp sweep (CLAUDE.md
+  // §5 item 2). A hardcoded X.Y.Z assignment here would silently break
+  // that property the next time someone edits the script.
+  const nonCommentLines = updaterContent.split('\n').filter(l => !l.trim().startsWith('#'));
+  const versionLiteralRe = /=\s*['"]v?\d+\.\d+\.\d+/;
+  const literalHit = nonCommentLines.find(l => versionLiteralRe.test(l));
+  if (literalHit) {
+    fail('Update-WaxFrame.ps1', `appears to hardcode a version literal ("${literalHit.trim()}") — it must read js/version.js live at runtime instead, or it will silently need a release-ceremony sweep step`);
+  } else {
+    ok('no hardcoded version literal (reads js/version.js live)');
+  }
+
+  // Must never check a GitHub API asset `.digest` field — that field
+  // only exists on manually-uploaded release assets, and WaxFrame's
+  // release ceremony deliberately never uploads one (CLAUDE.md §5 item
+  // 11: no manual ZIP-build step, ever). A future edit porting
+  // LensLedger's sha256-verify step wholesale would reference a field
+  // that doesn't exist on WaxFrame's auto-generated zipball path.
+  if (/\.digest\b/.test(updaterContent)) {
+    fail('Update-WaxFrame.ps1', 'references a `.digest` field — GitHub only supplies this for manually-uploaded release assets, which WaxFrame\'s release ceremony does not create (see CLAUDE.md item 11); reintroducing this would silently reference a field that never exists on our zipball path');
+  } else {
+    ok('no phantom digest-verification reference');
+  }
+}
+
 // ── Report ──────────────────────────────────────────────────
 
 console.log('');

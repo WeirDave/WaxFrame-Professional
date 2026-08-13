@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260809-001
+   Build: 20260812-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -9373,6 +9373,61 @@ kbd {
   color: #fff;
   box-shadow: 0 0 10px rgba(192,21,42,0.4);
 }
+
+/* ── Update-available badge (js/update-check.js, portable/file:// installs only) ──
+   Same "needs attention" treatment as .file-status--warn: accent border +
+   dim accent fill, no new color introduced. */
+.wf-update-badge {
+  font-size: var(--fs-11);
+  font-weight: 700;
+  padding: var(--space-4) var(--space-10);
+  border-radius: 20px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all 0.12s;
+}
+.wf-update-badge:hover {
+  background: var(--accent);
+  color: #0a0c12;
+}
+.wf-update-about-link {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: var(--fs-13);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+.wf-update-about-link:hover { color: var(--accent-hover); }
+.wf-update-steps {
+  text-align: left;
+  color: var(--text-dim);
+  font-size: var(--fs-13);
+  line-height: 1.6;
+  margin: var(--space-8) 0;
+  padding-left: var(--space-24, 24px);
+}
+.wf-update-steps li { margin-bottom: var(--space-6); }
+.wf-update-steps code {
+  font-family: 'Courier New', monospace;
+  background: var(--surface2);
+  padding: 0 var(--space-4);
+  border-radius: 3px;
+}
+.wf-update-platform-note {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: var(--space-8) 0 0;
+  opacity: 0.8;
+}
+.wf-update-modal .license-modal-actions { flex-wrap: wrap; }
 
 /* ── DOC STATS ── */
 .doc-stats {

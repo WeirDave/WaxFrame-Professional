@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.456
+
+**Portable install: update-available banner + companion updater script**
+
+Build: `20260812-001`<br>
+Released: `2026-08-12`
+
+### What changed
+
+The portable (`file://`) distribution had no update path beyond manually re-downloading the zip. This ships one, in two cooperating pieces, without adding a persistently-running local server — that would break the "double-click index.html, nothing running" identity that's the whole reason WaxFrame is air-gap-safe.
+
+- `js/update-check.js` (new) — loaded on all 16 HTML pages except `help.html` (the troubleshooting/diagnostics page; deliberately excluded, no shared footer/About-modal scaffolding to hook into). Gates immediately on `location.protocol !== 'file:'`, so it does nothing at all on the hosted waxframe.com site. On a portable install, checks GitHub's Releases API for a newer tag than `APP_VERSION` (cached 24h in localStorage to stay well under GitHub's unauthenticated rate limit), and — only if a newer version exists and hasn't already been dismissed — shows a footer pill and an About-modal row pointing at `Update-WaxFrame.ps1`. Any failure (offline, rate-limited, whatever) fails completely silent: no toast, no console noise, nothing that could read as "the app is broken" to someone running fully offline against a local Ollama server.
+- `Update-WaxFrame.ps1` (new, repo root) — the actual updater, run manually ("right-click → Run with PowerShell") since a `file://` page has no way to execute a local script itself. Checks the latest release, downloads GitHub's auto-generated per-tag zip, verifies the extracted tree structurally (required files present, embedded version matches the tag — no sha256 check, since WaxFrame's release ceremony never uploads a manually-named asset for GitHub to compute a digest against), then atomically swaps it into place. The previous install is renamed to a timestamped `.previous-` backup rather than deleted, so a bad update rolls back automatically on failure and a good-but-unwanted one can always be reverted by hand. Reads `js/version.js` live at runtime rather than embedding a version string, so it never needs a release-ceremony sweep.
+
+Explicitly out of scope for v1, not silently dropped: Mac/Linux automated install (Windows/PowerShell only — other platforms get the banner's manual-download link), cryptographic asset verification, and any automatic/background/silent checking beyond one check per page load.
+
+`tools/release-check.mjs` gains a 14th check validating `Update-WaxFrame.ps1`'s repo-slug reference and guarding against two specific regressions: a hardcoded version literal creeping back in (which would silently break the "no sweep needed" property) and a phantom `.digest` check (which would silently reference a field that doesn't exist on WaxFrame's zipball path).
+
+### Verification
+
+- Full end-to-end dry run of `Update-WaxFrame.ps1` against the live GitHub repo, in a disposable test folder: downloaded the real v3.63.455 release, verified it structurally, atomically swapped it in, and confirmed the old version landed intact in the timestamped backup folder.
+- Empirically confirmed (separate isolated test) that Windows allows renaming a folder while its own `.ps1` is executing from inside it — the one load-bearing assumption in the atomic-swap design that needed a real test, not just reasoning.
+- Two real bugs caught and fixed during that testing, not just written: the staging folder was originally nested inside the install folder, which would have silently corrupted the swap once the parent got renamed (moved staging to `%TEMP%`); and two em-dash characters in output strings broke the script specifically under Windows PowerShell 5.1 (`powershell.exe` — what "Run with PowerShell" actually launches), while parsing fine under pwsh 7, which is what the earlier syntax check used and what masked the bug (stripped to plain ASCII).
+- `js/update-check.js` exercised end-to-end through real headless Chrome (not a mock DOM) with a forced "update available" cache state: footer pill and About-row both render with correct copy, clicking either opens the instructional modal with correct dynamic version substitution and the right button set, styled correctly against the real `style.css`.
+- `node tools/release-check.mjs` — full pass, all 14 checks.
+
+### Files touched
+
+- `js/update-check.js` — new
+- `Update-WaxFrame.ps1` — new (repo root)
+- `tools/release-check.mjs` — Check 14 (`Update-WaxFrame.ps1` presence + repo reference)
+- `style.css` — `.wf-update-badge`, `.wf-update-about-link`, `.wf-update-steps`, `.wf-update-platform-note` (all token-based, reusing the existing `--accent`/`--accent-dim` "needs attention" treatment)
+- `<script src="js/update-check.js">` added to all 16 HTML pages except `help.html`
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`, `tools/test-provider-extractors.mjs`
+
+### Rollback
+
+`git revert` this commit. No server-side or KV state involved — this release only touches the app-side files listed above.
+
+---
+
 ## v3.63.455
 
 **Pricing worker: reviewed price corrections and a source-corroboration guardrail**
