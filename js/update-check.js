@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — update-check.js
-// Build: 20260812-002
+// Build: 20260812-003
 //  Portable-install ("file://") update notifier. Checks GitHub's
 //  Releases API for a newer tag than the running APP_VERSION and,
 //  if one exists, shows a footer pill + an About-modal row pointing
@@ -141,10 +141,48 @@
     });
   }
 
+  // ── Platform-appropriate instructions ──
+  // Best-effort UA sniff — fine for informational copy like this (picking
+  // which of the two shipped scripts to point at first), not fine for
+  // anything security-relevant. Defaults to the Windows steps if detection
+  // is inconclusive, since that's this project's primary platform.
+  function platformSteps() {
+    const ua = (navigator.platform || '') + ' ' + (navigator.userAgent || '');
+    if (/mac/i.test(ua)) {
+      return {
+        steps:
+          '<li>Find <code>Update-WaxFrame.command</code> in this WaxFrame folder.</li>' +
+          '<li>Double-click it. macOS may ask you to confirm running it the first time &mdash; that&rsquo;s expected for an unsigned script (right-click &rarr; Open if Gatekeeper blocks the double-click).</li>' +
+          '<li>It downloads the new version, checks it, and swaps it in &mdash; your old version is kept as a backup, nothing is deleted.</li>' +
+          '<li>WaxFrame reopens automatically when it&rsquo;s done.</li>',
+        note: 'On Linux, run the same file from a terminal instead: <code>bash Update-WaxFrame.command</code>.'
+      };
+    }
+    if (/linux/i.test(ua)) {
+      return {
+        steps:
+          '<li>Open a terminal in this WaxFrame folder.</li>' +
+          '<li>Run <code>bash Update-WaxFrame.command</code>.</li>' +
+          '<li>It downloads the new version, checks it, and swaps it in &mdash; your old version is kept as a backup, nothing is deleted.</li>' +
+          '<li>WaxFrame reopens automatically when it&rsquo;s done.</li>',
+        note: 'On Mac, double-click the same file in Finder instead.'
+      };
+    }
+    return {
+      steps:
+        '<li>Find <code>Update-WaxFrame.ps1</code> in this WaxFrame folder.</li>' +
+        '<li>Right-click it &rarr; &ldquo;Run with PowerShell&rdquo;.</li>' +
+        '<li>It downloads the new version, checks it, and swaps it in &mdash; your old version is kept as a backup, nothing is deleted.</li>' +
+        '<li>WaxFrame reopens automatically when it&rsquo;s done.</li>',
+      note: 'On Mac or Linux, use <code>Update-WaxFrame.command</code> instead (double-click on Mac, or <code>bash Update-WaxFrame.command</code> in a terminal on Linux).'
+    };
+  }
+
   // ── Instructional modal — lazily created, reuses .license-modal-* chrome ──
   function ensureUpdateDialog() {
     let overlay = document.getElementById('wfUpdateDialogOverlay');
     if (overlay) return overlay;
+    const platform = platformSteps();
     overlay = document.createElement('div');
     overlay.id = 'wfUpdateDialogOverlay';
     overlay.className = 'license-modal-overlay';
@@ -153,13 +191,8 @@
         '<img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">' +
         '<h2 class="license-modal-title" id="wfUpdateDialogTitle">A new version is available</h2>' +
         '<p class="license-modal-msg" id="wfUpdateDialogMsg"></p>' +
-        '<ol class="wf-update-steps">' +
-          '<li>Find <code>Update-WaxFrame.ps1</code> in this WaxFrame folder.</li>' +
-          '<li>Right-click it &rarr; &ldquo;Run with PowerShell&rdquo;.</li>' +
-          '<li>It downloads the new version, checks it, and swaps it in &mdash; your old version is kept as a backup, nothing is deleted.</li>' +
-          '<li>WaxFrame reopens automatically when it&rsquo;s done.</li>' +
-        '</ol>' +
-        '<p class="wf-update-platform-note">Windows only for now. On Mac or Linux, download the latest release manually from GitHub.</p>' +
+        '<ol class="wf-update-steps">' + platform.steps + '</ol>' +
+        '<p class="wf-update-platform-note">' + platform.note + '</p>' +
         '<div class="license-modal-actions" id="wfUpdateDialogActions"></div>' +
       '</div>';
     document.body.appendChild(overlay);

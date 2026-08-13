@@ -1,0 +1,217 @@
+#!/usr/bin/env bash
+# Update-WaxFrame.command
+#
+# Companion updater for the WaxFrame Professional portable (file://) install
+# on Mac and Linux -- the Mac/Linux counterpart to Update-WaxFrame.ps1
+# (Windows). Double-click in Finder to run (the .command extension is
+# macOS's equivalent of a .ps1's "Run with PowerShell" -- same convention
+# already used by this repo's sibling project, WD-Wireless-Tools/run.command).
+# On Linux, run from a terminal: bash Update-WaxFrame.command
+#
+# Cannot be launched automatically from the browser tab -- a file:// page
+# has no way to execute a local script, by design (see js/update-check.js,
+# which only ever shows instructions pointing here).
+#
+# What this does: checks GitHub for a newer release, downloads it, checks
+# the download is structurally sound, and swaps it in -- keeping your
+# current install as a dated backup folder next to this one (never
+# deleted). If anything goes wrong partway through, it rolls back
+# automatically so you're never left without a working copy.
+#
+# Deliberate scope decisions (not gaps -- stated up front, same as the
+# Windows script):
+#   - No cryptographic (sha256) verification. WaxFrame's release process
+#     never uploads a manually-named, digest-bearing asset -- only
+#     GitHub's auto-generated per-tag zip, which carries no API digest
+#     to check against. What IS verified: the download extracts cleanly,
+#     the extracted tree has all the files WaxFrame needs, and its own
+#     version file matches the release tag. That catches a bad/incomplete
+#     download. It does not, and cannot, protect against a compromised
+#     GitHub account pushing a malicious tag -- that's the same trust
+#     boundary you already accept visiting waxframe.com or downloading
+#     the zip by hand today.
+#   - No user-data migration step. WaxFrame keeps everything you create
+#     in the browser (IndexedDB/localStorage) or in a folder you pick
+#     yourself via a save dialog -- never inside this app folder. So the
+#     whole folder is safe to rename/replace wholesale.
+#   - No running-process coordination. A file:// page isn't a process to
+#     wait on or restart -- "relaunch" just means reopening index.html.
+#   - No JSON library dependency. Parses the small set of fields needed
+#     (tag_name, zipball_url) out of GitHub's API response with grep/sed,
+#     matching this project's existing regex-over-parser approach
+#     (see tools/release-check.mjs's own design notes).
+#
+# Build: 20260812-003
+
+set -euo pipefail
+
+REPO="WeirDave/WaxFrame-Professional"
+
+log_step() { printf '\033[36m%s\033[0m\n' "$1"; }
+log_ok()   { printf '\033[32m%s\033[0m\n' "$1"; }
+log_err()  { printf '\033[31m%s\033[0m\n' "$1" >&2; }
+pause()    { read -r -p "Press Enter to close" _ || true; }
+
+extract_json_field() {
+  # $1 = json text, $2 = field name. Only handles simple "field":"value"
+  # string fields, which is all GitHub's release payload needs here.
+  printf '%s' "$1" | grep -o "\"$2\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" | head -1 | sed -E 's/.*:[[:space:]]*"([^"]*)"/\1/'
+}
+
+get_wf_version() {
+  local vfile="$1/js/version.js"
+  [ -f "$vfile" ] || return 1
+  grep -o "APP_VERSION = 'v\?[0-9.]* Pro'" "$vfile" | head -1 | sed -E "s/.*'v?([0-9.]*) Pro'.*/\1/"
+}
+
+# Echoes 1 if $1 > $2, 0 if equal, -1 if $1 < $2.
+cmp_version() {
+  local a="${1#v}" b="${2#v}"
+  local a1 a2 a3 b1 b2 b3
+  IFS='.' read -r a1 a2 a3 <<< "$a"
+  IFS='.' read -r b1 b2 b3 <<< "$b"
+  a1=${a1:-0}; a2=${a2:-0}; a3=${a3:-0}
+  b1=${b1:-0}; b2=${b2:-0}; b3=${b3:-0}
+  if [ "$a1" -gt "$b1" ] || { [ "$a1" -eq "$b1" ] && [ "$a2" -gt "$b2" ]; } || { [ "$a1" -eq "$b1" ] && [ "$a2" -eq "$b2" ] && [ "$a3" -gt "$b3" ]; }; then
+    echo 1
+  elif [ "$a1" -eq "$b1" ] && [ "$a2" -eq "$b2" ] && [ "$a3" -eq "$b3" ]; then
+    echo 0
+  else
+    echo -1
+  fi
+}
+
+REQUIRED_FILES=(
+  "index.html" "ai-api-pricing.html" "ai-business-proposal.html" "ai-cover-letter-editor.html"
+  "ai-resume-review.html" "api-details.html" "document-playbooks.html" "help.html"
+  "hive-profiles.html" "privacy.html" "prompt-editor.html" "start-here.html"
+  "templates.html" "terms.html" "waxframe-user-manual.html" "what-are-tokens.html"
+  "js/version.js" "js/app.js" "style.css"
+)
+
+validate_release_tree() {
+  local root="$1" expected="$2" f ver
+  for f in "${REQUIRED_FILES[@]}"; do
+    if [ ! -f "$root/$f" ]; then
+      log_err "Downloaded release is missing expected file: $f"
+      return 1
+    fi
+  done
+  ver="$(get_wf_version "$root")" || { log_err "Downloaded release: could not read APP_VERSION from js/version.js"; return 1; }
+  if [ -n "$expected" ] && [ "$ver" != "$expected" ]; then
+    log_err "Downloaded release version mismatch: expected $expected, found $ver"
+    return 1
+  fi
+  printf '%s' "$ver"
+}
+
+# ---- 1. Resolve install root + current version ------------------------------
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ ! -f "$SCRIPT_DIR/index.html" ]; then
+  log_err "This script must run from inside a WaxFrame install folder (index.html not found next to it)."
+  pause; exit 1
+fi
+CURRENT_VERSION="$(get_wf_version "$SCRIPT_DIR")" || { log_err "Could not read the current version from js/version.js."; pause; exit 1; }
+log_step "WaxFrame Professional updater -- currently v$CURRENT_VERSION"
+
+# ---- 2. Check latest release --------------------------------------------------
+log_step "Checking for updates..."
+RELEASE_JSON="$(curl -fsSL -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$REPO/releases/latest")" || {
+  log_err "Could not reach GitHub to check for updates."
+  pause; exit 1
+}
+LATEST_TAG="$(extract_json_field "$RELEASE_JSON" tag_name)"
+LATEST_VERSION="${LATEST_TAG#v}"
+ZIPBALL_URL="$(extract_json_field "$RELEASE_JSON" zipball_url)"
+if [ -z "$LATEST_TAG" ]; then
+  log_err "Could not parse GitHub's response. Try again later, or download the latest release manually."
+  pause; exit 1
+fi
+
+if [ "$(cmp_version "$LATEST_VERSION" "$CURRENT_VERSION")" -le 0 ]; then
+  log_ok "Already up to date (v$CURRENT_VERSION)."
+  pause; exit 0
+fi
+log_ok "v$LATEST_VERSION is available (you have v$CURRENT_VERSION)."
+
+# ---- 3. Download into staging --------------------------------------------------
+# Staged OUTSIDE $SCRIPT_DIR, in a temp directory. Staging inside the
+# install folder would break step 8's atomic swap: once $SCRIPT_DIR gets
+# renamed to the backup name, every path computed under it would silently
+# move along with it too.
+STAGING="$(mktemp -d "${TMPDIR:-/tmp}/WaxFrameUpdate.XXXXXX")"
+cleanup() { rm -rf "$STAGING"; }
+trap cleanup EXIT
+
+ZIP_PATH="$STAGING/download.zip"
+EXTRACT_PATH="$STAGING/extracted"
+mkdir -p "$EXTRACT_PATH"
+
+log_step "Downloading v$LATEST_VERSION..."
+if [ -z "$ZIPBALL_URL" ]; then
+  ZIPBALL_URL="https://github.com/$REPO/archive/refs/tags/$LATEST_TAG.zip"
+fi
+curl -fsSL -o "$ZIP_PATH" "$ZIPBALL_URL" || { log_err "Download failed."; pause; exit 1; }
+
+# ---- 4/5. Extract + handle GitHub's wrapper folder --------------------------
+log_step "Extracting..."
+if ! unzip -q "$ZIP_PATH" -d "$EXTRACT_PATH"; then
+  log_err "Release ZIP could not be extracted."
+  pause; exit 1
+fi
+
+CHILD_COUNT=0
+EXTRACTED_ROOT=""
+for d in "$EXTRACT_PATH"/*/; do
+  [ -d "$d" ] || continue
+  CHILD_COUNT=$((CHILD_COUNT + 1))
+  EXTRACTED_ROOT="${d%/}"
+done
+if [ "$CHILD_COUNT" -ne 1 ]; then
+  log_err "Unexpected archive layout: expected exactly one top-level folder, found $CHILD_COUNT."
+  pause; exit 1
+fi
+
+# ---- 6/7. Validate structurally (no sha256 -- see header comment) -----------
+log_step "Verifying..."
+if ! VERIFIED_VERSION="$(validate_release_tree "$EXTRACTED_ROOT" "$LATEST_VERSION")"; then
+  pause; exit 1
+fi
+log_ok "Verified: v$VERIFIED_VERSION, all required files present."
+
+# ---- 8. Atomic swap with backup ----------------------------------------------
+log_step "Installing..."
+PARENT_DIR="$(dirname "$SCRIPT_DIR")"
+FOLDER_NAME="$(basename "$SCRIPT_DIR")"
+TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+BACKUP_PATH="$PARENT_DIR/${FOLDER_NAME}.previous-${CURRENT_VERSION}-${TIMESTAMP}"
+
+if ! mv "$SCRIPT_DIR" "$BACKUP_PATH"; then
+  log_err "Could not rename the current install folder -- aborting before any changes were made."
+  pause; exit 1
+fi
+
+if mv "$EXTRACTED_ROOT" "$SCRIPT_DIR"; then
+  log_ok "Updated to v$LATEST_VERSION. Your previous copy is kept at:"
+  log_ok "  $BACKUP_PATH"
+else
+  # Roll back: put the original folder's name back so the user is never
+  # left without a working copy.
+  if [ -d "$BACKUP_PATH" ] && [ ! -d "$SCRIPT_DIR" ]; then
+    mv "$BACKUP_PATH" "$SCRIPT_DIR" || true
+  fi
+  log_err "Update failed -- nothing was left half-installed, your previous copy is intact."
+  pause; exit 1
+fi
+
+# ---- 9. Relaunch ---------------------------------------------------------------
+log_step "Reopening WaxFrame..."
+if command -v open >/dev/null 2>&1; then
+  open "$SCRIPT_DIR/index.html"        # macOS
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open "$SCRIPT_DIR/index.html"    # Linux desktop
+else
+  log_ok "Open $SCRIPT_DIR/index.html in your browser to continue."
+fi
+
+pause

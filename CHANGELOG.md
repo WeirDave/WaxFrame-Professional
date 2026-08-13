@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.458
+
+**Portable install: Mac/Linux companion updater**
+
+Build: `20260812-003`<br>
+Released: `2026-08-12`
+
+### What changed
+
+`Update-WaxFrame.ps1` (v3.63.456) only covered Windows — Mac/Linux portable users could see the "update available" banner but only got a manual-download link. `Update-WaxFrame.command` (new, repo root) closes that gap with the same algorithm: check GitHub's latest release, download, verify the extracted tree structurally (required files present, embedded version matches the tag — no sha256, for the same reason as the Windows script: WaxFrame's release ceremony never uploads a digest-bearing asset), atomically swap the install folder with a timestamped backup for rollback, then reopen `index.html`.
+
+Ships as `.command` rather than plain `.sh` — that's the actual macOS convention for "double-click to run in Terminal" (the true analog to "right-click → Run with PowerShell"), already used by the sibling WD-Wireless-Tools project's `run.command`. Linux users run the same file via `bash Update-WaxFrame.command` from a terminal. No JSON library dependency — parses the small set of GitHub API fields it needs (`tag_name`, `zipball_url`) with grep/sed, matching this project's existing regex-over-parser approach.
+
+`js/update-check.js`'s instructional modal now detects the visitor's platform (best-effort UA sniff, fine for picking which of the two shipped scripts to show first) and shows the right script name and steps, with a footnote pointing at the other one — replacing the old "Windows only for now" copy.
+
+`tools/release-check.mjs`'s Check 14 is generalized from a single-file check into a loop over both `Update-WaxFrame.ps1` and `Update-WaxFrame.command`, so both get the same guardrails (no hardcoded version literal, no phantom `.digest` reference).
+
+### Verification
+
+- Full end-to-end dry run of `Update-WaxFrame.command` (via Git Bash, real curl/unzip) against the live GitHub repo, in a disposable test folder: parsed the real release JSON, downloaded the real v3.63.457 zip, verified it structurally, all correct.
+- **One honest gap, unlike the Windows script:** the final atomic-swap step (renaming the folder the script is itself running from) could not be empirically verified on a real Mac or Linux machine — none is available in this environment. It failed when tested via Git Bash on Windows, but isolated that failure to a Windows/NTFS-specific handle lock (confirmed via a targeted diagnostic: a plain directory rename works fine here when nothing has a file inside it open; it only fails when a script executing from inside that directory tries to rename its own folder). POSIX's `rename()` explicitly permits this regardless of open file descriptors — it's a well-established Unix guarantee, not a "should work" assumption — but this session couldn't put a real macOS/Linux box behind that claim. If it's ever wrong, the failure mode is safe: the script aborts before touching anything, exactly as designed.
+- Three platform branches (Mac / Linux / Windows-or-unknown UA) of the modal's instructional copy verified rendering correctly via real headless Chrome with spoofed user agents.
+- `node tools/release-check.mjs` — full pass, all 14 checks (Check 14 now covering both scripts).
+
+### Files touched
+
+- `Update-WaxFrame.command` — new (repo root)
+- `js/update-check.js` — platform-aware instructional copy (`platformSteps()`), replacing the static "Windows only for now" note
+- `tools/release-check.mjs` — Check 14 generalized to loop over both updater scripts
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`, `tools/test-provider-extractors.mjs`, both `Update-WaxFrame.*` scripts
+
+### Rollback
+
+`git revert` this commit. No server-side or KV state involved.
+
+---
+
 ## v3.63.457
 
 **Housekeeping: track helper-page screenshots + UptimeRobot image for release inclusion**
