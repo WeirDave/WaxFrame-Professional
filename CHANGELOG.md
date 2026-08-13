@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.457
+
+**Housekeeping: track helper-page screenshots + UptimeRobot image for release inclusion**
+
+Build: `20260812-002`<br>
+Released: `2026-08-12`
+
+### What changed
+
+10 helper-page screenshots (5 pages × dark/light, generated via `tools/capture-screenshots.ps1`) and the UptimeRobot status image were sitting untracked in the working tree — added to git in the previous commit so they ship inside the GitHub release zip like the rest of the screenshot set already does. This release exists specifically to cut a new tag whose auto-generated archive actually contains them; the prior tag (v3.63.456) predates that commit. No app code changed.
+
+### Verification
+
+- `node tools/release-check.mjs` — full pass, all 14 checks.
+
+### Files touched
+
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`, `tools/test-provider-extractors.mjs`, `Update-WaxFrame.ps1`
+
+### Rollback
+
+`git revert` this commit — it's a version-stamp sweep only, no functional changes.
+
+---
+
 ## v3.63.456
 
 **Portable install: update-available banner + companion updater script**
