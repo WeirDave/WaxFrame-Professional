@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v270
-2026-08-09
+WaxFrame Backlog Master v271
+2026-08-12
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -322,6 +322,48 @@ OPEN FEATURES
            that the next sale's Gumroad order details actually
            show an answer in this field. Safe to drop from the
            backlog once that's confirmed once.
+
+
+8. Mac/Linux companion updater for the portable install
+   ─────────────────────────────────────────────────────────
+   WHAT:   Update-WaxFrame.ps1 (shipped v3.63.456) only covers
+           Windows. Need an equivalent for Mac/Linux portable
+           users — a shell script (.sh) using the same
+           structural-validation algorithm: check GitHub's
+           latest release, download, verify the extracted tree
+           (required files present, embedded APP_VERSION
+           matches the tag), atomically swap the install folder
+           with a timestamped backup kept for rollback, then
+           reopen index.html.
+   WHY:    js/update-check.js's in-app banner already tells
+           Mac/Linux users an update exists, but today can only
+           point them at a manual download — the exact "just
+           give me a link" experience David explicitly rejected
+           for Windows. David confirmed 2026-08-12 this matters
+           for Mac users specifically, not just a nice-to-have.
+   STATE:  OPEN. Not started. The Windows half of this
+           architecture is live and tested in v3.63.456 — mirror
+           its verified algorithm rather than re-deriving one:
+           same structural checks, same atomic-rename-with-
+           backup safety, same honest "no sha256, no manual
+           asset to check a digest against" limitation (GitHub's
+           auto-generated zip has no API-supplied digest on
+           either platform).
+   WHERE:  Update-WaxFrame.ps1 (repo root) is the reference
+           implementation to port. js/update-check.js's
+           ensureUpdateDialog() has the "Windows only for now"
+           copy to update once a Mac/Linux script exists.
+           tools/release-check.mjs's Check 14 (search
+           "Update-WaxFrame.ps1 presence") is the pattern to
+           extend with an equivalent presence/shape check for
+           the new script.
+   DONE:   A .sh script shipped at repo root, passing the same
+           kind of end-to-end dry-run test Update-WaxFrame.ps1
+           got before it shipped — a real download against the
+           live repo in a disposable folder, not just code
+           review. js/update-check.js's modal copy updated to
+           stop saying Windows-only. release-check.mjs extended
+           to cover the new script.
 
 
 ════════════════════════════════════════════════════════════
