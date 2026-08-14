@@ -137,10 +137,10 @@ RELEASE CEREMONY (every release)
 5. NO release-notes-vX.Y.Z.md files in the repo, ever (rule:
    feedback_release_repo_hygiene). The GitHub Release body is generated at
    release time and pasted directly into `gh release create --notes`; no
-   sibling .md artifact stays in the tree afterward. NO ZIP build either —
-   the old single-deployment-zip workflow was retired with the move to
-   `git push origin HEAD:main`. GitHub auto-generates the source ZIP on the
-   release; portable users grab it from the Releases page.
+   sibling .md artifact stays in the tree afterward. The release-assets
+   workflow produces `WaxFrame-Professional-X.Y.Z.zip` plus its `.sha256`
+   sidecar and a GitHub artifact attestation. Portable updaters accept only
+   those predictable, checksum-verified assets.
 
 6. Single-branch workflow (rule: feedback_single_branch_workflow). Exactly
    one branch lives in the repo: main. Worktree branches auto-created by

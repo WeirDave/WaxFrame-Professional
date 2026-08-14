@@ -1,8 +1,8 @@
 # WaxFrame
 
-> WaxFrame Professional ("The Hive") is a self-hosted, browser-based multi-AI document refinement tool. A hive of AI reviewers ("Worker Bees") critiques your document in iterative rounds while a Builder AI synthesizes their feedback into each new draft, repeating until the reviewers converge. It runs entirely in the browser as vanilla HTML/CSS/JS — no backend, no install, no account, no subscription, air-gap safe — and works with your own API keys for providers including Anthropic Claude, OpenAI ChatGPT, Google Gemini, Mistral, DeepSeek, Grok, Perplexity, and Together AI. WaxFrame Pro is a one-time $19 lifetime purchase, not a subscription. Licensed AGPL-3.0.
+> WaxFrame Professional ("The Hive") is a self-hosted, local-first browser application for multi-AI document refinement. A hive of AI reviewers ("Worker Bees") critiques the same document across rounds while a Builder AI synthesizes their feedback. The static HTML/CSS/JS app has no account, document database, telemetry, install, or subscription. Provider requests leave the browser by design; Claude requests transit a disclosed, stateless WaxFrame Cloudflare relay, while supported local-model configurations can operate air-gapped. WaxFrame Pro is a one-time $19 lifetime purchase. Licensed AGPL-3.0.
 
-WaxFrame is an AI document tool for refining resumes, cover letters, business proposals, reports, and long-form writing using multiple AI models that check each other's work instead of a single model's first draft. All processing happens client-side; documents never touch a WaxFrame server because there isn't one.
+WaxFrame refines resumes, cover letters, business proposals, reports, and long-form writing using multiple AI models that check each other's work. Project state is stored in the browser. AI prompts and document content are sent to the providers the user selects; Claude traffic passes through the disclosed WaxFrame relay in transit and is not persisted there.
 
 ## Core pages
 

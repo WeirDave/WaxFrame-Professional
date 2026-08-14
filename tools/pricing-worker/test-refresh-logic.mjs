@@ -18,7 +18,7 @@
 // Exit 0 if every assertion passes; exit 1 with FAIL lines otherwise.
 // ============================================================
 
-import { decideModelUpdate, mapWithConcurrency, isTrustedSource, isValidSizeString, corroboratesSource } from './src/index.js';
+import { decideModelUpdate, mapWithConcurrency, isTrustedSource, isValidSizeString, corroboratesSource, buildStatusHtml, isSafeEmailAddress } from './src/index.js';
 
 let failures = 0;
 function assertEqual(actual, expected, label) {
@@ -159,6 +159,25 @@ console.log('\ncorroboratesSource — checks a proposed price actually appears o
 
   const dollarFormatted = ('Command R+ costs $2.50 per million input tokens and $10.00 per million output tokens. ').repeat(4);
   assert(corroboratesSource(dollarFormatted, 2.5, 10) === true, '$-prefixed, comma-free decimal formatting still matches');
+}
+
+// ── public status page output encoding ─────────────────────────────
+console.log('\nbuildStatusHtml — escapes every value read from KV/run-log');
+{
+  const payload = [{
+    ts: '<img src=x onerror=alert(1)>',
+    changes: [{
+      providerId: '<svg onload=alert(1)>',
+      modelId: 'model</strong><script>alert(1)</script>',
+      status: 'needs-review',
+      reason: '<img src=x onerror=alert(1)>'
+    }]
+  }];
+  const html = buildStatusHtml(payload);
+  assert(!html.includes('<script>') && !html.includes('<img src=x') && !html.includes('<svg onload'), 'LLM/KV-controlled fields cannot inject active HTML');
+  assert(html.includes('&lt;script&gt;') && html.includes('&lt;img src=x onerror=alert(1)&gt;'), 'unsafe characters remain visible as encoded text');
+  assert(isSafeEmailAddress('alerts@example.com') === true, 'valid private alert recipient accepted');
+  assert(isSafeEmailAddress('alerts@example.com\r\nBcc: attacker@example.com') === false, 'email header injection rejected');
 }
 
 console.log('');

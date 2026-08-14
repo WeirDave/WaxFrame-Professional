@@ -45,6 +45,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const errors = []; // { file, line?, msg }
@@ -763,7 +764,55 @@ try {
   fail('tools/test-provider-extractors.mjs', `provider extractor fixture failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
-// ── Check 14: companion updater scripts presence + repo reference ────
+// ── Check 14: Claude relay security behavior ────────────────────────
+
+section('Claude relay security behavior (tools/claude-proxy/test-security.mjs)');
+
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/claude-proxy/test-security.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/claude-proxy/test-security.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  fail('tools/claude-proxy/test-security.mjs', `relay security test failure — run it locally for full output. ${out.slice(-400) || 'Non-zero exit, no output captured'}`);
+}
+
+// ── Check 15: vendored dependency inventory + hashes ───────────────
+
+section('Vendored dependency inventory + hashes');
+
+const inventoryPath = join(ROOT, 'docs/vendored-dependencies.json');
+let inventory;
+try {
+  inventory = JSON.parse(read(inventoryPath));
+} catch (e) {
+  fail('docs/vendored-dependencies.json', `missing or invalid JSON: ${e.message}`);
+}
+
+if (inventory) {
+  const inventoried = new Set();
+  for (const dependency of inventory.dependencies || []) {
+    for (const [file, expectedHash] of Object.entries(dependency.files || {})) {
+      inventoried.add(file);
+      const filePath = join(ROOT, file);
+      try {
+        const actualHash = createHash('sha256').update(readFileSync(filePath)).digest('hex');
+        if (actualHash !== expectedHash) fail(file, `SHA-256 differs from dependency inventory (expected ${expectedHash}, got ${actualHash})`);
+      } catch (e) {
+        fail(file, `inventoried file missing or unreadable: ${e.message}`);
+      }
+    }
+  }
+
+  for (const filePath of walk(join(ROOT, 'lib'), p => /\.(?:js|mjs)$/.test(p))) {
+    const file = rel(filePath);
+    if (!inventoried.has(file)) fail(file, 'vendored executable is not listed in docs/vendored-dependencies.json');
+  }
+  if (!errors.some(e => e.file === 'docs/vendored-dependencies.json' || e.msg.includes('dependency inventory') || e.msg.includes('inventoried'))) {
+    ok(`${inventoried.size} vendored files match their recorded SHA-256 hashes`);
+  }
+}
+
+// ── Check 16: companion updater scripts presence + repo reference ────
 
 section('Companion updater scripts presence + repo reference');
 
@@ -808,16 +857,20 @@ for (const scriptName of UPDATER_SCRIPTS) {
     ok(`${scriptName}: no hardcoded version literal (reads js/version.js live)`);
   }
 
-  // Must never check a GitHub API asset `.digest` field — that field
-  // only exists on manually-uploaded release assets, and WaxFrame's
-  // release ceremony deliberately never uploads one (CLAUDE.md §5 item
-  // 11: no manual ZIP-build step, ever). A future edit porting
-  // LensLedger's sha256-verify step wholesale would reference a field
-  // that doesn't exist on WaxFrame's auto-generated zipball path.
+  // The updater must verify the detached checksum published beside the
+  // predictable release ZIP before extracting any downloaded bytes.
   if (/\.digest\b/.test(updaterContent)) {
-    fail(scriptName, 'references a `.digest` field — GitHub only supplies this for manually-uploaded release assets, which WaxFrame\'s release ceremony does not create (see CLAUDE.md item 11); reintroducing this would silently reference a field that never exists on our zipball path');
+    fail(scriptName, 'references the GitHub API `.digest` field instead of the published .sha256 sidecar');
   } else {
     ok(`${scriptName}: no phantom digest-verification reference`);
+  }
+
+  if (!/WaxFrame-Professional-[^\r\n"']+\.zip/.test(updaterContent) || !updaterContent.includes('.sha256')) {
+    fail(scriptName, 'does not use the predictable release ZIP and .sha256 sidecar names');
+  } else if (!/SHA256|sha256sum|shasum/i.test(updaterContent)) {
+    fail(scriptName, 'downloads a checksum but does not appear to verify SHA-256');
+  } else {
+    ok(`${scriptName}: verifies the release ZIP against its SHA-256 sidecar`);
   }
 }
 

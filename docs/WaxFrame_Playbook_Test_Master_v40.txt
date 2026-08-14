@@ -61,7 +61,7 @@ as wall-clock; see Backlog v10 Section 2).
   2026-05-10  T4 Recipe — Publix potato salad (Ref-Mat)    6     DeepSeek     4       47 min*      n/a       1,226w / 6,774c   majority (5/6)
   2026-05-09  T12 Contractor — Bay Area First Invoice v3.0 3     Gem25P       12      ~7 min hive  n/a       624w (-15%)       majority (R12, Claude holdout)
   2026-05-09  T6 LinkedIn About — wireless engineer        3     Cl37S        2       ~3 min       n/a       (length n/a)      majority
-  2026-05-09  T5 LinkedIn Post — DFS in defense            3     Cl37S        2       ~1 min       n/a       304w / 1,857c     majority
+  2026-05-09  T5 Technical LinkedIn post (fictionalized)   3     Cl37S        2       ~1 min       n/a       304w / 1,857c     majority
   2026-05-08  T1 BP — Wellness for Law Firm v1.0           6     Gem25P       11      ~53 min      n/a       857w              majority (5/6)
   2026-05-xx  BP — Brightwater Canoe & Kayak v3            3     Gem25P       5       ~10 min      n/a       1,175w / 8,369c   majority
   earlier     BP — Brightwater 2-AI variant                2     Gem25P       11      ~16 min      n/a       (length n/a)      majority (1 USER DECISION at R5 halted Auto)
@@ -141,7 +141,7 @@ done.
   Content & Marketing
     Blog Post                     T7    16 rds v1.0 / 4 rds v2.0
                                         (Ref-Mat + buzzword guard)
-    LinkedIn Post                 T5    2 rds (DFS, 3-AI)
+    LinkedIn Post                 T5    2 rds (technical example, 3-AI)
     Presentation Outline                8 rds (Wi-Fi 7 v3.0)
 
   Personal & Everyday

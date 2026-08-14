@@ -18,21 +18,22 @@ This Worker has been live since well before 2026-07-25. Its source lived only in
 
 ## What it does
 
-- **`POST /v1/messages`** — forwards to Anthropic's Messages API. Body passed through as-is; `x-api-key` and `anthropic-version` headers forwarded from the incoming request (default `anthropic-version: 2023-06-01` if the caller doesn't send one).
+- **`POST /v1/messages`** — forwards JSON bodies up to 8 MiB to Anthropic's Messages API. `x-api-key` and `anthropic-version` headers are forwarded from the incoming request (default `anthropic-version: 2023-06-01` if the caller doesn't send one).
 - **`GET /v1/models`** — forwards to Anthropic's model-list endpoint. Used by `provider-catalog.js`'s `anthropic-via-proxy` discovery method.
-- **Path allowlist.** Any other path falls back to `/v1/messages` (backwards compat for old WaxFrame code that called the Worker root) rather than proxying arbitrary paths — this Worker can't be used as an open proxy to anything except those two Anthropic endpoints.
+- **Path allowlist.** `/` remains a backwards-compatible alias for `/v1/messages`; every other unknown path returns 404.
 - **Method allowlist per path** — `/v1/messages` only accepts POST, `/v1/models` only accepts GET.
-- **CORS preflight (`OPTIONS`)** handled with `Access-Control-Allow-Origin: *` — fine, since this only ever forwards to Anthropic's own API using the caller's own key; there's no shared secret or session state to leak across origins.
+- **CORS preflight (`OPTIONS`)** allows the production site, GitHub Pages, portable `file://` installs, and loopback development origins. Other browser origins receive 403.
+- **Abuse controls.** Requests require a syntactically safe API-key header, are capped at 8 MiB, time out after 15 minutes, and are limited to 120 requests/minute per hashed API key per Cloudflare location.
 
 ## What it does NOT do
 
-No auth of its own, no rate limiting, no logging/analytics beyond Cloudflare's default observability, no request/response transformation beyond header pass-through. It is deliberately a thin pipe, not a gateway with its own logic — every WaxFrame-specific behavior (prompt construction, response parsing, error classification) lives client-side in `js/provider-catalog.js`/`js/app.js`/`js/wf-debug.js`, not here.
+No account system, shared credential, request logging, analytics, or prompt transformation. It remains a narrow relay; WaxFrame-specific prompt construction, response parsing, and error classification live client-side.
 
 ---
 
 ## Bindings
 
-**None.** No KV namespace, no secrets, no environment variables. The Anthropic API key travels through per-request from the browser's `x-api-key` header and is never stored server-side — this Worker holds no credentials of its own to leak, rotate, or manage.
+One `REQUEST_RATE_LIMITER` binding. There is no KV namespace, Worker secret, or environment variable. The Anthropic API key travels through per-request and is never stored; a truncated SHA-256 digest is used only as the rate-limit identifier.
 
 ---
 
@@ -45,10 +46,10 @@ cd tools/claude-proxy
 wrangler deploy
 ```
 
-No secrets to set, no KV to seed — `wrangler deploy` is the entire deploy process.
+No secrets or KV data to seed — `wrangler deploy` provisions the declared rate-limit binding.
 
 ---
 
 ## CORS
 
-`Access-Control-Allow-Origin: *` — intentional and safe here for the same reason as the pricing Worker: every response is either Anthropic's own public model-list data or a response scoped to the caller's own API key that only the caller (whoever supplied that key) can meaningfully use. There's nothing shared or sensitive this Worker itself holds.
+The Worker echoes `Access-Control-Allow-Origin` only for `https://waxframe.com`, `https://www.waxframe.com`, `https://weirdave.github.io`, portable opaque (`null`) origins, and loopback HTTP development origins. Add a new production origin to `ALLOWED_ORIGINS` before serving WaxFrame from it.

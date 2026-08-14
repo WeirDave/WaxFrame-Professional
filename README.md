@@ -6,7 +6,7 @@
 
 **Many minds, one refined result.**
 
-Multi-AI document refinement in your browser. The Builder rewrites; the rest of your hive reviews in parallel and surfaces specific suggestions. You resolve disagreements your way, then run another round. No server, no account, no install.
+Multi-AI document refinement in your browser. The Builder rewrites; the rest of your hive reviews in parallel and surfaces specific suggestions. You resolve disagreements your way, then run another round. Local-first, with no account, document database, telemetry, or install.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/WeirDave/WaxFrame-Professional?label=Latest&color=orange)](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
@@ -233,7 +233,7 @@ Anything else that speaks the OpenAI chat-completions shape will work too — po
 
 ## Privacy & Local-First Design
 
-WaxFrame runs entirely in your browser. There is no WaxFrame server, no cloud sync, no account system, no telemetry, and no document collection. Your API keys are stored in your browser only and connect directly to whichever AI provider you select. Your session — hive configuration, project goal, reference material, round history, working document — persists in IndexedDB, on your machine.
+WaxFrame's application and storage run in your browser. There is no account system, cloud sync, telemetry backend, or document database. Your API keys and session — hive configuration, project goal, reference material, round history, and working document — persist on your machine. AI requests go directly to the selected provider except Claude requests, which pass through the disclosed WaxFrame-operated Cloudflare relay without being logged or persisted.
 
 That makes WaxFrame especially well-suited to business proposals, RFP responses, internal drafts, technical documentation, legal-adjacent workflows, and any material you'd rather not route through another SaaS platform.
 

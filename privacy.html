@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — privacy.html
-     Build: 20260813-001
+     Build: 20260814-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,22 +65,22 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260813-001">
+  <meta name="waxframe-build" content="20260814-001">
   <title>Privacy Policy — WaxFrame</title>
-  <meta name="description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
+  <meta name="description" content="WaxFrame's privacy policy. Local-first storage, no account database, and no tracking, with a disclosed relay for Claude requests.">
   <meta name="keywords" content="WaxFrame privacy policy, no tracking AI tool, air-gap safe AI writing, self-hosted document tool">
   <link rel="canonical" href="https://waxframe.com/privacy.html">
   <meta property="og:title" content="Privacy Policy — WaxFrame">
-  <meta property="og:description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
+  <meta property="og:description" content="WaxFrame's privacy policy. Local-first storage, no account database, and no tracking, with a disclosed relay for Claude requests.">
   <meta property="og:url" content="https://waxframe.com/privacy.html">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Privacy Policy — WaxFrame">
-  <meta name="twitter:description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
+  <meta name="twitter:description" content="WaxFrame's privacy policy. Local-first storage, no account database, and no tracking, with a disclosed relay for Claude requests.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.459">
+  <link rel="stylesheet" href="style.css?v=3.63.460">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -115,7 +115,7 @@
         "name": "Do I need my own AI provider API keys?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes, for the paid Pro edition — WaxFrame connects directly to each AI provider (OpenAI, Anthropic, Google, and others) using API keys you obtain and control yourself, so there's no markup on top of provider costs and no WaxFrame-operated backend in between. The free WaxFrame edition works without any API keys at all, using a manual copy-paste workflow instead."
+          "text": "Yes, for the paid Pro edition — WaxFrame uses API keys you obtain and control yourself. Requests go directly to each provider except Claude, whose requests pass through the disclosed WaxFrame-operated Cloudflare relay without being logged or persisted. The free WaxFrame edition works without API keys using a manual copy-paste workflow."
         }
       }
     ]
@@ -206,7 +206,7 @@
   <div class="hp-section-header">
     <div class="hp-section-title-block">
       <h1 class="hp-section-title">Privacy Policy</h1>
-      <p class="hp-section-sub">WaxFrame is built so that your private data stays private by design — not by promise. There is no server to send it to. This page explains exactly where your data lives, the one narrow exception, and what the third-party services you connect can see.</p>
+      <p class="hp-section-sub">WaxFrame is local-first and designed to minimize the data it handles. This page explains exactly where your data lives, the disclosed Claude relay exception, and what the third-party services you connect can see.</p>
       <p class="hp-section-sub"><em>Effective May 25, 2026.</em></p>
     </div>
   </div>
@@ -215,8 +215,8 @@
     <h2>The short version</h2>
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">No backend, no database, no tracking</h3>
-      <p>WaxFrame has no application server and no database. The entire app runs in your browser. There is no WaxFrame account to create, and no analytics, telemetry, advertising, or cookies for tracking. Because there is no server collecting anything, there is nothing for WaxFrame to sell, share, or leak.</p>
+      <h3 class="wf-card-title">Local-first, no account database, no tracking</h3>
+      <p>WaxFrame has no account system, document database, analytics, telemetry, advertising, or tracking cookies. The application UI and project state run in your browser. The disclosed Claude relay forwards requests in transit without application-level persistence; third-party AI providers receive the requests you direct to them.</p>
       <p>The one piece of data that ever leaves your browser to a service operated by WaxFrame's developer is Claude traffic, which passes through a relay that does not log or store it. That single exception is detailed below.</p>
     </div>
 
@@ -239,7 +239,7 @@
 
     <div class="wf-card">
       <h3 class="wf-card-title">Do I need my own AI provider API keys?</h3>
-      <p>Yes, for the paid Pro edition — WaxFrame connects directly to each AI provider (OpenAI, Anthropic, Google, and others) using API keys you obtain and control yourself, so there's no markup on top of provider costs and no WaxFrame-operated backend in between. The free WaxFrame edition works without any API keys at all, using a manual copy-paste workflow instead.</p>
+      <p>Yes, for the paid Pro edition — WaxFrame uses API keys you obtain and control yourself. Requests go directly to each provider except Claude, whose requests pass through the disclosed WaxFrame-operated Cloudflare relay without being logged or persisted. The free WaxFrame edition works without API keys using a manual copy-paste workflow.</p>
     </div>
 
     <h2>What WaxFrame stores, and where</h2>
@@ -253,7 +253,7 @@
     <h2>Where your data goes when you run the hive</h2>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">Directly to the AI providers you choose</h3>
+      <h3 class="wf-card-title">To the AI providers you choose</h3>
       <p>When you run a round, WaxFrame sends your prompt and document text from your browser straight to the AI providers you have configured — OpenAI, Google, xAI, Mistral, Perplexity, Cohere, Together AI, DeepSeek, and any custom or server-based endpoints you add. Your API keys are sent only with those requests, only to those providers.</p>
       <p>Each provider receives, processes, and handles that data under <strong>its own privacy policy and terms</strong> — not WaxFrame's. What a provider does with your prompts and documents (including whether it retains them or uses them for training) is governed by your agreement with that provider. Review each provider's policy before sending sensitive content.</p>
     </div>
@@ -294,7 +294,7 @@
     <h2>Children</h2>
 
     <div class="wf-card is-accent">
-      <p>WaxFrame is a developer/productivity tool and is not directed at children under 13. It collects no personal information through any server, because it has no server.</p>
+      <p>WaxFrame is a developer/productivity tool and is not directed at children under 13. WaxFrame has no account, document database, analytics, or telemetry; data sent to configured providers and the Claude relay is described above.</p>
     </div>
 
     <h2>Changes &amp; contact</h2>
@@ -327,7 +327,7 @@
     <div class="goal-info-body">
       <p>WaxFrame is fully open source under the AGPL-3.0 license. Every line of code is public and auditable.</p>
       <div class="goal-info-row">
-        <span class="goal-info-phase draft">No Backend</span>
+        <span class="goal-info-phase draft">Local-first</span>
         <span class="goal-info-desc">WaxFrame has no database or app server. Everything runs in your browser. Your documents and session data live in your browser only — they never sit on a WaxFrame server because there isn't one.</span>
       </div>
       <div class="goal-info-row">
@@ -366,7 +366,7 @@
       <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">github.com/WeirDave/WaxFrame-Professional<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></span></div>
       <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent external-link">weirdave.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></span></div>
       <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
-      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
+      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no framework or install required; no account or document database.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
     </div>
     <button class="finish-modal-cancel" data-action="modal-close" data-target="aboutModalHelper">Got it →</button>
@@ -403,13 +403,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.459"></script>
-<script src="lib/docx.min.js?v=3.63.459"></script>
-<script src="js/docx-export.js?v=3.63.459"></script>
-<script src="js/nav-helper.js?v=3.63.459"></script>
-<script src="js/license-helper.js?v=3.63.459"></script>
-<script src="js/update-check.js?v=3.63.459"></script>
-<script src="js/helper-handlers.js?v=3.63.459"></script>
-<script src="js/version.js?v=3.63.459"></script>
+<script src="js/theme.js?v=3.63.460"></script>
+<script src="lib/docx.min.js?v=3.63.460"></script>
+<script src="js/docx-export.js?v=3.63.460"></script>
+<script src="js/nav-helper.js?v=3.63.460"></script>
+<script src="js/license-helper.js?v=3.63.460"></script>
+<script src="js/update-check.js?v=3.63.460"></script>
+<script src="js/helper-handlers.js?v=3.63.460"></script>
+<script src="js/version.js?v=3.63.460"></script>
 </body>
 </html>

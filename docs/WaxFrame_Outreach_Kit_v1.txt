@@ -23,8 +23,9 @@ Every competitor (Jasper, Copy.ai, Grammarly) is single-model,
 subscription-locked, and server-side. WaxFrame is adversarial
 multi-model refinement — Claude, ChatGPT, Gemini and others
 critique the SAME document across rounds until they converge,
-synthesized by a separate Builder AI. No backend, no account,
-runs in-browser with your own API keys. No subscription — a
+synthesized by a separate Builder AI. Local-first, with no
+account or document database, and runs in-browser with your own
+API keys. Claude uses a disclosed stateless relay. No subscription — a
 one-time $19 lifetime license, and the only ongoing cost is
 pay-as-you-go provider usage (~$0.30/review).
 
@@ -41,8 +42,9 @@ Short description:
   WaxFrame runs a "hive" of AI models (Claude, ChatGPT, Gemini,
   and more) that critique your document across iterative
   rounds until they converge, synthesized by a separate
-  Builder AI. No backend, no account, runs entirely in your
-  browser with your own API keys. Free trial, $19 lifetime —
+  Builder AI. Local-first, with no account or document database,
+  and runs in your browser with your own API keys. Claude uses a
+  disclosed stateless relay. Free trial, $19 lifetime —
   no subscription.
 
 First comment (maker comment, post at launch):
@@ -50,7 +52,8 @@ First comment (maker comment, post at launch):
   model's first draft with no second opinion. WaxFrame instead
   puts multiple AI models in the same room to critique a
   document, round after round, until they agree it's done.
-  Zero backend — it's a static HTML/CSS/JS app, air-gap safe,
+  Local-first static HTML/CSS/JS, with no account, telemetry, or
+  document database; local-model hives can run air-gapped.
   AGPL-3.0 open source. Happy to answer anything about the
   convergence mechanic or the API cost model.
 
@@ -62,8 +65,8 @@ Description:
   refinement tool. Multiple AI reviewers ("Worker Bees")
   critique your document in iterative rounds while a Builder
   AI synthesizes the feedback into each new draft, repeating
-  until the reviewers converge. No backend, no install, no
-  account — works with your own API keys for Claude, ChatGPT,
+  until the reviewers converge. Local-first, with no install,
+  account, document database, or telemetry — works with your own API keys for Claude, ChatGPT,
   Gemini, Mistral, DeepSeek, Grok, Perplexity, and Together AI.
   AGPL-3.0 open source. Alternative to: Jasper, Copy.ai,
   Grammarly (multi-model instead of single-model review).
@@ -84,11 +87,12 @@ Same one-liner as above. Category: Writing Tools.
 ════════════════════════════════════════════════════════════
 SELF-HOSTED / LOCAL-AI ANGLE (r/selfhosted, AlternativeTo tag)
 ════════════════════════════════════════════════════════════
-This audience cares about air-gap/no-backend more than the
+This audience cares about air-gap/local-first operation more than the
 general audience — lead differently:
 
   WaxFrame is a genuinely self-hosted AI writing tool — vanilla
-  HTML/CSS/JS, no build step, no server, no database. Clone the
+  HTML/CSS/JS, no build step, account, telemetry, or document
+  database. Clone the
   repo or download the release ZIP and open index.html directly
   (file://) — it works completely offline except for the actual
   AI provider calls. Also supports local model servers (Ollama,
@@ -97,7 +101,7 @@ general audience — lead differently:
   github.com/WeirDave/WaxFrame-Professional.
 
 r/selfhosted post: lead with the paragraph above, not the "hive"
-metaphor — this audience wants the technical facts (no backend,
+metaphor — this audience wants the technical facts (local-first,
 static files, local model support) up front, mascot/bee framing
 second if at all.
 
@@ -196,9 +200,9 @@ Cold outreach email template:
   WaxFrame is different from the Jasper/Copy.ai pattern: it
   runs a "hive" of AI models (Claude, ChatGPT, Gemini, etc.)
   that critique a document across rounds until they converge,
-  synthesized by a separate Builder AI. No backend, no account
-  — runs in-browser with your own API keys, so it's air-gap
-  safe and there's no subscription markup on top of provider
+  synthesized by a separate Builder AI. Local-first, no account
+  or document database; Claude uses a disclosed stateless relay.
+  Local-model hives can run air-gapped, and there's no subscription markup on top of provider
   costs. Free trial + $19 lifetime. Happy to send a demo doc
   or answer questions: [link].
 

@@ -49,7 +49,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # Full history + tags so check 4 can locate the last reachable
           # tag and diff style.css / js/*.js against it. Default shallow
@@ -57,7 +57,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           # Match a modern LTS; WaxFrame is plain-script vanilla JS so any
           # current Node will parse it the same way. No npm install — the
@@ -88,13 +88,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # Smoke doesn't need history.
           fetch-depth: 1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           # 22+ required — tools/capture.mjs uses the built-in WebSocket
           # constructor (no `ws` package, matches project's no-deps stance).

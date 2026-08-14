@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
-// Build: 20260813-001
+// Build: 20260814-001
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -200,7 +200,7 @@ const WAXFRAME_TEMPLATES = [
       "scratch": {
         "description": "Attract the right candidates and quietly turn away the wrong ones — an honest, specific posting that reflects what working there is actually like.",
         "goalDocType": "Job description",
-        "goalAudience": "Candidates applying for a [job title] role — be specific: e.g. Mid-level software engineers with 3–5 years of experience, Entry-level candidates in defense or aerospace",
+        "goalAudience": "Candidates applying for a [job title] role — be specific: e.g. Mid-level software engineers with 3–5 years of experience, Entry-level candidates in renewable energy",
         "goalOutcome": "Qualified candidates immediately understand the role, the requirements, and why the job is worth applying for. Unqualified candidates self-select out. Responsibilities are listed in order of importance, most critical first.",
         "goalScope": "List responsibilities from most important to least. Flag any must-have requirement that could unnecessarily narrow the candidate pool. Include a brief company culture statement at the end. Salary range: [amount or write OMIT].",
         "goalTone": "[Professional / startup / enterprise] — match the culture of the company",
@@ -215,7 +215,7 @@ const WAXFRAME_TEMPLATES = [
       "refine": {
         "description": "Audit your existing posting for vague requirements, hidden barriers, and copy that's scaring off the people you want to hire.",
         "goalDocType": "Job description",
-        "goalAudience": "Candidates applying for a [job title] role — be specific: e.g. Mid-level software engineers with 3–5 years of experience, Entry-level candidates in defense or aerospace",
+        "goalAudience": "Candidates applying for a [job title] role — be specific: e.g. Mid-level software engineers with 3–5 years of experience, Entry-level candidates in renewable energy",
         "goalOutcome": "Tighten my existing job description so qualified candidates immediately understand the role and unqualified candidates self-select out. Strengthen the opening, sharpen requirements, and make the culture statement land.",
         "goalScope": "Preserve all my listed requirements, responsibilities, and salary information. Reorder responsibilities by importance if needed. Flag must-haves that could narrow the candidate pool — do not silently remove them.",
         "goalTone": "[Professional / startup / enterprise] — match the culture of the company",
@@ -244,7 +244,7 @@ const WAXFRAME_TEMPLATES = [
       "scratch": {
         "description": "Generate a résumé from your career notes — accomplishments quantified, claims defensible, every line earning its space on the page.",
         "goalDocType": "Résumé",
-        "goalAudience": "Hiring manager or recruiter reviewing candidates for a [job title] role — e.g. Hiring manager at a defense technology company",
+        "goalAudience": "Hiring manager or recruiter reviewing candidates for a [job title] role — e.g. Hiring manager at a logistics technology company",
         "goalOutcome": "Reader invites me to interview. The résumé shows clear impact and achievements, not just job duties. Every bullet demonstrates value.",
         "goalScope": "Build from the career history I provide. Do not invent jobs, titles, dates, or metrics. Strengthen what is there — every bullet should demonstrate impact, not just describe a duty.",
         "goalTone": "Confident, professional, action-oriented — strong verbs, no passive voice, no \"responsible for\"",
@@ -260,7 +260,7 @@ const WAXFRAME_TEMPLATES = [
       "refine": {
         "description": "Take a strong draft to ready-to-submit — sharper impact statements, cleaner structure, fewer words doing more work.",
         "goalDocType": "Résumé",
-        "goalAudience": "Hiring manager or recruiter reviewing candidates for a [job title] role — e.g. Hiring manager at a defense technology company",
+        "goalAudience": "Hiring manager or recruiter reviewing candidates for a [job title] role — e.g. Hiring manager at a logistics technology company",
         "goalOutcome": "Polish my existing résumé so it shows clear impact and gets me interviewed. Replace duty-language with achievement-language. Tighten weak bullets. Surface the wins that are hiding inside generic phrasing.",
         "goalScope": "Do not remove or change job titles, companies, dates, or my listed metrics. Do not invent experience. Strengthen what is already there — replace \"responsible for\" with action verbs, replace duty-bullets with impact-bullets, surface numbers that are hiding in prose.",
         "goalTone": "Confident, professional, action-oriented — strong verbs, no passive voice, no \"responsible for\"",
