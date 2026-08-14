@@ -33,7 +33,7 @@ How to run it
 
 From a PowerShell prompt in this folder:
 
-    cd C:\Users\weird\Dropbox\Websites\WaxFrame-Professional\tools
+    cd <repo-root>\tools
     pwsh -ExecutionPolicy Bypass -File ".\capture-screenshots.ps1"
 
 That produces 18 PNGs in the repo's screenshots\ folder:

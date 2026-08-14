@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "generated": "2026-08-14",
+  "purpose": "Inventory and integrity baseline for browser libraries committed under lib/.",
+  "dependencies": [
+    {
+      "name": "docx",
+      "version": "unknown",
+      "license": "MIT",
+      "files": {
+        "lib/docx.min.js": "d5ec4f5a8b99740845974f5f6f020d6e5b1b6c27026195befc67eb37035c84c7"
+      },
+      "note": "The minified bundle does not identify its version. Replace it from a documented upstream release before claiming a version or assessing version-specific advisories."
+    },
+    {
+      "name": "jszip",
+      "version": "3.10.1",
+      "license": "MIT OR GPL-3.0-only",
+      "files": {
+        "lib/jszip.min.js": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e"
+      }
+    },
+    {
+      "name": "mammoth",
+      "version": "1.13.1",
+      "license": "BSD-2-Clause",
+      "files": {
+        "lib/mammoth.browser.min.js": "596ef52239e52d8ee3cee10b2ee4a72596abf900d0e4f468593f956e9f1809b0"
+      }
+    },
+    {
+      "name": "pdfjs-dist-classic",
+      "version": "3.11.174",
+      "license": "Apache-2.0",
+      "files": {
+        "lib/pdf.min.js": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
+        "lib/pdf.worker.min.js": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b"
+      }
+    },
+    {
+      "name": "pdfjs-dist-esm",
+      "version": "4.10.38",
+      "license": "Apache-2.0",
+      "files": {
+        "lib/pdf.min.mjs": "27fc2a057a00f92a4334ad06e17dbd7259912954e9fb7f76400bcca5fd190a9c",
+        "lib/pdf.worker.min.mjs": "1baa1844c89c80a5b2797c916e75ab29254be46d8e9cb53cb6364d7aad84be36"
+      }
+    },
+    {
+      "name": "sheetjs",
+      "version": "0.20.3",
+      "license": "Apache-2.0",
+      "files": {
+        "lib/xlsx.full.min.js": "cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41"
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260813-001
+     Build: 20260814-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260813-001">
+  <meta name="waxframe-build" content="20260814-001">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="keywords" content="WaxFrame user manual, multi-AI document refinement guide, hive setup guide">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.459">
+  <link rel="stylesheet" href="style.css?v=3.63.460">
 </head>
 <body class="helper-body">
 
@@ -1522,7 +1522,7 @@
         <li><strong>Job Description (Altura test):</strong> specific company name, role, seniority, and reporting structure filled into the structured goal fields — <strong>20–22 rounds</strong> convergence on a complex multi-page document.</li>
         <li><strong>Résumé (Dana Reyes test):</strong> specific candidate background and target industry filled at setup, with mid-stream notes injection added between Round 2 and 3 — <strong>10–12 rounds</strong> convergence.</li>
         <li><strong>Business Proposal (Brightwater Canoe and Kayak):</strong> <strong>v3.0 scaffold</strong>, 3-AI hive on a from-scratch run with a fully-populated identity scaffold in Scope &amp; constraints — <strong>5 rounds, ≈10 minutes</strong>. Earlier <strong>v2.0 scaffold</strong> with a 2-AI hive: <strong>11 rounds, ≈16 minutes</strong> (extra rounds came from a tied USER DECISION block at Round 5 that halted Auto Mode for manual selection). The third reviewer is what breaks decision ties automatically. For reference, the original <strong>v1.0 scaffold</strong> with a 3-AI hive converged faster (3 rounds, ≈8 minutes) because the scaffold had fewer constraints to satisfy; v3.0 is the polished version reflected in the in-app Business Proposal template today.</li>
-        <li><strong>LinkedIn Post (DFS in defense):</strong> 3-AI hive on a sharply-scoped social post with a clear opinion in the Tone field — <strong>2 rounds, ≈1 minute</strong>. Posted to live LinkedIn. A vaguer prompt on the same category previously took 5 rounds; setup specificity is the difference.</li>
+        <li><strong>Technical LinkedIn Post (fictionalized example):</strong> 3-AI hive on a sharply-scoped social post with a clear opinion in the Tone field — <strong>2 rounds, ≈1 minute</strong>. A vaguer prompt in the same category previously took 5 rounds; setup specificity is the difference.</li>
         <li><strong>LinkedIn About profile (wireless engineer):</strong> 3-AI hive with a 1,163-character identity scaffold pasted into Reference Material plus a Round 1 buzzword guard in Notes — <strong>2 rounds</strong>. The Reference Material did most of the work; the buzzword guard kept the draft clean from Round 1.</li>
         <li><strong>Thank-You Letter (from scratch vs refining a draft):</strong> same final document type, same hive, same goal fields. Starting from scratch with empty starting document → <strong>2 rounds</strong>. Refining a misaligned draft → <strong>13 rounds</strong>. The misaligned draft cost 6× more rounds.</li>
       </ul>
@@ -2207,7 +2207,7 @@
       <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">github.com/WeirDave/WaxFrame-Professional<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></span></div>
       <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent external-link">weirdave.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></span></div>
       <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
-      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
+      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no framework or install required; no account or document database.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
     </div>
     <button class="finish-modal-cancel" data-action="modal-close" data-target="aboutModalHelper">Got it →</button>
@@ -2246,14 +2246,14 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.459"></script>
-<script src="lib/docx.min.js?v=3.63.459"></script>
-<script src="js/docx-export.js?v=3.63.459"></script>
-<script src="js/nav-helper.js?v=3.63.459"></script>
-<script src="js/license-helper.js?v=3.63.459"></script>
-<script src="js/update-check.js?v=3.63.459"></script>
-<script src="js/helper-handlers.js?v=3.63.459"></script>
-<script src="js/version.js?v=3.63.459"></script>
-<script src="js/docs-scrollspy.js?v=3.63.459"></script>
+<script src="js/theme.js?v=3.63.460"></script>
+<script src="lib/docx.min.js?v=3.63.460"></script>
+<script src="js/docx-export.js?v=3.63.460"></script>
+<script src="js/nav-helper.js?v=3.63.460"></script>
+<script src="js/license-helper.js?v=3.63.460"></script>
+<script src="js/update-check.js?v=3.63.460"></script>
+<script src="js/helper-handlers.js?v=3.63.460"></script>
+<script src="js/version.js?v=3.63.460"></script>
+<script src="js/docs-scrollspy.js?v=3.63.460"></script>
 </body>
 </html>

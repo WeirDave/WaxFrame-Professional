@@ -26,8 +26,7 @@ crons = ["0 12 * * 1", "0 13 * * *"]
 # Push email alerts (via Cloudflare Email Routing) when a refresh needs a
 # human look — see src/index.js sendAlertEmail() + the v3.63.413-follow-up
 # header comment for exactly what triggers an email vs stays silent.
-# Requires waxframe.com's Email Routing to be enabled with weirdave@aol.com
-# as a verified destination address (done 2026-07-25).
+# Requires waxframe.com's Email Routing and a verified destination address.
+# Keep the recipient private: `wrangler secret put PRICING_ALERT_TO`.
 [[send_email]]
 name = "PRICING_ALERTS"
-destination_address = "weirdave@aol.com"

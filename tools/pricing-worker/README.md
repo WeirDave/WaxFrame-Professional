@@ -117,14 +117,14 @@ The decision logic above lives in `decideModelUpdate()` in `src/index.js`, expor
 
 ### Email alerts (v3.63.413, widened v3.63.421 and v3.63.437)
 
-The run log is pull — you have to remember to check `https://waxframe-pricing.weirdave.workers.dev/`. An email alert (via Cloudflare Email Routing's `send_email` binding, `[[send_email]]` in `wrangler.toml`, destination `weirdave@aol.com`) pushes instead, but only when something's actually worth a look:
+The run log is pull — you have to remember to check `https://waxframe-pricing.weirdave.workers.dev/`. An email alert (via Cloudflare Email Routing's `send_email` binding) pushes instead, but only when something's actually worth a look:
 - the whole run threw (KV unreachable, catastrophic failure)
 - any provider/model needs review this run (`needs-review` — changed or first-time price, held per "Review-before-publish" above)
 - a provider/model that succeeded (`confirmed`/`needs-review`) last run can't be read at all this run — the "their page probably changed" signal
 
 Deliberately still silent on routine `retained` rows that consistently come back incomplete (Gemini's non-default free-tier models, Together, Grok in practice — expected Perplexity behavior, not a fault) and on `confirmed` (price genuinely unchanged, nothing to look at). Emailing on either every week would just be noise you'd learn to ignore.
 
-Requires `waxframe.com`'s Email Routing enabled with a verified destination address (done 2026-07-25 — `weirdave@aol.com` auto-verified since it's the Cloudflare account's own login email, no confirmation click needed). If the `send_email` binding is ever missing/misconfigured, `sendAlertEmail()` no-ops silently rather than breaking the actual pricing refresh — email is a nice-to-have alert channel, not the source of truth.
+Requires `waxframe.com`'s Email Routing enabled with a verified destination address. Keep the recipient out of source control: run `wrangler secret put PRICING_ALERT_TO`, enter the verified address, then deploy. The unrestricted `send_email` binding can send only to destinations already verified in the Cloudflare account. If the binding or secret is missing/misconfigured, `sendAlertEmail()` no-ops silently rather than breaking the refresh — email is a nice-to-have alert channel, not the source of truth.
 
 **Where to look if something seems off:**
 - **`https://waxframe-pricing.weirdave.workers.dev/`** — the status page shows a "Scheduled refresh log" (last 10 runs). Each entry lists every provider/model row as `confirmed`, `needs-review`, or `retained` (couldn't verify, with a reason). Check this before trusting a number for anything time-sensitive, e.g. before a demo, and before applying any `needs-review` proposal.
