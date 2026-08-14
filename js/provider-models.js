@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — shared provider/model logic
-// Build: 20260812-003
+// Build: 20260813-001
 // ============================================================
 // provider-models.js — regex + parse primitives shared between api.js and
 // help.html. v3.63.82 introduced this file as the single source of truth;

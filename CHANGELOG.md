@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.459
+
+**Keyless server-AI eligibility + full dead-code audit cleanup**
+
+Build: `20260813-001`<br>
+Released: `2026-08-13`
+
+### What changed
+
+Server-imported AI models (Ollama, LM Studio, self-hosted Open WebUI, internal gateways) now count toward the two-AI minimum without requiring a saved API key — many local/self-hosted model servers don't require authentication at all, and WaxFrame was previously gating Setup, Builder selection, template hive reconciliation, and round execution purely on `_key` presence, which made keyless server AIs permanently unusable. `isServerImportedAI()`, `isAIReadyForUse()`, and `getConfiguredAIsForMode()` (new, `js/app.js`) centralize the readiness check in one place so setup gating, Builder eligibility, template reconciliation, the Bees sidebar, the hive count chip, and round execution can't drift back to key-only checks independently. `js/storage.js`'s Bearer-header builder now omits the `Authorization` header entirely when no key is present, instead of sending a literal `Bearer undefined` to keyless servers. In-app help text (index.html Setup 2 info panel) and the user manual (`waxframe-user-manual.html`, `docs/waxframe-user-manual-clean.txt`) updated to describe the two-AI requirement in terms of "configured" rather than "keyed."
+
+Also: a full dead-code/dead-file audit across every JS, HTML, and CSS file in the repo — the first full pass in 45+ releases. Removed `tools/migrate-inline-handlers.mjs`, a completed one-shot script that migrated inline `onclick=` handlers to the CSP-safe `data-action=` pattern; that migration shipped and is now a locked invariant, and nothing referenced the script anymore. Removed 5 dead CSS custom properties (`--fs-xl`, `--glow`, `--line-stripe`, `--modal-w-base`, `--modal-w-sm`) and 146 dead CSS classes/IDs from `style.css` — mostly remnants of superseded UI (an old Welcome-screen card layout, an old Builder-pick console, an unused alternate "save-bar" footer, an unbuilt Deep Dive Viewer modal, an old Document Playbooks layout, unused text-color utilities), each confirmed dead via literal-string AND dynamic-construction (template-literal/concatenation) cross-checks against every HTML and JS file before removal. Everything else audited — all 27 `js/*.js` files + `pdf-loader.mjs`, all 16 HTML pages, all vendored `lib/` files, `tools/`, `docs/`, and the repo root — came back clean; one additional orphan found (`WF_DEBUG.log` in `js/wf-debug.js`), kept intentionally as a manual devtools hook rather than removed, since it's documented as part of the debug object's public surface even though nothing in-app calls it. Six smaller findings (a stale-but-harmless orphaned `.flac` master audio file, an orphaned `@keyframes` block, an inert `:not()` reference, five reference docs due for a content-freshness pass, three stale local git worktrees, and wiring the new eligibility test into the release gate) were deliberately left for a dedicated pass rather than folded into this release — tracked as backlog item 8.
+
+### Verification
+
+- `node tools/test-server-ai-eligibility.mjs` (new, tracked this release) — passes; exercises `isServerImportedAI`, `isAIReadyForUse`, `getConfiguredAIsForMode`, and `continueFromBees` against mocked cloud/keyed, cloud/unkeyed, and server-imported/keyless AI configs.
+- `node tools/release-check.mjs` — full pass, all 14 checks, including CSS token-reference validation after the 1,186-line `style.css` reduction.
+- Post-deletion `style.css` sanity: brace balance confirmed, the sacred 80ch Working Document rule verified untouched at both its occurrences, a full re-grep of every removed selector against the final file confirmed zero leftover declarations.
+- In-browser smoke test (index, document-playbooks, api-details, templates) — all pages render full expected content, `style.css` loads clean 200 on every page, no CSS-related console errors.
+
+### Files touched
+
+- `js/app.js`, `js/storage.js` — keyless server-AI eligibility
+- `index.html`, `waxframe-user-manual.html`, `docs/waxframe-user-manual-clean.txt` — doc/help-text updates to match
+- `tools/test-server-ai-eligibility.mjs` — new, tracked
+- `tools/migrate-inline-handlers.mjs` — removed (completed one-shot migration, no remaining references)
+- `style.css` — 5 dead custom properties + 146 dead classes/IDs removed (net -1,142 lines)
+- `docs/WaxFrame_Backlog_Master_v273.txt` — new item 8 (audit follow-ups)
+- Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`, `tools/test-provider-extractors.mjs`, both `Update-WaxFrame.*` scripts
+
+### Rollback
+
+`git revert` this commit. No server-side or KV state involved.
+
+---
+
 ## v3.63.458
 
 **Portable install: Mac/Linux companion updater**

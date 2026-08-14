@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260812-003
+// Build: 20260813-001
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1053,7 +1053,11 @@ function loadSettings() {
             cfg.bodyFn    = (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
             cfg.extractFn = d => WFProviderCatalog.extractGeminiText(d);
           } else {
-            cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` });
+            cfg.headersFn = k => {
+              const headers = { 'Content-Type': 'application/json' };
+              if (k) headers['Authorization'] = `Bearer ${k}`;
+              return headers;
+            };
             cfg.bodyFn    = (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] });
             cfg.extractFn = d => WFProviderCatalog.extractOpenAIText(d);
           }

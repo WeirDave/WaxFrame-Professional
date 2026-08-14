@@ -134,7 +134,7 @@ Practical cost ladder:
 
 Hive mode:
 - Internet Based AI: default mode. Shows default direct-API providers: ChatGPT, Claude, Gemini, Grok, Perplexity, and Mistral, plus direct-API custom AIs.
-- Server Based AI: for self-hosted or enterprise AI servers such as Open WebUI, Ollama, LM Studio, or internal gateways. This hides default public providers and shows imported server models.
+- Server Based AI: for self-hosted or enterprise AI servers such as Open WebUI, Ollama, LM Studio, or internal gateways. This hides default public providers and shows imported server models. Active imported models count toward the two-AI minimum without an API key; enter a key only when the server requires authentication.
 
 Internet-mode toolbar:
 - API Key Guide: opens instructions for getting keys from supported providers.
