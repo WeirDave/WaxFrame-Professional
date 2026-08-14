@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v272
-2026-08-12
+WaxFrame Backlog Master v273
+2026-08-13
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -322,6 +322,54 @@ OPEN FEATURES
            that the next sale's Gumroad order details actually
            show an answer in this field. Safe to drop from the
            backlog once that's confirmed once.
+
+
+8. Follow-ups from the 2026-08-13 full code/file audit
+   ─────────────────────────────────────────────────────────
+   WHAT:   A full repo-wide dead-code/dead-file audit (v3.63.459)
+           found and fixed most of what it turned up (removed
+           tools/migrate-inline-handlers.mjs, 5 dead CSS custom
+           properties, 146 dead CSS classes/IDs). Six small items
+           were deliberately left for a deliberate human call
+           rather than auto-resolved:
+             a. sounds/232450__timbre__...flac is unreferenced at
+                runtime (js/scenes.js only loads the .mp3 sibling)
+                — it's the freesound.org master. Delete, or keep
+                as a re-encode source?
+             b. @keyframes lineNumPulse (style.css, was ~line 2542)
+                was orphaned by this audit's .line-highlight
+                deletion — wasn't in the original cleanup scope.
+             c. A `:not(.setup-section-img)` reference (style.css,
+                was ~line 5870) now points at a class that no
+                longer exists — inert, not breaking anything, just
+                stale.
+             d. Five reference docs (WaxFrame_Audit_Methodology_v1,
+                WaxFrame_Prompts_Reference_v3, WaxFrame_Storage_
+                Schema_v1, WaxFrame_Rules_Reference) self-date
+                "reviewed against v3.63.403" — now ~55 versions
+                stale. A spot-check of the storage schema against
+                live js/storage.js passed, so content is stale,
+                not wrong — just needs a review-date bump pass.
+             e. Three .claude/worktrees/ entries (gitignored, local
+                disk only) are stale/prunable, left over from a
+                Dropbox-path change — `git worktree prune` clears
+                them. Not a repo file, pure local housekeeping.
+             f. tools/test-server-ai-eligibility.mjs (added and
+                tracked this same release) tests
+                isServerImportedAI/isAIReadyForUse/
+                getConfiguredAIsForMode/continueFromBees but isn't
+                wired into tools/release-check.mjs as an automated
+                gate check yet — same pattern as check 13
+                (tools/test-provider-extractors.mjs). Candidate for
+                a future "check 15."
+   WHY:    Each needs a product/scope call (delete vs. keep,
+           worth a dedicated pass vs. not) rather than being safe
+           to auto-resolve inside an unrelated release.
+   STATE:  OPEN — no blockers, just needs a decision per sub-item.
+   WHERE:  See each sub-item above for the exact file/line.
+   DONE:   Each sub-item resolved (fixed, explicitly parked, or
+           dropped) and removed from this entry individually —
+           delete the whole entry once all six are cleared.
 
 
 ════════════════════════════════════════════════════════════

@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260812-003
+// Build: 20260813-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -508,6 +508,29 @@ let phase     = 'draft';
 let history   = [];
 let docText   = '';
 let docTab    = 'upload';
+
+// A saved API key is only one way an AI can be ready to use. Models imported
+// from a model server deliberately support unauthenticated endpoints (Ollama,
+// LM Studio, and local OpenWebUI are common examples), so their persisted
+// _modelsEndpoint is the structural setup marker. Keep this distinction in one
+// place so setup, Builder selection, and round execution cannot drift back to
+// key-only checks independently.
+function isServerImportedAI(ai) {
+  const cfg = ai && API_CONFIGS[ai.provider];
+  return !!cfg?._modelsEndpoint;
+}
+
+function isAIReadyForUse(ai) {
+  const cfg = ai && API_CONFIGS[ai.provider];
+  return !!cfg && (!!cfg._key || !!cfg._modelsEndpoint);
+}
+
+function getConfiguredAIsForMode(mode = _hiveMode) {
+  return (Array.isArray(aiList) ? aiList : []).filter(ai => {
+    const isServer = isServerImportedAI(ai);
+    return mode === 'server' ? isServer : (!isServer && isAIReadyForUse(ai));
+  });
+}
 // ── REFERENCE MATERIAL state (v3.21.0) ──
 // ── Reference Material — multi-document support (v3.24.0+) ──
 // Each entry: { id, name, text, source: 'upload'|'paste', filename }
@@ -570,7 +593,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260812-003';         // build stamp — update each session
+const BUILD = '20260813-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2705,14 +2728,16 @@ function assembleProjectGoal() {
 }
 
 function updateBeesRequirements() {
-  const keyedCount = aiList.filter(ai => API_CONFIGS[ai.provider]?._key).length;
+  const configuredCount = getConfiguredAIsForMode().length;
+  const isServerMode = _hiveMode === 'server';
   const reqKeys = document.getElementById('req-keys');
   if (reqKeys) {
-    reqKeys.textContent = (keyedCount >= 2 ? '✓' : '✗') + ` At least 2 AIs set up (${keyedCount} so far)`;
-    reqKeys.classList.toggle('met', keyedCount >= 2);
+    const requirement = isServerMode ? 'At least 2 active server AIs' : 'At least 2 AIs set up';
+    reqKeys.textContent = (configuredCount >= 2 ? '✓' : '✗') + ` ${requirement} (${configuredCount} so far)`;
+    reqKeys.classList.toggle('met', configuredCount >= 2);
   }
   const btn = document.getElementById('beesContinueBtn');
-  if (btn) btn.classList.toggle('btn-accent', keyedCount >= 2);
+  if (btn) btn.classList.toggle('btn-accent', configuredCount >= 2);
 }
 
 function updateBuilderRequirements() {
@@ -5173,25 +5198,25 @@ async function applyTemplate(templateId, path) {
   if (typeof renderSourceSizeCheck === 'function') renderSourceSizeCheck();
 
   // v3.63.43 (Phase 1b) — reconcile the template's saved hive against what
-  // the user actually has keyed. Custom templates only; built-ins have none.
+  // the user actually has configured. Custom templates only; built-ins have none.
   await reconcileTemplateHive(tpl);
 }
 
 // v3.63.43 — Phase 1b: hive reconcile on apply. A custom template stores the
 // lineup that produced its result (hive.aiIds + builder + hiveMode). The user
-// running it may have a different set of AIs keyed, so the choice happens HERE,
-// at apply time, where we know their keyed AIs. Offer "use this template's
+// running it may have a different set of configured AIs, so the choice happens
+// HERE, where we know which AIs are ready by key or server import. Offer "use this template's
 // hive" vs "keep mine"; pre-select the saved AIs they have, skip the ones they
 // don't, never block. clearProject() (run earlier in applyTemplate) leaves the
 // hive untouched, so activeAIs/builder/_hiveMode are intact when we get here.
 async function reconcileTemplateHive(tpl) {
   if (!tpl || !tpl.custom || !tpl.hive || !Array.isArray(tpl.hive.aiIds) || !tpl.hive.aiIds.length) return;
   const want = tpl.hive.aiIds;
-  const keyedNow = (Array.isArray(aiList) ? aiList : []).filter(ai => API_CONFIGS[ai.provider] && API_CONFIGS[ai.provider]._key);
-  const keyedIds = new Set(keyedNow.map(a => a.id));
+  const configuredNow = (Array.isArray(aiList) ? aiList : []).filter(isAIReadyForUse);
+  const configuredIds = new Set(configuredNow.map(a => a.id));
   const nameFor  = (id) => { const a = (aiList || []).find(x => x.id === id); return a ? displayAiName(a.name) : id; };
-  const have    = want.filter(id => keyedIds.has(id));
-  const missing = want.filter(id => !keyedIds.has(id));
+  const have    = want.filter(id => configuredIds.has(id));
+  const missing = want.filter(id => !configuredIds.has(id));
   const wantNames = want.map(nameFor).join(', ');
   const bName = tpl.hive.builder ? nameFor(tpl.hive.builder) : null;
 
@@ -5200,14 +5225,14 @@ async function reconcileTemplateHive(tpl) {
   // transient flag (not _editingTemplateId) because applyTemplate -> clearProject
   // clears _editingTemplateId before this runs.
   if (window._editLoadInProgress) {
-    if (have.length >= 2) _applyTemplateHive(tpl, keyedNow, have);
+    if (have.length >= 2) _applyTemplateHive(tpl, configuredNow, have);
     return;
   }
 
   // Run-mode: can't form a 2+ AI hive from what they have — inform, keep theirs.
   if (have.length < 2) {
-    const haveTxt = have.length ? `you have ${have.map(nameFor).join(', ')} keyed` : `you don't have any of them keyed`;
-    toast(`\u2139\ufe0f This template ran on ${wantNames} \u2014 ${haveTxt}, so your current hive stays. Add keys on Worker Bees to match it.`, 7000);
+    const haveTxt = have.length ? `you have ${have.map(nameFor).join(', ')} configured` : `you don't have any of them configured`;
+    toast(`\u2139\ufe0f This template ran on ${wantNames} \u2014 ${haveTxt}, so your current hive stays. Configure them on Worker Bees to match it.`, 7000);
     return;
   }
   // Already matches? Don't nag.
@@ -5217,21 +5242,21 @@ async function reconcileTemplateHive(tpl) {
   const sameMode = !tpl.hive.hiveMode || _hiveMode === tpl.hive.hiveMode;
   if (sameSet && sameBuilder && sameMode) return;
 
-  const missTxt = missing.length ? `\n\nYou don't have ${missing.map(nameFor).join(', ')} keyed \u2014 those are skipped.` : '';
+  const missTxt = missing.length ? `\n\nYou don't have ${missing.map(nameFor).join(', ')} configured \u2014 those are skipped.` : '';
   const useTheirs = await wfConfirm(
     '\u2b50 Use this template\'s hive?',
     `This template produced its result with: ${wantNames}${bName ? ` (Builder: ${bName})` : ''}.${missTxt}\n\nUse this template's lineup, or keep your current hive?`,
     { okText: 'Use this hive', cancelText: 'Keep mine' }
   );
   if (!useTheirs) return;
-  _applyTemplateHive(tpl, keyedNow, have);
+  _applyTemplateHive(tpl, configuredNow, have);
   toast(`\u2705 Hive set to this template's lineup: ${have.map(nameFor).join(', ')}`, 5000);
 }
 
-// Apply a template's hive (limited to the AIs the user has keyed). Shared by
+// Apply a template's hive (limited to AIs ready by key or server import). Shared by
 // the run-mode "use this hive" path and the silent edit-load path.
-function _applyTemplateHive(tpl, keyedNow, have) {
-  activeAIs = keyedNow.filter(ai => have.includes(ai.id));
+function _applyTemplateHive(tpl, configuredNow, have) {
+  activeAIs = configuredNow.filter(ai => have.includes(ai.id));
   if (tpl.hive.builder && have.includes(tpl.hive.builder)) {
     builder = tpl.hive.builder;
   } else if (!have.includes(builder)) {
@@ -6020,7 +6045,7 @@ function _buildProfileOverrideBadgeHTML(ai, cfg, hasKey) {
 // v3.31.0 — Single-row template. Two visual states:
 //   collapsed (default): icon + name + (custom-only) checkbox
 //   expanded:           the above + key field, model selector, etc.
-// Greyed-name class fires when the AI has no saved key.
+// Greyed-name class fires when the AI has neither a key nor a server import.
 function buildAISetupRowHTML(ai) {
   const isCustom  = !DEFAULT_AIS.find(d => d.id === ai.id);
   // v3.63.307 — Variants are aiList entries with .parentId set to the
@@ -6034,6 +6059,7 @@ function buildAISetupRowHTML(ai) {
   const cfg       = API_CONFIGS[ai.provider];
   const key       = cfg?._key || '';
   const hasKey    = !!key;
+  const isReady   = isAIReadyForUse(ai);
   const isExpanded = _expandedAIIds.has(ai.id);
   // v3.63.307 — Resolve the model for THIS ai (variants override cfg.model
   // via ai.model). Used by every model-aware piece below: 6-card grid,
@@ -6220,10 +6246,10 @@ function buildAISetupRowHTML(ai) {
   // panel).
   //
   // Builder button states:
-  //   • no key → placeholder slot (column reserved, button hidden)
-  //   • key + active Builder → solid gold "🔨 Builder" (not clickable)
-  //   • key + incapable (Jamba) → yellow "⚠ Reviewer-only" (not clickable)
-  //   • key + capable + not Builder → gray "🔨 Builder" (clickable)
+  //   • not ready → placeholder slot (column reserved, button hidden)
+  //   • ready + active Builder → solid gold "🔨 Builder" (not clickable)
+  //   • ready + incapable (Jamba) → yellow "⚠ Reviewer-only" (not clickable)
+  //   • ready + capable + not Builder → gray "🔨 Builder" (clickable)
   //
   // Manage link states:
   //   • no console URL (server-imported customs) → placeholder
@@ -6242,7 +6268,7 @@ function buildAISetupRowHTML(ai) {
   // suspenders. Same pattern for the is-active and is-incapable cases
   // (defensive no-ops on clicks that should already be inert).
   let builderButtonHTML;
-  if (!hasKey) {
+  if (!isReady) {
     builderButtonHTML = `<span class="ai-setup-builder-btn-placeholder" aria-hidden="true"></span>`;
   } else if (_isCurrentBuilderNow) {
     builderButtonHTML = `<button class="ai-setup-builder-btn is-active" type="button"
@@ -6290,8 +6316,8 @@ function buildAISetupRowHTML(ai) {
   // across rows regardless of name / key / Builder state.
   const statusPillHTML = _buildRowStatusPill(ai, hasKey)
     || `<span class="ai-setup-status-pill-placeholder" aria-hidden="true"></span>`;
-  const compactModel = hasKey ? _buildCompactModelSelect(ai, currentModel) : '';
-  const modelLabelHTML = hasKey
+  const compactModel = isReady ? _buildCompactModelSelect(ai, currentModel) : '';
+  const modelLabelHTML = isReady
     ? `<span class="ai-setup-model-label">Model:</span>`
     : '';
 
@@ -6314,7 +6340,7 @@ function buildAISetupRowHTML(ai) {
   // Variants are renamable — they live outside DEFAULT_AIS so isCustom
   // is true for them too. The same rename plumbing applies.
   return `
-    <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'} ${validateState}${isVariant ? ' is-variant' + variantColorCls : ''}" id="airow-${ai.id}">
+    <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${isReady ? 'has-key' : 'no-key'} ${validateState}${isVariant ? ' is-variant' + variantColorCls : ''}" id="airow-${ai.id}">
       <div class="ai-setup-row-summary" data-action="call" data-fn="toggleAISetupRow" data-arg="${ai.id}" role="button" tabindex="0" aria-expanded="${isExpanded}">
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
@@ -6924,13 +6950,12 @@ function renderHiveSidebar() {
   const customs  = _aiListAlpha(visible.filter(ai => !isDef(ai)));
 
   const jumpLink = (ai) => {
-    const cfg = API_CONFIGS[ai.provider];
-    const hasKey = !!cfg?._key;
-    return `<a href="#airow-${escapeHtml(ai.id)}" class="bees-sidebar-jump${hasKey ? ' has-key' : ''}"
+    const isReady = isAIReadyForUse(ai);
+    return `<a href="#airow-${escapeHtml(ai.id)}" class="bees-sidebar-jump${isReady ? ' has-key' : ''}"
       data-action="call" data-fn="jumpToAISetupRow" data-arg="${ai.id}" data-prevent="1" data-stop="1" title="Jump to ${escapeHtml(ai.name)}">
       ${resolveAiIcon(ai, 'bees-sidebar-jump-icon', 16)}
       <span class="bees-sidebar-jump-name">${escapeHtml(ai.name)}</span>
-      ${hasKey ? '<span class="bees-sidebar-jump-dot" title="Key saved">●</span>' : ''}
+      ${isReady ? '<span class="bees-sidebar-jump-dot" title="AI set up">●</span>' : ''}
     </a>`;
   };
 
@@ -7141,14 +7166,20 @@ function renderHiveProfileBar() {
 function renderHiveCountChip() {
   const chip = document.getElementById('hiveCountChip');
   if (!chip) return;
-  const total = aiList.length;
-  const withKeys = aiList.filter(ai => {
-    const cfg = API_CONFIGS[ai.provider];
-    return !!cfg?._key;
-  }).length;
+  const isServerMode = _hiveMode === 'server';
+  const visible = aiList.filter(ai => isServerMode ? isServerImportedAI(ai) : !isServerImportedAI(ai));
+  const total = visible.length;
+  const configured = getConfiguredAIsForMode().length;
+
+  if (isServerMode) {
+    chip.innerHTML = `
+      <span class="hive-count-chip-main"><strong>${total}</strong> server ${total === 1 ? 'AI' : 'AIs'} in hive <span class="hive-count-sep">·</span> <strong>${configured}</strong> active</span>
+    `;
+    return;
+  }
 
   chip.innerHTML = `
-    <span class="hive-count-chip-main"><strong>${total}</strong> ${total === 1 ? 'AI' : 'AIs'} in hive <span class="hive-count-sep">·</span> <strong>${withKeys}</strong> with ${withKeys === 1 ? 'key' : 'keys'}</span>
+    <span class="hive-count-chip-main"><strong>${total}</strong> ${total === 1 ? 'AI' : 'AIs'} in hive <span class="hive-count-sep">·</span> <strong>${configured}</strong> with ${configured === 1 ? 'key' : 'keys'}</span>
   `;
 }
 
@@ -11536,12 +11567,15 @@ function addImportServerModels() {
 }
 
 function continueFromBees() {
-  const keyed = aiList.filter(ai => API_CONFIGS[ai.provider]?._key);
-  if (keyed.length < 2) {
-    toast('⚠️ You need API keys for at least 2 AIs to continue');
+  const configured = getConfiguredAIsForMode();
+  if (configured.length < 2) {
+    const msg = _hiveMode === 'server'
+      ? '⚠️ You need at least 2 active server AIs to continue'
+      : '⚠️ You need API keys for at least 2 AIs to continue';
+    toast(msg);
     return;
   }
-  activeAIs = keyed;
+  activeAIs = configured;
   // v3.63.147 — Builder screen consolidation. Selection now happens
   // inline on the Worker Bees screen via the per-row 🔨 "Make this the
   // Builder" affordance. If the user didn't explicitly pick a Builder,
@@ -16134,7 +16168,7 @@ function getBuilderContentFilterFailoverCandidates(primaryAI) {
     .filter(ai => !window.sessionAIs || window.sessionAIs.has(ai.id))
     .map((ai, idx) => {
       const cfg = API_CONFIGS[ai.provider];
-      if (!cfg?._key) return null;
+      if (!isAIReadyForUse(ai)) return null;
       const rec = getBuilderRecommendation(ai.id);
       const recModel = rec?.model && !isBuilderIncapableModel(rec.model) ? rec.model : '';
       const model = recModel || cfg.model || '';
@@ -17135,7 +17169,7 @@ async function runBuilderOnly() {
   if (!builderAI) { toast('⚠️ No Builder selected'); return; }
 
   const cfg = API_CONFIGS[builderAI.provider];
-  if (!cfg?._key) { toast(`⚠️ No API key for ${builderAI.name}`); return; }
+  if (!isAIReadyForUse(builderAI)) { toast(`⚠️ ${builderAI.name} is not configured`); return; }
 
   // ── LICENSE CHECK ──
   if (!isLicensed()) {
@@ -17678,8 +17712,8 @@ async function retrySingleAIInPartialRound(aiId) {
     return;
   }
   const cfg = API_CONFIGS[ai.provider];
-  if (!cfg?._key) {
-    if (typeof toast === 'function') toast(`⚠️ No API key for ${ai.name} — set it first`);
+  if (!isAIReadyForUse(ai)) {
+    if (typeof toast === 'function') toast(`⚠️ ${ai.name} is not configured`);
     return;
   }
   const btn = document.getElementById('runRoundBtn');
@@ -18025,13 +18059,10 @@ async function runRound(opts) {
   let _notesAtBuilderCall = '';
   let _standingAtBuilderCall = '';
 
-  // Check all active AIs have API keys
-  const missingKeys = activeAIs.filter(ai => {
-    const cfg = API_CONFIGS[ai.provider];
-    return !cfg || !cfg._key;
-  });
-  if (missingKeys.length > 0) {
-    toast(`⚠️ Missing API keys: ${missingKeys.map(a => a.name).join(', ')}`);
+  // Internet AIs need keys; imported model-server AIs may be keyless.
+  const unconfiguredAIs = activeAIs.filter(ai => !isAIReadyForUse(ai));
+  if (unconfiguredAIs.length > 0) {
+    toast(`⚠️ AIs not configured: ${unconfiguredAIs.map(a => a.name).join(', ')}`);
     return;
   }
 
