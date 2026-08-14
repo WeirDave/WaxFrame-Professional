@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260812-003
+   Build: 20260813-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -67,7 +67,6 @@ input, textarea, select { font-family: inherit; }
   --red:          #f87171;
   --red-dim:      rgba(248,113,113,0.10);
   --amber:        #fbbf24;
-  --line-stripe:  rgba(255,255,255,0.04);
   --font:         'DM Sans', system-ui, sans-serif;
   --font-display: 'DM Sans', system-ui, sans-serif;
   --font-mono:    'Courier New', Courier, monospace;
@@ -77,14 +76,12 @@ input, textarea, select { font-family: inherit; }
   --shadow-sm:    0 2px 8px rgba(0,0,0,0.4);
   --shadow-md:    0 8px 32px rgba(0,0,0,0.5);
   --shadow-lg:    0 16px 64px rgba(0,0,0,0.6);
-  --glow:         0 0 24px rgba(245,166,35,0.15);
   /* ── Font size scale ── */
   --fs-xs:   10px;   /* version stamps, tiny badges */
   --fs-sm:   13px;   /* tips, hints, sub-labels, counter text */
   --fs-base: 14px;   /* body text, nav items, form labels */
   --fs-md:   16px;   /* button text, card sub-copy */
   --fs-lg:   18px;   /* card titles */
-  --fs-xl:   clamp(22px, calc(11.75px + 0.75vw), 26px);   /* screen-level headings — fluid 22→26 */
   --fs-2xl:  clamp(28px, calc(17.75px + 0.75vw), 32px);   /* logo/brand name — fluid 28→32 */
   --fs-mono: 13px;   /* all Courier New — textarea, code */
   /* Numeric font-size tokens — px-named scale used by R5a/R5b/R6/R7
@@ -143,8 +140,6 @@ input, textarea, select { font-family: inherit; }
      Adoption is incremental — info family + Project Goal are
      wired now; the rest migrate in the UX-003 uniformity sweep
      (see backlog). */
-  --modal-w-sm:   420px;
-  --modal-w-base: 640px;
   --modal-w-lg:   900px;
   --modal-w-xl:  1200px;
   --modal-w-2xl: 1320px;
@@ -255,11 +250,9 @@ input, textarea, select { font-family: inherit; }
   --red:          #b91c1c;
   --red-dim:      rgba(185,28,28,0.10);
   --amber:        #b45309;
-  --line-stripe:  rgba(0,0,0,0.04);
   --shadow-sm:    0 2px 12px rgba(0,0,0,0.14);
   --shadow-md:    0 8px 32px rgba(0,0,0,0.18);
   --shadow-lg:    0 16px 64px rgba(0,0,0,0.22);
-  --glow:         0 0 24px rgba(201,124,6,0.15);
 }
 
 /* Auto theme (follows OS) */
@@ -286,11 +279,9 @@ input, textarea, select { font-family: inherit; }
     --red:          #b91c1c;
     --red-dim:      rgba(185,28,28,0.10);
     --amber:        #b45309;
-    --line-stripe:  rgba(0,0,0,0.04);
     --shadow-sm:    0 2px 12px rgba(0,0,0,0.14);
     --shadow-md:    0 8px 32px rgba(0,0,0,0.18);
     --shadow-lg:    0 16px 64px rgba(0,0,0,0.22);
-    --glow:         0 0 24px rgba(201,124,6,0.15);
   }
 }
 
@@ -850,141 +841,6 @@ body.helper-body .page-main {
    alongside the inline button they styled. See index.html v3.63.173
    comment for the why. */
 
-.welcome-choices {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-12);
-  width: 100%;
-}
-
-.welcome-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-16);
-  padding: var(--space-20) 22px;
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--border2);
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.welcome-card:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-dim);
-}
-.welcome-card.free {
-  background: rgba(59, 130, 246, 0.07);
-  border-color: rgba(59, 130, 246, 0.35);
-}
-.welcome-card.free:hover {
-  background: rgba(59, 130, 246, 0.14);
-  border-color: rgba(59, 130, 246, 0.65);
-  color: #7ab8ff;
-}
-.welcome-card.pro {
-  background: rgba(245, 158, 11, 0.07);
-  border-color: rgba(245, 158, 11, 0.35);
-}
-.welcome-card.pro:hover {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.welcome-card-icon {
-  font-size: var(--fs-28);
-  width: 48px;
-  text-align: center;
-  flex-shrink: 0;
-}
-.welcome-card-body { flex: 1; }
-.welcome-card-title {
-  font-family: var(--font-display);
-  font-size: var(--fs-16);
-  font-weight: 700;
-  margin-bottom: var(--space-4);
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  color: var(--text-dim);
-}
-.welcome-card-arrow {
-  font-size: var(--fs-18);
-  color: var(--text-dim);
-}
-
-.badge-api {
-  background: var(--accent);
-  color: #0a0c12;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 2px 7px;
-  border-radius: 20px;
-  letter-spacing: 0.06em;
-  font-family: var(--font);
-}
-
-.welcome-info-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 0.15s;
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-.welcome-info-btn:hover { opacity: 1; }
-
-.welcome-info-label {
-  font-size: var(--fs-11);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: var(--space-6);
-}
-.welcome-info-row {
-  display: flex;
-  gap: var(--space-12);
-  align-items: flex-start;
-  margin-bottom: var(--space-10);
-}
-.welcome-info-icon {
-  font-size: var(--fs-20);
-  flex-shrink: 0;
-  width: 28px;
-  text-align: center;
-  line-height: 1.4;
-}
-.welcome-info-body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: var(--fs-13);
-  line-height: 1.5;
-  color: var(--text-dim);
-}
-.welcome-info-body strong {
-  color: var(--text);
-  font-size: var(--fs-13);
-}
-.welcome-info-note {
-  font-size: var(--fs-12);
-  color: var(--text-dim);
-  opacity: 0.8;
-}
-
-.welcome-footer {
-  display: flex;
-  gap: var(--space-10);
-  align-items: center;
-  margin-bottom: var(--space-10);
-}
-
 /* ══════════════════════════════════════
    SCREENS 2 & 3 — SETUP LAYOUT
 ══════════════════════════════════════ */
@@ -1126,19 +982,6 @@ body.helper-body .page-main {
    name. flex: 0 1 auto with overflow:hidden + ellipsis truncates long
    model ids (Qwen/Qwen3-235B-A22B-Instruct-2507-tput) gracefully. The
    provider name keeps flex:1 so it gets priority on narrow widths. */
-.ai-setup-model {
-  flex: 0 1 auto;
-  min-width: 0;
-  max-width: 320px;
-  font-family: var(--font-mono);
-  font-size: var(--fs-12);
-  font-weight: 400;
-  color: var(--text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-left: var(--space-6);
-}
 /* v3.40.0 — deprecation flag marker on AI cards when the saved model is
    no longer in the provider's live /v1/models list. Sits right after the
    AI name, before the spacer that pushes action buttons to the right.
@@ -1237,23 +1080,6 @@ body.helper-body .page-main {
    on every AI row was replaced by the .ai-getkey-link inside the
    expanded panel (only renders when the AI has no key yet). */
 
-/* ── Builder Pick ── */
-.builder-pick-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-/* v3.58.2 — Change-Builder modal: compact candidate grid (the base
-   .builder-pick-grid flex-wrap layout, unchanged) + ONE shared model dropdown
-   below it. Clicking a card highlights it (.cb-pending) and repopulates
-   #changeBuilderModelWrap. .builder-pick-grid is used ONLY by #changeBuilderGrid
-   (Setup 2 uses .builder-pick-grid-large). Nothing here touches work-main / 80ch. */
-#changeBuilderModal .builder-pick-btn.cb-pending {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 2px var(--accent);
-}
 /* v3.63.160 — New row-based Change Builder modal layout. Replaces the
    chip-grid (.builder-pick-grid) + shared-dropdown (.cb-model-wrap) +
    commit-button (.cb-confirm-btn) pattern with one row per AI:
@@ -1312,136 +1138,7 @@ body.helper-body .page-main {
   flex: 1 1 auto;
 }
 
-.cb-model-wrap { width: 100%; margin: var(--space-16) 0 var(--space-12); text-align: left; }
-.cb-model-wrap .model-select { width: 100%; }
-.cb-model-wrap .model-select-note { padding-left: 0; }
 .cb-model-empty { font-size: var(--fs-13); color: var(--text-dim); margin: var(--space-8) 0 0; }
-/* v3.63.69 — SELECTED BUILDER container (Setup 2 Builder screen). Wraps the selected
-   Builder's head (icon + name + bee) and the integrated model selector. Reuses
-   the same .model-select combobox as Worker Bees + Change Builder modal. */
-.builder-screen-model-wrap {
-  width: 100%;
-  margin: 0;
-  text-align: left;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--accent);
-  border-radius: var(--radius-md);
-  padding: var(--space-18) var(--space-20) var(--space-20);
-}
-.builder-screen-model-wrap .model-select { width: 100%; }
-.builder-screen-model-wrap .model-select-note { padding-left: 0; }
-/* laptop / short-viewport compaction */
-@media (max-width: 1600px), (max-height: 900px) {
-  .builder-screen-model-wrap {
-    padding: var(--space-12) var(--space-16) var(--space-14);
-  }
-}
-/* v3.63.200 — Custom Builder confirm button picks up the amber-raised
-   primary CTA treatment, matching .btn-accent / .footer-btn-smoke. */
-.cb-confirm-btn {
-  background: var(--bg-3d-amber);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
-  color: #1a1410;
-  font-size: var(--fs-13);
-  font-weight: 700;
-  cursor: pointer;
-  padding: var(--space-6) var(--space-20);
-  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
-  font-family: var(--font);
-  box-shadow: var(--shadow-3d-raised);
-}
-.cb-confirm-btn:hover:not(:disabled) {
-  background: var(--bg-3d-amber-hover);
-  border-color: var(--accent);
-  color: var(--accent);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-3d-raised-hover);
-}
-.cb-confirm-btn:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-3d-raised-active);
-}
-.cb-confirm-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
-
-/* v3.63.200 — Builder picker cards get the 3D button treatment.
-   .selected state uses the amber-dim gradient so the chosen Builder
-   reads as "lit up" / pressed-in among siblings. */
-.builder-pick-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-10);
-  padding: var(--space-20) var(--space-12) var(--space-14);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-md);
-  background: var(--bg-3d-button);
-  color: var(--text-dim);
-  font-size: var(--fs-13);
-  font-weight: 500;
-  transition: transform 0.12s, box-shadow 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
-  position: relative;
-  min-width: 100px;
-  cursor: pointer;
-  overflow: hidden;
-  box-shadow: var(--shadow-3d-button);
-}
-.builder-pick-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-3d-button-hover);
-}
-.builder-pick-btn:active {
-  transform: translateY(1px);
-  box-shadow: var(--shadow-3d-button-active);
-}
-.builder-pick-btn.selected {
-  border: 2px solid var(--accent);
-  background: linear-gradient(180deg, var(--accent-dim) 0%, rgba(0,0,0,0.10) 100%);
-  color: var(--accent);
-  font-weight: 700;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.16),
-    inset 0 -1px 0 rgba(0,0,0,0.18),
-    0 4px 12px rgba(245,166,35,0.30);
-}
-.builder-pick-icon {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  border-radius: 8px;
-}
-.builder-pick-name {
-  font-size: var(--fs-13);
-  font-weight: 600;
-  /* v3.32.19 — Allow long AI names to wrap inside the card width.
-     `word-break: break-word` lets hyphenated model names like
-     "Claude-3-7-Sonnet" or "GPT-4o-Mini" break at hyphens cleanly;
-     `overflow-wrap: anywhere` is a fallback for unbreakable tokens
-     (extremely long single words). `max-width: 100%` keeps the name
-     within the card's content box. `line-height: 1.25` gives multi-
-     line names visual breathing room without making single-line
-     names feel loose. `text-align: center` matches the column
-     layout's centered alignment so wrapped names remain centered. */
-  max-width: 100%;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  line-height: 1.25;
-  text-align: center;
-}
-.builder-selected-badge {
-  position: absolute;
-  top: -12px;
-  right: -10px;
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
-}
 
 .custom-ai-form {
   margin-top: var(--space-10);
@@ -1463,9 +1160,6 @@ body.helper-body .page-main {
   outline: none;
 }
 .custom-ai-form input:focus { border-color: var(--accent); }
-.field-lg, .field-sm, .field-goal, 
-.field-sm { width: 180px; min-width: 0; }
-.field-lg:focus, .field-sm:focus, .field-goal:focus, .field-doc:focus { border-color: var(--accent); }
 
 /* ── Doc input tabs ── */
 .doc-input-tabs {
@@ -1817,12 +1511,6 @@ body.helper-body .page-main {
 }
 .nav-hamburger:hover span {
   background: var(--accent);
-}
-.welcome-hamburger {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 10;
 }
 .welcome-menu-btn {
   position: absolute;
@@ -2221,11 +1909,6 @@ body.helper-body .page-main {
   opacity: 0.95;
 }
 
-/* hex-icon-wrap: no-op on big screen — icon sits directly in body */
-.hex-icon-wrap {
-  display: contents;
-}
-
 .hex-cell.is-builder  { border-color: var(--border2); }
 .hex-cell.is-builder::before  { background: var(--border2); }
 .hex-cell.is-active { border-color: var(--border2); }
@@ -2438,20 +2121,6 @@ body.helper-body .page-main {
   flex-shrink: 0;
   object-fit: contain;
 }
-.edit-hive-avatar-letter {
-  width: 24px;
-  height: 24px;
-  border-radius: 5px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
-  color: #fff;
-  text-transform: uppercase;
-  user-select: none;
-}
 .edit-hive-name {
   flex: 1;
   font-size: 13px;
@@ -2503,8 +2172,7 @@ body.helper-body .page-main {
     box-shadow: 0 0 12px var(--blue-dim);
     margin: 2px var(--space-8) var(--space-4);
   }
-  [data-theme="light"] .bee-dot-strip,
-  .bee-dot-strip-light {
+  [data-theme="light"] .bee-dot-strip {
     background: #ffffff;
     border-color: rgba(37,99,235,0.5);
     box-shadow: 0 0 12px var(--blue-dim);
@@ -2550,18 +2218,6 @@ body.helper-body .page-main {
   }
   .bee-dot:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
   .bee-dot img { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; display: block; }
-  .bee-dot .bee-dot-avatar {
-    width: 18px;
-    height: 18px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--fs-11) /* snapped from 10px */;
-    font-weight: 800;
-    color: #fff;
-    text-transform: uppercase;
-  }
 
   /* Satisfaction star — always present in DOM, opacity-toggled via
      .is-clean. Sits in the top-right corner overlapping the ring so it
@@ -2883,11 +2539,6 @@ body.helper-body .page-main {
   flex-shrink: 0;
   padding-right: var(--space-6);
 }
-.work-line-numbers div.line-highlight {
-  color: var(--amber);
-  font-weight: 700;
-  animation: lineNumPulse 0.8s ease-in-out infinite;
-}
 @keyframes lineNumPulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.35; }
@@ -3039,7 +2690,6 @@ body.helper-body .page-main {
   }
   .dcw-digits { font-size: 16px; }
   .dcw-label-top { font-size: 9px; }
-  .dcw-label-bot { font-size: 9px; }
   .left-panel-header { padding: 5px 8px; margin: 4px 5px 2px; }
   /* Setup Page 2 — hide bee, tighten padding */
     /* Compress length constraint box */
@@ -3112,7 +2762,6 @@ body.helper-body .page-main {
   .dcw-digits { font-size: 14px; }
   .dcw-digits-project { font-size: 14px; }
   .dcw-label-top { font-size: 8px; }
-  .dcw-label-bot { font-size: 8px; }
 
   /* Console legend wraps tighter; the colored squares stay legible
      but the typography matches the new density. */
@@ -3125,8 +2774,7 @@ body.helper-body .page-main {
     font-size: var(--fs-11);
     padding: 3px var(--space-8);
   }
-  .footer-right .btn,
-  .footer-right .footer-pill {
+  .footer-right .btn {
     font-size: var(--fs-11);
     padding: 3px var(--space-8);
   }
@@ -3284,12 +2932,6 @@ body.helper-body .page-main {
   gap: 4px;
   padding: 0 8px;
 }
-.dcw-divider {
-  width: 1px;
-  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.12), transparent);
-  margin: 2px 0;
-  flex-shrink: 0;
-}
 .dcw-label-top {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -3323,17 +2965,6 @@ body.helper-body .page-main {
   color: #00b300;
   text-shadow: 0 0 10px rgba(0,179,0,0.6), 0 0 28px rgba(0,179,0,0.2);
 }
-/* Round clock status label */
-.dcw-label-bot {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  color: #6a7090;
-  text-transform: uppercase;
-  transition: color 0.3s;
-  text-align: center;
-}
-.dcw-label-bot.running { color: #00b300; }
 /* Project clock — amber digits when running */
 .dcw-digits-project.running {
   color: var(--accent);
@@ -3410,8 +3041,6 @@ body.helper-body .page-main {
 [data-theme="light"] .dcw-digits-project.running { color: var(--accent); text-shadow: 0 0 8px rgba(245,166,35,0.5); }
 [data-theme="light"] .dcw-digits-project.paused { color: var(--accent); }
 [data-theme="light"] .dcw-label-top { color: #384060; }
-[data-theme="light"] .dcw-label-bot { color: #384060; }
-[data-theme="light"] .dcw-label-bot.running { color: #00b300; }
 [data-theme="light"] .dcw-ctrl-btn { border-color: #7880a0; color: #384060; }
 [data-theme="light"] .dcw-ctrl-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
 [data-theme="light"] .dcw-ctrl-btn--start.active {
@@ -3422,7 +3051,6 @@ body.helper-body .page-main {
   border-color: var(--accent);
   color: var(--accent);
 }
-[data-theme="light"] .dcw-divider { background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.12), transparent); }
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .dual-clock-widget { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.1); }
   [data-theme="auto"] .dcw-bezel { background: linear-gradient(145deg, #e8eaf0, #ffffff); border-color: #d0d4e8; }
@@ -3432,7 +3060,6 @@ body.helper-body .page-main {
   [data-theme="auto"] .dcw-digits-project.running { color: var(--accent); text-shadow: 0 0 8px rgba(245,166,35,0.5); }
   [data-theme="auto"] .dcw-digits-project.paused { color: var(--accent); }
   [data-theme="auto"] .dcw-label-top { color: #7880a0; }
-  [data-theme="auto"] .dcw-label-bot { color: #7880a0; }
   [data-theme="auto"] .dcw-ctrl-btn { border-color: #7880a0; color: #384060; }
   [data-theme="auto"] .dcw-ctrl-btn--start.active {
     border-color: #00b300;
@@ -3442,7 +3069,6 @@ body.helper-body .page-main {
     border-color: var(--accent);
     color: var(--accent);
   }
-  [data-theme="auto"] .dcw-divider { background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.12), transparent); }
 }
 
 /* ── FOOTER BAR ── */
@@ -3670,15 +3296,6 @@ body.helper-body .page-main {
   color: var(--text);
 }
 
-.bee-status-card.is-active { border-color: var(--border2); }
-.bee-status-card.is-inactive { opacity: 0.45; }
-.bee-status-card.is-builder { border-color: var(--accent); background: var(--accent-dim); }
-.bee-status-card.is-working    { border-color: var(--blue);    background: var(--blue-dim); }
-.bee-status-card.is-sending    { border-color: var(--blue);    background: var(--blue-dim); }
-.bee-status-card.is-responding { border-color: var(--purple);  background: var(--purple-dim); }
-.bee-status-card.is-done       { border-color: var(--green); }
-.bee-status-card.is-error      { border-color: var(--red);     background: var(--red-dim); }
-
 /* ROUND HISTORY */
 .round-history {
   display: flex;
@@ -3706,15 +3323,6 @@ body.helper-body .page-main {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── BEE CONTROLS ROW ── */
-.bee-controls-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-6);
-  margin-bottom: var(--space-10);
-  flex-wrap: wrap;
-}
-
 /* ════════════════════════════════════════════════════════════════
    BUILDER SCREEN (Setup 2) — "Builder Console" layout (v3.63.69)
    ────────────────────────────────────────────────────────────────
@@ -3722,45 +3330,6 @@ body.helper-body .page-main {
    as a compact adjacent picker on desktop and a stacked picker on laptops.
    No nested scroll. 80ch column untouched.
    ════════════════════════════════════════════════════════════════ */
-
-.builder-console-shell {
-  display: grid;
-  grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
-  gap: var(--space-18);
-  align-items: start;
-  min-height: 0;
-}
-
-.builder-console-primary,
-.builder-console-roster {
-  min-width: 0;
-}
-
-.builder-console-primary {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-12);
-}
-
-.builder-console-roster {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--space-18);
-}
-
-.builder-roster-kicker {
-  font-size: var(--fs-12);
-  font-weight: 800;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: var(--space-12);
-}
-
-.builder-console-tip {
-  margin: 0;
-}
 
 /* ── ROSTER (chips) ── */
 .builder-pick-grid-large {
@@ -3891,8 +3460,6 @@ body.helper-body .page-main {
 /* Laptop (≤1600px wide) OR short (≤900px tall): tighten the console so the
    whole Setup 2 page clears the fixed footer at 1366×768. */
 @media (max-width: 1600px), (max-height: 900px) {
-  .builder-console-shell { gap: var(--space-14); }
-  .builder-console-roster { padding: var(--space-14); }
   .builder-pick-grid-large {
     gap: var(--space-8);
     grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
@@ -3910,16 +3477,7 @@ body.helper-body .page-main {
   .builder-spotlight-model-label { margin-bottom: var(--space-6); }
 }
 
-@media (max-width: 1100px) {
-  .builder-console-shell {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 760px) {
-  .builder-console-roster {
-    padding: var(--space-12);
-  }
   .builder-chip {
     justify-content: flex-start;
   }
@@ -3928,12 +3486,6 @@ body.helper-body .page-main {
 /* ── SECTION BEE IMAGE ── */
 
 /* ── CUSTOM AI FORM ── */
-.custom-ai-form-title {
-  font-weight: 700;
-  font-size: var(--fs-14);
-  margin-bottom: var(--space-12);
-  color: var(--text);
-}
 .custom-ai-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4345,17 +3897,6 @@ body.helper-body .page-main {
 }
 .custom-ai-icon-uploader--big.has-icon .custom-ai-icon-preview-box--big img {
   display: block;
-}
-.custom-ai-icon-preview-empty {
-  font-size: var(--fs-11);
-  color: var(--text-dim);
-  text-align: center;
-  font-style: italic;
-  padding: 0 var(--space-8);
-  display: block;
-}
-.custom-ai-icon-uploader--big.has-icon .custom-ai-icon-preview-empty {
-  display: none;
 }
 /* Clear × button only visible when user uploaded a real icon — not
    for catalog-matched previews, since those aren't "theirs to clear" */
@@ -5062,18 +4603,6 @@ body.helper-body .page-main {
   font-style: italic;
 }
 .import-server-name-input:focus { outline: none; border-color: var(--accent); }
-.import-server-item-badge {
-  font-size: var(--fs-11) /* snapped from 10px */;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 1px var(--space-6);
-  flex-shrink: 0;
-}
 
 /* ── Raw-response toggle button (shown in ready state on both tiers) ── */
 .import-server-raw-toggle {
@@ -5389,25 +4918,6 @@ kbd {
   padding: 1px 5px;
 }
 
-/* ── PROJECT FIELD CLEAR BUTTONS ── */
-.project-field-wrap .field-lg { width: 100%; }
-.project-field-wrap:nth-child(2) .field-sm { width: 150px; }
-
-/* ── PROJECT FIELDS — clean stacked layout ── */
-.project-fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-  margin-bottom: var(--space-12);
-  width: 100%;
-  max-width: 480px;
-}
-.proj-field-full {
-  width: 100%;
-}
-.proj-field-ver {
-  width: 180px;
-}
 /* v3.27.7: removed .proj-clear-row, .proj-clear-row--bottom, .proj-clear-btn —
    project-screen restructure eliminated all referencing markup. */
 
@@ -5424,7 +4934,6 @@ kbd {
   transition: opacity 0.12s;
 }
 .goal-info-btn img { width: 28px; height: 28px; display: block; }
-.goal-info-btn-img { width: 28px; height: 28px; display: block; flex-shrink: 0; opacity: 0.9; }
 .goal-info-btn:hover { opacity: 1; }
 .finish-modal.goal-info-modal {
   max-width: var(--modal-w-xl); /* v3.55.1 — was 900px; widened to 1200 for wide-and-short reading */
@@ -5962,17 +5471,6 @@ kbd {
   z-index: 2;
 }
 
-/* v3.52.10 — Four orphan .bee-card.is-* selectors removed from here.
-   They had no declaration block, so the CSS parser consumed the next
-   rule's selector into an impossible descendant chain — making the
-   .work-notes-panel .work-panel-header rule below never match. Likely
-   residue of a comma-list whose shared declaration block was deleted
-   at some point. Surfaced by Codex CSS audit 2026-05-17. */
-
-.work-notes-panel .work-panel-header {
-  background: var(--surface2);
-}
-
 /* ══════════════════════════════════════
    FULLSCREEN LAYOUT (Setup Screens 2 & 3)
 ══════════════════════════════════════ */
@@ -6036,51 +5534,6 @@ kbd {
   margin-top: 2px;
 }
 
-.fs-col-header { margin-bottom: var(--space-20); }
-.fs-col-title {
-  font-family: var(--font-display);
-  font-size: var(--fs-24);
-  font-weight: 800;
-  color: var(--text);
-  margin-bottom: var(--space-8);
-  letter-spacing: -0.01em;
-}
-.fs-col-sub { font-size: var(--fs-14); color: var(--text-dim); line-height: 1.7; }
-/* v3.27.7: replaced .fs-col-tip with .gold-tip-card — generic gold/amber
-   callout block reusable across the app. Generalized from the .dp-real-example
-   styling used in document-playbooks.html. Use this for guidance copy that
-   should feel official rather than incidental. .fs-col-tip removed (only
-   consumer was the Builder screen, now using .gold-tip-card). */
-.gold-tip-card {
-  background: rgba(245, 166, 35, 0.05);
-  border: 1px solid rgba(245, 166, 35, 0.25);
-  border-radius: var(--radius-sm);
-  padding: var(--space-14) var(--space-18);
-  margin: 0 0 var(--space-16);
-  font-size: var(--fs-13);
-  color: var(--text);
-  line-height: 1.6;
-}
-.gold-tip-card a { color: var(--accent); }
-.gold-tip-card .tip-icon-img {
-  vertical-align: middle;
-  margin-right: var(--space-6);
-}
-
-/* Bee — fixed block above scroll area, not absolute */
-.setup-card-bee {
-  display: block;
-  width: 260px;
-  height: 260px;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
-  align-self: center;
-  flex-shrink: 0;
-  padding-top: 12px;
-}
-
 /* Controls row */
 .bee-controls-row-setup {
   display: flex;
@@ -6112,11 +5565,6 @@ kbd {
   margin: var(--space-16) 0 0 0;
   border-radius: 6px;
   position: relative;
-}
-.source-size-check.ssc-warning {
-  background: rgba(255, 120, 80, 0.08);
-  border: 1px solid rgba(255, 120, 80, 0.35);
-  border-left: 4px solid #ff7850;
 }
 .source-size-check.ssc-recommend {
   background: rgba(255, 200, 80, 0.07);
@@ -6419,12 +5867,7 @@ kbd {
 ══════════════════════════════════════ */
 
 /* Make sure col content sits above the image */
-.fs-col > *:not(.setup-section-img) { position: relative; z-index: 1; }
 .fs-body-single > *:not(.setup-section-img) { position: relative; z-index: 1; }
-.fs-body-single .fs-col-header {
-  max-width: 680px;
-  padding: 0 var(--space-20);
-}
 
 /* ── ROUND HISTORY CARDS ── */
 .round-hist-item {
@@ -6574,9 +6017,6 @@ kbd {
   letter-spacing: 0.02em;
   pointer-events: none;
 }
-.btn-shake-wide.running {
-  animation: shakePulse 0.8s ease-in-out infinite alternate;
-}
 @keyframes shakePulse {
   from { box-shadow: 0 0 6px rgba(245,166,35,0.4); }
   to   { box-shadow: 0 0 18px rgba(245,166,35,0.9); }
@@ -6602,46 +6042,7 @@ kbd {
 .footer-btn .shake-wide-label,
 .footer-btn .builder-only-label { color: var(--text); }
 
-/* ── Console Clock ── */
-.console-clock {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #0a0c12;
-  border: 1px solid #1a7a3a;
-  border-radius: var(--radius-sm);
-  margin: var(--space-4) var(--space-10);
-  padding: var(--space-6) var(--space-12);
-  font-family: var(--font-mono);
-}
-.console-clock.running .console-clock-time {
-  color: var(--amber);
-}
-.console-clock.running .console-clock-label {
-  color: var(--amber);
-  opacity: 0.7;
-}
-
-/* ── Round Timer Widget ── */
-.round-timer-clock.running {
-  color: #00b300;
-  text-shadow: 0 0 8px rgba(0,179,0,0.4);
-}
-
 /* ── Compact bee rows ── */
-
-/* ── NOTES 1/3, HISTORY 2/3 SPLIT ── */
-
-.work-notes-panel .round-history {
-  flex: 0 0 auto;
-  max-height: 220px;
-  overflow-y: auto;
-  padding: var(--space-8);
-  min-height: 0;
-  background: var(--surface);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border2) transparent;
-}
 
 /* ══════════════════════════════════════
    CONFLICTS PANEL
@@ -7961,12 +7362,6 @@ kbd {
   text-align: center;
 }
 
-.finish-modal-bee {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-}
-
 .finish-modal-logo {
   width: 288px;
   height: 288px;
@@ -9004,13 +8399,6 @@ kbd {
 .settings-row-disabled .settings-radio-pill {
   cursor: default;
 }
-.settings-foot-note {
-  font-size: var(--fs-sm);
-  color: var(--text-dim);
-  font-style: italic;
-  margin: var(--space-8) 0 0;
-}
-
 /* v3.63.321 — Settings TOC. Renders at the top of the Settings inner
    scroll area as a chip strip — each chip jumps to one alphabetized
    section. Built at openSettings time by _renderSettingsToc; the
@@ -9577,43 +8965,7 @@ kbd {
 /* v3.58.4 — bounce fix: reserve a fixed-height block for the dropdown + up to
    two note lines per role (✨ Reviewer + 🔨 Builder ≈ 4 lines), so switching
    candidates never shifts the buttons. Buttons then sit a fixed gap below. */
-#changeBuilderModal .cb-model-wrap { align-self: stretch; min-height: 150px; }
 #changeBuilderModal .cb-actions { margin-top: var(--space-16); }
-/* v3.58.4 — fixed 6-column candidate grid: the default 6 on the first row, up
-   to 6 per row after (10 AIs -> 6 + 4). Replaces auto flex-wrap. */
-#changeBuilderModal .builder-pick-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--space-8);
-}
-/* v3.58.4 — uniform card size always. Fixed height + the "Builder" badge
-   absolutely positioned, so the current-builder card matches every other card
-   (the in-flow badge used to make that one taller). */
-#changeBuilderModal .builder-pick-btn {
-  height: 108px;
-  min-width: 0;
-  padding: var(--space-12) var(--space-8);
-  justify-content: center;
-  gap: var(--space-6);
-}
-#changeBuilderModal .builder-pick-icon { width: 32px; height: 32px; }
-#changeBuilderModal .builder-pick-name { font-size: var(--fs-12); line-height: 1.2; }
-/* v3.58.4 — badge mirrors the work-screen .hex-builder-tag pill (amber, dark
-   text) but says "Builder" — same role word as the working-document cards. */
-#changeBuilderModal .builder-pick-current {
-  position: absolute;
-  bottom: var(--space-6);
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #0a0c12;
-  background: var(--accent);
-  border-radius: 3px;
-  padding: 1px var(--space-6);
-  white-space: nowrap;
-}
 #changeBuilderModal .finish-modal-msg { text-align: left; }
 
 /* ── Sheet Picker Modal (v3.25.0) ── */
@@ -9788,10 +9140,6 @@ kbd {
   text-transform: uppercase; letter-spacing: 0.08em;
   font-weight: 600; margin-top: 2px;
 }
-.page-header-spacer {
-  width: 80px;
-  flex-shrink: 0;
-}
 .page-header-controls {
   display: flex;
   align-items: center;
@@ -9827,19 +9175,6 @@ kbd {
   background: var(--surface); border: 1px solid var(--border2);
   border-radius: var(--radius-md); padding: var(--space-24);
   display: flex; flex-direction: column; gap: var(--space-14);
-}
-
-/* ── Column bee (tokens/api left column) ── */
-.col-bee {
-  display: block;
-  width: 260px; height: 260px;
-  object-fit: contain;
-  margin: 0 auto 4px;
-  align-self: center;
-  flex-shrink: 0;
-  padding-top: 12px;
-  pointer-events: none;
-  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
 }
 
 /* ── Table (tokens page) ── */
@@ -9898,24 +9233,6 @@ kbd {
 }
 .model-label { color: var(--muted); font-weight: 600; flex-shrink: 0; }
 .model-note { color: var(--muted); }
-
-/* ── Prompt editor save bar ── */
-.save-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  background: var(--surface); border: 1px solid var(--border2);
-  border-radius: var(--radius-md);
-  padding: 16px 24px; flex-shrink: 0; gap: 16px;
-}
-.save-bar-left { display: flex; align-items: center; gap: 20px; }
-.save-bar-center { display: none; }
-.save-bar-actions { display: flex; gap: 10px; flex-shrink: 0; align-items: center; }
-.save-bar-bee {
-  width: 180px; height: 180px; object-fit: contain;
-  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
-  flex-shrink: 0;
-}
-.save-bar-title { font-family: var(--font-display); font-size: 24px; font-weight: 800; color: var(--text); line-height: 1; }
-.save-bar-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
 /* ── Prompt editor groups ── */
 .prompts-grid { display: flex; flex-direction: column; gap: var(--space-16); }
@@ -10035,23 +9352,10 @@ kbd {
     box-shadow: 0 -1px 0 rgba(0,0,0,0.06);
   }
 }
-.page-footer-btns {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex: 1;
-  flex-wrap: wrap;
-}
 .page-footer-right {
   display: flex;
   align-items: center;
   gap: var(--space-10);
-  flex-shrink: 0;
-}
-.page-footer-left {
-  display: flex;
-  align-items: center;
   flex-shrink: 0;
 }
 /* Unified helper-page footer (v3.22.3 / v3.22.4) — thin like the work-screen
@@ -10087,14 +9391,6 @@ kbd {
   gap: var(--space-10);
   flex: 1;
   justify-content: center;
-}
-/* v3.22.4 — version pill is plain dim text, not a bordered button shape. */
-.footer-version-pill {
-  display: inline-flex;
-  align-items: center;
-  font-size: var(--fs-11) /* snapped from 10px */;
-  color: var(--text-dim);
-  letter-spacing: 0.06em;
 }
 .helper-version-stamp {
   display: inline;
@@ -10684,128 +9980,6 @@ kbd {
 }
 
 /* ══════════════════════════════════════
-   DEEP DIVE VIEWER (v3.28.2)
-   Modal showing the ring buffer captures as a clean table.
-   Replaces the previous "type WF_DEBUG.ringBuffer in DevTools" workflow.
-   All colors flow through theme variables; light overrides at bottom.
-═══════════════════════════════════════ */
-.ddv-overlay .ddv-modal {
-  max-width: 920px;
-  text-align: left;
-}
-.ddv-title-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  text-align: left;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-}
-.ddv-icon {
-  font-size: 1.4em;
-  flex-shrink: 0;
-}
-.ddv-count-badge {
-  font-size: 0.7em;
-  font-weight: 600;
-  color: var(--text);
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  padding: var(--space-4) var(--space-10);
-  letter-spacing: 0.04em;
-  font-family: var(--font);
-  margin-left: auto;
-}
-.ddv-body {
-  text-align: left;
-  margin-top: var(--space-8);
-}
-.ddv-status {
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: var(--text);
-  margin: 0 0 var(--space-14) 0;
-  padding: var(--space-10) var(--space-14);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border2);
-  background: var(--surface2);
-}
-.ddv-status-off    { border-color: rgba(245, 166, 35, 0.45); background: rgba(245, 166, 35, 0.10); }
-.ddv-status-empty  { /* uses default surface2 */ }
-.ddv-status-on     { border-color: rgba(45, 212, 191, 0.45); background: rgba(45, 212, 191, 0.10); }
-.ddv-table-wrap {
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  margin-bottom: var(--space-14);
-  max-height: 440px;
-  overflow-y: auto;
-}
-.ddv-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-}
-.ddv-table thead {
-  background: var(--surface2);
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-.ddv-table th {
-  text-align: left;
-  padding: var(--space-8) var(--space-10);
-  font-weight: 700;
-  color: var(--text);
-  font-size: 0.7rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--border2);
-  white-space: nowrap;
-}
-.ddv-table td {
-  padding: var(--space-8) var(--space-10);
-  border-bottom: 1px solid var(--border2);
-  color: var(--text);
-  vertical-align: top;
-}
-.ddv-table tr:last-child td {
-  border-bottom: none;
-}
-.ddv-table tr:hover td {
-  background: var(--accent-dim);
-}
-.ddv-table .ddv-mono {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.78rem;
-  color: var(--text);
-  word-break: break-word;
-}
-.ddv-table .ddv-num {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.8rem;
-  text-align: right;
-  white-space: nowrap;
-}
-.ddv-table .ddv-empty {
-  text-align: center;
-  padding: var(--space-32) var(--space-16);
-  color: var(--text-dim);
-  font-style: italic;
-}
-.ddv-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-  justify-content: flex-end;
-}
-/* Light theme — alpha-tinted status banners need stronger saturation
-   to remain visible on a white surface */
-[data-theme="light"] .ddv-status-off { background: rgba(201, 124, 6, 0.14); border-color: rgba(201, 124, 6, 0.40); }
-[data-theme="light"] .ddv-status-on  { background: rgba(13, 148, 136, 0.14); border-color: rgba(13, 148, 136, 0.40); }
-
-/* ══════════════════════════════════════
    MOBILE FUNNEL OVERLAY (≤768px)
    Hidden on desktop, shown on phones. Funnel landing: explains
    what WaxFrame is, why phone screens can't host the work flow,
@@ -11197,15 +10371,10 @@ kbd {
 ══════════════════════════════════════ */
 
 /* ── Info button images ── */
-.info-btn-img    { width: 22px; height: 22px; display: block; }
 .info-btn-img-lg { width: 36px; height: 36px; display: block; }
 
 /* ── Tip icon images (inline in paragraph text) ── */
 .tip-icon-img { width: 18px; height: 18px; vertical-align: middle; margin-right: var(--space-4); }
-
-/* ── Goal field — counter row ── */
-.goal-counter-row  { display: flex; justify-content: flex-start; align-items: center; gap: 4.5em; margin-bottom: 0; width: 100%; }
-.goal-counter-text { font-size: var(--fs-11); color: var(--text-dim); font-family: var(--font-mono); }
 
 /* ── Goal field — refine preview box ── */
 .goal-refine-preview-hdr   { background: var(--accent-dim); padding: var(--space-4) var(--space-10); display: flex; justify-content: space-between; align-items: center; }
@@ -11243,15 +10412,6 @@ kbd {
   scrollbar-width: thin;
   scrollbar-color: rgba(245,166,35,0.4) transparent;
 }
-.goal-modal-refine-wrap     { margin-top: var(--space-10); }
-.text-green                 { color: #00b300; }
-.text-accent                { color: var(--accent); }
-.text-warn                  { color: #fbbf24; }
-.text-error                 { color: #f87171; }
-.text-send                  { color: #60a5fa; }
-.text-preview               { color: #a78bfa; }
-.text-divider               { color: #f5a623; }
-
 .goal-refine-preview-empty {
   padding: var(--space-12) var(--space-10);
   font-size: var(--fs-11);
@@ -11477,18 +10637,6 @@ kbd {
   color: var(--text-dim);
   line-height: 1.5;
 }
-.checkpoint-row-json {
-  display: inline-block;
-  margin-top: 4px;
-  padding: 2px var(--space-6);
-  background: var(--surface3);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: var(--fs-11);
-  color: var(--text-dim);
-  word-break: break-all;
-}
-
 /* Preview lines — labeled values stacked below the description.
    v3.63.257 — At laptop widths these still stack vertically; at desktop
    widths (≥1200px) they reflow to two side-by-side columns with a small
@@ -12093,24 +11241,9 @@ kbd {
 .goal-modal-fields       { display: flex; flex-direction: column; gap: var(--space-8); padding: var(--space-14); background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); max-height: 55vh; overflow-y: auto; box-sizing: border-box; }
 .goal-modal-fields .dp-field         { padding: var(--space-6) 0; }
 .goal-modal-fields .dp-field-value   { color: var(--text); }
-.goal-modal-empty        { font-size: var(--fs-13); color: var(--text-dim); font-style: italic; padding: var(--space-8) 0; text-align: center; }
-.goal-modal-refine-label { font-size: var(--fs-12); color: var(--text-dim); margin-bottom: var(--space-6); font-weight: 600; }
-.goal-modal-refine-text  { font-family: var(--font-mono); font-size: var(--fs-12); line-height: 1.6; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: var(--space-10) var(--space-14); white-space: pre-wrap; max-height: 120px; overflow-y: auto; }
 .goal-modal-footer       { display: flex; gap: var(--space-10); margin-top: var(--space-16); align-items: center; }
 
 /* About modal logo is styled with the full About modal layout block. */
-
-/* ── Goal info modal icon ── */
-.goal-info-modal-icon { width: 72px; height: 72px; }
-
-/* ── Builder picker card ── */
-.builder-pick-card-inner { display: flex; flex-direction: column; align-items: center; gap: var(--space-6); padding: var(--space-12); }
-.builder-pick-icon       { width: 32px; height: 32px; object-fit: contain; border-radius: 6px; }
-.builder-pick-name       { font-size: var(--fs-12); font-weight: 700; }
-.builder-pick-current    { font-size: var(--fs-11) /* snapped from 10px */; color: var(--accent); }
-
-/* ── Continue to project button bee image ── */
-.btn-bee-img { width: 36px; height: 36px; object-fit: contain; vertical-align: middle; margin-right: 8px; }
 
 /* ── Convergence card extras ── */
 .convergence-count-badge { margin-left: 8px; color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
@@ -12140,8 +11273,6 @@ kbd {
 /* ── View round doc tab layout ── */
 .view-round-tab-row { display: flex; gap: 6px; }
 .view-round-tab-bar { display: flex; gap: 6px; padding: 10px 16px; flex-wrap: wrap; background: var(--surface2); flex-shrink: 0; border-bottom: 1px solid var(--border); }
-
-.goal-info-modal-icon-wrap { text-align: center; margin-bottom: var(--space-8); }
 
 /* ── Helper pages — tip icon image (20px, used in helper-tip-icon-img) ── */
 .helper-tip-icon-img { width: 20px; height: 20px; display: block; }
@@ -12213,7 +11344,6 @@ kbd {
 .wh-step > span:not(.wh-step-num) { flex:1; min-width:0; }
 
 .wh-tag { display:inline-block; font-size:var(--fs-11); font-weight:700; padding:2px var(--space-8); border-radius:20px; letter-spacing:0.04em; margin-right:var(--space-4); }
-.wh-tag-amber { background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent); }
 .wh-tag-green { background:rgba(0,179,0,0.12); border:1px solid rgba(0,179,0,0.4); color:#00b300; }
 .wh-tag-red { background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.4); color:#f87171; }
 
@@ -12625,34 +11755,6 @@ kbd {
   }
 }
 
-/* ── Category headers inside main column ── */
-.dp-category-hdr {
-  margin: 24px 0 20px;
-  padding: 16px 20px;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(6px);
-  border-left: 4px solid var(--accent);
-  border-radius: var(--radius-sm);
-  scroll-margin-top: 116px;
-}
-.dp-category-hdr:first-of-type {
-  margin-top: 0;
-}
-.dp-category-title {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 800;
-  color: #ffffff;
-  margin: 0 0 4px;
-  letter-spacing: 0.02em;
-}
-.dp-category-sub {
-  font-size: 14px;
-  color: rgba(255,255,255,0.7);
-  line-height: 1.6;
-  margin: 0;
-}
-
 /* ── Quick Start featured card (distinct from regular playbooks) ── */
 .dp-playbook--quickstart {
   border: 2px solid var(--accent);
@@ -12701,9 +11803,6 @@ kbd {
 
 .dp-back-top { display:block; text-align:right; font-size:var(--fs-12); color:var(--text-dim); text-decoration:none; padding:var(--space-4) 0 0; transition:color 0.12s; }
 .dp-back-top:hover { color:var(--accent); }
-
-/* ── dp-field-label variants ── */
-.dp-field-label--scratch { color: #3b82f6; }
 
 /* ── Playbook section headers (Step 3 / Step 4 labels) ── */
 .dp-section-hdr { font-size:var(--fs-11); font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); margin:0 0 var(--space-6); }
@@ -12756,8 +11855,6 @@ kbd {
 .dp-s4-label { font-size:var(--fs-11) /* snapped from 10px */; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim); margin-bottom:var(--space-4); }
 .dp-s4-label--scratch { color:#3b82f6; }
 
-[data-theme="light"] .dp-intro,
-[data-theme="light"] .dp-toc { background:#ffffff; }
 [data-theme="light"] .dp-playbook-body { background:#ffffff; }
 [data-theme="light"] .dp-field-value code { background:rgba(0,0,0,0.04); }
 [data-theme="light"] .dp-tag-blue { color:#2563eb; }
@@ -12766,8 +11863,6 @@ kbd {
 [data-theme="light"] .dp-back-top { color:#333; }
 [data-theme="light"] .dp-back-top:hover { color:var(--accent); }
 @media (prefers-color-scheme:light) {
-  [data-theme="auto"] .dp-intro,
-  [data-theme="auto"] .dp-toc { background:#ffffff; }
   [data-theme="auto"] .dp-playbook-body { background:#ffffff; }
   [data-theme="auto"] .dp-field-value code { background:rgba(0,0,0,0.04); }
   [data-theme="auto"] .dp-tag-blue { color:#2563eb; }
@@ -12781,14 +11876,12 @@ kbd {
 .print-header-title { font-size:var(--fs-22); font-weight:800; color:#111; margin-bottom:var(--space-4); }
 .print-header-sub { font-size:var(--fs-13); color:#666; }
 
-[data-theme="light"] .wh-intro { background:#ffffff; }
 [data-theme="light"] .wh-section { background:transparent; }
 [data-theme="light"] .wh-block { background:#ffffff; border-top-color:var(--border2); }
 [data-theme="light"] .wh-section-hdr { background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-color:rgba(255,255,255,0.1); }
 [data-theme="light"] .wh-back-top { color:#333; }
 [data-theme="light"] .wh-back-top:hover { color:var(--accent); }
 @media (prefers-color-scheme:light) {
-  [data-theme="auto"] .wh-intro { background:#ffffff; }
   [data-theme="auto"] .wh-section { background:transparent; }
   [data-theme="auto"] .wh-block { background:#ffffff; border-top-color:var(--border2); }
   [data-theme="auto"] .wh-section-hdr { background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-color:rgba(255,255,255,0.1); }
@@ -12824,7 +11917,6 @@ kbd {
   .wh-table { border-color:#ccc !important; }
   .wh-table th, .wh-table td { background:#fff !important; color:#333 !important; border-color:#ccc !important; }
   .wh-table th { background:#f0f0f0 !important; }
-  .wh-intro { background:#fff !important; border:1px solid #ccc !important; box-shadow:none !important; }
   .wh-section { background:#fff !important; border:1px solid #ccc !important; box-shadow:none !important; break-inside:avoid; }
   .wh-section-hdr { background:#fff !important; backdrop-filter:none !important; border-bottom:1px solid #ccc !important; }
   .wh-block { border-top-color:#ccc !important; }
@@ -13242,12 +12334,6 @@ kbd {
 
 /* ══ SETUP PAGE 2 LAPTOP FIXES ══ */
 @media (max-width: 1600px) {
-  /* Shrink bee on setup pages to recover vertical space */
-  .setup-card-bee {
-    width: 160px;
-    height: 160px;
-    padding-top: var(--space-6);
-  }
   /* Compress footer padding at laptop size */
   .fs-footer {
     padding: var(--space-8) var(--space-24);
@@ -13341,46 +12427,6 @@ kbd {
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
 }
-
-/* ── setup-single-card: the content card inside fs-body-single ── */
-.setup-single-card {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-md);
-  padding: var(--space-28) var(--space-32) 36px;
-  width: 100%;
-  max-width: 1390px;
-  box-sizing: border-box;
-  flex: 1;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-.setup-single-card--centered {
-  /* inherits all from base */
-}
-
-/* ── setup-intro: bee image + intro text side by side ── */
-.setup-intro {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-32);
-  margin-bottom: var(--space-28);
-}
-.setup-intro-bee {
-  width: 180px;
-  height: 180px;
-  object-fit: contain;
-  flex-shrink: 0;
-  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
-  pointer-events: none;
-  user-select: none;
-}
-.setup-intro-body {
-  flex: 1;
-  min-width: 0;
-}
-.setup-intro-body .fs-col-header { margin-bottom: 0; }
 
 /* ── goal-fields: the 6 structured goal fields ── */
 .goal-fields {
@@ -13558,19 +12604,12 @@ kbd {
   .fs-header .fs-logo { width: 56px; height: 56px; }
   .fs-logo-name { font-size: var(--fs-22); }
   .fs-footer { padding: var(--space-8) var(--space-24); }
-  .setup-intro-bee { width: 120px; height: 120px; }
-  .setup-single-card { padding: var(--space-18) var(--space-24) var(--space-24); }
   .goal-fields { gap: var(--space-12); }
   .goal-field-textarea { min-height: 56px; rows: 2; }
 }
 
 /* ── Laptop tier (1366–1600px): scale down from 1920 base ── */
 @media (max-width: 1600px) {
-  .setup-intro-bee { width: 140px; height: 140px; }
-  .setup-single-card { padding: var(--space-20) var(--space-24) var(--space-28); }
-  .proj-left-top-row { padding: var(--space-16) var(--space-20) 0; }
-  .proj-left-doctype { padding: 0 var(--space-20); }
-  .proj-goal-intro { padding: var(--space-16) var(--space-20) 0; }
   #panel-paste::after,
   #panel-upload::after,
   #panel-scratch::after,
@@ -13578,24 +12617,6 @@ kbd {
   #panel-ref-upload::after { background-size: 150px; }
 }
 
-/* ── proj-left-top-row: title + Clear Project button side by side ── */
-.proj-left-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-12);
-  margin-bottom: var(--space-8);
-  flex-shrink: 0;
-  padding: var(--space-20) var(--space-28) 0;
-}
-.proj-left-top-row .fs-col-title { margin-bottom: 0; }
-.proj-clear-top-btn {
-  font-size: var(--fs-sm);
-  padding: var(--space-4) var(--space-12);
-  color: var(--text-dim);
-  border-color: var(--border2);
-  flex-shrink: 0;
-}
 /* New v3.22.7 mid-position Clear Project button — relocated from inside
    the H1 title (where it was clipped behind the glass strip on the bee
    variant) to a row between the Project Goal sub paragraph and the
@@ -13630,20 +12651,6 @@ kbd {
   color: var(--text);
 }
 
-/* ── proj-left-doctype: Document type field sitting in left column ── */
-.proj-left-doctype {
-  padding: 0 var(--space-28);
-  margin-bottom: var(--space-4);
-}
-
-/* ── proj-goal-intro: brief intro line at top of right column ── */
-.proj-goal-intro {
-  padding: var(--space-20) var(--space-28) 0;
-  flex-shrink: 0;
-}
-.proj-goal-intro .fs-col-sub { margin-bottom: var(--space-16); }
-.proj-goal-intro .goal-info-btn { vertical-align: middle; margin-left: var(--space-4); }
-
 /* ── req-star: required field asterisk ── */
 .req-star {
   color: var(--accent);
@@ -13653,15 +12660,6 @@ kbd {
 
 /* ── Left scroll sub and fields consistent padding ── */
 /* ── screen-project single-column layout classes ── */
-
-.proj-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-12);
-  margin-bottom: var(--space-8);
-}
-.proj-title-row .fs-col-title { margin-bottom: 0; }
 
 .proj-meta-row {
   display: flex;
@@ -13678,22 +12676,6 @@ kbd {
 
 /* v3.27.7: removed .setup-card-tip — only consumer was the bottom tip on
    the project screen, which was deleted as irrelevant in the restructure. */
-
-/* ── Document Playbooks — project goal field display ── */
-.dp-goal-fields { display: flex; flex-direction: column; gap: var(--space-8); }
-.dp-goal-row { display: flex; gap: 0; align-items: baseline; }
-.dp-goal-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--accent);
-  white-space: nowrap;
-  min-width: 200px;
-  flex-shrink: 0;
-  padding-top: 1px;
-}
-.dp-goal-val { font-size: 13px; color: var(--text); line-height: 1.5; }
 
 /* ==========================================================
    v3.21.0 — REFERENCE MATERIAL (Setup 4 + Work-screen drawer)
@@ -13897,14 +12879,6 @@ kbd {
    Amber accent fill (#f5a623) so it carries the WaxFrame brand color
    into the menu chrome without competing with the file-type tab colors
    reserved for upload icons. ── */
-.nav-item .wf-icon-history {
-  width: 16px /* out-of-scale */;
-  height: 16px /* out-of-scale */;
-  vertical-align: -3px /* out-of-scale */;
-  margin-right: var(--space-6);
-}
-.nav-item-label { display: inline-block; }
-
 .ref-card-position {
   display: inline-flex;
   align-items: center;
@@ -14168,11 +13142,6 @@ kbd {
   font-size: var(--fs-12);
   color: var(--text-dim);
 }
-.notes-drawer-ta.ref-drawer-ta {
-  height: 440px;
-}
-
-
 /* ══════════════════════════════════════════════════════════════
    HELPER-PAGES DESIGN SYSTEM (v3.22.6)
    ══════════════════════════════════════════════════════════════
@@ -14758,105 +13727,6 @@ kbd {
   margin: var(--space-40) 0 var(--space-28);
 }
 
-/* ── Section heading (large) ─────────────────────────────────── */
-
-.helper-body .wf-section-heading {
-  font-family: var(--font-display);
-  font-size: var(--fs-24);
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -0.005em;
-  margin: 0 0 var(--space-8);
-  line-height: 1.25;
-}
-.helper-body .wf-section-heading-sub {
-  font-family: var(--font);
-  font-size: var(--fs-base);
-  line-height: 1.65;
-  color: var(--text-dim);
-  margin: 0 0 var(--space-24);
-}
-
-/* ── Pill primitive (.wf-pill) ───────────────────────────────── */
-/* Small inline label — used for category tags, AI badges, etc. */
-
-.helper-body .wf-pill {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--font);
-  font-size: var(--fs-11);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: var(--space-4) var(--space-10);
-  border-radius: 20px;
-  border: 1px dashed var(--border2);
-  color: var(--text-dim);
-  white-space: nowrap;
-}
-.helper-body .wf-pill.is-accent {
-  background: var(--accent-dim);
-  border-style: solid;
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.helper-body .wf-pill.is-green {
-  background: var(--green-dim);
-  border-style: solid;
-  border-color: var(--green);
-  color: var(--green);
-}
-.helper-body .wf-pill.is-amber {
-  background: rgba(251,191,36,0.10);
-  border-style: solid;
-  border-color: var(--amber);
-  color: var(--amber);
-}
-.helper-body .wf-pill.is-blue {
-  background: var(--blue-dim);
-  border-style: solid;
-  border-color: var(--blue);
-  color: var(--blue);
-}
-.helper-body .wf-pill.is-red {
-  background: var(--red-dim);
-  border-style: solid;
-  border-color: var(--red);
-  color: var(--red);
-}
-
-/* ── Intro panel (page-level hero block at top of page) ──────── */
-/* Replaces .wh-intro / .dp-intro / .kyh-intro / .api-intro variants. */
-
-.helper-body .wf-intro {
-  display: flex;
-  align-items: center;
-  gap: var(--space-24);
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-lg);
-  padding: 22px var(--space-28);
-  margin: 0 0 var(--space-32);
-}
-.helper-body .wf-intro-bee {
-  width: 80px;
-  height: 80px;
-  flex-shrink: 0;
-  object-fit: contain;
-}
-.helper-body .wf-intro-text {
-  flex: 1;
-  min-width: 0;
-}
-.helper-body .wf-intro-text h1 {
-  margin: 0 0 var(--space-8);
-}
-.helper-body .wf-intro-text p {
-  margin: 0;
-}
-.helper-body .wf-intro-text p + p {
-  margin-top: var(--space-8);
-}
-
 /* ── Two-column grid layout ──────────────────────────────────── */
 /* Used by what-are-tokens. Keeps existing .two-col / .col markup
    working but applies design-system spacing. */
@@ -14870,13 +13740,6 @@ kbd {
 .helper-body .two-col .col {
   min-width: 0;
 }
-.helper-body .col-bee {
-  width: 80px;
-  height: auto;
-  display: block;
-  margin: 0 0 var(--space-12);
-}
-
 /* ── KYH-card AI personality cards (api-details specific) ────── */
 /* Special component — keeps its own structure (icon + name + badges
    + body sections + tip) but visually aligned with .wf-card. */
@@ -16240,11 +15103,6 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.consoles-link-arrow {
-  flex-shrink: 0;
-  color: var(--accent);
-  font-weight: 700;
 }
 .consoles-empty {
   padding: var(--space-16);
