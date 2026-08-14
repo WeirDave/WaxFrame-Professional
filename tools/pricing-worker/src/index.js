@@ -151,6 +151,8 @@ const CORS = {
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'no-referrer',
   // 5-min fresh + 10-min stale-while-revalidate. Pricing data updates a few
   // times a year, so we don't need aggressive caching — and a long cache
   // window means stale "Last updated" stamps in the visitor's browser for
@@ -175,7 +177,22 @@ const RESEARCH_CONCURRENCY = 4;
 // Email Routing controls (waxframe.com) — it isn't a real receivable
 // mailbox, nothing needs to route TO it.
 const ALERT_FROM = 'pricing-worker@waxframe.com';
-const ALERT_TO   = 'weirdave@aol.com';
+
+function isSafeEmailAddress(value) {
+  return typeof value === 'string' &&
+    value.length <= 254 &&
+    !/[\r\n]/.test(value) &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 // v3.63.413 — a response is only trusted if its cited source URL's
 // hostname matches (or is a subdomain of) one of these per-provider
@@ -211,14 +228,15 @@ function isTrustedSource(providerId, sourceUrl) {
 function buildStatusHtml(log) {
   const rows = (log || []).map(entry => {
     const items = (entry.changes || []).map(c => {
-      const label = `${c.providerId}/${c.modelId}`;
-      const style = c.status === 'unverified-source' ? `<strong style="color:#b3261e">${label}: needs review — UNVERIFIED SOURCE</strong> — ${c.reason || ''}`
-        : c.status === 'needs-review' ? `<strong style="color:#b3261e">${label}: needs review</strong> — ${c.reason || ''}`
+      const label = `${escapeHtml(c.providerId)}/${escapeHtml(c.modelId)}`;
+      const reason = escapeHtml(c.reason || '');
+      const style = c.status === 'unverified-source' ? `<strong style="color:#b3261e">${label}: needs review — UNVERIFIED SOURCE</strong> — ${reason}`
+        : c.status === 'needs-review' ? `<strong style="color:#b3261e">${label}: needs review</strong> — ${reason}`
         : c.status === 'confirmed' ? `${label}: confirmed unchanged`
-        : `<span style="color:#a15c00">${label}: retained old value (${c.reason || 'unknown reason'})</span>`;
+        : `<span style="color:#a15c00">${label}: retained old value (${reason || 'unknown reason'})</span>`;
       return `<li>${style}</li>`;
     }).join('');
-    return `<details><summary>${entry.ts}</summary><ul>${items}</ul></details>`;
+    return `<details><summary>${escapeHtml(entry.ts)}</summary><ul>${items}</ul></details>`;
   }).join('') || '<p>No scheduled refresh has run yet.</p>';
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>WaxFrame Pricing Worker</title><style>body{font-family:system-ui,sans-serif;max-width:640px;margin:2rem auto;padding:0 1rem;color:#222;background:#fafafa}code{background:#eee;padding:.1rem .3rem;border-radius:3px}a{color:#0366d6}details{margin-bottom:.5rem}summary{cursor:pointer;font-weight:600}</style></head><body><h1>WaxFrame Pricing Worker</h1><p>Live data endpoint: <code><a href="/api/pricing">/api/pricing</a></code></p><p>Source: <a href="https://github.com/WeirDave/WaxFrame-Professional/tree/main/tools/pricing-worker">github.com/WeirDave/WaxFrame-Professional</a></p><h2>Scheduled refresh log</h2>${rows}</body></html>`;
@@ -455,11 +473,11 @@ async function mapWithConcurrency(items, limit, fn) {
 // Hand-rolled raw RFC5322 message — deliberately no mimetext/nodemailer
 // dependency, matches this project's no-build-step, no-npm-deps stance
 // everywhere else. A plain-text alert email doesn't need more than this.
-function buildRawEmail(subject, bodyLines) {
+function buildRawEmail(subject, bodyLines, alertTo) {
   const body = bodyLines.join('\r\n');
   return [
     `From: WaxFrame Pricing Worker <${ALERT_FROM}>`,
-    `To: ${ALERT_TO}`,
+    `To: ${alertTo}`,
     `Subject: ${subject}`,
     'Content-Type: text/plain; charset="UTF-8"',
     'MIME-Version: 1.0',
@@ -469,11 +487,12 @@ function buildRawEmail(subject, bodyLines) {
 }
 
 async function sendAlertEmail(env, subject, bodyLines) {
-  if (!env.PRICING_ALERTS) return; // send_email binding not configured — don't block the run over it
+  const alertTo = env.PRICING_ALERT_TO;
+  if (!env.PRICING_ALERTS || !isSafeEmailAddress(alertTo)) return; // private recipient secret or binding missing
   try {
     const { EmailMessage } = await import('cloudflare:email');
-    const raw = buildRawEmail(subject, bodyLines);
-    await env.PRICING_ALERTS.send(new EmailMessage(ALERT_FROM, ALERT_TO, raw));
+    const raw = buildRawEmail(subject, bodyLines, alertTo);
+    await env.PRICING_ALERTS.send(new EmailMessage(ALERT_FROM, alertTo, raw));
   } catch (e) {
     // Email is a nice-to-have alert channel, not the source of truth (the
     // run-log/status page is) — a failure to send shouldn't be treated as
@@ -661,7 +680,14 @@ export default {
       if (logRaw) { try { log = JSON.parse(logRaw) || []; } catch (e) { log = []; } }
       return new Response(buildStatusHtml(log), {
         status: 200,
-        headers: { 'Content-Type': 'text/html; charset=utf-8', ...CORS }
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+          'X-Content-Type-Options': 'nosniff',
+          'Referrer-Policy': 'no-referrer',
+          'X-Frame-Options': 'DENY',
+          ...CORS
+        }
       });
     }
 
@@ -688,4 +714,4 @@ export default {
 // Named exports alongside the default Worker export — consumed only by
 // tools/pricing-worker/test-refresh-logic.mjs (pure-function unit tests,
 // no KV/network). Cloudflare's runtime ignores exports it doesn't call.
-export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource };
+export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, escapeHtml, buildStatusHtml, isSafeEmailAddress };

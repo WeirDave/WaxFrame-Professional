@@ -22,15 +22,18 @@ WaxFrame ships continuously; only the **latest released version** is supported f
 
 ## Scope and design notes
 
-WaxFrame is a **local-first, static, browser-only** application:
+WaxFrame is a **local-first, static browser application** with one disclosed relay:
 
-- There is no backend and no database. Your documents, API keys, and license key live in your own browser's storage and are never transmitted to any WaxFrame server (there isn't one).
+- There is no WaxFrame account, document database, or telemetry backend. Your documents, API keys, and license key live in your browser storage. When you run an AI request, its content and credential go to the selected provider; Claude requests pass through the WaxFrame-operated Cloudflare relay because Anthropic does not permit the required direct browser CORS flow. The relay sees the request in transit but does not log or persist it.
 - Because secrets live in browser storage, the most serious class of vulnerability is **anything that can execute script in the page** (XSS) — that could read stored keys. Reports of injection vectors (crafted backups, reference material, custom-AI configs, imported data of any kind) are especially valued.
 - Full session backups intentionally contain your content and credentials. This is by design and is clearly warned at export time. Only restore backups you created or trust — the restore warning is intentionally non-dismissable.
 
 ## Dependency tracking
 
 WaxFrame self-hosts its front-end libraries as minified files in `lib/` (for air-gapped / offline use). To keep them watched for advisories:
+
+- [`docs/vendored-dependencies.json`](docs/vendored-dependencies.json) records every executable bundle, its identified upstream version, license, and SHA-256 hash. The release check fails on an unlisted or changed bundle.
+- The version of `lib/docx.min.js` cannot be established from the minified artifact. It remains explicitly marked `unknown`; it should be replaced from a documented upstream release before making version-specific security claims about it.
 
 - **PDF.js (`pdfjs-dist`), Mammoth (`mammoth`), and JSZip (`jszip`)** are declared in `package.json` purely so **Dependabot** can alert on known CVEs. That manifest is not a build system — WaxFrame has no build step.
 - **SheetJS (`xlsx`)** is *not* tracked via Dependabot. SheetJS no longer publishes to the npm registry (npm is permanently stuck at the old `0.18.5`), so npm-based scanners report stale and misleading results. WaxFrame ships SheetJS from the authoritative SheetJS CDN and its version is tracked manually against <https://cdn.sheetjs.com/>. The shipped version is kept ahead of known advisories.

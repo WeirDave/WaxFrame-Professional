@@ -83,7 +83,7 @@ OPEN FEATURES
            faster than waiting on index/authority to build
            organically.
    STATE:  PARTIAL — first 3 of 6 researched candidates sent
-           2026-07-25 from rdpaineiii@gmail.com (drafted same
+           2026-07-25 from a personal mailbox (drafted same
            day, David reviewed and sent them himself): eesel.ai
            (hi@eesel.app), tiiny.host (help@tiiny.host),
            resumeoptimizerpro.com (support@resumeoptimizerpro.com).

@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.460
+
+**Security and privacy hardening**
+
+Build: `20260814-001`<br>
+Released: `2026-08-14`
+
+### What changed
+
+- Removed or fictionalized employment-identifying examples, personal mailbox references, and a local workstation path from the current tree. Public authorship and repository identifiers remain intact.
+- Escaped all dynamic pricing-status HTML, added a restrictive status-page CSP and security headers, and moved the alert destination from source/config into a validated Worker secret.
+- Corrected absolute privacy claims: WaxFrame is local-first, but Claude requests transit the disclosed WaxFrame Cloudflare relay.
+- Hardened the Claude relay with exact origin checks, request/method/content-type limits, hashed-key rate limiting, upstream timeouts, and security tests.
+- Added checksum-verified portable update assets, a release workflow with GitHub artifact attestation, immutable action SHA pins, and release-check enforcement.
+- Added a hash-verified inventory for all vendored browser libraries; the unidentified `docx` bundle is explicitly tracked as an unresolved provenance gap.
+
+### Verification
+
+- `node tools/pricing-worker/test-refresh-logic.mjs`
+- `node tools/claude-proxy/test-security.mjs`
+- `node tools/release-check.mjs`
+- PowerShell and shell syntax checks for both portable updater scripts
+
+### Scope deliberately unchanged
+
+- File-size, archive-entry, and decompression-expansion limits were assessed but not implemented in this release.
+- Git history was not rewritten; redactions apply to the current tree only.
+
+---
+
 ## v3.63.459
 
 **Keyless server-AI eligibility + full dead-code audit cleanup**
@@ -1631,7 +1661,7 @@ Two guardrails added, both verified against the real Perplexity API before trust
 
 A second, separate problem surfaced testing the fix: requiring `contextWindow`/`maxOutput` alongside price meant the feature would near-never successfully update anything — Perplexity reliably nails the price but frequently can't confirm max-output-tokens specifically, a much less consistently published number than $/M pricing. Re-tested live: with all four required, 8 of 9 providers got rejected outright even when price + source were solid. Fixed by making price + trusted source the hard gate, and letting `contextWindow`/`maxOutput` independently fall back to the existing value when unconfirmed instead of vetoing an otherwise-good price update. Re-verified: Mistral now correctly confirms unchanged (this run's real price matched), Together AI's real 18% price increase now correctly auto-applies, and ChatGPT's consistently-suspicious 275% price jump correctly gets flagged rather than applied or silently dropped.
 
-**Push email alerts.** The run-log status page is pull — exactly the "someone has to remember to check" problem this whole feature exists to eliminate. Added a `send_email` Worker binding (Cloudflare Email Routing, `[[send_email]]` in `wrangler.toml`) that emails `weirdave@aol.com` when: the whole run throws, any provider gets `flagged`, or a provider that was working last run suddenly can't be read this run (the "their page probably changed" signal). Deliberately silent on routine `retained` — Gemini's free tier, Together, and Grok consistently come back incomplete most runs in practice; alerting on that every week would just become noise. Set up `waxframe.com`'s Email Routing from scratch for this (previously completely unconfigured — confirmed no existing MX/SPF records to conflict with before adding any); the destination address auto-verified since it's the Cloudflare account's own login email. Delivery verified for real: sent 4 live test emails (one an accidental duplicate from a redeploy-propagation-timing curl during verification, confirmed harmless and disclosed), all 4 confirmed received.
+**Push email alerts.** The run-log status page is pull — exactly the "someone has to remember to check" problem this whole feature exists to eliminate. Added a `send_email` Worker binding (Cloudflare Email Routing, `[[send_email]]` in `wrangler.toml`) that emails a private verified destination when: the whole run throws, any provider gets `flagged`, or a provider that was working last run suddenly can't be read this run (the "their page probably changed" signal). Deliberately silent on routine `retained` — Gemini's free tier, Together, and Grok consistently come back incomplete most runs in practice; alerting on that every week would just become noise. Set up `waxframe.com`'s Email Routing from scratch for this. Delivery was verified with live test messages.
 
 ### Verification
 
@@ -1646,7 +1676,7 @@ A second, separate problem surfaced testing the fix: requiring `contextWindow`/`
 - `tools/pricing-worker/src/index.js` — `SOURCE_DOMAINS` allowlist, `isTrustedSource()`, `relativeDelta()`, `DELTA_THRESHOLD`; validation redesigned to price-required/size-optional; `buildRawEmail()` + `sendAlertEmail()` (hand-rolled RFC5322, no mimetext/nodemailer dependency); alert-trigger logic in `refreshPricing()`
 - `tools/pricing-worker/wrangler.toml` — `[[send_email]]` binding added
 - `tools/pricing-worker/README.md` — "Scheduled auto-refresh" section rewritten with the new validation model and a new "Email alerts" section
-- Cloudflare account: `waxframe.com` Email Routing enabled (MX + SPF + DKIM records added), destination address `weirdave@aol.com` verified, `waxframe-pricing-deploy` API token scope unchanged (already covered this)
+- Cloudflare account: `waxframe.com` Email Routing enabled (MX + SPF + DKIM records added), private destination verified, `waxframe-pricing-deploy` API token scope unchanged (already covered this)
 - Standard cache-bust + build-stamp sweep across all 16 HTML pages, 27 `js/*.js` files, `js/pdf-loader.mjs`, `style.css`, `package.json`, `tools/verify-prompts-equivalence.mjs`
 
 ### Rollback
@@ -22858,7 +22888,7 @@ The "Three measured data points" block at L1180 was unchanged since the early me
 - Job Description (Altura) — 20-22 rounds
 - Résumé (Dana Reyes) — 10-12 rounds, with mid-stream notes injection
 - Business Proposal (Brightwater) — 3-AI 5 rounds vs 2-AI 11 rounds, illustrating hive-size effect on tied USER DECISIONs
-- LinkedIn Post (DFS in defense) — 2 rounds, posted to live LinkedIn
+- Technical LinkedIn post (fictionalized example) — 2 rounds
 - LinkedIn About (wireless engineer) — 2 rounds, illustrating Reference Material payoff
 - Thank-You (scratch vs refine) — 2 vs 13 rounds, illustrating misaligned-draft cost
 
@@ -27412,7 +27442,7 @@ Deferred so the chrome work can ship cleanly without scope creep:
 
 ### Test plan
 
-1. Drop files into `C:\Users\weird\Dropbox\Websites\WaxFrame-Professional`, hard-refresh (`Ctrl+Shift+R`).
+1. Drop files into the local WaxFrame repository root, then hard-refresh (`Ctrl+Shift+R`).
 2. Walk through to the work screen.
 3. Confirm topbar-right (left to right): Notes, Reference, Finish, 🔊 mute button, ☀️ Light, ⚙️ Auto, 🌙 Dark.
 4. Confirm footer-right shows the license pill (clickable, opens license-manage modal) and the new `ℹ️ About` button (opens existing About modal).

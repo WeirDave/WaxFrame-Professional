@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260813-001
+     Build: 20260814-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260813-001">
+  <meta name="waxframe-build" content="20260814-001">
   <title>API Key Guide for AI Providers — WaxFrame</title>
   <meta name="description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <meta name="keywords" content="AI API key setup, ChatGPT API key, Claude API key, Gemini API key, connect AI provider API">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.459">
+  <link rel="stylesheet" href="style.css?v=3.63.460">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -353,11 +353,11 @@
 
     <div class="wf-card is-green">
       <h3 class="wf-card-title">Your keys live in your browser</h3>
-      <p>Your API keys are stored in your browser's <code>localStorage</code> and sent to each AI provider only when WaxFrame makes a request on your behalf. WaxFrame has no backend — there is no database holding your keys, your prompts, or your documents.</p>
+      <p>Your API keys are stored in your browser's <code>localStorage</code> and sent only when WaxFrame makes a request on your behalf. WaxFrame has no account or document database; the Claude relay described below is the sole WaxFrame-operated request intermediary.</p>
       <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer (see our <a href="privacy.html" class="link-accent">Privacy Policy</a>) at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent external-link"><code>waxframe-claude-proxy.weirdave.workers.dev</code><svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. (The link goes to the live Worker endpoint, which expects API requests — opening it directly in a browser returns an API error rather than a page. That's normal.) All other providers (OpenAI, Gemini, Grok, Perplexity, Mistral, Cohere, Together AI, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
 
       <p><strong>Where exactly they live:</strong> your API keys are saved in your browser's <code>localStorage</code> (the same mechanism that remembers your dark-mode preference, your hive setup, and your project state). This is per-browser-profile, per-machine — keys you save on your work laptop don't appear on your phone, and clearing browser data for this site removes them. They are <strong>not encrypted at rest</strong>; any code or extension running in this browser profile that can read <code>localStorage</code> can read them. That's the same threat model as any browser-stored credential. For shared or untrusted devices, use a separate browser profile or clear data when finished.</p>
-      <p>WaxFrame — open source, no backend, no tracking. <a href="#" data-action="modal-open" data-target="openSourceModal" class="link-accent">Learn more →</a></p>
+      <p>WaxFrame — open source, local-first, no tracking. <a href="#" data-action="modal-open" data-target="openSourceModal" class="link-accent">Learn more →</a></p>
     </div>
 
     <h2 id="keys-default">The Default Six</h2>
@@ -1048,7 +1048,7 @@
     <div class="goal-info-body">
       <p>WaxFrame is fully open source under the AGPL-3.0 license. Every line of code is public and auditable.</p>
       <div class="goal-info-row">
-        <span class="goal-info-phase draft">No Backend</span>
+        <span class="goal-info-phase draft">Local-first</span>
         <span class="goal-info-desc">WaxFrame has no database or app server. Everything runs in your browser. Your documents and session data live in your browser only — they never sit on a WaxFrame server because there isn't one.</span>
       </div>
       <div class="goal-info-row">
@@ -1091,7 +1091,7 @@
       <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent external-link">github.com/WeirDave/WaxFrame-Professional<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></span></div>
       <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent external-link">weirdave.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></span></div>
       <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
-      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
+      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no framework or install required; no account or document database.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
     </div>
     <button class="finish-modal-cancel" data-action="modal-close" data-target="aboutModalHelper">Got it →</button>
@@ -1130,20 +1130,20 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.459"></script>
-<script src="lib/docx.min.js?v=3.63.459"></script>
-<script src="js/docx-export.js?v=3.63.459"></script>
-<script src="js/nav-helper.js?v=3.63.459"></script>
-<script src="js/license-helper.js?v=3.63.459"></script>
-<script src="js/update-check.js?v=3.63.459"></script>
-<script src="js/helper-handlers.js?v=3.63.459"></script>
-<script src="js/api-links.js?v=3.63.459"></script>
-<script src="js/version.js?v=3.63.459"></script>
-<script src="js/docs-scrollspy.js?v=3.63.459"></script>
+<script src="js/theme.js?v=3.63.460"></script>
+<script src="lib/docx.min.js?v=3.63.460"></script>
+<script src="js/docx-export.js?v=3.63.460"></script>
+<script src="js/nav-helper.js?v=3.63.460"></script>
+<script src="js/license-helper.js?v=3.63.460"></script>
+<script src="js/update-check.js?v=3.63.460"></script>
+<script src="js/helper-handlers.js?v=3.63.460"></script>
+<script src="js/api-links.js?v=3.63.460"></script>
+<script src="js/version.js?v=3.63.460"></script>
+<script src="js/docs-scrollspy.js?v=3.63.460"></script>
 <!-- v3.63.286 — api.js calls WFProviderCatalog.buildApiConfigs() at module eval; provider-models.js + provider-catalog.js must load first. -->
-<script src="js/provider-models.js?v=3.63.459"></script>
-<script src="js/provider-catalog.js?v=3.63.459"></script>
-<script src="js/api.js?v=3.63.459"></script>
-<script src="js/api-details-page.js?v=3.63.459"></script>
+<script src="js/provider-models.js?v=3.63.460"></script>
+<script src="js/provider-catalog.js?v=3.63.460"></script>
+<script src="js/api.js?v=3.63.460"></script>
+<script src="js/api-details-page.js?v=3.63.460"></script>
 </body>
 </html>
