@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app-bootstrap.js
-// Build: 20260815-006
+// Build: 20260815-007
 //  Glue shims for index.html's strict-CSP migration (v3.63.351).
 //
 //  Three inline handlers on the work screen had shapes the generic
@@ -210,21 +210,10 @@
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
     });
     return '' +
-      '<details>' +
-        '<summary style="cursor:pointer;font-weight:700;font-size:.93em">🌐 Hosted — your server must allow <code>' + safeOrigin + '</code></summary>' +
-        '<div style="margin-top:8px;font-size:.9em;line-height:1.5">' +
-          '<div>Your AI runs on your computer or LAN. The browser connects directly — nothing is proxied through WaxFrame hosting.</div>' +
-          '<div style="margin-top:6px"><strong>If the server shows Offline:</strong></div>' +
-          '<ul style="margin:4px 0 0 18px;padding:0">' +
-            '<li>Chrome/Chromium: approve <strong>Local Network Access</strong> when prompted.</li>' +
-            '<li>Ollama: set <code>OLLAMA_ORIGINS=' + safeOrigin + '</code>, restart.</li>' +
-            '<li>LM Studio: <code>lms server start --cors</code>.</li>' +
-          '</ul>' +
-          '<div style="margin-top:6px"><strong>Using http://localhost?</strong> Browsers block http from https pages. ' +
-          '<a href="https://github.com/WeirDave/WaxFrame-Professional/releases/latest" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Download WaxFrame</a> ' +
-          'and open index.html locally instead.</div>' +
-        '</div>' +
-      '</details>';
+      '🌐 Hosted mode — your server must accept connections from <code>' + safeOrigin + '</code>. ' +
+      'Local servers (Ollama, LM Studio) need extra setup from here — click <strong>Import from Model Server</strong> for options, or ' +
+      '<a href="https://github.com/WeirDave/WaxFrame-Professional/releases/latest" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">download WaxFrame</a> ' +
+      'and run it locally for the simplest path.';
   }
 
   function _wfRefreshHostedServerNotice() {
