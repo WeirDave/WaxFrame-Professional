@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pdf-loader-bootstrap.js
-// Build: 20260815-005
+// Build: 20260815-006
 //
 //  Hybrid pdf.js loader (added v3.63.393). Runtime-detects how
 //  the page was served and loads the right pdf.js build:
