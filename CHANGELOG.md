@@ -1,5 +1,26 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.467 — Fix guidance panel button colors + hosted notice syntax
+**Released:** 2026-08-15  
+**Build:** 20260815-007
+
+**What changed:**  
+- Fixed guidance panel buttons (Download from GitHub Releases, Full Setup Guide) not showing white text in dark mode — `.import-server-guidance-option a` was overriding `.btn-accent` color on `<a>` buttons; fixed with `:not(.btn)` exclusion.
+- Fixed smart-quote syntax error in hosted Server Mode notice that broke `app-bootstrap.js` parsing.
+- Simplified hosted Server Mode notice to a single actionable line pointing users to Import from Model Server or local download.
+
+**Verification:**  
+- release-check passed (all 17 HTML pages)
+
+**Files touched:**  
+- `js/app-bootstrap.js` — hosted notice rewritten, smart quotes fixed  
+- `style.css` — `.import-server-guidance-option a:not(.btn)` selector  
+- Full version sweep (52 files)
+
+**Rollback:** `git revert` — no schema/storage changes.
+
+---
+
 ## v3.63.466 — Full Open WebUI setup guide as helper page
 **Released:** 2026-08-15  
 **Build:** 20260815-006
