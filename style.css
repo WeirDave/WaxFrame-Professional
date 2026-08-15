@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260815-006
+   Build: 20260815-007
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4446,7 +4446,7 @@ body.helper-body .page-main {
   font-size: var(--fs-12);
   line-height: 1.5;
 }
-.import-server-guidance-option a {
+.import-server-guidance-option a:not(.btn) {
   color: var(--accent);
   text-decoration: underline;
 }
