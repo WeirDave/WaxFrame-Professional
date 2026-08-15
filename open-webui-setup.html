@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — open-webui-setup.html
-     Build: 20260815-007
+     Build: 20260815-008
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -37,7 +37,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260815-007">
+  <meta name="waxframe-build" content="20260815-008">
   <title>Open WebUI Setup Guide — WaxFrame</title>
   <meta name="description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
   <link rel="canonical" href="https://waxframe.com/open-webui-setup.html">
@@ -51,7 +51,7 @@
   <meta name="twitter:description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.467">
+  <link rel="stylesheet" href="style.css?v=3.63.468">
 </head>
 <body class="helper-body">
 
@@ -316,6 +316,34 @@ Your GPU</pre>
       <p>That keeps the model runtime you've already been using intact.</p>
     </div>
 
+    <hr class="wf-section-divider">
+
+    <h2>Connect WaxFrame to Open WebUI</h2>
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">15. Import your Open WebUI models into WaxFrame</h3>
+      <p>Go back to WaxFrame. On the Worker Bees screen, click <strong>Import from Model Server</strong>.</p>
+      <ol>
+        <li>Under <strong>Quick Add</strong>, select <strong>Open WebUI</strong>.</li>
+        <li>In the <strong>Server Address</strong> field, enter your Open WebUI address. If you followed this guide, that's <code>http://localhost:3000</code>.</li>
+        <li>If you set a password on your Open WebUI account, enter it in the API key field. Otherwise leave it blank.</li>
+        <li>Click <strong>Fetch Models</strong>.</li>
+      </ol>
+      <p>WaxFrame will pull the full model list from Open WebUI (which includes everything Ollama has). Select the models you want and click <strong>Add to Hive</strong>.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">16. Verify the connection</h3>
+      <p>After adding models, you should see them in your Worker Bees grid. Click <strong>Test All Keys</strong> — each imported model should show a green connectivity pill.</p>
+      <p>If a model shows red, check that:</p>
+      <ol>
+        <li>Docker Desktop is running and the open-webui container is started.</li>
+        <li>Ollama is running (<code>ollama list</code> should respond).</li>
+        <li>You entered the right address — <code>http://localhost:3000</code> for the default setup.</li>
+      </ol>
+      <p>Once your models are green, you're ready to run hive sessions against your local AI stack from waxframe.com — no API keys, no cloud costs.</p>
+    </div>
+
   </div>
 </div>
 
@@ -385,13 +413,13 @@ Your GPU</pre>
 </div>
 
 
-<script src="js/theme.js?v=3.63.467"></script>
-<script src="lib/docx.min.js?v=3.63.467"></script>
-<script src="js/docx-export.js?v=3.63.467"></script>
-<script src="js/nav-helper.js?v=3.63.467"></script>
-<script src="js/license-helper.js?v=3.63.467"></script>
-<script src="js/update-check.js?v=3.63.467"></script>
-<script src="js/helper-handlers.js?v=3.63.467"></script>
-<script src="js/version.js?v=3.63.467"></script>
+<script src="js/theme.js?v=3.63.468"></script>
+<script src="lib/docx.min.js?v=3.63.468"></script>
+<script src="js/docx-export.js?v=3.63.468"></script>
+<script src="js/nav-helper.js?v=3.63.468"></script>
+<script src="js/license-helper.js?v=3.63.468"></script>
+<script src="js/update-check.js?v=3.63.468"></script>
+<script src="js/helper-handlers.js?v=3.63.468"></script>
+<script src="js/version.js?v=3.63.468"></script>
 </body>
 </html>
