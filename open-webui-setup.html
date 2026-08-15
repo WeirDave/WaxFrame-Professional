@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — open-webui-setup.html
-     Build: 20260815-008
+     Build: 20260815-009
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -37,7 +37,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260815-008">
+  <meta name="waxframe-build" content="20260815-009">
   <title>Open WebUI Setup Guide — WaxFrame</title>
   <meta name="description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
   <link rel="canonical" href="https://waxframe.com/open-webui-setup.html">
@@ -51,7 +51,7 @@
   <meta name="twitter:description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.468">
+  <link rel="stylesheet" href="style.css?v=3.63.469">
 </head>
 <body class="helper-body">
 
@@ -134,7 +134,7 @@
   <div class="hp-section-header">
     <div class="hp-section-title-block">
       <h1 class="hp-section-title">Open WebUI Setup Guide</h1>
-      <p class="hp-section-sub">Use Open WebUI as a free, self-hosted proxy between WaxFrame and your local Ollama models. Open WebUI serves over HTTPS and handles the connection to Ollama behind the scenes — no mixed-content issues, no CORS configuration, no cost.</p>
+      <p class="hp-section-sub">Run your local Ollama models from waxframe.com. Open WebUI sits between your browser and Ollama, handles the cross-origin connection that browsers otherwise block, and gives you a full model server WaxFrame can import from — no cloud API keys, no cost.</p>
     </div>
   </div>
   <div class="hp-section-body">
@@ -191,10 +191,11 @@
   -p 3000:8080 `
   --add-host=host.docker.internal:host-gateway `
   -v open-webui:/app/backend/data `
+  -e CORS_ALLOW_ORIGIN=https://waxframe.com `
   --name open-webui `
   --restart always `
   ghcr.io/open-webui/open-webui:main</pre>
-      <p>This is the standard Open WebUI configuration for connecting a Dockerized Open WebUI instance to Ollama running on the host computer.</p>
+      <p>The <code>CORS_ALLOW_ORIGIN</code> line is what lets waxframe.com talk to your local Open WebUI. Without it, your browser blocks the cross-origin request.</p>
       <p>The first launch will download the Open WebUI Docker image, so you'll see some image layers being pulled.</p>
     </div>
 
@@ -280,11 +281,12 @@ xxxxxxxxxxxx   ghcr.io/open-webui/open-webui:main  0.0.0.0:3000->8080/tcp</pre>
       <pre class="wf-code-block">docker rm -f open-webui</pre>
       <p>Then:</p>
       <pre class="wf-code-block">docker pull ghcr.io/open-webui/open-webui:main</pre>
-      <p>Then recreate it:</p>
+      <p>Then recreate it with the same flags as your original install:</p>
       <pre class="wf-code-block">docker run -d `
   -p 3000:8080 `
   --add-host=host.docker.internal:host-gateway `
   -v open-webui:/app/backend/data `
+  -e CORS_ALLOW_ORIGIN=https://waxframe.com `
   --name open-webui `
   --restart always `
   ghcr.io/open-webui/open-webui:main</pre>
@@ -300,10 +302,13 @@ xxxxxxxxxxxx   ghcr.io/open-webui/open-webui:main  0.0.0.0:3000->8080/tcp</pre>
       <p>Open WebUI also provides an image containing both Open WebUI and Ollama. Do not use it if you already have Ollama installed on Windows.</p>
       <p>You already have Windows Ollama configured, downloaded models, GPU support working, and you've been tuning its context size and models. Running another Ollama inside Docker would give you two separate Ollama instances with separate model stores and potentially separate GPU configuration. That's pointless duplication.</p>
       <p>Your architecture should simply be:</p>
-      <pre class="wf-code-block">Browser
+      <pre class="wf-code-block">waxframe.com (your browser)
   |
   v
-Open WebUI (Docker :3000)
+http://localhost:3000
+  |
+  v
+Open WebUI (Docker container)
   |
   v
 host.docker.internal:11434
@@ -313,7 +318,7 @@ Ollama for Windows
   |
   v
 Your GPU</pre>
-      <p>That keeps the model runtime you've already been using intact.</p>
+      <p>Everything runs on your machine. WaxFrame sends requests to localhost, Open WebUI forwards them to Ollama, Ollama runs inference on your GPU. No data leaves your network.</p>
     </div>
 
     <hr class="wf-section-divider">
@@ -322,26 +327,29 @@ Your GPU</pre>
 
     <div class="wf-card is-green">
       <h3 class="wf-card-title">15. Import your Open WebUI models into WaxFrame</h3>
-      <p>Go back to WaxFrame. On the Worker Bees screen, click <strong>Import from Model Server</strong>.</p>
+      <p>Go back to <a href="https://waxframe.com" target="_blank" rel="noopener">waxframe.com</a>. On the Worker Bees screen, switch to <strong>Server Based AI</strong> mode if you haven't already — the Import from Model Server modal will open automatically.</p>
       <ol>
         <li>Under <strong>Quick Add</strong>, select <strong>Open WebUI</strong>.</li>
-        <li>In the <strong>Server Address</strong> field, enter your Open WebUI address. If you followed this guide, that's <code>http://localhost:3000</code>.</li>
-        <li>If you set a password on your Open WebUI account, enter it in the API key field. Otherwise leave it blank.</li>
+        <li>In the <strong>Server Address</strong> field, enter <code>http://localhost:3000</code>.</li>
+        <li>Open WebUI requires an API key. In its admin panel (<code>http://localhost:3000</code> → Settings → Account), generate an API key and paste it into the <strong>API Key</strong> field in WaxFrame.</li>
         <li>Click <strong>Fetch Models</strong>.</li>
       </ol>
-      <p>WaxFrame will pull the full model list from Open WebUI (which includes everything Ollama has). Select the models you want and click <strong>Add to Hive</strong>.</p>
+      <p>WaxFrame will pull the full model list from your local Open WebUI (which includes every model Ollama has). Select the ones you want and click <strong>Add to Hive</strong>.</p>
+      <p>This works because the <code>CORS_ALLOW_ORIGIN</code> flag you set in step 4 tells Open WebUI to accept requests from waxframe.com, and modern browsers treat <code>localhost</code> as a secure context — so the http://localhost request from an https:// page goes through without being blocked.</p>
     </div>
 
     <div class="wf-card is-accent">
       <h3 class="wf-card-title">16. Verify the connection</h3>
       <p>After adding models, you should see them in your Worker Bees grid. Click <strong>Test All Keys</strong> — each imported model should show a green connectivity pill.</p>
-      <p>If a model shows red, check that:</p>
+      <p>If a model shows red, check:</p>
       <ol>
-        <li>Docker Desktop is running and the open-webui container is started.</li>
-        <li>Ollama is running (<code>ollama list</code> should respond).</li>
-        <li>You entered the right address — <code>http://localhost:3000</code> for the default setup.</li>
+        <li><strong>Docker Desktop is running</strong> and the open-webui container is started (<code>docker ps</code>).</li>
+        <li><strong>Ollama is running</strong> — open a terminal and run <code>ollama list</code>.</li>
+        <li><strong>You entered the right address</strong> — <code>http://localhost:3000</code> (not https, not 8080).</li>
+        <li><strong>CORS is configured</strong> — if you see a CORS error in your browser console (F12 → Console), your container may not have the <code>CORS_ALLOW_ORIGIN</code> flag. Recreate it using the command from step 4.</li>
+        <li><strong>API key is set</strong> — Open WebUI requires authentication. Generate one from Open WebUI's Settings → Account page.</li>
       </ol>
-      <p>Once your models are green, you're ready to run hive sessions against your local AI stack from waxframe.com — no API keys, no cloud costs.</p>
+      <p>Once your models are green, you're running hive sessions from waxframe.com against your local AI stack — no cloud API keys, no per-token costs, your data never leaves your machine.</p>
     </div>
 
   </div>
@@ -413,13 +421,13 @@ Your GPU</pre>
 </div>
 
 
-<script src="js/theme.js?v=3.63.468"></script>
-<script src="lib/docx.min.js?v=3.63.468"></script>
-<script src="js/docx-export.js?v=3.63.468"></script>
-<script src="js/nav-helper.js?v=3.63.468"></script>
-<script src="js/license-helper.js?v=3.63.468"></script>
-<script src="js/update-check.js?v=3.63.468"></script>
-<script src="js/helper-handlers.js?v=3.63.468"></script>
-<script src="js/version.js?v=3.63.468"></script>
+<script src="js/theme.js?v=3.63.469"></script>
+<script src="lib/docx.min.js?v=3.63.469"></script>
+<script src="js/docx-export.js?v=3.63.469"></script>
+<script src="js/nav-helper.js?v=3.63.469"></script>
+<script src="js/license-helper.js?v=3.63.469"></script>
+<script src="js/update-check.js?v=3.63.469"></script>
+<script src="js/helper-handlers.js?v=3.63.469"></script>
+<script src="js/version.js?v=3.63.469"></script>
 </body>
 </html>

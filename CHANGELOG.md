@@ -1,5 +1,23 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.469 — Open WebUI guide rewritten for waxframe.com hosted flow
+**Released:** 2026-08-15  
+**Build:** 20260815-009
+
+**What changed:**  
+- Open WebUI setup guide rewritten for the hosted (waxframe.com) use case — the only context where this guide is reachable. Docker run command now includes `CORS_ALLOW_ORIGIN=https://waxframe.com` so the browser allows cross-origin requests from waxframe.com to localhost. Steps 15-16 rewritten to walk the user through importing models on waxframe.com specifically, including API key generation in Open WebUI's admin panel and CORS troubleshooting. Architecture diagram updated to show the waxframe.com → localhost → Open WebUI → Ollama chain. Update command in step 13 also carries the CORS flag.
+
+**Verification:**  
+- release-check passed (all 17 HTML pages)
+
+**Files touched:**  
+- `open-webui-setup.html` — subtitle, docker run commands (steps 4 + 13), architecture diagram, steps 15-16  
+- Full version sweep (53 files)
+
+**Rollback:** `git revert` — no schema/storage changes.
+
+---
+
 ## v3.63.468 — Server mode UX: remove redundant button, auto-open Import, complete setup guide
 **Released:** 2026-08-15  
 **Build:** 20260815-008
