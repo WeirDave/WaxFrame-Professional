@@ -1,5 +1,15 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.461 — Hosted Server Mode origin guidance
+**Released:** 2026-08-15  
+**Build:** 20260815-001
+
+- Added hosted Server Mode guidance that detects the current WaxFrame origin and shows the exact origin to allow for Ollama, LM Studio, or OpenWebUI CORS settings.
+- Added Local Network Access guidance for Chromium-based browsers when a hosted WaxFrame page connects to localhost or LAN model servers.
+- Clarified that prompts and documents still travel directly from the browser to the selected local/LAN model server; GitHub or website hosting only serves the WaxFrame frontend.
+- Kept existing Server-mode eligibility, model selection, API calls, storage, Builder logic, and round execution unchanged.
+
+
 ---
 
 ## v3.63.460
