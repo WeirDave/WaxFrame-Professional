@@ -185,4 +185,105 @@
   window.__wfApplyDecisionsNoLock = function() {
     if (typeof applyDecisions === 'function') applyDecisions({ noLock: true });
   };
+
+  // ── Hosted Server Mode origin guidance (v3.63.460) ────────────
+  // A downloaded/file:// WaxFrame can talk to localhost without a remote web
+  // origin. A hosted copy (waxframe.com, GitHub Pages, etc.) executes in the
+  // user's browser under an https:// origin, so localhost/LAN model servers
+  // must allow THAT origin via CORS. Current Chromium also gates public-site
+  // -> local-network/loopback requests behind Local Network Access permission.
+  //
+  // Nothing is proxied through WaxFrame hosting: the browser still connects
+  // directly to the user's Ollama / LM Studio / OpenWebUI endpoint. This helper
+  // only makes the deployment requirement visible when Server Based AI is the
+  // active mode; it does not alter endpoint, auth, model, or round behavior.
+  function _wfHostedServerOrigin() {
+    var p = window.location && window.location.protocol;
+    if (p !== 'http:' && p !== 'https:') return null;
+    var h = (window.location.hostname || '').toLowerCase();
+    if (h === 'localhost' || h === '127.0.0.1' || h === '::1' || h === '[::1]') return null;
+    return window.location.origin || null;
+  }
+
+  function _wfHostedServerNoticeHTML(origin) {
+    var safeOrigin = String(origin || '').replace(/[&<>"']/g, function(ch) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+    });
+    return '' +
+      '<div style="font-weight:700;margin-bottom:5px">🌐 Hosted Server Mode</div>' +
+      '<div>WaxFrame is loaded from <code>' + safeOrigin + '</code>, but your AI still runs on your computer or LAN. ' +
+      'Your browser must be allowed to reach the local network, and the model server must allow this web origin.</div>' +
+      '<div style="margin-top:7px"><strong>If the server shows Offline even though it is running:</strong></div>' +
+      '<ul style="margin:5px 0 0 20px;padding:0">' +
+        '<li>Chrome/Chromium: approve the <strong>Local Network Access</strong> permission when prompted.</li>' +
+        '<li>Ollama: add <code>OLLAMA_ORIGINS=' + safeOrigin + '</code>, then restart Ollama.</li>' +
+        '<li>LM Studio: enable CORS for the local server (CLI: <code>lms server start --cors</code>).</li>' +
+      '</ul>' +
+      '<div style="margin-top:7px;font-size:.92em;opacity:.85">Allow this exact origin rather than <code>*</code> when possible. ' +
+      'Your document and prompts still travel directly from this browser to your selected model server.</div>';
+  }
+
+  function _wfRefreshHostedServerNotice() {
+    var wrap = document.getElementById('hiveModeToggleWrap');
+    if (!wrap) return;
+    var existing = document.getElementById('wfHostedServerNotice');
+    var origin = _wfHostedServerOrigin();
+    var serverBtn = wrap.querySelector('[data-fn="setHiveMode"][data-arg="server"]');
+    var serverActive = !!(serverBtn && (
+      serverBtn.classList.contains('is-active') || serverBtn.getAttribute('aria-checked') === 'true'
+    ));
+
+    if (!origin || !serverActive) {
+      if (existing) existing.remove();
+      return;
+    }
+
+    if (!existing) {
+      existing = document.createElement('div');
+      existing.id = 'wfHostedServerNotice';
+      existing.setAttribute('role', 'note');
+      existing.style.margin = '10px 0 14px';
+      existing.style.padding = '11px 13px';
+      existing.style.border = '1px solid rgba(214, 158, 46, .55)';
+      existing.style.borderRadius = '8px';
+      existing.style.background = 'rgba(214, 158, 46, .10)';
+      existing.style.lineHeight = '1.4';
+      wrap.insertAdjacentElement('afterend', existing);
+    }
+    existing.innerHTML = _wfHostedServerNoticeHTML(origin);
+  }
+
+  function _wfInstallHostedServerNotice() {
+    var wrap = document.getElementById('hiveModeToggleWrap');
+    if (!wrap) return;
+    _wfRefreshHostedServerNotice();
+
+    // renderHiveModeToggle() rebuilds this wrapper with innerHTML whenever the
+    // mode changes, so observing the small wrapper is enough to stay in sync
+    // without a page-wide MutationObserver.
+    var observer = new MutationObserver(function() {
+      _wfRefreshHostedServerNotice();
+    });
+    observer.observe(wrap, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'aria-checked'] });
+
+    // setHiveMode() is async because the mode flip may ask for confirmation.
+    // A post-click refresh covers the cancellation/confirmation path even if a
+    // future render stops mutating an observed attribute.
+    document.addEventListener('click', function(e) {
+      var target = e.target && e.target.closest ? e.target.closest('[data-fn="setHiveMode"]') : null;
+      if (!target) return;
+      window.setTimeout(_wfRefreshHostedServerNotice, 0);
+      window.setTimeout(_wfRefreshHostedServerNotice, 250);
+    }, true);
+  }
+
+  // Exposed for diagnostics/tests and harmless on downloaded copies (origin null).
+  window.__wfHostedServerOrigin = _wfHostedServerOrigin;
+  window.__wfRefreshHostedServerNotice = _wfRefreshHostedServerNotice;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _wfInstallHostedServerNotice, { once: true });
+  } else {
+    _wfInstallHostedServerNotice();
+  }
 })();
