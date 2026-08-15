@@ -1,0 +1,150 @@
+name: Release v3.63.461 helper
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/release-v3.63.461.yml
+
+permissions:
+  contents: write
+  actions: write
+  pages: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Prepare release surfaces
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const NEW_VERSION = '3.63.461';
+          const NEW_BUILD = '20260815-001';
+          const ROOT = process.cwd();
+          const abs = p => path.join(ROOT, p);
+          const read = p => fs.readFileSync(abs(p), 'utf8');
+          const write = (p, s) => fs.writeFileSync(abs(p), s, 'utf8');
+
+          function walk(dir, pred) {
+            const out = [];
+            for (const ent of fs.readdirSync(abs(dir), { withFileTypes: true })) {
+              if (['.git', 'node_modules', 'release-artifacts'].includes(ent.name)) continue;
+              const rel = path.join(dir, ent.name);
+              if (ent.isDirectory()) out.push(...walk(rel, pred));
+              else if (pred(rel)) out.push(rel);
+            }
+            return out;
+          }
+
+          let s = read('js/version.js');
+          s = s.replace(/(\/\/\s*Build:\s*)\d{8}-\d{3}/, '$1' + NEW_BUILD);
+          s = s.replace(/(const\s+APP_VERSION\s*=\s*['"]v?)3\.63\.460(\s+Pro['"])/, '$1' + NEW_VERSION + '$2');
+          write('js/version.js', s);
+
+          for (const rel of walk('js', p => p.endsWith('.js'))) {
+            s = read(rel);
+            s = s.replace(/(\/\/\s*Build:\s*)\d{8}-\d{3}/, '$1' + NEW_BUILD);
+            if (rel.replace(/\\/g, '/') === 'js/app.js') {
+              s = s.replace(/(const\s+BUILD\s*=\s*['"])\d{8}-\d{3}(['"])/, '$1' + NEW_BUILD + '$2');
+            }
+            write(rel, s);
+          }
+
+          for (const rel of walk('.', p => p.endsWith('.html'))) {
+            s = read(rel);
+            s = s.replace(/(<!--[\s\S]*?\bBuild:\s*)\d{8}-\d{3}/, '$1' + NEW_BUILD);
+            s = s.replace(/(<meta\s+name="waxframe-build"\s+content=")\d{8}-\d{3}(")/g, '$1' + NEW_BUILD + '$2');
+            s = s.replace(/\?v=3\.63\.460\b/g, '?v=' + NEW_VERSION);
+            if (rel.replace(/\\/g, '/') === 'index.html') {
+              s = s.replace(/("softwareVersion"\s*:\s*")3\.63\.460(")/, '$1' + NEW_VERSION + '$2');
+            }
+            write(rel, s);
+          }
+
+          s = read('style.css');
+          s = s.replace(/(Build:\s*)\d{8}-\d{3}/, '$1' + NEW_BUILD);
+          write('style.css', s);
+
+          const pkg = JSON.parse(read('package.json'));
+          pkg.version = NEW_VERSION;
+          write('package.json', JSON.stringify(pkg, null, 2) + '\n');
+
+          s = read('CHANGELOG.md');
+          const entry = [
+            '## v3.63.461 — Hosted Server Mode origin guidance',
+            '**Released:** 2026-08-15  ',
+            '**Build:** 20260815-001',
+            '',
+            '- Added hosted Server Mode guidance that detects the current WaxFrame origin and shows the exact origin to allow for Ollama, LM Studio, or OpenWebUI CORS settings.',
+            '- Added Local Network Access guidance for Chromium-based browsers when a hosted WaxFrame page connects to localhost or LAN model servers.',
+            '- Clarified that prompts and documents still travel directly from the browser to the selected local/LAN model server; GitHub or website hosting only serves the WaxFrame frontend.',
+            '- Kept existing Server-mode eligibility, model selection, API calls, storage, Builder logic, and round execution unchanged.',
+            '',
+            ''
+          ].join('\n');
+          const h1 = s.match(/^#.*$/m);
+          if (h1) {
+            const at = h1.index + h1[0].length;
+            s = s.slice(0, at) + '\n\n' + entry + s.slice(at).replace(/^\s*/, '\n');
+          } else {
+            s = entry + s;
+          }
+          write('CHANGELOG.md', s);
+
+          const oldBacklog = 'docs/WaxFrame_Backlog_Master_v273.txt';
+          const newBacklog = 'docs/WaxFrame_Backlog_Master_v274.txt';
+          s = read(oldBacklog);
+          s = s.replace(/^WaxFrame Backlog Master v273/m, 'WaxFrame Backlog Master v274');
+          s = s.replace(/^2026-08-13$/m, '2026-08-15');
+          write(newBacklog, s);
+          fs.unlinkSync(abs(oldBacklog));
+
+          for (const helper of [
+            '.github/workflows/one-shot-release-v3.63.461.yml',
+            '.github/workflows/release-v3.63.461.yml'
+          ]) {
+            if (fs.existsSync(abs(helper))) fs.unlinkSync(abs(helper));
+          }
+
+          console.log('Prepared v3.63.461 / build 20260815-001');
+          NODE
+
+      - name: Validate release
+        run: node tools/release-check.mjs
+
+      - name: Run browser smoke
+        run: node tools/smoke-app-headless.mjs
+
+      - name: Commit and push release
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "v3.63.461 — Hosted Server Mode origin guidance" -m "Show the exact hosted WaxFrame origin and explain CORS and Local Network Access requirements for localhost and LAN model servers. Why: hosted WaxFrame needs browser and model-server origin permission even though the AI workload and documents remain local."
+          git push origin HEAD:main
+
+      - name: Start official release validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run release-check.yml --ref main
+
+      - name: Request Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST repos/${GITHUB_REPOSITORY}/pages/builds
