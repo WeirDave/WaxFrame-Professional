@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app-bootstrap.js
-// Build: 20260815-002
+// Build: 20260815-003
 //  Glue shims for index.html's strict-CSP migration (v3.63.351).
 //
 //  Three inline handlers on the work screen had shapes the generic
@@ -210,20 +210,21 @@
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
     });
     return '' +
-      '<div style="font-weight:700;margin-bottom:5px">🌐 Hosted Server Mode</div>' +
-      '<div>WaxFrame is loaded from <code>' + safeOrigin + '</code>, but your AI still runs on your computer or LAN. ' +
-      'Your browser must be allowed to reach the local network, and the model server must allow this web origin.</div>' +
-      '<div style="margin-top:7px"><strong>If the server shows Offline even though it is running:</strong></div>' +
-      '<ul style="margin:5px 0 0 20px;padding:0">' +
-        '<li>Chrome/Chromium: approve the <strong>Local Network Access</strong> permission when prompted.</li>' +
-        '<li>Ollama: add <code>OLLAMA_ORIGINS=' + safeOrigin + '</code>, then restart Ollama.</li>' +
-        '<li>LM Studio: enable CORS for the local server (CLI: <code>lms server start --cors</code>).</li>' +
-      '</ul>' +
-      '<div style="margin-top:7px;font-size:.92em;opacity:.85">Allow this exact origin rather than <code>*</code> when possible. ' +
-      'Your document and prompts still travel directly from this browser to your selected model server.</div>' +
-      '<div style="margin-top:7px;font-size:.92em;opacity:.85"><strong>Using http://localhost?</strong> Browsers block http from https pages. ' +
-      '<a href="https://github.com/WeirDave/WaxFrame-Professional/releases/latest" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Download WaxFrame</a> ' +
-      'and open index.html locally, or put your server behind an https reverse proxy.</div>';
+      '<details>' +
+        '<summary style="cursor:pointer;font-weight:700;font-size:.93em">🌐 Hosted — your server must allow <code>' + safeOrigin + '</code></summary>' +
+        '<div style="margin-top:8px;font-size:.9em;line-height:1.5">' +
+          '<div>Your AI runs on your computer or LAN. The browser connects directly — nothing is proxied through WaxFrame hosting.</div>' +
+          '<div style="margin-top:6px"><strong>If the server shows Offline:</strong></div>' +
+          '<ul style="margin:4px 0 0 18px;padding:0">' +
+            '<li>Chrome/Chromium: approve <strong>Local Network Access</strong> when prompted.</li>' +
+            '<li>Ollama: set <code>OLLAMA_ORIGINS=' + safeOrigin + '</code>, restart.</li>' +
+            '<li>LM Studio: <code>lms server start --cors</code>.</li>' +
+          '</ul>' +
+          '<div style="margin-top:6px"><strong>Using http://localhost?</strong> Browsers block http from https pages. ' +
+          '<a href="https://github.com/WeirDave/WaxFrame-Professional/releases/latest" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Download WaxFrame</a> ' +
+          'and open index.html locally instead.</div>' +
+        '</div>' +
+      '</details>';
   }
 
   function _wfRefreshHostedServerNotice() {
@@ -245,12 +246,13 @@
       existing = document.createElement('div');
       existing.id = 'wfHostedServerNotice';
       existing.setAttribute('role', 'note');
-      existing.style.margin = '10px 0 14px';
-      existing.style.padding = '11px 13px';
-      existing.style.border = '1px solid rgba(214, 158, 46, .55)';
+      existing.style.margin = '8px 0 10px';
+      existing.style.padding = '9px 13px';
+      existing.style.border = '1px solid rgba(214, 158, 46, .45)';
       existing.style.borderRadius = '8px';
-      existing.style.background = 'rgba(214, 158, 46, .10)';
+      existing.style.background = 'rgba(214, 158, 46, .08)';
       existing.style.lineHeight = '1.4';
+      existing.style.fontSize = '.93em';
       wrap.insertAdjacentElement('afterend', existing);
     }
     existing.innerHTML = _wfHostedServerNoticeHTML(origin);

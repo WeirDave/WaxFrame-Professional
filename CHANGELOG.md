@@ -1,5 +1,27 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.463 — Collapse hosted Server Mode notice
+**Released:** 2026-08-15  
+**Build:** 20260815-003
+
+- Replaced the wall-of-text hosted Server Mode notice with a collapsed `<details>` element. Default state is a single line: **"Hosted — your server must allow https://waxframe.com"**. Click to expand for CORS, Local Network Access, and mixed-content guidance. Previously the full notice rendered as 8+ lines of text immediately below the mode toggle, pushing the toolbar and AI list down before the user had even imported a model.
+- Tightened container spacing and font size for the notice.
+
+### Verification
+
+- `node tools/release-check.mjs` — all 14 checks pass
+- Browser-verified: `<details>` renders collapsed, `open` attribute is `false`, summary shows the correct origin
+
+### Files touched
+
+js/app-bootstrap.js + full version sweep
+
+### Rollback
+
+Revert this commit.
+
+---
+
 ## v3.63.462 — Local model server onboarding for hosted users
 **Released:** 2026-08-15  
 **Build:** 20260815-002
