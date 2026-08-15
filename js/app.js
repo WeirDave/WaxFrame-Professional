@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260815-009
+// Build: 20260815-010
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -593,7 +593,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260815-009';         // build stamp — update each session
+const BUILD = '20260815-010';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -10636,7 +10636,9 @@ function validateCustomAIEndpoint(url) {
   if (!parsed || (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')) {
     return '⚠️ Enter a valid http:// or https:// endpoint URL';
   }
-  if (!IS_LOCAL_RUNTIME && parsed.protocol === 'http:') {
+  const _h = parsed.hostname;
+  const _loopback = (_h === 'localhost' || _h === '127.0.0.1' || _h === '[::1]' || _h === '::1');
+  if (!IS_LOCAL_RUNTIME && parsed.protocol === 'http:' && !_loopback) {
     return '⚠️ WaxFrame is served over https — an http:// endpoint is blocked by the browser. Download WaxFrame from GitHub Releases and open index.html locally, or use an https:// endpoint.';
   }
   return '';
@@ -11166,10 +11168,8 @@ function applyImportServerQuickAdd(value) {
   }
 
   if (value === 'openwebui') {
-    chatEl.value   = '';
-    chatEl.placeholder = 'https://your-server.com/api/chat/completions';
-    modelsEl.value = '';
-    modelsEl.placeholder = 'https://your-server.com/api/models';
+    chatEl.value   = 'http://localhost:3000/api/chat/completions';
+    modelsEl.value = 'http://localhost:3000/api/models';
   } else if (value === 'ollama') {
     chatEl.value   = 'http://localhost:11434/v1/chat/completions';
     modelsEl.value = 'http://localhost:11434/api/tags';
@@ -11217,8 +11217,12 @@ async function fetchImportServerModels() {
     );
     return;
   }
-  // Mixed-content pre-flight: browser will block http:// from an https:// page.
-  if (!IS_LOCAL_RUNTIME && new URL(modelsUrl).protocol === 'http:') {
+  // Mixed-content pre-flight: browser will block http:// from an https:// page,
+  // EXCEPT for localhost/127.0.0.1 which browsers treat as a secure context.
+  function _isLoopback(url) {
+    try { const h = new URL(url).hostname; return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h === '::1'; } catch { return false; }
+  }
+  if (!IS_LOCAL_RUNTIME && new URL(modelsUrl).protocol === 'http:' && !_isLoopback(modelsUrl)) {
     showImportServerError('Mixed-content blocked by the browser',
       `WaxFrame is served over https, so requests to ${modelsUrl} will be blocked by the browser before they leave your machine.`,
       ['Download WaxFrame from GitHub Releases (github.com/WeirDave/WaxFrame-Professional/releases/latest) and open index.html locally — file:// can reach localhost freely.',
@@ -11227,7 +11231,7 @@ async function fetchImportServerModels() {
     );
     return;
   }
-  if (!IS_LOCAL_RUNTIME && new URL(chatUrl).protocol === 'http:') {
+  if (!IS_LOCAL_RUNTIME && new URL(chatUrl).protocol === 'http:' && !_isLoopback(chatUrl)) {
     showImportServerError('Mixed-content blocked by the browser',
       `WaxFrame is served over https, so requests to ${chatUrl} will be blocked by the browser before they leave your machine.`,
       ['Download WaxFrame from GitHub Releases (github.com/WeirDave/WaxFrame-Professional/releases/latest) and open index.html locally — file:// can reach localhost freely.',
@@ -11355,7 +11359,9 @@ function validateImportServerUrl(url) {
   // models" step) had no such check at all — an http:// endpoint entered
   // there would silently proceed to a browser-blocked fetch with a generic
   // network error instead of this clear message.
-  if (!IS_LOCAL_RUNTIME && parsed.protocol === 'http:') {
+  const _h = parsed.hostname;
+  const _loopback = (_h === 'localhost' || _h === '127.0.0.1' || _h === '[::1]' || _h === '::1');
+  if (!IS_LOCAL_RUNTIME && parsed.protocol === 'http:' && !_loopback) {
     return 'WaxFrame is served over https — an http:// endpoint is blocked by the browser. Download WaxFrame from GitHub Releases and open index.html locally, or use an https:// endpoint.';
   }
   return '';

@@ -1,5 +1,26 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.470 — Allow localhost connections from hosted WaxFrame
+**Released:** 2026-08-15  
+**Build:** 20260815-010
+
+**What changed:**  
+- **Localhost exemption from mixed-content block** — WaxFrame's own validation was rejecting ALL `http://` URLs from hosted pages, but modern browsers treat localhost/127.0.0.1 as a secure context and allow the request. Fixed in three places: `validateImportServerUrl()`, `validateCustomAIEndpoint()`, and the `fetchImportServerModels()` pre-flight check. This is the fix that actually unblocks the waxframe.com → Open WebUI flow.
+- **Open WebUI Quick Add now pre-fills localhost URLs** — selecting Open WebUI from Quick Add now fills Chat Endpoint as `http://localhost:3000/api/chat/completions` and Models Endpoint as `http://localhost:3000/api/models` instead of leaving blank placeholders.
+- **Setup guide step 15 updated** — now shows both endpoint URLs explicitly and explains what Quick Add fills in.
+
+**Verification:**  
+- release-check passed (all 17 HTML pages)
+
+**Files touched:**  
+- `js/app.js` — localhost exemption in 3 validators, Open WebUI Quick Add pre-fill  
+- `open-webui-setup.html` — step 15 endpoint details  
+- Full version sweep (53 files)
+
+**Rollback:** `git revert` — no schema/storage changes.
+
+---
+
 ## v3.63.469 — Open WebUI guide rewritten for waxframe.com hosted flow
 **Released:** 2026-08-15  
 **Build:** 20260815-009

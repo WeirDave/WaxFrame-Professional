@@ -35,7 +35,7 @@
 #     matching this project's existing regex-over-parser approach
 #     (see tools/release-check.mjs's own design notes).
 #
-# Build: 20260815-009
+# Build: 20260815-010
 
 set -euo pipefail
 
