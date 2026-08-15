@@ -1,0 +1,70 @@
+name: Finalize v3.63.461 release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/release-finalize-v3.63.461.yml
+
+permissions:
+  contents: write
+  actions: write
+  pages: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run prepared release sweep
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src = Path('.github/workflows/release-v3.63.461.yml').read_text().splitlines()
+          out = []
+          inside = False
+          for line in src:
+              if "node <<'NODE'" in line:
+                  inside = True
+                  continue
+              if inside and line.strip() == 'NODE':
+                  break
+              if inside:
+                  out.append(line[10:] if line.startswith('          ') else line)
+          Path('/tmp/wf-release-prep.js').write_text('\n'.join(out) + '\n')
+          PY
+          node /tmp/wf-release-prep.js
+          rm -f .github/workflows/release-finalize-v3.63.461.yml
+
+      - name: Validate release
+        run: node tools/release-check.mjs
+
+      - name: Commit and push release
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "v3.63.461 — Hosted Server Mode origin guidance" -m "Show the exact hosted WaxFrame origin and explain CORS and Local Network Access requirements for localhost and LAN model servers. Why: hosted WaxFrame needs browser and model-server origin permission even though the AI workload and documents remain local."
+          git push origin HEAD:main
+
+      - name: Start official release validation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run release-check.yml --ref main
+
+      - name: Request Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST repos/${GITHUB_REPOSITORY}/pages/builds
