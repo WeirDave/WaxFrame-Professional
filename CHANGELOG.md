@@ -1,5 +1,34 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.462 — Local model server onboarding for hosted users
+**Released:** 2026-08-15  
+**Build:** 20260815-002
+
+### What changed
+
+Customers running WaxFrame from waxframe.com (or any HTTPS host) who want to use Ollama or LM Studio previously hit a dead end: the Quick Add presets were hidden, the mixed-content error said "run WaxFrame locally" without explaining how, and there was no mention of workarounds. This release replaces that dead end with clear, actionable guidance at every stage.
+
+- **Quick Add presets now visible on hosted runtime.** Ollama and LM Studio appear with a "(setup required)" suffix instead of being hidden. Selecting either one shows a dedicated guidance panel with three paths: download WaxFrame from GitHub Releases and run locally (easiest), use Open WebUI as an HTTPS proxy to the local server, or set up a reverse proxy with HTTPS.
+- **Mixed-content errors now show actionable hints.** When a user manually enters an `http://` URL on a hosted page, the error title now reads "Mixed-content blocked by the browser" (not the misleading "Enter a Models Endpoint URL") and the hints list all three workaround paths with a direct link to the GitHub Releases page.
+- **Runtime note updated.** The hosted-mode note in the Import Server modal now links directly to the GitHub Releases download and directs users to the Quick Add presets for setup guidance.
+- **Hosted Server Mode notice updated.** The CORS/LNA guidance banner (added v3.63.461) now includes a note about mixed-content blocking with a download link for users whose local server runs on plain HTTP.
+- Deleted the `fix/server-guidance-visibility` branch from GitHub (a ChatGPT-authored attempt at this problem that took the wrong approach — it narrowed the guidance notice by port-sniffing instead of fixing the dead-end UX).
+
+### Verification
+
+- `node tools/release-check.mjs` — all 14 checks pass
+- Browser-verified on localhost:8420 (hosted-mode behavior): Quick Add shows all four presets; selecting Ollama/LM Studio renders the 3-option guidance panel; switching to Open WebUI resets cleanly; manually entering `http://localhost:11434` triggers the improved mixed-content error with actionable hints; no console errors
+
+### Files touched
+
+index.html, js/app.js, js/app-bootstrap.js, style.css, + full version sweep (all 16 HTML, 28 JS, style.css, package.json, tools scripts)
+
+### Rollback
+
+Revert this commit. The only behavioral change is UI guidance — no storage, API, round, or model-selection logic was modified.
+
+---
+
 ## v3.63.461 — Hosted Server Mode origin guidance
 **Released:** 2026-08-15  
 **Build:** 20260815-001

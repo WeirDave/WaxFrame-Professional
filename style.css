@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260815-001
+   Build: 20260815-002
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4305,10 +4305,12 @@ body.helper-body .page-main {
    ─────────────────────────────────────────────────────────── */
 .import-server-help,
 .import-server-raw-panel,
-.import-server-error { display: none; }
+.import-server-error,
+.import-server-local-guidance { display: none; }
 .import-server-modal.import-server-state-prefetch .import-server-help { display: block; }
 .import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-raw-panel { display: flex; }
 .import-server-modal.import-server-state-error    .import-server-error { display: block; }
+.import-server-modal.import-server-state-local-guidance .import-server-local-guidance { display: block; }
 /* Loading state: hide all right-region content so nothing flashes during auto-fetch */
 .import-server-modal.import-server-state-loading .import-server-col-middle,
 .import-server-modal.import-server-state-loading .import-server-col-checklist {
@@ -4383,6 +4385,74 @@ body.helper-body .page-main {
   display: none;
 }
 .import-server-help-runtime.visible { display: block; }
+.import-server-help-runtime a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* Local-server guidance pane */
+.import-server-local-guidance {
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+  padding: var(--space-14);
+  line-height: 1.55;
+}
+.import-server-guidance-title {
+  font-size: var(--fs-16);
+  font-weight: 700;
+  margin-bottom: var(--space-10);
+}
+.import-server-local-guidance > p {
+  margin: 0 0 var(--space-14);
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+}
+.import-server-local-guidance code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: var(--fs-12);
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+}
+.import-server-guidance-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+.import-server-guidance-option {
+  padding: var(--space-12);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface2);
+}
+.import-server-guidance-option-hdr {
+  font-weight: 700;
+  font-size: var(--fs-13);
+  margin-bottom: var(--space-6);
+}
+.import-server-guidance-rec {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: var(--fs-11);
+}
+.import-server-guidance-adv {
+  color: var(--text-dim);
+  font-weight: 400;
+  font-size: var(--fs-11);
+}
+.import-server-guidance-option p {
+  margin: 0 0 var(--space-8);
+  font-size: var(--fs-12);
+  line-height: 1.5;
+}
+.import-server-guidance-option a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.import-server-guidance-option .btn {
+  margin-top: var(--space-4);
+}
 
 /* Raw response pane — reuses .custom-ai-raw-panel base but allowed to fill its column */
 /* Raw response pane — reuses .custom-ai-raw-panel base but allowed to fill its column.
@@ -4655,6 +4725,14 @@ body.helper-body .page-main {
     display: flex;
     margin-top: var(--space-14);
   }
+
+  /* LOCAL-GUIDANCE: guidance pane takes cols 2+3, hide checklist placeholder */
+  .import-server-modal.import-server-state-local-guidance .import-server-col-middle {
+    grid-column: 2 / 4;
+  }
+  .import-server-modal.import-server-state-local-guidance .import-server-col-checklist {
+    display: none;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -4699,6 +4777,14 @@ body.helper-body .page-main {
   .import-server-modal.import-server-state-error .import-server-raw-panel {
     display: flex;
     margin-top: var(--space-14);
+  }
+
+  /* LOCAL-GUIDANCE: guidance pane takes cols 2+3, hide checklist */
+  .import-server-modal.import-server-state-local-guidance .import-server-col-middle {
+    grid-column: 2 / 4;
+  }
+  .import-server-modal.import-server-state-local-guidance .import-server-col-checklist {
+    display: none;
   }
 }
 
