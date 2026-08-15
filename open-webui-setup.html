@@ -1,5 +1,5 @@
 <!-- ============================================================
-     WaxFrame — prompt-editor.html
+     WaxFrame — open-webui-setup.html
      Build: 20260815-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
@@ -9,35 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- v3.63.366 — Content-Security-Policy. script-src strict-CSP RE-TIGHTENED in v3.63.366:
-       script-src is locked to 'self' plus two sha256- hashes that pin the
-       pre-paint head guard below. The v3.63.347 → v3.63.352 inline-handler /
-       inline-script migration removed every other inline JavaScript surface
-       across all 16 HTML pages; release-check Check 5 enforces the strict
-       directive, Check 8 enforces zero inline on*= attrs per file, Check 9
-       enforces exactly one inline script tag per page (the head guard below).
-       'unsafe-eval' stays on script-src for vendored SheetJS / mammoth /
-       pdf.js (new Function internals). style-src 'unsafe-inline' stays
-       because we emit per-element style="..." attributes and the
-       inline <style> on the next line. v3.63.408 --
-       connect-src carries http://localhost:* and http://127.0.0.1:* so the
-       Server Based AI / Import from Model Server flow can reach a locally
-       running Ollama, LM Studio, or Open WebUI instance. Scoped to loopback
-       only -- no blanket http: allowance. Remote server-mode endpoints
-       (enterprise Alfredo/Open WebUI, etc.) already work via the https:
-       source and need no exception. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
-  <!-- v3.63.345 — Clickjacking guard + CSP violation listener.
-       Frame-busting: GitHub Pages cannot set the HTTP frame-ancestors
-       directive, so this client-side check hides the page if we detect
-       we are embedded in an iframe, then tries to break out by redirecting
-       the top window. The inline-style class is added BEFORE any visible
-       paint so the attacker never sees clickable UI; if the top.location
-       write is cross-origin-blocked, the page stays hidden as the fail-safe.
-       CSP listener: captures securitypolicyviolation events into the Deep
-       Dive ring buffer + console. Gives us local visibility into what the
-       permissive CSP is catching without needing a server-side report
-       endpoint. Useful baseline for the future strict-CSP migration. -->
   <style>html.wf-framebusted{display:none}</style>
   <script>
   (function () {
@@ -66,18 +38,17 @@
   })();
   </script>
   <meta name="waxframe-build" content="20260815-006">
-  <title>Prompt Editor Reference — WaxFrame</title>
-  <meta name="description" content="View and customize the prompts WaxFrame sends to your AI Worker Bees during multi-AI document refinement rounds.">
-  <meta name="keywords" content="AI prompt editor, customize AI review prompts, WaxFrame prompts">
-  <link rel="canonical" href="https://waxframe.com/prompt-editor.html">
-  <meta property="og:title" content="Prompt Editor Reference — WaxFrame">
-  <meta property="og:description" content="View and customize the prompts WaxFrame sends to your AI Worker Bees during multi-AI document refinement rounds.">
-  <meta property="og:url" content="https://waxframe.com/prompt-editor.html">
+  <title>Open WebUI Setup Guide — WaxFrame</title>
+  <meta name="description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
+  <link rel="canonical" href="https://waxframe.com/open-webui-setup.html">
+  <meta property="og:title" content="Open WebUI Setup Guide — WaxFrame">
+  <meta property="og:description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
+  <meta property="og:url" content="https://waxframe.com/open-webui-setup.html">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Prompt Editor Reference — WaxFrame">
-  <meta name="twitter:description" content="View and customize the prompts WaxFrame sends to your AI Worker Bees during multi-AI document refinement rounds.">
+  <meta name="twitter:title" content="Open WebUI Setup Guide — WaxFrame">
+  <meta name="twitter:description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css?v=3.63.466">
@@ -123,11 +94,6 @@
     <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🛡️ Privacy Policy</a>
     <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📜 Terms of Use</a>
   </div>
-  <!-- v3.63.283 — Pinned Buy CTA, matches index.html's navBuyFooter. Shown
-       only to non-licensed (trial) users; license-helper.js's
-       updateLicenseBadge() hides it once a valid license is present. Its
-       own distinct slot — inside .nav-panel but outside .nav-body so it
-       sticks to the bottom of the panel like the work-screen version. -->
   <div class="nav-panel-footer" id="navBuyFooter">
     <a class="nav-buy-cta external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" data-action="nav-close" title="Buy a license to unlock unlimited rounds">
       <span class="nav-buy-cta-icon">🛒</span>
@@ -164,154 +130,194 @@
 
 <div class="page-main" id="top">
 
-  <div class="hp-section">
-    <div class="hp-section-header">
-      <img src="images/WaxFrame_Prompt_Editor_Bee_v1.png" alt="" class="hp-section-bee">
-      <div class="hp-section-title-block">
-        <h1 class="hp-section-title">Prompt Editor</h1>
-        <p class="hp-section-sub">Prompts are the instructions WaxFrame sends to each AI on your behalf. You can read them here for full transparency into what's being sent — your API key, your money. Most users never need to change anything, and if you do experiment, Reset to Defaults will always restore the original instructions exactly. Changes are saved to your browser only and never leave your device.</p>
-      </div>
+<div class="hp-section">
+  <div class="hp-section-header">
+    <div class="hp-section-title-block">
+      <h1 class="hp-section-title">Open WebUI Setup Guide</h1>
+      <p class="hp-section-sub">Use Open WebUI as a free, self-hosted proxy between WaxFrame and your local Ollama models. Open WebUI serves over HTTPS and handles the connection to Ollama behind the scenes — no mixed-content issues, no CORS configuration, no cost.</p>
     </div>
-    <div class="hp-section-body">
+  </div>
+  <div class="hp-section-body">
 
-      <div class="prompt-editor-actions">
-        <span class="status-toast" id="statusToast"></span>
-        <button class="btn btn-red" data-action="prompt-reset-all">↺ Reset All to Defaults</button>
-        <button class="btn btn-accent" data-action="prompt-save-all">💾 Save All Prompts</button>
-      </div>
+    <h2>Before You Start</h2>
 
-  <div class="prompts-grid" id="promptsGrid">
-
-    <!-- REVIEWER PROMPTS -->
-    <div class="prompt-group">
-      <div class="prompt-group-header">
-        <div>
-          <div class="prompt-group-title">Reviewer Prompts</div>
-          <div class="prompt-group-sub">Sent to every AI except the Builder. They respond with numbered suggestions only.</div>
-        </div>
-        <span class="prompt-group-badge badge-reviewer">Reviewer</span>
-      </div>
-
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <div>
-            <div class="prompt-block-label">Draft Phase — Starting from Scratch <span class="modified-badge" id="badge-draft_scratch">Modified</span></div>
-            <div class="prompt-block-desc">Used when the user selects "Start from Scratch" — each AI writes a first draft from the project goal.</div>
-          </div>
-          <button class="prompt-reset-btn" data-action="prompt-reset" data-prompt-key="draft_scratch">Reset</button>
-        </div>
-        <textarea class="prompt-ta" id="ta-draft_scratch" data-input-action="prompt-modified" data-prompt-key="draft_scratch"></textarea>
-      </div>
-
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <div>
-            <div class="prompt-block-label">Refine Text Phase <span class="modified-badge" id="badge-refine">Modified</span></div>
-            <div class="prompt-block-desc">Used in the Refine Text phase — reviewers give numbered suggestions on the current document.</div>
-          </div>
-          <button class="prompt-reset-btn" data-action="prompt-reset" data-prompt-key="refine">Reset</button>
-        </div>
-        <textarea class="prompt-ta" id="ta-refine" data-input-action="prompt-modified" data-prompt-key="refine"></textarea>
-      </div>
-
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">1. Confirm Ollama is working</h3>
+      <p>Open PowerShell and check that Ollama is installed and has models available:</p>
+      <pre class="wf-code-block">ollama --version</pre>
+      <p>Then list your installed models:</p>
+      <pre class="wf-code-block">ollama list</pre>
+      <p>You should see the models you already installed. Test the API:</p>
+      <pre class="wf-code-block">Invoke-RestMethod http://localhost:11434/api/tags</pre>
+      <p>If that returns model information, Ollama is good.</p>
     </div>
 
-    <!-- BUILDER PROMPTS -->
-    <div class="prompt-group">
-      <div class="prompt-group-header">
-        <div>
-          <div class="prompt-group-title">Builder Prompts</div>
-          <div class="prompt-group-sub">Sent only to the Builder AI. It receives all reviewer suggestions and rewrites the full document.</div>
-        </div>
-        <span class="prompt-group-badge badge-builder">Builder</span>
-      </div>
-
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <div>
-            <div class="prompt-block-label">Builder — Draft Phase <span class="modified-badge" id="badge-builder_draft">Modified</span></div>
-            <div class="prompt-block-desc">Builder consolidates multiple first drafts into one cohesive document.</div>
-          </div>
-          <button class="prompt-reset-btn" data-action="prompt-reset" data-prompt-key="builder_draft">Reset</button>
-        </div>
-        <textarea class="prompt-ta" id="ta-builder_draft" data-input-action="prompt-modified" data-prompt-key="builder_draft"></textarea>
-      </div>
-
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <div>
-            <div class="prompt-block-label">Builder — Refine Text Phase <span class="modified-badge" id="badge-builder_refine">Modified</span></div>
-            <div class="prompt-block-desc">Builder incorporates reviewer suggestions and rewrites the full document each round.</div>
-          </div>
-          <button class="prompt-reset-btn" data-action="prompt-reset" data-prompt-key="builder_refine">Reset</button>
-        </div>
-        <textarea class="prompt-ta" id="ta-builder_refine" data-input-action="prompt-modified" data-prompt-key="builder_refine"></textarea>
-      </div>
-
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">2. Check whether Docker Desktop is installed</h3>
+      <p>Run:</p>
+      <pre class="wf-code-block">docker --version</pre>
+      <p>If you get something like <code>Docker version 28.x.x</code>, skip to Step 4.</p>
+      <p>If PowerShell says <code>docker</code> isn't recognized, install Docker Desktop next.</p>
     </div>
 
-    <!-- SYSTEM INJECTIONS -->
-    <div class="prompt-group">
-      <div class="prompt-group-header">
-        <div>
-          <div class="prompt-group-title">System Injections</div>
-          <div class="prompt-group-sub">Added automatically by WaxFrame when conditions are met. Edit with care — the format must stay consistent for conflict suppression to work correctly.</div>
-        </div>
-        <span class="prompt-group-badge badge-builder">Admin</span>
-      </div>
+    <hr class="wf-section-divider">
 
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <div>
-            <div class="prompt-block-label">Resolved Decisions — Builder <span class="modified-badge" id="badge-resolved_builder">Modified</span></div>
-            <div class="prompt-block-desc">Injected into the Builder prompt when the user has resolved at least one conflict. Prevents the Builder from re-raising settled decisions.</div>
-          </div>
-          <button class="prompt-reset-btn" data-action="prompt-reset" data-prompt-key="resolved_builder">Reset</button>
-        </div>
-        <textarea class="prompt-ta" id="ta-resolved_builder" data-input-action="prompt-modified" data-prompt-key="resolved_builder"></textarea>
-      </div>
+    <h2>Install Docker Desktop (if needed)</h2>
 
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <div>
-            <div class="prompt-block-label">Resolved Decisions — Reviewers <span class="modified-badge" id="badge-resolved_reviewers">Modified</span></div>
-            <div class="prompt-block-desc">Injected into every reviewer prompt when conflicts have been resolved. Prevents reviewers from re-raising settled decisions using different wording.</div>
-          </div>
-          <button class="prompt-reset-btn" data-action="prompt-reset" data-prompt-key="resolved_reviewers">Reset</button>
-        </div>
-        <textarea class="prompt-ta" id="ta-resolved_reviewers" data-input-action="prompt-modified" data-prompt-key="resolved_reviewers"></textarea>
-      </div>
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">3. Install Docker Desktop</h3>
+      <p>Using Winget:</p>
+      <pre class="wf-code-block">winget install -e --id Docker.DockerDesktop</pre>
+      <p>After installation:</p>
+      <ol>
+        <li>Launch Docker Desktop.</li>
+        <li>Let it finish starting.</li>
+        <li>Accept the WSL2 backend if prompted.</li>
+        <li>Wait until Docker Desktop says the engine is running.</li>
+      </ol>
+      <p>Then open a <strong>fresh</strong> PowerShell window and run:</p>
+      <pre class="wf-code-block">docker version</pre>
+      <p>You should see both a <strong>Client</strong> and <strong>Server</strong> section.</p>
+    </div>
 
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <div>
-            <div class="prompt-block-label">Per-AI Repeat Offender Warning <span class="modified-badge" id="badge-ai_warning">Modified</span></div>
-            <div class="prompt-block-desc">Injected into a specific AI's prompt when it has re-raised an already-resolved conflict 3 or more times. Targeted to that AI only.</div>
-          </div>
-          <button class="prompt-reset-btn" data-action="prompt-reset" data-prompt-key="ai_warning">Reset</button>
-        </div>
-        <textarea class="prompt-ta" id="ta-ai_warning" data-input-action="prompt-modified" data-prompt-key="ai_warning"></textarea>
-      </div>
+    <hr class="wf-section-divider">
 
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <div>
-            <div class="prompt-block-label">Model Recommendation (v3.26.0) <span class="modified-badge" id="badge-recommend_model">Modified</span></div>
-            <div class="prompt-block-desc">Sent to a provider's API when the user adds a new AI (default 6 or Custom AI). The provider returns a PICK and WHY which WaxFrame uses to auto-select the best model. The {MODEL_LIST} placeholder is replaced at runtime with the actual fetched model list — keep that token verbatim.</div>
-          </div>
-          <button class="prompt-reset-btn" data-action="prompt-reset" data-prompt-key="recommend_model">Reset</button>
-        </div>
-        <textarea class="prompt-ta" id="ta-recommend_model" data-input-action="prompt-modified" data-prompt-key="recommend_model"></textarea>
-      </div>
+    <h2>Install and Start Open WebUI</h2>
 
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">4. Install Open WebUI</h3>
+      <p>Run this as one PowerShell command:</p>
+      <pre class="wf-code-block">docker run -d `
+  -p 3000:8080 `
+  --add-host=host.docker.internal:host-gateway `
+  -v open-webui:/app/backend/data `
+  --name open-webui `
+  --restart always `
+  ghcr.io/open-webui/open-webui:main</pre>
+      <p>This is the standard Open WebUI configuration for connecting a Dockerized Open WebUI instance to Ollama running on the host computer.</p>
+      <p>The first launch will download the Open WebUI Docker image, so you'll see some image layers being pulled.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">5. Verify the container started</h3>
+      <p>Run:</p>
+      <pre class="wf-code-block">docker ps</pre>
+      <p>You should see something similar to:</p>
+      <pre class="wf-code-block">CONTAINER ID   IMAGE                               PORTS
+xxxxxxxxxxxx   ghcr.io/open-webui/open-webui:main  0.0.0.0:3000->8080/tcp</pre>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">6. Open Open WebUI</h3>
+      <p>In your browser, open:</p>
+      <pre class="wf-code-block">http://localhost:3000</pre>
+      <p>You should get the Open WebUI setup screen.</p>
+    </div>
+
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">7. Create your Open WebUI account</h3>
+      <p>The first account you create becomes the <strong>administrator</strong> for that Open WebUI installation.</p>
+      <p>This account exists locally inside Open WebUI. You are not signing up for some external Open WebUI cloud account.</p>
+      <p>Your data is stored in the Docker volume <code>open-webui</code>. That is why removing/recreating the container won't normally wipe your chats or settings.</p>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Connect Ollama to Open WebUI</h2>
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">8. Check whether Open WebUI sees Ollama</h3>
+      <p>Once logged in, look at the model selector near the top. Your existing Ollama models should appear.</p>
+      <p>Open WebUI talks to Ollama through:</p>
+      <pre class="wf-code-block">http://host.docker.internal:11434</pre>
+      <p>Docker's <code>host.docker.internal</code> hostname represents your Windows host from inside the container. This is the important part because <code>localhost</code> inside the Open WebUI container refers to the container itself, not Windows.</p>
+    </div>
+
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">9. If your Ollama models do NOT appear</h3>
+      <p>Go into: <strong>Admin Panel → Settings → Connections</strong></p>
+      <p>Find Ollama. Set the Ollama URL to:</p>
+      <pre class="wf-code-block">http://host.docker.internal:11434</pre>
+      <p>Save it, then refresh Open WebUI.</p>
+      <p><strong>Do not use</strong> <code>http://localhost:11434</code> from inside the Docker container — <code>localhost</code> inside Docker points to the container, not your Windows machine.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">10. Start chatting</h3>
+      <p>Pick one of your Ollama models from the model dropdown and enter a normal prompt.</p>
+      <p>Ollama does the model inference; Open WebUI is the interface, conversation manager, knowledge/document system, tool layer, and provider manager sitting in front of it.</p>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Day-to-Day Management</h2>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">11. Starting Open WebUI later</h3>
+      <p>You normally don't have to manually start it. We used <code>--restart always</code>, so Docker will restart the Open WebUI container automatically.</p>
+      <p>If needed:</p>
+      <pre class="wf-code-block">docker start open-webui</pre>
+      <p>To stop it:</p>
+      <pre class="wf-code-block">docker stop open-webui</pre>
+      <p>To restart it:</p>
+      <pre class="wf-code-block">docker restart open-webui</pre>
+      <p>To check its status:</p>
+      <pre class="wf-code-block">docker ps -a</pre>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">12. View Open WebUI logs</h3>
+      <p>If something breaks:</p>
+      <pre class="wf-code-block">docker logs open-webui</pre>
+      <p>Or watch them live:</p>
+      <pre class="wf-code-block">docker logs -f open-webui</pre>
+      <p>Press <code>Ctrl+C</code> to stop watching.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">13. Update Open WebUI later</h3>
+      <p>Open WebUI's documented Docker update procedure: remove the old container, pull the current image, and recreate it while retaining the persistent volume.</p>
+      <pre class="wf-code-block">docker rm -f open-webui</pre>
+      <p>Then:</p>
+      <pre class="wf-code-block">docker pull ghcr.io/open-webui/open-webui:main</pre>
+      <p>Then recreate it:</p>
+      <pre class="wf-code-block">docker run -d `
+  -p 3000:8080 `
+  --add-host=host.docker.internal:host-gateway `
+  -v open-webui:/app/backend/data `
+  --name open-webui `
+  --restart always `
+  ghcr.io/open-webui/open-webui:main</pre>
+      <p>Your persistent Open WebUI data remains in the <code>open-webui</code> volume because that Docker volume wasn't deleted.</p>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Important: Do NOT install the bundled Ollama version</h2>
+
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">14. Keep your existing Ollama install</h3>
+      <p>Open WebUI also provides an image containing both Open WebUI and Ollama. Do not use it if you already have Ollama installed on Windows.</p>
+      <p>You already have Windows Ollama configured, downloaded models, GPU support working, and you've been tuning its context size and models. Running another Ollama inside Docker would give you two separate Ollama instances with separate model stores and potentially separate GPU configuration. That's pointless duplication.</p>
+      <p>Your architecture should simply be:</p>
+      <pre class="wf-code-block">Browser
+  |
+  v
+Open WebUI (Docker :3000)
+  |
+  v
+host.docker.internal:11434
+  |
+  v
+Ollama for Windows
+  |
+  v
+Your GPU</pre>
+      <p>That keeps the model runtime you've already been using intact.</p>
     </div>
 
   </div>
-
-      <a href="#top" class="wh-back-top">↑ Back to top</a>
-
-    </div><!-- /hp-section-body -->
-  </div><!-- /hp-section -->
+</div>
 
 </div>
 
@@ -350,8 +356,6 @@
 </div>
 <!-- ========================================================
      LICENSE MODALS — helper-page (v3.22.6)
-     Mirrors in-app license modals for parity. License pill in
-     footer-right toggles between these via license-helper.js.
      ======================================================== -->
 <div class="license-modal-overlay" id="licenseModal" data-action="license-modal-backdrop-close">
   <div class="license-modal">
@@ -388,8 +392,6 @@
 <script src="js/license-helper.js?v=3.63.466"></script>
 <script src="js/update-check.js?v=3.63.466"></script>
 <script src="js/helper-handlers.js?v=3.63.466"></script>
-<script src="js/prompts.js?v=3.63.466"></script>
-<script src="js/prompt-editor.js?v=3.63.466"></script>
 <script src="js/version.js?v=3.63.466"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260815-005
+   Build: 20260815-006
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13736,6 +13736,34 @@ kbd {
 }
 .wf-card p:last-child {
   margin-bottom: 0;
+}
+.wf-card ol {
+  margin: 0 0 var(--space-10);
+  padding-left: 20px;
+  line-height: 1.7;
+}
+.wf-card ol li {
+  margin-bottom: var(--space-6);
+}
+.wf-card code {
+  font-family: 'Courier New', monospace;
+  font-size: var(--fs-11);
+  background: var(--surface2);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.wf-code-block {
+  display: block;
+  font-family: 'Courier New', monospace;
+  font-size: var(--fs-11);
+  background: var(--surface2);
+  border-radius: 4px;
+  padding: var(--space-8) var(--space-12);
+  margin: var(--space-6) 0 var(--space-10);
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.5;
+  color: var(--text);
 }
 .wf-card h2,
 .wf-card h3 {

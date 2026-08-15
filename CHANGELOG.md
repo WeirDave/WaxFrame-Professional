@@ -1,5 +1,27 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.466 — Full Open WebUI setup guide as helper page
+**Released:** 2026-08-15  
+**Build:** 20260815-006
+
+**What changed:**  
+Added `open-webui-setup.html` — a complete 14-step walkthrough for setting up Open WebUI as a proxy between WaxFrame and local Ollama models. Covers Ollama verification, Docker Desktop install (including WSL2), Open WebUI container setup, Ollama connection troubleshooting (host.docker.internal), day-to-day Docker management, updating, and why NOT to use the bundled Ollama image. Option B in the guidance panel now links directly to this page with a "Full Setup Guide" button instead of trying to compress everything into inline steps. Added `.wf-code-block` CSS for styled command blocks on helper pages.
+
+**Verification:**  
+- release-check passed (17 HTML pages now, INLINE_HANDLER_BUDGET updated)  
+- New page renders correctly with WaxFrame helper-page styling
+
+**Files touched:**  
+- `open-webui-setup.html` — NEW (17th HTML page)  
+- `js/app.js` — `_showLocalServerGuidance()` Option B simplified, links to setup guide  
+- `style.css` — `.wf-code-block`, `.wf-card ol/code` styles added  
+- `tools/release-check.mjs` — INLINE_HANDLER_BUDGET entry for new page  
+- Full version sweep (51 files)
+
+**Rollback:** `git revert` — no schema/storage changes.
+
+---
+
 ## v3.63.465 — Open WebUI setup guidance: Docker prereqs + troubleshooting
 **Released:** 2026-08-15  
 **Build:** 20260815-005
