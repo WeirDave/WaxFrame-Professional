@@ -1,5 +1,26 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.468 — Server mode UX: remove redundant button, auto-open Import, complete setup guide
+**Released:** 2026-08-15  
+**Build:** 20260815-008
+
+**What changed:**  
+- Removed the "Add Custom AI" button from the server-mode toolbar — its functionality is fully covered by Import from Model Server's manual entry fields, and having both was confusing new users.
+- When switching to server mode with zero server AIs configured, the Import from Model Server modal now opens automatically so the user lands directly on the action they need.
+- Open WebUI setup guide expanded from 14 to 16 steps — added steps 15-16 that close the loop by walking the user through importing their Open WebUI models into WaxFrame and verifying connectivity.
+
+**Verification:**  
+- release-check passed (all 17 HTML pages)
+
+**Files touched:**  
+- `js/app.js` — `renderWorkerBeeToolbar()` server branch trimmed, `setHiveMode()` auto-open logic, button text updated to "16 steps"  
+- `open-webui-setup.html` — steps 15-16 added (Connect WaxFrame to Open WebUI)  
+- Full version sweep (51 files + 2 updater scripts)
+
+**Rollback:** `git revert` — no schema/storage changes.
+
+---
+
 ## v3.63.467 — Fix guidance panel button colors + hosted notice syntax
 **Released:** 2026-08-15  
 **Build:** 20260815-007
