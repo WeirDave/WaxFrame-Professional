@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260815-004
+// Build: 20260815-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -593,7 +593,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260815-004';         // build stamp — update each session
+const BUILD = '20260815-005';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -11011,10 +11011,11 @@ function _showLocalServerGuidance(serverName) {
         '<div class="import-server-guidance-option-hdr">Option B — Use Open WebUI as a proxy</div>' +
         '<p><a href="https://openwebui.com" target="_blank" rel="noopener">Open WebUI</a> is a free, self-hosted web interface that connects to your local ' + esc(serverName) + ' and serves over https.</p>' +
         '<ol class="import-server-guidance-steps">' +
-          '<li>Install Open WebUI — the quickest way is Docker:<br>' +
-            '<code>docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway ghcr.io/open-webui/open-webui:main</code></li>' +
-          '<li>Open <code>http://localhost:3000</code> and create an account (local only, no cloud signup).</li>' +
-          '<li>Open WebUI auto-detects ' + esc(serverName) + ' — verify your models appear in its sidebar.</li>' +
+          '<li>Requires <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">Docker Desktop</a> — if <code>docker --version</code> errors, install it first and wait for the engine to start. Windows users may need to install WSL2 (<code>wsl --install</code>, then reboot).</li>' +
+          '<li>Install Open WebUI:<br>' +
+            '<code>docker run -d -p 3000:8080 --add-host=host.docker.internal:host-gateway -v open-webui:/app/backend/data --name open-webui --restart always ghcr.io/open-webui/open-webui:main</code></li>' +
+          '<li>Open <code>http://localhost:3000</code> and create an account (local only, no cloud signup). The first account becomes the admin.</li>' +
+          '<li>Open WebUI auto-detects ' + esc(serverName) + ' — verify your models appear in the model selector. If they don\'t, go to Admin Panel → Settings → Connections and set the Ollama URL to <code>http://host.docker.internal:11434</code>.</li>' +
           '<li>Come back here, select <strong>Open WebUI</strong> from Quick Add, and enter your Open WebUI address.</li>' +
         '</ol>' +
       '</div>' +
