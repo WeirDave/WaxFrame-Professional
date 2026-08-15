@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — open-webui-setup.html
-     Build: 20260815-009
+     Build: 20260815-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -37,7 +37,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260815-009">
+  <meta name="waxframe-build" content="20260815-010">
   <title>Open WebUI Setup Guide — WaxFrame</title>
   <meta name="description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
   <link rel="canonical" href="https://waxframe.com/open-webui-setup.html">
@@ -51,7 +51,7 @@
   <meta name="twitter:description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.469">
+  <link rel="stylesheet" href="style.css?v=3.63.470">
 </head>
 <body class="helper-body">
 
@@ -329,9 +329,14 @@ Your GPU</pre>
       <h3 class="wf-card-title">15. Import your Open WebUI models into WaxFrame</h3>
       <p>Go back to <a href="https://waxframe.com" target="_blank" rel="noopener">waxframe.com</a>. On the Worker Bees screen, switch to <strong>Server Based AI</strong> mode if you haven't already — the Import from Model Server modal will open automatically.</p>
       <ol>
-        <li>Under <strong>Quick Add</strong>, select <strong>Open WebUI</strong>.</li>
-        <li>In the <strong>Server Address</strong> field, enter <code>http://localhost:3000</code>.</li>
-        <li>Open WebUI requires an API key. In its admin panel (<code>http://localhost:3000</code> → Settings → Account), generate an API key and paste it into the <strong>API Key</strong> field in WaxFrame.</li>
+        <li>Under <strong>Quick Add</strong>, select <strong>Open WebUI</strong>. This pre-fills both endpoint fields:
+          <ul>
+            <li><strong>Chat Endpoint:</strong> <code>http://localhost:3000/api/chat/completions</code></li>
+            <li><strong>Models Endpoint:</strong> <code>http://localhost:3000/api/models</code></li>
+          </ul>
+          If your Open WebUI runs on a different port or address, adjust both URLs to match.
+        </li>
+        <li>Open WebUI requires an API key for external access. Go to your Open WebUI admin panel at <code>http://localhost:3000</code>, then <strong>Settings → Account</strong>, and generate an API key. Paste it into the <strong>API Key</strong> field in WaxFrame.</li>
         <li>Click <strong>Fetch Models</strong>.</li>
       </ol>
       <p>WaxFrame will pull the full model list from your local Open WebUI (which includes every model Ollama has). Select the ones you want and click <strong>Add to Hive</strong>.</p>
@@ -421,13 +426,13 @@ Your GPU</pre>
 </div>
 
 
-<script src="js/theme.js?v=3.63.469"></script>
-<script src="lib/docx.min.js?v=3.63.469"></script>
-<script src="js/docx-export.js?v=3.63.469"></script>
-<script src="js/nav-helper.js?v=3.63.469"></script>
-<script src="js/license-helper.js?v=3.63.469"></script>
-<script src="js/update-check.js?v=3.63.469"></script>
-<script src="js/helper-handlers.js?v=3.63.469"></script>
-<script src="js/version.js?v=3.63.469"></script>
+<script src="js/theme.js?v=3.63.470"></script>
+<script src="lib/docx.min.js?v=3.63.470"></script>
+<script src="js/docx-export.js?v=3.63.470"></script>
+<script src="js/nav-helper.js?v=3.63.470"></script>
+<script src="js/license-helper.js?v=3.63.470"></script>
+<script src="js/update-check.js?v=3.63.470"></script>
+<script src="js/helper-handlers.js?v=3.63.470"></script>
+<script src="js/version.js?v=3.63.470"></script>
 </body>
 </html>
