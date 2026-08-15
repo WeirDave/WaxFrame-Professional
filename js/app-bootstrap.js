@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app-bootstrap.js
-// Build: 20260815-001
+// Build: 20260815-002
 //  Glue shims for index.html's strict-CSP migration (v3.63.351).
 //
 //  Three inline handlers on the work screen had shapes the generic
@@ -220,7 +220,10 @@
         '<li>LM Studio: enable CORS for the local server (CLI: <code>lms server start --cors</code>).</li>' +
       '</ul>' +
       '<div style="margin-top:7px;font-size:.92em;opacity:.85">Allow this exact origin rather than <code>*</code> when possible. ' +
-      'Your document and prompts still travel directly from this browser to your selected model server.</div>';
+      'Your document and prompts still travel directly from this browser to your selected model server.</div>' +
+      '<div style="margin-top:7px;font-size:.92em;opacity:.85"><strong>Using http://localhost?</strong> Browsers block http from https pages. ' +
+      '<a href="https://github.com/WeirDave/WaxFrame-Professional/releases/latest" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">Download WaxFrame</a> ' +
+      'and open index.html locally, or put your server behind an https reverse proxy.</div>';
   }
 
   function _wfRefreshHostedServerNotice() {

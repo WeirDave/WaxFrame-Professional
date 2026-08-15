@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260815-001
+// Build: 20260815-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -593,7 +593,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260815-001';         // build stamp — update each session
+const BUILD = '20260815-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -10635,7 +10635,7 @@ function validateCustomAIEndpoint(url) {
     return '⚠️ Enter a valid http:// or https:// endpoint URL';
   }
   if (!IS_LOCAL_RUNTIME && parsed.protocol === 'http:') {
-    return '⚠️ WaxFrame is served over https — an http:// endpoint is blocked by the browser. Use https://, or run WaxFrame locally.';
+    return '⚠️ WaxFrame is served over https — an http:// endpoint is blocked by the browser. Download WaxFrame from GitHub Releases and open index.html locally, or use an https:// endpoint.';
   }
   return '';
 }
@@ -10936,12 +10936,12 @@ function getImportServerInnerModal() {
 }
 
 function setImportServerState(state) {
-  // state: 'prefetch' | 'loading' | 'ready' | 'error'
+  // state: 'prefetch' | 'loading' | 'ready' | 'error' | 'local-guidance'
   // 'loading' is transient — used between modal open and auto-fetch completion
   // to suppress all middle/right-column content so nothing flashes.
   const modal = getImportServerInnerModal();
   if (!modal) return;
-  modal.classList.remove('import-server-state-prefetch', 'import-server-state-loading', 'import-server-state-ready', 'import-server-state-error');
+  modal.classList.remove('import-server-state-prefetch', 'import-server-state-loading', 'import-server-state-ready', 'import-server-state-error', 'import-server-state-local-guidance');
   // Any state change resets the laptop-only "show raw instead of checklist" modifier
   modal.classList.remove('import-server-raw-visible');
   modal.classList.add(`import-server-state-${state}`);
@@ -10967,10 +10967,12 @@ function populateImportServerQuickAdd() {
     { value: '',          label: '— Select a known server or fill in manually —' },
     { value: 'openwebui', label: 'Open WebUI — /api/chat/completions & /api/models' }
   ];
-  // Local-only presets are hidden on hosted (https) runtime due to mixed-content blocking
   if (IS_LOCAL_RUNTIME) {
     opts.push({ value: 'ollama',   label: 'Ollama (local) — http://localhost:11434' });
     opts.push({ value: 'lmstudio', label: 'LM Studio (local) — http://localhost:1234' });
+  } else {
+    opts.push({ value: 'ollama',   label: 'Ollama (local) — setup required' });
+    opts.push({ value: 'lmstudio', label: 'LM Studio (local) — setup required' });
   }
   sel.innerHTML = opts.map(o => `<option value="${escapeHtml(o.value)}">${esc(o.label)}</option>`).join('');
 }
@@ -10981,9 +10983,42 @@ function updateImportServerRuntimeNote() {
   if (IS_LOCAL_RUNTIME) {
     el.textContent = `Runtime: local file (file://) — Open WebUI, Ollama, and LM Studio are all usable.`;
   } else {
-    el.textContent = `Runtime: hosted (https://) — only https endpoints can be reached. Local presets (Ollama, LM Studio) are hidden because browsers block http://localhost from a secure page.`;
+    el.innerHTML = `Runtime: hosted (https://) — only https endpoints can be reached. To use Ollama or LM Studio, select their preset from Quick Add for setup options, or <a href="https://github.com/WeirDave/WaxFrame-Professional/releases/latest" target="_blank" rel="noopener">download WaxFrame</a> and run locally.`;
   }
   el.classList.add('visible');
+}
+
+function _showLocalServerGuidance(serverName) {
+  const pane = document.getElementById('importServerLocalGuidance');
+  if (!pane) return;
+  const isOllama = serverName === 'Ollama';
+  const port = isOllama ? '11434' : '1234';
+  const proxyHint = isOllama
+    ? 'Set <code>OLLAMA_ORIGINS=https://waxframe.com</code> and restart Ollama so it accepts cross-origin requests from this page.'
+    : 'Enable CORS in LM Studio server settings, or start with <code>lms server start --cors</code>.';
+  pane.innerHTML = '' +
+    '<div class="import-server-guidance-title">Using ' + esc(serverName) + ' with hosted WaxFrame</div>' +
+    '<p>' + esc(serverName) + ' runs on <code>http://localhost:' + port + '</code>, but this page is served over <strong>https</strong>. ' +
+    'Browsers block http requests from https pages (mixed content), so the connection cannot be made directly.</p>' +
+    '<div class="import-server-guidance-options">' +
+      '<div class="import-server-guidance-option">' +
+        '<div class="import-server-guidance-option-hdr">Option A — Run WaxFrame locally <span class="import-server-guidance-rec">(easiest)</span></div>' +
+        '<p>Download the latest release and open <code>index.html</code> from your computer. ' +
+        'The local <code>file://</code> page can reach localhost freely.</p>' +
+        '<a href="https://github.com/WeirDave/WaxFrame-Professional/releases/latest" target="_blank" rel="noopener" class="btn btn-sm btn-accent">Download from GitHub Releases</a>' +
+      '</div>' +
+      '<div class="import-server-guidance-option">' +
+        '<div class="import-server-guidance-option-hdr">Option B — Use Open WebUI as a proxy</div>' +
+        '<p><a href="https://openwebui.com" target="_blank" rel="noopener">Open WebUI</a> can serve over https and proxy to your local ' + esc(serverName) + ' behind the scenes. ' +
+        'Select <strong>Open WebUI</strong> from Quick Add instead and point it at your Open WebUI instance.</p>' +
+      '</div>' +
+      '<div class="import-server-guidance-option">' +
+        '<div class="import-server-guidance-option-hdr">Option C — HTTPS reverse proxy <span class="import-server-guidance-adv">(advanced)</span></div>' +
+        '<p>Put a reverse proxy (Caddy, nginx, etc.) in front of ' + esc(serverName) + ' with a self-signed or local certificate, ' +
+        'then enter the <code>https://</code> address here. ' + proxyHint + '</p>' +
+      '</div>' +
+    '</div>';
+  setImportServerState('local-guidance');
 }
 
 function onImportServerKeyInput() {
@@ -11117,6 +11152,14 @@ function applyImportServerQuickAdd(value) {
   const chatEl   = document.getElementById('importServerChatUrl');
   const modelsEl = document.getElementById('importServerUrl');
   if (!chatEl || !modelsEl) return;
+
+  // On hosted runtime, Ollama/LM Studio presets show a guidance panel
+  // instead of populating http:// URLs that the browser would block.
+  if (!IS_LOCAL_RUNTIME && (value === 'ollama' || value === 'lmstudio')) {
+    _showLocalServerGuidance(value === 'ollama' ? 'Ollama' : 'LM Studio');
+    return;
+  }
+
   if (value === 'openwebui') {
     chatEl.value   = '';
     chatEl.placeholder = 'https://your-server.com/api/chat/completions';
@@ -11141,19 +11184,31 @@ async function fetchImportServerModels() {
 
   const modelsUrlError = validateImportServerUrl(modelsUrl);
   if (modelsUrlError) {
-    showImportServerError('Enter a Models Endpoint URL',
+    const isMixed = modelsUrlError.includes('http://');
+    showImportServerError(
+      isMixed ? 'Mixed-content blocked by the browser' : 'Enter a Models Endpoint URL',
       modelsUrlError,
-      ['Use Quick Add to pre-fill a known pattern, then adjust the server portion to match yours.',
-       'The Models Endpoint is the URL that returns the list of available models (for Open WebUI that is /api/models).']
+      isMixed
+        ? ['Download WaxFrame from GitHub Releases (github.com/WeirDave/WaxFrame-Professional/releases/latest) and open index.html locally — file:// can reach localhost freely.',
+           'Or use Open WebUI (select it from Quick Add) — it serves over https and can proxy to your local model server.',
+           'Or put your server behind an https reverse proxy (Caddy, nginx) and enter the https:// address here.']
+        : ['Use Quick Add to pre-fill a known pattern, then adjust the server portion to match yours.',
+           'The Models Endpoint is the URL that returns the list of available models (for Open WebUI that is /api/models).']
     );
     return;
   }
   const chatUrlError = validateImportServerUrl(chatUrl);
   if (chatUrlError) {
-    showImportServerError('Enter a Chat Endpoint URL',
+    const isMixed = chatUrlError.includes('http://');
+    showImportServerError(
+      isMixed ? 'Mixed-content blocked by the browser' : 'Enter a Chat Endpoint URL',
       chatUrlError,
-      ['Use Quick Add to pre-fill a known pattern, then adjust the server portion to match yours.',
-       'The Chat Endpoint is the OpenAI-compatible URL WaxFrame posts prompts to, usually /v1/chat/completions or /api/chat/completions.']
+      isMixed
+        ? ['Download WaxFrame from GitHub Releases (github.com/WeirDave/WaxFrame-Professional/releases/latest) and open index.html locally — file:// can reach localhost freely.',
+           'Or use Open WebUI (select it from Quick Add) — it serves over https and can proxy to your local model server.',
+           'Or put your server behind an https reverse proxy (Caddy, nginx) and enter the https:// address here.']
+        : ['Use Quick Add to pre-fill a known pattern, then adjust the server portion to match yours.',
+           'The Chat Endpoint is the OpenAI-compatible URL WaxFrame posts prompts to, usually /v1/chat/completions or /api/chat/completions.']
     );
     return;
   }
@@ -11161,16 +11216,18 @@ async function fetchImportServerModels() {
   if (!IS_LOCAL_RUNTIME && new URL(modelsUrl).protocol === 'http:') {
     showImportServerError('Mixed-content blocked by the browser',
       `WaxFrame is served over https, so requests to ${modelsUrl} will be blocked by the browser before they leave your machine.`,
-      ['Use an https:// endpoint served by your server.',
-       'Or open WaxFrame locally from the file:// URL (download the build and open index.html) if you need to reach http://localhost.']
+      ['Download WaxFrame from GitHub Releases (github.com/WeirDave/WaxFrame-Professional/releases/latest) and open index.html locally — file:// can reach localhost freely.',
+       'Or use Open WebUI (select it from Quick Add) — it serves over https and can proxy to your local model server.',
+       'Or put your server behind an https reverse proxy (Caddy, nginx) and enter the https:// address here.']
     );
     return;
   }
   if (!IS_LOCAL_RUNTIME && new URL(chatUrl).protocol === 'http:') {
     showImportServerError('Mixed-content blocked by the browser',
       `WaxFrame is served over https, so requests to ${chatUrl} will be blocked by the browser before they leave your machine.`,
-      ['Use an https:// endpoint served by your server.',
-       'Or open WaxFrame locally from the file:// URL (download the build and open index.html) if you need to reach http://localhost.']
+      ['Download WaxFrame from GitHub Releases (github.com/WeirDave/WaxFrame-Professional/releases/latest) and open index.html locally — file:// can reach localhost freely.',
+       'Or use Open WebUI (select it from Quick Add) — it serves over https and can proxy to your local model server.',
+       'Or put your server behind an https reverse proxy (Caddy, nginx) and enter the https:// address here.']
     );
     return;
   }
@@ -11294,7 +11351,7 @@ function validateImportServerUrl(url) {
   // there would silently proceed to a browser-blocked fetch with a generic
   // network error instead of this clear message.
   if (!IS_LOCAL_RUNTIME && parsed.protocol === 'http:') {
-    return 'WaxFrame is served over https — an http:// server endpoint is blocked by the browser. Use https://, or run WaxFrame locally.';
+    return 'WaxFrame is served over https — an http:// endpoint is blocked by the browser. Download WaxFrame from GitHub Releases and open index.html locally, or use an https:// endpoint.';
   }
   return '';
 }
