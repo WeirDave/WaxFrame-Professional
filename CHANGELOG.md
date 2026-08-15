@@ -1,5 +1,25 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.464 — Flesh out hosted Ollama/LM Studio guidance options
+**Released:** 2026-08-15  
+**Build:** 20260815-004
+
+**What changed:**  
+The local-server guidance panel (shown when selecting Ollama or LM Studio from Quick Add on hosted WaxFrame) now gives actionable detail for all three options. Option B (Open WebUI proxy) explains that it's free and self-hosted, gives the Docker install command, and walks through the full flow. Option C (HTTPS reverse proxy) includes a copy-paste Caddy config example so advanced users have a concrete starting point instead of just a concept.
+
+**Verification:**  
+- release-check 14/14 passed  
+- Tested guidance panel for both Ollama and LM Studio presets on hosted runtime
+
+**Files touched:**  
+- `js/app.js` — `_showLocalServerGuidance()` Options B + C rewritten with structured steps and Caddy example  
+- `style.css` — `.import-server-guidance-steps`, `.import-server-guidance-pre` styles added  
+- Full version sweep (50 files)
+
+**Rollback:** `git revert` — no schema/storage changes.
+
+---
+
 ## v3.63.463 — Collapse hosted Server Mode notice
 **Released:** 2026-08-15  
 **Build:** 20260815-003
