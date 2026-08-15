@@ -1,5 +1,23 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.465 — Open WebUI setup guidance: Docker prereqs + troubleshooting
+**Released:** 2026-08-15  
+**Build:** 20260815-005
+
+**What changed:**  
+Option B (Open WebUI proxy) in the local-server guidance panel now includes Docker Desktop prerequisite check (with WSL2 note for Windows), the full production Docker command with persistent volume/auto-restart/named container, admin account note on first setup, and Ollama connection troubleshooting (host.docker.internal URL for Admin Panel → Connections if models don't auto-detect).
+
+**Verification:**  
+- release-check 14/14 passed
+
+**Files touched:**  
+- `js/app.js` — `_showLocalServerGuidance()` Option B steps expanded  
+- Full version sweep (50 files)
+
+**Rollback:** `git revert` — no schema/storage changes.
+
+---
+
 ## v3.63.464 — Flesh out hosted Ollama/LM Studio guidance options
 **Released:** 2026-08-15  
 **Build:** 20260815-004
