@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260816-001
+     Build: 20260816-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260816-001">
+  <meta name="waxframe-build" content="20260816-002">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="keywords" content="WaxFrame user manual, multi-AI document refinement guide, hive setup guide">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.473">
+  <link rel="stylesheet" href="style.css?v=3.63.474">
 </head>
 <body class="helper-body">
 
@@ -115,6 +115,7 @@
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📋 Document Playbooks</a>
     <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🛟 Help</a>
     <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" data-action="nav-close"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Hive Profiles</a>
+    <a class="nav-item" href="open-webui-setup.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🖥 Local AI Server Guide</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🪙 What Are Tokens?</a>
 
@@ -213,7 +214,7 @@
 
         <div class="doc-sidebar-category">Appendices</div>
         <a href="#appendix-a" class="doc-sidebar-link">A — Adding a Custom AI</a>
-        <a href="#appendix-b" class="doc-sidebar-link">B — Importing from a Model Server</a>
+        <a href="#appendix-b" class="doc-sidebar-link">B — Using a Server-Based Hive</a>
         <a href="#appendix-c" class="doc-sidebar-link">C — Using WaxFrame at Work</a>
 
         <div class="doc-sidebar-category">Reference</div>
@@ -464,7 +465,7 @@
       <p>In Server mode, the toolbar shows a narrower set of buttons appropriate for managing AIs imported from a model server:</p>
       <div class="goal-info-row">
         <span class="info-label">Import from Model Server</span>
-        <span class="goal-info-desc">Opens a form that connects to a local or enterprise AI server (Open WebUI, Ollama, LM Studio, etc.) and fetches the full list of available models. Adds multiple AIs to your hive at once. See <a href="#appendix-b" class="link-accent">Appendix B — Importing from a Model Server</a> for full instructions.</span>
+        <span class="goal-info-desc">Opens a form that connects to a local or enterprise AI server (Open WebUI, Ollama, LM Studio, etc.) and fetches the full list of available models. Adds multiple AIs to your hive at once. See <a href="#appendix-b" class="link-accent">Appendix B — Using a Server-Based Hive</a> for full instructions.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Add Custom AI</span>
@@ -1798,12 +1799,16 @@
   <div class="wh-section" id="appendix-b">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">B</div>
-      <div class="wh-section-title">Appendix B — Importing from a Model Server</div>
+      <div class="wh-section-title">Appendix B — Using a Server-Based Hive</div>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">When to use this</div>
       <p>If you have a local or enterprise AI server running — such as Open WebUI, Ollama, or LM Studio — and it hosts multiple models, Import from Model Server lets you fetch the complete list of models from that server and add several AIs to your hive at once, instead of adding them one by one using the Add Custom AI form. To open the form: go to the Setup screen and click <strong>Import from Model Server</strong> in the toolbar.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p><strong>Setting up your local AI stack from scratch?</strong> The <a href="open-webui-setup.html" target="_blank" rel="noopener noreferrer" class="link-accent">Local AI Server Guide</a> walks through installing Ollama, Docker, and Open WebUI on Windows step by step, and includes hardware requirements, VRAM budgeting, model selection advice, and warm-start commands. It also covers LM Studio as an alternative server.</p></div>
+      </div>
     </div>
 
     <div class="wh-block">
@@ -1884,7 +1889,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Setting up an internal-only hive</div>
-      <p>If your organisation uses only internal AI models and you do not want the six default public AIs (ChatGPT, Claude, etc.) visible in your list, flip the <strong>🖥 Server Based AI</strong> toggle at the top of Setup 1 — Set up your hive. This hides the six defaults and any direct-API customs from view (their saved keys are preserved — they reappear if you switch back to Internet mode) and shows only AIs imported from a model server. You can then click <strong>Import from Model Server</strong> in the toolbar to fetch the models available from your gateway (Open WebUI, Ollama, LM Studio, an internal endpoint like Anduril's Alfredo, or any other OpenAI-compatible server) and add several at once. See <a href="#appendix-b" class="link-accent">Appendix B — Importing from a Model Server</a> for the full walkthrough.</p>
+      <p>If your organisation uses only internal AI models and you do not want the six default public AIs (ChatGPT, Claude, etc.) visible in your list, flip the <strong>🖥 Server Based AI</strong> toggle at the top of Setup 1 — Set up your hive. This hides the six defaults and any direct-API customs from view (their saved keys are preserved — they reappear if you switch back to Internet mode) and shows only AIs imported from a model server. You can then click <strong>Import from Model Server</strong> in the toolbar to fetch the models available from your gateway (Open WebUI, Ollama, LM Studio, an internal endpoint like Anduril's Alfredo, or any other OpenAI-compatible server) and add several at once. See <a href="#appendix-b" class="link-accent">Appendix B — Using a Server-Based Hive</a> for the full walkthrough.</p>
     </div>
 
     <div class="wh-block">
@@ -2246,14 +2251,14 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.473"></script>
-<script src="lib/docx.min.js?v=3.63.473"></script>
-<script src="js/docx-export.js?v=3.63.473"></script>
-<script src="js/nav-helper.js?v=3.63.473"></script>
-<script src="js/license-helper.js?v=3.63.473"></script>
-<script src="js/update-check.js?v=3.63.473"></script>
-<script src="js/helper-handlers.js?v=3.63.473"></script>
-<script src="js/version.js?v=3.63.473"></script>
-<script src="js/docs-scrollspy.js?v=3.63.473"></script>
+<script src="js/theme.js?v=3.63.474"></script>
+<script src="lib/docx.min.js?v=3.63.474"></script>
+<script src="js/docx-export.js?v=3.63.474"></script>
+<script src="js/nav-helper.js?v=3.63.474"></script>
+<script src="js/license-helper.js?v=3.63.474"></script>
+<script src="js/update-check.js?v=3.63.474"></script>
+<script src="js/helper-handlers.js?v=3.63.474"></script>
+<script src="js/version.js?v=3.63.474"></script>
+<script src="js/docs-scrollspy.js?v=3.63.474"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — open-webui-setup.html
-     Build: 20260816-001
+     Build: 20260816-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -37,21 +37,21 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260816-001">
-  <title>Open WebUI Setup Guide — WaxFrame</title>
-  <meta name="description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
+  <meta name="waxframe-build" content="20260816-002">
+  <title>Local AI Server Guide — WaxFrame</title>
+  <meta name="description" content="Set up a local AI server (Ollama, Open WebUI, LM Studio) for WaxFrame hive sessions — installation, hardware sizing, VRAM budgeting, model selection, and tested model results.">
   <link rel="canonical" href="https://waxframe.com/open-webui-setup.html">
-  <meta property="og:title" content="Open WebUI Setup Guide — WaxFrame">
-  <meta property="og:description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
+  <meta property="og:title" content="Local AI Server Guide — WaxFrame">
+  <meta property="og:description" content="Set up a local AI server (Ollama, Open WebUI, LM Studio) for WaxFrame hive sessions — installation, hardware sizing, VRAM budgeting, model selection, and tested model results.">
   <meta property="og:url" content="https://waxframe.com/open-webui-setup.html">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Open WebUI Setup Guide — WaxFrame">
-  <meta name="twitter:description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
+  <meta name="twitter:title" content="Local AI Server Guide — WaxFrame">
+  <meta name="twitter:description" content="Set up a local AI server (Ollama, Open WebUI, LM Studio) for WaxFrame hive sessions — installation, hardware sizing, VRAM budgeting, model selection, and tested model results.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.473">
+  <link rel="stylesheet" href="style.css?v=3.63.474">
 </head>
 <body class="helper-body">
 
@@ -81,7 +81,9 @@
     <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">💰 AI API Pricing</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📋 Document Playbooks</a>
     <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🛟 Help</a>
-    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" data-action="nav-close"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Hive Profiles</a>    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📖 User Manual</a>
+    <a class="nav-item" href="hive-profiles.html" target="_blank" rel="noopener noreferrer" data-action="nav-close"><img src="images/WaxFrame_Worker_Bee_v2.png" class="nav-bee-icon" alt=""> Hive Profiles</a>
+    <a class="nav-item" href="open-webui-setup.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🖥 Local AI Server Guide</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">🪙 What Are Tokens?</a>
 
     <div class="nav-divider"></div>
@@ -133,8 +135,8 @@
 <div class="hp-section">
   <div class="hp-section-header">
     <div class="hp-section-title-block">
-      <h1 class="hp-section-title">Open WebUI Setup Guide</h1>
-      <p class="hp-section-sub">Run your local Ollama models from waxframe.com. Open WebUI sits between your browser and Ollama, handles the cross-origin connection that browsers otherwise block, and gives you a full model server WaxFrame can import from — no cloud API keys, no cost.</p>
+      <h1 class="hp-section-title">Local AI Server Guide</h1>
+      <p class="hp-section-sub">Run WaxFrame hive sessions against AI models on your own machine — no cloud API keys, no per-token cost, your data never leaves your network. This guide covers installing and configuring Ollama, Open WebUI, and LM Studio on Windows, choosing models for your GPU, and the results of real-world model testing on consumer hardware.</p>
     </div>
   </div>
   <div class="hp-section-body">
@@ -371,6 +373,309 @@ Your GPU</pre>
       <p>Once your models are green, you're running hive sessions from waxframe.com against your local AI stack — no cloud API keys, no per-token costs, your data never leaves your machine.</p>
     </div>
 
+    <hr class="wf-section-divider">
+
+    <h2>LM Studio — An Alternative to Open WebUI</h2>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">18. When to use LM Studio instead</h3>
+      <p><a href="https://lmstudio.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">LM Studio<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> is a standalone desktop application that downloads, manages, and serves local AI models — similar to the Ollama + Open WebUI combination but packaged as a single install with a GUI. It has its own built-in model browser, a chat interface, and an OpenAI-compatible API server you can point WaxFrame at.</p>
+      <p><strong>Use LM Studio when:</strong> you want a single-app install with no Docker, no terminal commands, and a visual model browser. Good for getting started quickly or for users who prefer a GUI over command-line tools.</p>
+      <p><strong>Use Ollama + Open WebUI when:</strong> you want more control over model configuration (custom Modelfiles, context-size tuning, environment variables), need the Docker container to handle CORS for waxframe.com access, or want to run headless on a server.</p>
+      <p><strong>You can use both at the same time.</strong> LM Studio and Ollama use different default ports (LM Studio: 1234, Ollama: 11434). They can coexist on the same machine. WaxFrame's Import from Model Server has Quick Add presets for both.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">19. Connecting LM Studio to WaxFrame</h3>
+      <ol>
+        <li>Open LM Studio and download a model from the built-in browser.</li>
+        <li>Load the model and click the <strong>Local Server</strong> tab (or the server icon in the sidebar).</li>
+        <li>Start the server — by default it runs on <code>http://localhost:1234</code>.</li>
+        <li>In WaxFrame, go to Setup → Import from Model Server. Use the <strong>LM Studio (local)</strong> Quick Add preset, which fills in:
+          <ul>
+            <li><strong>Chat Endpoint:</strong> <code>http://localhost:1234/v1/chat/completions</code></li>
+            <li><strong>Models Endpoint:</strong> <code>http://localhost:1234/v1/models</code></li>
+          </ul>
+        </li>
+        <li>Leave the API Key blank (LM Studio's local server does not require one by default).</li>
+        <li>Click <strong>Fetch Models</strong> → select → <strong>Add to Hive</strong>.</li>
+      </ol>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Assessing Your Hardware</h2>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">20. Check your GPU and VRAM</h3>
+      <p>Local AI models run on your graphics card (GPU), not your CPU. The critical resource is <strong>VRAM</strong> — the memory on your GPU. The more VRAM you have, the larger and smarter the models you can run, and the more models you can load simultaneously for a WaxFrame hive session.</p>
+      <p>To check your GPU on Windows:</p>
+      <ol>
+        <li><strong>Task Manager:</strong> Press <code>Ctrl+Shift+Esc</code> → Performance tab → GPU. Look for <strong>Dedicated GPU memory</strong> — that is your VRAM.</li>
+        <li><strong>NVIDIA GPU (PowerShell):</strong>
+          <pre class="wf-code-block">nvidia-smi</pre>
+          This shows your GPU name, total VRAM, and current usage.
+        </li>
+        <li><strong>Ollama (if installed):</strong>
+          <pre class="wf-code-block">ollama ps</pre>
+          This shows which models are currently loaded, how much VRAM each uses, and whether they are running on GPU or CPU.
+        </li>
+      </ol>
+    </div>
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">21. VRAM budgeting — the key concept</h3>
+      <p>Think of VRAM like seats on a bus. Each AI model you load takes up a certain number of seats. Once the bus is full, the next model either waits for a seat to open up or spills onto your system RAM (CPU), which is dramatically slower — sometimes 10-50x slower.</p>
+      <p><strong>The number you see on a model's download page (e.g. "1.9 GB") is the file size on disk, not the VRAM it uses when loaded.</strong> A model's actual VRAM footprint depends on two things:</p>
+      <ul>
+        <li><strong>The model's parameter count</strong> — a 3B (3 billion parameter) model uses less VRAM than a 7B model, which uses less than a 14B model.</li>
+        <li><strong>The context window</strong> — how much text the model can "see" at once, measured in tokens. A larger context window means the model allocates more memory for its working space (called the KV cache). Ollama defaults to 2048 tokens but WaxFrame sessions often need 8K-32K to hold the full document plus worker feedback.</li>
+      </ul>
+      <p>The practical effect: a model that shows as 1.9 GB on disk might use 3.4 GB of VRAM when loaded with a 32K context window, or 6.0 GB with a larger parameter count at the same context size.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">22. How many models can you run simultaneously?</h3>
+      <p>WaxFrame's hive needs multiple AIs running at the same time — at minimum two (one worker and one Builder), ideally three or more. Each loaded model occupies VRAM until it is unloaded. Here is a rough guide based on common consumer GPUs:</p>
+      <table class="wh-table">
+        <thead><tr><th>GPU VRAM</th><th>Example GPUs</th><th>What fits</th></tr></thead>
+        <tbody>
+          <tr><td><strong>8 GB</strong></td><td>RTX 4060, RTX 3070</td><td>One 3B model at a time. Not enough for a multi-model hive — models will swap in and out of VRAM between turns, adding 10-30 seconds of cold-load time per response.</td></tr>
+          <tr><td><strong>12 GB</strong></td><td>RTX 4070, RTX 3060 12GB</td><td>Two 3B models simultaneously, or one 7B model alone. Tight but workable for a 2-model hive with small models.</td></tr>
+          <tr><td><strong>16 GB</strong></td><td>RTX 4080 SUPER, RTX 5070 Ti</td><td>Two to three 3B models simultaneously, or one 7B + one 3B. This is the sweet spot for consumer hardware — enough for a functional hive, though model quality is the limiting factor (see Model Testing Results below).</td></tr>
+          <tr><td><strong>24 GB</strong></td><td>RTX 4090, RTX 5080</td><td>Three 7B models, or two 7B + one 3B, or one 14B + one 3B. Enough headroom for models that can genuinely handle WaxFrame's Builder protocol.</td></tr>
+          <tr><td><strong>48+ GB</strong></td><td>RTX A6000, dual-GPU setups, enterprise</td><td>Multiple 14B-70B models. Enterprise/work-server territory — models at this size start approaching cloud-AI quality for document refinement.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">23. OLLAMA_MAX_LOADED_MODELS — controlling simultaneous models</h3>
+      <p>By default, Ollama loads one model at a time and unloads the previous one. For a WaxFrame hive you need multiple models loaded simultaneously. Set this environment variable to tell Ollama how many to keep in memory:</p>
+      <pre class="wf-code-block">[Environment]::SetEnvironmentVariable("OLLAMA_MAX_LOADED_MODELS", "3", "User")</pre>
+      <p>Then restart Ollama (quit from the system tray and reopen it). Verify with:</p>
+      <pre class="wf-code-block">[Environment]::GetEnvironmentVariable("OLLAMA_MAX_LOADED_MODELS", "User")</pre>
+      <p>Set this to however many models you want loaded at once. For a 16 GB GPU, 3 is a reasonable starting point with 3B-class models. If you set it higher than your VRAM can handle, Ollama will spill models to CPU memory and performance will drop dramatically.</p>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Model Configuration and Warm-Starting</h2>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">24. Custom Modelfiles — tuning context size</h3>
+      <p>Ollama's default context window (2048 tokens) is too small for most WaxFrame sessions. You can create a custom model variant with a larger context window using a <strong>Modelfile</strong>.</p>
+      <p>Create a text file (e.g. <code>Modelfile.mymodel</code>) with this content:</p>
+      <pre class="wf-code-block">FROM qwen2.5:3b
+PARAMETER num_ctx 16384</pre>
+      <p>Then build it:</p>
+      <pre class="wf-code-block">ollama create my-qwen25-16k -f Modelfile.mymodel</pre>
+      <p>This creates a new model variant called <code>my-qwen25-16k</code> that uses qwen2.5:3b as its base but with a 16K context window. The variant is a thin wrapper — it does not re-download the model weights.</p>
+      <p><strong>Context size vs. VRAM tradeoff:</strong> A larger context window means the model can see more of your document and the worker feedback at once, which is important for Builder quality. But it also uses more VRAM. 16384 (16K) is a good balance for consumer GPUs. Going to 32768 (32K) uses noticeably more VRAM — check with <code>ollama ps</code> after loading to see the actual impact.</p>
+    </div>
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">25. Warm-starting models before a hive session</h3>
+      <p>When Ollama loads a model from disk into VRAM, there is a one-time delay (5-30 seconds depending on model size and your disk speed). During a hive session, WaxFrame sends requests to each AI in sequence — if a model is not already loaded, the first request triggers a cold load and the user waits.</p>
+      <p>To avoid this, <strong>warm-start</strong> your models before launching a hive session. Open PowerShell and send a trivial prompt to each model:</p>
+      <pre class="wf-code-block">ollama run cogito:3b "hi"
+ollama run qwen2.5:3b "hi"
+ollama run smollm3-slim "hi"</pre>
+      <p>Each command loads the model into VRAM (if not already loaded), generates a short response, and returns. After running all three, verify they are loaded:</p>
+      <pre class="wf-code-block">ollama ps</pre>
+      <p>You should see all your models listed with their VRAM usage and <strong>100% GPU</strong> (meaning none of the model has spilled to CPU). If any model shows a CPU/GPU split (e.g. 7%/93%), it does not fully fit in your remaining VRAM.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">26. Swapping models</h3>
+      <p>To replace a loaded model with a different one, just run the new model — Ollama will unload the least-recently-used model if VRAM is full:</p>
+      <pre class="wf-code-block">ollama run qwen2.5:7b "hi"</pre>
+      <p>Then update WaxFrame: go to Setup → Import from Model Server → Fetch Models and add the new model to your hive. Remove the old one from your Worker Bees list if you no longer want it.</p>
+      <p>To check what is currently loaded at any time:</p>
+      <pre class="wf-code-block">ollama ps</pre>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Model Testing Results</h2>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">27. What we tested and why it matters</h3>
+      <p>We spent three days testing every viable open-source model combination on an NVIDIA RTX 4080 SUPER (16 GB VRAM) to find out which models can actually handle WaxFrame's hive protocol — specifically, the Builder role. The Builder has strict requirements: it must wrap the updated document in <code>%%DOCUMENT_START%%</code> / <code>%%DOCUMENT_END%%</code> delimiters, it must include a <code>%%CONFLICTS_START%%</code> section (or report NO CONFLICTS), it must not echo back prompt metadata or instructions, and it must synthesize worker feedback into a coherent revision rather than just concatenating suggestions.</p>
+      <p>Cloud AIs (ChatGPT, Claude, Gemini) handle all of this easily — they have enough intelligence and instruction-following ability to understand the protocol and produce clean output. Local models at the 3B-7B parameter range struggle significantly. The table below shows every model and combination we tested, what went right, and what went wrong.</p>
+    </div>
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">28. Every model tested — full results</h3>
+      <p>Test document: a chocolate chip cookie recipe (~400 words). All tests run on an RTX 4080 SUPER (16 GB VRAM), Windows 11, Ollama, with OLLAMA_MAX_LOADED_MODELS=3.</p>
+      <table class="wh-table">
+        <thead><tr><th>Model</th><th>Role tested</th><th>VRAM (loaded)</th><th>Speed</th><th>Builder quality</th><th>Key issue</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>qwen3:4b</strong></td>
+            <td>Worker + Builder</td>
+            <td>~10 GB (w/ 32K ctx)</td>
+            <td>52-144s</td>
+            <td>Best tested — only model to achieve convergence and report real conflicts</td>
+            <td>Hidden "thinking" burns 4,000-14,000 invisible tokens per response, making it extremely slow and expensive on token budget</td>
+          </tr>
+          <tr>
+            <td><strong>qwen2.5:7b</strong></td>
+            <td>Worker + Builder</td>
+            <td>4.7 GB</td>
+            <td>1.1-6.3s</td>
+            <td>5/10 — protocol compliant (correct delimiters) but rubber-stamps everything</td>
+            <td>No critical evaluation: applied every worker suggestion including bad ones (e.g. adding water to cookies, dropping butter measurement). Fast but no synthesis ability.</td>
+          </tr>
+          <tr>
+            <td><strong>qwen2.5:3b</strong></td>
+            <td>Worker + Builder</td>
+            <td>3.4 GB</td>
+            <td>0.8-12.6s</td>
+            <td>1/10 — metadata echo, word explosion</td>
+            <td>As Builder: exploded to 868 words in Round 2, mixed raw edit instructions ("Line 28: Replace...") into the document body. As worker: inserted [INSERT DATE] placeholders.</td>
+          </tr>
+          <tr>
+            <td><strong>qwen2.5:14b</strong></td>
+            <td>Builder (solo test)</td>
+            <td>15 GB (7% CPU / 93% GPU)</td>
+            <td>Not tested in hive</td>
+            <td>N/A — too large</td>
+            <td>Fills nearly all 16 GB VRAM by itself. No room for a second model. Dead end for 2-model setup on 16 GB hardware.</td>
+          </tr>
+          <tr>
+            <td><strong>cogito:3b</strong></td>
+            <td>Worker + Builder</td>
+            <td>6.0 GB</td>
+            <td>1.4-11s</td>
+            <td>2/10 — echoes entire prompt structure into document</td>
+            <td>As Builder: output included "WAXFRAME — RECIPE", "Round 1 · Phase 1 · Draft", "SEND TO ALL AIs" from the prompt. As worker: sometimes fast (1.4s), sometimes hallucinated (suggested adding water to cookies).</td>
+          </tr>
+          <tr>
+            <td><strong>cogito-3b-slim</strong></td>
+            <td>Worker + Builder</td>
+            <td>4.1 GB</td>
+            <td>1.6-12.3s</td>
+            <td>2/10 — same issues as cogito:3b</td>
+            <td>Dropped the %%DOCUMENT_START%% delimiter entirely on first Builder attempt. Echoed metadata on second attempt. Slim variant saves VRAM but does not fix the underlying model limitations.</td>
+          </tr>
+          <tr>
+            <td><strong>SmolLM3 (Q4_K_M)</strong></td>
+            <td>Worker + Builder</td>
+            <td>4.6 GB</td>
+            <td>7.1-12.7s</td>
+            <td>6/10 — cleanest 3B-class Builder, no metadata echo</td>
+            <td>A "thinking" model — includes a hidden chain-of-thought that scales with prompt complexity. In later rounds, thinking overhead grew to 55:1 ratio (1,483 tokens for 27 words of visible output). As worker: slow (23-58s).</td>
+          </tr>
+          <tr>
+            <td><strong>llama3.2:3b</strong></td>
+            <td>Builder</td>
+            <td>~2 GB</td>
+            <td>7.2-39.7s</td>
+            <td>3/10 — included %%CONFLICTS_START%% but concatenated instead of synthesizing</td>
+            <td>Word count explosion: 771 → 2,739 words over rounds. Document degraded badly. Concatenated worker suggestions verbatim rather than synthesizing them.</td>
+          </tr>
+          <tr>
+            <td><strong>qwen3.5:4b</strong></td>
+            <td>Worker + Builder</td>
+            <td>~2.5 GB</td>
+            <td>92-125s</td>
+            <td>Failed — ALL CAPS output, metadata echo</td>
+            <td>Hidden thinking burned 8,310-13,043 completion tokens. Output was ALL CAPS with prompt metadata echoed into the document.</td>
+          </tr>
+          <tr>
+            <td><strong>gemma3:4b</strong></td>
+            <td>Previously eliminated</td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
+            <td>Tested before the documented session; eliminated for poor instruction following.</td>
+          </tr>
+          <tr>
+            <td><strong>phi4-mini</strong></td>
+            <td>Previously eliminated</td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
+            <td>Tested before the documented session; eliminated for poor Builder output.</td>
+          </tr>
+          <tr>
+            <td><strong>granite</strong></td>
+            <td>Previously eliminated</td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
+            <td>Tested before the documented session; eliminated early.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">29. Best working combinations found</h3>
+      <p>Out of every combination tested, two configurations loaded and ran successfully on 16 GB VRAM with 100% GPU (no CPU spill) and sub-15-second response times:</p>
+      <table class="wh-table">
+        <thead><tr><th>Combo</th><th>Models</th><th>Total VRAM</th><th>Speed</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>2-model</strong></td>
+            <td>cogito:3b (worker) + qwen2.5:7b (Builder)</td>
+            <td>10.7 GB</td>
+            <td>1-6 seconds per response</td>
+            <td>Fastest combo. Protocol compliant — correct delimiters, correct structure. But the Builder rubber-stamps all worker suggestions without critical evaluation. No convergence achieved.</td>
+          </tr>
+          <tr>
+            <td><strong>3-model</strong></td>
+            <td>cogito:3b (worker) + qwen2.5:3b (worker) + SmolLM3 (Builder)</td>
+            <td>14.0 GB</td>
+            <td>7-13 seconds per response</td>
+            <td>All three at 100% GPU, zero CPU spill. SmolLM3 was the cleanest Builder of any 3B model — no metadata echo, correct delimiters. But thinking overhead grew over rounds and no convergence achieved.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>Both combinations functioned correctly</strong> — WaxFrame ran hive sessions against them, rounds completed, documents were updated. The limiting factor was not speed or protocol compliance but <strong>model intelligence</strong>: 3B-7B models do not have enough reasoning capacity to synthesize worker feedback critically, evaluate conflicting suggestions, or achieve convergence (workers saying "no changes needed").</p>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Understanding Local Model Limitations</h2>
+
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">30. Why local models behave differently from cloud AIs</h3>
+      <p>Cloud AIs like ChatGPT, Claude, and Gemini have hundreds of billions of parameters and run on datacenter-grade hardware with hundreds of gigabytes of VRAM. The models you can run on a consumer GPU are 10-100x smaller. That size difference is not just about speed — it directly affects intelligence:</p>
+      <ul>
+        <li><strong>Instruction following:</strong> Cloud AIs reliably follow complex multi-step instructions (like WaxFrame's Builder protocol). Small local models frequently ignore parts of the prompt, echo metadata, or produce structurally incorrect output.</li>
+        <li><strong>Synthesis ability:</strong> The Builder role requires reading multiple worker critiques, evaluating which suggestions are good and which are bad, and producing a single coherent revision. At 3B-7B parameters, models tend to either rubber-stamp everything (accepting all suggestions including bad ones) or ignore the feedback entirely.</li>
+        <li><strong>Convergence:</strong> In a cloud-AI hive, workers eventually say "no changes needed" because the document has been refined to a point where the AIs agree it is good. Local models at 3B-7B do not demonstrate this behavior — they keep suggesting changes indefinitely, often contradicting themselves across rounds.</li>
+        <li><strong>Critical evaluation:</strong> A good Builder rejects bad worker suggestions. In our testing, qwen2.5:7b accepted a worker's suggestion to add water to a cookie recipe and dropped the butter measurement — a cloud-AI Builder would have caught both errors.</li>
+      </ul>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">31. "Thinking" models — hidden token costs</h3>
+      <p>Some models (qwen3, qwen3.5, SmolLM3) include a hidden chain-of-thought step before generating their visible response. The model "thinks" internally — you do not see this text, but it consumes tokens and time. In our testing:</p>
+      <ul>
+        <li><strong>qwen3:4b</strong> burned 4,000-14,000 invisible tokens per response. It was the only model to achieve convergence and report real conflicts, but each response took 52-144 seconds — too slow for practical use.</li>
+        <li><strong>SmolLM3</strong> thought more cheaply than qwen3, but the overhead scaled with prompt complexity. By Round 11, it produced 1,483 tokens for just 27 words of visible output (a 55:1 ratio).</li>
+        <li><strong>qwen2.5</strong> (the generation before qwen3) has zero thinking overhead. Its responses are fast but it lacks the reasoning depth that thinking provides.</li>
+      </ul>
+      <p>If you see a model responding slowly despite showing 100% GPU, check whether it is a thinking model. You cannot disable the thinking in most cases — it is baked into the model architecture.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">32. The bottom line — when local AI hives make sense</h3>
+      <p><strong>Local models work for the mechanics</strong> — WaxFrame connects, rounds execute, documents update, responses come back fast. On a 16 GB GPU, you can run 2-3 models simultaneously with sub-15-second response times and zero API cost.</p>
+      <p><strong>Local models struggle with the intelligence</strong> — at 3B-7B parameters, no model we tested could match what a cloud AI does as Builder. No convergence, no meaningful conflict detection, no critical evaluation of worker suggestions. The hive runs but the output quality does not match what you get from a ChatGPT/Claude/Gemini hive.</p>
+      <p><strong>Where local hives shine today:</strong></p>
+      <ul>
+        <li><strong>Air-gapped environments</strong> where cloud access is not an option (defense, healthcare, classified networks). A larger GPU or a proper AI server with 48+ GB VRAM running 14B-70B models will produce substantially better results.</li>
+        <li><strong>Learning and experimentation</strong> — understanding how WaxFrame works, testing setup flows, building familiarity before committing API spend.</li>
+        <li><strong>Style and tone refinement</strong> on short documents where the content is opinion-driven rather than factually anchored — the intelligence gap matters less when there is no "right answer" to converge on.</li>
+      </ul>
+      <p><strong>Where cloud hives are still the right choice:</strong> anything where convergence, critical evaluation, or document quality matters. Cloud AI costs pennies per round — a full 10-round hive session with five cloud AIs typically costs $0.10-$0.50 depending on document length and provider.</p>
+      <p>As local model quality improves (and it is improving fast), this gap will narrow. The infrastructure you set up today — Ollama, your model server, your WaxFrame configuration — will run better models tomorrow without changing anything.</p>
+    </div>
+
   </div>
 </div>
 
@@ -440,13 +745,13 @@ Your GPU</pre>
 </div>
 
 
-<script src="js/theme.js?v=3.63.473"></script>
-<script src="lib/docx.min.js?v=3.63.473"></script>
-<script src="js/docx-export.js?v=3.63.473"></script>
-<script src="js/nav-helper.js?v=3.63.473"></script>
-<script src="js/license-helper.js?v=3.63.473"></script>
-<script src="js/update-check.js?v=3.63.473"></script>
-<script src="js/helper-handlers.js?v=3.63.473"></script>
-<script src="js/version.js?v=3.63.473"></script>
+<script src="js/theme.js?v=3.63.474"></script>
+<script src="lib/docx.min.js?v=3.63.474"></script>
+<script src="js/docx-export.js?v=3.63.474"></script>
+<script src="js/nav-helper.js?v=3.63.474"></script>
+<script src="js/license-helper.js?v=3.63.474"></script>
+<script src="js/update-check.js?v=3.63.474"></script>
+<script src="js/helper-handlers.js?v=3.63.474"></script>
+<script src="js/version.js?v=3.63.474"></script>
 </body>
 </html>

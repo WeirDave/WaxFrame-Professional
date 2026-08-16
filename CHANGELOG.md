@@ -1,5 +1,30 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.474 — Local AI Server Guide: model testing, hardware sizing, VRAM budgeting
+**Released:** 2026-08-16  
+**Build:** 20260816-002
+
+### What changed
+- **open-webui-setup.html retitled "Local AI Server Guide"** — expanded from a 17-step Open WebUI setup to a comprehensive 32-step guide covering Ollama, Open WebUI, Docker, and LM Studio on Windows, with hardware assessment, VRAM budgeting, warm-start commands, custom Modelfile configuration, and model swapping.
+- **Full model testing results documented** — 12 models tested across three days on an RTX 4080 SUPER (16 GB VRAM), with per-model VRAM usage, speed, Builder quality ratings, and specific failure descriptions in plain English. Two working combos identified: cogito:3b + qwen2.5:7b (2-model, 10.7 GB) and cogito:3b + qwen2.5:3b + SmolLM3 (3-model, 14 GB).
+- **Local model limitations section** — explains why 3B-7B models behave differently from cloud AIs (instruction following, synthesis ability, convergence, critical evaluation), what "thinking" models cost in hidden tokens, and when local vs. cloud hives make sense.
+- **User manual Appendix B renamed** from "Importing from a Model Server" to "Using a Server-Based Hive" — all four cross-references updated, plus a new tip box linking to the setup guide.
+- **"Local AI Server Guide" added to nav menu** across all 15 HTML pages (main app + every helper page) — the setup guide was previously only reachable from a troubleshooting branch inside the Import from Model Server flow.
+- **app.js link text updated** — the model server guidance panel now says "Local AI Server Guide" instead of "Full Setup Guide (17 steps)".
+
+### Verification
+- release-check: all 14 checks pass
+- Browser preview: page renders all 32 steps, all tables, nav link visible
+- Grep: zero remaining "Open WebUI Setup Guide" references, zero stale version stamps
+
+### Files touched
+index.html, js/app.js, js/version.js, style.css, open-webui-setup.html, waxframe-user-manual.html, ai-api-pricing.html, ai-business-proposal.html, ai-cover-letter-editor.html, ai-resume-review.html, api-details.html, document-playbooks.html, hive-profiles.html, privacy.html, prompt-editor.html, templates.html, terms.html, what-are-tokens.html, package.json, tools/release-check.mjs, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — content-only change, no schema or storage changes.
+
+---
+
 ## v3.63.473 — Pricing Worker: retry resilience + on-demand refresh
 **Released:** 2026-08-16  
 **Build:** 20260816-001
