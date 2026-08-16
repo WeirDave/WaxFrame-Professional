@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260815-011
+// Build: 20260815-012
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -365,11 +365,14 @@
   function resolveDotted(name) {
     if (!name) return undefined;
     var parts = name.split('.');
+    var parent = null;
     var cur = window;
     for (var i = 0; i < parts.length; i++) {
       if (cur == null) return undefined;
+      parent = cur;
       cur = cur[parts[i]];
     }
+    if (typeof cur === 'function' && parts.length > 1) return cur.bind(parent);
     return cur;
   }
 
