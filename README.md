@@ -202,7 +202,7 @@ WaxFrame ships with default configurations for these providers:
 | Provider | Default Model |
 |---|---|
 | Anthropic (Claude) | `claude-sonnet-4-6` |
-| OpenAI (ChatGPT) | `gpt-5.5` |
+| OpenAI (ChatGPT) | `gpt-5.6-sol` |
 | Google (Gemini) | `gemini-3.5-flash` |
 | xAI (Grok) | `grok-4.5` |
 | Mistral | `mistral-large-latest` |
@@ -212,7 +212,7 @@ You can change any AI's model at any time from the Set up your hive screen.
 
 ### Server / Self-Hosted Endpoints
 
-WaxFrame also works with any OpenAI-compatible endpoint via **Add Custom AI** (single model) or **Import from Model Server** (bulk import every model from one gateway in one shot). Tested against:
+WaxFrame also works with any OpenAI-compatible endpoint via **Add Custom AI** (single model) or **Import from Model Server** (bulk import every model from one gateway in one shot). The **[Local AI Server Guide](https://waxframe.com/open-webui-setup.html)** walks through hardware sizing, installation, model configuration, and tested model combinations for running a local hive. Tested against:
 
 | Endpoint | Type | Notes |
 |---|---|---|
@@ -227,7 +227,7 @@ WaxFrame also works with any OpenAI-compatible endpoint via **Add Custom AI** (s
 
 Anything else that speaks the OpenAI chat-completions shape will work too — point WaxFrame at the endpoint and it'll fetch the model list.
 
-**Custom endpoints need CORS configured on the server side** — `Access-Control-Allow-Origin: *` or `https://weirdave.github.io` — since WaxFrame runs entirely in the browser and cannot bypass it. The six default providers above all have CORS pre-configured; you'll only need to set this on your own gateway.
+**Custom endpoints need CORS configured on the server side** — `Access-Control-Allow-Origin: *` or `https://waxframe.com` — since WaxFrame runs entirely in the browser and cannot bypass it. The six default providers above all have CORS pre-configured; you'll only need to set this on your own gateway.
 
 ---
 
@@ -256,11 +256,11 @@ Loads instantly. No download. Latest stable build.
 For corporate networks that block `github.io`, on-prem servers, internal-network laptops, secure rooms, or anywhere you'd rather not depend on an external CDN, grab a tagged release ZIP:
 
 1. Open the [Releases page](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
-2. Under **Assets**, download the **Source code (zip)**
+2. Under **Assets**, download **WaxFrame-Professional-X.Y.Z.zip** (the build artifact — not the auto-generated source archives)
 3. Extract into any folder — desktop, USB stick, network share, internal web server
 4. Open `index.html` in a browser
 
-That's it. Every dependency ships in the ZIP — fonts, libraries (PDF.js, Mammoth, JSZip, SheetJS), provider icons, the whole stack. No CDN calls, no `npm install`, no build step. Once loaded, WaxFrame only talks to whichever AI endpoints you point it at. Drop it on an internal server and the whole team can hit it.
+Each release ZIP ships with a `.sha256` sidecar for integrity verification. Every dependency is inside — fonts, libraries (PDF.js, Mammoth, JSZip, SheetJS), provider icons, the whole stack. No CDN calls, no `npm install`, no build step. Once loaded, WaxFrame only talks to whichever AI endpoints you point it at. Drop it on an internal server and the whole team can hit it.
 
 ### From `main` (bleeding edge)
 
