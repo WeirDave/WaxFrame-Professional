@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — open-webui-setup.html
-     Build: 20260815-010
+     Build: 20260815-011
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -37,7 +37,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260815-010">
+  <meta name="waxframe-build" content="20260815-011">
   <title>Open WebUI Setup Guide — WaxFrame</title>
   <meta name="description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
   <link rel="canonical" href="https://waxframe.com/open-webui-setup.html">
@@ -51,7 +51,7 @@
   <meta name="twitter:description" content="Step-by-step guide to setting up Open WebUI as a proxy for your local Ollama models in WaxFrame.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.470">
+  <link rel="stylesheet" href="style.css?v=3.63.471">
 </head>
 <body class="helper-body">
 
@@ -326,7 +326,21 @@ Your GPU</pre>
     <h2>Connect WaxFrame to Open WebUI</h2>
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">15. Import your Open WebUI models into WaxFrame</h3>
+      <h3 class="wf-card-title">15. Get your Open WebUI API key</h3>
+      <p>Open WebUI requires authentication for API access. You need to generate a persistent API key from your Open WebUI instance.</p>
+      <ol>
+        <li>Go to <code>http://localhost:3000</code> in your browser and make sure you're logged in.</li>
+        <li>Open the browser console: press <strong>F12</strong>, then click the <strong>Console</strong> tab.</li>
+        <li>Paste this command and press Enter:
+          <pre class="wf-code-block">fetch('/api/v1/auths/api_key', {method:'POST', headers:{'Authorization':'Bearer '+localStorage.getItem('token'),'Content-Type':'application/json'}}).then(r=>r.json()).then(d=>console.log(d))</pre>
+        </li>
+        <li>The console will print your API key — a long string starting with <code>sk-</code>. Copy it. If you see an object with an <code>api_key</code> field, copy the value of that field.</li>
+      </ol>
+      <p>This key does not expire. You only need to do this once.</p>
+    </div>
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">16. Import your Open WebUI models into WaxFrame</h3>
       <p>Go back to <a href="https://waxframe.com" target="_blank" rel="noopener">waxframe.com</a>. On the Worker Bees screen, switch to <strong>Server Based AI</strong> mode if you haven't already — the Import from Model Server modal will open automatically.</p>
       <ol>
         <li>Under <strong>Quick Add</strong>, select <strong>Open WebUI</strong>. This pre-fills both endpoint fields:
@@ -336,7 +350,7 @@ Your GPU</pre>
           </ul>
           If your Open WebUI runs on a different port or address, adjust both URLs to match.
         </li>
-        <li>Open WebUI requires an API key for external access. Go to your Open WebUI admin panel at <code>http://localhost:3000</code>, then <strong>Settings → Account</strong>, and generate an API key. Paste it into the <strong>API Key</strong> field in WaxFrame.</li>
+        <li>Paste the API key from step 15 into the <strong>API Key</strong> field.</li>
         <li>Click <strong>Fetch Models</strong>.</li>
       </ol>
       <p>WaxFrame will pull the full model list from your local Open WebUI (which includes every model Ollama has). Select the ones you want and click <strong>Add to Hive</strong>.</p>
@@ -344,7 +358,7 @@ Your GPU</pre>
     </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">16. Verify the connection</h3>
+      <h3 class="wf-card-title">17. Verify the connection</h3>
       <p>After adding models, you should see them in your Worker Bees grid. Click <strong>Test All Keys</strong> — each imported model should show a green connectivity pill.</p>
       <p>If a model shows red, check:</p>
       <ol>
@@ -352,7 +366,7 @@ Your GPU</pre>
         <li><strong>Ollama is running</strong> — open a terminal and run <code>ollama list</code>.</li>
         <li><strong>You entered the right address</strong> — <code>http://localhost:3000</code> (not https, not 8080).</li>
         <li><strong>CORS is configured</strong> — if you see a CORS error in your browser console (F12 → Console), your container may not have the <code>CORS_ALLOW_ORIGIN</code> flag. Recreate it using the command from step 4.</li>
-        <li><strong>API key is set</strong> — Open WebUI requires authentication. Generate one from Open WebUI's Settings → Account page.</li>
+        <li><strong>API key rejected (401)</strong> — regenerate using the console command in step 15. Make sure you copy the key without any surrounding quotes.</li>
       </ol>
       <p>Once your models are green, you're running hive sessions from waxframe.com against your local AI stack — no cloud API keys, no per-token costs, your data never leaves your machine.</p>
     </div>
@@ -426,13 +440,13 @@ Your GPU</pre>
 </div>
 
 
-<script src="js/theme.js?v=3.63.470"></script>
-<script src="lib/docx.min.js?v=3.63.470"></script>
-<script src="js/docx-export.js?v=3.63.470"></script>
-<script src="js/nav-helper.js?v=3.63.470"></script>
-<script src="js/license-helper.js?v=3.63.470"></script>
-<script src="js/update-check.js?v=3.63.470"></script>
-<script src="js/helper-handlers.js?v=3.63.470"></script>
-<script src="js/version.js?v=3.63.470"></script>
+<script src="js/theme.js?v=3.63.471"></script>
+<script src="lib/docx.min.js?v=3.63.471"></script>
+<script src="js/docx-export.js?v=3.63.471"></script>
+<script src="js/nav-helper.js?v=3.63.471"></script>
+<script src="js/license-helper.js?v=3.63.471"></script>
+<script src="js/update-check.js?v=3.63.471"></script>
+<script src="js/helper-handlers.js?v=3.63.471"></script>
+<script src="js/version.js?v=3.63.471"></script>
 </body>
 </html>
