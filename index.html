@@ -3701,15 +3701,19 @@
        so it's always visible at the bottom of the panel. Shown only to
        non-licensed users; updateLicenseBadge() hides it once a valid license
        is present. Its own distinct slot — not in the Navigation wayfinding
-       list, not buried in Tools. -->
+       list, not buried in Tools.
+       v3.63.473 — Changed from a Gumroad link to open Settings → License.
+       The old design sent existing customers who hadn't entered their key
+       on this origin to buy AGAIN. Settings has both the key-entry field
+       and the Gumroad link, so users who need to buy still can. -->
   <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" data-action="nav-close" title="Buy a license to unlock unlimited rounds">
-      <span class="nav-buy-cta-icon">🛒</span>
+    <button class="nav-buy-cta" data-action="call-chain" data-fn="closeNavMenu,openLicenseSettings" title="Enter your license key or buy one to unlock unlimited rounds">
+      <span class="nav-buy-cta-icon">🔑</span>
       <span class="nav-buy-cta-text">
-        <span class="nav-buy-cta-title">Buy a License</span>
+        <span class="nav-buy-cta-title">Enter License Key</span>
         <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
       </span>
-    <svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>
+    </button>
   </div>
 </div>
 
