@@ -2517,16 +2517,32 @@ function attachDevToolbarDrag() {
 // code references them.
 
 function updateLicenseBadge() {
-  // v3.55.5 — Keep the pinned Buy footer in sync with license state:
-  // visible for non-licensed (trial) users, hidden once a valid license is
-  // present. This runs on load and after every license change, and the nav
-  // panel is closed until opened, so there's no flash.
+  const licensed = isLicensed();
+
   const buyFooter = document.getElementById('navBuyFooter');
-  if (buyFooter) buyFooter.style.display = isLicensed() ? 'none' : '';
+  const buyIcon   = document.getElementById('navBuyIcon');
+  const buyTitle  = document.getElementById('navBuyTitle');
+  const buySub    = document.getElementById('navBuySub');
+  const buyCta    = document.getElementById('navBuyCta');
+  if (buyFooter) {
+    if (licensed) {
+      if (buyIcon)  buyIcon.textContent  = '✓';
+      if (buyTitle) buyTitle.textContent = 'WaxFrame Pro';
+      if (buySub)   buySub.textContent   = 'License active — manage in Settings';
+      if (buyCta)   buyCta.title         = 'Manage your WaxFrame Pro license';
+      buyFooter.classList.add('licensed');
+    } else {
+      if (buyIcon)  buyIcon.textContent  = '🔑';
+      if (buyTitle) buyTitle.textContent = 'Enter License Key';
+      if (buySub)   buySub.textContent   = 'Unlock unlimited rounds';
+      if (buyCta)   buyCta.title         = 'Enter your license key or buy one to unlock unlimited rounds';
+      buyFooter.classList.remove('licensed');
+    }
+  }
 
   const badge = document.getElementById('licenseBadge');
   if (!badge) return;
-  if (isLicensed()) {
+  if (licensed) {
     badge.textContent = '✓ Licensed';
     badge.title       = 'WaxFrame Pro — manage license in Settings';
     badge.classList.add('licensed');
