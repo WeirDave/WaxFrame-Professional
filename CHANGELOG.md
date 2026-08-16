@@ -1,5 +1,23 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.472 — Fix Bundle for Scout (and all dotted data-fn dispatches)
+**Released:** 2026-08-15  
+**Build:** 20260815-012
+
+**What changed:**  
+- **Fixed Bundle for Scout button doing nothing on click.** The delegated action dispatcher resolved dotted function paths like `WF_DEBUG.bundleForScout` correctly but called the result as a bare `fn()`, losing the `this` binding. `this.ringBuffer` inside the method threw a silent TypeError and the download never fired. `resolveDotted()` now returns `cur.bind(parent)` for dotted paths, preserving the receiver. Also fixes Clear Buffer and Test Card — same root cause.
+
+**Verification:**  
+- release-check passed (all 14 checks)
+
+**Files touched:**  
+- `js/helper-handlers.js` — `resolveDotted()` binds method to parent for dotted paths  
+- Full version sweep (50 files)
+
+**Rollback:** `git revert` — no schema/storage changes.
+
+---
+
 ## v3.63.471 — Checkpoint UX: mode toggle restyle + Open WebUI guide fix
 **Released:** 2026-08-15  
 **Build:** 20260815-011
