@@ -109,6 +109,22 @@
 //  at). Emailing on every retained/confirmed would just be noise David
 //  learns to ignore.
 //
+//  Build 20260816-001 — RETRY RESILIENCE. The weekly refresh's single
+//  biggest recurring failure mode was transient HTTP 429 rate limits
+//  from Perplexity: 35-40 models through a concurrency-4 pool with no
+//  pauses or retries meant several models failed every single week.
+//  Three layers:
+//    1. researchModel() now retries transient errors (429, 5xx, network)
+//       up to 3 times with exponential backoff (2s/4s/8s).
+//    2. mapWithConcurrency() accepts an optional inter-request delay
+//       (750ms for the main pass) to avoid burst-triggering rate limits
+//       in the first place.
+//    3. After the main pass, any models still failing transiently get a
+//       second-pass retry after an 8s cooldown with lower concurrency
+//       (2 slots) and wider spacing (1.5s).
+//  Permanent failures (bad JSON, untrusted source, missing fields) still
+//  fail immediately on first attempt — retrying won't fix them.
+//
 //  Build 20260809-001 — SOURCE CORROBORATION. Prompted by two real
 //  needs-review proposals in one run that didn't hold up on manual check:
 //  Sonar cited docs.cohere.com/docs/command-a as the source for a price,
@@ -172,6 +188,20 @@ const PERPLEXITY_MODEL = 'sonar-pro'; // matches the model WaxFrame's own ground
 // models (up from ~10 provider-default rows) against a single external API
 // warrants a cap instead of firing every request simultaneously.
 const RESEARCH_CONCURRENCY = 4;
+
+// Retry with exponential backoff for transient failures (429, 5xx, network
+// errors). Permanent failures (bad JSON, untrusted source, missing fields)
+// fail immediately — retrying won't fix them.
+const RETRY_MAX_ATTEMPTS  = 3;
+const RETRY_BASE_DELAY_MS = 2000;  // 2s, 4s, 8s
+const INTER_REQUEST_DELAY_MS = 750; // pause between slots to avoid burst-triggering rate limits
+
+function isTransientError(reason) {
+  if (typeof reason !== 'string') return false;
+  return /^(HTTP (429|5\d\d)|network error)/i.test(reason);
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // From-address just needs to be a valid-looking address on a domain
 // Email Routing controls (waxframe.com) — it isn't a real receivable
@@ -273,7 +303,7 @@ function isValidSizeString(s) {
   return typeof s === 'string' && /^~?\s*[0-9]*\.?[0-9]+\s*[KMGB]?$/i.test(s.trim());
 }
 
-async function researchModel(provider, model, apiKey) {
+async function researchModelOnce(provider, model, apiKey) {
   let resp;
   try {
     resp = await fetch(PERPLEXITY_URL, {
@@ -285,9 +315,9 @@ async function researchModel(provider, model, apiKey) {
       })
     });
   } catch (e) {
-    return { ok: false, reason: `network error: ${e.message || e}` };
+    return { ok: false, reason: `network error: ${e.message || e}`, transient: true };
   }
-  if (!resp.ok) return { ok: false, reason: `HTTP ${resp.status}` };
+  if (!resp.ok) return { ok: false, reason: `HTTP ${resp.status}`, transient: resp.status === 429 || resp.status >= 500 };
 
   let data;
   try { data = await resp.json(); } catch (e) { return { ok: false, reason: 'non-JSON response' }; }
@@ -310,6 +340,17 @@ async function researchModel(provider, model, apiKey) {
     contextWindow: isValidSizeString(contextWindow) ? String(contextWindow).trim() : null,
     maxOutput: isValidSizeString(maxOutput) ? String(maxOutput).trim() : null
   };
+}
+
+async function researchModel(provider, model, apiKey) {
+  for (let attempt = 0; attempt < RETRY_MAX_ATTEMPTS; attempt++) {
+    const result = await researchModelOnce(provider, model, apiKey);
+    if (result.ok || !result.transient) return result;
+    if (attempt < RETRY_MAX_ATTEMPTS - 1) {
+      await sleep(RETRY_BASE_DELAY_MS * Math.pow(2, attempt));
+    }
+  }
+  return researchModelOnce(provider, model, apiKey);
 }
 
 // ── Source corroboration (Build 20260809-001) ───────────────────────
@@ -451,13 +492,16 @@ function decideModelUpdate(provider, model, result, wasHealthyLastRun, nowIso) {
 // Same result shape as Promise.allSettled (array of {status, value} or
 // {status, reason}) so callers don't care which one ran. Bounded worker
 // pool instead of firing every task at once — see RESEARCH_CONCURRENCY.
-async function mapWithConcurrency(items, limit, fn) {
+// Optional delayMs pauses between each slot pickup to avoid burst-
+// triggering API rate limits.
+async function mapWithConcurrency(items, limit, fn, delayMs) {
   const results = new Array(items.length);
   let next = 0;
   async function worker() {
     for (;;) {
       const i = next++;
       if (i >= items.length) return;
+      if (delayMs && i > 0) await sleep(delayMs);
       try {
         results[i] = { status: 'fulfilled', value: await fn(items[i], i) };
       } catch (e) {
@@ -580,7 +624,22 @@ async function refreshPricing(env) {
       });
     });
 
-    const results = await mapWithConcurrency(tasks, RESEARCH_CONCURRENCY, t => researchModel(t.provider, t.model, apiKey));
+    const results = await mapWithConcurrency(tasks, RESEARCH_CONCURRENCY, t => researchModel(t.provider, t.model, apiKey), INTER_REQUEST_DELAY_MS);
+
+    // Second pass: any model that still failed with a transient error after
+    // researchModel's own 3-attempt retry gets one more shot after a longer
+    // cooldown. By now the rate-limit window has usually reset.
+    const retryIndices = [];
+    results.forEach((r, i) => {
+      const outcome = r.status === 'fulfilled' ? r.value : null;
+      if (outcome && !outcome.ok && outcome.transient) retryIndices.push(i);
+    });
+    if (retryIndices.length) {
+      await sleep(RETRY_BASE_DELAY_MS * 4); // 8s cooldown before second pass
+      const retryTasks = retryIndices.map(i => ({ idx: i, task: tasks[i] }));
+      const retryResults = await mapWithConcurrency(retryTasks, Math.min(2, retryTasks.length), rt => researchModel(rt.task.provider, rt.task.model, apiKey), INTER_REQUEST_DELAY_MS * 2);
+      retryResults.forEach((r2, j) => { results[retryTasks[j].idx] = r2; });
+    }
 
     const nowIso = new Date().toISOString();
     const changes = [];
@@ -674,6 +733,23 @@ export default {
       return new Response(data, { status: 200, headers: JSON_HEADERS });
     }
 
+    if (url.pathname === '/api/refresh' && request.method === 'POST') {
+      const token = env.REFRESH_TOKEN;
+      if (!token) {
+        return new Response(JSON.stringify({ error: 'REFRESH_TOKEN secret not configured' }), { status: 501, headers: JSON_HEADERS });
+      }
+      const auth = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+      if (!auth || auth !== token) {
+        return new Response(JSON.stringify({ error: 'Invalid or missing token' }), { status: 403, headers: JSON_HEADERS });
+      }
+      try {
+        await refreshPricing(env);
+        return new Response(JSON.stringify({ ok: true, ts: new Date().toISOString() }), { status: 200, headers: JSON_HEADERS });
+      } catch (e) {
+        return new Response(JSON.stringify({ ok: false, error: String(e && e.message || e) }), { status: 500, headers: JSON_HEADERS });
+      }
+    }
+
     if (url.pathname === '/' && request.method === 'GET') {
       let log = [];
       const logRaw = await env.PRICING_DATA.get(RUN_LOG_KEY);
@@ -714,4 +790,4 @@ export default {
 // Named exports alongside the default Worker export — consumed only by
 // tools/pricing-worker/test-refresh-logic.mjs (pure-function unit tests,
 // no KV/network). Cloudflare's runtime ignores exports it doesn't call.
-export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, escapeHtml, buildStatusHtml, isSafeEmailAddress };
+export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError };
