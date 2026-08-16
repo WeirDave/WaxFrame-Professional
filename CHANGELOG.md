@@ -1,5 +1,29 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.475 — Local AI Server Guide: sidebar TOC, section restructure, Mac hardware coverage
+**Released:** 2026-08-16  
+**Build:** 20260816-003
+
+### What changed
+- **Floating sidebar table of contents** added to the Local AI Server Guide (open-webui-setup.html), matching the pattern used by the user manual — sticky `doc-sidebar` with 6 category groups, 15 anchor links, and scroll-based highlighting via `docs-scrollspy.js`.
+- **Sections restructured** to match the intro paragraph's logical flow: server options overview → hardware assessment → installation paths → model config → testing results → limitations. Previously hardware assessment was buried after all installation steps.
+- **Mac / Apple Silicon hardware coverage** — the "Assessing Your Hardware" section now covers both Windows (NVIDIA GPU / Task Manager / nvidia-smi) and Mac (Apple Silicon unified memory / About This Mac / sysctl). New card explains unified memory vs. discrete VRAM. GPU sizing table split into NVIDIA (5 tiers) and Apple Silicon (5 tiers, 8 GB–64+ GB). OLLAMA_MAX_LOADED_MODELS instructions include both PowerShell and launchctl/zshrc syntax.
+- **Step numbers removed** from all card titles — sections are self-contained and navigable via sidebar, sequential numbering no longer needed.
+- **"Your Server Options" overview section** added at the top — summarizes Ollama + Open WebUI, LM Studio, and the "use both" option before the reader commits to an installation path.
+
+### Verification
+- release-check: all 14 checks pass
+- Browser preview: sidebar renders and highlights correctly, all anchor links functional, both hardware tables render
+- Grep: zero stale step-number references, zero stale version stamps
+
+### Files touched
+open-webui-setup.html, js/version.js, index.html, js/app.js, style.css, waxframe-user-manual.html, ai-api-pricing.html, ai-business-proposal.html, ai-cover-letter-editor.html, ai-resume-review.html, api-details.html, document-playbooks.html, hive-profiles.html, privacy.html, prompt-editor.html, templates.html, terms.html, what-are-tokens.html, help.html, start-here.html, package.json, tools/release-check.mjs, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, js/*.js, js/pdf-loader.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — content-only change, no schema or storage changes.
+
+---
+
 ## v3.63.474 — Local AI Server Guide: model testing, hardware sizing, VRAM budgeting
 **Released:** 2026-08-16  
 **Build:** 20260816-002
