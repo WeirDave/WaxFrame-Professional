@@ -3697,21 +3697,19 @@
       <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" data-action="nav-close">📜 Terms of Use</a>
     </details>
   </div>
-  <!-- v3.55.5 — Pinned upgrade CTA. Sits OUTSIDE .nav-body (which scrolls),
-       so it's always visible at the bottom of the panel. Shown only to
-       non-licensed users; updateLicenseBadge() hides it once a valid license
-       is present. Its own distinct slot — not in the Navigation wayfinding
-       list, not buried in Tools.
-       v3.63.473 — Changed from a Gumroad link to open Settings → License.
-       The old design sent existing customers who hadn't entered their key
-       on this origin to buy AGAIN. Settings has both the key-entry field
-       and the Gumroad link, so users who need to buy still can. -->
+  <!-- v3.55.5 — Pinned license CTA. Sits OUTSIDE .nav-body (which scrolls),
+       so it's always visible at the bottom of the panel. updateLicenseBadge()
+       swaps icon/title/subtitle to reflect license state:
+         Licensed → "WaxFrame Pro" + manage-license action
+         Trial    → "Enter License Key" + opens Settings
+       v3.63.473 — context-aware: adapts to license state instead of
+       showing a single static Gumroad link for everyone. -->
   <div class="nav-panel-footer" id="navBuyFooter">
-    <button class="nav-buy-cta" data-action="call-chain" data-fn="closeNavMenu,openLicenseSettings" title="Enter your license key or buy one to unlock unlimited rounds">
-      <span class="nav-buy-cta-icon">🔑</span>
+    <button class="nav-buy-cta" id="navBuyCta" data-action="call-chain" data-fn="closeNavMenu,openLicenseSettings" title="Enter your license key or buy one to unlock unlimited rounds">
+      <span class="nav-buy-cta-icon" id="navBuyIcon">🔑</span>
       <span class="nav-buy-cta-text">
-        <span class="nav-buy-cta-title">Enter License Key</span>
-        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
+        <span class="nav-buy-cta-title" id="navBuyTitle">Enter License Key</span>
+        <span class="nav-buy-cta-sub" id="navBuySub">Unlock unlimited rounds</span>
       </span>
     </button>
   </div>

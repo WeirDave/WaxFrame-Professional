@@ -230,13 +230,13 @@
        own distinct slot — inside .nav-panel but outside .nav-body so it
        sticks to the bottom of the panel like the work-screen version. -->
   <div class="nav-panel-footer" id="navBuyFooter">
-    <a class="nav-buy-cta external-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" data-action="nav-close" title="Buy a license to unlock unlimited rounds">
-      <span class="nav-buy-cta-icon">🛒</span>
+    <button class="nav-buy-cta" id="navBuyCta" data-action="call-chain" data-fn="closeNavMenu,openLicenseAuto" title="Enter your license key or buy one to unlock unlimited rounds">
+      <span class="nav-buy-cta-icon" id="navBuyIcon">🔑</span>
       <span class="nav-buy-cta-text">
-        <span class="nav-buy-cta-title">Buy a License</span>
-        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
+        <span class="nav-buy-cta-title" id="navBuyTitle">Enter License Key</span>
+        <span class="nav-buy-cta-sub" id="navBuySub">Unlock unlimited rounds</span>
       </span>
-    <svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>
+    </button>
   </div>
 </div>
 

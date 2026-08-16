@@ -12131,6 +12131,20 @@ kbd {
 .nav-buy-cta:hover .nav-buy-cta-sub {
   color: #0a0c12;
 }
+.nav-panel-footer.licensed .nav-buy-cta {
+  background: var(--green-dim);
+  border-color: var(--green);
+}
+.nav-panel-footer.licensed .nav-buy-cta-icon {
+  color: var(--green);
+}
+.nav-panel-footer.licensed .nav-buy-cta-title {
+  color: var(--green);
+}
+.nav-panel-footer.licensed .nav-buy-cta:hover {
+  background: var(--green);
+  box-shadow: 0 0 14px rgba(0,179,0,0.45);
+}
 
 /* v3.63.283 — Worker bee mascot used inline where the 🐝 emoji used to sit.
    The mascot is a full-color illustration; sized to roughly match the text

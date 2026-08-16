@@ -63,19 +63,32 @@ function clearLicense() {
 
 // ── Badge rendering ──
 function updateLicenseBadge() {
-  // v3.63.282 — Keep the pinned Buy footer in sync with license state, same
-  // as app.js's updateLicenseBadge does on the work screen. Visible for
-  // non-licensed (trial) users, hidden once a valid license is present.
-  // Pre-v3.63.282 helper pages carried a "🛒 Buy WaxFrame Pro" inline
-  // nav-item that showed unconditionally — fired even for licensed users
-  // who shouldn't see an upsell at all. Now the wider pinned CTA shows
-  // only on trial, matching the canonical index.html pattern.
+  const licensed = isLicensed();
+
   const buyFooter = document.getElementById('navBuyFooter');
-  if (buyFooter) buyFooter.style.display = isLicensed() ? 'none' : '';
+  const buyIcon   = document.getElementById('navBuyIcon');
+  const buyTitle  = document.getElementById('navBuyTitle');
+  const buySub    = document.getElementById('navBuySub');
+  const buyCta    = document.getElementById('navBuyCta');
+  if (buyFooter) {
+    if (licensed) {
+      if (buyIcon)  buyIcon.textContent  = '✓';
+      if (buyTitle) buyTitle.textContent = 'WaxFrame Pro';
+      if (buySub)   buySub.textContent   = 'License active — manage license';
+      if (buyCta)   buyCta.title         = 'Manage your WaxFrame Pro license';
+      buyFooter.classList.add('licensed');
+    } else {
+      if (buyIcon)  buyIcon.textContent  = '🔑';
+      if (buyTitle) buyTitle.textContent = 'Enter License Key';
+      if (buySub)   buySub.textContent   = 'Unlock unlimited rounds';
+      if (buyCta)   buyCta.title         = 'Enter your license key or buy one to unlock unlimited rounds';
+      buyFooter.classList.remove('licensed');
+    }
+  }
 
   const badge = document.getElementById('licenseBadge');
   if (!badge) return;
-  if (isLicensed()) {
+  if (licensed) {
     badge.textContent = '✓ Licensed';
     badge.title       = 'WaxFrame Pro — manage license';
     badge.classList.add('licensed');
@@ -281,6 +294,11 @@ async function confirmRemoveLicense() {
     "Your license key has been removed from this browser. You're back on the free trial.",
     'Got it'
   );
+}
+
+function openLicenseAuto() {
+  if (isLicensed()) showLicenseManageModal();
+  else showLicenseModal('');
 }
 
 // ── Init on load ──

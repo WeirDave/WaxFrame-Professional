@@ -8,7 +8,7 @@
 - **Pricing worker retry resilience (3 layers).** The weekly Sonar pricing sweep's biggest recurring failure mode was transient HTTP 429 rate limits — 35-40 models through a concurrency-4 pool with no pauses or retries meant several models failed every single week. Three layers fix this: (1) `researchModel()` retries transient errors (429, 5xx, network) up to 3 times with exponential backoff (2s/4s/8s); permanent failures (bad JSON, untrusted source, missing fields) still fail immediately. (2) `mapWithConcurrency()` accepts an optional inter-request delay (750ms for the main pass) to avoid burst-triggering rate limits. (3) After the main pass, any models still failing transiently get a second-pass retry after an 8s cooldown with lower concurrency (2 slots) and wider spacing (1.5s). Net effect: a model gets up to 7 chances across both passes before showing up in the alert email.
 - **On-demand pricing refresh.** New `POST /api/refresh` endpoint on the pricing worker, gated by a `REFRESH_TOKEN` Bearer secret. Runs the full `refreshPricing()` flow — same behavior as the Sunday cron, triggered on demand. Dev toolbar button ("🔄 Refresh Pricing") calls it; prompts for the token on first use, stores it in localStorage, auto-clears on 403.
 - **DEV_README.md created** (gitignored, Dropbox-only) — documents dev-toolbar features, Worker secrets, cron schedule, and operational details.
-- **Nav "Buy a License" footer → "Enter License Key".** The pinned footer at the bottom of the nav panel was a hardcoded Gumroad link — misleading for existing customers who already own a license but haven't entered it on this origin. Changed from `<a>` → `<button>` using `call-chain` to close the nav and open Settings → Account & License, where both key entry and the Gumroad link are available.
+- **Nav license footer is now context-aware.** The pinned footer at the bottom of the nav panel was a hardcoded Gumroad "Buy a License" link for everyone. Now it adapts: licensed users see a green "WaxFrame Pro — License active" confirmation that opens license management; unlicensed users see "Enter License Key" that opens the license entry flow. Updated across all 15 pages (index.html + 14 helper pages). Helper pages gained `openLicenseAuto()` to route to the correct modal based on license state.
 
 **Verification:**  
 - release-check passed (all 16 checks)
@@ -18,8 +18,10 @@
 - `tools/pricing-worker/src/index.js` — retry logic, inter-request delay, second-pass sweep, POST /api/refresh endpoint  
 - `tools/pricing-worker/test-refresh-logic.mjs` — `isTransientError` + delay tests  
 - `js/wf-debug.js` — `WF_DEBUG.refreshPricing()` method  
-- `index.html` — dev toolbar "🔄 Refresh Pricing" button, nav footer CTA changed to open Settings  
-- `style.css` — button resets for `.nav-buy-cta`  
+- `index.html` — dev toolbar "🔄 Refresh Pricing" button, nav footer CTA now context-aware  
+- `style.css` — button resets + licensed-state styling for `.nav-buy-cta`  
+- `js/license-helper.js` — footer content swapping + `openLicenseAuto()` router  
+- 14 helper pages — nav footer changed from Gumroad link to context-aware button  
 - `.gitignore` — DEV_README.md exclusion  
 - `DEV_README.md` — new (gitignored)  
 - Full version sweep (48 files)
