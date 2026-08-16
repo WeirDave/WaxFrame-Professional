@@ -12099,6 +12099,9 @@ kbd {
   background: var(--accent-dim);
   border: 1px solid var(--accent);
   text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
   transition: all 0.14s;
 }
 .nav-buy-cta:hover {
