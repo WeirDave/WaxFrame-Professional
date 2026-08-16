@@ -2527,9 +2527,9 @@ function updateLicenseBadge() {
   if (buyFooter) {
     if (licensed) {
       if (buyIcon)  buyIcon.textContent  = '✓';
-      if (buyTitle) buyTitle.textContent = 'WaxFrame Pro';
+      if (buyTitle) buyTitle.textContent = 'WaxFrame Professional';
       if (buySub)   buySub.textContent   = 'License active — manage in Settings';
-      if (buyCta)   buyCta.title         = 'Manage your WaxFrame Pro license';
+      if (buyCta)   buyCta.title         = 'Manage your WaxFrame Professional license';
       buyFooter.classList.add('licensed');
     } else {
       if (buyIcon)  buyIcon.textContent  = '🔑';
