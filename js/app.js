@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260815-010
+// Build: 20260815-011
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -593,7 +593,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260815-010';         // build stamp — update each session
+const BUILD = '20260815-011';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -11015,7 +11015,7 @@ function _showLocalServerGuidance(serverName) {
         '<div class="import-server-guidance-option-hdr">Option B — Use Open WebUI as a proxy</div>' +
         '<p><a href="https://openwebui.com" target="_blank" rel="noopener">Open WebUI</a> is a free, self-hosted web interface that connects to your local ' + esc(serverName) + ' and serves over https. No cost, no cloud account — runs entirely on your machine via Docker.</p>' +
         '<p>Once Open WebUI is running, come back here, select <strong>Open WebUI</strong> from Quick Add, and enter your Open WebUI address.</p>' +
-        '<a href="open-webui-setup.html" target="_blank" rel="noopener" class="btn btn-sm btn-accent">Full Setup Guide (16 steps)</a>' +
+        '<a href="open-webui-setup.html" target="_blank" rel="noopener" class="btn btn-sm btn-accent">Full Setup Guide (17 steps)</a>' +
       '</div>' +
       '<div class="import-server-guidance-option">' +
         '<div class="import-server-guidance-option-hdr">Option C — HTTPS reverse proxy <span class="import-server-guidance-adv">(advanced)</span></div>' +
