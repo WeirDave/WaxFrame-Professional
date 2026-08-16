@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — open-webui-setup.html
-     Build: 20260816-002
+     Build: 20260816-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -37,7 +37,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260816-002">
+  <meta name="waxframe-build" content="20260816-003">
   <title>Local AI Server Guide — WaxFrame</title>
   <meta name="description" content="Set up a local AI server (Ollama, Open WebUI, LM Studio) for WaxFrame hive sessions — installation, hardware sizing, VRAM budgeting, model selection, and tested model results.">
   <link rel="canonical" href="https://waxframe.com/open-webui-setup.html">
@@ -51,7 +51,7 @@
   <meta name="twitter:description" content="Set up a local AI server (Ollama, Open WebUI, LM Studio) for WaxFrame hive sessions — installation, hardware sizing, VRAM budgeting, model selection, and tested model results.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.474">
+  <link rel="stylesheet" href="style.css?v=3.63.475">
 </head>
 <body class="helper-body">
 
@@ -132,19 +132,211 @@
 
 <div class="page-main" id="top">
 
-<div class="hp-section">
-  <div class="hp-section-header">
-    <div class="hp-section-title-block">
-      <h1 class="hp-section-title">Local AI Server Guide</h1>
-      <p class="hp-section-sub">Run WaxFrame hive sessions against AI models on your own machine — no cloud API keys, no per-token cost, your data never leaves your network. This guide covers installing and configuring Ollama, Open WebUI, and LM Studio on Windows, choosing models for your GPU, and the results of real-world model testing on consumer hardware.</p>
+  <div class="hp-section">
+    <div class="hp-section-header">
+      <div class="hp-section-title-block">
+        <h1 class="hp-section-title">Local AI Server Guide</h1>
+        <p class="hp-section-sub">Run WaxFrame hive sessions against AI models on your own machine — no cloud API keys, no per-token cost, your data never leaves your network. This guide covers choosing a model server, assessing your hardware, installing and configuring Ollama, Open WebUI, and LM Studio on Windows, and the results of real-world model testing on consumer hardware.</p>
+      </div>
     </div>
   </div>
-  <div class="hp-section-body">
 
-    <h2>Before You Start</h2>
+  <!-- TWO-COLUMN LAYOUT: sticky sidebar + main content -->
+  <div class="doc-layout">
+
+    <aside class="doc-sidebar">
+      <div class="doc-sidebar-inner">
+        <div class="doc-sidebar-category">Getting Started</div>
+        <a href="#server-options" class="doc-sidebar-link">Your Server Options</a>
+        <a href="#hardware" class="doc-sidebar-link">Assessing Your Hardware</a>
+
+        <div class="doc-sidebar-category">Ollama + Open WebUI</div>
+        <a href="#prereqs" class="doc-sidebar-link">Before You Start</a>
+        <a href="#install-docker" class="doc-sidebar-link">Install Docker Desktop</a>
+        <a href="#install-owui" class="doc-sidebar-link">Install Open WebUI</a>
+        <a href="#connect-ollama" class="doc-sidebar-link">Connect Ollama to Open WebUI</a>
+        <a href="#owui-architecture" class="doc-sidebar-link">Architecture &amp; Bundled Ollama</a>
+        <a href="#connect-waxframe" class="doc-sidebar-link">Connect WaxFrame</a>
+        <a href="#owui-management" class="doc-sidebar-link">Day-to-Day Management</a>
+
+        <div class="doc-sidebar-category">LM Studio</div>
+        <a href="#lm-studio" class="doc-sidebar-link">LM Studio Setup</a>
+
+        <div class="doc-sidebar-category">Model Selection</div>
+        <a href="#model-config" class="doc-sidebar-link">Configuration &amp; Warm-Starting</a>
+
+        <div class="doc-sidebar-category">Testing Results</div>
+        <a href="#test-results" class="doc-sidebar-link">Model Testing Results</a>
+        <a href="#best-combos" class="doc-sidebar-link">Best Working Combinations</a>
+        <a href="#limitations" class="doc-sidebar-link">Local Model Limitations</a>
+        <a href="#bottom-line" class="doc-sidebar-link">The Bottom Line</a>
+
+        <div class="doc-sidebar-category">Related</div>
+        <a href="waxframe-user-manual.html#appendix-b" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">User Manual — Appendix B</a>
+        <a href="waxframe-user-manual.html#appendix-c" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">User Manual — At Work</a>
+      </div>
+    </aside>
+
+    <div class="doc-main">
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GETTING STARTED
+       ═══════════════════════════════════════════════════════════ -->
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="server-options">Your Server Options</h2>
+            <p class="hp-section-sub">Three server applications can serve local AI models to WaxFrame. Pick the one that fits your situation — or use more than one.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">Ollama + Open WebUI — the power setup</h3>
+      <p><strong>Ollama</strong> is a lightweight model server that runs on your machine and serves AI models over a local API. <strong>Open WebUI</strong> is a free, self-hosted web interface that sits in front of Ollama via Docker, handles cross-origin requests, and gives you a full model management UI.</p>
+      <p><strong>Use this when:</strong> you want fine-grained control over model configuration (custom Modelfiles, context-size tuning, environment variables), need the Docker container to handle CORS for waxframe.com access, or want to run headless on a server. This is the setup used for all the model testing documented below.</p>
+    </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">1. Confirm Ollama is working</h3>
+      <h3 class="wf-card-title">LM Studio — the quick-start alternative</h3>
+      <p><a href="https://lmstudio.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">LM Studio<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> is a standalone desktop application that downloads, manages, and serves local AI models — similar to the Ollama + Open WebUI combination but packaged as a single install with a GUI. No Docker, no terminal commands. It has its own built-in model browser, a chat interface, and an OpenAI-compatible API server you can point WaxFrame at.</p>
+      <p><strong>Use this when:</strong> you want the simplest possible path to a working local hive. Good for getting started quickly or for users who prefer a GUI.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">You can use both at the same time</h3>
+      <p>LM Studio and Ollama use different default ports (LM Studio: 1234, Ollama: 11434). They can coexist on the same machine and serve different models. WaxFrame's Import from Model Server has Quick Add presets for both.</p>
+    </div>
+
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HARDWARE ASSESSMENT
+       ═══════════════════════════════════════════════════════════ -->
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="hardware">Assessing Your Hardware</h2>
+            <p class="hp-section-sub">Check your GPU capabilities before choosing models — VRAM determines what you can run and how many models fit simultaneously.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">Check your GPU and memory</h3>
+      <p>Local AI models run on your graphics card (GPU), not your CPU. The critical resource is <strong>VRAM</strong> — the memory available to your GPU. The more you have, the larger and smarter the models you can run, and the more models you can load simultaneously for a WaxFrame hive session.</p>
+
+      <p><strong>Windows (NVIDIA GPU):</strong></p>
+      <ol>
+        <li><strong>Task Manager:</strong> Press <code>Ctrl+Shift+Esc</code> → Performance tab → GPU. Look for <strong>Dedicated GPU memory</strong> — that is your VRAM.</li>
+        <li><strong>PowerShell:</strong>
+          <pre class="wf-code-block">nvidia-smi</pre>
+          This shows your GPU name, total VRAM, and current usage.
+        </li>
+      </ol>
+
+      <p><strong>Mac (Apple Silicon):</strong></p>
+      <ol>
+        <li><strong>About This Mac:</strong> Apple menu →  About This Mac. Look for <strong>Memory</strong> — on Apple Silicon, this is your total unified memory (shared between CPU and GPU).</li>
+        <li><strong>Terminal:</strong>
+          <pre class="wf-code-block">sysctl hw.memsize</pre>
+          This shows total system memory in bytes. Divide by 1,073,741,824 to get GB.
+        </li>
+      </ol>
+
+      <p><strong>Either platform (Ollama installed):</strong></p>
+      <pre class="wf-code-block">ollama ps</pre>
+      <p>This shows which models are currently loaded, how much memory each uses, and whether they are running on GPU or CPU.</p>
+    </div>
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">Apple Silicon — unified memory is different</h3>
+      <p>NVIDIA GPUs have their own dedicated VRAM, separate from system RAM. Apple Silicon (M1, M2, M3, M4) uses <strong>unified memory</strong> — the CPU and GPU share the same pool of RAM. There is no separate "VRAM" number.</p>
+      <p>This is actually an advantage for local AI: models do not need to be copied from system RAM into GPU memory. They load once and both the CPU and GPU can access them directly. The tradeoff is that your AI models, your operating system, your browser, and everything else are all drawing from the same pool.</p>
+      <p><strong>Rule of thumb:</strong> reserve at least 8 GB for macOS and your apps. Whatever is left is your effective model budget. On a 16 GB Mac, that means ~8 GB for models. On a 24 GB Mac, ~16 GB. On a 36 GB or higher machine, you have serious headroom.</p>
+    </div>
+
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">VRAM budgeting — the key concept</h3>
+      <p>Think of VRAM like seats on a bus. Each AI model you load takes up a certain number of seats. Once the bus is full, the next model either waits for a seat to open up or spills onto your system RAM (CPU), which is dramatically slower — sometimes 10-50x slower.</p>
+      <p><strong>The number you see on a model's download page (e.g. "1.9 GB") is the file size on disk, not the VRAM it uses when loaded.</strong> A model's actual VRAM footprint depends on two things:</p>
+      <ul>
+        <li><strong>The model's parameter count</strong> — a 3B (3 billion parameter) model uses less VRAM than a 7B model, which uses less than a 14B model.</li>
+        <li><strong>The context window</strong> — how much text the model can "see" at once, measured in tokens. A larger context window means the model allocates more memory for its working space (called the KV cache). Ollama defaults to 2048 tokens but WaxFrame sessions often need 8K-32K to hold the full document plus worker feedback.</li>
+      </ul>
+      <p>The practical effect: a model that shows as 1.9 GB on disk might use 3.4 GB of VRAM when loaded with a 32K context window, or 6.0 GB with a larger parameter count at the same context size.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">How many models can you run simultaneously?</h3>
+      <p>WaxFrame's hive needs multiple AIs running at the same time — at minimum two (one worker and one Builder), ideally three or more. Each loaded model occupies memory until it is unloaded. Here is a rough guide:</p>
+
+      <p><strong>NVIDIA GPUs (Windows/Linux):</strong></p>
+      <table class="wh-table">
+        <thead><tr><th>VRAM</th><th>Example GPUs</th><th>What fits</th></tr></thead>
+        <tbody>
+          <tr><td><strong>8 GB</strong></td><td>RTX 4060, RTX 3070</td><td>One 3B model at a time. Not enough for a multi-model hive — models will swap in and out of VRAM between turns, adding 10-30 seconds of cold-load time per response.</td></tr>
+          <tr><td><strong>12 GB</strong></td><td>RTX 4070, RTX 3060 12GB</td><td>Two 3B models simultaneously, or one 7B model alone. Tight but workable for a 2-model hive with small models.</td></tr>
+          <tr><td><strong>16 GB</strong></td><td>RTX 4080 SUPER, RTX 5070 Ti</td><td>Two to three 3B models simultaneously, or one 7B + one 3B. The sweet spot for consumer hardware — enough for a functional hive, though model quality is the limiting factor (see <a href="#test-results" class="link-accent">Model Testing Results</a> below).</td></tr>
+          <tr><td><strong>24 GB</strong></td><td>RTX 4090, RTX 5080</td><td>Three 7B models, or two 7B + one 3B, or one 14B + one 3B. Enough headroom for models that can genuinely handle WaxFrame's Builder protocol.</td></tr>
+          <tr><td><strong>48+ GB</strong></td><td>RTX A6000, dual-GPU setups</td><td>Multiple 14B-70B models. Enterprise/work-server territory — models at this size start approaching cloud-AI quality for document refinement.</td></tr>
+        </tbody>
+      </table>
+
+      <p><strong>Apple Silicon Macs (unified memory):</strong></p>
+      <table class="wh-table">
+        <thead><tr><th>Total RAM</th><th>Example Macs</th><th>Effective model budget</th><th>What fits</th></tr></thead>
+        <tbody>
+          <tr><td><strong>8 GB</strong></td><td>MacBook Air M1/M2 (base)</td><td>~4 GB after macOS</td><td>One 3B model — barely. Expect swapping. Not practical for a hive.</td></tr>
+          <tr><td><strong>16 GB</strong></td><td>MacBook Air/Pro M2/M3/M4</td><td>~8 GB for models</td><td>One or two 3B models. Comparable to an 8 GB NVIDIA GPU. Workable for a minimal 2-model hive.</td></tr>
+          <tr><td><strong>24 GB</strong></td><td>MacBook Pro M3/M4 Pro</td><td>~16 GB for models</td><td>Two to three 3B models, or one 7B + one 3B. Comparable to a 16 GB NVIDIA card — the consumer sweet spot.</td></tr>
+          <tr><td><strong>36-48 GB</strong></td><td>MacBook Pro M3/M4 Max</td><td>~28-40 GB for models</td><td>Multiple 7B models or one 14B+ model with room to spare. This is where Apple Silicon starts to shine — unified memory means zero copy overhead.</td></tr>
+          <tr><td><strong>64+ GB</strong></td><td>Mac Studio M4 Ultra, Mac Pro</td><td>~56+ GB for models</td><td>Multiple 14B-70B models. Genuine alternative to a multi-GPU workstation for local AI work.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">OLLAMA_MAX_LOADED_MODELS — controlling simultaneous models</h3>
+      <p>By default, Ollama loads one model at a time and unloads the previous one. For a WaxFrame hive you need multiple models loaded simultaneously. Set this environment variable to tell Ollama how many to keep in memory:</p>
+      <p><strong>Windows (PowerShell):</strong></p>
+      <pre class="wf-code-block">[Environment]::SetEnvironmentVariable("OLLAMA_MAX_LOADED_MODELS", "3", "User")</pre>
+      <p>Verify with:</p>
+      <pre class="wf-code-block">[Environment]::GetEnvironmentVariable("OLLAMA_MAX_LOADED_MODELS", "User")</pre>
+      <p><strong>Mac/Linux (Terminal):</strong></p>
+      <pre class="wf-code-block">launchctl setenv OLLAMA_MAX_LOADED_MODELS 3</pre>
+      <p>To make it persist across reboots on Mac, add this line to your <code>~/.zshrc</code> (or <code>~/.bashrc</code> on Linux):</p>
+      <pre class="wf-code-block">export OLLAMA_MAX_LOADED_MODELS=3</pre>
+      <p>After setting the variable on either platform, restart Ollama (quit from the system tray / menu bar and reopen it).</p>
+      <p>Set this to however many models you want loaded at once. For 16 GB of available model memory, 3 is a reasonable starting point with 3B-class models. If you set it higher than your memory can handle, Ollama will spill models to swap and performance will drop dramatically.</p>
+    </div>
+
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       OLLAMA + OPEN WEBUI INSTALLATION
+       ═══════════════════════════════════════════════════════════ -->
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="prereqs">Ollama + Open WebUI — Before You Start</h2>
+            <p class="hp-section-sub">Confirm your prerequisites before installing Open WebUI.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">Confirm Ollama is working</h3>
       <p>Open PowerShell and check that Ollama is installed and has models available:</p>
       <pre class="wf-code-block">ollama --version</pre>
       <p>Then list your installed models:</p>
@@ -155,19 +347,28 @@
     </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">2. Check whether Docker Desktop is installed</h3>
+      <h3 class="wf-card-title">Check whether Docker Desktop is installed</h3>
       <p>Run:</p>
       <pre class="wf-code-block">docker --version</pre>
-      <p>If you get something like <code>Docker version 28.x.x</code>, skip to Step 4.</p>
+      <p>If you get something like <code>Docker version 28.x.x</code>, skip ahead to <a href="#install-owui" class="link-accent">Install and Start Open WebUI</a>.</p>
       <p>If PowerShell says <code>docker</code> isn't recognized, install Docker Desktop next.</p>
     </div>
 
-    <hr class="wf-section-divider">
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
 
-    <h2>Install Docker Desktop (if needed)</h2>
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="install-docker">Install Docker Desktop</h2>
+            <p class="hp-section-sub">Docker is required for Open WebUI. Skip this if Docker is already installed.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
 
     <div class="wf-card is-amber">
-      <h3 class="wf-card-title">3. Install Docker Desktop</h3>
+      <h3 class="wf-card-title">Install Docker Desktop</h3>
       <p>Using Winget:</p>
       <pre class="wf-code-block">winget install -e --id Docker.DockerDesktop</pre>
       <p>After installation:</p>
@@ -182,12 +383,21 @@
       <p>You should see both a <strong>Client</strong> and <strong>Server</strong> section.</p>
     </div>
 
-    <hr class="wf-section-divider">
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
 
-    <h2>Install and Start Open WebUI</h2>
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="install-owui">Install and Start Open WebUI</h2>
+            <p class="hp-section-sub">Pull the Docker image and get Open WebUI running.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">4. Install Open WebUI</h3>
+      <h3 class="wf-card-title">Install Open WebUI</h3>
       <p>Run this as one PowerShell command:</p>
       <pre class="wf-code-block">docker run -d `
   -p 3000:8080 `
@@ -202,7 +412,7 @@
     </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">5. Verify the container started</h3>
+      <h3 class="wf-card-title">Verify the container started</h3>
       <p>Run:</p>
       <pre class="wf-code-block">docker ps</pre>
       <p>You should see something similar to:</p>
@@ -211,25 +421,34 @@ xxxxxxxxxxxx   ghcr.io/open-webui/open-webui:main  0.0.0.0:3000->8080/tcp</pre>
     </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">6. Open Open WebUI</h3>
+      <h3 class="wf-card-title">Open Open WebUI</h3>
       <p>In your browser, open:</p>
       <pre class="wf-code-block">http://localhost:3000</pre>
       <p>You should get the Open WebUI setup screen.</p>
     </div>
 
     <div class="wf-card is-amber">
-      <h3 class="wf-card-title">7. Create your Open WebUI account</h3>
+      <h3 class="wf-card-title">Create your Open WebUI account</h3>
       <p>The first account you create becomes the <strong>administrator</strong> for that Open WebUI installation.</p>
       <p>This account exists locally inside Open WebUI. You are not signing up for some external Open WebUI cloud account.</p>
       <p>Your data is stored in the Docker volume <code>open-webui</code>. That is why removing/recreating the container won't normally wipe your chats or settings.</p>
     </div>
 
-    <hr class="wf-section-divider">
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
 
-    <h2>Connect Ollama to Open WebUI</h2>
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="connect-ollama">Connect Ollama to Open WebUI</h2>
+            <p class="hp-section-sub">Verify that Open WebUI can see your Ollama models.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">8. Check whether Open WebUI sees Ollama</h3>
+      <h3 class="wf-card-title">Check whether Open WebUI sees Ollama</h3>
       <p>Once logged in, look at the model selector near the top. Your existing Ollama models should appear.</p>
       <p>Open WebUI talks to Ollama through:</p>
       <pre class="wf-code-block">http://host.docker.internal:11434</pre>
@@ -237,7 +456,7 @@ xxxxxxxxxxxx   ghcr.io/open-webui/open-webui:main  0.0.0.0:3000->8080/tcp</pre>
     </div>
 
     <div class="wf-card is-amber">
-      <h3 class="wf-card-title">9. If your Ollama models do NOT appear</h3>
+      <h3 class="wf-card-title">If your Ollama models do NOT appear</h3>
       <p>Go into: <strong>Admin Panel → Settings → Connections</strong></p>
       <p>Find Ollama. Set the Ollama URL to:</p>
       <pre class="wf-code-block">http://host.docker.internal:11434</pre>
@@ -246,61 +465,31 @@ xxxxxxxxxxxx   ghcr.io/open-webui/open-webui:main  0.0.0.0:3000->8080/tcp</pre>
     </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">10. Start chatting</h3>
+      <h3 class="wf-card-title">Start chatting</h3>
       <p>Pick one of your Ollama models from the model dropdown and enter a normal prompt.</p>
       <p>Ollama does the model inference; Open WebUI is the interface, conversation manager, knowledge/document system, tool layer, and provider manager sitting in front of it.</p>
     </div>
 
-    <hr class="wf-section-divider">
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
 
-    <h2>Day-to-Day Management</h2>
 
-    <div class="wf-card is-accent">
-      <h3 class="wf-card-title">11. Starting Open WebUI later</h3>
-      <p>You normally don't have to manually start it. We used <code>--restart always</code>, so Docker will restart the Open WebUI container automatically.</p>
-      <p>If needed:</p>
-      <pre class="wf-code-block">docker start open-webui</pre>
-      <p>To stop it:</p>
-      <pre class="wf-code-block">docker stop open-webui</pre>
-      <p>To restart it:</p>
-      <pre class="wf-code-block">docker restart open-webui</pre>
-      <p>To check its status:</p>
-      <pre class="wf-code-block">docker ps -a</pre>
-    </div>
+  <!-- ═══════════════════════════════════════════════════════════
+       ARCHITECTURE & BUNDLED OLLAMA
+       ═══════════════════════════════════════════════════════════ -->
 
-    <div class="wf-card is-accent">
-      <h3 class="wf-card-title">12. View Open WebUI logs</h3>
-      <p>If something breaks:</p>
-      <pre class="wf-code-block">docker logs open-webui</pre>
-      <p>Or watch them live:</p>
-      <pre class="wf-code-block">docker logs -f open-webui</pre>
-      <p>Press <code>Ctrl+C</code> to stop watching.</p>
-    </div>
-
-    <div class="wf-card is-accent">
-      <h3 class="wf-card-title">13. Update Open WebUI later</h3>
-      <p>Open WebUI's documented Docker update procedure: remove the old container, pull the current image, and recreate it while retaining the persistent volume.</p>
-      <pre class="wf-code-block">docker rm -f open-webui</pre>
-      <p>Then:</p>
-      <pre class="wf-code-block">docker pull ghcr.io/open-webui/open-webui:main</pre>
-      <p>Then recreate it with the same flags as your original install:</p>
-      <pre class="wf-code-block">docker run -d `
-  -p 3000:8080 `
-  --add-host=host.docker.internal:host-gateway `
-  -v open-webui:/app/backend/data `
-  -e CORS_ALLOW_ORIGIN=https://waxframe.com `
-  --name open-webui `
-  --restart always `
-  ghcr.io/open-webui/open-webui:main</pre>
-      <p>Your persistent Open WebUI data remains in the <code>open-webui</code> volume because that Docker volume wasn't deleted.</p>
-    </div>
-
-    <hr class="wf-section-divider">
-
-    <h2>Important: Do NOT install the bundled Ollama version</h2>
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="owui-architecture">Architecture &amp; Bundled Ollama</h2>
+            <p class="hp-section-sub">How the pieces fit together — and why you should NOT use the bundled Ollama image.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
 
     <div class="wf-card is-amber">
-      <h3 class="wf-card-title">14. Keep your existing Ollama install</h3>
+      <h3 class="wf-card-title">Keep your existing Ollama install</h3>
       <p>Open WebUI also provides an image containing both Open WebUI and Ollama. Do not use it if you already have Ollama installed on Windows.</p>
       <p>You already have Windows Ollama configured, downloaded models, GPU support working, and you've been tuning its context size and models. Running another Ollama inside Docker would give you two separate Ollama instances with separate model stores and potentially separate GPU configuration. That's pointless duplication.</p>
       <p>Your architecture should simply be:</p>
@@ -323,12 +512,26 @@ Your GPU</pre>
       <p>Everything runs on your machine. WaxFrame sends requests to localhost, Open WebUI forwards them to Ollama, Ollama runs inference on your GPU. No data leaves your network.</p>
     </div>
 
-    <hr class="wf-section-divider">
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
 
-    <h2>Connect WaxFrame to Open WebUI</h2>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       CONNECT WAXFRAME
+       ═══════════════════════════════════════════════════════════ -->
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="connect-waxframe">Connect WaxFrame to Open WebUI</h2>
+            <p class="hp-section-sub">Generate an API key and import your local models into WaxFrame.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">15. Get your Open WebUI API key</h3>
+      <h3 class="wf-card-title">Get your Open WebUI API key</h3>
       <p>Open WebUI requires authentication for API access. You need to generate a persistent API key from your Open WebUI instance.</p>
       <ol>
         <li>Go to <code>http://localhost:3000</code> in your browser and make sure you're logged in.</li>
@@ -342,7 +545,7 @@ Your GPU</pre>
     </div>
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">16. Import your Open WebUI models into WaxFrame</h3>
+      <h3 class="wf-card-title">Import your Open WebUI models into WaxFrame</h3>
       <p>Go back to <a href="https://waxframe.com" target="_blank" rel="noopener">waxframe.com</a>. On the Worker Bees screen, switch to <strong>Server Based AI</strong> mode if you haven't already — the Import from Model Server modal will open automatically.</p>
       <ol>
         <li>Under <strong>Quick Add</strong>, select <strong>Open WebUI</strong>. This pre-fills both endpoint fields:
@@ -352,43 +555,107 @@ Your GPU</pre>
           </ul>
           If your Open WebUI runs on a different port or address, adjust both URLs to match.
         </li>
-        <li>Paste the API key from step 15 into the <strong>API Key</strong> field.</li>
+        <li>Paste the API key into the <strong>API Key</strong> field.</li>
         <li>Click <strong>Fetch Models</strong>.</li>
       </ol>
       <p>WaxFrame will pull the full model list from your local Open WebUI (which includes every model Ollama has). Select the ones you want and click <strong>Add to Hive</strong>.</p>
-      <p>This works because the <code>CORS_ALLOW_ORIGIN</code> flag you set in step 4 tells Open WebUI to accept requests from waxframe.com, and modern browsers treat <code>localhost</code> as a secure context — so the http://localhost request from an https:// page goes through without being blocked.</p>
+      <p>This works because the <code>CORS_ALLOW_ORIGIN</code> flag you set during installation tells Open WebUI to accept requests from waxframe.com, and modern browsers treat <code>localhost</code> as a secure context — so the http://localhost request from an https:// page goes through without being blocked.</p>
     </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">17. Verify the connection</h3>
+      <h3 class="wf-card-title">Verify the connection</h3>
       <p>After adding models, you should see them in your Worker Bees grid. Click <strong>Test All Keys</strong> — each imported model should show a green connectivity pill.</p>
       <p>If a model shows red, check:</p>
       <ol>
         <li><strong>Docker Desktop is running</strong> and the open-webui container is started (<code>docker ps</code>).</li>
         <li><strong>Ollama is running</strong> — open a terminal and run <code>ollama list</code>.</li>
         <li><strong>You entered the right address</strong> — <code>http://localhost:3000</code> (not https, not 8080).</li>
-        <li><strong>CORS is configured</strong> — if you see a CORS error in your browser console (F12 → Console), your container may not have the <code>CORS_ALLOW_ORIGIN</code> flag. Recreate it using the command from step 4.</li>
-        <li><strong>API key rejected (401)</strong> — regenerate using the console command in step 15. Make sure you copy the key without any surrounding quotes.</li>
+        <li><strong>CORS is configured</strong> — if you see a CORS error in your browser console (F12 → Console), your container may not have the <code>CORS_ALLOW_ORIGIN</code> flag. Recreate it using the install command above.</li>
+        <li><strong>API key rejected (401)</strong> — regenerate using the console command above. Make sure you copy the key without any surrounding quotes.</li>
       </ol>
       <p>Once your models are green, you're running hive sessions from waxframe.com against your local AI stack — no cloud API keys, no per-token costs, your data never leaves your machine.</p>
     </div>
 
-    <hr class="wf-section-divider">
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
 
-    <h2>LM Studio — An Alternative to Open WebUI</h2>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       DAY-TO-DAY MANAGEMENT
+       ═══════════════════════════════════════════════════════════ -->
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="owui-management">Day-to-Day Management</h2>
+            <p class="hp-section-sub">Starting, stopping, updating, and monitoring your Open WebUI container.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">18. When to use LM Studio instead</h3>
-      <p><a href="https://lmstudio.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">LM Studio<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> is a standalone desktop application that downloads, manages, and serves local AI models — similar to the Ollama + Open WebUI combination but packaged as a single install with a GUI. It has its own built-in model browser, a chat interface, and an OpenAI-compatible API server you can point WaxFrame at.</p>
-      <p><strong>Use LM Studio when:</strong> you want a single-app install with no Docker, no terminal commands, and a visual model browser. Good for getting started quickly or for users who prefer a GUI over command-line tools.</p>
-      <p><strong>Use Ollama + Open WebUI when:</strong> you want more control over model configuration (custom Modelfiles, context-size tuning, environment variables), need the Docker container to handle CORS for waxframe.com access, or want to run headless on a server.</p>
-      <p><strong>You can use both at the same time.</strong> LM Studio and Ollama use different default ports (LM Studio: 1234, Ollama: 11434). They can coexist on the same machine. WaxFrame's Import from Model Server has Quick Add presets for both.</p>
+      <h3 class="wf-card-title">Starting Open WebUI later</h3>
+      <p>You normally don't have to manually start it. We used <code>--restart always</code>, so Docker will restart the Open WebUI container automatically.</p>
+      <p>If needed:</p>
+      <pre class="wf-code-block">docker start open-webui</pre>
+      <p>To stop it:</p>
+      <pre class="wf-code-block">docker stop open-webui</pre>
+      <p>To restart it:</p>
+      <pre class="wf-code-block">docker restart open-webui</pre>
+      <p>To check its status:</p>
+      <pre class="wf-code-block">docker ps -a</pre>
     </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">19. Connecting LM Studio to WaxFrame</h3>
+      <h3 class="wf-card-title">View Open WebUI logs</h3>
+      <p>If something breaks:</p>
+      <pre class="wf-code-block">docker logs open-webui</pre>
+      <p>Or watch them live:</p>
+      <pre class="wf-code-block">docker logs -f open-webui</pre>
+      <p>Press <code>Ctrl+C</code> to stop watching.</p>
+    </div>
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">Update Open WebUI later</h3>
+      <p>Open WebUI's documented Docker update procedure: remove the old container, pull the current image, and recreate it while retaining the persistent volume.</p>
+      <pre class="wf-code-block">docker rm -f open-webui</pre>
+      <p>Then:</p>
+      <pre class="wf-code-block">docker pull ghcr.io/open-webui/open-webui:main</pre>
+      <p>Then recreate it with the same flags as your original install:</p>
+      <pre class="wf-code-block">docker run -d `
+  -p 3000:8080 `
+  --add-host=host.docker.internal:host-gateway `
+  -v open-webui:/app/backend/data `
+  -e CORS_ALLOW_ORIGIN=https://waxframe.com `
+  --name open-webui `
+  --restart always `
+  ghcr.io/open-webui/open-webui:main</pre>
+      <p>Your persistent Open WebUI data remains in the <code>open-webui</code> volume because that Docker volume wasn't deleted.</p>
+    </div>
+
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       LM STUDIO
+       ═══════════════════════════════════════════════════════════ -->
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="lm-studio">Setting Up LM Studio</h2>
+            <p class="hp-section-sub">A Docker-free alternative — download, install, and connect to WaxFrame in minutes.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">Connecting LM Studio to WaxFrame</h3>
       <ol>
-        <li>Open LM Studio and download a model from the built-in browser.</li>
+        <li>Download and install <a href="https://lmstudio.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">LM Studio<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> and download a model from the built-in browser.</li>
         <li>Load the model and click the <strong>Local Server</strong> tab (or the server icon in the sidebar).</li>
         <li>Start the server — by default it runs on <code>http://localhost:1234</code>.</li>
         <li>In WaxFrame, go to Setup → Import from Model Server. Use the <strong>LM Studio (local)</strong> Quick Add preset, which fills in:
@@ -402,68 +669,26 @@ Your GPU</pre>
       </ol>
     </div>
 
-    <hr class="wf-section-divider">
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
 
-    <h2>Assessing Your Hardware</h2>
 
-    <div class="wf-card is-accent">
-      <h3 class="wf-card-title">20. Check your GPU and VRAM</h3>
-      <p>Local AI models run on your graphics card (GPU), not your CPU. The critical resource is <strong>VRAM</strong> — the memory on your GPU. The more VRAM you have, the larger and smarter the models you can run, and the more models you can load simultaneously for a WaxFrame hive session.</p>
-      <p>To check your GPU on Windows:</p>
-      <ol>
-        <li><strong>Task Manager:</strong> Press <code>Ctrl+Shift+Esc</code> → Performance tab → GPU. Look for <strong>Dedicated GPU memory</strong> — that is your VRAM.</li>
-        <li><strong>NVIDIA GPU (PowerShell):</strong>
-          <pre class="wf-code-block">nvidia-smi</pre>
-          This shows your GPU name, total VRAM, and current usage.
-        </li>
-        <li><strong>Ollama (if installed):</strong>
-          <pre class="wf-code-block">ollama ps</pre>
-          This shows which models are currently loaded, how much VRAM each uses, and whether they are running on GPU or CPU.
-        </li>
-      </ol>
-    </div>
+  <!-- ═══════════════════════════════════════════════════════════
+       MODEL CONFIGURATION
+       ═══════════════════════════════════════════════════════════ -->
 
-    <div class="wf-card is-green">
-      <h3 class="wf-card-title">21. VRAM budgeting — the key concept</h3>
-      <p>Think of VRAM like seats on a bus. Each AI model you load takes up a certain number of seats. Once the bus is full, the next model either waits for a seat to open up or spills onto your system RAM (CPU), which is dramatically slower — sometimes 10-50x slower.</p>
-      <p><strong>The number you see on a model's download page (e.g. "1.9 GB") is the file size on disk, not the VRAM it uses when loaded.</strong> A model's actual VRAM footprint depends on two things:</p>
-      <ul>
-        <li><strong>The model's parameter count</strong> — a 3B (3 billion parameter) model uses less VRAM than a 7B model, which uses less than a 14B model.</li>
-        <li><strong>The context window</strong> — how much text the model can "see" at once, measured in tokens. A larger context window means the model allocates more memory for its working space (called the KV cache). Ollama defaults to 2048 tokens but WaxFrame sessions often need 8K-32K to hold the full document plus worker feedback.</li>
-      </ul>
-      <p>The practical effect: a model that shows as 1.9 GB on disk might use 3.4 GB of VRAM when loaded with a 32K context window, or 6.0 GB with a larger parameter count at the same context size.</p>
-    </div>
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="model-config">Model Configuration &amp; Warm-Starting</h2>
+            <p class="hp-section-sub">Tune context windows, pre-load models before a hive session, and swap models in and out of VRAM.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">22. How many models can you run simultaneously?</h3>
-      <p>WaxFrame's hive needs multiple AIs running at the same time — at minimum two (one worker and one Builder), ideally three or more. Each loaded model occupies VRAM until it is unloaded. Here is a rough guide based on common consumer GPUs:</p>
-      <table class="wh-table">
-        <thead><tr><th>GPU VRAM</th><th>Example GPUs</th><th>What fits</th></tr></thead>
-        <tbody>
-          <tr><td><strong>8 GB</strong></td><td>RTX 4060, RTX 3070</td><td>One 3B model at a time. Not enough for a multi-model hive — models will swap in and out of VRAM between turns, adding 10-30 seconds of cold-load time per response.</td></tr>
-          <tr><td><strong>12 GB</strong></td><td>RTX 4070, RTX 3060 12GB</td><td>Two 3B models simultaneously, or one 7B model alone. Tight but workable for a 2-model hive with small models.</td></tr>
-          <tr><td><strong>16 GB</strong></td><td>RTX 4080 SUPER, RTX 5070 Ti</td><td>Two to three 3B models simultaneously, or one 7B + one 3B. This is the sweet spot for consumer hardware — enough for a functional hive, though model quality is the limiting factor (see Model Testing Results below).</td></tr>
-          <tr><td><strong>24 GB</strong></td><td>RTX 4090, RTX 5080</td><td>Three 7B models, or two 7B + one 3B, or one 14B + one 3B. Enough headroom for models that can genuinely handle WaxFrame's Builder protocol.</td></tr>
-          <tr><td><strong>48+ GB</strong></td><td>RTX A6000, dual-GPU setups, enterprise</td><td>Multiple 14B-70B models. Enterprise/work-server territory — models at this size start approaching cloud-AI quality for document refinement.</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="wf-card is-accent">
-      <h3 class="wf-card-title">23. OLLAMA_MAX_LOADED_MODELS — controlling simultaneous models</h3>
-      <p>By default, Ollama loads one model at a time and unloads the previous one. For a WaxFrame hive you need multiple models loaded simultaneously. Set this environment variable to tell Ollama how many to keep in memory:</p>
-      <pre class="wf-code-block">[Environment]::SetEnvironmentVariable("OLLAMA_MAX_LOADED_MODELS", "3", "User")</pre>
-      <p>Then restart Ollama (quit from the system tray and reopen it). Verify with:</p>
-      <pre class="wf-code-block">[Environment]::GetEnvironmentVariable("OLLAMA_MAX_LOADED_MODELS", "User")</pre>
-      <p>Set this to however many models you want loaded at once. For a 16 GB GPU, 3 is a reasonable starting point with 3B-class models. If you set it higher than your VRAM can handle, Ollama will spill models to CPU memory and performance will drop dramatically.</p>
-    </div>
-
-    <hr class="wf-section-divider">
-
-    <h2>Model Configuration and Warm-Starting</h2>
-
-    <div class="wf-card is-accent">
-      <h3 class="wf-card-title">24. Custom Modelfiles — tuning context size</h3>
+      <h3 class="wf-card-title">Custom Modelfiles — tuning context size</h3>
       <p>Ollama's default context window (2048 tokens) is too small for most WaxFrame sessions. You can create a custom model variant with a larger context window using a <strong>Modelfile</strong>.</p>
       <p>Create a text file (e.g. <code>Modelfile.mymodel</code>) with this content:</p>
       <pre class="wf-code-block">FROM qwen2.5:3b
@@ -475,7 +700,7 @@ PARAMETER num_ctx 16384</pre>
     </div>
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">25. Warm-starting models before a hive session</h3>
+      <h3 class="wf-card-title">Warm-starting models before a hive session</h3>
       <p>When Ollama loads a model from disk into VRAM, there is a one-time delay (5-30 seconds depending on model size and your disk speed). During a hive session, WaxFrame sends requests to each AI in sequence — if a model is not already loaded, the first request triggers a cold load and the user waits.</p>
       <p>To avoid this, <strong>warm-start</strong> your models before launching a hive session. Open PowerShell and send a trivial prompt to each model:</p>
       <pre class="wf-code-block">ollama run cogito:3b "hi"
@@ -487,7 +712,7 @@ ollama run smollm3-slim "hi"</pre>
     </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">26. Swapping models</h3>
+      <h3 class="wf-card-title">Swapping models</h3>
       <p>To replace a loaded model with a different one, just run the new model — Ollama will unload the least-recently-used model if VRAM is full:</p>
       <pre class="wf-code-block">ollama run qwen2.5:7b "hi"</pre>
       <p>Then update WaxFrame: go to Setup → Import from Model Server → Fetch Models and add the new model to your hive. Remove the old one from your Worker Bees list if you no longer want it.</p>
@@ -495,18 +720,32 @@ ollama run smollm3-slim "hi"</pre>
       <pre class="wf-code-block">ollama ps</pre>
     </div>
 
-    <hr class="wf-section-divider">
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
 
-    <h2>Model Testing Results</h2>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MODEL TESTING RESULTS
+       ═══════════════════════════════════════════════════════════ -->
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="test-results">Model Testing Results</h2>
+            <p class="hp-section-sub">Three days of real-world testing on an RTX 4080 SUPER — every model, every combination, what worked and what didn't.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">27. What we tested and why it matters</h3>
+      <h3 class="wf-card-title">What we tested and why it matters</h3>
       <p>We spent three days testing every viable open-source model combination on an NVIDIA RTX 4080 SUPER (16 GB VRAM) to find out which models can actually handle WaxFrame's hive protocol — specifically, the Builder role. The Builder has strict requirements: it must wrap the updated document in <code>%%DOCUMENT_START%%</code> / <code>%%DOCUMENT_END%%</code> delimiters, it must include a <code>%%CONFLICTS_START%%</code> section (or report NO CONFLICTS), it must not echo back prompt metadata or instructions, and it must synthesize worker feedback into a coherent revision rather than just concatenating suggestions.</p>
       <p>Cloud AIs (ChatGPT, Claude, Gemini) handle all of this easily — they have enough intelligence and instruction-following ability to understand the protocol and produce clean output. Local models at the 3B-7B parameter range struggle significantly. The table below shows every model and combination we tested, what went right, and what went wrong.</p>
     </div>
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">28. Every model tested — full results</h3>
+      <h3 class="wf-card-title">Every model tested — full results</h3>
       <p>Test document: a chocolate chip cookie recipe (~400 words). All tests run on an RTX 4080 SUPER (16 GB VRAM), Windows 11, Ollama, with OLLAMA_MAX_LOADED_MODELS=3.</p>
       <table class="wh-table">
         <thead><tr><th>Model</th><th>Role tested</th><th>VRAM (loaded)</th><th>Speed</th><th>Builder quality</th><th>Key issue</th></tr></thead>
@@ -612,7 +851,7 @@ ollama run smollm3-slim "hi"</pre>
     </div>
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">29. Best working combinations found</h3>
+      <h3 class="wf-card-title" id="best-combos">Best working combinations found</h3>
       <p>Out of every combination tested, two configurations loaded and ran successfully on 16 GB VRAM with 100% GPU (no CPU spill) and sub-15-second response times:</p>
       <table class="wh-table">
         <thead><tr><th>Combo</th><th>Models</th><th>Total VRAM</th><th>Speed</th><th>Notes</th></tr></thead>
@@ -636,12 +875,26 @@ ollama run smollm3-slim "hi"</pre>
       <p><strong>Both combinations functioned correctly</strong> — WaxFrame ran hive sessions against them, rounds completed, documents were updated. The limiting factor was not speed or protocol compliance but <strong>model intelligence</strong>: 3B-7B models do not have enough reasoning capacity to synthesize worker feedback critically, evaluate conflicting suggestions, or achieve convergence (workers saying "no changes needed").</p>
     </div>
 
-    <hr class="wf-section-divider">
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
 
-    <h2>Understanding Local Model Limitations</h2>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       LIMITATIONS
+       ═══════════════════════════════════════════════════════════ -->
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="limitations">Understanding Local Model Limitations</h2>
+            <p class="hp-section-sub">Why local 3B-7B models can't match cloud AI quality — and when each option makes sense.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
 
     <div class="wf-card is-amber">
-      <h3 class="wf-card-title">30. Why local models behave differently from cloud AIs</h3>
+      <h3 class="wf-card-title">Why local models behave differently from cloud AIs</h3>
       <p>Cloud AIs like ChatGPT, Claude, and Gemini have hundreds of billions of parameters and run on datacenter-grade hardware with hundreds of gigabytes of VRAM. The models you can run on a consumer GPU are 10-100x smaller. That size difference is not just about speed — it directly affects intelligence:</p>
       <ul>
         <li><strong>Instruction following:</strong> Cloud AIs reliably follow complex multi-step instructions (like WaxFrame's Builder protocol). Small local models frequently ignore parts of the prompt, echo metadata, or produce structurally incorrect output.</li>
@@ -652,7 +905,7 @@ ollama run smollm3-slim "hi"</pre>
     </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">31. "Thinking" models — hidden token costs</h3>
+      <h3 class="wf-card-title">"Thinking" models — hidden token costs</h3>
       <p>Some models (qwen3, qwen3.5, SmolLM3) include a hidden chain-of-thought step before generating their visible response. The model "thinks" internally — you do not see this text, but it consumes tokens and time. In our testing:</p>
       <ul>
         <li><strong>qwen3:4b</strong> burned 4,000-14,000 invisible tokens per response. It was the only model to achieve convergence and report real conflicts, but each response took 52-144 seconds — too slow for practical use.</li>
@@ -663,7 +916,7 @@ ollama run smollm3-slim "hi"</pre>
     </div>
 
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">32. The bottom line — when local AI hives make sense</h3>
+      <h3 class="wf-card-title" id="bottom-line">The bottom line — when local AI hives make sense</h3>
       <p><strong>Local models work for the mechanics</strong> — WaxFrame connects, rounds execute, documents update, responses come back fast. On a 16 GB GPU, you can run 2-3 models simultaneously with sub-15-second response times and zero API cost.</p>
       <p><strong>Local models struggle with the intelligence</strong> — at 3B-7B parameters, no model we tested could match what a cloud AI does as Builder. No convergence, no meaningful conflict detection, no critical evaluation of worker suggestions. The hive runs but the output quality does not match what you get from a ChatGPT/Claude/Gemini hive.</p>
       <p><strong>Where local hives shine today:</strong></p>
@@ -676,10 +929,14 @@ ollama run smollm3-slim "hi"</pre>
       <p>As local model quality improves (and it is improving fast), this gap will narrow. The infrastructure you set up today — Ollama, your model server, your WaxFrame configuration — will run better models tomorrow without changing anything.</p>
     </div>
 
-  </div>
-</div>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
 
-</div>
+    </div><!-- /doc-main -->
+  </div><!-- /doc-layout -->
+
+</div><!-- /page-main -->
 
 <!-- ========================================================
      UNIFIED HELPER-PAGE FOOTER (v3.22.5) — sticky bottom.
@@ -745,13 +1002,14 @@ ollama run smollm3-slim "hi"</pre>
 </div>
 
 
-<script src="js/theme.js?v=3.63.474"></script>
-<script src="lib/docx.min.js?v=3.63.474"></script>
-<script src="js/docx-export.js?v=3.63.474"></script>
-<script src="js/nav-helper.js?v=3.63.474"></script>
-<script src="js/license-helper.js?v=3.63.474"></script>
-<script src="js/update-check.js?v=3.63.474"></script>
-<script src="js/helper-handlers.js?v=3.63.474"></script>
-<script src="js/version.js?v=3.63.474"></script>
+<script src="js/theme.js?v=3.63.475"></script>
+<script src="lib/docx.min.js?v=3.63.475"></script>
+<script src="js/docx-export.js?v=3.63.475"></script>
+<script src="js/nav-helper.js?v=3.63.475"></script>
+<script src="js/license-helper.js?v=3.63.475"></script>
+<script src="js/update-check.js?v=3.63.475"></script>
+<script src="js/helper-handlers.js?v=3.63.475"></script>
+<script src="js/version.js?v=3.63.475"></script>
+<script src="js/docs-scrollspy.js?v=3.63.475"></script>
 </body>
 </html>
