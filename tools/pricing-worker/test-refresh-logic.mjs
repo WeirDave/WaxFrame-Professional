@@ -18,7 +18,7 @@
 // Exit 0 if every assertion passes; exit 1 with FAIL lines otherwise.
 // ============================================================
 
-import { decideModelUpdate, mapWithConcurrency, isTrustedSource, isValidSizeString, corroboratesSource, buildStatusHtml, isSafeEmailAddress } from './src/index.js';
+import { decideModelUpdate, mapWithConcurrency, isTrustedSource, isValidSizeString, corroboratesSource, buildStatusHtml, isSafeEmailAddress, isTransientError } from './src/index.js';
 
 let failures = 0;
 function assertEqual(actual, expected, label) {
@@ -159,6 +159,38 @@ console.log('\ncorroboratesSource — checks a proposed price actually appears o
 
   const dollarFormatted = ('Command R+ costs $2.50 per million input tokens and $10.00 per million output tokens. ').repeat(4);
   assert(corroboratesSource(dollarFormatted, 2.5, 10) === true, '$-prefixed, comma-free decimal formatting still matches');
+}
+
+// ── isTransientError (Build 20260816-001) ──────────────────────────
+console.log('\nisTransientError — classifies which failures deserve a retry');
+{
+  assert(isTransientError('HTTP 429') === true, '429 rate limit is transient');
+  assert(isTransientError('HTTP 500') === true, '500 server error is transient');
+  assert(isTransientError('HTTP 502') === true, '502 bad gateway is transient');
+  assert(isTransientError('HTTP 503') === true, '503 unavailable is transient');
+  assert(isTransientError('network error: fetch failed') === true, 'network error is transient');
+  assert(isTransientError('HTTP 400') === false, '400 bad request is permanent');
+  assert(isTransientError('HTTP 401') === false, '401 unauthorized is permanent');
+  assert(isTransientError('unparseable response') === false, 'parse failure is permanent');
+  assert(isTransientError('untrusted or missing source (got: none)') === false, 'bad source is permanent');
+  assert(isTransientError('invalid or missing price fields in response') === false, 'bad price fields is permanent');
+  assert(isTransientError('no confirmed model-version attribution in response') === false, 'missing model attribution is permanent');
+}
+
+// ── mapWithConcurrency with delay ─────────────────────────────────
+console.log('\nmapWithConcurrency — delay parameter spaces out requests');
+{
+  const timestamps = [];
+  await mapWithConcurrency([1, 2, 3], 1, async (n) => {
+    timestamps.push(Date.now());
+    return n;
+  }, 100);
+  if (timestamps.length === 3) {
+    const gap1 = timestamps[1] - timestamps[0];
+    const gap2 = timestamps[2] - timestamps[1];
+    assert(gap1 >= 80, `first gap ${gap1}ms should be ≥80ms (100ms delay with jitter tolerance)`);
+    assert(gap2 >= 80, `second gap ${gap2}ms should be ≥80ms`);
+  }
 }
 
 // ── public status page output encoding ─────────────────────────────

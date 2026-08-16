@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260815-012
+// Build: 20260816-001
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
