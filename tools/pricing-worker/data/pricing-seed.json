@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-09T13:00:00Z",
+  "lastUpdated": "2026-08-16T17:00:00Z",
   "schemaVersion": 3,
   "tokensPerRound": {
     "input": 5000,
@@ -414,15 +414,15 @@
         },
         {
           "id": "command-a-03-2025",
-          "inputPerM": null,
-          "outputPerM": null,
-          "contextWindow": null,
-          "maxOutput": null,
-          "estPerRound": null,
-          "estNote": null,
-          "sourceUrl": null,
-          "verifiedAt": null,
-          "status": "needs-verification"
+          "inputPerM": 0,
+          "outputPerM": 0,
+          "contextWindow": "256K",
+          "maxOutput": "8K",
+          "estPerRound": 0,
+          "estNote": "free via API — open-source (Apache 2.0)",
+          "sourceUrl": "https://cohere.com/pricing",
+          "verifiedAt": "2026-08-16T17:00:00Z",
+          "status": "verified"
         }
       ]
     },
