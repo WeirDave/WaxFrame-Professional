@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260815-010
+   Build: 20260815-011
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10576,26 +10576,41 @@ kbd {
 }
 
 .checkpoint-mode-toggle {
-  display: flex; gap: var(--space-8);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
   margin: 0 0 var(--space-16) 0;
 }
-.checkpoint-mode-pill {
-  flex: 1;
-  padding: var(--space-10) var(--space-16);
-  background: var(--surface2);
-  border: 1px solid var(--border2);
+.checkpoint-mode-label {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+  margin-right: var(--space-4);
+}
+.checkpoint-mode-track {
+  display: inline-flex;
   border-radius: var(--radius-md, 10px);
-  font-size: var(--fs-14);
-  font-weight: 600;
+  background: var(--surface2);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.45);
+  overflow: hidden;
+}
+.checkpoint-mode-pill {
+  flex: none;
+  padding: var(--space-6) var(--space-20);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md, 10px);
+  font-size: var(--fs-13);
+  font-weight: 500;
   color: var(--text-dim);
   cursor: pointer;
-  transition: background .15s, color .15s, border-color .15s;
+  transition: background .15s, color .15s, box-shadow .15s;
 }
-.checkpoint-mode-pill:hover { background: var(--surface3); color: var(--text); }
+.checkpoint-mode-pill:hover:not(.active) { color: var(--text); }
 .checkpoint-mode-pill.active {
-  background: var(--accent-dim);
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--surface3);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
 }
 
 .checkpoint-panel { display: block; }

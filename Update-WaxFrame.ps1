@@ -27,7 +27,7 @@
 #   - No running-process coordination. A file:// page isn't a process to
 #     wait on or restart -- "relaunch" just means reopening index.html.
 #
-# Build: 20260815-010
+# Build: 20260815-011
 
 [CmdletBinding()]
 param()

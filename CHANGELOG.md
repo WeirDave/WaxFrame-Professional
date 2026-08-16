@@ -1,5 +1,27 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.471 — Checkpoint UX: mode toggle restyle + Open WebUI guide fix
+**Released:** 2026-08-15  
+**Build:** 20260815-011
+
+**What changed:**  
+- **Checkpoint screen: Save/Restore mode selector restyled as a 3D segmented toggle.** The two full-width pills that looked like action buttons are now a compact toggle with an inset track and raised active state — reads as a mode switch, not a CTA. "Mode:" label added. Pill text shortened to "Save" / "Restore" (emoji removed). Save Checkpoint action button at the bottom now uses `btn-accent` for the standard amber/black filled CTA style.
+- Open WebUI setup guide expanded from 16 to 17 steps. New step 15 replaces the incorrect "Settings → Account → generate API key" instruction (that section doesn't exist in current Open WebUI) with the working approach: run a `fetch` command in the browser console against `/api/v1/auths/api_key` to generate a persistent API key. Step 16 is now the WaxFrame import, step 17 is verification. Troubleshooting updated to reference the correct key generation method and warn about quote characters when pasting.
+
+**Verification:**  
+- release-check passed (all 14 checks)
+
+**Files touched:**  
+- `index.html` — checkpoint mode toggle restructured (track wrapper, label, shortened text), Save button gets `btn-accent`  
+- `style.css` — `.checkpoint-mode-toggle`, `.checkpoint-mode-track`, `.checkpoint-mode-label`, `.checkpoint-mode-pill` restyled  
+- `open-webui-setup.html` — steps 15-17 rewritten  
+- `js/app.js` — button text updated to "17 steps"  
+- Full version sweep (54 files)
+
+**Rollback:** `git revert` — no schema/storage changes.
+
+---
+
 ## v3.63.470 — Allow localhost connections from hosted WaxFrame
 **Released:** 2026-08-15  
 **Build:** 20260815-010
