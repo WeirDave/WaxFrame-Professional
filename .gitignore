@@ -10,6 +10,9 @@ tools/pricing-worker/.wrangler/
 # Claude Code standing-orders brief — local only, not for GitHub
 CLAUDE.md
 
+# Dev-only operational reference — secrets, tokens, dev-toolbar docs
+DEV_README.md
+
 # Generated release bundles/staging folders
 release-artifacts/
 

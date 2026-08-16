@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260815-012
+// Build: 20260816-001
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -424,6 +424,46 @@ window.WF_DEBUG = {
     const n = this.ringBuffer.length;
     this.ringBuffer = [];
     if (typeof toast === 'function') toast(`🗑 Cleared ${n} round capture${n === 1 ? '' : 's'} — tier classifications preserved`, 4000);
+  },
+
+  // ── On-demand pricing refresh (v3.63.473) ──
+  // Triggers the pricing worker's POST /api/refresh endpoint so David
+  // can re-run the weekly Sonar sweep immediately after applying a
+  // needs-review proposal or when a provider announces new pricing.
+  // The REFRESH_TOKEN is stored in localStorage on first use (prompted
+  // via wfConfirm's input variant) — it's a Worker secret, not an API
+  // key for a provider, so localStorage is fine.
+  async refreshPricing() {
+    const LS_KEY = 'waxframe_pricing_refresh_token';
+    const ENDPOINT = 'https://waxframe-pricing.weirdave.workers.dev/api/refresh';
+    let token = localStorage.getItem(LS_KEY);
+    if (!token) {
+      token = window.prompt('Enter the REFRESH_TOKEN secret from the pricing worker.\nStored locally for future use.');
+      if (!token || !token.trim()) return;
+      token = token.trim();
+      localStorage.setItem(LS_KEY, token);
+    }
+    if (typeof toast === 'function') toast('Triggering pricing refresh…');
+    try {
+      const resp = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await resp.json().catch(() => null);
+      if (resp.ok && data && data.ok) {
+        if (typeof toast === 'function') toast('Pricing refresh complete — check email for results', 5000);
+      } else {
+        const msg = (data && data.error) || ('HTTP ' + resp.status);
+        if (resp.status === 403) {
+          localStorage.removeItem(LS_KEY);
+          if (typeof toast === 'function') toast('Token rejected — cleared. Try again with the correct token.', 5000);
+        } else {
+          if (typeof toast === 'function') toast('Pricing refresh failed: ' + msg, 5000);
+        }
+      }
+    } catch (e) {
+      if (typeof toast === 'function') toast('Pricing refresh network error: ' + (e.message || e), 5000);
+    }
   },
 
   // ── Dev test triggers (v3.28.2) ──
