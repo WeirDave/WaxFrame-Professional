@@ -1,5 +1,27 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.476 — README accuracy audit
+**Released:** 2026-08-16  
+**Build:** 20260816-004
+
+### What changed
+- **ChatGPT default model corrected** — README table listed `gpt-5.5` but the code default has been `gpt-5.6-sol` since v3.63.452. Updated to match.
+- **Portable download instructions updated** — replaced "download the Source code (zip)" with the actual release asset name `WaxFrame-Professional-X.Y.Z.zip` and noted the `.sha256` sidecar for integrity verification.
+- **CORS origin corrected** — custom endpoint instructions referenced `https://weirdave.github.io` but `weirdave.github.io` 301-redirects to `waxframe.com`, making the browser's actual origin `https://waxframe.com`. Updated to the canonical domain.
+- **Local AI Server Guide linked** — the Server / Self-Hosted Endpoints section now links to the full setup guide (`open-webui-setup.html`) covering hardware sizing, installation, and tested model combinations.
+
+### Verification
+- release-check: all 16 checks pass
+- All four changes verified against provider-catalog.js, release-assets.yml, and live redirect behavior
+
+### Files touched
+README.md, index.html, js/version.js, js/app.js, style.css, all HTML pages, all JS files, package.json, tools/release-check.mjs, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — content-only change, no schema or storage changes.
+
+---
+
 ## v3.63.475 — Local AI Server Guide: sidebar TOC, section restructure, Mac hardware coverage
 **Released:** 2026-08-16  
 **Build:** 20260816-003
