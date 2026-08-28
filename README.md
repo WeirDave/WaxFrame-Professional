@@ -80,7 +80,7 @@ A WaxFrame session has two AI roles and one document, processed in rounds. Every
 
 Each AI with a saved API key becomes a reviewer. You need at least two distinct model families to proceed — a hive of six AIs that are all near-identical fine-tunes of the same family is functionally one reviewer with six voices. Three or more reviewers is recommended so the hive can break ties without your input.
 
-AIs without a saved key remain visible in the hive and skip automatically each round. Toggle individual AIs on or off for a session from the **Edit Hive** button on the work screen without losing their saved keys.
+Internet AIs without a saved key remain visible in the hive and skip automatically each round. Server-imported AIs (Ollama, LM Studio, Open WebUI, internal gateways) work without a key when the server itself does not require authentication. Toggle individual AIs on or off for a session from the **Edit Hive** button on the work screen without losing their saved keys.
 
 **Crown one of your AIs Builder** by clicking the **🔨 Builder** button on its row. The Builder rewrites the entire document every round and uses significantly more tokens than any reviewer — it needs a paid API plan with real capacity. Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably; DeepSeek is the most cost-effective by a wide margin, though it is the slowest responder in the hive, so expect longer rounds.
 
