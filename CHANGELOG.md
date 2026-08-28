@@ -1,5 +1,25 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.477 — Keyless server-AI docs fix + Start Here Quick Start rewrite
+**Released:** 2026-08-28  
+**Build:** 20260828-001
+
+### What changed
+- **"AIs without keys" info modal updated (issue #9)** — the Worker Bees info modal on Setup Step 1 still said keyless AIs are "skipped automatically every round," which has been wrong since v3.63.459 added keyless server-imported model support. The text now distinguishes internet providers (need a key) from server-imported AIs (work without a key when the server itself does not require auth). Same stale language corrected in README.md.
+- **Start Here Quick Start rewrite (issue #10)** — the Quick Start instructions assumed keys were already configured and told users to "go to the Project screen" without explaining the five-screen setup flow. The card now: states the two-AI prerequisite up front with a link to Step 3; walks through all five setup screens by name; mentions keyless server-imported models as an alternative to API keys. The "Set up enough AIs" section (Step 3) also now mentions Ollama/LM Studio/Open WebUI as keyless options alongside the API key path.
+
+### Verification
+- release-check: all 14 checks pass
+- Modal text reviewed against `isAIReadyForUse()` logic in app.js (key OR modelsEndpoint)
+
+### Files touched
+index.html, start-here.html, README.md, js/version.js, js/app.js, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — content-only change, no schema or storage changes.
+
+---
+
 ## v3.63.476 — README accuracy audit
 **Released:** 2026-08-16  
 **Build:** 20260816-004
