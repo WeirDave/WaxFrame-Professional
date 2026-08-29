@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260828-001
+// Build: 20260829-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -593,7 +593,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260828-001';         // build stamp — update each session
+const BUILD = '20260829-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -7807,8 +7807,10 @@ async function runSingleKeyTest(ai) {
     return;
   }
 
-  const sentBody = cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED');
-  rec.endpoint = cfg.endpoint;
+  const _model = getModelForAI(ai);
+  const endpoint = cfg.endpointFn ? cfg.endpointFn(_model) : cfg.endpoint;
+  const sentBody = cfg.bodyFn(_model, 'Reply with exactly one word: CONNECTED');
+  rec.endpoint = endpoint;
   try { rec.sentBody = JSON.stringify(JSON.parse(sentBody), null, 2); }
   catch { rec.sentBody = sentBody; }
 
@@ -7816,7 +7818,7 @@ async function runSingleKeyTest(ai) {
 
   const t0 = Date.now();
   try {
-    const response = await fetch(cfg.endpoint, { method: 'POST', headers: cfg.headersFn(cfg._key), body: sentBody });
+    const response = await fetch(endpoint, { method: 'POST', headers: cfg.headersFn(cfg._key), body: sentBody });
     const ms = Date.now() - t0;
     let rawText = '';
     try { rawText = await response.text(); } catch { rawText = '(could not read body)'; }

@@ -1,5 +1,24 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.478 — Fix variant Test All Keys hitting parent endpoint (issue #11)
+**Released:** 2026-08-29  
+**Build:** 20260829-001
+
+### What changed
+- **Variant "Test All Keys" endpoint fix (issue #11)** — `runSingleKeyTest` used the shared `cfg.model` and `cfg.endpoint` for every AI, which meant variants (e.g. a Gemini variant running `gemini-3.5-flash` while the parent runs `gemini-flash-lite-latest`) were tested against the parent's model and endpoint URL instead of their own. For Gemini specifically, the model name is embedded in the URL (`/models/{model}:generateContent`), so the variant test was literally hitting the wrong model. Fix: resolve the model via `getModelForAI(ai)` and compute the endpoint dynamically through `cfg.endpointFn` when present — the same pattern the main hive request path has used since v3.63.307.
+
+### Verification
+- release-check: all 16 checks pass
+- Confirmed the main hive send path (line ~19475) already uses getModelForAI + endpointFn correctly; this aligns the test-key path to match
+
+### Files touched
+js/app.js, js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — two-line logic fix in runSingleKeyTest, no schema or storage changes.
+
+---
+
 ## v3.63.477 — Keyless server-AI docs fix + Start Here Quick Start rewrite
 **Released:** 2026-08-28  
 **Build:** 20260828-001
