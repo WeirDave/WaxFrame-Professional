@@ -1,5 +1,28 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.479 — Pricing update: OpenAI gpt-5.6-sol price cut + Cohere Command A now paid
+**Released:** 2026-08-30  
+**Build:** 20260830-001
+
+### What changed
+- **gpt-5.6-sol price cut** — OpenAI announced a 20% input / 33% output promotional reduction: $5/$30 → $4/$20 per M tokens, effective through at least Nov 21 2026. Seed and fallback updated.
+- **Cohere Command A now paid** — command-a-03-2025 was previously free via API (Apache 2.0 open-source); Cohere now charges $2.5/$10 per M tokens. Seed and fallback updated, estNote cleared.
+- **Pricing worker triage (no code changes)** — three other worker alerts were investigated and rejected: ministral-8b-latest proposed price was actually the 3B model's rate (still $0.15/$0.15); gemini-3.1-flash-lite and gpt-5.5 failures were Perplexity Sonar extraction flakiness, not actual price changes.
+
+### Verification
+- release-check: all 14 checks pass
+- gpt-5.6-sol price verified against developers.openai.com/api/docs/pricing and OpenAI community announcement
+- Command A price verified against docs.cohere.com/docs/command-a ($2.5 input / $10 output)
+- ministral-8b-latest manually verified still $0.15/$0.15 on mistral.ai/pricing/api/ (worker confused with 3B)
+
+### Files touched
+tools/pricing-worker/data/pricing-seed.json, js/pricing-renderer.js (regenerated fallback), js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — pricing data only, no logic changes.
+
+---
+
 ## v3.63.478 — Fix variant Test All Keys hitting parent endpoint (issue #11)
 **Released:** 2026-08-29  
 **Build:** 20260829-001
