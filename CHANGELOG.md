@@ -1,5 +1,25 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.481 — Mistral tier-gated model fix: Recommend retry + smarter 403 handling
+**Released:** 2026-08-30  
+**Build:** 20260830-003
+
+### What changed
+- **Recommend Models now retries with fallback asking models** — when the first asking model returns 403 (tier-gated), `recommendForDefault` walks the full candidate list instead of giving up. Mistral's `mistral-large-latest` is tier-locked on free plans; this lets `mistral-small-latest` succeed as the asker so the dropdown actually updates.
+- **validateKeyOnSave distinguishes model-tier 403 from key-invalid 403** — Mistral returns HTTP 403 with `type: "tier_not_allowed"` when the model is subscription-gated, not when the key is bad. The validation probe now parses the 403 response body; model-tier errors log a console warning ("pick a different model") but don't set the Invalid badge. Only true auth-class 403s flag the key.
+
+### Verification
+- release-check: all 14 checks pass
+- Scout bundle confirmed: Mistral `tierClassificationErrors` shows `HTTP 403 — tier_not_allowed` on `mistral-medium`, key is valid
+
+### Files touched
+js/app.js, js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — two targeted edits in app.js (recommendForDefault retry loop, validateKeyOnSave 403 classifier), safe to revert.
+
+---
+
 ## v3.63.480 — Fix sticky Invalid badge after model change or successful test
 **Released:** 2026-08-30  
 **Build:** 20260830-002

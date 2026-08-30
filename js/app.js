@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260830-002
+// Build: 20260830-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -600,7 +600,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260830-002';         // build stamp — update each session
+const BUILD = '20260830-003';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -7344,18 +7344,34 @@ function validateKeyOnSave(aiId, keyAtFire) {
     headers: cfg.headersFn(cfg._key),
     body
   })
-    .then(resp => {
+    .then(async resp => {
       if (!stillCurrent()) return;
       if (resp.status === 401 || resp.status === 403) {
-        window._invalidKeys = window._invalidKeys || {};
-        window._invalidKeys[aiId] = true;
-        // v3.63.25 — Clear any prior valid flag so we don't render
-        // both states at once.
-        if (window._validKeys && window._validKeys[aiId]) delete window._validKeys[aiId];
-        if (typeof consoleLog === 'function') {
-          consoleLog(`⚠️ ${ai.name}: API key looks invalid (HTTP ${resp.status}). Double-check the key you just saved.`, 'warn');
+        let isModelTierIssue = false;
+        if (resp.status === 403) {
+          try {
+            const errText = await resp.text();
+            const errJson = JSON.parse(errText);
+            const errType = errJson?.type || errJson?.error?.type || '';
+            const errMsg = errJson?.message || errJson?.error?.message || '';
+            if (errType === 'tier_not_allowed' || /not available in your subscription/i.test(errMsg) || /model.*not available/i.test(errMsg)) {
+              isModelTierIssue = true;
+            }
+          } catch (_) {}
         }
-        renderAIRow(aiId, false);
+        if (isModelTierIssue) {
+          if (typeof consoleLog === 'function') {
+            consoleLog(`⚠️ ${ai.name}: model "${cfg.model}" is not available on your subscription tier — pick a different model.`, 'warn');
+          }
+        } else {
+          window._invalidKeys = window._invalidKeys || {};
+          window._invalidKeys[aiId] = true;
+          if (window._validKeys && window._validKeys[aiId]) delete window._validKeys[aiId];
+          if (typeof consoleLog === 'function') {
+            consoleLog(`⚠️ ${ai.name}: API key looks invalid (HTTP ${resp.status}). Double-check the key you just saved.`, 'warn');
+          }
+          renderAIRow(aiId, false);
+        }
       } else if (resp.ok) {
         // Success — clear any prior invalid flag.
         if (window._invalidKeys && window._invalidKeys[aiId]) {
@@ -9661,11 +9677,15 @@ async function recommendForDefault(provider) {
   // pass-through).
   const viable = filterModelsForRole(models, 'reviewer');
   const fallbackList = MODEL_FALLBACKS[provider] || [];
-  const stableFallback = fallbackList.find(m => models.includes(m));
-  const askingModel = stableFallback
-    || viable[0]
-    || (cfg.model && models.includes(cfg.model) ? cfg.model : null)
-    || models[0];
+  const stableFallbacks = fallbackList.filter(m => models.includes(m));
+  const candidates = [
+    ...stableFallbacks,
+    ...viable.filter(m => !stableFallbacks.includes(m)),
+    cfg.model && models.includes(cfg.model) ? cfg.model : null,
+    models[0]
+  ].filter(Boolean);
+  const seen = new Set();
+  const uniqueCandidates = candidates.filter(m => { if (seen.has(m)) return false; seen.add(m); return true; });
 
   // v3.63.279 — Same simplification as the tier-classifier above: cfg.format
   // is the source of truth; custom AIs without a format default to 'openai'.
@@ -9676,16 +9696,23 @@ async function recommendForDefault(provider) {
   // Builder pick uses the hard-guardrail prompt (rejects reasoning variants
   // due to envelope risk). Two API calls run concurrently so the dropdown
   // can render both ✨ Reviewer and 🔨 Builder markers.
-  const baseArgs = { endpoint: cfg.endpoint, format, key: cfg._key, models, askingModel };
-  const [reviewerResult, builderResult] = await Promise.all([
-    recommendModel({ ...baseArgs, cacheId: `default-${provider}-reviewer`, role: 'reviewer' }),
-    recommendModel({ ...baseArgs, cacheId: `default-${provider}-builder`,  role: 'builder'  })
-  ]);
+  // v3.63.481 — Retry with the next candidate if the asking model 403s
+  // (tier-gated). Mistral's free tier can't invoke mistral-large-latest,
+  // so the first fallback fails; walking the list finds one that works.
+  for (const askingModel of uniqueCandidates) {
+    const baseArgs = { endpoint: cfg.endpoint, format, key: cfg._key, models, askingModel };
+    const [reviewerResult, builderResult] = await Promise.all([
+      recommendModel({ ...baseArgs, cacheId: `default-${provider}-reviewer`, role: 'reviewer' }),
+      recommendModel({ ...baseArgs, cacheId: `default-${provider}-builder`,  role: 'builder'  })
+    ]);
 
-  // Return Reviewer-shape for backwards compat with callers that assume a
-  // single result. Builder result is cached separately and rendered by the
-  // dropdown via getCachedRecommendation('default-${provider}-builder').
-  return reviewerResult;
+    // Return Reviewer-shape for backwards compat with callers that assume a
+    // single result. Builder result is cached separately and rendered by the
+    // dropdown via getCachedRecommendation('default-${provider}-builder').
+    if (reviewerResult) return reviewerResult;
+    console.warn(`[recommend] ${provider}: askingModel ${askingModel} failed, trying next candidate…`);
+  }
+  return null;
 }
 
 // v3.26.1 — manual recheck button handler for default-AI rows. Sits next to
