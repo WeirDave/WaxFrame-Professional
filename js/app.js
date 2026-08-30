@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260830-001
+// Build: 20260830-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -423,6 +423,13 @@ function saveModelForAI(aiId, modelId, opts) {
       cfg.endpoint = cfg.endpointFn(modelId);
     }
   }
+  if (window._invalidKeys && window._invalidKeys[aiId]) {
+    delete window._invalidKeys[aiId];
+  }
+  if (window._validKeys && window._validKeys[aiId]) {
+    delete window._validKeys[aiId];
+  }
+  if (cfg._key) validateKeyOnSave(aiId, cfg._key);
   saveSettings();
   // v3.63.13 — refresh the row so the new model surfaces in the card header
   // (— gpt-5.5 etc.) immediately, not only after a full grid re-render.
@@ -593,7 +600,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260830-001';         // build stamp — update each session
+const BUILD = '20260830-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -7593,6 +7600,12 @@ async function testApiKey(id) {
     }
     let extracted = '';
     try { extracted = cfg.extractFn(JSON.parse(rawText)); } catch { extracted = '(parse error)'; }
+    if (window._invalidKeys && window._invalidKeys[id]) {
+      delete window._invalidKeys[id];
+    }
+    window._validKeys = window._validKeys || {};
+    window._validKeys[id] = true;
+    renderAIRow(id, false);
     if (subEl)  subEl.textContent  = `✅ Connected — "${extracted.trim().substring(0, 60)}"`;
     if (statEl) statEl.textContent = `HTTP ${response.status} — ${ms}ms  ✅`;
     if (rowStatusEl) { rowStatusEl.textContent = '✓'; rowStatusEl.className = 'tkp-status tkp-pass'; rowStatusEl.title = extracted.trim().substring(0, 60); }
@@ -9880,6 +9893,12 @@ async function recheckModelForAI(id, opts) {
     toast(`⚠️ ${ai.name}: couldn't get a recommendation — model unchanged. Open DevTools console for the raw response.`, 6000);
     return;
   }
+
+  if (window._invalidKeys && window._invalidKeys[id]) {
+    delete window._invalidKeys[id];
+  }
+  window._validKeys = window._validKeys || {};
+  window._validKeys[id] = true;
 
   // v3.63.18 — Green-flash helper. After a successful recommendation,
   // paint the per-row Recommend Models button green with a "✓ Recommended
