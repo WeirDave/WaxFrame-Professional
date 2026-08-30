@@ -1,5 +1,30 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.480 — Fix sticky Invalid badge after model change or successful test
+**Released:** 2026-08-30  
+**Build:** 20260830-002
+
+### What changed
+- **Bug fix: Invalid badge never cleared by model change, Test, or Recommend** — `_invalidKeys` was only cleared on key save or key removal. If `validateAllSavedKeys` (fires on every screen entry) flagged a key as invalid — e.g. due to a stale model after switching from Server to Internet mode — the Invalid badge persisted even after:
+  - Picking a different model from the dropdown
+  - Clicking Test and getting a pass
+  - Clicking Recommend Models and getting a successful recommendation
+- **saveModelForAI** now clears both `_invalidKeys` and `_validKeys` and re-fires validation against the new model.
+- **testApiKey** now clears `_invalidKeys` and sets `_validKeys` on HTTP 200, then re-renders the row so the badge flips to Ready immediately.
+- **recheckModelForAI** now clears `_invalidKeys` and sets `_validKeys` when the recommendation succeeds.
+
+### Verification
+- release-check: all 14 checks pass
+- Reproduced scenario: switch Server→Internet, observe Invalid on Mistral, pick new model → badge now clears and re-validates
+
+### Files touched
+js/app.js, js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — three small flag-clearing additions in app.js, safe to revert.
+
+---
+
 ## v3.63.479 — Pricing update: OpenAI gpt-5.6-sol price cut + Cohere Command A now paid
 **Released:** 2026-08-30  
 **Build:** 20260830-001
