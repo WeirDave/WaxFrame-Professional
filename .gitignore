@@ -1,5 +1,6 @@
 # wrangler local cache (auth tokens, asset uploads, etc.) — never commit
 tools/pricing-worker/.wrangler/
+.wrangler/
 
 # Atomic-write temp files (created by edit tools when Dropbox sync races)
 *.tmp.*
