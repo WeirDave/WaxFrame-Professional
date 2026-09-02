@@ -38,6 +38,7 @@ $Repo = 'WeirDave/WaxFrame-Professional'
 function Write-Step($msg) { Write-Host $msg -ForegroundColor Cyan }
 function Write-Ok($msg)   { Write-Host $msg -ForegroundColor Green }
 function Write-Err($msg)  { Write-Host $msg -ForegroundColor Red }
+function Write-Warn($msg) { Write-Host $msg -ForegroundColor Yellow }
 
 function Compare-WfVersion($a, $b) {
   $pa = ($a -replace '^v', '') -split '\.' | ForEach-Object { [int]($_ -as [int]) }
@@ -122,6 +123,82 @@ if ((Compare-WfVersion $latestVersion $currentVersion) -le 0) {
   exit 0
 }
 Write-Ok "v$latestVersion is available (you have v$currentVersion)."
+
+# ---- 2b. Git fast path ---------------------------------------------------------
+# A folder cloned from GitHub updates by fetching and checking out the release
+# tag: a few KB of objects instead of the whole ZIP, and the previous version
+# stays in the object store as its own rollback. The ZIP path below is
+# unchanged and still handles every other install.
+#
+# Refuses on a working copy with unpushed commits or edited tracked files --
+# checking a release tag out over in-progress work is not an update.
+function Test-WfGit {
+  try { & git --version *>$null; return $LASTEXITCODE -eq 0 } catch { return $false }
+}
+
+function Invoke-WfGit {
+  param([string[]]$Arguments, [switch]$AllowFailure)
+  $output = & git -C $scriptDir @Arguments 2>&1
+  if ($LASTEXITCODE -ne 0 -and -not $AllowFailure) {
+    throw "git $($Arguments -join ' ') failed: $output"
+  }
+  return $output
+}
+
+function Get-WfDirtyTrackedPaths {
+  $lines = Invoke-WfGit -Arguments @('status', '--porcelain') -AllowFailure
+  $dirty = @()
+  foreach ($line in @($lines)) {
+    $text = "$line"
+    if ($text.Trim().Length -eq 0) { continue }
+    if ($text.Substring(0, 2).Trim() -eq '??') { continue }  # untracked never blocks
+    $dirty += $text.Substring(3).Trim().Trim('"')
+  }
+  return $dirty
+}
+
+if ((Test-Path (Join-Path $scriptDir '.git')) -and (Test-WfGit)) {
+  Write-Step 'This copy is a git checkout -- updating with git.'
+  try {
+    $head = (Invoke-WfGit -Arguments @('rev-parse', '--abbrev-ref', 'HEAD') -AllowFailure | Out-String).Trim()
+    $onBranch = $head -and $head -ne 'HEAD'
+    $ahead = 0
+    if ($onBranch) {
+      $aheadText = (Invoke-WfGit -Arguments @('rev-list', '--count', '@{u}..HEAD') -AllowFailure | Out-String).Trim()
+      if ($aheadText -match '^\d+$') { $ahead = [int]$aheadText }
+    }
+    $dirty = Get-WfDirtyTrackedPaths
+
+    if ($onBranch -and ($ahead -gt 0 -or $dirty.Count -gt 0)) {
+      Write-Err 'This checkout has local work -- unpushed commits or edited files.'
+      Write-Err 'Updating would check a release tag out over it. Use git directly.'
+      Read-Host 'Press Enter to close'
+      exit 1
+    }
+    if ($dirty.Count -gt 0) {
+      Write-Err "These tracked files have local edits: $($dirty -join ', ')"
+      Write-Err 'Revert or move them, then run this again.'
+      Read-Host 'Press Enter to close'
+      exit 1
+    }
+
+    Write-Step 'Fetching from GitHub...'
+    Invoke-WfGit -Arguments @('fetch', '--tags', '--prune', 'origin') | Out-Null
+    Write-Step "Checking out $latestTag..."
+    Invoke-WfGit -Arguments @('-c', 'advice.detachedHead=false', 'checkout', '--force', $latestTag) | Out-Null
+
+    $installedVersion = Get-WfVersion $scriptDir
+    Write-Ok "Updated to v$installedVersion. Nothing was downloaded or replaced --"
+    Write-Ok "your previous version is still in git if you ever need it back."
+    Write-Step 'Reopening WaxFrame...'
+    Start-Process (Join-Path $scriptDir 'index.html')
+    Read-Host 'Press Enter to close'
+    exit 0
+  } catch {
+    Write-Warn "Git update didn't complete: $($_.Exception.Message)"
+    Write-Warn 'Falling back to the download method.'
+  }
+}
 
 # ---- 3. Download into staging --------------------------------------------------
 # Staged OUTSIDE $scriptDir, in %TEMP%. Staging inside the install folder

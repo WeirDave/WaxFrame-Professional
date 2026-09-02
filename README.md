@@ -253,7 +253,28 @@ Loads instantly. No download. Latest stable build.
 
 ### Portable (work, servers, air-gapped environments)
 
-For corporate networks that block `github.io`, on-prem servers, internal-network laptops, secure rooms, or anywhere you'd rather not depend on an external CDN, grab a tagged release ZIP:
+For corporate networks that block `github.io`, on-prem servers, internal-network laptops, secure rooms, or anywhere you'd rather not depend on an external CDN, put a copy on the machine.
+
+**One command:**
+
+```powershell
+irm https://raw.githubusercontent.com/WeirDave/WaxFrame-Professional/main/Install-WaxFrame.ps1 | iex
+```
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/WeirDave/WaxFrame-Professional/main/Install-WaxFrame.command | bash
+```
+
+It asks how you want it installed:
+
+| Method | What it means |
+| --- | --- |
+| **Git** | A tracked checkout. Updating later fetches a few KB and checks out the new tag, so it takes seconds. If git isn't installed, Windows offers to install it first with `winget` — usually under a minute. |
+| **ZIP** | No dependencies. Each update re-downloads the app and verifies its SHA-256. |
+
+Either way you land on the newest tagged release, and `Update-WaxFrame.ps1` (or `.command`) in that folder handles updates from then on — it detects which kind of install it is and uses the right mechanism automatically.
+
+**Or do it by hand:**
 
 1. Open the [Releases page](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
 2. Under **Assets**, download **WaxFrame-Professional-X.Y.Z.zip** (the build artifact — not the auto-generated source archives)
@@ -261,6 +282,8 @@ For corporate networks that block `github.io`, on-prem servers, internal-network
 4. Open `index.html` in a browser
 
 Each release ZIP ships with a `.sha256` sidecar for integrity verification. Every dependency is inside — fonts, libraries (PDF.js, Mammoth, JSZip, SheetJS), provider icons, the whole stack. No CDN calls, no `npm install`, no build step. Once loaded, WaxFrame only talks to whichever AI endpoints you point it at. Drop it on an internal server and the whole team can hit it.
+
+Your licence is separate from the app — buy it once and enter the key inside WaxFrame. The install scripts only fetch the app itself, so moving to a new machine or reinstalling never touches your licence.
 
 ### From `main` (bleeding edge)
 
