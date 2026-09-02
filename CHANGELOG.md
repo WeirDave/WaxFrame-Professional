@@ -1,5 +1,30 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.482 — Git install and update path: one command in, seconds to update
+**Released:** 2026-09-01  
+**Build:** 20260901-001
+
+### What changed
+- **New `Install-WaxFrame.ps1` / `Install-WaxFrame.command`** — one-command install for a machine that doesn't have WaxFrame yet:
+  `irm https://raw.githubusercontent.com/WeirDave/WaxFrame-Professional/main/Install-WaxFrame.ps1 | iex`
+  A fresh install asks git-vs-ZIP in plain language. Git gives a tracked checkout that updates in seconds; ZIP has no dependencies but re-downloads the whole app each time. Both land on the newest release tag, not on whatever `main` happens to be. The licence is unaffected — it is entered in the app, and these scripts only fetch the app itself.
+- **Missing git is not a dead end on Windows** — choosing git without it installed runs `winget install Git.Git` as part of the same flow, trying per-user scope first to avoid an admin prompt. No winget (older Windows 10), no network, or a policy block each falls back to ZIP with the actual reason printed. On Mac the routes (`xcode-select --install`, Homebrew) are described rather than run, since they are slow and intrusive.
+- **Both updater scripts gained a git fast path** — `Update-WaxFrame.ps1` and `Update-WaxFrame.command` now detect a cloned folder and update by fetching and checking out the release tag: a few KB of objects rather than the whole ZIP, with the previous version left in the object store as its own rollback. Everything else still takes the existing verified-ZIP path, unchanged.
+- **The git path refuses to run over local work** — a checkout with unpushed commits or edited tracked files is stopped with an explanation instead of having a release tag checked out over it. Untracked files are never touched. If anything in the git path fails, it falls back to the download method rather than leaving the folder half-updated.
+
+### Verification
+- release-check: all 16 checks pass, including Check 16's four assertions per updater script (repo slug, no hardcoded version literal, no phantom digest reference, SHA-256 sidecar verification) — the git additions keep every one of them
+- Both new scripts and both edited updaters parse clean (PowerShell AST parser; `bash -n`)
+- Full version sweep verified: no `3.63.481` or `20260830-003` left anywhere in HTML, JS, MJS, CSS or JSON
+
+### Files touched
+Install-WaxFrame.ps1 (new), Install-WaxFrame.command (new), Update-WaxFrame.ps1, Update-WaxFrame.command, README.md, js/version.js, js/app.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/release-check.mjs, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — the updater change is one self-contained block per script, each guarded by `if (.git exists and git available)`, and falls through to the untouched ZIP path if removed. The install scripts are new files with nothing depending on them.
+
+---
+
 ## v3.63.481 — Mistral tier-gated model fix: Recommend retry + smarter 403 handling
 **Released:** 2026-08-30  
 **Build:** 20260830-003

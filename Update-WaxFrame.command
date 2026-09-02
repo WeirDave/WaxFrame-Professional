@@ -131,6 +131,75 @@ if [ "$(cmp_version "$LATEST_VERSION" "$CURRENT_VERSION")" -le 0 ]; then
 fi
 log_ok "v$LATEST_VERSION is available (you have v$CURRENT_VERSION)."
 
+# ---- 2b. Git fast path ---------------------------------------------------------
+# A folder cloned from GitHub updates by fetching and checking out the release
+# tag: a few KB of objects instead of the whole ZIP, and the previous version
+# stays in the object store as its own rollback. The ZIP path below is
+# unchanged and still handles every other install.
+#
+# Refuses on a working copy with unpushed commits or edited tracked files --
+# checking a release tag out over in-progress work is not an update.
+have_git() { command -v git >/dev/null 2>&1; }
+
+dirty_tracked_paths() {
+  git -C "$SCRIPT_DIR" status --porcelain 2>/dev/null | while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    case "$line" in
+      '??'*) continue ;;   # untracked never blocks a checkout
+    esac
+    printf '%s\n' "$(printf '%s' "$line" | cut -c4- | tr -d '"')"
+  done
+}
+
+if [ -d "$SCRIPT_DIR/.git" ] && have_git; then
+  log_step "This copy is a git checkout -- updating with git."
+  git_ok=1
+
+  HEAD_REF="$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+  AHEAD=0
+  if [ -n "$HEAD_REF" ] && [ "$HEAD_REF" != "HEAD" ]; then
+    AHEAD="$(git -C "$SCRIPT_DIR" rev-list --count '@{u}..HEAD' 2>/dev/null || echo 0)"
+    case "$AHEAD" in ''|*[!0-9]*) AHEAD=0 ;; esac
+  fi
+  DIRTY="$(dirty_tracked_paths)"
+
+  if [ -n "$HEAD_REF" ] && [ "$HEAD_REF" != "HEAD" ] \
+     && { [ "$AHEAD" -gt 0 ] || [ -n "$DIRTY" ]; }; then
+    log_err "This checkout has local work -- unpushed commits or edited files."
+    log_err "Updating would check a release tag out over it. Use git directly."
+    pause; exit 1
+  fi
+  if [ -n "$DIRTY" ]; then
+    log_err "These tracked files have local edits: $(printf '%s' "$DIRTY" | tr '\n' ' ')"
+    log_err "Revert or move them, then run this again."
+    pause; exit 1
+  fi
+
+  log_step "Fetching from GitHub..."
+  git -C "$SCRIPT_DIR" fetch --tags --prune origin >/dev/null 2>&1 || git_ok=0
+  if [ "$git_ok" -eq 1 ]; then
+    log_step "Checking out $LATEST_TAG..."
+    git -C "$SCRIPT_DIR" -c advice.detachedHead=false checkout --force "$LATEST_TAG" >/dev/null 2>&1 || git_ok=0
+  fi
+
+  if [ "$git_ok" -eq 1 ]; then
+    INSTALLED="$(get_wf_version "$SCRIPT_DIR")"
+    log_ok "Updated to v$INSTALLED. Nothing was downloaded or replaced --"
+    log_ok "your previous version is still in git if you ever need it back."
+    log_step "Reopening WaxFrame..."
+    if command -v open >/dev/null 2>&1; then
+      open "$SCRIPT_DIR/index.html"
+    elif command -v xdg-open >/dev/null 2>&1; then
+      xdg-open "$SCRIPT_DIR/index.html"
+    else
+      log_ok "Open $SCRIPT_DIR/index.html in your browser to continue."
+    fi
+    pause; exit 0
+  fi
+
+  log_err "Git update didn't complete. Falling back to the download method."
+fi
+
 # ---- 3. Download into staging --------------------------------------------------
 # Staged OUTSIDE $SCRIPT_DIR, in a temp directory. Staging inside the
 # install folder would break step 8's atomic swap: once $SCRIPT_DIR gets
