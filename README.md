@@ -8,14 +8,14 @@
 
 Multi-AI document refinement in your browser. The Builder rewrites; the rest of your hive reviews in parallel and surfaces specific suggestions. You resolve disagreements your way, then run another round. Local-first, with no account, document database, telemetry, or install.
 
-[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?logo=github)](https://github.com/sponsors/WeirDave)
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Latest Release](https://img.shields.io/github/v/release/WeirDave/WaxFrame-Professional?label=Latest&color=orange)](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
-[![Release Check](https://github.com/WeirDave/WaxFrame-Professional/actions/workflows/release-check.yml/badge.svg?branch=main)](https://github.com/WeirDave/WaxFrame-Professional/actions/workflows/release-check.yml)
-[![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
-[![Portable](https://img.shields.io/badge/Portable-Air--Gap_Friendly-success.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
-[![Privacy](https://img.shields.io/badge/Privacy-Local_First-brightgreen.svg)](#privacy--local-first-design)
-[![Stack](https://img.shields.io/badge/Stack-Vanilla_JS-lightgrey.svg)](#run-locally)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?style=for-the-badge&logo=github)](https://github.com/sponsors/WeirDave)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue?style=for-the-badge)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/WeirDave/WaxFrame-Professional?label=Latest&color=orange&style=for-the-badge)](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
+[![Release Check](https://img.shields.io/github/actions/workflow/status/WeirDave/WaxFrame-Professional/release-check.yml?branch=main&style=for-the-badge&label=Release%20Check)](https://github.com/WeirDave/WaxFrame-Professional/actions/workflows/release-check.yml)
+[![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green?style=for-the-badge)](https://weirdave.github.io/WaxFrame-Professional/)
+[![Portable](https://img.shields.io/badge/Portable-Air--Gap_Friendly-success?style=for-the-badge)](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
+[![Privacy](https://img.shields.io/badge/Privacy-Local_First-brightgreen?style=for-the-badge)](#privacy--local-first-design)
+[![Stack](https://img.shields.io/badge/Stack-Vanilla_JS-lightgrey?style=for-the-badge)](#run-locally)
 
 ### [→ Launch WaxFrame in your browser](https://weirdave.github.io/WaxFrame-Professional/)
 

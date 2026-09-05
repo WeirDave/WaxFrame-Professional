@@ -1,5 +1,25 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.483 — Add GitHub Sponsors badge to README
+**Released:** 2026-09-05  
+**Build:** 20260905-001
+
+### What changed
+- GitHub Sponsors badge added as the first badge in the README header row, linking to github.com/sponsors/WeirDave.
+- All 8 README badges switched to `style=for-the-badge` for better visibility — matches WD-Wireless-Tools badge styling.
+
+### Verification
+- release-check: all checks pass
+- Visual confirmation: badge renders correctly in badge row
+
+### Files touched
+README.md, js/version.js, js/app.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — single badge addition, no dependencies.
+
+---
+
 ## v3.63.482 — Git install and update path: one command in, seconds to update
 **Released:** 2026-09-01  
 **Build:** 20260901-001
