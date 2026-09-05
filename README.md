@@ -8,6 +8,7 @@
 
 Multi-AI document refinement in your browser. The Builder rewrites; the rest of your hive reviews in parallel and surfaces specific suggestions. You resolve disagreements your way, then run another round. Local-first, with no account, document database, telemetry, or install.
 
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?logo=github)](https://github.com/sponsors/WeirDave)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/WeirDave/WaxFrame-Professional?label=Latest&color=orange)](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
 [![Release Check](https://github.com/WeirDave/WaxFrame-Professional/actions/workflows/release-check.yml/badge.svg?branch=main)](https://github.com/WeirDave/WaxFrame-Professional/actions/workflows/release-check.yml)
