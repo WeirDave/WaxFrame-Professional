@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260906-002
+   Build: 20260906-003
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1347,6 +1347,24 @@ body.helper-body .page-main {
      At wider viewports this still leaves plenty of room for full names;
      at laptop widths (~1366px) it cleanly truncates instead of overlapping. */
   max-width: calc(50% - 150px);
+}
+.work-screen-label {
+  font-size: var(--fs-12);
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.work-screen-label-sep {
+  color: var(--muted);
+  font-size: var(--fs-12);
+  flex-shrink: 0;
+}
+@media (max-width: 1399px) {
+  .work-screen-label,
+  .work-screen-label-sep { display: none; }
 }
 .work-topbar-center {
   display: flex;

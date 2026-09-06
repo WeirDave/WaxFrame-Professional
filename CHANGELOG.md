@@ -1,5 +1,28 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.486 — Onboarding UX: work screen identity, launch label, Quick Start rewrite
+**Released:** 2026-09-06  
+**Build:** 20260906-003
+
+### What changed
+- **"Working Console" label on the work screen** — the topbar now shows "WORKING CONSOLE — Project Name" in the top left, giving the screen a clear identity instead of relying on info-button hover text. The label hides at narrower viewports (<1400px) to preserve space.
+- **"Launch WaxFrame" renamed to "Launch Session"** — the button on Setup 4 (Starting Document) no longer says "Launch WaxFrame" when you're already inside WaxFrame. Clearer at a glance, especially for first-time users.
+- **Quick Start instructions rewritten** — start-here.html now gives explicit numbered steps for each of the four setup screens instead of a single run-on paragraph. References the new "Working Console" label and "Launch Session" button text.
+- Continues addressing issue #10 (onboarding UX).
+
+### Verification
+- release-check: all 16 checks pass
+- Browser-verified: "Launch Session →" label on Setup 4, "WORKING CONSOLE" label in work screen topbar, start-here.html Quick Start instructions render correctly with numbered list
+- Sacred rule (80ch column width) verified intact
+
+### Files touched
+index.html, style.css, start-here.html, js/app.js, js/version.js, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — CSS addition + HTML label + text changes only, no structural risk.
+
+---
+
 ## v3.63.485 — Pre-launch AI readiness gate
 **Released:** 2026-09-06  
 **Build:** 20260906-002
