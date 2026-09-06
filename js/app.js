@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260906-003
+// Build: 20260906-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -600,7 +600,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260906-003';         // build stamp — update each session
+const BUILD = '20260906-004';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2702,6 +2702,7 @@ function openNavMenu() {
   document.getElementById('navPanel')?.classList.add('open');
   document.getElementById('navBackdrop')?.classList.add('open');
 }
+
 
 function closeNavMenu() {
   document.getElementById('navPanel')?.classList.remove('open');
@@ -22492,6 +22493,11 @@ async function clearDocument() {
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', async () => {
+  // Keep the Navigation <details> permanently open — collapsing it hides
+  // all setup/screen links with no obvious way to get them back (issue #10).
+  const _navDetails = document.querySelector('#navPanel details.nav-section');
+  if (_navDetails) _navDetails.addEventListener('toggle', () => { if (!_navDetails.open) _navDetails.open = true; });
+
   // v3.41.0 — initTheme() removed. theme.js auto-inits on load.
   loadSettings(); // always load hive (AI keys) silently
   // v3.63.284 — ensureOriginalModelBaseline() call removed alongside the

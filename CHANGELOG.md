@@ -1,5 +1,24 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.487 — Lock Navigation menu open, prevent accidental collapse
+**Released:** 2026-09-06  
+**Build:** 20260906-004
+
+### What changed
+- **Navigation menu section can no longer be collapsed** — the Navigation `<details>` in the hamburger menu now re-opens itself if someone clicks the summary to collapse it. Previously, accidentally clicking the "Navigation" label hid all setup and screen links with no obvious way to get them back (the collapsed state persisted for the page session). Other menu sections (Tools, Help, Advanced, Legal) remain collapsible. Final fix from issue #10.
+
+### Verification
+- release-check: all 16 checks pass
+- Toggle listener fires on DOMContentLoaded after the navPanel DOM exists
+
+### Files touched
+js/app.js, js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — single event listener addition, no structural changes.
+
+---
+
 ## v3.63.486 — Onboarding UX: work screen identity, launch label, Quick Start rewrite
 **Released:** 2026-09-06  
 **Build:** 20260906-003
