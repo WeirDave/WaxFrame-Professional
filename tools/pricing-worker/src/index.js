@@ -233,7 +233,7 @@ const SOURCE_DOMAINS = {
   'gemini-free':  ['google.dev', 'google.com'],
   'gemini-paid':  ['google.dev', 'google.com'],
   'grok':         ['x.ai'],
-  'deepseek':     ['deepseek.com'],
+  'deepseek':     ['deepseek.com', 'deepseek.ai'],
   'together':     ['together.ai', 'together.xyz'],
   'mistral':      ['mistral.ai'],
   'chatgpt':      ['openai.com'],

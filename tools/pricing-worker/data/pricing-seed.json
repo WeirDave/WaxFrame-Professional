@@ -174,26 +174,26 @@
       "models": [
         {
           "id": "deepseek-v4-flash",
-          "inputPerM": 0.14,
-          "outputPerM": 0.28,
+          "inputPerM": 0.22,
+          "outputPerM": 0.66,
           "contextWindow": "1M",
           "maxOutput": "384K",
-          "estPerRound": 0.001,
+          "estPerRound": 0.002,
           "estNote": null,
-          "sourceUrl": "https://platform.deepseek.com/top_up",
-          "verifiedAt": "2026-08-01T19:25:30Z",
+          "sourceUrl": "https://api-docs.deepseek.com/quick_start/pricing/",
+          "verifiedAt": "2026-09-06T12:00:00Z",
           "status": "verified"
         },
         {
           "id": "deepseek-v4-pro",
-          "inputPerM": 0.435,
-          "outputPerM": 0.87,
+          "inputPerM": 0.66,
+          "outputPerM": 1.98,
           "contextWindow": "1M",
           "maxOutput": "384K",
-          "estPerRound": 0.004,
+          "estPerRound": 0.007,
           "estNote": null,
           "sourceUrl": "https://api-docs.deepseek.com/quick_start/pricing/",
-          "verifiedAt": "2026-08-02T20:00:00Z",
+          "verifiedAt": "2026-09-06T12:00:00Z",
           "status": "verified"
         }
       ]
@@ -264,14 +264,14 @@
         },
         {
           "id": "ministral-8b-latest",
-          "inputPerM": 0.15,
-          "outputPerM": 0.15,
+          "inputPerM": 0.1,
+          "outputPerM": 0.1,
           "contextWindow": null,
           "maxOutput": null,
           "estPerRound": 0.001,
           "estNote": null,
-          "sourceUrl": "https://mistral.ai/pricing/api/",
-          "verifiedAt": "2026-08-02T22:00:00Z",
+          "sourceUrl": "https://mistral.ai/news/ministraux/",
+          "verifiedAt": "2026-09-06T12:00:00Z",
           "status": "verified"
         }
       ]

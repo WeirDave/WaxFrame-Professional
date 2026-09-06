@@ -1,5 +1,31 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.484 — Pricing refresh: DeepSeek + Mistral price updates, trusted-source fix
+**Released:** 2026-09-06  
+**Build:** 20260906-001
+
+### What changed
+- **DeepSeek price updates** — both models verified against api-docs.deepseek.com/quick_start/pricing/:
+  - deepseek-v4-pro: $0.435/$0.87 → $0.66/$1.98 per M tokens (off-peak)
+  - deepseek-v4-flash: $0.14/$0.28 → $0.22/$0.66 per M tokens (off-peak)
+- **Mistral Ministral 8B price drop** — verified against mistral.ai: $0.15/$0.15 → $0.10/$0.10 per M tokens.
+- **Pricing worker trusted-source fix** — added `deepseek.ai` to DeepSeek's trusted domain list alongside `deepseek.com`. The Sonar research step was citing `deepseek.ai/pricing` which the worker correctly rejected as untrusted; both domains are official DeepSeek properties.
+- **grok-4.3 Sonar research hiccup** — no code change needed. Verified pricing is unchanged ($1.25/$2.50) against docs.x.ai/developers/pricing. Sonar returned null prices (transient research failure), not a real price change.
+- Pricing-renderer fallback data regenerated from updated seed.
+
+### Verification
+- release-check: all 14 checks pass
+- All three price changes verified against provider pages via WebFetch before updating
+- Pricing worker test-refresh-logic: all tests pass
+
+### Files touched
+tools/pricing-worker/data/pricing-seed.json, tools/pricing-worker/src/index.js, js/pricing-renderer.js, js/version.js, js/app.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — pricing data only, no structural changes. Worker redeploy needed to revert the trusted-source addition.
+
+---
+
 ## v3.63.483 — Add GitHub Sponsors badge to README
 **Released:** 2026-09-05  
 **Build:** 20260905-001
