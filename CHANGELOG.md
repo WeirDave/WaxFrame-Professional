@@ -1,5 +1,24 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.485 — Pre-launch AI readiness gate
+**Released:** 2026-09-06  
+**Build:** 20260906-002
+
+### What changed
+- **Pre-launch AI readiness check** — `startSession()` now validates that all active AIs have a working API key or server connection before transitioning to the work screen. Previously, unconfigured AIs were only caught when the user clicked "Smoke the Hive", which dead-ended the Quick Start flow with a confusing toast after five setup screens. The check now fires at Launch time with a clear message naming the unconfigured AIs and directing the user back to Setup 1. Addresses the onboarding dead-end reported in issue #10.
+
+### Verification
+- release-check: all 16 checks pass
+- Verified `isAIReadyForUse()` is the same function used by `runRound()` — no behavioral divergence
+
+### Files touched
+js/app.js, js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — single guard addition in `startSession()`, no structural changes.
+
+---
+
 ## v3.63.484 — Pricing refresh: DeepSeek + Mistral price updates, trusted-source fix
 **Released:** 2026-09-06  
 **Build:** 20260906-001

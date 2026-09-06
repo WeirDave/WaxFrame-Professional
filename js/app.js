@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260906-001
+// Build: 20260906-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -600,7 +600,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260906-001';         // build stamp — update each session
+const BUILD = '20260906-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -15227,6 +15227,15 @@ async function startSession() {
 
   if (docTab !== 'scratch' && !docText) {
     toast('⚠️ Please upload a file or paste your document text');
+    return;
+  }
+
+  // Pre-launch AI readiness gate — catch unconfigured AIs here instead of
+  // letting the user reach the work screen and dead-end at Smoke the Hive
+  const unconfiguredAtLaunch = activeAIs.filter(ai => !isAIReadyForUse(ai));
+  if (unconfiguredAtLaunch.length > 0) {
+    const names = unconfiguredAtLaunch.map(a => a.name).join(', ');
+    toast(`⚠️ ${unconfiguredAtLaunch.length === 1 ? 'AI not configured' : 'AIs not configured'}: ${names} — set up keys in Setup 1 before launching`);
     return;
   }
 
