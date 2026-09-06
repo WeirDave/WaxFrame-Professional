@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260905-001
+// Build: 20260906-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -600,7 +600,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260905-001';         // build stamp — update each session
+const BUILD = '20260906-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -9696,7 +9696,7 @@ async function recommendForDefault(provider) {
   // Builder pick uses the hard-guardrail prompt (rejects reasoning variants
   // due to envelope risk). Two API calls run concurrently so the dropdown
   // can render both ✨ Reviewer and 🔨 Builder markers.
-  // v3.63.483 — Retry with the next candidate if the asking model 403s
+  // v3.63.484 — Retry with the next candidate if the asking model 403s
   // (tier-gated). Mistral's free tier can't invoke mistral-large-latest,
   // so the first fallback fails; walking the list finds one that works.
   for (const askingModel of uniqueCandidates) {
