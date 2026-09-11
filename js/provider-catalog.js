@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260911-001
+// Build: 20260911-002
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -117,17 +117,159 @@
     return { sys: sys, usr: usr };
   }
 
+  // v3.63.489 — Anthropic REQUIRES max_tokens on every request, so unlike
+  // the OpenAI and Gemini shapes (which omit it and inherit the provider
+  // default) this body builder has to name a number. That number was 4096
+  // and had been since the builder was written.
+  //
+  // 4096 output tokens is roughly 3,000 words — and the Builder's output
+  // has to carry the whole document PLUS the conflicts block PLUS the
+  // applied-changes block. So WaxFrame was capping Claude Builders far
+  // below the model's real capability: every model in the `claude`
+  // fallback list (Sonnet 4.6, Opus 4.8/4.7/4.6, Haiku 4.5) supports at
+  // least 64K/32K output. The cap that cut David's build off on
+  // 2026-09-11 was WaxFrame's own, not the model's.
+  //
+  // 16384 is a deliberately conservative raise: comfortably inside every
+  // model this app offers, while 4x the old ceiling. It is NOT read from
+  // the model, which is the proper fix — Anthropic's /v1/models now
+  // returns a per-model `max_tokens` (and `max_input_tokens`), and
+  // WaxFrame already calls that endpoint via the proxy. Wiring that up is
+  // the follow-up. Until then, a hand-configured pre-4.x Claude model with
+  // a lower ceiling would get a clear 400 from Anthropic naming max_tokens.
+  var ANTHROPIC_MAX_OUTPUT_TOKENS = 16384;
+
+  // ── Truncation detection (v3.63.489) ──────────────────────────────
+  //
+  // Lives here rather than in app.js because it is provider-response
+  // knowledge, which is what this module owns — and because this module
+  // is require()-able from Node, so tools/test-provider-extractors.mjs can
+  // pin the behavior with fixtures. app.js holds thin delegating wrappers.
+  //
+  // Why this exists: a Builder that hits its output cap returns a response
+  // that looks finished, it just stops. Before v3.63.489 the only way to
+  // tell was a finishReason recorded in the Deep Dive ring buffer, which
+  // is never written unless Deep Dive is switched on — off by default, so
+  // in normal use truncation was undetectable and got misreported as the
+  // Builder ignoring its formatting instructions.
+
+  // Provider stop-reason field, coalesced across every response shape
+  // WaxFrame speaks. Verified against live provider docs in v3.63.489:
+  //   OpenAI-shape  choices[0].finish_reason    (ChatGPT, Copilot, Grok,
+  //                 Perplexity, Mistral, DeepSeek, Together, Cohere-compat,
+  //                 and every OpenAI-compatible local server)
+  //   Gemini        candidates[0].finishReason
+  //   Anthropic     stop_reason
+  // The camelCase choices[0].finishReason fallback is for OpenAI-compatible
+  // local servers that spell it that way — off-spec, seen in the wild, free
+  // to tolerate.
+  function extractFinishReason(data) {
+    if (!data) return null;
+    var c = data.choices && data.choices[0];
+    if (c && c.finish_reason != null) return c.finish_reason;
+    var cand = data.candidates && data.candidates[0];
+    if (cand && cand.finishReason != null) return cand.finishReason;
+    if (data.stop_reason != null) return data.stop_reason;
+    if (c && c.finishReason != null) return c.finishReason;
+    return null;
+  }
+
+  // True ONLY for "ran out of output room".
+  //
+  // Must not match a normal completion ('stop', 'end_turn', 'STOP',
+  // 'COMPLETE', 'eos'), a tool call, or a content-filter stop: those are
+  // different failures with different fixes, and treating one as truncation
+  // would fire a continuation at a response that already finished.
+  //
+  // Values confirmed against provider docs in v3.63.489:
+  //   'length'        OpenAI, Grok, Perplexity, DeepSeek, Together, Cohere
+  //   'MAX_TOKENS'    Gemini
+  //   'max_tokens'    Anthropic
+  //   'model_length'  Mistral — UNVERIFIED. Mistral's public API reference
+  //                   does not enumerate finish_reason values; carried
+  //                   defensively because matching a value that turns out
+  //                   not to exist costs nothing.
+  // DeepSeek's 'insufficient_system_resource' and 'aborted' are deliberately
+  // NOT matched — infrastructure failures, not capacity limits. The right
+  // response to those is retrying the same call, not stitching a
+  // continuation onto a partial answer.
+  var TRUNCATION_REASONS = {
+    LENGTH: 1, MAX_TOKENS: 1, MODEL_LENGTH: 1,
+    MAX_OUTPUT_TOKENS: 1, OUTPUT_LIMIT: 1, TOKEN_LIMIT: 1
+  };
+  function isTruncationSignal(value) {
+    if (value == null) return false;
+    var s = String(value).toUpperCase().replace(/[\s-]+/g, '_');
+    return TRUNCATION_REASONS[s] === 1;
+  }
+
+  // Structural truncation check — needs no provider cooperation at all.
+  //
+  // A complete Builder response closes every block it opens. A START marker
+  // present without its matching END means generation stopped partway
+  // through that block. This is the signal that carries the self-hosted
+  // case (Ollama, LM Studio, Open WebUI), where the output cap is a
+  // server-side setting and the response frequently carries no usable
+  // finish_reason at all.
+  //
+  // Only START-without-END counts. A block that never opened is not
+  // evidence of truncation — the draft-phase Builder prompt legitimately
+  // omits the APPLIED block entirely.
+  var ENVELOPE_PAIRS = [
+    ['%%DOCUMENT_START%%',  '%%DOCUMENT_END%%'],
+    ['%%CONFLICTS_START%%', '%%CONFLICTS_END%%'],
+    ['%%APPLIED_START%%',   '%%APPLIED_END%%']
+  ];
+  function looksStructurallyTruncated(text) {
+    if (!text || typeof text !== 'string') return false;
+    var clean = text.replace(/`\[/g, '[').replace(/\]`/g, ']');
+    for (var i = 0; i < ENVELOPE_PAIRS.length; i++) {
+      var open = ENVELOPE_PAIRS[i][0], close = ENVELOPE_PAIRS[i][1];
+      var o = clean.indexOf(open);
+      if (o === -1) continue;
+      if (clean.lastIndexOf(close) <= o) return true;
+    }
+    return false;
+  }
+
+  // ── Forced-truncation test hook (v3.63.489) ───────────────────────
+  //
+  // David's ask was for a "test method" — a repeatable way to reproduce a
+  // token-cap cutoff on demand instead of waiting to be bitten by one
+  // mid-project. Set this from the dev toolbar (or the console) and the
+  // NEXT request from any body builder asks the provider for a
+  // deliberately tiny output budget, which reproduces a real truncation
+  // through the real provider round-trip: a real finish_reason, a real
+  // half-written envelope, and the real detection path.
+  //
+  // Deliberately NOT persisted to localStorage: a forced-truncation mode
+  // that survived a reload would be indistinguishable from the bug it
+  // simulates. It resets on page load, every time.
+  //
+  //   window.WF_FORCE_TINY_OUTPUT = true    → next calls truncate
+  //   window.WF_FORCE_TINY_OUTPUT = false   → back to normal
+  var FORCED_TINY_TOKENS = 64;
+  function forcedTinyTokens() {
+    return (root && root.WF_FORCE_TINY_OUTPUT) ? FORCED_TINY_TOKENS : null;
+  }
+
   // Body builders — one per WaxFrame format.
   var BODY_BUILDERS = {
     'openai-chat': function (model, prompt) {
       var p = buildSysUsr(prompt);
-      return JSON.stringify({
+      var body = {
         model: model,
         messages: [
           { role: 'system', content: p.sys },
           { role: 'user',   content: p.usr }
         ]
-      });
+      };
+      // No max_tokens normally — the OpenAI shape inherits the provider's
+      // (or the local server's) own default, which is what we want. Only
+      // the forced-truncation test hook adds one.
+      var tiny = forcedTinyTokens();
+      if (tiny) body.max_tokens = tiny;
+      return JSON.stringify(body);
     },
     'anthropic-messages': function (model, prompt) {
       // v3.63.278 — Move the WaxFrame envelope into Anthropic's `system`
@@ -147,7 +289,7 @@
         // changes upstream.
         return JSON.stringify({
           model: model,
-          max_tokens: 4096,
+          max_tokens: forcedTinyTokens() || ANTHROPIC_MAX_OUTPUT_TOKENS,
           messages: [{ role: 'user', content: prompt }]
         });
       }
@@ -157,7 +299,7 @@
         : prompt.slice(0, split).trim() + '\n\nBegin your review now.';
       return JSON.stringify({
         model: model,
-        max_tokens: 4096,
+        max_tokens: forcedTinyTokens() || ANTHROPIC_MAX_OUTPUT_TOKENS,
         system: sysText,
         messages: [{ role: 'user', content: usrText }]
       });
@@ -166,7 +308,10 @@
       var s = splitEnvelope(prompt);
       var split = s.split, isBuilder = s.isBuilder;
       if (split === -1) {
-        return JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+        var fBody = { contents: [{ parts: [{ text: prompt }] }] };
+        var fTiny = forcedTinyTokens();
+        if (fTiny) fBody.generationConfig = { maxOutputTokens: fTiny };
+        return JSON.stringify(fBody);
       }
       // v3.63.278 — Hoisted the guard to the module-level REVIEWER_GUARD
       // constant shared with the OpenAI-shape buildSysUsr and the Anthropic
@@ -176,10 +321,13 @@
       var usrText = isBuilder
         ? '⚠️ YOU ARE NOW IN THE BUILD STEP. Read your system instructions carefully and follow the output format exactly.\n\n' + prompt.slice(0, split).trim() + '\n\nProduce the complete updated document now, wrapped in the required delimiters. Do not skip the conflicts block.'
         : prompt.slice(0, split).trim() + '\n\nBegin your review now.';
-      return JSON.stringify({
+      var gBody = {
         system_instruction: { parts: [{ text: sysText }] },
         contents: [{ parts: [{ text: usrText }] }]
-      });
+      };
+      var gTiny = forcedTinyTokens();
+      if (gTiny) gBody.generationConfig = { maxOutputTokens: gTiny };
+      return JSON.stringify(gBody);
     }
   };
 
@@ -750,6 +898,15 @@
   // on; the names just no longer need to be reachable from outside.
   root.WFProviderCatalog = {
     CATALOG: CATALOG,
+    // v3.63.489 — exported so the custom/rehydrated anthropic-format body
+    // builders in app.js and storage.js use the same ceiling as the
+    // catalog's own, instead of each carrying a private copy of 4096.
+    ANTHROPIC_MAX_OUTPUT_TOKENS: ANTHROPIC_MAX_OUTPUT_TOKENS,
+    // v3.63.489 — truncation detection. app.js wraps these; the wrappers
+    // exist so call sites read naturally, not because the logic differs.
+    extractFinishReason: extractFinishReason,
+    isTruncationSignal: isTruncationSignal,
+    looksStructurallyTruncated: looksStructurallyTruncated,
     getEntry: getEntry,
     buildApiConfigs: buildApiConfigs,
     fetchModelsList: fetchModelsList,

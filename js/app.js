@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260911-001
+// Build: 20260911-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -168,6 +168,70 @@ function _makeContentFilteredError(ai, reason) {
 
 function isContentFilteredError(err) {
   return !!(err && (err.contentFiltered || err.code === 'CONTENT_FILTERED' || _isContentFilteredSignal(err.message)));
+}
+
+// ── Truncation detection (v3.63.489) ────────────────────────────────
+//
+// The detection logic itself lives in js/provider-catalog.js — it is
+// provider-response knowledge, and that module is require()-able from Node
+// so tools/test-provider-extractors.mjs can pin it with fixtures. These are
+// thin delegating wrappers so the call sites below read naturally.
+//
+// Detection uses TWO independent signals, OR'd:
+//   1. The provider's stop/finish reason — tells us WHY, and is what a
+//      future continuation pass keys off. Spelled differently by every
+//      provider, and omitted entirely by some local servers.
+//   2. The structure of the response — an opened envelope block that never
+//      closed. Needs no provider cooperation, which is what makes it work
+//      on self-hosted servers where signal 1 is usually absent.
+// Signal 2 is the safety net; signal 1 is the diagnosis. Either one is
+// enough to refuse the round.
+function _extractFinishReason(data) {
+  return window.WFProviderCatalog.extractFinishReason(data);
+}
+function _isTruncationSignal(value) {
+  return window.WFProviderCatalog.isTruncationSignal(value);
+}
+function _looksStructurallyTruncated(text) {
+  return window.WFProviderCatalog.looksStructurallyTruncated(text);
+}
+
+// Human-readable evidence string — says WHICH signal fired, so a support
+// export distinguishes "the provider told us" from "we inferred it from an
+// unclosed block". Those have different follow-ups when diagnosing.
+function _truncEvidence(t) {
+  const bits = [];
+  if (t.bySignal)    bits.push(`finishReason=${t.finishReason}`);
+  if (t.byStructure) bits.push('unclosed %%…_END%% block');
+  return bits.join(' + ') || 'unknown';
+}
+
+// Detail line for the failed-round record and the troubleshooting card.
+function _describeTruncation(ai, prompt, t) {
+  const parts = [
+    `Builder: ${ai?.name || 'unknown'}`,
+    `Chars sent: ${(prompt?.length || 0).toLocaleString()}`
+  ];
+  if (t.completionTokens) parts.push(`Output tokens: ${t.completionTokens.toLocaleString()}`);
+  parts.push(`Evidence: ${_truncEvidence(t)}`);
+  parts.push(`Time: ${new Date().toLocaleTimeString()}`);
+  return parts.join(' · ');
+}
+
+// Single decision point for "was this Builder response cut off?".
+// `meta` is the out-param callAPI fills; `text` is the raw response.
+function _detectBuilderTruncation(text, meta) {
+  const bySignal    = _isTruncationSignal(meta?.finishReason);
+  const byStructure = _looksStructurallyTruncated(text);
+  return {
+    truncated:    bySignal || byStructure,
+    bySignal,
+    byStructure,
+    finishReason: meta?.finishReason ?? null,
+    // Measured output size, when the provider reports usage. Used by the
+    // troubleshooting card to tell the user what they actually got.
+    completionTokens: meta?.completionTokens ?? null
+  };
 }
 
 function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
@@ -600,7 +664,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260911-001';         // build stamp — update each session
+const BUILD = '20260911-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -10577,7 +10641,7 @@ function addCustomAI() {
     },
     anthropic: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
-      bodyFn: (m, prompt) => JSON.stringify({ model: m, max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }),
+      bodyFn: (m, prompt) => JSON.stringify({ model: m, max_tokens: (window.WFProviderCatalog?.ANTHROPIC_MAX_OUTPUT_TOKENS || 16384), messages: [{ role: 'user', content: prompt }] }),
       extractFn: d => WFProviderCatalog.extractAnthropicText(d)
     },
     google: {
@@ -14890,7 +14954,7 @@ function updateRefGrandTotals() {
 // PUSHES a new upload-source doc into the array instead of replacing
 // the singleton (the v3.21.0–v3.23.4 behavior).
 //
-// v3.63.488 — the drag half of this used to live in four functions wired
+// v3.63.489 — the drag half of this used to live in four functions wired
 // by inline ondragenter=/ondragover=/ondragleave=/ondrop= attributes on
 // #refDropRow. Inline handlers are inline JavaScript, so v3.63.366's
 // strict script-src stopped the browser compiling them and the whole
@@ -16336,8 +16400,12 @@ async function callBuilderWithContentFilterFailover(primaryAI, reviews, notes) {
     const modelNote = modelOverride && modelOverride !== originalModel ? ` · model: ${modelOverride}` : '';
     consoleLog(`📤 ${ai.name} (Builder${isFailover ? ' failover' : ''}) — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint}${modelNote})`, 'send');
     try {
-      const response = await callAPI(ai, prompt, notes, 'builder');
-      return { ai, prompt, response, modelUsed: cfg?.model || modelOverride || originalModel || '', isFailover };
+      // v3.63.489 — carry the per-call metadata out with the response so
+      // the consumer downstream can tell a cut-off build from a finished
+      // one. Each attempt owns its own meta object.
+      const meta = {};
+      const response = await callAPI(ai, prompt, notes, 'builder', meta);
+      return { ai, prompt, response, meta, modelUsed: cfg?.model || modelOverride || originalModel || '', isFailover };
     } catch (err) {
       err._wfBuilderAI = ai;
       err._wfBuilderPrompt = prompt;
@@ -17375,7 +17443,8 @@ async function runBuilderOnly() {
     // v3.36.14 — Pass `notes` (already frozen at top of runBuilderOnly
     // at L11769) as 3rd arg so the deep-dive captureRound entry holds
     // the authoritative Builder-call notes record.
-    const builderResponse = await callAPI(builderAI, prompt, notes, 'builder');
+    const _builderMeta = {};
+    const builderResponse = await callAPI(builderAI, prompt, notes, 'builder', _builderMeta);
     const newDoc    = stripBuilderEnvelope(extractDocument(builderResponse));
     const conflicts = extractConflicts(builderResponse);
     window._lastConflicts = conflicts || null;
@@ -17385,30 +17454,28 @@ async function runBuilderOnly() {
     window._lastAppliedChanges = extractAppliedChanges(builderResponse);
     const hasConflictBlock = builderResponse.includes('%%CONFLICTS_START%%');
 
-    if (!hasConflictBlock) {
+    // v3.63.489 — Truncation is now checked FIRST, and independently of
+    // the conflicts block. Pre-v3.63.489 this test lived inside the
+    // `if (!hasConflictBlock)` branch, so a response cut off AFTER
+    // %%CONFLICTS_START%% was never examined for truncation at all — it
+    // took the "has conflicts block" path and could be accepted with an
+    // incomplete APPLIED block. Truncation is a property of the response,
+    // not of which block happened to be missing.
+    const _trunc = _detectBuilderTruncation(builderResponse, _builderMeta);
+    if (_trunc.truncated) {
       builderHadError = true;
-      // v3.63.132 — Distinguish "Builder ignored the instructions" from
-      // "Builder hit its API's output cap mid-response". Check the last
-      // ring-buffer entry for this round's Builder call; finishReason of
-      // 'length' (OpenAI/Mistral/etc.) or 'MAX_TOKENS' (Anthropic/Google)
-      // means the response was cut off, not malformed. Different error
-      // code → different troubleshooting card with the right fix.
-      const _lastBuilderCall = (typeof WF_DEBUG !== 'undefined' && Array.isArray(WF_DEBUG.ringBuffer))
-        ? WF_DEBUG.ringBuffer.slice().reverse().find(e => e?.role === 'builder' && e?.round === round)
-        : null;
-      const _finish = (_lastBuilderCall?.finishReason || '').toString().toUpperCase();
-      const _truncated = _finish === 'LENGTH' || _finish === 'MAX_TOKENS';
-      _failedRoundReason = _truncated ? 'truncated' : 'conflicts';
-      _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}${_truncated ? ` · finishReason=${_finish}` : ''}`;
-      if (_truncated) {
-        setBeeStatus(builderAI.id, 'error', 'Output truncated');
-        setStatus(`⚠️ Builder output cut off at the model's token cap — round rejected`);
-        consoleLog(`⚠️ Builder output truncated (finishReason=${_finish}) — round rejected. Try a Builder with higher output capacity.`, 'error');
-      } else {
-        setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
-        setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
-        consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop).`, 'error');
-      }
+      _failedRoundReason  = 'truncated';
+      _failedRoundDetails = _describeTruncation(builderAI, prompt, _trunc);
+      setBeeStatus(builderAI.id, 'error', 'Output truncated');
+      setStatus(`⚠️ Builder output cut off at the model's token cap — round rejected`);
+      consoleLog(`⚠️ Builder output truncated (${_truncEvidence(_trunc)}) — round rejected. Your document was NOT changed.`, 'error');
+    } else if (!hasConflictBlock) {
+      builderHadError = true;
+      _failedRoundReason  = 'conflicts';
+      _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
+      setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
+      setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
+      consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop).`, 'error');
     } else if (conflicts) {
       consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
     } else {
@@ -18829,27 +18896,30 @@ async function runRound(opts) {
       const cleanResponse = builderResponse.replace(/`\[/g, '[').replace(/\]`/g, ']');
       const hasConflictBlock = cleanResponse.includes('%%CONFLICTS_START%%');
 
-      // ── GATE 1: Missing conflicts block = hard failure ──
-      if (!hasConflictBlock) {
+      // ── GATE 0: Output cut off at the token cap = hard failure ──
+      // v3.63.489 — checked BEFORE the conflicts gate and independently of
+      // it. See the matching comment in runBuilderOnly: truncation is a
+      // property of the response, not of which block went missing, and a
+      // response cut off after %%CONFLICTS_START%% used to skip this test
+      // entirely. Reads the meta object callBuilderWithContentFilterFailover
+      // now carries out of callAPI, with a structural fallback for servers
+      // that report no finish reason.
+      const _trunc = _detectBuilderTruncation(builderResponse, builderCall.meta);
+      if (_trunc.truncated) {
         builderHadError = true;
-        // v3.63.132 — Same truncation-vs-ignored split as runRound's
-        // Builder path above. See comments there for the rationale.
-        const _lastBuilderCall = (typeof WF_DEBUG !== 'undefined' && Array.isArray(WF_DEBUG.ringBuffer))
-          ? WF_DEBUG.ringBuffer.slice().reverse().find(e => e?.role === 'builder' && e?.round === round)
-          : null;
-        const _finish = (_lastBuilderCall?.finishReason || '').toString().toUpperCase();
-        const _truncated = _finish === 'LENGTH' || _finish === 'MAX_TOKENS';
-        _failedRoundReason = _truncated ? 'truncated' : 'conflicts';
-        _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}${_truncated ? ` · finishReason=${_finish}` : ''}`;
-        if (_truncated) {
-          setBeeStatus(builderAI.id, 'error', 'Output truncated');
-          setStatus(`⚠️ Builder output cut off at the model's token cap — round rejected`);
-          consoleLog(`⚠️ Builder output truncated (finishReason=${_finish}) — round rejected. Try a Builder with higher output capacity.`, 'error');
-        } else {
-          setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
-          setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
-          consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop).`, 'error');
-        }
+        _failedRoundReason  = 'truncated';
+        _failedRoundDetails = _describeTruncation(builderAI, builderPrompt, _trunc);
+        setBeeStatus(builderAI.id, 'error', 'Output truncated');
+        setStatus(`⚠️ Builder output cut off at the model's token cap — round rejected`);
+        consoleLog(`⚠️ Builder output truncated (${_truncEvidence(_trunc)}) — round rejected. Your document was NOT changed.`, 'error');
+      } else if (!hasConflictBlock) {
+        // ── GATE 1: Missing conflicts block = hard failure ──
+        builderHadError = true;
+        _failedRoundReason  = 'conflicts';
+        _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
+        setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
+        setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
+        consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop).`, 'error');
       } else if (conflicts) {
         consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
       } else {
@@ -19474,7 +19544,16 @@ function _releaseProviderSlot(base) {
 }
 function _noopRelease() { /* no-op for uncapped providers */ }
 
-async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
+// v3.63.489 — `metaOut` is an optional caller-owned object that callAPI
+// fills with per-call response metadata (finish reason, token usage,
+// model). It exists because callAPI returns a bare string, so the
+// provider's stop reason had nowhere to go: the only previous way to read
+// it was the Deep Dive ring buffer, which is empty unless Deep Dive is
+// switched on. An out-param rather than a module-level global because
+// reviewer calls run CONCURRENTLY — a shared global would race and hand
+// the Builder another AI's finish reason. Each caller passes its own
+// object, so there is nothing to race on. Callers that don't care omit it.
+async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut = null) {
   const cfg = API_CONFIGS[ai.provider];
   // v3.63.408 — isCustomEndpoint must be known BEFORE the key gate: server-
   // imported AIs (the internal gateway, Ollama, LM Studio, unauth'd Open WebUI) are
@@ -19628,7 +19707,11 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
   }
 
   const data = await response.json();
-  const finishReason = data?.choices?.[0]?.finish_reason || data?.candidates?.[0]?.finishReason || data?.stop_reason || data?.promptFeedback?.blockReason || null;
+  // v3.63.489 — _finishReason is the provider's stop reason via the shared
+  // coalescer; `finishReason` below keeps the blockReason fallback that
+  // only the content-filter check wants.
+  const _finishReason = _extractFinishReason(data);
+  const finishReason = _finishReason || data?.promptFeedback?.blockReason || null;
   const promptBlockReason = data?.promptFeedback?.blockReason || data?.candidates?.[0]?.finishReason || '';
   if (_isContentFilteredSignal(finishReason) || _isContentFilteredSignal(promptBlockReason)) {
     const reason = finishReason || promptBlockReason || 'provider safety filter';
@@ -19716,7 +19799,12 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
     chars:     text.length,
     words,
     status:    response.status,
-    finishReason: data?.choices?.[0]?.finish_reason || data?.stop_reason || null,
+    // v3.63.489 — was `choices[0].finish_reason || stop_reason`, which
+    // omitted Gemini's `candidates[0].finishReason` even though the
+    // correctly-coalesced value was already being computed a few lines
+    // above for the content-filter check. Gemini truncation was invisible
+    // here. Both now share _extractFinishReason so they cannot drift.
+    finishReason: _finishReason,
     promptPreview:    typeof prompt === 'string' ? prompt.slice(0, 500) : '',
     promptChars:      typeof prompt === 'string' ? prompt.length : 0,
     promptTokens:     _pt,
@@ -19730,6 +19818,19 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
     // Builder-only prompts).
     notes:            typeof notesContext === 'string' ? notesContext : ''
   });
+
+  // v3.63.489 — hand the caller everything it needs to decide whether this
+  // response was cut off. Written last so a throw earlier in the function
+  // leaves metaOut untouched rather than half-populated.
+  if (metaOut && typeof metaOut === 'object') {
+    metaOut.finishReason     = _finishReason;
+    metaOut.truncated        = _isTruncationSignal(_finishReason);
+    metaOut.promptTokens     = _pt;
+    metaOut.completionTokens = _ct;
+    metaOut.totalTokens      = _tt;
+    metaOut.model            = cfg.model;
+    metaOut.chars            = text.length;
+  }
 
   return text;
   } finally {
