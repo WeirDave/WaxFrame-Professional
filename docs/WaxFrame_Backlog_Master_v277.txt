@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v276
+WaxFrame Backlog Master v277
 2026-09-11
 
 ABOUT THIS DOCUMENT
@@ -408,137 +408,52 @@ OPEN FEATURES
            fails the gate.
 
 
-10. Builder continuation-and-stitch on token-cap truncation
+10. Widen model-limit coverage beyond the two providers that publish it
    ─────────────────────────────────────────────────────────
-   WHAT:   When a Builder hits its output cap mid-document,
-           resume the build from where it stopped and splice
-           the halves into one document, instead of rejecting
-           the round and making the user pick another model.
-           David's call, 2026-09-11: "so projects will be
-           stitched when they encounter a limiter."
-   WHY:    Detection shipped in v3.63.489 — a cut-off build is
-           now caught and the round refused, so nobody gets a
-           half-finished document presented as complete. But
-           refusing is not finishing. Continuation fixes the
-           problem regardless of which model was chosen, and
-           does not depend on predicting output length from
-           input length (which is not reliably predictable).
-   STATE:  OPEN — detection prerequisite is DONE (v3.63.489:
-           _detectBuilderTruncation, provider-catalog's
-           extractFinishReason / isTruncationSignal /
-           looksStructurallyTruncated, 43 passing fixtures,
-           and the Force Truncate dev-toolbar hook for
-           reproducing a cutoff on demand).
-
-   WHERE:  js/provider-catalog.js BODY_BUILDERS (all three
-           shapes need a continuation variant — bodyFn is
-           currently bodyFn(model, prompt) and builds the whole
-           message array internally, so continuation needs a
-           third argument or a sibling bodyFnContinue).
-           js/app.js runBuilderOnly (~L17464) and runRound
-           (~L18907) — both already compute _trunc and are the
-           natural retry points.
-           Envelope order is DOCUMENT then CONFLICTS then
-           APPLIED; the document comes first and is by far the
-           bulk, so truncation almost always lands mid-document.
-
-   SEAM STRATEGY (the part most likely to produce a bad result
-   — a repeated paragraph or a dropped sentence looks fine and
-   is worse than an obvious truncation):
-     1. Do NOT resume from the last character. Trim the partial
-        back to the last clean paragraph boundary (blank line)
-        and discard the trailing fragment. A half-written
-        paragraph is the least reliable text in the response;
-        asking the model to rewrite that paragraph beats asking
-        it to resume mid-word.
-     2. Fall back to the last sentence boundary if no paragraph
-        break exists, or if trimming would discard more than
-        ~30% of the partial. Raw-end resume is the last resort.
-     3. Anthropic supports true ASSISTANT PREFILL — pass the
-        trimmed partial as a trailing assistant turn and the
-        model continues it verbatim. That is the exact-fit
-        mechanism and should be used where available.
-        OpenAI-shape and Gemini get the approximation: partial
-        as an assistant message plus an explicit instruction
-        not to repeat, not to restart, and not to re-emit
-        the DOCUMENT_START marker.
-     4. Stitch with OVERLAP DETECTION regardless of the
-        instruction — models commonly repeat the last sentence
-        anyway. Take the last ~400 chars of the trimmed partial,
-        find the longest suffix-of-partial that is also a
-        prefix-of-continuation (try lengths 400 down to 40,
-        first match wins), and drop the duplicate before
-        concatenating. Compare on whitespace-normalised text
-        but splice on the original.
-     5. If no overlap is found, join with a blank line —
-        correct, because step 1 trimmed to a paragraph boundary.
-
-   CEILING (must be explicit, never silent):
-     Each continuation pass resends the original build prompt
-     (source document + reviewer output) PLUS the accumulated
-     partial, so input grows roughly linearly with each pass.
-     The ceiling is where prompt + accumulated partial
-     approaches the model's INPUT context window.
-     - Cap continuation at 2-3 passes, then stop.
-     - Where the input limit is known, check remaining room
-       before each pass rather than discovering it by failing:
-       Gemini exposes inputTokenLimit, Anthropic exposes
-       max_input_tokens (both on the models endpoints WaxFrame
-       already calls).
-     - At the ceiling, say so plainly: the document has
-       outgrown this model, here are the measured numbers.
-       Never loop, never silently degrade, never hand back a
-       document that is quietly missing its tail.
-
-   DONE:   A build that would previously truncate completes as
-           one coherent document; the seam is not detectable by
-           reading (no repeated or dropped text); the pass
-           count and any stitching is visible in the console;
-           hitting the ceiling produces an explicit
-           "outgrown this model" message with numbers, not a
-           loop or a silent partial. Force Truncate reproduces
-           a cutoff that then successfully stitches.
+   WHAT:   v3.63.490 ships limits in the model picker with
+           provenance labelling (API / observed / table). Two
+           gaps remain: (a) the Anthropic Builder request still
+           sends the hand-picked ANTHROPIC_MAX_OUTPUT_TOKENS
+           constant (16384) rather than the model's real
+           max_tokens, which is now being harvested; (b) local
+           servers publish a context length but never an output
+           cap, so their real ceiling is only learnable by
+           observation.
+   WHY:    The constant works and is safely inside every Claude
+           model WaxFrame offers, but it is a hardcoded number
+           where a live one is now available in the same
+           response WaxFrame already reads.
+   STATE:  OPEN, low urgency. The picker is honest about every
+           number it shows today, which was the actual ask.
+   WHERE:  js/provider-catalog.js ANTHROPIC_MAX_OUTPUT_TOKENS
+           and the anthropic-messages body builder;
+           js/app.js getModelLimits.
+   DONE:   Anthropic Builder requests send the model's own
+           max_tokens where harvested, falling back to the
+           constant when not; Ollama /api/show and LM Studio
+           /api/v0/models are polled for imported server AIs so
+           their context length shows as API-sourced rather
+           than unknown.
 
 
-11. Read model output/input limits from the provider APIs
+11. Pre-flight warning when a length target exceeds the Builder's cap
    ─────────────────────────────────────────────────────────
-   WHAT:   Replace the hand-picked ANTHROPIC_MAX_OUTPUT_TOKENS
-           constant (16384, set in v3.63.489) with the real
-           per-model limit read from the provider, and use the
-           input limits to power the continuation ceiling check
-           (item 10) and a pre-flight warning.
-   WHY:    A hardcoded table of model limits rots silently as
-           providers ship new models. It turns out two of the
-           providers WaxFrame uses now publish the numbers, and
-           WaxFrame already calls both endpoints.
-   STATE:  OPEN. Verified against live provider docs 2026-09-11:
-             Gemini    v1beta/models gives inputTokenLimit AND
-                       outputTokenLimit                  [YES]
-             Anthropic /v1/models gives max_tokens AND
-                       max_input_tokens                  [YES]
-             Cohere    /v1/models gives context_length only
-                       (input side only)
-             Mistral   context length only (unverified)
-             OpenAI, Copilot, Grok, DeepSeek, Perplexity,
-                       Together: bare id lists, nothing  [NO]
-             Ollama / LM Studio / Open WebUI: nothing useful,
-                       and the cap that matters there is a
-                       SERVER-SIDE setting, not a model
-                       property, so no table can ever be right
-                       for the self-hosted case.
-           So: read it where published, let the user enter it
-           where not, and never pretend to know it.
-   WHERE:  js/provider-catalog.js fetchModelsList /
-           fetchModelsByFormat already hit these endpoints —
-           the fields are in responses WaxFrame currently
-           discards.
-   DONE:   Anthropic Builder requests send the model's real
-           max_tokens instead of a constant; the continuation
-           ceiling check (item 10) uses real input limits where
-           published; a pre-flight WARNING (never a promise)
-           fires when a length target is set on the Project
-           screen and the Builder's known output cap cannot
-           plausibly hold it; silent when the cap is unknown.
+   WHAT:   When the user has set a length target on the Project
+           screen AND the Builder's max output is known, warn
+           before the build starts if the target plausibly will
+           not fit.
+   WHY:    Warning before a long build beats discovering the
+           cutoff after. Now cheap: v3.63.490 already knows the
+           Builder's output limit and its provenance.
+   STATE:  OPEN. Explicitly a WARNING, never a promise — output
+           length is not reliably predictable from input length,
+           so this can flag a likely problem but must not claim
+           a build will succeed.
+   WHERE:  js/app.js getLengthConstraint / getModelLimits;
+           the Launch Session path and the Builder screen.
+   DONE:   A target that cannot fit the known cap warns at
+           Launch with both numbers and the limit's provenance;
+           silent when the cap is unknown; never blocks.
 
 
 ════════════════════════════════════════════════════════════

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260911-002
+// Build: 20260911-003
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -117,7 +117,7 @@
     return { sys: sys, usr: usr };
   }
 
-  // v3.63.489 — Anthropic REQUIRES max_tokens on every request, so unlike
+  // v3.63.490 — Anthropic REQUIRES max_tokens on every request, so unlike
   // the OpenAI and Gemini shapes (which omit it and inherit the provider
   // default) this body builder has to name a number. That number was 4096
   // and had been since the builder was written.
@@ -139,7 +139,7 @@
   // a lower ceiling would get a clear 400 from Anthropic naming max_tokens.
   var ANTHROPIC_MAX_OUTPUT_TOKENS = 16384;
 
-  // ── Truncation detection (v3.63.489) ──────────────────────────────
+  // ── Truncation detection (v3.63.490) ──────────────────────────────
   //
   // Lives here rather than in app.js because it is provider-response
   // knowledge, which is what this module owns — and because this module
@@ -147,14 +147,14 @@
   // pin the behavior with fixtures. app.js holds thin delegating wrappers.
   //
   // Why this exists: a Builder that hits its output cap returns a response
-  // that looks finished, it just stops. Before v3.63.489 the only way to
+  // that looks finished, it just stops. Before v3.63.490 the only way to
   // tell was a finishReason recorded in the Deep Dive ring buffer, which
   // is never written unless Deep Dive is switched on — off by default, so
   // in normal use truncation was undetectable and got misreported as the
   // Builder ignoring its formatting instructions.
 
   // Provider stop-reason field, coalesced across every response shape
-  // WaxFrame speaks. Verified against live provider docs in v3.63.489:
+  // WaxFrame speaks. Verified against live provider docs in v3.63.490:
   //   OpenAI-shape  choices[0].finish_reason    (ChatGPT, Copilot, Grok,
   //                 Perplexity, Mistral, DeepSeek, Together, Cohere-compat,
   //                 and every OpenAI-compatible local server)
@@ -181,7 +181,7 @@
   // different failures with different fixes, and treating one as truncation
   // would fire a continuation at a response that already finished.
   //
-  // Values confirmed against provider docs in v3.63.489:
+  // Values confirmed against provider docs in v3.63.490:
   //   'length'        OpenAI, Grok, Perplexity, DeepSeek, Together, Cohere
   //   'MAX_TOKENS'    Gemini
   //   'max_tokens'    Anthropic
@@ -232,7 +232,7 @@
     return false;
   }
 
-  // ── Forced-truncation test hook (v3.63.489) ───────────────────────
+  // ── Forced-truncation test hook (v3.63.490) ───────────────────────
   //
   // David's ask was for a "test method" — a repeatable way to reproduce a
   // token-cap cutoff on demand instead of waiting to be bitten by one
@@ -631,6 +631,220 @@
     return out;
   }
 
+  // ── Model token limits (v3.63.490) ────────────────────────────────
+  //
+  // David, 2026-09-11: "we just don't know what the limits are so if
+  // different models have different limits then we need to know that so
+  // that we can choose the right model for the builder."
+  //
+  // The number that matters when picking a Builder is MAX OUTPUT TOKENS —
+  // that is what cuts a build off mid-document. The context window matters
+  // too (it bounds how much document + reviewer output you can send in),
+  // so both are surfaced, but output is the one that bites.
+  //
+  // Three sources, and WHICH ONE a number came from is shown in the UI.
+  // That is not decoration: a figure read live from the provider and a
+  // figure typed into a table by hand a year ago deserve different amounts
+  // of trust, and an engineer picking a tool should be able to tell them
+  // apart. A hardcoded number that silently rots when a provider ships a
+  // new model is worse than showing nothing, because it gets believed.
+  //
+  //   'api'      — read live from the provider's own models endpoint.
+  //                Authoritative. No maintenance, cannot go stale.
+  //   'observed' — measured from a real truncation in this app. Ground
+  //                truth for what the model ACTUALLY did here, which can
+  //                be lower than any published figure (a self-hosted
+  //                server's own cap, or an org policy limit).
+  //   'table'    — maintained by hand below. Correct on the date stated
+  //                and not a moment longer.
+  //
+  // Availability, verified against live provider docs and specs on
+  // 2026-09-11 (not from memory — these endpoints change):
+  //
+  //   Gemini      v1beta/models  inputTokenLimit + outputTokenLimit   BOTH
+  //   Anthropic   /v1/models     max_input_tokens + max_tokens        BOTH
+  //   Together    /v1/models     context_length                       context only
+  //   Cohere      /v1/models     context_length                       context only
+  //   LM Studio   /api/v0/models max_context_length +
+  //                              loaded_context_length                context only
+  //   Ollama      /api/show      model_info["<arch>.context_length"]  context only
+  //   OpenAI      /v1/models     id, created, object, owned_by,
+  //                              shutdown_date                        NEITHER
+  //   Copilot / Grok / Perplexity / DeepSeek / Mistral                NEITHER
+  //
+  // OpenAI's emptiness is confirmed from the live openai-openapi spec, not
+  // inferred. OpenRouter publishes per-model completion limits and would be
+  // the best source of all — but WaxFrame does not route through OpenRouter,
+  // so it is not an option here.
+  //
+  // For self-hosted servers (Ollama, LM Studio, Open WebUI) the output cap
+  // is a SERVER-SIDE setting — Ollama's num_predict, LM Studio's loaded
+  // config — not a property of the model. No table and no API can ever be
+  // right about it for a given install. That is exactly the case 'observed'
+  // exists to cover.
+
+  // Hand-maintained fallback. Deliberately SMALL: it carries only the
+  // models WaxFrame ships as defaults/fallbacks, where a wrong number would
+  // mislead on the common path. Everything else shows "unknown" rather than
+  // a guess. Review date is displayed in the UI verbatim.
+  var LIMITS_TABLE_REVIEWED = '2026-09-11';
+  var LIMITS_TABLE = {
+    // OpenAI publishes nothing via API (confirmed against the live spec).
+    'gpt-5.6-sol':        { context: 400000, output: 128000 },
+    'gpt-5.5':            { context: 400000, output: 128000 },
+    // xAI publishes no model-listing limits.
+    'grok-4':             { context: 256000, output:  32000 },
+    // DeepSeek publishes nothing via API.
+    'deepseek-chat':      { context: 128000, output:   8192 },
+    'deepseek-reasoner':  { context: 128000, output:  65536 },
+    // Mistral's models endpoint carries context only, and its
+    // finish_reason vocabulary is undocumented.
+    'mistral-large-latest': { context: 128000, output: 8192 },
+    // AI21 Jamba — the family already flagged Reviewer-only in the picker.
+    // Hard 4096 output ceiling across 1.5 / 1.6 / 1.7, which is why it
+    // cannot finish a Builder round at any setting.
+    'jamba-1.5-large':    { context: 256000, output:   4096 },
+    'jamba-1.6-large':    { context: 256000, output:   4096 }
+  };
+
+  // Pull limits out of ONE model entry, per response shape. Returns null
+  // when the shape carries nothing usable, which is the common case.
+  //
+  // Kept separate from the fetch so it can be fixture-tested without a
+  // network call — this is exactly the kind of code that breaks silently
+  // when a provider reshapes a response.
+  function limitsFromModelEntry(discovery, m) {
+    if (!m || typeof m !== 'object') return null;
+    var ctx = null, out = null;
+
+    if (discovery === 'gemini-list') {
+      // The only provider that publishes both, cleanly.
+      if (m.inputTokenLimit  != null) ctx = Number(m.inputTokenLimit);
+      if (m.outputTokenLimit != null) out = Number(m.outputTokenLimit);
+    } else if (discovery === 'anthropic-via-proxy') {
+      // max_tokens here means "the largest value you may pass as the
+      // max_tokens REQUEST parameter" — i.e. the output ceiling. Anthropic
+      // returns 0 for models where it is not published; treat 0 as unknown
+      // rather than as a real limit of zero.
+      if (m.max_input_tokens) ctx = Number(m.max_input_tokens);
+      if (m.max_tokens)       out = Number(m.max_tokens);
+    } else {
+      // OpenAI-shape. The official OpenAI endpoint carries nothing, but
+      // several OpenAI-COMPATIBLE servers put a context length on the same
+      // object under various names. Reading them opportunistically costs
+      // nothing and is the only automatic signal available for a local
+      // server. loaded_context_length wins over max_context_length where
+      // both appear (LM Studio): a model can be loaded with a window below
+      // its architectural maximum, and the loaded value is what the server
+      // will actually serve.
+      if (m.loaded_context_length) ctx = Number(m.loaded_context_length);
+      else if (m.context_length)   ctx = Number(m.context_length);
+      else if (m.max_context_length) ctx = Number(m.max_context_length);
+      else if (m.max_model_len)    ctx = Number(m.max_model_len);
+      // Some OpenAI-compatible servers expose an output cap too. Rare.
+      if (m.max_output_tokens)         out = Number(m.max_output_tokens);
+      else if (m.max_completion_tokens) out = Number(m.max_completion_tokens);
+    }
+
+    if (!isFinite(ctx) || ctx <= 0) ctx = null;
+    if (!isFinite(out) || out <= 0) out = null;
+    if (ctx == null && out == null) return null;
+    return { context: ctx, output: out, source: 'api' };
+  }
+
+  // Table lookup. Exact id first, then a prefix match so a dated variant
+  // (claude-sonnet-4-6-20260115) still resolves against its base entry.
+  function limitsFromTable(model) {
+    if (!model) return null;
+    var hit = LIMITS_TABLE[model];
+    if (hit) return { context: hit.context, output: hit.output, source: 'table', reviewed: LIMITS_TABLE_REVIEWED };
+    var keys = Object.keys(LIMITS_TABLE);
+    for (var i = 0; i < keys.length; i++) {
+      if (model.indexOf(keys[i]) === 0) {
+        var h = LIMITS_TABLE[keys[i]];
+        return { context: h.context, output: h.output, source: 'table', reviewed: LIMITS_TABLE_REVIEWED };
+      }
+    }
+    return null;
+  }
+
+  // Merge the three sources into one record for display.
+  //
+  // Precedence for the OUTPUT figure is deliberate and is the whole point
+  // of recording observations: an observed truncation BEATS a declared
+  // limit. If the provider says 8192 and we were actually cut off at 4096,
+  // then 4096 is what this setup does — the difference is a server config,
+  // an org policy, or a stale table, and the user needs the real number.
+  // When the two disagree, BOTH are surfaced rather than quietly replacing
+  // one with the other.
+  //
+  // Context window has no observed equivalent (nothing measures it), so it
+  // is api-then-table.
+  function mergeModelLimits(apiLimits, observed, model) {
+    var table = limitsFromTable(model);
+    var out = {
+      model: model || '',
+      context: null, contextSource: null,
+      output: null,  outputSource: null,
+      reviewed: null,
+      declaredOutput: null,   // set only when observation contradicts it
+      observedAt: null
+    };
+
+    if (apiLimits && apiLimits.context != null) { out.context = apiLimits.context; out.contextSource = 'api'; }
+    else if (table && table.context != null)    { out.context = table.context;     out.contextSource = 'table'; out.reviewed = table.reviewed; }
+
+    var declared = null, declaredSrc = null;
+    if (apiLimits && apiLimits.output != null) { declared = apiLimits.output; declaredSrc = 'api'; }
+    else if (table && table.output != null)    { declared = table.output;     declaredSrc = 'table'; out.reviewed = table.reviewed; }
+
+    var obs = (observed && observed.output) ? Number(observed.output) : null;
+    if (!isFinite(obs) || obs <= 0) obs = null;
+
+    if (obs != null) {
+      out.output = obs;
+      out.outputSource = 'observed';
+      out.observedAt = observed.at || null;
+      // Only call it a contradiction when the declared figure is
+      // meaningfully higher — providers round, and a model legitimately
+      // stopping a little under its ceiling is not evidence of anything.
+      if (declared != null && declared > obs * 1.1) {
+        out.declaredOutput = declared;
+        out.declaredOutputSource = declaredSrc;
+      }
+    } else if (declared != null) {
+      out.output = declared;
+      out.outputSource = declaredSrc;
+    }
+    return out;
+  }
+
+  // Compact display form. Providers pick either round-DECIMAL limits
+  // (128000, 200000, 400000) or round-BINARY ones (4096, 8192, 65536), and
+  // each family is named accordingly in the wild: nobody calls 65536 "66K",
+  // they call it 64K. So divide by 1024 when the value is an exact multiple
+  // of 1024, and by 1000 otherwise. Both are exact renderings of the real
+  // number, not roundings - the precise figure is always in the tooltip.
+  function formatTokenLimit(n) {
+    if (n == null || !isFinite(n) || n <= 0) return null;
+    // Decimal first: 128000 is divisible by 1024 as well, but it is a
+    // round-decimal limit and is universally called 128K, not 125K.
+    if (n % 1000000 === 0) return (n / 1000000) + 'M';
+    if (n % 1048576 === 0) return (n / 1048576) + 'M';
+    if (n % 1000 === 0)    return (n / 1000) + 'K';
+    if (n % 1024 === 0)    return (n / 1024) + 'K';
+    if (n >= 1000)         return Math.round(n / 1000) + 'K';
+    return String(n);
+  }
+
+  // Short provenance marker shown next to each number.
+  function limitSourceLabel(src) {
+    if (src === 'api')      return 'from provider API';
+    if (src === 'observed') return 'observed in a real run';
+    if (src === 'table')    return 'from WaxFrame table';
+    return 'unknown';
+  }
+
   // ── fetchModelsList ───────────────────────────────────────────────
   // One async function replaces the provider-specific if/else chains that
   // used to live in BOTH fetchModelsForProvider AND fetchModelsForProvider
@@ -641,8 +855,21 @@
   // wraps it for the 7-day cache path; the watchdog wraps it cache-less.
   // RETRY-ONCE IS THE CALLER'S CONCERN too — same reason. Throws on
   // transport errors so the caller can decide.
-  async function fetchModelsList(entry, key) {
+  // v3.63.490 — `limitsOut` is an optional caller-owned object that gets
+  // filled with { modelId: {context, output, source:'api'} } for whatever
+  // the provider published alongside its model list. Same out-param shape
+  // as callAPI's metaOut and for the same reason: the return contract here
+  // is a plain array of ids that ~every caller depends on, and the limits
+  // are extra information riding the SAME response — no new network call,
+  // no new endpoint, nothing to keep in sync. Callers that don't care omit
+  // it and nothing changes.
+  async function fetchModelsList(entry, key, limitsOut) {
     if (!entry || !key) return null;
+    var _collect = function (id, raw) {
+      if (!limitsOut || !id) return;
+      var lim = limitsFromModelEntry(entry.discovery, raw);
+      if (lim) limitsOut[id] = lim;
+    };
     var disc = entry.discovery;
     if (!disc) return null;
 
@@ -657,6 +884,7 @@
       var entries = (data && data.data) || [];
       // v3.56.46 — order by real recency (created epoch), newest first.
       entries = entries.slice().sort(function (a, b) { return (b.created || 0) - (a.created || 0); });
+      entries.forEach(function (m) { _collect(m && m.id, m); });
       var models = entries.map(function (m) { return m.id; }).filter(filter);
       return models.length ? Array.from(new Set(models)) : null;
     }
@@ -672,10 +900,10 @@
       });
       if (!resp.ok) return null;
       var data = await resp.json();
-      var models = (data && data.data || [])
-        .slice()
-        .sort(function (a, b) { return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0); })
-        .map(function (m) { return m.id; });
+      var aEntries = (data && data.data || []).slice()
+        .sort(function (a, b) { return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0); });
+      aEntries.forEach(function (m) { _collect(m && m.id, m); });
+      var models = aEntries.map(function (m) { return m.id; });
       return models.length ? Array.from(new Set(models)) : null;
     }
 
@@ -687,8 +915,10 @@
       );
       if (!resp.ok) return null;
       var data = await resp.json();
-      var models = (data && data.models || [])
-        .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1; })
+      var gEntries = (data && data.models || [])
+        .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1; });
+      gEntries.forEach(function (m) { _collect(String(m.name || '').replace('models/', ''), m); });
+      var models = gEntries
         .map(function (m) { return String(m.name || '').replace('models/', ''); })
         .filter(filter)
         .sort().reverse();
@@ -898,13 +1128,21 @@
   // on; the names just no longer need to be reachable from outside.
   root.WFProviderCatalog = {
     CATALOG: CATALOG,
-    // v3.63.489 — exported so the custom/rehydrated anthropic-format body
+    // v3.63.490 — exported so the custom/rehydrated anthropic-format body
     // builders in app.js and storage.js use the same ceiling as the
     // catalog's own, instead of each carrying a private copy of 4096.
     ANTHROPIC_MAX_OUTPUT_TOKENS: ANTHROPIC_MAX_OUTPUT_TOKENS,
-    // v3.63.489 — truncation detection. app.js wraps these; the wrappers
+    // v3.63.490 — truncation detection. app.js wraps these; the wrappers
     // exist so call sites read naturally, not because the logic differs.
     extractFinishReason: extractFinishReason,
+    // v3.63.490 — model token limits.
+    limitsFromModelEntry: limitsFromModelEntry,
+    limitsFromTable: limitsFromTable,
+    mergeModelLimits: mergeModelLimits,
+    formatTokenLimit: formatTokenLimit,
+    limitSourceLabel: limitSourceLabel,
+    LIMITS_TABLE: LIMITS_TABLE,
+    LIMITS_TABLE_REVIEWED: LIMITS_TABLE_REVIEWED,
     isTruncationSignal: isTruncationSignal,
     looksStructurallyTruncated: looksStructurallyTruncated,
     getEntry: getEntry,
