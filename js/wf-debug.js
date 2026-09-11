@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260911-004
+// Build: 20260911-005
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -433,7 +433,7 @@ window.WF_DEBUG = {
   // The REFRESH_TOKEN is stored in localStorage on first use (prompted
   // via wfConfirm's input variant) — it's a Worker secret, not an API
   // key for a provider, so localStorage is fine.
-  // ── Forced truncation (v3.63.491) ──────────────────────────────
+  // ── Forced truncation (v3.63.492) ──────────────────────────────
   //
   // David's "test method" ask: a repeatable way to reproduce a Builder
   // token-cap cutoff on demand, instead of discovering one mid-project by
@@ -1111,6 +1111,16 @@ function renderTroubleshootingCard(entry, ctx) {
   // straight through. Hidden when ctx.message is empty.
   const providerWrap = document.getElementById('tcProviderMessage');
   const providerText = document.getElementById('tcProviderMessageText');
+  // v3.63.492 — the label is no longer always true. This block was built for
+  // verbatim provider error text ("What the provider actually said"), but
+  // the truncation card now puts WaxFrame's OWN diagnosis here — where it
+  // belongs, since it is the most prominent slot on the card. Attributing
+  // our analysis to the provider would be a lie in the one place the user
+  // is looking for a straight answer. ctx.messageLabel overrides it.
+  const providerLabel = document.getElementById('tcProviderMessageLabel');
+  if (providerLabel) {
+    providerLabel.textContent = ctx.messageLabel || 'What the provider actually said:';
+  }
   if (providerWrap && providerText) {
     const raw = (ctx.message || '').trim();
     // Strip leading classification prefix like "RATE_LIMITED:" or "AUTH_FAILED:"

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260911-004
+// Build: 20260911-005
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -161,7 +161,7 @@ check(
   false
 );
 
-// ── Truncation detection (v3.63.491) ────────────────────────────────
+// ── Truncation detection (v3.63.492) ────────────────────────────────
 // A Builder that hits its output cap returns a response that LOOKS
 // finished. These fixtures pin the two signals that catch it, per provider
 // response shape. Live values were verified against provider docs when
@@ -229,7 +229,7 @@ check('draft-phase response with no APPLIED block is not truncated',
   WFProviderCatalog.looksStructurallyTruncated([DOC_OK, CONF_OK].join(`\n`)), false);
 check('cut off mid-document (no DOCUMENT_END)',
   WFProviderCatalog.looksStructurallyTruncated(`%%DOCUMENT_START%%\nhalf a docum`), true);
-// The pre-v3.63.491 blind spot: this response HAS a conflicts block, so the
+// The pre-v3.63.492 blind spot: this response HAS a conflicts block, so the
 // old check — nested inside `if (!hasConflictBlock)` — never examined it.
 check('cut off inside the conflicts block (the old blind spot)',
   WFProviderCatalog.looksStructurallyTruncated(
@@ -253,7 +253,7 @@ console.log('▶ Anthropic Builder output ceiling');
 check('Anthropic ceiling is well above the old 4096 default',
   WFProviderCatalog.ANTHROPIC_MAX_OUTPUT_TOKENS >= 16384, true);
 
-// ── Model token limits (v3.63.491) ──────────────────────────────────
+// ── Model token limits (v3.63.492) ──────────────────────────────────
 // Which model can actually finish a Builder round is decided by its max
 // output tokens. These fixtures pin BOTH the per-provider extraction (the
 // shapes drift) and the provenance precedence (the part that would quietly
@@ -373,7 +373,7 @@ check('observed source label',
 check('table source label',
   WFProviderCatalog.limitSourceLabel('table'), 'from WaxFrame table');
 
-// ── Observed-cap analysis (v3.63.491) ───────────────────────────────
+// ── Observed-cap analysis (v3.63.492) ───────────────────────────────
 // When a server administrator caps token usage, no declared number reveals
 // it — only watching where responses stop. These fixtures pin the part that
 // would mislead if it broke: how much a given set of stop points actually
@@ -469,6 +469,32 @@ check('runs with no usable token count are ignored',
 check('varied prompts are flagged so the UI can explain the ambiguity',
   ambiguous.promptsVaried, false);
 check('genuinely varied prompts are detected', outCap.promptsVaried, true);
+
+// ── Requested output budget (v3.63.492) ─────────────────────────────
+// "Stopped after N tokens" is half an answer. What the request ASKED for is
+// the other half: asking for 16K and getting 4K means something clamped us,
+// while asking for NOTHING and getting 4K means a server-side default
+// filled the gap — which is invisible unless the absence is reported.
+const RB = WFProviderCatalog.requestedOutputBudget;
+
+console.log('▶ Reading back what the request asked for');
+
+check('OpenAI shape max_tokens',            RB(JSON.stringify({ max_tokens: 16384 })), 16384);
+check('gpt-5 shape max_completion_tokens',  RB(JSON.stringify({ max_completion_tokens: 8192 })), 8192);
+check('Gemini generationConfig',            RB(JSON.stringify({ generationConfig: { maxOutputTokens: 65536 } })), 65536);
+check('Ollama native options.num_predict',  RB(JSON.stringify({ options: { num_predict: 2048 } })), 2048);
+
+// The case that matters most: WaxFrame's OpenAI-shape body deliberately
+// sends no limit, so an Open WebUI admin default silently fills it in. The
+// error screen can only say so if "absent" is distinguishable from "zero".
+check('no budget specified reads as null (the admin-default case)',
+  RB(JSON.stringify({ model: 'gpt-4o', messages: [] })), null);
+check('Ollama -1 means unbounded, not a budget',
+  RB(JSON.stringify({ options: { num_predict: -1 } })), null);
+check('zero is not a budget',    RB(JSON.stringify({ max_tokens: 0 })), null);
+check('unparseable body is safe', RB('not json'), null);
+check('null body is safe',        RB(null), null);
+check('non-string body is safe',  RB({ max_tokens: 100 }), null);
 
 console.log('');
 if (fail === 0) {
