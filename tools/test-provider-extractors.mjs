@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260911-002
+// Build: 20260911-003
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -161,7 +161,7 @@ check(
   false
 );
 
-// ── Truncation detection (v3.63.489) ────────────────────────────────
+// ── Truncation detection (v3.63.490) ────────────────────────────────
 // A Builder that hits its output cap returns a response that LOOKS
 // finished. These fixtures pin the two signals that catch it, per provider
 // response shape. Live values were verified against provider docs when
@@ -229,7 +229,7 @@ check('draft-phase response with no APPLIED block is not truncated',
   WFProviderCatalog.looksStructurallyTruncated([DOC_OK, CONF_OK].join(`\n`)), false);
 check('cut off mid-document (no DOCUMENT_END)',
   WFProviderCatalog.looksStructurallyTruncated(`%%DOCUMENT_START%%\nhalf a docum`), true);
-// The pre-v3.63.489 blind spot: this response HAS a conflicts block, so the
+// The pre-v3.63.490 blind spot: this response HAS a conflicts block, so the
 // old check — nested inside `if (!hasConflictBlock)` — never examined it.
 check('cut off inside the conflicts block (the old blind spot)',
   WFProviderCatalog.looksStructurallyTruncated(
@@ -252,6 +252,126 @@ console.log('▶ Anthropic Builder output ceiling');
 // the cap that cut a real build off on 2026-09-11.
 check('Anthropic ceiling is well above the old 4096 default',
   WFProviderCatalog.ANTHROPIC_MAX_OUTPUT_TOKENS >= 16384, true);
+
+// ── Model token limits (v3.63.490) ──────────────────────────────────
+// Which model can actually finish a Builder round is decided by its max
+// output tokens. These fixtures pin BOTH the per-provider extraction (the
+// shapes drift) and the provenance precedence (the part that would quietly
+// mislead if it broke).
+
+console.log('\u25b6 Limit extraction per provider shape (limitsFromModelEntry)');
+
+const gem = WFProviderCatalog.limitsFromModelEntry('gemini-list',
+  { name: 'models/gemini-3.5-pro', inputTokenLimit: 1048576, outputTokenLimit: 65536 });
+check('Gemini publishes both limits - context', gem && gem.context, 1048576);
+check('Gemini publishes both limits - output',  gem && gem.output,  65536);
+
+const ant = WFProviderCatalog.limitsFromModelEntry('anthropic-via-proxy',
+  { id: 'claude-sonnet-4-6', max_input_tokens: 200000, max_tokens: 64000 });
+check('Anthropic publishes both limits - context', ant && ant.context, 200000);
+check('Anthropic publishes both limits - output',  ant && ant.output,  64000);
+
+// Anthropic returns 0 where a limit is not published. Zero is not a real
+// ceiling of zero - it must read as unknown, or the picker would claim a
+// model can emit nothing.
+check('Anthropic zeroes mean unknown, not a real limit of zero',
+  WFProviderCatalog.limitsFromModelEntry('anthropic-via-proxy',
+    { id: 'x', max_input_tokens: 0, max_tokens: 0 }), null);
+
+// Verified against the live openai-openapi spec on 2026-09-11: the Model
+// object carries id / created / object / owned_by / shutdown_date only.
+check('OpenAI publishes no limits at all',
+  WFProviderCatalog.limitsFromModelEntry('openai-models',
+    { id: 'gpt-5.6-sol', created: 1, object: 'model', owned_by: 'openai' }), null);
+
+// LM Studio reports both an architectural max and what the running
+// instance actually serves. The loaded value is the operational truth.
+const lms = WFProviderCatalog.limitsFromModelEntry('openai-models',
+  { id: 'qwen', max_context_length: 262144, loaded_context_length: 81920 });
+check('LM Studio loaded_context_length wins over max_context_length',
+  lms && lms.context, 81920);
+check('LM Studio max_context_length used when nothing is loaded',
+  WFProviderCatalog.limitsFromModelEntry('openai-models',
+    { id: 'q', max_context_length: 32768 }).context, 32768);
+check('Together context_length is picked up',
+  WFProviderCatalog.limitsFromModelEntry('openai-models',
+    { id: 't', context_length: 131072 }).context, 131072);
+
+console.log('\u25b6 Provenance precedence (mergeModelLimits)');
+
+// An OBSERVED truncation beats a declared figure. This is the whole reason
+// observations are recorded: the declared number can be right about the
+// model and still wrong about this setup (a self-hosted server's own cap,
+// or an org policy).
+const conflict = WFProviderCatalog.mergeModelLimits(
+  { context: 200000, output: 64000, source: 'api' },
+  { output: 4096, at: '2026-09-11T12:00:00Z' },
+  'claude-sonnet-4-6');
+check('observed output beats declared', conflict.output, 4096);
+check('observed output is labelled observed', conflict.outputSource, 'observed');
+check('the contradicted declared figure is preserved, not discarded',
+  conflict.declaredOutput, 64000);
+check('context still comes from the API', conflict.contextSource, 'api');
+
+// Providers round, and a model stopping slightly under its ceiling is not
+// evidence of a lower cap. Only a MEANINGFUL shortfall counts as a conflict.
+const nearMiss = WFProviderCatalog.mergeModelLimits(
+  { context: 200000, output: 64000, source: 'api' },
+  { output: 63000, at: '2026-09-11T12:00:00Z' },
+  'claude-sonnet-4-6');
+check('a near-miss observation is not reported as contradicting the provider',
+  nearMiss.declaredOutput, null);
+
+const apiOnly = WFProviderCatalog.mergeModelLimits(
+  { context: 1048576, output: 65536, source: 'api' }, null, 'gemini-3.5-pro');
+check('API-only output is labelled api', apiOnly.outputSource, 'api');
+check('API-only context is labelled api', apiOnly.contextSource, 'api');
+
+// Nothing published: fall back to the hand-maintained table, and say so.
+const tableOnly = WFProviderCatalog.mergeModelLimits(null, null, 'gpt-5.6-sol');
+check('falls back to the maintained table', tableOnly.outputSource, 'table');
+check('the table carries its review date so staleness is visible',
+  tableOnly.reviewed, WFProviderCatalog.LIMITS_TABLE_REVIEWED);
+
+// Unknown must stay unknown. Inventing a number here is worse than showing
+// nothing, because a displayed number gets trusted.
+const unknown = WFProviderCatalog.mergeModelLimits(null, null, 'some-local-model-nobody-publishes');
+check('unknown model reports no output limit',  unknown.output, null);
+check('unknown model reports no context limit', unknown.context, null);
+check('unknown model reports no source',        unknown.outputSource, null);
+
+// A dated variant should still resolve against its base table entry.
+check('dated model variant resolves via prefix match',
+  WFProviderCatalog.limitsFromTable('gpt-5.6-sol-20260401').output,
+  WFProviderCatalog.LIMITS_TABLE['gpt-5.6-sol'].output);
+
+// Observed alone, with nothing published anywhere - the self-hosted case.
+const obsOnly = WFProviderCatalog.mergeModelLimits(null, { output: 2048, at: '2026-09-11T12:00:00Z' }, 'local-llama');
+check('observation alone is enough to report a ceiling', obsOnly.output, 2048);
+check('observation alone is labelled observed', obsOnly.outputSource, 'observed');
+check('observation alone raises no false conflict', obsOnly.declaredOutput, null);
+
+console.log('\u25b6 Limit formatting (formatTokenLimit)');
+
+// Providers pick round-decimal OR round-binary limits, and each family is
+// named accordingly in the wild. 65536 is "64K" to everyone; 128000 is
+// "128K", never "125K".
+check('65536 renders as 64K',    WFProviderCatalog.formatTokenLimit(65536), '64K');
+check('4096 renders as 4K',      WFProviderCatalog.formatTokenLimit(4096), '4K');
+check('8192 renders as 8K',      WFProviderCatalog.formatTokenLimit(8192), '8K');
+check('128000 renders as 128K',  WFProviderCatalog.formatTokenLimit(128000), '128K');
+check('200000 renders as 200K',  WFProviderCatalog.formatTokenLimit(200000), '200K');
+check('1048576 renders as 1M',   WFProviderCatalog.formatTokenLimit(1048576), '1M');
+check('262144 renders as 256K',  WFProviderCatalog.formatTokenLimit(262144), '256K');
+check('null renders as null',    WFProviderCatalog.formatTokenLimit(null), null);
+check('zero renders as null',    WFProviderCatalog.formatTokenLimit(0), null);
+
+check('source labels are human wording, not codes',
+  WFProviderCatalog.limitSourceLabel('api'), 'from provider API');
+check('observed source label',
+  WFProviderCatalog.limitSourceLabel('observed'), 'observed in a real run');
+check('table source label',
+  WFProviderCatalog.limitSourceLabel('table'), 'from WaxFrame table');
 
 console.log('');
 if (fail === 0) {

@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260911-002
+// Build: 20260911-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -170,7 +170,7 @@ function isContentFilteredError(err) {
   return !!(err && (err.contentFiltered || err.code === 'CONTENT_FILTERED' || _isContentFilteredSignal(err.message)));
 }
 
-// ── Truncation detection (v3.63.489) ────────────────────────────────
+// ── Truncation detection (v3.63.490) ────────────────────────────────
 //
 // The detection logic itself lives in js/provider-catalog.js — it is
 // provider-response knowledge, and that module is require()-able from Node
@@ -234,6 +234,172 @@ function _detectBuilderTruncation(text, meta) {
   };
 }
 
+// ── Model token limits (v3.63.490) ──────────────────────────────────
+//
+// "we just don't know what the limits are so if different models have
+// different limits then we need to know that so that we can choose the
+// right model for the builder" — David, 2026-09-11.
+//
+// Two stores, deliberately separate:
+//
+//   waxframe_model_limits     what providers PUBLISH, harvested from the
+//                             model-list responses WaxFrame already makes
+//                             (see _fetchModelsViaCatalog in api.js). Only
+//                             Gemini and Anthropic publish an output cap;
+//                             several local servers publish a context
+//                             length. Refreshed whenever models are.
+//
+//   waxframe_observed_limits  what a model ACTUALLY did here, recorded the
+//                             moment a Builder round is refused for
+//                             truncation. This is the only source that can
+//                             be right about a self-hosted server, where
+//                             the ceiling is the operator's own
+//                             num_predict / loaded config rather than
+//                             anything the model or the API knows about.
+//
+// The merge and the display live in provider-catalog.js (pure, fixture-
+// tested); this file owns persistence and the DOM.
+const LS_MODEL_LIMITS    = 'waxframe_model_limits';
+const LS_OBSERVED_LIMITS = 'waxframe_observed_limits';
+
+function _readLimitsStore(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return (parsed && typeof parsed === 'object') ? parsed : {};
+  } catch (e) {
+    console.warn('[model-limits] unreadable store', key, e);
+    return {};
+  }
+}
+function _writeLimitsStore(key, obj) {
+  try { localStorage.setItem(key, JSON.stringify(obj)); }
+  catch (e) { console.warn('[model-limits] could not persist', key, e); }
+}
+
+// Called by api.js after a model-list fetch. Merges rather than replaces so
+// a provider that publishes limits for only some of its models does not
+// wipe what we already knew about the others.
+function wfStoreApiModelLimits(provider, limitsMap) {
+  if (!provider || !limitsMap) return;
+  const store = _readLimitsStore(LS_MODEL_LIMITS);
+  const bucket = store[provider] || (store[provider] = {});
+  const stamp = Date.now();
+  Object.keys(limitsMap).forEach(model => {
+    const l = limitsMap[model];
+    if (!l) return;
+    bucket[model] = { context: l.context, output: l.output, fetchedAt: stamp };
+  });
+  _writeLimitsStore(LS_MODEL_LIMITS, store);
+}
+
+// Record a measured ceiling from a REAL truncation.
+//
+// Only called when a Builder round is refused for truncation AND the
+// provider reported how many output tokens it produced. The recorded value
+// is that count: the model emitted this many and then stopped, so this is a
+// demonstrated floor on where its ceiling sits for this setup. Cheap to do
+// — detection already computed all of it — and it is the only mechanism
+// that can learn a self-hosted server's real cap.
+//
+// Keeps the HIGHEST observation seen, not the most recent. A later round
+// that stopped earlier (a longer prompt leaving less output room, say) is
+// not evidence the ceiling dropped, and letting it overwrite would ratchet
+// the displayed number down incorrectly.
+function wfRecordObservedLimit(provider, model, outputTokens, evidence) {
+  if (!provider || !model) return;
+  const n = Number(outputTokens);
+  if (!isFinite(n) || n <= 0) return;
+  const store = _readLimitsStore(LS_OBSERVED_LIMITS);
+  const bucket = store[provider] || (store[provider] = {});
+  const prev = bucket[model];
+  if (prev && Number(prev.output) >= n) return;
+  bucket[model] = { output: n, at: new Date().toISOString(), evidence: evidence || '' };
+  _writeLimitsStore(LS_OBSERVED_LIMITS, store);
+  consoleLog(`📏 Recorded observed output ceiling for ${model}: ${n.toLocaleString()} tokens (measured from this truncation).`, 'info');
+}
+
+// The merged view used by the UI. Never throws — a limits lookup must not
+// be able to take down the model picker.
+function getModelLimits(provider, model) {
+  try {
+    const api = (_readLimitsStore(LS_MODEL_LIMITS)[provider] || {})[model] || null;
+    const obs = (_readLimitsStore(LS_OBSERVED_LIMITS)[provider] || {})[model] || null;
+    return window.WFProviderCatalog.mergeModelLimits(api, obs, model);
+  } catch (e) {
+    console.warn('[model-limits] lookup failed', e);
+    return { model, context: null, output: null, contextSource: null, outputSource: null };
+  }
+}
+
+// Compact form for a dropdown row: "64K out · 200K ctx".
+// Returns '' when nothing is known, so rows stay clean rather than
+// carrying a row of "unknown" noise.
+function _limitsChip(provider, model) {
+  const L = getModelLimits(provider, model);
+  const fmt = window.WFProviderCatalog.formatTokenLimit;
+  const bits = [];
+  if (L.output  != null) bits.push(`${fmt(L.output)} out`);
+  if (L.context != null) bits.push(`${fmt(L.context)} ctx`);
+  if (!bits.length) return '';
+  // One marker per row rather than per number: ✓ provider API,
+  // 📏 observed in a real run, ~ hand-maintained table. The full
+  // explanation is in the title attribute and in the note line below the
+  // picker — the row itself has to stay narrow.
+  const src = L.outputSource || L.contextSource;
+  const mark = src === 'api' ? '✓' : src === 'observed' ? '📏' : '~';
+  return `<span class="opt-limits" title="${escapeHtml(_limitsTooltip(L))}">${mark} ${esc(bits.join(' · '))}</span>`;
+}
+
+function _limitsTooltip(L) {
+  const lab = window.WFProviderCatalog.limitSourceLabel;
+  const lines = [];
+  if (L.output != null) {
+    lines.push(`Max output: ${L.output.toLocaleString()} tokens (${lab(L.outputSource)})`);
+  } else {
+    lines.push('Max output: unknown — this provider does not publish it');
+  }
+  if (L.declaredOutput != null) {
+    lines.push(`Declared as ${L.declaredOutput.toLocaleString()} (${lab(L.declaredOutputSource)}), but a real run here stopped lower.`);
+  }
+  if (L.context != null) {
+    lines.push(`Context window: ${L.context.toLocaleString()} tokens (${lab(L.contextSource)})`);
+  } else {
+    lines.push('Context window: unknown');
+  }
+  if (L.observedAt) lines.push(`Observed ${new Date(L.observedAt).toLocaleDateString()}`);
+  if (L.reviewed)   lines.push(`Table last reviewed ${L.reviewed}`);
+  return lines.join('\n');
+}
+
+// The explanatory line under the picker. This is where the provenance
+// legend lives, because an engineer picking a Builder needs to know which
+// of these numbers he can lean on.
+function _limitsNoteLine(provider, model) {
+  const L = getModelLimits(provider, model);
+  const fmt = window.WFProviderCatalog.formatTokenLimit;
+  const lab = window.WFProviderCatalog.limitSourceLabel;
+  if (L.output == null && L.context == null) {
+    return `<span class="model-select-note-line is-limits">📐 Token limits: not published by this provider and not in WaxFrame's table. Run a build — if it gets cut off, WaxFrame records the real ceiling and shows it here.</span>`;
+  }
+  const parts = [];
+  if (L.output != null) {
+    parts.push(`max output <strong>${esc(fmt(L.output))}</strong> (${esc(lab(L.outputSource))})`);
+  } else {
+    parts.push('max output <strong>unknown</strong>');
+  }
+  if (L.context != null) {
+    parts.push(`context <strong>${esc(fmt(L.context))}</strong> (${esc(lab(L.contextSource))})`);
+  }
+  let extra = '';
+  if (L.declaredOutput != null) {
+    extra = ` <span class="limits-conflict">Declared ${esc(fmt(L.declaredOutput))}, but a real run here stopped at ${esc(fmt(L.output))} — trust the measured figure.</span>`;
+  } else if (L.outputSource === 'table') {
+    extra = ` <span class="limits-caveat">Hand-maintained, last reviewed ${esc(L.reviewed || 'unknown')} — may be out of date if the provider has shipped new models since.</span>`;
+  }
+  return `<span class="model-select-note-line is-limits">📐 ${parts.join(' · ')}.${extra}</span>`;
+}
+
 function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const models = getModelsForProvider(provider);
   if (!models.length) return '';
@@ -257,7 +423,12 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   // markers as colored words AND a tint class so the ✨ Reviewer (gold) and
   // 🔨 Builder (blue) picks pop the moment the list opens. A shared inner
   // builder keeps the trigger's current-value display identical to its row.
-  const _optInner = (m) => {
+  // withLimits=false for the TRIGGER's current-value display: the trigger is
+  // a narrow fixed-width control, and a limits chip there pushes the model id
+  // into an ellipsis. The limits note line sits directly beneath it and says
+  // the same thing in full words, so the chip belongs on the dropdown ROWS
+  // (where the comparison is actually being made) and not on the trigger.
+  const _optInner = (m, withLimits = true) => {
     const spans = [];
     if (m === reviewerModel) spans.push('<span class="opt-role is-reviewer">✨ Reviewer</span>');
     if (m === builderModel)  spans.push('<span class="opt-role is-builder">🔨 Builder</span>');
@@ -268,7 +439,11 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
     if (isBuilderIncapableModel(m)) spans.push('<span class="opt-role is-builder-warn" title="Output token cap too low to finish a Builder round — use as Reviewer only">⚠️ Reviewer-only</span>');
     const markerHTML = spans.length ? spans.join(' · ') + ' — ' : '';
     const reasoningBadge = (m === reviewerModel && isReasoningLike(m)) ? ' (reasoning)' : '';
-    return `${markerHTML}${esc(m)}${reasoningBadge}`;
+    // v3.63.490 — token limits on the row itself. Max output is the number
+    // that decides whether a model can finish a Builder round, so it has to
+    // be visible AT THE MOMENT OF CHOOSING, not buried in a settings page.
+    const limitsHTML = withLimits ? _limitsChip(provider, m) : '';
+    return `${markerHTML}${esc(m)}${reasoningBadge}${limitsHTML ? ' ' + limitsHTML : ''}`;
   };
   const _tintCls = (m) => {
     const r = m === reviewerModel, b = m === builderModel;
@@ -281,7 +456,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   // Current-value display: matches the chosen row, or the raw id when the saved
   // model isn't in the live list (e.g. it was quarantined / removed).
   const valueInner = models.includes(currentModel)
-    ? _optInner(currentModel)
+    ? _optInner(currentModel, false)
     : esc(currentModel || '(pick a model)');
 
   // Note line: shows the WHY for BOTH role recommendations whenever they're
@@ -312,6 +487,11 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   if (!builderModel && builderCache?.none && builderCache?.why) {
     noteParts.push(`<span class="model-select-note-line is-builder">🔨 Builder: ${esc(builderCache.why)}</span>`);
   }
+  // v3.63.490 — limits line for the currently-selected model, carrying the
+  // provenance in words. Always present (even when nothing is known), so
+  // "we don't know" is stated rather than left as an absence the user has
+  // to interpret.
+  if (currentModel) noteParts.push(_limitsNoteLine(provider, currentModel));
   const noteHtml = noteParts.length ? `<span class="model-select-note">${noteParts.join('')}</span>` : '';
 
   // v3.32.10 — recheck button label updated to reflect dual-role behavior.
@@ -664,7 +844,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260911-002';         // build stamp — update each session
+const BUILD = '20260911-003';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -5875,9 +6055,29 @@ function _buildCompactModelSelect(ai, currentModel) {
     return b.join('');
   };
 
+  // v3.63.490 — token limits in the option text. This is a NATIVE <select>,
+  // so there is no markup to hang a styled chip on and no per-option title
+  // that browsers render reliably — the limits have to ride the option text
+  // itself. Plain-text provenance marker matching the custom combobox:
+  //   ✓ provider API   📏 observed in a real run here   ~ WaxFrame table
+  // Output first, because output is what decides whether a model can finish
+  // a Builder round. Omitted entirely when nothing is known, rather than
+  // padding every row with "unknown".
+  const _limitsText = (m) => {
+    const L = getModelLimits(ai.provider, m);
+    const fmt = window.WFProviderCatalog.formatTokenLimit;
+    const bits = [];
+    if (L.output  != null) bits.push(`${fmt(L.output)} out`);
+    if (L.context != null) bits.push(`${fmt(L.context)} ctx`);
+    if (!bits.length) return '';
+    const src = L.outputSource || L.contextSource;
+    const mark = src === 'api' ? '✓' : src === 'observed' ? '📏' : '~';
+    return `  [${mark} ${bits.join(' · ')}]`;
+  };
+
   const opts = models.map(m => {
     const badges = _badges(m);
-    const display = badges ? `${m}  ${badges}` : m;
+    const display = `${m}${badges ? '  ' + badges : ''}${_limitsText(m)}`;
     return `<option value="${escapeHtml(m)}"${m === currentModel ? ' selected' : ''}>${escapeHtml(display)}</option>`;
   }).join('');
 
@@ -5889,10 +6089,20 @@ function _buildCompactModelSelect(ai, currentModel) {
     ? `<option value="" selected disabled>(pick a model)</option>`
     : '';
 
+  // v3.63.490 — the collapsed row's hover tooltip: model id, then the full
+  // limits breakdown in words (including which source each number came
+  // from). Composed here rather than inline in the template so the newline
+  // separator stays a plain value.
+  const _compactTitle = currentModel
+    ? currentModel + String.fromCharCode(10, 10) + _limitsTooltip(getModelLimits(ai.provider, currentModel))
+    : '(pick a model)';
+
   return `<select class="ai-setup-compact-model" id="compactmodel-${ai.id}"
     data-action="noop"
     data-change-action="call-multi" data-fn="swapAIModelFromHiveCard" data-args="data:aiId,value" data-ai-id="${ai.id}" data-stop="1"
-    title="${escapeHtml(currentModel || '(pick a model)')}">
+    title="${escapeHtml(_compactTitle)}">
+
+' + _limitsTooltip(getModelLimits(ai.provider, currentModel)) : ''))}">
     ${placeholderOpt}${savedOpt}${opts}
   </select>`;
 }
@@ -14954,7 +15164,7 @@ function updateRefGrandTotals() {
 // PUSHES a new upload-source doc into the array instead of replacing
 // the singleton (the v3.21.0–v3.23.4 behavior).
 //
-// v3.63.489 — the drag half of this used to live in four functions wired
+// v3.63.490 — the drag half of this used to live in four functions wired
 // by inline ondragenter=/ondragover=/ondragleave=/ondrop= attributes on
 // #refDropRow. Inline handlers are inline JavaScript, so v3.63.366's
 // strict script-src stopped the browser compiling them and the whole
@@ -16400,7 +16610,7 @@ async function callBuilderWithContentFilterFailover(primaryAI, reviews, notes) {
     const modelNote = modelOverride && modelOverride !== originalModel ? ` · model: ${modelOverride}` : '';
     consoleLog(`📤 ${ai.name} (Builder${isFailover ? ' failover' : ''}) — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint}${modelNote})`, 'send');
     try {
-      // v3.63.489 — carry the per-call metadata out with the response so
+      // v3.63.490 — carry the per-call metadata out with the response so
       // the consumer downstream can tell a cut-off build from a finished
       // one. Each attempt owns its own meta object.
       const meta = {};
@@ -17454,8 +17664,8 @@ async function runBuilderOnly() {
     window._lastAppliedChanges = extractAppliedChanges(builderResponse);
     const hasConflictBlock = builderResponse.includes('%%CONFLICTS_START%%');
 
-    // v3.63.489 — Truncation is now checked FIRST, and independently of
-    // the conflicts block. Pre-v3.63.489 this test lived inside the
+    // v3.63.490 — Truncation is now checked FIRST, and independently of
+    // the conflicts block. Pre-v3.63.490 this test lived inside the
     // `if (!hasConflictBlock)` branch, so a response cut off AFTER
     // %%CONFLICTS_START%% was never examined for truncation at all — it
     // took the "has conflicts block" path and could be accepted with an
@@ -17466,6 +17676,12 @@ async function runBuilderOnly() {
       builderHadError = true;
       _failedRoundReason  = 'truncated';
       _failedRoundDetails = _describeTruncation(builderAI, prompt, _trunc);
+      // v3.63.490 — a truncation is a MEASUREMENT of this model's real
+      // output ceiling for this setup. Record it; the model picker shows it
+      // as an observed figure, which is the only number that can be right
+      // for a self-hosted server.
+      wfRecordObservedLimit(builderAI.provider, getModelForAI(builderAI),
+                            _trunc.completionTokens, _truncEvidence(_trunc));
       setBeeStatus(builderAI.id, 'error', 'Output truncated');
       setStatus(`⚠️ Builder output cut off at the model's token cap — round rejected`);
       consoleLog(`⚠️ Builder output truncated (${_truncEvidence(_trunc)}) — round rejected. Your document was NOT changed.`, 'error');
@@ -18897,7 +19113,7 @@ async function runRound(opts) {
       const hasConflictBlock = cleanResponse.includes('%%CONFLICTS_START%%');
 
       // ── GATE 0: Output cut off at the token cap = hard failure ──
-      // v3.63.489 — checked BEFORE the conflicts gate and independently of
+      // v3.63.490 — checked BEFORE the conflicts gate and independently of
       // it. See the matching comment in runBuilderOnly: truncation is a
       // property of the response, not of which block went missing, and a
       // response cut off after %%CONFLICTS_START%% used to skip this test
@@ -18909,6 +19125,9 @@ async function runRound(opts) {
         builderHadError = true;
         _failedRoundReason  = 'truncated';
         _failedRoundDetails = _describeTruncation(builderAI, builderPrompt, _trunc);
+        // v3.63.490 — see the matching call in runBuilderOnly.
+        wfRecordObservedLimit(builderAI.provider, getModelForAI(builderAI),
+                              _trunc.completionTokens, _truncEvidence(_trunc));
         setBeeStatus(builderAI.id, 'error', 'Output truncated');
         setStatus(`⚠️ Builder output cut off at the model's token cap — round rejected`);
         consoleLog(`⚠️ Builder output truncated (${_truncEvidence(_trunc)}) — round rejected. Your document was NOT changed.`, 'error');
@@ -19544,7 +19763,7 @@ function _releaseProviderSlot(base) {
 }
 function _noopRelease() { /* no-op for uncapped providers */ }
 
-// v3.63.489 — `metaOut` is an optional caller-owned object that callAPI
+// v3.63.490 — `metaOut` is an optional caller-owned object that callAPI
 // fills with per-call response metadata (finish reason, token usage,
 // model). It exists because callAPI returns a bare string, so the
 // provider's stop reason had nowhere to go: the only previous way to read
@@ -19707,7 +19926,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   }
 
   const data = await response.json();
-  // v3.63.489 — _finishReason is the provider's stop reason via the shared
+  // v3.63.490 — _finishReason is the provider's stop reason via the shared
   // coalescer; `finishReason` below keeps the blockReason fallback that
   // only the content-filter check wants.
   const _finishReason = _extractFinishReason(data);
@@ -19799,7 +20018,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     chars:     text.length,
     words,
     status:    response.status,
-    // v3.63.489 — was `choices[0].finish_reason || stop_reason`, which
+    // v3.63.490 — was `choices[0].finish_reason || stop_reason`, which
     // omitted Gemini's `candidates[0].finishReason` even though the
     // correctly-coalesced value was already being computed a few lines
     // above for the content-filter check. Gemini truncation was invisible
@@ -19819,7 +20038,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     notes:            typeof notesContext === 'string' ? notesContext : ''
   });
 
-  // v3.63.489 — hand the caller everything it needs to decide whether this
+  // v3.63.490 — hand the caller everything it needs to decide whether this
   // response was cut off. Written last so a throw earlier in the function
   // leaves metaOut untouched rather than half-populated.
   if (metaOut && typeof metaOut === 'object') {

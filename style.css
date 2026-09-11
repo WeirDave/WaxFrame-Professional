@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260911-002
+   Build: 20260911-003
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4988,6 +4988,30 @@ body.helper-body .page-main {
 }
 .model-select-opt.is-builder-warn-pick:hover { filter: brightness(1.12); }
 .model-select-opt .opt-role.is-builder-warn { color: var(--warn, #fbbf24); }
+/* v3.63.490 — Token-limit chip on each model row. Max output is the number
+   that decides whether a model can finish a Builder round, so it belongs at
+   the point of choosing rather than in a settings page. Dimmed and smaller
+   than the model id: it is reference data, not the thing being picked.
+   The leading marker carries provenance — ✓ provider API, 📏 observed in a
+   real run here, ~ hand-maintained table — with the full wording in the
+   title attribute and in the note line under the picker. */
+.model-select-opt .opt-limits {
+  font-size: var(--fs-11);
+  color: var(--text-dim);
+  opacity: 0.85;
+  white-space: nowrap;
+}
+/* The limits note line under the picker. Neutral (dim) rather than
+   role-coloured: gold and blue already mean ✨ Reviewer / 🔨 Builder on the
+   sibling lines, and this line is about capability, not about a role pick. */
+.model-select-note-line.is-limits { color: var(--text-dim); }
+/* Measured reality disagreeing with a published figure is the single most
+   important thing this feature can tell you, so it is the one part that
+   gets a colour. Amber = "read this", not "broken". */
+.model-select-note-line .limits-conflict { color: var(--warn, #fbbf24); }
+/* A hand-maintained number carries an explicit staleness caveat. Deliberately
+   quieter than the conflict styling — it is a caveat, not a finding. */
+.model-select-note-line .limits-caveat { color: var(--muted); }
 /* v3.63.34 — keyboard-active row (arrow-key highlight). Distinct from
    .is-selected (the committed pick) and :hover. An outline rather than a
    background so it reads clearly even on the gold/blue-tinted pick rows. */

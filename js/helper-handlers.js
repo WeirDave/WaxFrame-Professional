@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260911-002
+// Build: 20260911-003
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -508,7 +508,7 @@
     if (fn) fn(el, e);
   });
 
-  // ── Drag & drop dispatcher (v3.63.489) ─────────────────────
+  // ── Drag & drop dispatcher (v3.63.490) ─────────────────────
   //
   // Drop zones used to wire themselves with inline ondragover= /
   // ondrop= attributes. Those attributes ARE inline JavaScript: when

@@ -1,5 +1,60 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.490 — Show each model's token limits where you pick the Builder
+**Released:** 2026-09-11
+**Build:** 20260911-003
+
+### What changed
+- **Every model row in every model picker now shows its max output tokens and context window.** Max output is the number that decides whether a model can finish a Builder round without being cut off, so it is visible at the moment of choosing rather than buried somewhere else.
+- **Each number is labelled with where it came from**, because a figure read live from a provider and a figure typed into a table by hand deserve different amounts of trust:
+  - **✓ from provider API** — read live off the provider's own models endpoint. Authoritative, zero maintenance, cannot go stale.
+  - **📏 observed in a real run** — measured from an actual truncation in this app. Ground truth for what the model really did *here*.
+  - **~ from WaxFrame table** — hand-maintained, and shown with the date it was last reviewed plus an explicit warning that it may be out of date.
+- **Unknown stays unknown.** When neither the provider nor the table has a number, the picker says so in words rather than going blank or inventing one. A displayed number gets trusted; a wrong one is worse than none.
+- **Observed limits override declared ones, and the disagreement is shown.** If a provider declares 64K but a build here actually stopped at 4K, the picker reports 4K as the real figure and says so: *"Declared 64K, but a real run here stopped at 4K — trust the measured figure."* This is the only mechanism that can be right about a self-hosted server, where the ceiling is the operator's own `num_predict` / loaded config rather than anything the model or the API knows.
+- **Limits are harvested from model-list responses WaxFrame already fetches** — no new endpoint, no new request, nothing extra to keep in sync. Gemini and Anthropic both carry per-model limits on their existing model-list payloads.
+- Observations are recorded automatically whenever a Builder round is refused for truncation (the detection added in v3.63.489 already computed everything needed). The highest observation is kept, not the most recent: a later round that stopped earlier because a longer prompt left less output room is not evidence the ceiling dropped.
+- Added on all four picker surfaces: the custom combobox (Worker Bees expanded, Change Builder modal, Builder spotlight panel, troubleshooting card) and the compact native `<select>` on the collapsed Worker Bee row.
+
+### What each provider actually publishes (verified 2026-09-11, not from memory)
+| Provider | Context window | Max output |
+|---|---|---|
+| Google (Gemini) | ✅ `inputTokenLimit` | ✅ `outputTokenLimit` |
+| Anthropic (Claude) | ✅ `max_input_tokens` | ✅ `max_tokens` |
+| Together AI | ✅ `context_length` | ❌ |
+| Cohere | ✅ `context_length` | ❌ |
+| LM Studio | ✅ `max_context_length` + `loaded_context_length` | ❌ (server-side setting) |
+| Ollama | ✅ `model_info["<arch>.context_length"]` | ❌ (server-side `num_predict`) |
+| OpenAI | ❌ | ❌ |
+| Copilot, Grok, Perplexity, DeepSeek, Mistral | ❌ | ❌ |
+
+OpenAI's emptiness is confirmed against the live `openai-openapi` spec — the Model object carries `id`, `created`, `object`, `owned_by`, `shutdown_date` and nothing else. OpenRouter publishes per-model completion limits and would be the single best source available, but WaxFrame does not route through OpenRouter, so it is not an option here.
+
+So: **two of ten built-in providers publish the output limit.** The rest fall back to a deliberately small hand-maintained table covering only WaxFrame's own default/fallback models, or to observation. Where LM Studio reports both a maximum and a loaded context length, the **loaded** value wins — a model can be loaded with a window below its architectural maximum, and the loaded value is what the server will actually serve.
+
+### Verification
+- release-check: all 16 checks pass
+- **37 new fixtures** in `tools/test-provider-extractors.mjs` (Check 13), **80 total passing** — per-provider extraction, provenance precedence, and number formatting. Includes the cases most likely to mislead if they broke: Anthropic returning `0` must read as *unknown* rather than a real ceiling of zero; a near-miss observation must not be reported as contradicting the provider; unknown must stay unknown.
+- **Verified in real Firefox on a real `file://` page** (Marionette-driven), with a screenshot of the rendered picker:
+  - All four picker surfaces render limits correctly.
+  - All three provenance kinds render distinctly, seeded through the live writers rather than by hand.
+  - The observed-beats-declared conflict renders in amber with both figures.
+  - An unknown model states the situation in words instead of rendering blank.
+  - A table-sourced model carries its "last reviewed" staleness caveat.
+  - The highest observation is kept when a later, smaller measurement arrives.
+  - A corrupted limits store does not break the picker (verified by writing invalid JSON).
+- Caught during verification: the limits chip overflowed the narrow combobox trigger and pushed the model id into an ellipsis. The trigger now omits the chip — the note line directly beneath it carries the same information in full words.
+- Number formatting verified: 65536 renders as **64K** (not 66K) and 128000 as **128K** (not 125K). Providers pick either round-decimal or round-binary limits and each family is named accordingly; both renderings are exact, and the precise figure is always in the tooltip.
+- Sacred rule (80ch column width) intact.
+
+### Files touched
+js/provider-catalog.js, js/app.js, js/api.js, style.css, tools/test-provider-extractors.mjs, js/version.js, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, CHANGELOG.md, docs/WaxFrame_Backlog_Master_v277.txt
+
+### Rollback
+`git revert <sha>` — display-only plus two localStorage stores (`waxframe_model_limits`, `waxframe_observed_limits`). No change to how any request is made or any round is run.
+
+---
+
 ## v3.63.489 — Builder truncation detection + raise the self-inflicted Claude output cap
 **Released:** 2026-09-11  
 **Build:** 20260911-002
