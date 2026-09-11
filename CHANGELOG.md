@@ -1,5 +1,50 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.491 — Work out your real token cap by measuring it
+**Released:** 2026-09-11
+**Build:** 20260911-004
+
+### Why
+If a server administrator has capped token usage, no declared number will tell you. `/api/show` and `/v1/models` keep reporting the *model's* limits, which say nothing about the policy sitting in front of it. The only way to learn an imposed cap from the outside is to watch where responses actually stop — so measurement is now the primary mechanism, not a fallback for models the table missed.
+
+### What changed
+- **Every cut-off run is recorded, not just the largest.** v3.63.490 kept a single highest figure, which threw away exactly the repetition that turns a lower bound into evidence of a cap. WaxFrame now keeps a rolling history (25 per model/endpoint) with output tokens, prompt tokens and timestamp.
+- **Declared and observed are shown side by side.** *"declared 32K (from provider API) · context 32K · observed ~256 (3 cut-off runs)"* — and when the gap is real, it is named: *"This model declares 32K but stops far short of it here. That gap is what an administrative cap looks like — the limit is being imposed in front of the model, not by it."*
+- **One truncation is reported as a lower bound, never as a cap.** A single run says the ceiling is *at most* N; it is not proof the ceiling *is* N. The wording says so, and the UI colours confidence: grey for one or two runs, blue when repeated stops cluster, amber when they do not cluster at all.
+- **Three kinds of cap are distinguished, because they behave differently:**
+  - **per-request output cap** — stops cluster on output count and hold steady even as prompt size changes
+  - **total context limit** — stops cluster on prompt + output combined, so bigger prompts leave less room to write
+  - **rate / quota policy** — stops do not cluster on either, and are reported as inconclusive rather than as a size cap
+- **Ambiguity is stated rather than guessed.** Telling an output cap from a context limit *requires* having seen prompts of different sizes. With only same-size prompts, both hypotheses fit, and WaxFrame says so: *"not enough variation yet to tell them apart."*
+- **Observations are keyed per endpoint**, so the same model behind a corporate server and behind a home server stay separate instead of averaging away the very thing being measured.
+- **Persisted across sessions** in `localStorage`, with migration from the v3.63.490 single-value shape — a cap already learned survives the upgrade.
+- **New: 🔬 Measure cap.** An explicit, user-initiated probe that asks the model to generate until something stops it, then records where. It **never runs automatically**: the reason a cap exists is that someone is rationing tokens, so spending tokens to discover the budget without asking would be exactly the wrong instinct. The confirm states the cost before anything is sent — a ~40-token prompt plus however much the model produces before being cut off, which *is* the cap being measured. A 16,000-token soft ceiling stops an uncapped model running away, and a stop at that ceiling is reported as "no server cap below 16K" rather than recorded as a fake cap.
+
+### Verification
+- release-check: all 16 checks pass. **27 new fixtures, 106 passing.**
+- **Verified end to end against a real Ollama server** (0.33.3 on localhost), driven from WaxFrame's own `index.html` on a real `file://` page in Firefox:
+  - Three genuine capped requests with prompt sizes varying 13x (101 → 496 → 1296 tokens) and a fixed 256-token output budget standing in for an imposed cap.
+  - All three truncated for real: `finish_reason: "length"`, `completion_tokens: 256`.
+  - The analysis concluded `kind: "output"`, `capValue: 256`, `confidence: "consistent"`, `promptsVaried: true` — correctly identifying a per-request output cap rather than a context limit, because output held steady while the prompt grew.
+  - Rendered line: *"declared 32K (from provider API) · context 32K (from provider API) · observed ~256 (3 cut-off runs). stopped at about 256 output tokens across 3 cut-off runs, holding steady even as prompt size changed — that looks like a per-request output cap."*
+  - Observations survived a full page reload.
+  - Per-endpoint keys confirmed distinct for the same model on two different servers.
+  - Zero CSP violations.
+- **`file://` reachability re-confirmed** before building: page origin `null`, protocol `file:`, and `GET /api/tags`, preflighted `POST /api/show`, `GET /api/ps` and `GET /v1/models` all returned 200 from inside the app with its live strict CSP. WaxFrame's CSP already permits `http://localhost:*` and `http://127.0.0.1:*`, so no CSP change was needed.
+- **A real bug in this release was caught by the end-to-end test and fixed:** observations did not survive a reload, because the endpoint half of the storage key is derived from live config that is not always loaded yet. Lookup now falls back to matching on provider + model when the exact endpoint key misses, while still preferring an exact endpoint match so work and home servers stay separate. Re-verified: `survivedReload: 3`.
+- The force-truncate hook from v3.63.489 and the probe's soft ceiling were unified into a single output-budget override, so two mechanisms cannot write `max_tokens` independently and contradict each other.
+
+### Known limitation
+A cap is only learned from runs that actually get cut off (or from an explicit probe). A model that has never truncated shows as unmeasured, and says so.
+
+### Files touched
+js/provider-catalog.js, js/app.js, style.css, tools/test-provider-extractors.mjs, js/version.js, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, CHANGELOG.md, docs/WaxFrame_Backlog_Master_v278.txt
+
+### Rollback
+`git revert <sha>` — display plus two localStorage stores, and one new user-initiated action. No change to how a normal round is run.
+
+---
+
 ## v3.63.490 — Show each model's token limits where you pick the Builder
 **Released:** 2026-09-11
 **Build:** 20260911-003

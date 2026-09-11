@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260911-003
+// Build: 20260911-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -170,7 +170,7 @@ function isContentFilteredError(err) {
   return !!(err && (err.contentFiltered || err.code === 'CONTENT_FILTERED' || _isContentFilteredSignal(err.message)));
 }
 
-// ── Truncation detection (v3.63.490) ────────────────────────────────
+// ── Truncation detection (v3.63.491) ────────────────────────────────
 //
 // The detection logic itself lives in js/provider-catalog.js — it is
 // provider-response knowledge, and that module is require()-able from Node
@@ -234,7 +234,7 @@ function _detectBuilderTruncation(text, meta) {
   };
 }
 
-// ── Model token limits (v3.63.490) ──────────────────────────────────
+// ── Model token limits (v3.63.491) ──────────────────────────────────
 //
 // "we just don't know what the limits are so if different models have
 // different limits then we need to know that so that we can choose the
@@ -293,30 +293,150 @@ function wfStoreApiModelLimits(provider, limitsMap) {
   _writeLimitsStore(LS_MODEL_LIMITS, store);
 }
 
-// Record a measured ceiling from a REAL truncation.
+// ── Empirical cap discovery (v3.63.491) ─────────────────────────────
 //
-// Only called when a Builder round is refused for truncation AND the
-// provider reported how many output tokens it produced. The recorded value
-// is that count: the model emitted this many and then stopped, so this is a
-// demonstrated floor on where its ceiling sits for this setup. Cheap to do
-// — detection already computed all of it — and it is the only mechanism
-// that can learn a self-hosted server's real cap.
+// "I'm sure that our IT people have placed a limit on the token count ...
+// we still should have some sort of a recourse to find out on our own
+// without someone telling us as users." — David, 2026-09-11.
 //
-// Keeps the HIGHEST observation seen, not the most recent. A later round
-// that stopped earlier (a longer prompt leaving less output room, say) is
-// not evidence the ceiling dropped, and letting it overwrite would ratchet
-// the displayed number down incorrectly.
-function wfRecordObservedLimit(provider, model, outputTokens, evidence) {
+// This is the case no declared number can answer. When a server
+// administrator caps token usage, /api/show and /v1/models keep reporting
+// the MODEL's limits, which say nothing about the policy in front of it.
+// Watching where responses actually stop is the only way to learn it from
+// the outside — so observation is the PRIMARY mechanism here, not a
+// fallback for models the table missed.
+//
+// Keyed by provider + model + ENDPOINT ORIGIN, not just model. The same
+// model id behind a corporate server and behind a home server are two
+// different situations with two different caps, and merging them would
+// average away the very thing being measured.
+//
+// A rolling history is kept rather than a single number, because one
+// truncation is only a lower bound — it is repeated stops landing in the
+// same place that constitute evidence of a cap. The analysis that turns a
+// history into a claim lives in provider-catalog.js (pure, fixture-tested).
+const OBS_MAX_PER_KEY = 25;
+
+// Origin of the endpoint actually being called, so work and home servers
+// stay separate. Falls back to the provider id when there is no endpoint
+// (keeps cloud providers on a stable key).
+function _endpointKey(provider) {
+  try {
+    const ep = window.API_CONFIGS?.[provider]?.endpoint;
+    if (!ep) return provider;
+    return new URL(ep).origin;
+  } catch (e) {
+    return provider;
+  }
+}
+
+function wfObservationKey(provider, model, endpoint) {
+  return [provider || '?', model || '?', endpoint || _endpointKey(provider)].join('|');
+}
+
+// v3.63.491 stored one number per provider/model:
+//   { provider: { model: { output, at, evidence } } }
+// v3.63.491 stores a history per provider/model/endpoint. Migrate rather
+// than discard — a cap already learned should survive the upgrade.
+function _migrateObservedStore(store) {
+  if (!store || store.__v === 2) return store;
+  const out = { __v: 2, keys: {} };
+  Object.keys(store).forEach(provider => {
+    const bucket = store[provider];
+    if (!bucket || typeof bucket !== 'object') return;
+    Object.keys(bucket).forEach(model => {
+      const rec = bucket[model];
+      if (!rec || !Number(rec.output)) return;
+      const key = wfObservationKey(provider, model, _endpointKey(provider));
+      out.keys[key] = {
+        provider, model, endpoint: _endpointKey(provider),
+        observations: [{ out: Number(rec.output), prompt: 0, total: 0,
+                         at: rec.at || null, evidence: rec.evidence || 'migrated from v3.63.491' }]
+      };
+    });
+  });
+  return out;
+}
+
+function _readObservedStore() {
+  const raw = _readLimitsStore(LS_OBSERVED_LIMITS);
+  const migrated = _migrateObservedStore(raw);
+  if (migrated !== raw) _writeLimitsStore(LS_OBSERVED_LIMITS, migrated);
+  return migrated;
+}
+
+// Record where a response actually stopped.
+//
+// `meta` is callAPI's out-param, so prompt and completion token counts come
+// along for free when the provider reports them. Both matter: without
+// prompt size there is no way to tell a per-request output cap from the
+// shared context window filling up.
+//
+// Every truncation is kept, not just the largest. The previous version kept
+// only the highest observation, which threw away exactly the repetition
+// that turns a lower bound into evidence of a cap.
+function wfRecordObservedLimit(provider, model, meta, evidence) {
   if (!provider || !model) return;
-  const n = Number(outputTokens);
-  if (!isFinite(n) || n <= 0) return;
-  const store = _readLimitsStore(LS_OBSERVED_LIMITS);
-  const bucket = store[provider] || (store[provider] = {});
-  const prev = bucket[model];
-  if (prev && Number(prev.output) >= n) return;
-  bucket[model] = { output: n, at: new Date().toISOString(), evidence: evidence || '' };
+  const out = Number(meta?.completionTokens);
+  if (!isFinite(out) || out <= 0) {
+    // No usage data (common on bare local servers). Nothing measurable.
+    consoleLog(`📏 ${model} was cut off, but the server reported no token counts — nothing measurable to record.`, 'info');
+    return;
+  }
+  const endpoint = _endpointKey(provider);
+  const store = _readObservedStore();
+  const key = wfObservationKey(provider, model, endpoint);
+  const rec = store.keys[key] || (store.keys[key] = { provider, model, endpoint, observations: [] });
+  rec.observations.push({
+    out,
+    prompt: Number(meta?.promptTokens) || 0,
+    total:  Number(meta?.totalTokens)  || 0,
+    at:     new Date().toISOString(),
+    evidence: evidence || ''
+  });
+  if (rec.observations.length > OBS_MAX_PER_KEY) {
+    rec.observations = rec.observations.slice(-OBS_MAX_PER_KEY);
+  }
   _writeLimitsStore(LS_OBSERVED_LIMITS, store);
-  consoleLog(`📏 Recorded observed output ceiling for ${model}: ${n.toLocaleString()} tokens (measured from this truncation).`, 'info');
+
+  const a = window.WFProviderCatalog.analyzeObservations(rec.observations);
+  consoleLog(`📏 Recorded where ${model} stopped: ${out.toLocaleString()} output tokens. ` +
+             window.WFProviderCatalog.describeObservations(a), 'info');
+}
+
+function wfGetObservations(provider, model, endpoint) {
+  try {
+    const store = _readObservedStore();
+    const want = endpoint || _endpointKey(provider);
+    const exact = store.keys[wfObservationKey(provider, model, want)];
+    if (exact) return exact.observations || [];
+
+    // v3.63.491 — the endpoint half of the key is derived from live config,
+    // which is not always available: the AI may not be rehydrated yet at
+    // first paint, or its endpoint may have been edited since the
+    // observations were recorded. Composing the key from whatever config
+    // happens to be loaded and returning [] on a miss silently forgets a
+    // cap that was correctly learned — exactly the failure this store
+    // exists to prevent, and one that a reload would trigger.
+    //
+    // So fall back to matching on provider + model and take the most
+    // recently updated record. Endpoint separation still holds whenever the
+    // endpoint IS known (the exact hit above wins), which is the case that
+    // keeps a work server and a home server from averaging together.
+    const candidates = Object.keys(store.keys)
+      .map(k => store.keys[k])
+      .filter(r => r && r.provider === provider && r.model === model && (r.observations || []).length);
+    if (!candidates.length) return [];
+    candidates.sort((a, b) => {
+      const at = a.observations[a.observations.length - 1]?.at || '';
+      const bt = b.observations[b.observations.length - 1]?.at || '';
+      return bt.localeCompare(at);
+    });
+    return candidates[0].observations || [];
+  } catch (e) {
+    console.warn('[model-limits] observation read failed', e);
+    return [];
+  }
 }
 
 // The merged view used by the UI. Never throws — a limits lookup must not
@@ -324,11 +444,21 @@ function wfRecordObservedLimit(provider, model, outputTokens, evidence) {
 function getModelLimits(provider, model) {
   try {
     const api = (_readLimitsStore(LS_MODEL_LIMITS)[provider] || {})[model] || null;
-    const obs = (_readLimitsStore(LS_OBSERVED_LIMITS)[provider] || {})[model] || null;
-    return window.WFProviderCatalog.mergeModelLimits(api, obs, model);
+    const observations = wfGetObservations(provider, model);
+    const analysis = window.WFProviderCatalog.analyzeObservations(observations);
+    // Feed the merge the strongest empirical figure we have: a clustered
+    // cap when repetition supports one, otherwise the highest single stop
+    // point (which is a lower bound). The merge already prefers observed
+    // over declared and preserves the contradicted declared figure.
+    const obsForMerge = analysis
+      ? { output: analysis.capValue || analysis.lowerBound, at: analysis.lastAt }
+      : null;
+    const merged = window.WFProviderCatalog.mergeModelLimits(api, obsForMerge, model);
+    merged.analysis = analysis;
+    return merged;
   } catch (e) {
     console.warn('[model-limits] lookup failed', e);
-    return { model, context: null, output: null, contextSource: null, outputSource: null };
+    return { model, context: null, output: null, contextSource: null, outputSource: null, analysis: null };
   }
 }
 
@@ -379,26 +509,179 @@ function _limitsNoteLine(provider, model) {
   const L = getModelLimits(provider, model);
   const fmt = window.WFProviderCatalog.formatTokenLimit;
   const lab = window.WFProviderCatalog.limitSourceLabel;
-  if (L.output == null && L.context == null) {
-    return `<span class="model-select-note-line is-limits">📐 Token limits: not published by this provider and not in WaxFrame's table. Run a build — if it gets cut off, WaxFrame records the real ceiling and shows it here.</span>`;
-  }
+  const desc = window.WFProviderCatalog.describeObservations;
+  const A = L.analysis;
+
+  // v3.63.491 — declared and observed are shown SIDE BY SIDE rather than
+  // one replacing the other. The gap between them is the finding: a model
+  // that declares 128K and consistently stops at 4K is telling you an
+  // administrator capped it, which is precisely the question no single
+  // number can answer and no provider will tell you.
+  const declared = (A && L.declaredOutput != null) ? L.declaredOutput
+                 : (A ? null : L.output);
+  const declaredSrc = (A && L.declaredOutput != null) ? L.declaredOutputSource
+                 : (A ? null : L.outputSource);
+
   const parts = [];
-  if (L.output != null) {
-    parts.push(`max output <strong>${esc(fmt(L.output))}</strong> (${esc(lab(L.outputSource))})`);
-  } else {
+  if (declared != null) {
+    parts.push(`declared <strong>${esc(fmt(declared))}</strong> (${esc(lab(declaredSrc))})`);
+  } else if (!A) {
     parts.push('max output <strong>unknown</strong>');
   }
   if (L.context != null) {
     parts.push(`context <strong>${esc(fmt(L.context))}</strong> (${esc(lab(L.contextSource))})`);
   }
-  let extra = '';
-  if (L.declaredOutput != null) {
-    extra = ` <span class="limits-conflict">Declared ${esc(fmt(L.declaredOutput))}, but a real run here stopped at ${esc(fmt(L.output))} — trust the measured figure.</span>`;
-  } else if (L.outputSource === 'table') {
-    extra = ` <span class="limits-caveat">Hand-maintained, last reviewed ${esc(L.reviewed || 'unknown')} — may be out of date if the provider has shipped new models since.</span>`;
+
+  // No measurements yet — say what would produce one, rather than leaving
+  // an absence the user has to interpret.
+  if (!A) {
+    const head = parts.length ? `📐 ${parts.join(' · ')}.` : "📐 Token limits: not published by this provider and not in WaxFrame's table.";
+    return `<span class="model-select-note-line is-limits">${head} <span class="limits-caveat">No cut-off runs recorded yet, so nothing measured. If a build gets cut off, WaxFrame records where it stopped and reports it here.</span></span>`;
   }
-  return `<span class="model-select-note-line is-limits">📐 ${parts.join(' · ')}.${extra}</span>`;
+
+  const measuredFigure = A.capValue || A.lowerBound;
+  const confCls = A.confidence === 'consistent' ? 'is-consistent'
+                : A.confidence === 'unclear'    ? 'is-unclear' : 'is-tentative';
+  const measured = `<span class="limits-observed ${confCls}">observed <strong>~${esc(fmt(measuredFigure))}</strong> (${A.count} cut-off run${A.count === 1 ? '' : 's'})</span>`;
+  parts.push(measured);
+
+  // The gap IS the finding. Only called out when the declared figure is
+  // meaningfully higher than what actually happens.
+  let verdict = '';
+  if (declared != null && measuredFigure && declared > measuredFigure * 1.1) {
+    verdict = `<span class="limits-conflict">This model declares ${esc(fmt(declared))} but stops far short of it here. That gap is what an administrative cap looks like — the limit is being imposed in front of the model, not by it.</span>`;
+  }
+
+  return `<span class="model-select-note-line is-limits">📐 ${parts.join(' · ')}.` +
+         ` <span class="limits-detail">${esc(desc(A))}</span>` +
+         (verdict ? ' ' + verdict : '') +
+         `</span>`;
 }
+
+// ── Deliberate cap probe (v3.63.491) ────────────────────────────────
+//
+// Passive observation is the default and costs nothing: it learns from
+// truncations that were going to happen anyway. But it only learns when a
+// real build gets cut off, which means waiting to be bitten.
+//
+// This is the impatient path — ask the model for a deliberately long
+// answer and watch where it stops. One request, one measurement, no
+// waiting.
+//
+// IT IS NEVER AUTOMATIC, AND THAT IS THE WHOLE POINT. The reason the cap
+// exists is that someone is rationing tokens. Spending tokens to discover
+// a token budget, without asking, would be exactly the wrong instinct. So:
+// user-initiated only, and the confirm states what it will cost BEFORE
+// anything is sent.
+//
+// The probe is a genuinely cheap experiment: the prompt is tiny (~40
+// tokens), and the cost is whatever the model generates before the cap
+// stops it — which is bounded by the very cap being measured. If the cap
+// is 4K, the probe costs 4K. If there is no cap, PROBE_SOFT_CEILING stops
+// it so an uncapped model cannot run away.
+const PROBE_SOFT_CEILING = 16000;
+
+const PROBE_PROMPT =
+  'Write a continuous numbered list, one item per line, starting at 1 and counting upward. ' +
+  'Each line must read exactly "N. token padding line" where N is the number. ' +
+  'Do not stop, do not summarise, do not add commentary. Begin at 1 and keep going.';
+
+// Deliberately trivial content: this measures WHERE generation stops, and
+// nothing about the text matters. A numbered list also makes a truncation
+// self-evident to the eye if anyone inspects the raw response.
+
+async function wfProbeModelCap(aiId) {
+  const ai = activeAIs.find(a => a.id === aiId);
+  if (!ai) { toast('Could not find that AI'); return; }
+  const model = getModelForAI(ai);
+  const cfg = API_CONFIGS[ai.provider];
+  const endpointLabel = (() => { try { return new URL(cfg?.endpoint).host; } catch (e) { return ai.provider; } })();
+
+  const existing = wfGetObservations(ai.provider, model);
+  const priorNote = existing.length
+    ? ` You already have ${existing.length} recorded cut-off run${existing.length === 1 ? '' : 's'} for this model; ` +
+      `a probe adds one more, which is what turns a single lower bound into a confirmed pattern.`
+    : '';
+
+  // wfConfirm renders the body with textContent, so this is plain prose by
+  // design — no markup. It has to state the cost BEFORE anything is sent:
+  // the whole reason a cap exists is that someone is rationing tokens, and
+  // spending them to discover the budget without asking would be exactly
+  // the wrong instinct.
+  const ok = await wfConfirm(
+    "Measure this model's real output cap?",
+    `This sends ONE request to ${model} at ${endpointLabel}, asking it to generate until something ` +
+    `stops it, then records where it stopped.
+
+` +
+    `What it will cost: a ~40-token prompt, plus however many output tokens the model produces before ` +
+    `it is cut off. If a cap is in place, that cap is the cost — a 4,000-token cap costs about 4,000 ` +
+    `tokens. If nothing stops it, WaxFrame halts at ${PROBE_SOFT_CEILING.toLocaleString()} tokens so an ` +
+    `uncapped model cannot run away.
+
+` +
+    `Run this when you want the answer now. If you would rather not spend the tokens, do nothing — ` +
+    `WaxFrame already records where real builds get cut off, at no extra cost.` + priorNote,
+    { okText: 'Run the probe', cancelText: 'Cancel' }
+  );
+  if (!ok) return;
+
+  consoleLog(`🔬 Probing ${ai.name} (${model}) for its real output ceiling…`, 'send');
+  setBeeStatus(ai.id, 'working', 'Probing cap');
+  const meta = {};
+  // Soft ceiling so an UNCAPPED model cannot generate without bound while
+  // we measure it. If a real cap is lower than this, the cap stops the
+  // request first and this never binds — which is the desired outcome.
+  window.WF_OUTPUT_BUDGET_OVERRIDE = PROBE_SOFT_CEILING;
+  try {
+    const text = await callAPI(ai, PROBE_PROMPT, '', 'probe', meta);
+    const truncated = _isTruncationSignal(meta.finishReason);
+    const outTokens = Number(meta.completionTokens) || 0;
+
+    // If it stopped at OUR ceiling, that is WaxFrame's limit asserting
+    // itself, not the server's. Recording it would plant a fake cap in the
+    // history and poison every later analysis.
+    const hitOurCeiling = truncated && outTokens >= PROBE_SOFT_CEILING * 0.95;
+    if (hitOurCeiling) {
+      consoleLog(`🔬 Probe reached WaxFrame's own ${PROBE_SOFT_CEILING.toLocaleString()}-token safety ceiling ` +
+                 `without the server stopping it. Nothing capped this model below that, so no cap was recorded.`, 'info');
+      toast(`🔬 No server cap below ${window.WFProviderCatalog.formatTokenLimit(PROBE_SOFT_CEILING)}`, 6000);
+      setBeeStatus(ai.id, 'idle', '');
+      return;
+    }
+    if (truncated && outTokens > 0) {
+      wfRecordObservedLimit(ai.provider, model, meta, `probe · finishReason=${meta.finishReason}`);
+      const a = window.WFProviderCatalog.analyzeObservations(wfGetObservations(ai.provider, model));
+      consoleLog(`🔬 Probe stopped at ${outTokens.toLocaleString()} output tokens ` +
+                 `(finishReason=${meta.finishReason}). ${window.WFProviderCatalog.describeObservations(a)}`, 'success');
+      toast(`🔬 Stopped at ~${window.WFProviderCatalog.formatTokenLimit(outTokens)} output tokens`, 6000);
+    } else if (outTokens > 0) {
+      // Finished on its own. That is a real result too — it means nothing
+      // capped it at this size, so the ceiling is ABOVE what we saw. Not
+      // recorded as an observation: the store holds truncations, and
+      // filing a voluntary stop alongside them would corrupt the analysis.
+      consoleLog(`🔬 Probe was NOT cut off — ${model} chose to stop on its own after ` +
+                 `${outTokens.toLocaleString()} output tokens (finishReason=${meta.finishReason || 'none reported'}). ` +
+                 `No cap asserted itself at this size, so any ceiling is above that. Not recorded as a cut-off.`, 'info');
+      toast(`🔬 No cap hit — model stopped on its own at ${outTokens.toLocaleString()} tokens`, 6000);
+    } else {
+      consoleLog(`🔬 Probe returned ${text ? text.length.toLocaleString() + ' chars' : 'nothing'} but the server ` +
+                 `reported no token counts, so there is nothing measurable to record. ` +
+                 `Some local servers omit usage data entirely.`, 'warn');
+      toast('🔬 Probe ran, but this server reports no token counts', 6000);
+    }
+    setBeeStatus(ai.id, 'idle', '');
+  } catch (e) {
+    setBeeStatus(ai.id, 'error', 'Probe failed');
+    consoleLog(`🔬 Probe failed: ${e?.message || e}`, 'error');
+    toast('🔬 Probe failed — see the console', 5000);
+  } finally {
+    // Always clear, however the probe exited. A budget override left set
+    // would silently cap every subsequent Builder round.
+    window.WF_OUTPUT_BUDGET_OVERRIDE = 0;
+  }
+}
+if (typeof window !== 'undefined') window.wfProbeModelCap = wfProbeModelCap;
 
 function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const models = getModelsForProvider(provider);
@@ -439,7 +722,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
     if (isBuilderIncapableModel(m)) spans.push('<span class="opt-role is-builder-warn" title="Output token cap too low to finish a Builder round — use as Reviewer only">⚠️ Reviewer-only</span>');
     const markerHTML = spans.length ? spans.join(' · ') + ' — ' : '';
     const reasoningBadge = (m === reviewerModel && isReasoningLike(m)) ? ' (reasoning)' : '';
-    // v3.63.490 — token limits on the row itself. Max output is the number
+    // v3.63.491 — token limits on the row itself. Max output is the number
     // that decides whether a model can finish a Builder round, so it has to
     // be visible AT THE MOMENT OF CHOOSING, not buried in a settings page.
     const limitsHTML = withLimits ? _limitsChip(provider, m) : '';
@@ -487,7 +770,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   if (!builderModel && builderCache?.none && builderCache?.why) {
     noteParts.push(`<span class="model-select-note-line is-builder">🔨 Builder: ${esc(builderCache.why)}</span>`);
   }
-  // v3.63.490 — limits line for the currently-selected model, carrying the
+  // v3.63.491 — limits line for the currently-selected model, carrying the
   // provenance in words. Always present (even when nothing is known), so
   // "we don't know" is stated rather than left as an absence the user has
   // to interpret.
@@ -497,6 +780,13 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   // v3.32.10 — recheck button label updated to reflect dual-role behavior.
   const recheckBtn = showRecheck
     ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" data-action="call" data-fn="recheckModelForAI" data-arg="${aiId}" title="Ask the provider for its best Reviewer and Builder models AND classify Cheap / Balanced / Thinker / Fast tier picks — populates all 6 cards on the hive grid">Recommend Models</button>`
+    : '';
+  // v3.63.491 — deliberate cap probe. Offered wherever Recommend Models is,
+  // because it answers the same class of question ("what can this model
+  // actually do for me") and belongs next to it. Costs tokens, so it asks
+  // first and says what it will spend — never fires on its own.
+  const probeBtn = showRecheck
+    ? `<button class="ai-recheck-btn ai-probe-btn" id="probebtn-${aiId}" data-action="call" data-fn="wfProbeModelCap" data-arg="${aiId}" title="Send one request that generates until something stops it, then record where it stopped. Answers 'what is my real output cap' without waiting for a build to get cut off — and without waiting for someone to tell you. Asks for confirmation first and states what it will cost.">🔬 Measure cap</button>`
     : '';
 
   return `<div class="model-select-wrap">
@@ -510,6 +800,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
       <div class="model-select-list" role="listbox">${optRows}</div>
     </div>
     ${recheckBtn}
+    ${probeBtn}
     ${noteHtml}
   </div>`;
 }
@@ -844,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260911-003';         // build stamp — update each session
+const BUILD = '20260911-004';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -6055,7 +6346,7 @@ function _buildCompactModelSelect(ai, currentModel) {
     return b.join('');
   };
 
-  // v3.63.490 — token limits in the option text. This is a NATIVE <select>,
+  // v3.63.491 — token limits in the option text. This is a NATIVE <select>,
   // so there is no markup to hang a styled chip on and no per-option title
   // that browsers render reliably — the limits have to ride the option text
   // itself. Plain-text provenance marker matching the custom combobox:
@@ -6089,7 +6380,7 @@ function _buildCompactModelSelect(ai, currentModel) {
     ? `<option value="" selected disabled>(pick a model)</option>`
     : '';
 
-  // v3.63.490 — the collapsed row's hover tooltip: model id, then the full
+  // v3.63.491 — the collapsed row's hover tooltip: model id, then the full
   // limits breakdown in words (including which source each number came
   // from). Composed here rather than inline in the template so the newline
   // separator stays a plain value.
@@ -15164,7 +15455,7 @@ function updateRefGrandTotals() {
 // PUSHES a new upload-source doc into the array instead of replacing
 // the singleton (the v3.21.0–v3.23.4 behavior).
 //
-// v3.63.490 — the drag half of this used to live in four functions wired
+// v3.63.491 — the drag half of this used to live in four functions wired
 // by inline ondragenter=/ondragover=/ondragleave=/ondrop= attributes on
 // #refDropRow. Inline handlers are inline JavaScript, so v3.63.366's
 // strict script-src stopped the browser compiling them and the whole
@@ -16610,7 +16901,7 @@ async function callBuilderWithContentFilterFailover(primaryAI, reviews, notes) {
     const modelNote = modelOverride && modelOverride !== originalModel ? ` · model: ${modelOverride}` : '';
     consoleLog(`📤 ${ai.name} (Builder${isFailover ? ' failover' : ''}) — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint}${modelNote})`, 'send');
     try {
-      // v3.63.490 — carry the per-call metadata out with the response so
+      // v3.63.491 — carry the per-call metadata out with the response so
       // the consumer downstream can tell a cut-off build from a finished
       // one. Each attempt owns its own meta object.
       const meta = {};
@@ -17664,8 +17955,8 @@ async function runBuilderOnly() {
     window._lastAppliedChanges = extractAppliedChanges(builderResponse);
     const hasConflictBlock = builderResponse.includes('%%CONFLICTS_START%%');
 
-    // v3.63.490 — Truncation is now checked FIRST, and independently of
-    // the conflicts block. Pre-v3.63.490 this test lived inside the
+    // v3.63.491 — Truncation is now checked FIRST, and independently of
+    // the conflicts block. Pre-v3.63.491 this test lived inside the
     // `if (!hasConflictBlock)` branch, so a response cut off AFTER
     // %%CONFLICTS_START%% was never examined for truncation at all — it
     // took the "has conflicts block" path and could be accepted with an
@@ -17676,12 +17967,12 @@ async function runBuilderOnly() {
       builderHadError = true;
       _failedRoundReason  = 'truncated';
       _failedRoundDetails = _describeTruncation(builderAI, prompt, _trunc);
-      // v3.63.490 — a truncation is a MEASUREMENT of this model's real
+      // v3.63.491 — a truncation is a MEASUREMENT of this model's real
       // output ceiling for this setup. Record it; the model picker shows it
       // as an observed figure, which is the only number that can be right
       // for a self-hosted server.
       wfRecordObservedLimit(builderAI.provider, getModelForAI(builderAI),
-                            _trunc.completionTokens, _truncEvidence(_trunc));
+                            _builderMeta, _truncEvidence(_trunc));
       setBeeStatus(builderAI.id, 'error', 'Output truncated');
       setStatus(`⚠️ Builder output cut off at the model's token cap — round rejected`);
       consoleLog(`⚠️ Builder output truncated (${_truncEvidence(_trunc)}) — round rejected. Your document was NOT changed.`, 'error');
@@ -19113,7 +19404,7 @@ async function runRound(opts) {
       const hasConflictBlock = cleanResponse.includes('%%CONFLICTS_START%%');
 
       // ── GATE 0: Output cut off at the token cap = hard failure ──
-      // v3.63.490 — checked BEFORE the conflicts gate and independently of
+      // v3.63.491 — checked BEFORE the conflicts gate and independently of
       // it. See the matching comment in runBuilderOnly: truncation is a
       // property of the response, not of which block went missing, and a
       // response cut off after %%CONFLICTS_START%% used to skip this test
@@ -19125,9 +19416,9 @@ async function runRound(opts) {
         builderHadError = true;
         _failedRoundReason  = 'truncated';
         _failedRoundDetails = _describeTruncation(builderAI, builderPrompt, _trunc);
-        // v3.63.490 — see the matching call in runBuilderOnly.
+        // v3.63.491 — see the matching call in runBuilderOnly.
         wfRecordObservedLimit(builderAI.provider, getModelForAI(builderAI),
-                              _trunc.completionTokens, _truncEvidence(_trunc));
+                              builderCall.meta, _truncEvidence(_trunc));
         setBeeStatus(builderAI.id, 'error', 'Output truncated');
         setStatus(`⚠️ Builder output cut off at the model's token cap — round rejected`);
         consoleLog(`⚠️ Builder output truncated (${_truncEvidence(_trunc)}) — round rejected. Your document was NOT changed.`, 'error');
@@ -19763,7 +20054,7 @@ function _releaseProviderSlot(base) {
 }
 function _noopRelease() { /* no-op for uncapped providers */ }
 
-// v3.63.490 — `metaOut` is an optional caller-owned object that callAPI
+// v3.63.491 — `metaOut` is an optional caller-owned object that callAPI
 // fills with per-call response metadata (finish reason, token usage,
 // model). It exists because callAPI returns a bare string, so the
 // provider's stop reason had nowhere to go: the only previous way to read
@@ -19926,7 +20217,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   }
 
   const data = await response.json();
-  // v3.63.490 — _finishReason is the provider's stop reason via the shared
+  // v3.63.491 — _finishReason is the provider's stop reason via the shared
   // coalescer; `finishReason` below keeps the blockReason fallback that
   // only the content-filter check wants.
   const _finishReason = _extractFinishReason(data);
@@ -20018,7 +20309,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     chars:     text.length,
     words,
     status:    response.status,
-    // v3.63.490 — was `choices[0].finish_reason || stop_reason`, which
+    // v3.63.491 — was `choices[0].finish_reason || stop_reason`, which
     // omitted Gemini's `candidates[0].finishReason` even though the
     // correctly-coalesced value was already being computed a few lines
     // above for the content-filter check. Gemini truncation was invisible
@@ -20038,7 +20329,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     notes:            typeof notesContext === 'string' ? notesContext : ''
   });
 
-  // v3.63.490 — hand the caller everything it needs to decide whether this
+  // v3.63.491 — hand the caller everything it needs to decide whether this
   // response was cut off. Written last so a throw earlier in the function
   // leaves metaOut untouched rather than half-populated.
   if (metaOut && typeof metaOut === 'object') {

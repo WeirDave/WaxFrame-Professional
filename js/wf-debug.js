@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260911-003
+// Build: 20260911-004
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -433,7 +433,7 @@ window.WF_DEBUG = {
   // The REFRESH_TOKEN is stored in localStorage on first use (prompted
   // via wfConfirm's input variant) — it's a Worker secret, not an API
   // key for a provider, so localStorage is fine.
-  // ── Forced truncation (v3.63.490) ──────────────────────────────
+  // ── Forced truncation (v3.63.491) ──────────────────────────────
   //
   // David's "test method" ask: a repeatable way to reproduce a Builder
   // token-cap cutoff on demand, instead of discovering one mid-project by

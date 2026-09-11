@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260911-003
+// Build: 20260911-004
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -117,7 +117,7 @@
     return { sys: sys, usr: usr };
   }
 
-  // v3.63.490 — Anthropic REQUIRES max_tokens on every request, so unlike
+  // v3.63.491 — Anthropic REQUIRES max_tokens on every request, so unlike
   // the OpenAI and Gemini shapes (which omit it and inherit the provider
   // default) this body builder has to name a number. That number was 4096
   // and had been since the builder was written.
@@ -139,7 +139,7 @@
   // a lower ceiling would get a clear 400 from Anthropic naming max_tokens.
   var ANTHROPIC_MAX_OUTPUT_TOKENS = 16384;
 
-  // ── Truncation detection (v3.63.490) ──────────────────────────────
+  // ── Truncation detection (v3.63.491) ──────────────────────────────
   //
   // Lives here rather than in app.js because it is provider-response
   // knowledge, which is what this module owns — and because this module
@@ -147,14 +147,14 @@
   // pin the behavior with fixtures. app.js holds thin delegating wrappers.
   //
   // Why this exists: a Builder that hits its output cap returns a response
-  // that looks finished, it just stops. Before v3.63.490 the only way to
+  // that looks finished, it just stops. Before v3.63.491 the only way to
   // tell was a finishReason recorded in the Deep Dive ring buffer, which
   // is never written unless Deep Dive is switched on — off by default, so
   // in normal use truncation was undetectable and got misreported as the
   // Builder ignoring its formatting instructions.
 
   // Provider stop-reason field, coalesced across every response shape
-  // WaxFrame speaks. Verified against live provider docs in v3.63.490:
+  // WaxFrame speaks. Verified against live provider docs in v3.63.491:
   //   OpenAI-shape  choices[0].finish_reason    (ChatGPT, Copilot, Grok,
   //                 Perplexity, Mistral, DeepSeek, Together, Cohere-compat,
   //                 and every OpenAI-compatible local server)
@@ -181,7 +181,7 @@
   // different failures with different fixes, and treating one as truncation
   // would fire a continuation at a response that already finished.
   //
-  // Values confirmed against provider docs in v3.63.490:
+  // Values confirmed against provider docs in v3.63.491:
   //   'length'        OpenAI, Grok, Perplexity, DeepSeek, Together, Cohere
   //   'MAX_TOKENS'    Gemini
   //   'max_tokens'    Anthropic
@@ -232,7 +232,7 @@
     return false;
   }
 
-  // ── Forced-truncation test hook (v3.63.490) ───────────────────────
+  // ── Forced-truncation test hook (v3.63.491) ───────────────────────
   //
   // David's ask was for a "test method" — a repeatable way to reproduce a
   // token-cap cutoff on demand instead of waiting to be bitten by one
@@ -249,8 +249,24 @@
   //   window.WF_FORCE_TINY_OUTPUT = true    → next calls truncate
   //   window.WF_FORCE_TINY_OUTPUT = false   → back to normal
   var FORCED_TINY_TOKENS = 64;
+
+  // v3.63.491 — generalised from the v3.63.489 force-truncate hook into a
+  // single output-budget override, because a second caller needed it: the
+  // deliberate cap probe sets a SOFT CEILING so an uncapped model cannot
+  // generate without bound while being measured. Two mechanisms writing
+  // max_tokens independently would eventually contradict each other, so
+  // there is one.
+  //
+  //   WF_OUTPUT_BUDGET_OVERRIDE = <n>   explicit budget (probe ceiling)
+  //   WF_FORCE_TINY_OUTPUT = true       64 tokens (force-truncate test)
+  //
+  // An explicit override wins, so a probe run while Force Truncate is on
+  // measures the probe ceiling rather than silently measuring 64.
   function forcedTinyTokens() {
-    return (root && root.WF_FORCE_TINY_OUTPUT) ? FORCED_TINY_TOKENS : null;
+    if (!root) return null;
+    var explicit = Number(root.WF_OUTPUT_BUDGET_OVERRIDE);
+    if (isFinite(explicit) && explicit > 0) return explicit;
+    return root.WF_FORCE_TINY_OUTPUT ? FORCED_TINY_TOKENS : null;
   }
 
   // Body builders — one per WaxFrame format.
@@ -631,7 +647,7 @@
     return out;
   }
 
-  // ── Model token limits (v3.63.490) ────────────────────────────────
+  // ── Model token limits (v3.63.491) ────────────────────────────────
   //
   // David, 2026-09-11: "we just don't know what the limits are so if
   // different models have different limits then we need to know that so
@@ -682,6 +698,160 @@
   // config — not a property of the model. No table and no API can ever be
   // right about it for a given install. That is exactly the case 'observed'
   // exists to cover.
+
+  // ── Observed-cap analysis (v3.63.491) ─────────────────────────────
+  //
+  // David, 2026-09-11: "I'm sure that our IT people have placed a limit on
+  // the token count in order to prevent people from chewing down tons of
+  // tokens ... we still should have some sort of a recourse to find out on
+  // our own without someone telling us as users."
+  //
+  // This is the case declared metadata cannot answer. When a cap is imposed
+  // by a server administrator, /api/show and /v1/models keep reporting the
+  // MODEL's numbers, which say nothing about the policy sitting in front of
+  // it. The only way to learn an administrative cap from the outside is to
+  // watch where responses actually stop. So observation is the primary
+  // mechanism here, not a fallback.
+  //
+  // WHAT A STOP POINT ACTUALLY TELLS YOU — this is the part that is easy to
+  // get wrong, and getting it wrong means confidently reporting a wrong
+  // number:
+  //
+  //   ONE truncation is a LOWER BOUND, nothing more. The model emitted N
+  //   tokens and stopped. The cap is N or lower. It is not proof the cap
+  //   IS N — that run might have been cut short by something unrelated.
+  //
+  //   REPEATED truncations landing on the same number are the real signal.
+  //   That is a cap asserting itself.
+  //
+  //   WHICH cap is a separate question. A stop point can come from a
+  //   per-request output limit, from the total context window filling up,
+  //   or from a rate/quota policy that cut the request off. These behave
+  //   differently and must not be conflated:
+  //
+  //     * output-token cap  -> stops cluster on OUTPUT count, and stay put
+  //                            even when prompt size varies
+  //     * context limit     -> stops cluster on PROMPT + OUTPUT combined,
+  //                            so the output figure falls as prompts grow
+  //     * rate / quota      -> stops do not cluster on either; they land
+  //                            wherever the policy happened to bite
+  //
+  //   Telling the first two apart REQUIRES having seen prompts of different
+  //   sizes. With only same-size prompts both hypotheses fit equally well,
+  //   and saying which one it is would be a guess. We report that honestly
+  //   rather than picking one.
+
+  // Two numbers "cluster" when their spread is small relative to their
+  // size. 8% tolerance: generous enough to absorb tokenizer differences and
+  // a model stopping a few tokens early, tight enough that 4096 and 8192
+  // never look like the same cap.
+  var CLUSTER_TOLERANCE = 0.08;
+  function _clusters(values) {
+    if (!values || values.length < 2) return null;
+    var min = Math.min.apply(null, values);
+    var max = Math.max.apply(null, values);
+    if (min <= 0) return null;
+    var spread = (max - min) / max;
+    return { clustered: spread <= CLUSTER_TOLERANCE, min: min, max: max, spread: spread };
+  }
+
+  // Do we have prompts of genuinely different sizes? Without that we cannot
+  // separate an output cap from a context limit. Same 8% yardstick.
+  function _promptsVary(prompts) {
+    var known = (prompts || []).filter(function (p) { return p > 0; });
+    if (known.length < 2) return false;
+    var c = _clusters(known);
+    return !!(c && !c.clustered);
+  }
+
+  // observations: [{ out, prompt, total, at, evidence }]
+  // `out` is required; prompt/total are used only for cap-type inference
+  // and may be absent (plenty of local servers report no usage at all).
+  function analyzeObservations(observations) {
+    var obs = (observations || []).filter(function (o) { return o && Number(o.out) > 0; });
+    if (!obs.length) return null;
+
+    var outs    = obs.map(function (o) { return Number(o.out); });
+    var prompts = obs.map(function (o) { return Number(o.prompt) || 0; });
+    var totals  = obs.map(function (o) {
+      var t = Number(o.total) || 0;
+      if (!t && Number(o.out) && Number(o.prompt)) t = Number(o.out) + Number(o.prompt);
+      return t;
+    }).filter(function (t) { return t > 0; });
+
+    var highest = Math.max.apply(null, outs);
+    var result = {
+      count: obs.length,
+      lowerBound: highest,          // the cap is AT LEAST this
+      lastAt: obs[obs.length - 1].at || null,
+      kind: 'single',
+      confidence: 'single-datapoint',
+      capValue: null,
+      promptsVaried: _promptsVary(prompts)
+    };
+
+    if (obs.length === 1) return result;
+
+    var outCluster   = _clusters(outs);
+    var totalCluster = totals.length >= 2 ? _clusters(totals) : null;
+
+    if (outCluster && outCluster.clustered) {
+      // Output counts land in the same place every time.
+      result.capValue = outCluster.min;
+      if (result.promptsVaried) {
+        // Held steady across DIFFERENT prompt sizes -> it is the output
+        // budget that is capped, not the shared context window.
+        result.kind = 'output';
+      } else {
+        // Same-size prompts: an output cap and a context limit are
+        // indistinguishable from this evidence. Say so.
+        result.kind = 'output-or-context';
+      }
+    } else if (totalCluster && totalCluster.clustered) {
+      // Output varies but prompt+output does not: the shared window is
+      // what is filling up, so bigger prompts leave less room to write.
+      result.kind = 'context';
+      result.capValue = totalCluster.min;
+    } else {
+      // Neither clusters. Could be a rate/quota policy, a flaky endpoint,
+      // or simply not enough data yet.
+      result.kind = 'inconclusive';
+      result.capValue = null;
+    }
+
+    result.confidence = obs.length >= 3 ? 'consistent' : 'likely';
+    if (result.kind === 'inconclusive') result.confidence = 'unclear';
+    return result;
+  }
+
+  // One-line plain-English summary. Deliberately hedged: it describes what
+  // was MEASURED, and never asserts a definitive cap from a single run.
+  function describeObservations(a) {
+    if (!a) return '';
+    var n = function (v) { return Number(v).toLocaleString(); };
+    if (a.count === 1) {
+      return 'stopped once at ' + n(a.lowerBound) + ' output tokens — a lower bound, not a confirmed cap. ' +
+             'Another cut-off run will tell us whether this is really the ceiling.';
+    }
+    var runs = a.count + ' cut-off runs';
+    if (a.kind === 'output') {
+      return 'stopped at about ' + n(a.capValue) + ' output tokens across ' + runs +
+             ', holding steady even as prompt size changed — that looks like a per-request output cap.';
+    }
+    if (a.kind === 'output-or-context') {
+      return 'stopped at about ' + n(a.capValue) + ' output tokens across ' + runs +
+             '. Every one of those runs sent a similar-sized prompt, so this could be a per-request ' +
+             'output cap OR the total context window filling up — not enough variation yet to tell them apart.';
+    }
+    if (a.kind === 'context') {
+      return 'stopped at about ' + n(a.capValue) + ' tokens of prompt + output combined across ' + runs +
+             ' — that looks like a total context limit rather than an output cap, so a longer prompt ' +
+             'leaves less room to write.';
+    }
+    return 'cut off ' + a.count + ' times, but at inconsistent points (highest: ' + n(a.lowerBound) +
+           ' output tokens). That does not look like a fixed size cap — it may be a rate or quota ' +
+           'policy, or simply too few runs to see the pattern yet.';
+  }
 
   // Hand-maintained fallback. Deliberately SMALL: it carries only the
   // models WaxFrame ships as defaults/fallbacks, where a wrong number would
@@ -855,7 +1025,7 @@
   // wraps it for the 7-day cache path; the watchdog wraps it cache-less.
   // RETRY-ONCE IS THE CALLER'S CONCERN too — same reason. Throws on
   // transport errors so the caller can decide.
-  // v3.63.490 — `limitsOut` is an optional caller-owned object that gets
+  // v3.63.491 — `limitsOut` is an optional caller-owned object that gets
   // filled with { modelId: {context, output, source:'api'} } for whatever
   // the provider published alongside its model list. Same out-param shape
   // as callAPI's metaOut and for the same reason: the return contract here
@@ -1128,17 +1298,20 @@
   // on; the names just no longer need to be reachable from outside.
   root.WFProviderCatalog = {
     CATALOG: CATALOG,
-    // v3.63.490 — exported so the custom/rehydrated anthropic-format body
+    // v3.63.491 — exported so the custom/rehydrated anthropic-format body
     // builders in app.js and storage.js use the same ceiling as the
     // catalog's own, instead of each carrying a private copy of 4096.
     ANTHROPIC_MAX_OUTPUT_TOKENS: ANTHROPIC_MAX_OUTPUT_TOKENS,
-    // v3.63.490 — truncation detection. app.js wraps these; the wrappers
+    // v3.63.491 — truncation detection. app.js wraps these; the wrappers
     // exist so call sites read naturally, not because the logic differs.
     extractFinishReason: extractFinishReason,
-    // v3.63.490 — model token limits.
+    // v3.63.491 — model token limits.
     limitsFromModelEntry: limitsFromModelEntry,
     limitsFromTable: limitsFromTable,
     mergeModelLimits: mergeModelLimits,
+    // v3.63.491 — empirical cap discovery.
+    analyzeObservations: analyzeObservations,
+    describeObservations: describeObservations,
     formatTokenLimit: formatTokenLimit,
     limitSourceLabel: limitSourceLabel,
     LIMITS_TABLE: LIMITS_TABLE,

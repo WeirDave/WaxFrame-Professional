@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v277
+WaxFrame Backlog Master v278
 2026-09-11
 
 ABOUT THIS DOCUMENT
@@ -454,6 +454,85 @@ OPEN FEATURES
    DONE:   A target that cannot fit the known cap warns at
            Launch with both numbers and the limit's provenance;
            silent when the cap is unknown; never blocks.
+
+
+12. Read declared limits from local servers (Ollama / Open WebUI / LM Studio)
+   ─────────────────────────────────────────────────────────
+   WHAT:   Harvest the context length local servers already
+           publish, so the "declared" half of the declared-vs-
+           observed comparison is populated for self-hosted
+           AIs instead of reading "unknown".
+   WHY:    v3.63.491 measures the real cap by observation,
+           which is what matters when an administrator has
+           imposed one. But the comparison is far more
+           legible with a declared figure beside it: "declared
+           32K, observed 4K" names the gap, where "unknown vs
+           4K" only reports a number.
+   STATE:  OPEN. All of it verified reachable from file:// on
+           2026-09-11 against a live Ollama 0.33.3, from
+           WaxFrame's own page with its strict CSP, zero CSP
+           violations:
+             /api/tags  -> details.context_length per model,
+                           every model, one call, no load
+                           needed. ALREADY CALLED by the
+                           Ollama import preset; the field is
+                           being discarded.
+             /api/show  -> parameters string carries num_ctx
+                           when a Modelfile sets one, plus
+                           model_info["<arch>.context_length"]
+             /api/ps    -> context_length for LOADED models =
+                           the actual runtime allocation
+             /v1/models -> id/object/created/owned_by only.
+                           Sparse. Native API is strictly
+                           better.
+           Open WebUI /api/models embeds the ENTIRE raw Ollama
+           object as `.ollama`, so `.ollama.details.
+           context_length` is already arriving there too, and
+           that endpoint is ALREADY CALLED by the Open WebUI
+           preset. It also proxies Ollama at /ollama/api/tags,
+           /ollama/api/ps and /ollama/api/show.
+           LM Studio /api/v0/models returns max_context_length
+           AND loaded_context_length (loaded wins - a model can
+           be loaded below its architectural maximum). NOT
+           verified live; no instance was running.
+   WHERE:  js/provider-catalog.js limitsFromModelEntry already
+           reads several OpenAI-compatible context fields;
+           IMPORT_SERVER_PRESETS in js/app.js holds the
+           per-server endpoints.
+   DONE:   A local server AI shows its context length as
+           API-sourced rather than unknown; where a Modelfile
+           num_ctx differs from the architectural figure, the
+           CONFIGURED number leads and both are shown - showing
+           the architectural number alone would overstate the
+           real ceiling, which is the exact trap this is meant
+           to avoid.
+
+
+13. open-webui-setup.html steers users into a CORS config that breaks file://
+   ─────────────────────────────────────────────────────────
+   WHAT:   The setup page instructs
+           CORS_ALLOW_ORIGIN=https://waxframe.com. A file://
+           page sends Origin: null, which that value excludes,
+           so the offline/air-gapped mode the page is otherwise
+           written for cannot reach the server at all.
+   WHY:    Documentation bug with real consequences: it is the
+           single most likely reason a local-server setup fails
+           for an offline user, and the failure presents as an
+           opaque CORS error.
+   STATE:  OPEN. Open WebUI's CORS_ALLOW_ORIGIN DEFAULTS to '*'
+           (confirmed in backend/open_webui/config.py), so an
+           untouched install works from file://; it is
+           following WaxFrame's own hardening advice that
+           breaks it. Note a validator rejects non-http(s)
+           schemes unless CORS_ALLOW_CUSTOM_SCHEME is set, so
+           "allowlist file://" is NOT the fix - '*' or 'null'
+           is.
+   WHERE:  open-webui-setup.html, the CORS section.
+   DONE:   The page documents the offline case separately and
+           does not hand air-gapped users a value that locks
+           them out; WaxFrame surfaces a CORS-shaped failure by
+           naming the env var to change rather than reporting
+           "unknown".
 
 
 ════════════════════════════════════════════════════════════
