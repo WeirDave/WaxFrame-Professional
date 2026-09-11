@@ -1,5 +1,46 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.489 — Builder truncation detection + raise the self-inflicted Claude output cap
+**Released:** 2026-09-11  
+**Build:** 20260911-002
+
+### What changed
+- **A Builder that runs out of output room is now caught and the round is rejected.** Previously a cut-off build could be reported as "Builder did not return a %%CONFLICTS_START%% block" — a diagnosis that points at instruction-following when the real cause is capacity — and in one case could be accepted outright. Your document is never replaced by a half-finished one.
+- **Truncation detection no longer depends on Deep Dive being switched on.** The check read `finishReason` out of the Deep Dive ring buffer, but `WF_DEBUG.captureRound()` opens with `if (!this.deepDiveOn) return;` and Deep Dive is off by default. In normal use the ring buffer was empty, so the truncation branch was unreachable and the `BUILDER_TRUNCATED` card could essentially never fire. `callAPI()` now hands the finish reason directly to its caller through an out-param.
+- **Gemini truncation was invisible even with Deep Dive on.** The stored finish reason read `choices[0].finish_reason || stop_reason` and omitted Gemini's `candidates[0].finishReason` — despite the correctly-coalesced value being computed 88 lines earlier for the content-filter check. Both now share one `extractFinishReason()`.
+- **Truncation is checked before, and independently of, the conflicts block.** The old test lived inside `if (!hasConflictBlock)`, so a response cut off *after* `%%CONFLICTS_START%%` was never examined for truncation at all. Truncation is a property of the response, not of which block happened to go missing.
+- **Second, provider-independent signal: unclosed envelope blocks.** A `%%..._START%%` with no matching `%%..._END%%` means generation stopped partway through. This is what carries the self-hosted case (Ollama, LM Studio, Open WebUI), where the output cap is a server-side setting and the response often carries no usable finish reason at all.
+- **Claude Builders were capped at 4,096 output tokens by WaxFrame itself, not by the model.** Anthropic requires `max_tokens` on every request, and the value had been 4096 since the body builder was written — roughly 3,000 words, for a payload that has to carry the document *plus* the conflicts block *plus* the applied-changes block. Every model in the Claude list (Sonnet 4.6, Opus 4.8/4.7/4.6, Haiku 4.5) supports far more. Raised to a named `ANTHROPIC_MAX_OUTPUT_TOKENS = 16384`, conservatively inside all of them.
+- **`BUILDER_TRUNCATED` card rewritten.** It previously recommended switching to Claude for its higher output cap — while WaxFrame was capping Claude at 4096, lower than most alternatives. It now leads with "your document was not changed" and calls out that on a self-hosted server the limit is usually the user's own `num_predict` / `max_tokens` server setting, which WaxFrame cannot read or raise.
+- **New dev-toolbar control: ✂ Force Truncate.** Asks every provider for a 64-token output budget so a cutoff can be reproduced on demand — a real finish reason on the wire, a real half-written envelope, the real detection path. Never persisted: a forced-truncation mode that survived a reload would be indistinguishable from the bug it simulates.
+- Detection logic lives in `js/provider-catalog.js` (provider-response knowledge, and the module is `require()`-able from Node so it can be fixture-tested); `js/app.js` holds thin delegating wrappers.
+
+### Verification
+- release-check: all 16 checks pass
+- **17 new fixtures** in `tools/test-provider-extractors.mjs` (Check 13), 43 total passing. Confirmed against live provider docs: `length` (OpenAI/Grok/Perplexity/DeepSeek/Together/Cohere), `MAX_TOKENS` (Gemini), `max_tokens` (Anthropic). Explicitly asserted NOT to fire on `stop`, `end_turn`, `STOP`, `COMPLETE`, `eos`, `tool_calls`, `content_filter`, or DeepSeek's `insufficient_system_resource` / `aborted` — a false positive would fire a continuation at an already-complete document.
+- **Verified in real Firefox on a real `file://` page** (Marionette-driven):
+  - Decision table exercised end to end: clean response with no metadata → not truncated; `finishReason: 'stop'` → not truncated; `finishReason: 'length'` → truncated; cut off mid-document with no provider metadata → truncated; cut off inside the conflicts block (the old blind spot) → truncated.
+  - Evidence string reports which signal fired: `finishReason=length + unclosed %%…_END%% block`.
+  - Force Truncate verified against the **real** request bodies for all three shapes, in both the Builder-envelope and no-envelope paths: Claude 16384→64, ChatGPT uncapped→64, Gemini uncapped→64, all restoring correctly when toggled off.
+  - Regression check: reviewer calls still send no cap on the OpenAI shape.
+  - Dev-toolbar button toggles label and flag in both directions.
+  - Zero CSP violations, zero JS errors.
+- Testing caught two real gaps mid-build: the forced cap initially did not apply in the Anthropic and Gemini *no-envelope fallback* branches. Both fixed and re-verified.
+- Sacred rule (80ch column width) intact — `style.css` untouched apart from its version stamp.
+
+### Known limitation (deliberate, not deferred silently)
+Detection rejects the round; it does not yet recover it. **Continuation-and-stitch is the next release** — resume the build from where it stopped and splice the halves, so a long document completes instead of failing. The seam strategy, the context ceiling, and the pre-flight warning are specified in `docs/WaxFrame_Backlog_Master_v276.txt` item 10.
+
+Also not done here: reading Anthropic's per-model `max_tokens` and Gemini's `outputTokenLimit` from the models endpoints (both now expose it; WaxFrame already calls both endpoints). 16384 is a hand-picked safe constant until then.
+
+### Files touched
+js/provider-catalog.js, js/app.js, js/wf-debug.js, js/storage.js, index.html, tools/test-provider-extractors.mjs, js/version.js, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, CHANGELOG.md, docs/WaxFrame_Backlog_Master_v276.txt
+
+### Rollback
+`git revert <sha>` — restores the 4096 Claude cap and the Deep-Dive-gated detection. Reverting restores a state where a cut-off Builder response can be misreported.
+
+---
+
 ## v3.63.488 — Fix dead drag-and-drop file upload on both drop zones
 **Released:** 2026-09-11  
 **Build:** 20260911-001

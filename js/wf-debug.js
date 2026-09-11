@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260911-001
+// Build: 20260911-002
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -433,6 +433,42 @@ window.WF_DEBUG = {
   // The REFRESH_TOKEN is stored in localStorage on first use (prompted
   // via wfConfirm's input variant) — it's a Worker secret, not an API
   // key for a provider, so localStorage is fine.
+  // ── Forced truncation (v3.63.489) ──────────────────────────────
+  //
+  // David's "test method" ask: a repeatable way to reproduce a Builder
+  // token-cap cutoff on demand, instead of discovering one mid-project by
+  // reading a document that quietly stops.
+  //
+  // Flipping this on makes every subsequent request ask its provider for a
+  // deliberately tiny output budget (64 tokens), which produces a REAL
+  // truncation through the real provider round-trip: a real finish_reason
+  // on the wire, a real half-written envelope, and the real detection path
+  // in runRound / runBuilderOnly. Nothing is simulated or stubbed, which is
+  // the point — a mock would only prove the mock works.
+  //
+  // To use it: flip on, Smoke the Hive, confirm the round is REJECTED with
+  // the "Builder output was cut off" card and the document is unchanged,
+  // then flip off. Runs offline against a local server just as well as
+  // against a cloud provider.
+  //
+  // Never persisted: a forced-truncation mode that survived a reload would
+  // be indistinguishable from the bug it simulates. Resets every page load.
+  toggleForceTruncate() {
+    window.WF_FORCE_TINY_OUTPUT = !window.WF_FORCE_TINY_OUTPUT;
+    const on = !!window.WF_FORCE_TINY_OUTPUT;
+    const btn = document.getElementById('wfForceTruncateBtn');
+    if (btn) btn.textContent = on ? '✂ Force Truncate: ON' : '✂ Force Truncate';
+    if (typeof consoleLog === 'function') {
+      consoleLog(on
+        ? '✂ Force Truncate ON — every request now asks for a 64-token output budget. Run a round: it MUST be rejected as truncated and leave your document unchanged. Resets on reload.'
+        : '✂ Force Truncate OFF — normal output budgets restored.',
+        on ? 'warn' : 'info');
+    }
+    if (typeof toast === 'function') {
+      toast(on ? '✂ Force Truncate ON — next round will be cut off on purpose' : '✂ Force Truncate OFF', 4000);
+    }
+  },
+
   async refreshPricing() {
     const LS_KEY = 'waxframe_pricing_refresh_token';
     const ENDPOINT = 'https://waxframe-pricing.weirdave.workers.dev/api/refresh';
@@ -862,7 +898,7 @@ window.WF_ERROR_CATALOG = [
     code: 'BUILDER_TRUNCATED',
     matches: (err, ctx) => ctx.kind === 'builder_truncated',
     title: 'Builder output was cut off mid-response (token cap)',
-    meaning: 'The Builder hit its API\'s max-output-tokens cap before finishing the %%CONFLICTS_START%% formatting block WaxFrame needs. This is a model capacity limit, not bad instruction-following — retrying with the same model will get truncated again. Switch to a Builder with a higher output cap (Claude / GPT / Gemini Pro all support 8K+; DeepSeek and Mistral Large work too). Some families have a hard cap that can\'t be raised — notably AI21\'s Jamba (capped at 4096 across 1.5 / 1.6 / 1.7), which is structurally incompatible with the Builder role no matter how you configure it. Jamba still works fine as a Reviewer.',
+    meaning: "The Builder ran out of output room before it finished. YOUR DOCUMENT WAS NOT CHANGED — the round was rejected rather than saving a half-finished document. This is a capacity limit, not bad instruction-following, so retrying with the same model and the same settings will cut off in the same place. Three things that do help: switch to a Builder with more output room; shorten the document or split it across projects; or ask for less in one round. If you are on a self-hosted server (Ollama, LM Studio, Open WebUI), the limit is usually a setting on YOUR server rather than a property of the model — look for num_predict or max_tokens in the server config, since WaxFrame cannot read or raise it from here. Some families have a hard cap that cannot be raised at all — notably AI21's Jamba (capped at 4096 across 1.5 / 1.6 / 1.7), which is structurally incompatible with the Builder role however you configure it. Jamba still works fine as a Reviewer.",
     actions: [
       { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
       // v3.63.382 — Builder-only retry against cached reviews. Only useful

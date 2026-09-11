@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260911-001
+// Build: 20260911-002
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -160,6 +160,98 @@ check(
   geminiExtraFilters.some(pattern => pattern.test('gemini-3.5-flash')),
   false
 );
+
+// ── Truncation detection (v3.63.489) ────────────────────────────────
+// A Builder that hits its output cap returns a response that LOOKS
+// finished. These fixtures pin the two signals that catch it, per provider
+// response shape. Live values were verified against provider docs when
+// this was written; drift here means a real cut-off document gets
+// presented to the user as a complete one.
+
+console.log('▶ Finish-reason extraction (extractFinishReason)');
+
+check('OpenAI shape — choices[0].finish_reason',
+  WFProviderCatalog.extractFinishReason({ choices: [{ finish_reason: 'length' }] }), 'length');
+check('Gemini shape — candidates[0].finishReason',
+  WFProviderCatalog.extractFinishReason({ candidates: [{ finishReason: 'MAX_TOKENS' }] }), 'MAX_TOKENS');
+check('Anthropic shape — stop_reason',
+  WFProviderCatalog.extractFinishReason({ stop_reason: 'max_tokens' }), 'max_tokens');
+check('off-spec local server — choices[0].finishReason (camelCase)',
+  WFProviderCatalog.extractFinishReason({ choices: [{ finishReason: 'length' }] }), 'length');
+check('normal OpenAI completion still reads back as stop',
+  WFProviderCatalog.extractFinishReason({ choices: [{ finish_reason: 'stop' }] }), 'stop');
+check('no finish reason anywhere (common on local servers)',
+  WFProviderCatalog.extractFinishReason({ choices: [{ message: { content: 'hi' } }] }), null);
+check('null response object',
+  WFProviderCatalog.extractFinishReason(null), null);
+
+console.log('▶ Truncation signal (isTruncationSignal)');
+
+// Must fire — these mean "ran out of output room".
+check("OpenAI / Grok / Perplexity / DeepSeek / Together 'length'",
+  WFProviderCatalog.isTruncationSignal('length'), true);
+check("Gemini 'MAX_TOKENS'",
+  WFProviderCatalog.isTruncationSignal('MAX_TOKENS'), true);
+check("Anthropic 'max_tokens'",
+  WFProviderCatalog.isTruncationSignal('max_tokens'), true);
+check("Mistral 'model_length' (carried defensively, unverified upstream)",
+  WFProviderCatalog.isTruncationSignal('model_length'), true);
+
+// Must NOT fire — these are finished responses or unrelated failures.
+// A false positive here would fire a continuation at an already-complete
+// document, which is worse than the bug being guarded against.
+check("normal OpenAI stop", WFProviderCatalog.isTruncationSignal('stop'), false);
+check("Anthropic 'end_turn'", WFProviderCatalog.isTruncationSignal('end_turn'), false);
+check("Gemini 'STOP'", WFProviderCatalog.isTruncationSignal('STOP'), false);
+check("Cohere 'COMPLETE'", WFProviderCatalog.isTruncationSignal('COMPLETE'), false);
+check("Together 'eos'", WFProviderCatalog.isTruncationSignal('eos'), false);
+check("'tool_calls'", WFProviderCatalog.isTruncationSignal('tool_calls'), false);
+check("'content_filter' is a different failure",
+  WFProviderCatalog.isTruncationSignal('content_filter'), false);
+check("DeepSeek 'insufficient_system_resource' is infra, not capacity",
+  WFProviderCatalog.isTruncationSignal('insufficient_system_resource'), false);
+check("DeepSeek 'aborted' is infra, not capacity",
+  WFProviderCatalog.isTruncationSignal('aborted'), false);
+check('null', WFProviderCatalog.isTruncationSignal(null), false);
+check('undefined', WFProviderCatalog.isTruncationSignal(undefined), false);
+check('empty string', WFProviderCatalog.isTruncationSignal(''), false);
+
+console.log('▶ Structural truncation (looksStructurallyTruncated)');
+
+const DOC_OK   = `%%DOCUMENT_START%%\nbody\n%%DOCUMENT_END%%`;
+const CONF_OK  = `%%CONFLICTS_START%%\nNO CONFLICTS\n%%CONFLICTS_END%%`;
+const APPL_OK  = `%%APPLIED_START%%\nNO APPLIED CHANGES\n%%APPLIED_END%%`;
+const COMPLETE = [DOC_OK, CONF_OK, APPL_OK].join(`\n`);
+
+check('complete three-block response is not truncated',
+  WFProviderCatalog.looksStructurallyTruncated(COMPLETE), false);
+check('draft-phase response with no APPLIED block is not truncated',
+  WFProviderCatalog.looksStructurallyTruncated([DOC_OK, CONF_OK].join(`\n`)), false);
+check('cut off mid-document (no DOCUMENT_END)',
+  WFProviderCatalog.looksStructurallyTruncated(`%%DOCUMENT_START%%\nhalf a docum`), true);
+// The pre-v3.63.489 blind spot: this response HAS a conflicts block, so the
+// old check — nested inside `if (!hasConflictBlock)` — never examined it.
+check('cut off inside the conflicts block (the old blind spot)',
+  WFProviderCatalog.looksStructurallyTruncated(
+    DOC_OK + `\n%%CONFLICTS_START%%\n[USER DECISION] half a conf`), true);
+check('cut off inside the applied block',
+  WFProviderCatalog.looksStructurallyTruncated(
+    [DOC_OK, CONF_OK].join(`\n`) + `\n%%APPLIED_START%%\n[APPLIED] half`), true);
+check('backtick-wrapped markers are normalised before the check',
+  WFProviderCatalog.looksStructurallyTruncated(
+    [`%%DOCUMENT_START%%\nbody with \`[bracket]\` text\n%%DOCUMENT_END%%`, CONF_OK].join(`\n`)), false);
+check('empty string', WFProviderCatalog.looksStructurallyTruncated(''), false);
+check('non-string input', WFProviderCatalog.looksStructurallyTruncated(null), false);
+
+console.log('▶ Anthropic Builder output ceiling');
+
+// Regression guard on the self-inflicted cap. WaxFrame must send
+// max_tokens to Anthropic (the API requires it), and for the life of the
+// app it sent 4096 — about 3,000 words for a payload that carries the
+// document AND the conflicts block AND the applied-changes block. That was
+// the cap that cut a real build off on 2026-09-11.
+check('Anthropic ceiling is well above the old 4096 default',
+  WFProviderCatalog.ANTHROPIC_MAX_OUTPUT_TOKENS >= 16384, true);
 
 console.log('');
 if (fail === 0) {
