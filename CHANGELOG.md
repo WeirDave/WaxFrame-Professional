@@ -1,5 +1,40 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.492 — The truncation error screen now tells you the number
+**Released:** 2026-09-11
+**Build:** 20260911-005
+
+### Why
+"On the error screen and it's not telling me." The card already fires when a build is cut off — it just said *that* it happened, not *where* or *why*. Everything needed to answer that was already in the response and was being thrown away.
+
+### What changed
+- **The card now leads with the measurement.** *"Stopped after 4,096 output tokens."* No probe, no configuration, no extra endpoint calls — this is data already in hand at the moment truncation is detected.
+- **It reports what the request asked for, which is the other half of the diagnosis:**
+  - asked 16,384 / got 4,096 → *"something stopped it well short of what WaxFrame requested — that points at a limit on the server or gateway rather than a setting in WaxFrame"*
+  - asked 4,096 / got 4,096 → *"this is WaxFrame's own ceiling rather than the server's"*
+  - **asked nothing** / got 4,096 → *"WaxFrame did not specify an output limit on this request, so the ceiling came from the server or gateway default"*
+- **That third case is the important one.** WaxFrame's OpenAI-shape body deliberately sends no `max_tokens`, inheriting the provider default. Open WebUI applies an admin-configured `max_tokens` **only when the client omits the key** (`utils/payload.py:74` — `if value is not None and key not in form_data`). So on a gateway like the internal gateway, an administrator's cap fills that gap silently on every build. The absence is now named rather than left invisible.
+- **When the endpoint reports no usage at all, that is stated explicitly:** *"This endpoint does not report token counts, so WaxFrame cannot say exactly how many tokens it produced — the cut-off was detected from the unfinished response itself."* An endpoint that tells us nothing is itself information about that gateway.
+- **Prior observations become a verdict.** With a history, the card adds *"This matches where this model has stopped before: stopped at about 4,090 output tokens across 3 cut-off runs, holding steady even as prompt size changed — that looks like a per-request output cap."* That is the difference between "it broke" and "it broke because of this."
+- Supporting figures on one line: builder, model, prompt tokens, total tokens, chars sent, which signal detected the cut-off, and the time.
+- **New capture:** `callAPI` now reads the output budget back off the serialised request body, so it works across all three request shapes (`max_tokens`, `max_completion_tokens`, `generationConfig.maxOutputTokens`, `options.num_predict`) without any body builder having to cooperate — including custom and rehydrated configs. Ollama's `-1` (unbounded) correctly reads as "no budget", not as a budget of -1.
+- **Fixed a wording bug this exposed:** the card labelled its inline message *"What the provider actually said:"*. That block was built for verbatim provider error text, but the truncation card now puts WaxFrame's own analysis there. Attributing our reading to the provider would be a lie in the one place the user is looking for a straight answer. The label is now settable per card and reads **"What WaxFrame measured:"** for truncation.
+
+### Verification
+- release-check: all 16 checks pass. **10 new fixtures, 116 passing.**
+- **Verified in real Firefox on a real `file://` page, end to end against a live Ollama server:** a genuine truncation produced `finishReason: "length"`, `completionTokens: 128`, `promptTokens: 102`, `totalTokens: 230`, `requestedOutput: 128`, `usageReported: true` — and the card text *"Stopped after 128 output tokens. The request asked for up to 128 and got essentially all of it, so this is WaxFrame's own ceiling rather than the server's."*
+- All four message branches exercised: no-limit-requested (the gateway-default case), clamped-below-request, our-own-ceiling, and no-usage-reported.
+- **Rendered through the real troubleshooting card** and confirmed visible with the corrected label, plus a screenshot. Zero CSP violations.
+- A diagnosis failure can never take down the error screen — the observation lookup is wrapped, because a card that crashes while explaining a crash is worse than the original problem.
+
+### Files touched
+js/app.js, js/provider-catalog.js, js/wf-debug.js, index.html, tools/test-provider-extractors.mjs, js/version.js, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — reporting only. No change to how any request is made or any round is run.
+
+---
+
 ## v3.63.491 — Work out your real token cap by measuring it
 **Released:** 2026-09-11
 **Build:** 20260911-004
