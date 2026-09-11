@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260911-003
+   Build: 20260911-004
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4988,7 +4988,7 @@ body.helper-body .page-main {
 }
 .model-select-opt.is-builder-warn-pick:hover { filter: brightness(1.12); }
 .model-select-opt .opt-role.is-builder-warn { color: var(--warn, #fbbf24); }
-/* v3.63.490 — Token-limit chip on each model row. Max output is the number
+/* v3.63.491 — Token-limit chip on each model row. Max output is the number
    that decides whether a model can finish a Builder round, so it belongs at
    the point of choosing rather than in a settings page. Dimmed and smaller
    than the model id: it is reference data, not the thing being picked.
@@ -5012,6 +5012,32 @@ body.helper-body .page-main {
 /* A hand-maintained number carries an explicit staleness caveat. Deliberately
    quieter than the conflict styling — it is a caveat, not a finding. */
 .model-select-note-line .limits-caveat { color: var(--muted); }
+/* v3.63.491 — Observed-cap readout. The measured figure is the one to
+   trust when an administrator has capped a model below what it declares,
+   so it carries weight the declared figure does not. Confidence is encoded
+   in colour because the difference between "stopped once" and "stopped in
+   the same place five times" is the difference between a hint and an
+   answer. */
+.model-select-note-line .limits-observed { font-weight: 700; }
+/* Repeated, clustered stops — this is a real measurement. */
+.model-select-note-line .limits-observed.is-consistent { color: var(--blue); }
+/* One or two data points — suggestive, not settled. */
+.model-select-note-line .limits-observed.is-tentative  { color: var(--text-dim); }
+/* Stops that do not cluster: could be a rate/quota policy rather than a
+   size cap. Amber because it needs reading, not because it is broken. */
+.model-select-note-line .limits-observed.is-unclear    { color: var(--warn, #fbbf24); }
+/* The prose explanation of what was actually measured. Quieter than the
+   numbers it explains. */
+.model-select-note-line .limits-detail {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-style: italic;
+}
+/* The probe button sits beside Recommend Models and shares its shape, but
+   spends tokens, so it reads as secondary rather than as a peer action. */
+.ai-probe-btn { opacity: 0.9; }
+.ai-probe-btn:hover { opacity: 1; }
 /* v3.63.34 — keyboard-active row (arrow-key highlight). Distinct from
    .is-selected (the committed pick) and :hover. An outline rather than a
    background so it reads clearly even on the gold/blue-tinted pick rows. */

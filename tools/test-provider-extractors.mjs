@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260911-003
+// Build: 20260911-004
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -161,7 +161,7 @@ check(
   false
 );
 
-// ── Truncation detection (v3.63.490) ────────────────────────────────
+// ── Truncation detection (v3.63.491) ────────────────────────────────
 // A Builder that hits its output cap returns a response that LOOKS
 // finished. These fixtures pin the two signals that catch it, per provider
 // response shape. Live values were verified against provider docs when
@@ -229,7 +229,7 @@ check('draft-phase response with no APPLIED block is not truncated',
   WFProviderCatalog.looksStructurallyTruncated([DOC_OK, CONF_OK].join(`\n`)), false);
 check('cut off mid-document (no DOCUMENT_END)',
   WFProviderCatalog.looksStructurallyTruncated(`%%DOCUMENT_START%%\nhalf a docum`), true);
-// The pre-v3.63.490 blind spot: this response HAS a conflicts block, so the
+// The pre-v3.63.491 blind spot: this response HAS a conflicts block, so the
 // old check — nested inside `if (!hasConflictBlock)` — never examined it.
 check('cut off inside the conflicts block (the old blind spot)',
   WFProviderCatalog.looksStructurallyTruncated(
@@ -253,7 +253,7 @@ console.log('▶ Anthropic Builder output ceiling');
 check('Anthropic ceiling is well above the old 4096 default',
   WFProviderCatalog.ANTHROPIC_MAX_OUTPUT_TOKENS >= 16384, true);
 
-// ── Model token limits (v3.63.490) ──────────────────────────────────
+// ── Model token limits (v3.63.491) ──────────────────────────────────
 // Which model can actually finish a Builder round is decided by its max
 // output tokens. These fixtures pin BOTH the per-provider extraction (the
 // shapes drift) and the provenance precedence (the part that would quietly
@@ -372,6 +372,103 @@ check('observed source label',
   WFProviderCatalog.limitSourceLabel('observed'), 'observed in a real run');
 check('table source label',
   WFProviderCatalog.limitSourceLabel('table'), 'from WaxFrame table');
+
+// ── Observed-cap analysis (v3.63.491) ───────────────────────────────
+// When a server administrator caps token usage, no declared number reveals
+// it — only watching where responses stop. These fixtures pin the part that
+// would mislead if it broke: how much a given set of stop points actually
+// justifies claiming.
+
+const A = (obs) => WFProviderCatalog.analyzeObservations(obs);
+
+console.log('\u25b6 What a stop point justifies claiming');
+
+check('no observations yield no analysis', A([]), null);
+check('null input is safe', A(null), null);
+
+// One truncation is a LOWER BOUND. Claiming it as the cap would be wrong:
+// that run may have been cut short for an unrelated reason.
+const one = A([{ out: 4096, prompt: 3000 }]);
+check('a single run is not treated as a confirmed cap', one.capValue, null);
+check('a single run reports a lower bound',             one.lowerBound, 4096);
+check('a single run is labelled as one data point',     one.confidence, 'single-datapoint');
+check('single-run wording says lower bound, not cap',
+  WFProviderCatalog.describeObservations(one).includes('lower bound'), true);
+
+console.log('\u25b6 Telling the kinds of cap apart');
+
+// Output count holds steady while prompt size varies ~20x. Only a
+// per-request OUTPUT cap behaves like that — a context limit would have
+// squeezed the output down as the prompt grew.
+const outCap = A([
+  { out: 4096, prompt: 1000 },
+  { out: 4090, prompt: 9000 },
+  { out: 4096, prompt: 20000 }
+]);
+check('steady output across varied prompts reads as an output cap', outCap.kind, 'output');
+check('output cap value is the clustered figure', outCap.capValue, 4090);
+check('three clustered runs read as consistent',   outCap.confidence, 'consistent');
+check('output-cap wording names a per-request output cap',
+  WFProviderCatalog.describeObservations(outCap).includes('per-request output cap'), true);
+
+// Same evidence, but every prompt was the same size. An output cap and a
+// context limit both fit. Picking one would be a guess, so it must not.
+const ambiguous = A([
+  { out: 4096, prompt: 3000 },
+  { out: 4090, prompt: 3050 }
+]);
+check('identical prompt sizes cannot separate output cap from context limit',
+  ambiguous.kind, 'output-or-context');
+check('the ambiguity is stated rather than resolved by guessing',
+  WFProviderCatalog.describeObservations(ambiguous).includes('not enough variation yet'), true);
+
+// Output falls as the prompt grows, but prompt+output stays put: the shared
+// window is what is filling up.
+const ctxCap = A([
+  { out: 5000, prompt: 3000, total: 8000 },
+  { out: 2000, prompt: 6000, total: 8000 },
+  { out: 1000, prompt: 7000, total: 8000 }
+]);
+check('steady prompt+output reads as a context limit', ctxCap.kind, 'context');
+check('context limit value is the combined figure',    ctxCap.capValue, 8000);
+check('context wording explains that longer prompts leave less room',
+  WFProviderCatalog.describeObservations(ctxCap).includes('leaves less room to write'), true);
+
+// Stops that land nowhere in particular. Could be a rate or quota policy.
+// Must NOT be reported as a size cap.
+const noisy = A([
+  { out: 900,  prompt: 3000 },
+  { out: 5000, prompt: 3000 },
+  { out: 200,  prompt: 3000 }
+]);
+check('scattered stops are not reported as a cap', noisy.capValue, null);
+check('scattered stops are labelled inconclusive',  noisy.kind, 'inconclusive');
+check('scattered stops raise the rate/quota possibility',
+  WFProviderCatalog.describeObservations(noisy).includes('rate or quota'), true);
+
+console.log('\u25b6 Clustering tolerance');
+
+// 4096 and 8192 are different caps and must never merge into one.
+check('4096 and 8192 do not read as the same cap',
+  A([{ out: 4096, prompt: 1000 }, { out: 8192, prompt: 9000 }]).kind, 'inconclusive');
+// A model stopping a few tokens early is the same cap.
+check('small variation still reads as one cap',
+  A([{ out: 4096, prompt: 1000 }, { out: 4050, prompt: 9000 }]).kind, 'output');
+
+console.log('\u25b6 Bookkeeping');
+
+const many = A([
+  { out: 4096, prompt: 1000, at: '2026-09-01T00:00:00Z' },
+  { out: 4096, prompt: 9000, at: '2026-09-02T00:00:00Z' }
+]);
+check('observation count is reported', many.count, 2);
+check('two clustered runs read as likely, not consistent', many.confidence, 'likely');
+check('the most recent timestamp is carried', many.lastAt, '2026-09-02T00:00:00Z');
+check('runs with no usable token count are ignored',
+  A([{ out: 0, prompt: 100 }, { out: null }]), null);
+check('varied prompts are flagged so the UI can explain the ambiguity',
+  ambiguous.promptsVaried, false);
+check('genuinely varied prompts are detected', outCap.promptsVaried, true);
 
 console.log('');
 if (fail === 0) {
