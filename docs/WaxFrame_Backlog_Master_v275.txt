@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v274
-2026-08-15
+WaxFrame Backlog Master v275
+2026-09-11
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -370,6 +370,42 @@ OPEN FEATURES
    DONE:   Each sub-item resolved (fixed, explicitly parked, or
            dropped) and removed from this entry individually —
            delete the whole entry once all six are cleared.
+
+
+9. Check 8 cannot see inline handlers generated from JS
+   ─────────────────────────────────────────────────────────
+   WHAT:   release-check Check 8 (inline on*= handler budget)
+           only scans .html files. Markup built inside JS
+           template literals and injected via innerHTML is
+           invisible to it. An `onclick="…"` written into a
+           template literal in app.js would ship, be blocked
+           by the strict CSP at runtime, and pass the gate.
+   WHY:    This is exactly how the v3.63.488 drag-and-drop
+           bug shipped, one layer up: six inline drag
+           handlers sat in index.html for months while the
+           gate reported "0 inline handlers", because the
+           regex did not list the drag/drop event names. The
+           regex hole is fixed. The file-scope hole is not.
+           The failure mode is nasty because it is silent —
+           the named function still exists on window, so any
+           check that merely asserts the handler is defined
+           passes while the element has no listener at all.
+   STATE:  OPEN — swept js/ manually during v3.63.488 and it
+           is currently CLEAN: every on*= hit in js/ is a
+           comment documenting what the v3.63.347–352
+           migration replaced. So this is a guard against
+           regression, not a known live defect.
+   WHERE:  tools/release-check.mjs — INLINE_HANDLER_RE and
+           the htmlFiles loop around the Check 8 section.
+           The regex itself is now exhaustive and can be
+           reused as-is against js/*.js and js/*.mjs.
+   DONE:   Check 8 also scans js/*.js and js/*.mjs for on*=
+           inside string/template-literal markup, with its
+           own budget table starting at 0 for every file;
+           comments are excluded so the existing migration
+           notes don't trip it. A deliberately added
+           `onclick="x"` inside a template literal in app.js
+           fails the gate.
 
 
 ════════════════════════════════════════════════════════════

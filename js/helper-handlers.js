@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20260906-004
+// Build: 20260911-001
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -507,6 +507,132 @@
     var fn = CHANGE_ACTIONS[el.dataset.changeAction];
     if (fn) fn(el, e);
   });
+
+  // ── Drag & drop dispatcher (v3.63.488) ─────────────────────
+  //
+  // Drop zones used to wire themselves with inline ondragover= /
+  // ondrop= attributes. Those attributes ARE inline JavaScript: when
+  // script-src was re-tightened in v3.63.366 (no 'unsafe-inline', no
+  // 'unsafe-hashes') the browser stopped compiling them into handlers
+  // at all, and every drop zone in the app went dead. It failed
+  // silently and stayed broken for months because the named functions
+  // still existed on window — `typeof window.handleRefDragOver` was
+  // 'function' the whole time while `refDropRow.ondragover` was null —
+  // and Check 8's inline-handler regex did not cover drag/drop event
+  // names, so release-check kept reporting index.html as
+  // "strict-CSP-clean (0 inline handlers)". Both holes are closed:
+  // the zones are delegated here, and Check 8 now matches drag/drop.
+  //
+  // A drop zone opts in declaratively:
+  //   data-drop-fn="processRefFiles"  → fn(FileList) on drop
+  //   data-drop-highlight="elId"      → id of the element that gets
+  //                                     .drag-over (default: the zone)
+  //
+  // dragover MUST preventDefault or the drop event never fires and the
+  // browser handles the drop natively — on the file:// builds David
+  // runs offline that means navigating away from the app to the
+  // dropped file, losing the screen you were on.
+  var DROP_SEL = '[data-drop-fn]';
+  var dragDepth = new WeakMap();
+
+  function dropZoneFor(e) {
+    var t = e.target;
+    if (t && t.nodeType === 3) t = t.parentNode;          // text node → parent
+    if (!t || typeof t.closest !== 'function') return null;
+    return t.closest(DROP_SEL);
+  }
+  function highlightFor(zone) {
+    var id = zone.dataset.dropHighlight;
+    return (id && document.getElementById(id)) || zone;
+  }
+  function carriesFiles(dt) {
+    if (!dt) return false;
+    // dt.types is a DOMStringList in older Gecko, an array elsewhere.
+    var types = dt.types || [];
+    for (var i = 0; i < types.length; i++) if (types[i] === 'Files') return true;
+    return false;
+  }
+  function setDepth(zone, n) {
+    if (n <= 0) { dragDepth.delete(zone); highlightFor(zone).classList.remove('drag-over'); }
+    else { dragDepth.set(zone, n); highlightFor(zone).classList.add('drag-over'); }
+  }
+
+  document.addEventListener('dragenter', function(e) {
+    var zone = dropZoneFor(e);
+    if (!zone || !carriesFiles(e.dataTransfer)) return;
+    e.preventDefault();
+    // Counter, not a boolean: dragenter/dragleave fire again for every
+    // child element the cursor crosses inside the zone (the icon, the
+    // label, the hidden input), so a boolean flickers the highlight off
+    // while the cursor is still legitimately inside.
+    setDepth(zone, (dragDepth.get(zone) || 0) + 1);
+  });
+
+  document.addEventListener('dragleave', function(e) {
+    var zone = dropZoneFor(e);
+    if (!zone) return;
+    setDepth(zone, (dragDepth.get(zone) || 0) - 1);
+  });
+
+  document.addEventListener('dragover', function(e) {
+    var zone = dropZoneFor(e);
+    if (zone && carriesFiles(e.dataTransfer)) {
+      // THE line that makes drop fire at all.
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = 'copy'; } catch (_) {}
+      return;
+    }
+    // Not over a drop zone. A file dragged anywhere else would be
+    // handled natively on release — Firefox navigates the tab to the
+    // file, blowing away the current screen. Swallow it instead, but
+    // only for file drags: text/HTML drags into a textarea are a real
+    // editing affordance and must keep working, and a native
+    // <input type="file"> handles its own drops.
+    if (!carriesFiles(e.dataTransfer)) return;
+    var t = e.target;
+    if (t && t.nodeType === 3) t = t.parentNode;
+    if (t && t.tagName === 'INPUT' && t.type === 'file') return;
+    e.preventDefault();
+    try { e.dataTransfer.dropEffect = 'none'; } catch (_) {}
+  });
+
+  document.addEventListener('drop', function(e) {
+    var zone = dropZoneFor(e);
+    if (!zone) {
+      // Matching swallow for the dragover guard above.
+      if (!carriesFiles(e.dataTransfer)) return;
+      var t = e.target;
+      if (t && t.nodeType === 3) t = t.parentNode;
+      if (t && t.tagName === 'INPUT' && t.type === 'file') return;
+      e.preventDefault();
+      return;
+    }
+    e.preventDefault();
+    setDepth(zone, 0);
+    var fn = resolveDotted(zone.dataset.dropFn);
+    if (typeof fn !== 'function') return;
+    fn(filesFromDataTransfer(e.dataTransfer));
+  });
+
+  // Normalizes a DataTransfer down to the same thing an <input
+  // type="file"> hands its change event: a plain list of File objects.
+  // Both ingestion paths converge here, one step after the File
+  // objects exist, so drop and click-to-browse cannot drift apart.
+  // dt.files is the happy path everywhere current; dt.items is the
+  // fallback for anything that only populates the item list.
+  function filesFromDataTransfer(dt) {
+    if (!dt) return [];
+    if (dt.files && dt.files.length) return dt.files;
+    var out = [];
+    if (dt.items) {
+      for (var i = 0; i < dt.items.length; i++) {
+        if (dt.items[i].kind !== 'file') continue;
+        var f = dt.items[i].getAsFile();
+        if (f) out.push(f);
+      }
+    }
+    return out;
+  }
 
   // ── Image load-error fallback ──────────────────────────────
   // Replaces inline onerror="this.style.display='none'" on icon
