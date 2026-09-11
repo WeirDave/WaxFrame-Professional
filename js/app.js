@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260906-004
+// Build: 20260911-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -600,7 +600,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260906-004';         // build stamp — update each session
+const BUILD = '20260911-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -11764,21 +11764,23 @@ function switchDocTab(tab) {
   if (typeof renderSourceSizeCheck === 'function') renderSourceSizeCheck();
 }
 
-function handleDragOver(e) {
-  e.preventDefault();
-  document.getElementById('dropZone')?.classList.add('drag-over');
-}
-
-function handleFileDrop(e) {
-  e.preventDefault();
-  document.getElementById('dropZone')?.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
+// Starting Document ingestion. Drag-and-drop and click-to-browse BOTH
+// arrive here as a plain FileList — the drop side via the delegated
+// data-drop-fn dispatcher in helper-handlers.js, the click side via the
+// hidden #fileInput change event. Keeping the two paths converged on one
+// FileList-shaped entry point is deliberate: when they were separate,
+// v3.63.366's CSP tightening killed the drop path alone and nothing
+// caught it, because the click path kept working.
+//
+// This zone is single-file by design (unlike reference material, which
+// batches), so only the first file is taken.
+function processDocFiles(fileList) {
+  const file = fileList && fileList[0];
   if (file) processFile(file);
 }
 
 function handleFileSelect(e) {
-  const file = e.target.files[0];
-  if (file) processFile(file);
+  processDocFiles(e.target.files);
 }
 
 function clearUploadedFile() {
@@ -14884,40 +14886,23 @@ function updateRefGrandTotals() {
   if (setupClearBtn) setupClearBtn.classList.toggle('is-hidden', referenceDocs.length === 0);
 }
 
-// File drop / select handlers — both routed through processRefFile which
+// File drop / select handlers — both routed through processRefFiles which
 // PUSHES a new upload-source doc into the array instead of replacing
 // the singleton (the v3.21.0–v3.23.4 behavior).
-// Drag/drop counter — tracks enter/leave events across child buttons inside
-// the drop row so the .drag-over visual state doesn't flicker when the cursor
-// crosses internal element boundaries (a common gotcha with HTML5 drag events).
-let _refDragCounter = 0;
-
-function handleRefDragEnter(e) {
-  e.preventDefault();
-  _refDragCounter++;
-  document.getElementById('refDropRow')?.classList.add('drag-over');
-}
-function handleRefDragOver(e) {
-  // preventDefault is required on dragover for the drop event to fire.
-  e.preventDefault();
-  if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-}
-function handleRefDragLeave(e) {
-  e.preventDefault();
-  _refDragCounter--;
-  if (_refDragCounter <= 0) {
-    _refDragCounter = 0;
-    document.getElementById('refDropRow')?.classList.remove('drag-over');
-  }
-}
-function handleRefFileDrop(e) {
-  e.preventDefault();
-  _refDragCounter = 0;
-  document.getElementById('refDropRow')?.classList.remove('drag-over');
-  processRefFiles(e.dataTransfer.files);
-}
+//
+// v3.63.488 — the drag half of this used to live in four functions wired
+// by inline ondragenter=/ondragover=/ondragleave=/ondrop= attributes on
+// #refDropRow. Inline handlers are inline JavaScript, so v3.63.366's
+// strict script-src stopped the browser compiling them and the whole
+// drop path went dead while click-to-browse kept working. The drag
+// mechanics (preventDefault on dragover, the enter/leave counter that
+// stops .drag-over flickering as the cursor crosses child elements) now
+// live once in helper-handlers.js and serve every zone; this file only
+// declares where the files go. Zone opts in with:
+//   data-drop-fn="processRefFiles"
 function handleRefFileSelect(e) {
   processRefFiles(e.target.files);
+  // Reset so re-picking the same filename still fires a change event.
   if (e.target) e.target.value = '';
 }
 

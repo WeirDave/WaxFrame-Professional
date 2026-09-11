@@ -1,5 +1,39 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.488 — Fix dead drag-and-drop file upload on both drop zones
+**Released:** 2026-09-11  
+**Build:** 20260911-001
+
+### What changed
+- **Drag-and-drop file upload works again** — dropping a file on the Reference Material zone (Setup 4) or the Starting Document zone (Setup 5) did nothing at all. Click-to-browse kept working, which is why it read as a partial failure rather than a dead feature. Both zones now accept drops, single and multi-file.
+- **Root cause: strict CSP silently killed the handlers.** Both zones were wired with inline `ondragenter=` / `ondragover=` / `ondragleave=` / `ondrop=` attributes. Those attributes are inline JavaScript. When v3.63.366 re-tightened `script-src` to `'self' 'unsafe-eval' 'sha256-…'` — no `'unsafe-inline'`, no `'unsafe-hashes'` — the browser stopped compiling them into handlers entirely. The named functions still existed on `window`, so nothing that merely checked for their presence would have caught it; the elements simply had no listeners. With no `preventDefault()` on `dragover`, the browser handled the drop natively instead, which on the offline `file://` builds means navigating the tab away from the app to the dropped file.
+- **Both zones now use a shared delegated dispatcher** in `js/helper-handlers.js`, declared with `data-drop-fn="…"`. The drag mechanics live in exactly one place: `preventDefault()` on `dragover`, `dropEffect = 'copy'`, and the enter/leave depth counter that stops the `.drag-over` highlight flickering as the cursor crosses child elements inside the zone.
+- **The drop and click paths now converge on a single `FileList`-shaped entry point** (`processRefFiles` / `processDocFiles`). Previously each zone had two independent ingestion paths that could — and did — drift apart. `filesFromDataTransfer()` normalizes a `DataTransfer` to the same shape an `<input type="file">` hands its change event, with a `dataTransfer.items` fallback.
+- **Files dropped outside a drop zone are now swallowed instead of navigated to.** Dropping a file anywhere else on the page used to make the browser leave the app and open the file, losing the current screen. Text drags into textareas are explicitly left alone, as are native `<input type="file">` elements.
+- **Gate hardened so this class of bug cannot recur silently** — Check 8's inline-handler regex never listed the drag/drop event names, so it reported `index.html` as "strict-CSP-clean (0 inline handlers)" while six inline drag handlers sat in the file. The regex is now exhaustive (drag/drop, pointer, clipboard, touch, animation, focus variants). `index.html` is genuinely at 0 under the stricter pattern.
+- Dead code removed: `handleRefDragEnter`, `handleRefDragOver`, `handleRefDragLeave`, `handleRefFileDrop`, `handleDragOver`, `handleFileDrop`, `_refDragCounter`.
+
+### Verification
+- release-check: all 16 checks pass
+- **Verified in real Firefox on a real `file://` page** (Marionette-driven, matching how WaxFrame is actually run offline) — not by asserting handlers exist:
+  - **Before the fix:** page fully loaded, `typeof window.handleRefDragOver === 'function'`, yet `refDropRow.ondragover === null` and `refDropRow.ondrop === null`. The attributes were present in the HTML and the browser had refused to compile them.
+  - **After the fix:** a real `File` in a real `DataTransfer`, dispatched as genuine `DragEvent`s. Reference Material rendered its card — `TXT droptest.txt — 49 chars · Characters: 49, Words: 7`. Starting Document reported `✅ 57 chars · 10 words · 1 paragraphs · extracted from startdoc.txt` and persisted the filename.
+  - `dragover` confirmed `defaultPrevented === true` with `dropEffect === 'copy'` — the exact mechanism that was broken.
+  - Multi-file drop: two files ingested in one drop, appended alongside existing reference docs rather than replacing them.
+  - Drag highlight confirmed by computed style: border `rgb(69,74,102)` → `rgb(245,166,35)` during drag, cleared after drop.
+  - Stray-drop guard: file dropped on `document.body` swallowed; text drag left untouched.
+  - **Click-to-browse regression-tested on both zones** and still works — `clicked-ref.txt` and `clicked-doc.txt` both ingested.
+  - Zero CSP violations and zero JS errors in the ring buffer after the fix.
+- Sacred rule (80ch column width) intact — `style.css` untouched apart from its version stamp.
+
+### Files touched
+js/helper-handlers.js, js/app.js, index.html, tools/release-check.mjs, js/version.js, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — restores the inline attributes and the six deleted handler functions. Note that reverting restores the broken state: the inline handlers do not work under the current CSP.
+
+---
+
 ## v3.63.487 — Lock Navigation menu open, prevent accidental collapse
 **Released:** 2026-09-06  
 **Build:** 20260906-004

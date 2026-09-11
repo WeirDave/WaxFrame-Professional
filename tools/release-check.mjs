@@ -612,7 +612,18 @@ const INLINE_HANDLER_BUDGET = {
   'what-are-tokens.html':         0  // migrated in v3.63.348
 };
 
-const INLINE_HANDLER_RE = /\son(click|input|change|keydown|keyup|keypress|submit|focus|blur|mousedown|mouseup|mouseover|mouseout|wheel|load|error)\s*=/gi;
+// v3.63.488 — drag/drop event names added. They were missing from this
+// list since the check was written, and it cost a real bug: the
+// v3.63.351 migration left six ondragenter/ondragover/ondragleave/ondrop
+// attributes behind on index.html's two drop zones, this regex could not
+// see them, and the check happily reported index.html as
+// "strict-CSP-clean (0 inline handlers)". When v3.63.366 re-tightened
+// script-src the browser stopped compiling those attributes and both
+// drop zones died silently — the handler functions still existed on
+// window, so nothing that merely asserted their presence would catch it.
+// Keep this list exhaustive: an event name missing here is a handler the
+// ratchet cannot protect.
+const INLINE_HANDLER_RE = /\son(click|dblclick|input|change|keydown|keyup|keypress|submit|reset|focus|focusin|focusout|blur|mousedown|mouseup|mousemove|mouseover|mouseout|mouseenter|mouseleave|contextmenu|wheel|scroll|dragstart|dragenter|dragover|dragleave|dragend|drag|drop|paste|copy|cut|touchstart|touchend|touchmove|animationend|transitionend|load|error)\s*=/gi;
 
 for (const file of htmlFiles) {
   const r = rel(file);
