@@ -1,5 +1,50 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.493 — Stop guessing at token caps; name a gateway timeout for what it is
+**Released:** 2026-09-14
+**Build:** 20260914-001
+
+### Why
+Two error screens were asserting causes the evidence did not support. One of them was a regression introduced in v3.63.489, in this changelog, by the same work that was meant to make truncation legible.
+
+### The regression, plainly
+v3.63.489 added a second truncation signal — an envelope block that opened and never closed — and OR'd it with the provider's stop reason. That was wrong. An unclosed `%%—_END%%` marker is evidence the **envelope** is incomplete; it is not evidence a token cap was hit. A model that completed normally (`finish_reason: "stop"`, full usage, 1,200 output tokens) but forgot a closing marker was told:
+
+> *Builder output was cut off mid-response (token cap) — The Builder ran out of output room before it finished.*
+
+That is an assumption dressed as a diagnosis, and it is the worst kind: a user who takes it to their IT group will be told, correctly, that no such limit exists — leaving them stuck between two confident and contradictory accounts.
+
+### What changed
+- **Evidenced and inferred cut-offs are now different failures with different cards.**
+  - `BUILDER_TRUNCATED` — retitled **"Builder stopped at its output limit"** — fires ONLY when the provider itself reported a stop reason. It now says so explicitly: *"The provider stopped this response at its output limit (finish reason "length") after 4,096 output tokens."*
+  - `BUILDER_INCOMPLETE` (new) — **"Builder response was incomplete — cause not established"** — fires when only the structural signal tripped. It reports the observation, states plainly that *"the provider did NOT report running out of output room, so this is not, on the evidence, a token limit,"* and names three candidate causes without picking one: format non-compliance, a connection cut short in transit, or an undeclared limit.
+- **An observed cap is now only recorded when the provider actually reported one.** Filing an inferred stop point into the observed-limit history would have seeded it with numbers that are not caps, corrupting every later analysis.
+- **504 gets its own card instead of "the provider is down".** A 504 was matching `PROVIDER_DOWN`, which told the user *"this is on their side, not yours... check the provider status page"* — wrong on every count for a corporate gateway, where "their side" is the user's own IT and there is no status page. The new `GATEWAY_TIMEOUT` card (504 / 524 / 522 / 408, matched **before** `PROVIDER_DOWN` since first match wins) explains that a proxy gave up waiting, that the model was probably still generating, and that **this is why re-sending often returns almost instantly** — the first request completed upstream after the proxy hung up. It points at the proxy read-timeout as the number that matters, not a token limit.
+- **The Scout Bundle can now contain a transport failure.** `captureRound` only runs after `response.json()` succeeds, so the ring buffer is structurally blind to 504s, dropped connections and CORS rejections — a bundle could show a hive working perfectly while the user stared at gateway errors all day. `captureFailure` was always-on and already held the last one; it simply was never included. Now it is.
+- **That new export field is scrubbed, and the scrubber is reachable from a test.** `_redactKeysIn` is shaped for the LS_HIVE JSON and does nothing for a flat failure record carrying a provider error message and raw response body. `WF_DEBUG.scrubFailureRecord()` pattern-strips credentials and caps the raw body at 4,000 chars. It is a method rather than a closure on purpose: a redaction path that cannot be called from a test is a redaction path nobody has verified.
+- **"Max output unknown" replaced.** Now: *"max output not published by this endpoint"*, with the tooltip explaining that many gateways (Open WebUI among them) deliberately withhold per-model limits, so it stays unknown until a run is actually cut off.
+
+### What the evidence actually showed
+A Scout Bundle from a real cut-off build was examined (read-only; nothing from it committed, and no fixture derived from it). Its Builder call carried HTTP **200**, `finish_reason: "length"`, `completion_tokens: 4096` exactly, `prompt_tokens: 18977`, elapsed 49.4s. That is a genuine, evidenced output cap — not a timeout — so the truncation reporting was right for that build. A separate 504 on a later run is a different failure entirely, and could never have appeared in that bundle for the reason above.
+
+Worth recording: an exact 4,096 is the signature of a **default**, not a deliberate policy. Open WebUI applies an admin-configured `max_tokens` only when the client omits the key, and WaxFrame's OpenAI-shape body omits it. An IT group can truthfully say "we set no limits" while a default silently applies on every request.
+
+### Verification
+- release-check: all 16 checks pass. 116 provider fixtures still pass.
+- **Verified in real Firefox on a real `file://` page:** the regression case (normal completion + malformed envelope) now routes to `BUILDER_INCOMPLETE` and no longer claims a token cap; an evidenced cap still routes to `BUILDER_TRUNCATED` and names the finish reason; a 504 classifies as `GATEWAY_TIMEOUT` while a 502 still classifies as `PROVIDER_DOWN`.
+- Scrubber exercised against realistic credential shapes: Open WebUI **JWT** bearer tokens, `sk-ant-*`, `sk-proj-*`, Google `AIza*` keys in query strings, and HTTP Basic — all redacted; benign diagnostic text survives untouched; `status` and `code` preserved; oversized raw bodies truncated.
+
+### Known gap
+`js/wf-debug.js` is not `require()`-able from Node, so `scrubFailureRecord` has no fixture in Check 13 and is covered by browser verification only. Logged to the backlog.
+
+### Files touched
+js/app.js, js/wf-debug.js, js/version.js, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md, docs/WaxFrame_Backlog_Master_v279.txt
+
+### Rollback
+`git revert <sha>` — error-message routing plus one new export field. Reverting restores the state where a normally-completed response can be reported as a token cap.
+
+---
+
 ## v3.63.492 — The truncation error screen now tells you the number
 **Released:** 2026-09-11
 **Build:** 20260911-005
