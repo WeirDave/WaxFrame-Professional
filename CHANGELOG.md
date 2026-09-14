@@ -1,5 +1,39 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.496 — Backlog housekeeping: 16 numbered items down to 11 real ones
+**Released:** 2026-09-14
+**Build:** 20260914-004
+
+### Why
+The item count had drifted away from the amount of actual work, which made the queue look worse than it is. Most of the inflation was bookkeeping: shipped items never deleted, settled decisions sitting in a numbered queue where they can never be closed, and one entry hiding six separate chores under a single number.
+
+### What changed in docs/WaxFrame_Backlog_Master_v281.txt
+Every claim was verified against the live repo before acting — none taken on faith.
+
+- **Struck (already done, never removed):** old #7 (questionnaire; its own STATE said SHIPPED 2026-08-09) and the model-limit half of old #10, which shipped in v3.63.494. Verified in the tree: `provider-catalog.js:148` `DEFAULT_OUTPUT_BUDGET = 32768`, `:309` `body.max_tokens = resolveOutputBudget(model)`, and `ANTHROPIC_MAX_OUTPUT_TOKENS` absent from both `js/` and `tools/`.
+- **Moved out of the queue into a new STANDING PRACTICE section:** old #1 (ongoing housekeeping that can never be closed), #4 (DEFERRED by David 2026-08-02), #6 (PARKED 2026-08-01), #9 (a tooling gap — `js/` re-verified clean, its only `on*=` hit being `storage.js:741` reading `getAttribute('onclick')` inside the XSS sanitiser, which is not a live handler).
+- **Merged:** old #10(b) + #12 (one job: local servers publish no output cap) and old #11 + #16 (both hang off knowing the cap — warn before, recover after). Old #13's adjacency to #12 is noted without merging: same sitting, different deliverable.
+- **Split:** old #8 was six distinct chores under one number. Now six numbered entries, so the count reflects the work. All six re-verified present today.
+- **Renumbered 1—11 with no gaps.** The old scheme had no #5 (descoped 2026-08-02) plus accumulated struck entries.
+- **New OUTREACH section** for the two items with no code footprint. Their recorded states cannot be verified from the repo, so they are preserved verbatim and explicitly flagged as self-reported — as is the struck questionnaire's SHIPPED claim, which was taken on the strength of its own STATE field rather than repo evidence.
+- Ordered by value. #1 is streaming, the only item that fixes something hit in practice today.
+
+### Verification
+- release-check: all 16 checks pass.
+- Structure confirmed: 11 numbered entries, contiguous 1—11, outreach preserved verbatim as A and B.
+- Code claims spot-checked individually rather than accepted: the v3.63.494 constant removal, the `js/` inline-handler sweep, and all six of old #8's sub-items (unreferenced `.flac` present; `lineNumPulse` present with exactly one occurrence, the definition; `setup-section-img` reference present; `test-server-ai-eligibility.mjs` has zero references in `release-check.mjs`).
+
+### Note recorded against old #8(c)
+`:not(.setup-section-img)` is inert but **not** a free deletion: `:not()` contributes its argument's specificity, so removing it lowers the rule's specificity and can change which rule wins. Flagged in the entry so nobody strips it blind.
+
+### Files touched
+docs/WaxFrame_Backlog_Master_v281.txt (replaces v280), js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — documentation only. No code behaviour changes.
+
+---
+
 ## v3.63.495 — Launching over an active session now actually clears it
 **Released:** 2026-09-14
 **Build:** 20260914-003

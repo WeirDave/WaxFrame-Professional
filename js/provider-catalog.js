@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260914-003
+// Build: 20260914-004
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -117,7 +117,7 @@
     return { sys: sys, usr: usr };
   }
 
-  // ── Output budget resolution (v3.63.495) ──────────────────────────
+  // ── Output budget resolution (v3.63.496) ──────────────────────────
   //
   // Every request now states how much output it wants, and that number comes
   // from the MODEL, not from a constant.
@@ -161,7 +161,7 @@
     return v;
   }
 
-  // ── Truncation detection (v3.63.495) ──────────────────────────────
+  // ── Truncation detection (v3.63.496) ──────────────────────────────
   //
   // Lives here rather than in app.js because it is provider-response
   // knowledge, which is what this module owns — and because this module
@@ -169,14 +169,14 @@
   // pin the behavior with fixtures. app.js holds thin delegating wrappers.
   //
   // Why this exists: a Builder that hits its output cap returns a response
-  // that looks finished, it just stops. Before v3.63.495 the only way to
+  // that looks finished, it just stops. Before v3.63.496 the only way to
   // tell was a finishReason recorded in the Deep Dive ring buffer, which
   // is never written unless Deep Dive is switched on — off by default, so
   // in normal use truncation was undetectable and got misreported as the
   // Builder ignoring its formatting instructions.
 
   // Provider stop-reason field, coalesced across every response shape
-  // WaxFrame speaks. Verified against live provider docs in v3.63.495:
+  // WaxFrame speaks. Verified against live provider docs in v3.63.496:
   //   OpenAI-shape  choices[0].finish_reason    (ChatGPT, Copilot, Grok,
   //                 Perplexity, Mistral, DeepSeek, Together, Cohere-compat,
   //                 and every OpenAI-compatible local server)
@@ -203,7 +203,7 @@
   // different failures with different fixes, and treating one as truncation
   // would fire a continuation at a response that already finished.
   //
-  // Values confirmed against provider docs in v3.63.495:
+  // Values confirmed against provider docs in v3.63.496:
   //   'length'        OpenAI, Grok, Perplexity, DeepSeek, Together, Cohere
   //   'MAX_TOKENS'    Gemini
   //   'max_tokens'    Anthropic
@@ -254,7 +254,7 @@
     return false;
   }
 
-  // ── Forced-truncation test hook (v3.63.495) ───────────────────────
+  // ── Forced-truncation test hook (v3.63.496) ───────────────────────
   //
   // David's ask was for a "test method" — a repeatable way to reproduce a
   // token-cap cutoff on demand instead of waiting to be bitten by one
@@ -272,7 +272,7 @@
   //   window.WF_FORCE_TINY_OUTPUT = false   → back to normal
   var FORCED_TINY_TOKENS = 64;
 
-  // v3.63.495 — generalised from the v3.63.489 force-truncate hook into a
+  // v3.63.496 — generalised from the v3.63.489 force-truncate hook into a
   // single output-budget override, because a second caller needed it: the
   // deliberate cap probe sets a SOFT CEILING so an uncapped model cannot
   // generate without bound while being measured. Two mechanisms writing
@@ -302,7 +302,7 @@
           { role: 'user',   content: p.usr }
         ]
       };
-      // v3.63.495 — was deliberately omitted so the provider default would
+      // v3.63.496 — was deliberately omitted so the provider default would
       // apply. That handed every gateway in front of us the right to cap the
       // build silently. Now stated explicitly, which also suppresses an Open
       // WebUI admin default (it fills the key only when absent).
@@ -667,7 +667,7 @@
     return out;
   }
 
-  // ── Model token limits (v3.63.495) ────────────────────────────────
+  // ── Model token limits (v3.63.496) ────────────────────────────────
   //
   // David, 2026-09-11: "we just don't know what the limits are so if
   // different models have different limits then we need to know that so
@@ -719,7 +719,7 @@
   // right about it for a given install. That is exactly the case 'observed'
   // exists to cover.
 
-  // ── What did we actually ask for? (v3.63.495) ─────────────────────
+  // ── What did we actually ask for? (v3.63.496) ─────────────────────
   //
   // When a build is cut off, "stopped after N tokens" only half-answers the
   // question. The other half is what the request ASKED for, because the two
@@ -754,7 +754,7 @@
     return n;
   }
 
-  // ── Budget-rejection parsing (v3.63.495) ──────────────────────────
+  // ── Budget-rejection parsing (v3.63.496) ──────────────────────────
   //
   // Stating a budget introduces one new failure: a model whose real ceiling
   // is below what we asked for rejects the request outright. Providers are
@@ -785,7 +785,7 @@
     return 0;
   }
 
-  // ── Observed-cap analysis (v3.63.495) ─────────────────────────────
+  // ── Observed-cap analysis (v3.63.496) ─────────────────────────────
   //
   // David, 2026-09-11: "I'm sure that our IT people have placed a limit on
   // the token count in order to prevent people from chewing down tons of
@@ -1111,7 +1111,7 @@
   // wraps it for the 7-day cache path; the watchdog wraps it cache-less.
   // RETRY-ONCE IS THE CALLER'S CONCERN too — same reason. Throws on
   // transport errors so the caller can decide.
-  // v3.63.495 — `limitsOut` is an optional caller-owned object that gets
+  // v3.63.496 — `limitsOut` is an optional caller-owned object that gets
   // filled with { modelId: {context, output, source:'api'} } for whatever
   // the provider published alongside its model list. Same out-param shape
   // as callAPI's metaOut and for the same reason: the return contract here
@@ -1384,20 +1384,20 @@
   // on; the names just no longer need to be reachable from outside.
   root.WFProviderCatalog = {
     CATALOG: CATALOG,
-    // v3.63.495 — exported so the custom/rehydrated anthropic-format body
+    // v3.63.496 — exported so the custom/rehydrated anthropic-format body
     // builders in app.js and storage.js use the same ceiling as the
     // catalog's own, instead of each carrying a private copy of 4096.
     DEFAULT_OUTPUT_BUDGET: DEFAULT_OUTPUT_BUDGET,
     resolveOutputBudget: resolveOutputBudget,
     parseBudgetRejection: parseBudgetRejection,
-    // v3.63.495 — truncation detection. app.js wraps these; the wrappers
+    // v3.63.496 — truncation detection. app.js wraps these; the wrappers
     // exist so call sites read naturally, not because the logic differs.
     extractFinishReason: extractFinishReason,
-    // v3.63.495 — model token limits.
+    // v3.63.496 — model token limits.
     limitsFromModelEntry: limitsFromModelEntry,
     limitsFromTable: limitsFromTable,
     mergeModelLimits: mergeModelLimits,
-    // v3.63.495 — empirical cap discovery.
+    // v3.63.496 — empirical cap discovery.
     requestedOutputBudget: requestedOutputBudget,
     analyzeObservations: analyzeObservations,
     describeObservations: describeObservations,
