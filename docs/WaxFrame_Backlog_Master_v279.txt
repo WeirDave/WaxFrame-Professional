@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v278
+WaxFrame Backlog Master v279
 2026-09-11
 
 ABOUT THIS DOCUMENT
@@ -533,6 +533,64 @@ OPEN FEATURES
            them out; WaxFrame surfaces a CORS-shaped failure by
            naming the env var to change rather than reporting
            "unknown".
+
+
+14. Stream Builder responses (likely fix for the 504s)
+   ─────────────────────────────────────────────────────────
+   WHAT:   Send chat requests with stream:true and consume the
+           SSE deltas, instead of one blocking POST that waits
+           for the entire answer.
+   WHY:    WaxFrame is fully non-streaming (zero occurrences of
+           stream:true). A Builder round holds a connection open
+           with ZERO bytes flowing for its whole duration -
+           observed max 540s per the timeout constants in
+           app.js. Common proxy read-timeouts are 60s, so a long
+           build is exactly the shape of request a corporate
+           gateway kills. David hit a 504 on 2026-09-14 and a
+           re-send answered immediately, which is the classic
+           signature: the first request completed upstream after
+           the proxy hung up. Streaming keeps bytes moving, and
+           that is precisely why it exists for long generations.
+           NOTE the interaction: the 4096 output cap has been
+           MASKING this. The capped build finished in 49s
+           because it was cut short. Send an explicit larger
+           max_tokens and builds get longer - straight into
+           timeout range. These two want fixing together.
+   STATE:  OPEN, and the largest remaining item. Not started.
+   WHERE:  js/app.js callAPI (single fetch + response.json());
+           js/provider-catalog.js BODY_BUILDERS (all three
+           shapes need stream:true) and EXTRACTORS (need
+           incremental delta accumulation, not whole-object
+           reads). The envelope parser must tolerate partial
+           accumulation. AbortController wiring already exists
+           for timeouts and must keep working.
+   DONE:   A long Builder round completes through a gateway that
+           previously 504'd; the Live Console shows progress
+           while it generates; a genuine mid-stream disconnect
+           is still detected and reported as incomplete rather
+           than silently saving a partial document.
+
+
+15. scrubFailureRecord has no Node fixture
+   ─────────────────────────────────────────────────────────
+   WHAT:   js/wf-debug.js is not require()-able from Node, so
+           WF_DEBUG.scrubFailureRecord (added v3.63.493, and an
+           EXPORT-surface redaction path) is covered only by
+           browser verification, not by Check 13.
+   WHY:    Redaction is exactly the code that must not silently
+           rot. It was hoisted out of a closure into a method
+           specifically so a test COULD reach it; the test does
+           not exist yet.
+   STATE:  OPEN, small.
+   WHERE:  js/wf-debug.js (the WF_DEBUG const is a bare
+           declaration, not assigned to a root object the way
+           provider-catalog.js does it);
+           tools/test-provider-extractors.mjs is the natural
+           home once it is reachable.
+   DONE:   Fixtures cover Open WebUI JWT bearer tokens, sk-*,
+           AIza* keys in query strings, HTTP Basic, benign text
+           surviving untouched, and raw-body truncation - and
+           they run as part of the release gate.
 
 
 ════════════════════════════════════════════════════════════

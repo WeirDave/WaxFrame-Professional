@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260911-005
+// Build: 20260914-001
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -108,6 +108,47 @@ window.WF_DEBUG = {
     const stamped = { ...entry, capturedAt: new Date().toISOString() };
     this.ringBuffer.push(stamped);
     if (this.ringBuffer.length > this.RING_MAX) this.ringBuffer.shift();
+  },
+
+  // ── Failure-record scrubbing (v3.63.493) ──────────────────────
+  //
+  // The failure record is now included in the Scout bundle, so it is an
+  // EXPORT surface and gets the same treatment as every other one: audit
+  // every field. _redactKeysIn is shaped for the LS_HIVE JSON specifically
+  // (obj.keys / obj.customAIConfigs) and does nothing for a flat failure
+  // record carrying a provider error `message` and its raw response body.
+  // Neither is expected to contain a credential — but "not expected to" is
+  // exactly the assumption that puts secrets in exports.
+  //
+  // A method rather than a closure inside bundleForScout on purpose: a
+  // redaction path that cannot be called from a test is a redaction path
+  // nobody has verified.
+  scrubFailureRecord(rec) {
+    if (!rec || typeof rec !== 'object') return null;
+    const clean = (v) => {
+      if (typeof v !== 'string') return v;
+      return v
+        .replace(/sk-[A-Za-z0-9_\-]{12,}/g, 'sk-[REDACTED]')
+        .replace(/AIza[0-9A-Za-z_\-]{30,}/g, 'AIza[REDACTED]')
+        .replace(/(Bearer|Basic)\s+[A-Za-z0-9._\-~+\/=]{12,}/gi, '$1 [REDACTED]')
+        .replace(/([?&](?:key|api[_-]?key|access[_-]?token)=)[^&\s"']+/gi, '$1[REDACTED]')
+        .replace(/("(?:x-api-key|authorization|api[_-]?key)"\s*:\s*")[^"]*(")/gi, '$1[REDACTED]$2');
+    };
+    const out = {};
+    for (const k of Object.keys(rec)) {
+      let v = rec[k];
+      if (typeof v === 'string') {
+        v = clean(v);
+        // A verbose gateway error should not be able to smuggle a megabyte
+        // into the bundle either.
+        if (k === 'raw' && v.length > 4000) {
+          v = v.slice(0, 4000) + `
+[…truncated ${(rec[k].length - 4000).toLocaleString()} chars for bundle export]`;
+        }
+      }
+      out[k] = v;
+    }
+    return out;
   },
 
   // ── Capture (Troubleshooting always-on lightweight) ──
@@ -393,6 +434,15 @@ window.WF_DEBUG = {
       _waxframe_tier_count:    Object.keys(tierCache).length,
       _waxframe_keys_redacted: true,
       ringBuffer:              this.ringBuffer,
+      // v3.63.493 — the ring buffer is written by captureRound, which only
+      // runs AFTER response.json() succeeds. That makes it structurally
+      // blind to transport failures: a 504, a dropped connection or a
+      // CORS rejection never reaches it, so a bundle could show a hive
+      // "working fine" while the user was staring at gateway errors all
+      // day. captureFailure is always-on and already holds the last one —
+      // it was simply never included here. Now it is, so the next
+      // gateway failure arrives with evidence instead of a guess.
+      lastFailure:             this.scrubFailureRecord(this.lastFailure),
       tierClassifications:     tierCache,
       tierClassificationErrors: tierErrors,
       checkpoint:              checkpoint
@@ -433,7 +483,7 @@ window.WF_DEBUG = {
   // The REFRESH_TOKEN is stored in localStorage on first use (prompted
   // via wfConfirm's input variant) — it's a Worker secret, not an API
   // key for a provider, so localStorage is fine.
-  // ── Forced truncation (v3.63.492) ──────────────────────────────
+  // ── Forced truncation (v3.63.493) ──────────────────────────────
   //
   // David's "test method" ask: a repeatable way to reproduce a Builder
   // token-cap cutoff on demand, instead of discovering one mid-project by
@@ -756,6 +806,37 @@ window.WF_ERROR_CATALOG = [
     ]
   },
   {
+    // v3.63.493 — Placed BEFORE PROVIDER_DOWN because classify() returns the
+    // first match and a 504 is in the 5xx range. PROVIDER_DOWN's advice
+    // ("this is on their side... check the provider status page") is wrong
+    // for a gateway timeout: on a corporate endpoint "their side" is the
+    // user's own IT, there is no public status page, and the model most
+    // likely did not fail at all.
+    //
+    // 504 Gateway Timeout / 524 / 522 / 408 all mean the same thing from
+    // here: a proxy gave up waiting for the response. WaxFrame sends
+    // NON-STREAMING requests, so a long Builder generation holds a
+    // connection open with zero bytes flowing for its entire duration
+    // (observed max: 540s). Common proxy read-timeouts are 60s, so a long
+    // build can be killed by the proxy while the model is still working
+    // perfectly. That also explains an immediate success on retry: the
+    // first request often completes upstream after the proxy hung up, and
+    // the retry lands on a warm result.
+    code: 'GATEWAY_TIMEOUT',
+    matches: (err, ctx, msg, status) => {
+      const s = parseInt(status, 10) || parseInt(ctx.status, 10);
+      return s === 504 || s === 524 || s === 522 || s === 408 ||
+             msg.includes('gateway timeout') || msg.includes('gateway time-out');
+    },
+    title: '{ai} \u2014 the gateway timed out waiting for a response',
+    meaning: "A proxy or gateway in front of {ai} gave up waiting and closed the connection. This is a TIMEOUT, not a token limit and not the model refusing \u2014 the model was very likely still generating when the connection was cut, and may even have finished afterwards. That is why re-sending the same prompt sometimes returns almost instantly: the first request completed upstream after the proxy hung up. WaxFrame sends the whole request and waits for the whole answer with nothing flowing in between, so a long Builder round is exactly the shape of request a proxy read-timeout kills. What helps: re-send the prompt (often succeeds immediately); shorten the document or use fewer reviewers so the Builder has less to write; or, if this is a corporate gateway, ask whoever runs it what the proxy read-timeout is \u2014 that is the number that matters here, not a token limit.",
+    actions: [
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Retry round', kind: 'retry' },
+      { label: 'Pick a different model', kind: 'fix-bee' }
+    ]
+  },
+  {
     code: 'PROVIDER_DOWN',
     matches: (err, ctx, msg, status) => {
       const s = parseInt(status, 10);
@@ -897,14 +978,37 @@ window.WF_ERROR_CATALOG = [
     // ⚠️ Reviewer-only in the Change Builder model dropdown.
     code: 'BUILDER_TRUNCATED',
     matches: (err, ctx) => ctx.kind === 'builder_truncated',
-    title: 'Builder output was cut off mid-response (token cap)',
-    meaning: "The Builder ran out of output room before it finished. YOUR DOCUMENT WAS NOT CHANGED — the round was rejected rather than saving a half-finished document. This is a capacity limit, not bad instruction-following, so retrying with the same model and the same settings will cut off in the same place. Three things that do help: switch to a Builder with more output room; shorten the document or split it across projects; or ask for less in one round. If you are on a self-hosted server (Ollama, LM Studio, Open WebUI), the limit is usually a setting on YOUR server rather than a property of the model — look for num_predict or max_tokens in the server config, since WaxFrame cannot read or raise it from here. Some families have a hard cap that cannot be raised at all — notably AI21's Jamba (capped at 4096 across 1.5 / 1.6 / 1.7), which is structurally incompatible with the Builder role however you configure it. Jamba still works fine as a Reviewer.",
+    title: 'Builder stopped at its output limit',
+    meaning: "The provider explicitly reported that it stopped this response at an output limit \u2014 that is its own finish reason, not our inference. YOUR DOCUMENT WAS NOT CHANGED; the round was rejected rather than saving a half-finished document. Retrying with the same model and the same settings will stop in the same place. What helps: switch to a Builder with more output room; shorten the document or split it across projects; or ask for less in one round. If you are on a self-hosted server or a corporate gateway (Ollama, LM Studio, Open WebUI), the limit is usually a setting on THAT server rather than a property of the model \u2014 and note that many gateways apply a default output limit only when the client does not specify one, so this can appear even where nobody deliberately set a cap. AI21's Jamba is capped at 4096 across 1.5 / 1.6 / 1.7 and cannot finish a Builder round at any setting; it works fine as a Reviewer.",
     actions: [
       { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
       // v3.63.382 — Builder-only retry against cached reviews. Only useful
       // after a Builder swap (same model would just truncate again), but
       // letting the user retry just the Builder costs no reviewer tokens.
       { label: 'Retry Builder only', kind: 'retry-builder-cached' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    // v3.63.493 — Split out of BUILDER_TRUNCATED, which v3.63.489 had made
+    // fire on BOTH a provider stop reason AND a merely-unclosed envelope
+    // block. The second is not evidence of a token cap: a model that
+    // completes normally (finish reason "stop", full usage) but forgets a
+    // closing marker would be told it "ran out of output room", which is an
+    // assumption dressed as a diagnosis. Worse, that is a claim the user may
+    // then take to their IT group, who will correctly say no such limit
+    // exists \u2014 leaving them stuck between two contradictory accounts.
+    //
+    // This card states the observation and names the candidates without
+    // picking one. If the provider DID report a stop reason, the
+    // BUILDER_TRUNCATED card above fires instead and can say so plainly.
+    code: 'BUILDER_INCOMPLETE',
+    matches: (err, ctx) => ctx.kind === 'builder_incomplete',
+    title: 'Builder response was incomplete \u2014 cause not established',
+    meaning: "The Builder opened one of the required %%\u2026_START%% blocks and never closed it, so the response could not be used. YOUR DOCUMENT WAS NOT CHANGED. Importantly, the provider did NOT report running out of output room \u2014 so this is not, on the evidence, a token limit. Three things cause this, and the details below say which facts we actually have: (1) the model did not follow the required output format, which is the most common cause and is usually fixed by retrying or switching Builder; (2) the response was cut short in transit \u2014 a proxy or gateway closing the connection mid-stream looks exactly like this from here; (3) an output limit that the endpoint applied without telling us. If this keeps happening on a corporate or self-hosted gateway, the connection-drop explanation is worth checking before the token one.",
+    actions: [
+      { label: 'Retry Builder only', kind: 'retry-builder-cached' },
+      { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -1111,7 +1215,7 @@ function renderTroubleshootingCard(entry, ctx) {
   // straight through. Hidden when ctx.message is empty.
   const providerWrap = document.getElementById('tcProviderMessage');
   const providerText = document.getElementById('tcProviderMessageText');
-  // v3.63.492 — the label is no longer always true. This block was built for
+  // v3.63.493 — the label is no longer always true. This block was built for
   // verbatim provider error text ("What the provider actually said"), but
   // the truncation card now puts WaxFrame's OWN diagnosis here — where it
   // belongs, since it is the most prominent slot on the card. Attributing
