@@ -1,5 +1,51 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.494 — The output budget now comes from the model, not from a constant
+**Released:** 2026-09-14
+**Build:** 20260914-002
+
+### The bug, and it was ours
+Long Builder rounds were being cut off, and the cap was WaxFrame's doing in both of the two ways a request can go wrong:
+
+- **`anthropic-messages` hardcoded `max_tokens`** — 4096 originally, raised to 16384 in v3.63.489. Anthropic requires the parameter, so *something* had to be sent, but a fixed number silently overrides every model that can do more.
+- **`openai-chat` sent nothing at all**, deliberately, to inherit the provider default. That looked like the safe choice and was in fact the worse one. Open WebUI (and gateways like it) apply an admin-configured `max_tokens` **only when the client omits the key** — `utils/payload.py`, `if value is not None and key not in form_data`. By omitting it, WaxFrame handed every gateway in front of it permission to cap builds at its own default, invisibly, in a way indistinguishable from a model limit.
+
+The second path is the one that bit: a real failing build ran through an `openai`-format server AI, so the Anthropic constant was never on its code path. The cap it hit was the gateway's, applied only because we declined to state a budget.
+
+### What changed
+- **`max_tokens` is now resolved from the selected model on all three request shapes.** `WF_RESOLVE_OUTPUT_BUDGET` (app.js) reads the model-limits store and the body builders consult it. Preference: the model's published maximum (provider API) — then a ceiling measured here — then the maintained table — then a `DEFAULT_OUTPUT_BUDGET` of 32,768.
+- **This is the wiring the limits work was missing.** `limitsFromModelEntry()` has been harvesting per-model maximums off model-list responses since v3.63.490 and nothing consumed them: the real figure sat unread in a cache while a constant decided the budget. It also fixes *"Max output unknown"* at the source — same metadata path, now actually consulted.
+- **A measured ceiling beats a published one.** If a provider advertises 120,000 and a run here was cut off at 4,096, 4,096 is what gets sent. That is the point of recording observations, and it is what makes a gateway-imposed limit self-correcting.
+- **Reject-and-learn retry.** Stating a budget introduces one new failure: a model whose real ceiling is lower refuses the request. Providers name the number when they do (*"max_tokens is too large: 32768. This model supports at most 4096 completion tokens."*). `parseBudgetRejection()` extracts it, records it so the picker and every later request use it, and retries once — guarded so it cannot loop. A hard ceiling is learned the first time it is met rather than after a bug report. This is the free rejection probe discussed earlier, arriving exactly when it is useful and never costing a speculative request.
+- **Deliberately not clamped to the context window.** Prompt and output sharing a window is the server's arithmetic; guessing at it here would reintroduce exactly the kind of invented limit this release removes.
+- `ANTHROPIC_MAX_OUTPUT_TOKENS` is gone, including its two copies in the rehydrated/custom Anthropic body builders (`app.js`, `storage.js`) and its fixture.
+
+### Verification
+- release-check: all 16 checks pass. **117 fixtures pass** (fixture updated from the removed constant to the resolver, plus a guard that a missing resolver falls back to the default rather than to zero — a zero budget would ask every provider for no output at all).
+- **A/B proved against a live Ollama server from a real `file://` page in Firefox.** Identical prompt, model and server; only the budget differs:
+
+  | | Budget sent | finish_reason | Output | Truncated |
+  |---|---|---|---|---|
+  | With this fix | 32,768 | `stop` | 5,292 tokens | **No** |
+  | Old 4,096 cap | 4,096 | `length` | 4,096 tokens | Yes |
+
+  The build that previously truncated now completes. 5,292 > 4,096, so the old cap was genuinely binding for this workload.
+- Also verified: all three request shapes state a budget; a known published limit (120,000) overrides the default and is the value actually sent; a measured 4,096 correctly beats a published 120,000. Zero CSP violations.
+
+### Honest limits of this verification
+The reject-and-learn retry was exercised as a unit (the parser correctly returns 4096 from OpenAI's wording, 0 for a budget error naming no number, and null for an unrelated error) but **no live provider rejected a budget during testing**, so that path has not run end to end against a real 400. It is guarded against looping and falls back to today's behaviour.
+
+### Still open, and now more likely
+Lifting the cap makes generations **longer**, so gateway timeouts become more probable, not less. WaxFrame is entirely non-streaming: a Builder round holds a connection open with zero bytes flowing for its whole duration (observed max 540s) against proxy read-timeouts commonly set to 60s. Streaming is backlog item 14 and is now the top remaining item.
+
+### Files touched
+js/provider-catalog.js, js/app.js, js/storage.js, tools/test-provider-extractors.mjs, js/version.js, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, CHANGELOG.md, docs/WaxFrame_Backlog_Master_v280.txt
+
+### Rollback
+`git revert <sha>` — restores the hardcoded constant and the omitted `max_tokens`, which restores the truncation.
+
+---
+
 ## v3.63.493 — Stop guessing at token caps; name a gateway timeout for what it is
 **Released:** 2026-09-14
 **Build:** 20260914-001

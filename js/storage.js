@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260914-001
+// Build: 20260914-002
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1046,7 +1046,7 @@ function loadSettings() {
         if (cfg && typeof cfg.headersFn !== 'function') {
           if (cfg.format === 'anthropic') {
             cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' });
-            cfg.bodyFn    = (m, prompt) => JSON.stringify({ model: m, max_tokens: (window.WFProviderCatalog?.ANTHROPIC_MAX_OUTPUT_TOKENS || 16384), messages: [{ role: 'user', content: prompt }] });
+            cfg.bodyFn    = (m, prompt) => JSON.stringify({ model: m, max_tokens: (window.WFProviderCatalog?.resolveOutputBudget?.(m) || 32768), messages: [{ role: 'user', content: prompt }] });
             cfg.extractFn = d => WFProviderCatalog.extractAnthropicText(d);
           } else if (cfg.format === 'google') {
             cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k });
