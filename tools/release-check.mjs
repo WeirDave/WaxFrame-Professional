@@ -612,7 +612,7 @@ const INLINE_HANDLER_BUDGET = {
   'what-are-tokens.html':         0  // migrated in v3.63.348
 };
 
-// v3.63.494 — drag/drop event names added. They were missing from this
+// v3.63.495 — drag/drop event names added. They were missing from this
 // list since the check was written, and it cost a real bug: the
 // v3.63.351 migration left six ondragenter/ondragover/ondragleave/ondrop
 // attributes behind on index.html's two drop zones, this regex could not

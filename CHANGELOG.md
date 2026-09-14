@@ -1,5 +1,47 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.495 — Launching over an active session now actually clears it
+**Released:** 2026-09-14
+**Build:** 20260914-003
+
+### The bug
+Launching a new session over an active one showed this confirm:
+
+> *You have an active session (2 rounds completed). Launching again will clear your current document and round history. Continue?*
+
+It cleared neither. `startSession()` read `history` and `round` but **never assigned either one** — the only session variables it touched were `docText` (and only on the paste/scratch tabs) and `phase`. The previous run's rounds, round counter, resolved decisions and conflict state all carried into the "new" session.
+
+**Second-order effect, and the nastier half:** the Round-0 push that records the starting document is gated on `history.length === 0`. With stale history present it never fired, so the new document was never recorded as the session's starting point at all.
+
+### What changed
+- **`resetSessionState()`** — one function, called by both `startSession()` (after the user confirms) and `clearProject()`, so the two cannot drift apart again. It clears `round`, `history`, `_resolvedDecisions`, `_lastConflicts`, `_lastAppliedChanges`, `_autoCapturedConflicts`, the round-counter state machine, `_lengthGuardOverride`, `_finishExported`, and the persisted session copy in localStorage. `startSession()` additionally awaits `idbClear()` so a reload cannot resurrect the old run.
+- **It bumps `_projectGen` first.** An in-flight round that is mid-await checks that token at its next write checkpoint and bails, so it cannot land phantom history in the session being started. Launch-over-active is precisely the moment a round is most likely to still be running.
+- **It deliberately does NOT touch project setup** — project fields, reference material, the hive, or the uploaded document all survive. Launch happens immediately after the user configured those; wiping them would destroy what they just built. `clearProject()` remains the separate, louder gesture that does clear setup.
+- **New loaded-state readout in the work topbar** — *"no rounds yet"* or *"2 rounds · 18,432 chars"*, beside the project name, reading live state rather than a cached copy. The bug was invisible: a session carrying three stale rounds looked identical to a fresh one. Hovering gives the full sentence, including that launching clears both.
+
+### On whether this was inflating his payload
+It was not, and it is worth stating plainly because it was a reasonable suspicion. **Round history is not included in the Builder prompt.** The prompt carries the project goal/context, reference material, any length constraint, the current document, resolved decisions, standing and this-round notes, and *this round's* reviewer responses — never prior rounds. Accumulated history therefore does not grow the request.
+
+One item that *does* reach the prompt and *did* survive a launch is **resolved decisions**, which are written into every Builder prompt and accumulate across rounds. That would have grown the payload slightly across launches. It is cleared now.
+
+For the record, the failing build's own numbers: prompt 52,143 characters / **18,977 tokens**. The "52k" figure was characters, not tokens — the document is roughly 13k tokens, which fits comfortably in the budget v3.63.494 now sends.
+
+### Verification
+- release-check: all 16 checks pass. Sacred rule (80ch column) intact.
+- **Verified in real Firefox on a real `file://` page.** A session was stood up with 3 history entries, `round = 3`, 2 resolved decisions, live conflicts, applied changes and the session-exists flag set. After the reset: history 0, round 1, decisions 0, conflicts null, applied 0, flags cleared, `_projectGen` bumped.
+- Confirmed the Round-0 gate goes from blocked to open across the reset — the second-order bug.
+- Confirmed project setup survives: reference material and project name both intact afterwards.
+- Confirmed both `clearProject()` and `startSession()` route through the shared helper.
+- Indicator verified against live state: *"no rounds yet"* on a fresh session, *"2 rounds · 18,432 chars"* with history present. Zero CSP violations.
+
+### Files touched
+js/app.js, index.html, style.css, js/version.js, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — restores the state where the launch confirm promises a reset it does not perform.
+
+---
+
 ## v3.63.494 — The output budget now comes from the model, not from a constant
 **Released:** 2026-09-14
 **Build:** 20260914-002
