@@ -1,0 +1,529 @@
+WaxFrame Backlog Master v281
+2026-09-14
+
+ABOUT THIS DOCUMENT
+────────────────────────────────────────────────────────────
+This is the canonical list of open work for WaxFrame
+Professional — bugs that need fixing and features that need
+building. Each entry is written to stand on its own so any
+person or AI assistant can pick it up cold and understand:
+
+  WHAT     — what the thing is, in plain language
+  WHY      — what problem it solves or what value it adds
+  STATE    — current status (OPEN / PARTIAL / PARKED / DEFERRED)
+  WHERE    — file:line pointers into the codebase
+  DONE     — what "done" looks like (acceptance criteria)
+
+Companion document: docs/WaxFrame_Playbook_Test_Master_vN.txt
+(test runs + measured convergence data).
+
+Changelog content does NOT belong here. Released work goes
+to CHANGELOG.md and is removed from this file the moment it
+ships.
+
+v281 — HOUSEKEEPING PASS (2026-09-14). The item count had drifted
+away from the amount of real work. Every claim below was verified
+against the live repo before acting:
+
+  STRUCK (already done, never removed):
+    old #7  questionnaire — its own STATE said SHIPPED 2026-08-09
+    old #10a model-limit half — shipped v3.63.494. Verified:
+            provider-catalog.js:148 DEFAULT_OUTPUT_BUDGET = 32768,
+            :309 body.max_tokens = resolveOutputBudget(model),
+            ANTHROPIC_MAX_OUTPUT_TOKENS absent from js/ and tools/.
+  MOVED OUT OF THE QUEUE (decisions and standing practice, not
+  tasks — see the two sections after OPEN FEATURES):
+    old #1 (ongoing housekeeping), #4 (DEFERRED by David
+    2026-08-02), #6 (PARKED 2026-08-01), #9 (tooling gap; js/
+    verified clean today).
+  MERGED:
+    old #10b + #12 — one job: local servers publish no output cap
+    old #11 + #16  — both hang off knowing the cap: warn before,
+                     recover after
+  SPLIT:
+    old #8 was six separate chores under one number. Now six
+    numbered items, so the count reflects the work.
+  RENUMBERED 1..11 with no gaps. The old numbering had no #5
+  (descoped 2026-08-02) and had accumulated struck entries.
+
+Net: 16 numbered items → 11, and the 11 are all real.
+
+
+════════════════════════════════════════════════════════════
+OPEN BUGS
+════════════════════════════════════════════════════════════
+
+None currently open. (Lock-button one-way-unlock entry removed
+2026-07-25 — David: not encountered in a long time, killing it
+rather than carrying a stale repro-blocked entry indefinitely.
+If it resurfaces, re-add fresh rather than resurrecting this
+one — the old hypotheses may no longer be relevant to whatever
+the current code looks like.)
+
+
+════════════════════════════════════════════════════════════
+OPEN FEATURES
+════════════════════════════════════════════════════════════
+Ordered by value. 1 is the only item that fixes something David
+actually hits today.
+
+1. Stream Builder responses (the real fix for the 504s)
+   ─────────────────────────────────────────────────────────
+   WHAT:   Send chat requests with stream:true and consume the
+           SSE deltas, instead of one blocking POST that waits
+           for the entire answer.
+   WHY:    WaxFrame is fully non-streaming (zero occurrences of
+           stream:true). A Builder round holds a connection open
+           with ZERO bytes flowing for its whole duration —
+           observed max 540s per the timeout constants in
+           app.js. Common proxy read-timeouts are 60s, so a long
+           build is exactly the shape of request a corporate
+           gateway kills. David hit a 504 on 2026-09-14 and a
+           re-send answered immediately, which is the classic
+           signature: the first request completed upstream after
+           the proxy hung up.
+           URGENCY ROSE WITH v3.63.494. The old 4096 cap was
+           MASKING this — the truncated build finished in 49s
+           because it was cut short. Now that requests state a
+           real budget, generations run longer, straight into
+           timeout range.
+   STATE:  OPEN. Largest remaining item. Not started.
+   WHERE:  js/app.js callAPI (single fetch + response.json());
+           js/provider-catalog.js BODY_BUILDERS (all three
+           shapes need stream:true) and EXTRACTORS (need
+           incremental delta accumulation, not whole-object
+           reads). The envelope parser must tolerate partial
+           accumulation. AbortController wiring already exists
+           for timeouts and must keep working.
+   DONE:   A long Builder round completes through a gateway that
+           previously 504'd; the Live Console shows progress
+           while it generates; a genuine mid-stream disconnect
+           is still detected and reported as incomplete rather
+           than silently saving a partial document.
+
+
+2. Read declared limits from local servers
+   ─────────────────────────────────────────────────────────
+   (merged 2026-09-14: old #12 + the surviving half of old #10)
+   WHAT:   Harvest the context length local servers already
+           publish, so the "declared" half of the declared-vs-
+           observed comparison is populated for self-hosted AIs
+           instead of reading "not published".
+   WHY:    v3.63.491 measures the real cap by observation, which
+           is what matters when a gateway imposes one. But the
+           comparison is far more legible with a declared figure
+           beside it: "declared 32K, observed 4K" names the gap,
+           where "not published vs 4K" only reports a number.
+   STATE:  OPEN. Reachability PROVEN from file:// on 2026-09-11
+           against a live Ollama 0.33.3, driven from WaxFrame's
+           own page with its strict CSP, zero CSP violations:
+             /api/tags  -> details.context_length per model,
+                           every model, one call, no load
+                           needed. ALREADY CALLED by the Ollama
+                           import preset; the field is discarded.
+             /api/show  -> parameters carries num_ctx when a
+                           Modelfile sets one, plus
+                           model_info["<arch>.context_length"]
+             /api/ps    -> context_length for LOADED models =
+                           the actual runtime allocation
+             /v1/models -> id/object/created/owned_by only.
+                           Sparse; the native API is strictly
+                           better.
+           Open WebUI /api/models embeds the ENTIRE raw Ollama
+           object as `.ollama`, so `.ollama.details.context_
+           length` already arrives there too, and that endpoint
+           is ALREADY CALLED by the Open WebUI preset. It also
+           proxies Ollama at /ollama/api/{tags,ps,show}.
+           LM Studio /api/v0/models returns max_context_length
+           AND loaded_context_length (loaded wins — a model can
+           be loaded below its architectural maximum). NOT
+           verified live; no instance was running.
+   WHERE:  js/provider-catalog.js limitsFromModelEntry already
+           reads several OpenAI-compatible context fields;
+           IMPORT_SERVER_PRESETS in js/app.js holds the
+           per-server endpoints.
+   DONE:   A local server AI shows its context length as
+           API-sourced rather than unknown; where a Modelfile
+           num_ctx differs from the architectural figure, the
+           CONFIGURED number leads and both are shown — showing
+           the architectural number alone would overstate the
+           real ceiling, which is the exact trap this avoids.
+
+
+3. open-webui-setup.html steers users into a CORS config that breaks file://
+   ─────────────────────────────────────────────────────────
+   (adjacent to #2 — same sitting, different deliverable: #2 is
+   code that reads the endpoint, this is documentation about
+   reaching it at all. Not merged; they can ship separately.)
+   WHAT:   The setup page instructs
+           CORS_ALLOW_ORIGIN=https://waxframe.com. A file://
+           page sends Origin: null, which that value excludes,
+           so the offline/air-gapped mode the page is otherwise
+           written for cannot reach the server at all.
+   WHY:    Documentation bug with real consequences: it is the
+           single most likely reason a local-server setup fails
+           for an offline user, and the failure presents as an
+           opaque CORS error. The irony is that Open WebUI
+           DEFAULTS to permissive — it is our own hardening
+           advice that breaks the offline path.
+   STATE:  OPEN, cheap. Open WebUI's CORS_ALLOW_ORIGIN defaults
+           to '*' (confirmed in backend/open_webui/config.py),
+           so an untouched install works from file://. Note a
+           validator rejects non-http(s) schemes unless
+           CORS_ALLOW_CUSTOM_SCHEME is set, so "allowlist
+           file://" is NOT the fix — '*' or 'null' is.
+   WHERE:  open-webui-setup.html, the CORS section.
+   DONE:   The page documents the offline case separately and
+           does not hand air-gapped users a value that locks
+           them out; WaxFrame surfaces a CORS-shaped failure by
+           naming the env var to change rather than reporting
+           "unknown".
+
+
+4. Cap-aware warning before a build, and coverage for the recovery after
+   ─────────────────────────────────────────────────────────
+   (merged 2026-09-14: old #11 + old #16 — both hang off knowing
+   the Builder's output cap. Warn before; recover after.)
+   WHAT:   (a) When a length target is set on the Project screen
+           AND the Builder's max output is known, warn before
+           the build starts if the target plausibly will not fit.
+           (b) Drive the v3.63.494 reject-and-learn retry end to
+           end against a real 400, which has never happened.
+   WHY:    (a) Warning before a long build beats discovering the
+           cutoff after, and is cheap now that the cap and its
+           provenance are known. (b) That retry is the recovery
+           path for the one new failure mode v3.63.494 adds; if
+           it is broken, a model whose real ceiling is under
+           32768 fails outright where it used to work.
+   STATE:  OPEN.
+           (a) Explicitly a WARNING, never a promise — output
+           length is not reliably predictable from input length.
+           (b) parseBudgetRejection verified in isolation:
+           returns 4096 from OpenAI's wording, 0 for a budget
+           error naming no number, null for unrelated errors.
+           Guarded against looping via _budgetRetry. No live
+           provider rejected a budget during testing — Ollama
+           silently clamps rather than rejecting, so the local
+           rig cannot produce this failure.
+   WHERE:  js/app.js getLengthConstraint / getModelLimits, the
+           Launch Session path and the Builder screen;
+           js/provider-catalog.js parseBudgetRejection and
+           js/app.js callAPI (the !response.ok branch).
+   DONE:   (a) A target that cannot fit the known cap warns at
+           Launch with both numbers and the limit's provenance;
+           silent when the cap is unknown; never blocks.
+           (b) A provider that really rejects 32768 is driven end
+           to end: the retry fires once, the named ceiling is
+           recorded, the second request succeeds, and the picker
+           shows that ceiling as API-sourced. A mock endpoint
+           returning OpenAI's exact 400 body satisfies this
+           without spending tokens.
+
+
+5. scrubFailureRecord has no Node fixture
+   ─────────────────────────────────────────────────────────
+   WHAT:   js/wf-debug.js is not require()-able from Node, so
+           WF_DEBUG.scrubFailureRecord (added v3.63.493, and an
+           EXPORT-surface redaction path) is covered only by
+           browser verification, not by the release gate.
+   WHY:    Redaction is exactly the code that must not silently
+           rot. It was hoisted out of a closure into a method
+           specifically so a test COULD reach it; the test does
+           not exist yet.
+   STATE:  OPEN, small.
+   WHERE:  js/wf-debug.js (the WF_DEBUG const is a bare
+           declaration, not assigned to a root object the way
+           provider-catalog.js does it);
+           tools/test-provider-extractors.mjs is the natural
+           home once it is reachable.
+   DONE:   Fixtures cover Open WebUI JWT bearer tokens, sk-*,
+           AIza* keys in query strings, HTTP Basic, benign text
+           surviving untouched, and raw-body truncation — and
+           they run as part of the release gate.
+
+
+   ITEMS 6-11 were sub-items (a)-(f) of old #8, the follow-ups
+   from the 2026-08-13 full code/file audit (v3.63.459). Each
+   needs its own product call rather than being safe to
+   auto-resolve inside an unrelated release, so each is its own
+   entry now and the count is honest. All six re-verified
+   present in the tree on 2026-09-14.
+
+
+6. Unreferenced .flac master in sounds/
+   ─────────────────────────────────────────────────────────
+   WHAT:   sounds/232450__timbre__purely-synthesised-metal-clang-
+           with-long-reverb.flac is unreferenced at runtime —
+           js/scenes.js only loads the .mp3 sibling. It is the
+           freesound.org master.
+   WHY:    Ships in every release zip. Either it is a re-encode
+           source worth keeping, or it is dead weight.
+   STATE:  OPEN — needs a keep/delete call. Verified present
+           2026-09-14.
+   WHERE:  sounds/ ; js/scenes.js for the .mp3 reference.
+   DONE:   Deleted, or an explicit note here recording why it
+           stays.
+
+
+7. Orphaned @keyframes lineNumPulse
+   ─────────────────────────────────────────────────────────
+   WHAT:   @keyframes lineNumPulse in style.css was orphaned by
+           the v3.63.459 audit's .line-highlight deletion — it
+           was not in that cleanup's scope.
+   WHY:    Dead CSS. An unreferenced @keyframes cannot fire (it
+           only applies via an animation: property), so this is
+           inert, not risky.
+   STATE:  OPEN, trivial. Verified 2026-09-14: exactly one
+           occurrence in style.css, the definition itself —
+           nothing references it.
+   WHERE:  style.css.
+   DONE:   Removed, with the usual visual smoke-test pass over
+           the work screen per the CSS-deletion rule.
+
+
+8. Stale :not(.setup-section-img) selector
+   ─────────────────────────────────────────────────────────
+   WHAT:   A `:not(.setup-section-img)` reference in style.css
+           now points at a class that no longer exists.
+   WHY:    Inert — :not() against a non-existent class matches
+           everything — but stale and confusing to read.
+   STATE:  OPEN, trivial but NOT a pure no-op: :not() contributes
+           its argument's specificity, so simply deleting it
+           LOWERS the rule's specificity and can change which
+           rule wins. Needs the smoke-test, not a blind strip.
+   WHERE:  style.css (was ~line 5870; verified still present
+           2026-09-14).
+   DONE:   Either removed with specificity checked and the
+           affected screens smoke-tested, or annotated in place
+           explaining why it stays.
+
+
+9. Reference docs self-date to v3.63.403
+   ─────────────────────────────────────────────────────────
+   WHAT:   Five reference docs (WaxFrame_Audit_Methodology_v1,
+           WaxFrame_Prompts_Reference_v3, WaxFrame_Storage_
+           Schema_v1, WaxFrame_Rules_Reference) say "reviewed
+           against v3.63.403" — now ~90 versions stale.
+   WHY:    A stale review date makes a reader distrust content
+           that may be perfectly accurate, or trust content that
+           has drifted. A spot-check of the storage schema
+           against live js/storage.js passed, so the content is
+           stale-dated rather than wrong.
+   STATE:  OPEN — needs a review pass, not a rewrite.
+   WHERE:  docs/.
+   DONE:   Each doc re-checked against the live tree and its
+           review-date line bumped, or explicitly marked as
+           historical and not maintained.
+
+
+10. Stale .claude/worktrees entries
+   ─────────────────────────────────────────────────────────
+   WHAT:   Three .claude/worktrees/ entries (gitignored, local
+           disk only) left over from a Dropbox-path change.
+   WHY:    Pure local housekeeping. Not a repo file, ships
+           nothing, affects nobody but this machine.
+   STATE:  OPEN, trivial. `git worktree prune` clears them.
+           Deliberately NOT done during the v281 pass: other
+           sessions may hold worktrees, and pruning under them
+           is not this task's business.
+   WHERE:  .claude/worktrees/ (local only).
+   DONE:   Pruned on a machine where no other session is using
+           them.
+
+
+11. Wire test-server-ai-eligibility.mjs into the release gate
+   ─────────────────────────────────────────────────────────
+   WHAT:   tools/test-server-ai-eligibility.mjs tests
+           isServerImportedAI / isAIReadyForUse /
+           getConfiguredAIsForMode / continueFromBees but is not
+           wired into tools/release-check.mjs as a gate stage.
+   WHY:    A test nothing runs is a test that rots. Same pattern
+           as the provider-extractor fixtures, which ARE wired.
+   STATE:  OPEN, small. Verified 2026-09-14: zero references to
+           it in tools/release-check.mjs.
+   WHERE:  tools/test-server-ai-eligibility.mjs;
+           tools/release-check.mjs (follow the existing
+           shell-out stages).
+   DONE:   It runs as a numbered release-check stage and fails
+           the gate when it fails. Update the check count in
+           CLAUDE.md §4 the same day.
+
+
+════════════════════════════════════════════════════════════
+STANDING PRACTICE — NOT QUEUE ITEMS
+════════════════════════════════════════════════════════════
+These were numbered features but cannot be "completed": they are
+ongoing habits or settled decisions. Kept for the reasoning, moved
+out of the queue so the count means something.
+
+• BUILDER-INCAPABLE FAMILY LIST (old #1). Some model families
+  cannot reliably act as Builder — they break the
+  %%CONFLICTS_START%% block, truncate mid-document, or hallucinate
+  formatting that breaks the parser. The filter list currently
+  holds Jamba (added v3.63.132) and a few others. PRACTICE: when a
+  new family proves structurally incompatible as Builder in two
+  consecutive measured runs, add it to the list, exclude it from
+  Builder recommendations, and badge it Reviewer-only in the
+  picker. No candidate is queued; this is a habit, not a task.
+
+• RELEASE-CEREMONY AUTOMATED VERIFICATION (old #4). DEFERRED by
+  David 2026-08-02: keeping CLAUDE.md §4/§5 accurate is sufficient
+  mitigation, rather than building a scheduled-Action
+  tag-staleness check. Revisit ONLY if a release or tag is
+  actually missed again — the design is preserved in the
+  v280 file's history. Do not build preemptively.
+
+• THREE DUPLICATE-LOGIC CLEANUPS (old #6). PARKED 2026-08-01. All
+  three already carry "mirror of" comments pointing at their
+  counterparts, which is the cheap half of the fix. Consolidation
+  is a refactor with no user-visible payoff; revisit only if one
+  of the pairs actually drifts.
+
+• CHECK 8 CANNOT SEE JS-GENERATED HANDLERS (old #9). Check 8's
+  inline-handler regex scans .html only, so an on*= written into a
+  JS template literal and injected via innerHTML would ship,
+  be blocked by CSP at runtime, and pass the gate. This is a
+  TOOLING GAP, not a defect: js/ was swept manually in v3.63.488
+  and re-verified clean on 2026-09-14 (the only on*= hit is
+  storage.js:741 reading getAttribute('onclick') in the XSS
+  sanitiser — not a live handler). Recorded here so the gap is
+  known; extend INLINE_HANDLER_RE's file scope if a regression
+  ever appears.
+
+
+════════════════════════════════════════════════════════════
+OUTREACH — NO CODE FOOTPRINT
+════════════════════════════════════════════════════════════
+These are real open work but live entirely outside the repo, so
+their recorded states CANNOT be verified from the tree. They are
+left exactly as previously recorded; treat the states as
+self-reported and confirm with David before acting.
+
+Same caveat applies to the struck questionnaire item (old #7),
+whose "SHIPPED 2026-08-09" was likewise self-reported — it was
+struck on the strength of its own STATE field, not repo evidence.
+
+A. Direct outreach to AI-document-workflow writers/bloggers
+   ─────────────────────────────────────────────────────────
+   WHAT:   David found articles/posts from people who write
+           about AI document creation/refinement workflows
+           while searching that topic. Idea: reach out to
+           those specific authors directly (not a cold mass
+           blast) with a link/access to WaxFrame so they can
+           personally evaluate it — a targeted alternative to
+           the passive discoverability plumbing shipped in
+           v3.63.406 (llms.txt, IndexNow, sitemap).
+   WHY:    On-page SEO is now healthy but the site still has
+           zero authority/backlinks (see SEO campaign context,
+           v3.63.406). A credible writer who already covers
+           this space trying the product and mentioning it
+           gets both a backlink and real user evaluation —
+           faster than waiting on index/authority to build
+           organically.
+   STATE:  PARTIAL — first 3 of 6 researched candidates sent
+           2026-07-25 from a personal mailbox (drafted same
+           day, David reviewed and sent them himself): eesel.ai
+           (hi@eesel.app), tiiny.host (help@tiiny.host),
+           resumeoptimizerpro.com (support@resumeoptimizerpro.com).
+           Awaiting response on all three — check back and log
+           reply/no-reply per DONE below once something lands.
+           Neeraj Mathrani has no verified email — needs a
+           LinkedIn DM or his site's contact form instead, not
+           drafted. There's An AI For That + Ben's Bites are
+           self-serve submission boards, not email — see entry #3.
+           No "AI tools weekly roundup" YouTube channel confirmed
+           yet; revisit if the current 3 don't land.
+   WHERE:  N/A — outside the codebase. See
+           docs/WaxFrame_Outreach_Kit_v1.txt for the full
+           candidate list + copy.
+   DONE:   At least one direct outreach sent to an identified
+           author with a working access link (Pro trial link
+           or Free edition link); response or non-response
+           logged here or in project notes either way.
+
+
+B. Submit to AI tool directories + self-hosted listings
+   ─────────────────────────────────────────────────────────
+   WHAT:   Submit WaxFrame to AI-tool discovery directories
+           (Product Hunt, AlternativeTo, SaaSHub, There's An AI
+           For That, Futurepedia) and self-hosted-specific
+           listings (AlternativeTo's self-hosted tag,
+           r/selfhosted) using the copy already drafted per
+           directory. Also: full URL in the YouTube demo
+           description (youtu.be/89w9ROd3jIE), GitHub repo
+           topics, r/SideProject launch post.
+   WHY:    Same zero-authority/zero-backlink problem as entry
+           #2 — directory listings are lower-effort than direct
+           outreach and several (AlternativeTo, SaaSHub) are
+           evergreen backlink sources once live.
+   STATE:  PARTIAL — Product Hunt and SaaSHub listings are live
+           and complete (submitted 2026-08-02; SaaSHub free tier,
+           pending approval — full profile: description, 2
+           categories, 3 competitors, pricing, 6 screenshots, 4
+           feature specs, 5 of 6 Q&A answered — skipped "biggest
+           customers" as not for public disclosure — plus the
+           YouTube demo video). AlternativeTo (blocked — new
+           submissions paused on weekends, retry on a weekday).
+           There's An AI For That is no longer free to submit —
+           now $49 (Website Only) / $347 (Maximum Exposure) / a
+           custom paid plan, no free tier found; David declined
+           to pay 2026-08-02, skipped pending a decision on
+           whether it's worth the spend. Futurepedia is the same
+           story — $247 Basic (sold out) / $497 Verified Listing
+           / custom Enterprise, no free tier found either;
+           skipped 2026-08-02 for the same reason. Both kit entries
+           assumed free self-serve submission when drafted
+           (v3.63.409) — that's stale now, worth a repricing pass
+           on WaxFrame_Outreach_Kit_v1.txt next time it's touched.
+           r/selfhosted and r/SideProject are DONE (2026-08-02):
+           r/selfhosted's standalone-post rule blocks new-project
+           threads outright and the "younger than 3 months" New
+           Project Megathread exception doesn't even apply (repo
+           is ~4.5 months old) — posted as a top-level comment in
+           the current megathread anyway per David's call, using
+           their template incl. an honest AI-involvement
+           disclosure. r/SideProject post went up standalone,
+           links only to the free edition per the no-Gumroad-link
+           rule. GitHub repo topics were already done (20/20
+           topics, already includes self-hosted/ai/llm/vanilla-
+           javascript — at GitHub's cap, nothing to add). YouTube
+           demo description fixed 2026-08-02 — while checking it,
+           found its Gumroad link was pointing at a dead
+           l/aihive slug (shipped in v3.63.451, see CHANGELOG).
+           This backlog entry is now fully closed; all 5
+           directories attempted, all free-tier options taken.
+   WHERE:  docs/WaxFrame_Outreach_Kit_v1.txt (directory copy +
+           self-hosted angle sections).
+   DONE:   Each directory listing is live with a working link;
+           log per-directory as submitted/live here (or delete
+           this entry once all are live and move to CHANGELOG-
+           style notes, per normal backlog hygiene).
+
+
+════════════════════════════════════════════════════════════
+NOTES ON FORMAT
+════════════════════════════════════════════════════════════
+Every numbered entry above uses the same five-field structure:
+WHAT, WHY, STATE, WHERE, DONE. Going forward, any new
+backlog entry MUST follow that structure so the document
+stays pickup-ready for any reader.
+
+State vocabulary:
+  OPEN      — known and ready to work on; no blockers.
+  PARTIAL   — work has started, more remains; current
+              state described in the entry.
+  PARKED    — design is understood but not on a near-term
+              release path; revisit later.
+  DEFERRED  — paused waiting on an external input
+              (user repro, upstream decision, etc.).
+
+When an item ships, it moves to CHANGELOG.md and is
+DELETED from this file. No "CLOSED" section here — the
+changelog is the system of record for completed work.
+
+Two habits this document keeps failing at, both fixed in v281:
+  • Shipped items must be DELETED the day they ship. Old #7 sat
+    here marked SHIPPED for over a month.
+  • Decisions and standing practice do not belong in a numbered
+    queue — they inflate the count and can never be closed.
+    Put them in STANDING PRACTICE.
