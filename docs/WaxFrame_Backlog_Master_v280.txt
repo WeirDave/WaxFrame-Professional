@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v279
+WaxFrame Backlog Master v280
 2026-09-11
 
 ABOUT THIS DOCUMENT
@@ -591,6 +591,34 @@ OPEN FEATURES
            AIza* keys in query strings, HTTP Basic, benign text
            surviving untouched, and raw-body truncation - and
            they run as part of the release gate.
+
+
+16. Exercise the reject-and-learn budget retry against a real 400
+   ─────────────────────────────────────────────────────────
+   WHAT:   v3.63.494 states an output budget on every request and
+           retries once, with the ceiling the provider names,
+           when a model refuses the budget as too large. The
+           parser is unit-verified; the end-to-end path has
+           never run against a live 400.
+   WHY:    It is the recovery path for the one new failure mode
+           v3.63.494 introduces. If it is broken, a model whose
+           real ceiling is under 32768 fails outright where it
+           used to work.
+   STATE:  OPEN. parseBudgetRejection verified in isolation:
+           returns 4096 from OpenAI's wording, 0 for a budget
+           error naming no number, null for unrelated errors.
+           Guarded against looping via _budgetRetry. No live
+           provider rejected a budget during testing - Ollama
+           silently clamps rather than rejecting, so the local
+           rig cannot produce this failure.
+   WHERE:  js/provider-catalog.js parseBudgetRejection;
+           js/app.js callAPI (the !response.ok branch).
+   DONE:   A provider that really rejects 32768 is driven end to
+           end: the retry fires once, the named ceiling is
+           recorded, the second request succeeds, and the picker
+           subsequently shows that ceiling as API-sourced. A
+           mock endpoint returning OpenAI's exact 400 body would
+           satisfy this without spending tokens.
 
 
 ════════════════════════════════════════════════════════════

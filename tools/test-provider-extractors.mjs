@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260914-001
+// Build: 20260914-002
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -161,7 +161,7 @@ check(
   false
 );
 
-// ── Truncation detection (v3.63.493) ────────────────────────────────
+// ── Truncation detection (v3.63.494) ────────────────────────────────
 // A Builder that hits its output cap returns a response that LOOKS
 // finished. These fixtures pin the two signals that catch it, per provider
 // response shape. Live values were verified against provider docs when
@@ -229,7 +229,7 @@ check('draft-phase response with no APPLIED block is not truncated',
   WFProviderCatalog.looksStructurallyTruncated([DOC_OK, CONF_OK].join(`\n`)), false);
 check('cut off mid-document (no DOCUMENT_END)',
   WFProviderCatalog.looksStructurallyTruncated(`%%DOCUMENT_START%%\nhalf a docum`), true);
-// The pre-v3.63.493 blind spot: this response HAS a conflicts block, so the
+// The pre-v3.63.494 blind spot: this response HAS a conflicts block, so the
 // old check — nested inside `if (!hasConflictBlock)` — never examined it.
 check('cut off inside the conflicts block (the old blind spot)',
   WFProviderCatalog.looksStructurallyTruncated(
@@ -250,10 +250,16 @@ console.log('▶ Anthropic Builder output ceiling');
 // app it sent 4096 — about 3,000 words for a payload that carries the
 // document AND the conflicts block AND the applied-changes block. That was
 // the cap that cut a real build off on 2026-09-11.
-check('Anthropic ceiling is well above the old 4096 default',
-  WFProviderCatalog.ANTHROPIC_MAX_OUTPUT_TOKENS >= 16384, true);
+check('default output budget is well above the old 4096/16384 constants',
+  WFProviderCatalog.DEFAULT_OUTPUT_BUDGET >= 32768, true);
+// v3.63.494 — the budget now comes from the model, not a constant. With no
+// resolver installed (the Node test environment), it must fall back to the
+// default rather than to zero or NaN — a zero budget would ask every
+// provider for no output at all.
+check('with no resolver installed, the default applies',
+  WFProviderCatalog.resolveOutputBudget('any-model'), WFProviderCatalog.DEFAULT_OUTPUT_BUDGET);
 
-// ── Model token limits (v3.63.493) ──────────────────────────────────
+// ── Model token limits (v3.63.494) ──────────────────────────────────
 // Which model can actually finish a Builder round is decided by its max
 // output tokens. These fixtures pin BOTH the per-provider extraction (the
 // shapes drift) and the provenance precedence (the part that would quietly
@@ -373,7 +379,7 @@ check('observed source label',
 check('table source label',
   WFProviderCatalog.limitSourceLabel('table'), 'from WaxFrame table');
 
-// ── Observed-cap analysis (v3.63.493) ───────────────────────────────
+// ── Observed-cap analysis (v3.63.494) ───────────────────────────────
 // When a server administrator caps token usage, no declared number reveals
 // it — only watching where responses stop. These fixtures pin the part that
 // would mislead if it broke: how much a given set of stop points actually
@@ -470,7 +476,7 @@ check('varied prompts are flagged so the UI can explain the ambiguity',
   ambiguous.promptsVaried, false);
 check('genuinely varied prompts are detected', outCap.promptsVaried, true);
 
-// ── Requested output budget (v3.63.493) ─────────────────────────────
+// ── Requested output budget (v3.63.494) ─────────────────────────────
 // "Stopped after N tokens" is half an answer. What the request ASKED for is
 // the other half: asking for 16K and getting 4K means something clamped us,
 // while asking for NOTHING and getting 4K means a server-side default

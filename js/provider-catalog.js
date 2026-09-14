@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260914-001
+// Build: 20260914-002
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -117,29 +117,51 @@
     return { sys: sys, usr: usr };
   }
 
-  // v3.63.493 — Anthropic REQUIRES max_tokens on every request, so unlike
-  // the OpenAI and Gemini shapes (which omit it and inherit the provider
-  // default) this body builder has to name a number. That number was 4096
-  // and had been since the builder was written.
+  // ── Output budget resolution (v3.63.494) ──────────────────────────
   //
-  // 4096 output tokens is roughly 3,000 words — and the Builder's output
-  // has to carry the whole document PLUS the conflicts block PLUS the
-  // applied-changes block. So WaxFrame was capping Claude Builders far
-  // below the model's real capability: every model in the `claude`
-  // fallback list (Sonnet 4.6, Opus 4.8/4.7/4.6, Haiku 4.5) supports at
-  // least 64K/32K output. The cap that cut David's build off on
-  // 2026-09-11 was WaxFrame's own, not the model's.
+  // Every request now states how much output it wants, and that number comes
+  // from the MODEL, not from a constant.
   //
-  // 16384 is a deliberately conservative raise: comfortably inside every
-  // model this app offers, while 4x the old ceiling. It is NOT read from
-  // the model, which is the proper fix — Anthropic's /v1/models now
-  // returns a per-model `max_tokens` (and `max_input_tokens`), and
-  // WaxFrame already calls that endpoint via the proxy. Wiring that up is
-  // the follow-up. Until then, a hand-configured pre-4.x Claude model with
-  // a lower ceiling would get a clear 400 from Anthropic naming max_tokens.
-  var ANTHROPIC_MAX_OUTPUT_TOKENS = 16384;
+  // Two separate bugs converged here, and the fix is the same for both:
+  //
+  //   1. anthropic-messages hardcoded max_tokens (4096, raised to 16384 in
+  //      v3.63.489). Anthropic REQUIRES the parameter, so something had to
+  //      be sent — but a fixed number silently overrides every model that
+  //      can do more. Claude Opus 4.8 supports far past 16K; we were capping
+  //      it anyway.
+  //
+  //   2. openai-chat sent NOTHING, deliberately, to inherit the provider
+  //      default. That looked safe and is in fact the worse failure: Open
+  //      WebUI (and gateways like it) apply an admin-configured max_tokens
+  //      ONLY when the client omits the key — see utils/payload.py,
+  //      `if value is not None and key not in form_data`. By omitting it we
+  //      handed a corporate gateway permission to cap every build at its
+  //      default, invisibly, with no way to tell it apart from a model
+  //      limit. Stating a budget takes that permission back.
+  //
+  // WF_RESOLVE_OUTPUT_BUDGET is installed by app.js and reads the model-
+  // limits store (API-harvested figures first, then measured observations,
+  // then the maintained table). It returns null when nothing is known, in
+  // which case DEFAULT_OUTPUT_BUDGET applies — generous enough to finish a
+  // real document, and backed by the reject-and-learn retry in callAPI for
+  // the models that cannot go that high.
+  var DEFAULT_OUTPUT_BUDGET = 32768;
+  var MIN_OUTPUT_BUDGET     = 1024;
 
-  // ── Truncation detection (v3.63.493) ──────────────────────────────
+  function resolveOutputBudget(model) {
+    var forced = forcedTinyTokens();
+    if (forced) return forced;          // test hooks win, see below
+    var v = null;
+    try {
+      if (root && typeof root.WF_RESOLVE_OUTPUT_BUDGET === 'function') {
+        v = Number(root.WF_RESOLVE_OUTPUT_BUDGET(model));
+      }
+    } catch (e) { v = null; }
+    if (!isFinite(v) || v < MIN_OUTPUT_BUDGET) v = DEFAULT_OUTPUT_BUDGET;
+    return v;
+  }
+
+  // ── Truncation detection (v3.63.494) ──────────────────────────────
   //
   // Lives here rather than in app.js because it is provider-response
   // knowledge, which is what this module owns — and because this module
@@ -147,14 +169,14 @@
   // pin the behavior with fixtures. app.js holds thin delegating wrappers.
   //
   // Why this exists: a Builder that hits its output cap returns a response
-  // that looks finished, it just stops. Before v3.63.493 the only way to
+  // that looks finished, it just stops. Before v3.63.494 the only way to
   // tell was a finishReason recorded in the Deep Dive ring buffer, which
   // is never written unless Deep Dive is switched on — off by default, so
   // in normal use truncation was undetectable and got misreported as the
   // Builder ignoring its formatting instructions.
 
   // Provider stop-reason field, coalesced across every response shape
-  // WaxFrame speaks. Verified against live provider docs in v3.63.493:
+  // WaxFrame speaks. Verified against live provider docs in v3.63.494:
   //   OpenAI-shape  choices[0].finish_reason    (ChatGPT, Copilot, Grok,
   //                 Perplexity, Mistral, DeepSeek, Together, Cohere-compat,
   //                 and every OpenAI-compatible local server)
@@ -181,7 +203,7 @@
   // different failures with different fixes, and treating one as truncation
   // would fire a continuation at a response that already finished.
   //
-  // Values confirmed against provider docs in v3.63.493:
+  // Values confirmed against provider docs in v3.63.494:
   //   'length'        OpenAI, Grok, Perplexity, DeepSeek, Together, Cohere
   //   'MAX_TOKENS'    Gemini
   //   'max_tokens'    Anthropic
@@ -232,7 +254,7 @@
     return false;
   }
 
-  // ── Forced-truncation test hook (v3.63.493) ───────────────────────
+  // ── Forced-truncation test hook (v3.63.494) ───────────────────────
   //
   // David's ask was for a "test method" — a repeatable way to reproduce a
   // token-cap cutoff on demand instead of waiting to be bitten by one
@@ -250,7 +272,7 @@
   //   window.WF_FORCE_TINY_OUTPUT = false   → back to normal
   var FORCED_TINY_TOKENS = 64;
 
-  // v3.63.493 — generalised from the v3.63.489 force-truncate hook into a
+  // v3.63.494 — generalised from the v3.63.489 force-truncate hook into a
   // single output-budget override, because a second caller needed it: the
   // deliberate cap probe sets a SOFT CEILING so an uncapped model cannot
   // generate without bound while being measured. Two mechanisms writing
@@ -280,11 +302,11 @@
           { role: 'user',   content: p.usr }
         ]
       };
-      // No max_tokens normally — the OpenAI shape inherits the provider's
-      // (or the local server's) own default, which is what we want. Only
-      // the forced-truncation test hook adds one.
-      var tiny = forcedTinyTokens();
-      if (tiny) body.max_tokens = tiny;
+      // v3.63.494 — was deliberately omitted so the provider default would
+      // apply. That handed every gateway in front of us the right to cap the
+      // build silently. Now stated explicitly, which also suppresses an Open
+      // WebUI admin default (it fills the key only when absent).
+      body.max_tokens = resolveOutputBudget(model);
       return JSON.stringify(body);
     },
     'anthropic-messages': function (model, prompt) {
@@ -305,7 +327,7 @@
         // changes upstream.
         return JSON.stringify({
           model: model,
-          max_tokens: forcedTinyTokens() || ANTHROPIC_MAX_OUTPUT_TOKENS,
+          max_tokens: resolveOutputBudget(model),
           messages: [{ role: 'user', content: prompt }]
         });
       }
@@ -315,7 +337,7 @@
         : prompt.slice(0, split).trim() + '\n\nBegin your review now.';
       return JSON.stringify({
         model: model,
-        max_tokens: forcedTinyTokens() || ANTHROPIC_MAX_OUTPUT_TOKENS,
+        max_tokens: resolveOutputBudget(model),
         system: sysText,
         messages: [{ role: 'user', content: usrText }]
       });
@@ -325,8 +347,7 @@
       var split = s.split, isBuilder = s.isBuilder;
       if (split === -1) {
         var fBody = { contents: [{ parts: [{ text: prompt }] }] };
-        var fTiny = forcedTinyTokens();
-        if (fTiny) fBody.generationConfig = { maxOutputTokens: fTiny };
+        fBody.generationConfig = { maxOutputTokens: resolveOutputBudget(model) };
         return JSON.stringify(fBody);
       }
       // v3.63.278 — Hoisted the guard to the module-level REVIEWER_GUARD
@@ -341,8 +362,7 @@
         system_instruction: { parts: [{ text: sysText }] },
         contents: [{ parts: [{ text: usrText }] }]
       };
-      var gTiny = forcedTinyTokens();
-      if (gTiny) gBody.generationConfig = { maxOutputTokens: gTiny };
+      gBody.generationConfig = { maxOutputTokens: resolveOutputBudget(model) };
       return JSON.stringify(gBody);
     }
   };
@@ -647,7 +667,7 @@
     return out;
   }
 
-  // ── Model token limits (v3.63.493) ────────────────────────────────
+  // ── Model token limits (v3.63.494) ────────────────────────────────
   //
   // David, 2026-09-11: "we just don't know what the limits are so if
   // different models have different limits then we need to know that so
@@ -699,7 +719,7 @@
   // right about it for a given install. That is exactly the case 'observed'
   // exists to cover.
 
-  // ── What did we actually ask for? (v3.63.493) ─────────────────────
+  // ── What did we actually ask for? (v3.63.494) ─────────────────────
   //
   // When a build is cut off, "stopped after N tokens" only half-answers the
   // question. The other half is what the request ASKED for, because the two
@@ -734,7 +754,38 @@
     return n;
   }
 
-  // ── Observed-cap analysis (v3.63.493) ─────────────────────────────
+  // ── Budget-rejection parsing (v3.63.494) ──────────────────────────
+  //
+  // Stating a budget introduces one new failure: a model whose real ceiling
+  // is below what we asked for rejects the request outright. Providers are
+  // unusually helpful here — the rejection names the real number:
+  //
+  //   OpenAI: "max_tokens is too large: 32768. This model supports at most
+  //            4096 completion tokens."
+  //
+  // So the failure carries its own fix. callAPI retries once with the number
+  // the provider named, and records it, which means a hard ceiling is learned
+  // the first time it is hit rather than after a user files a bug. This is
+  // the free rejection probe, arriving exactly when it is useful and never
+  // costing a speculative request.
+  //
+  // Returns the provider's stated maximum, or 0 when the error is about the
+  // budget but names no number (retry without the parameter), or null when
+  // the error is unrelated (do not retry).
+  var BUDGET_ERROR_RE = /max[_ ]?(?:tokens|completion[_ ]?tokens|output[_ ]?tokens)/i;
+  function parseBudgetRejection(message) {
+    if (!message || typeof message !== 'string') return null;
+    if (!BUDGET_ERROR_RE.test(message)) return null;
+    // "supports at most 4096 completion tokens" / "maximum of 4096"
+    var m = message.match(/(?:at most|maximum(?: of)?|limit of|must be (?:<=|less than or equal to))\s*([0-9][0-9,]{2,})/i);
+    if (m) {
+      var n = parseInt(m[1].replace(/,/g, ''), 10);
+      if (isFinite(n) && n > 0) return n;
+    }
+    return 0;
+  }
+
+  // ── Observed-cap analysis (v3.63.494) ─────────────────────────────
   //
   // David, 2026-09-11: "I'm sure that our IT people have placed a limit on
   // the token count in order to prevent people from chewing down tons of
@@ -1060,7 +1111,7 @@
   // wraps it for the 7-day cache path; the watchdog wraps it cache-less.
   // RETRY-ONCE IS THE CALLER'S CONCERN too — same reason. Throws on
   // transport errors so the caller can decide.
-  // v3.63.493 — `limitsOut` is an optional caller-owned object that gets
+  // v3.63.494 — `limitsOut` is an optional caller-owned object that gets
   // filled with { modelId: {context, output, source:'api'} } for whatever
   // the provider published alongside its model list. Same out-param shape
   // as callAPI's metaOut and for the same reason: the return contract here
@@ -1333,18 +1384,20 @@
   // on; the names just no longer need to be reachable from outside.
   root.WFProviderCatalog = {
     CATALOG: CATALOG,
-    // v3.63.493 — exported so the custom/rehydrated anthropic-format body
+    // v3.63.494 — exported so the custom/rehydrated anthropic-format body
     // builders in app.js and storage.js use the same ceiling as the
     // catalog's own, instead of each carrying a private copy of 4096.
-    ANTHROPIC_MAX_OUTPUT_TOKENS: ANTHROPIC_MAX_OUTPUT_TOKENS,
-    // v3.63.493 — truncation detection. app.js wraps these; the wrappers
+    DEFAULT_OUTPUT_BUDGET: DEFAULT_OUTPUT_BUDGET,
+    resolveOutputBudget: resolveOutputBudget,
+    parseBudgetRejection: parseBudgetRejection,
+    // v3.63.494 — truncation detection. app.js wraps these; the wrappers
     // exist so call sites read naturally, not because the logic differs.
     extractFinishReason: extractFinishReason,
-    // v3.63.493 — model token limits.
+    // v3.63.494 — model token limits.
     limitsFromModelEntry: limitsFromModelEntry,
     limitsFromTable: limitsFromTable,
     mergeModelLimits: mergeModelLimits,
-    // v3.63.493 — empirical cap discovery.
+    // v3.63.494 — empirical cap discovery.
     requestedOutputBudget: requestedOutputBudget,
     analyzeObservations: analyzeObservations,
     describeObservations: describeObservations,
