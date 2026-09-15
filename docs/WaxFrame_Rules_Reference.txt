@@ -215,8 +215,10 @@ UI CONVENTIONS
   1. Worker Bees  2. Builder  3. Your Project  4. Reference Material (optional)
   5. Starting Document.
 - 14 provider icons in images/icon-*.png: chatgpt, claude, cohere, deepseek,
-  gemini, generic, grok, llama, mistral, perplexity, the internal gateway, lmstudio,
-  openwebui, together. wfIconUpload._CATALOG maps text -> PNG; matchCatalog()
+  gemini, generic, grok, jamba, llama, lmstudio, mistral, openwebui,
+  perplexity, together. (Verified against the tree 2026-09-15 — the
+  previous list was already wrong independently of the confidentiality
+  pass: it omitted jamba.) wfIconUpload._CATALOG maps text -> PNG; matchCatalog()
   exposes the matcher.
 - Modal mascot convention: API Bee (WaxFrame_API_Bee_v1.png) = auth/endpoint
   modals (Import from Model Server, Add Custom AI, Test All Keys, Test Key).
@@ -379,9 +381,9 @@ CREDITS
 ENVIRONMENT
 ====================================================================
 
-- David is a Senior Wireless Network Engineer (CWNA, CWDP, CWAP) at the employer
+- David is a Senior Wireless Network Engineer (CWNA, CWDP, CWAP) at his employer
   (contractor). WaxFrame is a side project separate from the day
-  job, though he also uses it at work via the the employer AI gateway "the internal gateway"
+  job, though it is also used against enterprise gateways
   (Open WebUI proxy). Air-gapped work laptop requires manual file transfer via
   GitHub releases — which is part of why docs/ now ships in the zip.
 - Two editions: Pro (github.com/WeirDave/WaxFrame-Professional, live at

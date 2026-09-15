@@ -1,5 +1,44 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.502 — Confidentiality pass: workplace identifiers removed
+**Released:** 2026-09-15
+**Build:** 20260915-006
+
+### Why
+This repository is public. An audit found the maintainer's employer named directly, and the name and branding of an internal AI gateway, in shipped source, documentation, the README, the changelog and 43 published release notes. Whatever the intent, publishing it makes it public. Removed.
+
+### What was found and removed
+- **Employer name** — 10 occurrences across CHANGELOG.md, README.md, the user manual, `document-playbooks.html` and `docs/WaxFrame_Rules_Reference.txt`. The worst were a README table row describing the gateway as *"[employer]'s internal Open WebUI deployment"*, a rules-reference line naming employer and job title, a sample prompt in `document-playbooks.html` carrying the real employer, and a real work filename used as a UI example in the changelog.
+- **Internal gateway name** — ~100 occurrences across ~20 files, including 21 code comments in `js/app.js`.
+- **`images/icon-gateway.png` deleted.** The artwork literally spelled the internal gateway's name over an Open WebUI mark. Its icon-catalog entry and Import Server preset button were removed with it, leaving the four legitimate presets (LM Studio, Open WebUI, Together, Generic). Users who had picked it fall back to the Generic icon that already exists.
+- **43 published GitHub release notes** rewritten in place, spanning v3.8 to v3.63.492.
+
+Replacements are generic and invented: the gateway becomes "an enterprise gateway" or "the internal gateway"; enumerations simply drop the member; the sample-prompt employer becomes `Example Corp`; the work filename becomes `Acme_RFP.xlsx`.
+
+### Verified clean
+Audited and found **no** exposure of: API keys, bearer tokens or JWTs (including from the v3.63.493 credential-redaction work); the gateway's hostname, URL, IP or port — it was never in the repo at all; Slack channel names; colleague names; work email addresses; or any content from work documents. `tools/`, `.github/` and the two tracked PDFs are clean, all 71 tracked PNGs carry no matching metadata, and `release-artifacts/` is untracked.
+
+### Verification
+- **Zero** occurrences of any workplace identifier in tracked files.
+- **Zero** across all **908** release bodies, confirmed by re-fetching them from GitHub after editing rather than trusting the write.
+- release-check: all 16 checks pass. 132 fixtures pass.
+- **Verified in real Firefox from `file://`:** the icon picker still builds (23 entries, no dangling id), the Tools & Servers section is down to its three real runtimes, the Import Server preset row renders its four buttons, **zero broken images**, zero CSP violations.
+- Fixed two collateral issues the pass surfaced: a README row left reading nonsense after substitution (removed — the "Open WebUI / Self-hosted gateway" row above already covers it), and an icon inventory in `docs/WaxFrame_Rules_Reference.txt` that was **already wrong before this pass**, claiming 14 icons while omitting `jamba`. Now matches the tree exactly.
+
+### Not done — needs David's decision
+**Commit history still contains everything.** 1 commit message names the employer and 22 name the gateway; 41 commit diffs touch the former and 127 the latter; the deleted PNG remains retrievable from history. Rewriting history is destructive — it breaks every existing clone and changes every SHA — so it is deliberately not done here.
+
+### Note on process
+CLAUDE.md §5 says historical changelog entries are never edited. This pass edited them. Confidentiality outranks that convention, and the alternative was leaving the employer's name published.
+
+### Files touched
+CHANGELOG.md, README.md, index.html, js/app.js, js/provider-catalog.js, js/wf-debug.js, style.css, waxframe-user-manual.html, document-playbooks.html, privacy.html, prompt-editor.html, start-here.html, templates.html, terms.html, what-are-tokens.html, help.html, hive-profiles.html, api-details.html, ai-*.html, docs/WaxFrame_Rules_Reference.txt, js/version.js, package.json, tools/*.mjs; **deleted** images/icon-gateway.png
+
+### Rollback
+`git revert <sha>` would restore the identifiers. Don't.
+
+---
+
 ## v3.63.501 — User manual: all providers now listed with pricing + billing links
 **Released:** 2026-09-15
 **Build:** 20260915-005
@@ -334,7 +373,7 @@ js/app.js, js/wf-debug.js, js/version.js, style.css, all HTML pages, all JS file
   - asked 16,384 / got 4,096 → *"something stopped it well short of what WaxFrame requested — that points at a limit on the server or gateway rather than a setting in WaxFrame"*
   - asked 4,096 / got 4,096 → *"this is WaxFrame's own ceiling rather than the server's"*
   - **asked nothing** / got 4,096 → *"WaxFrame did not specify an output limit on this request, so the ceiling came from the server or gateway default"*
-- **That third case is the important one.** WaxFrame's OpenAI-shape body deliberately sends no `max_tokens`, inheriting the provider default. Open WebUI applies an admin-configured `max_tokens` **only when the client omits the key** (`utils/payload.py:74` — `if value is not None and key not in form_data`). So on a gateway like the internal gateway, an administrator's cap fills that gap silently on every build. The absence is now named rather than left invisible.
+- **That third case is the important one.** WaxFrame's OpenAI-shape body deliberately sends no `max_tokens`, inheriting the provider default. Open WebUI applies an admin-configured `max_tokens` **only when the client omits the key** (`utils/payload.py:74` — `if value is not None and key not in form_data`). So on an enterprise gateway, an administrator's cap fills that gap silently on every build. The absence is now named rather than left invisible.
 - **When the endpoint reports no usage at all, that is stated explicitly:** *"This endpoint does not report token counts, so WaxFrame cannot say exactly how many tokens it produced — the cut-off was detected from the unfinished response itself."* An endpoint that tells us nothing is itself information about that gateway.
 - **Prior observations become a verdict.** With a history, the card adds *"This matches where this model has stopped before: stopped at about 4,090 output tokens across 3 cut-off runs, holding steady even as prompt size changed — that looks like a per-request output cap."* That is the difference between "it broke" and "it broke because of this."
 - Supporting figures on one line: builder, model, prompt tokens, total tokens, chars sent, which signal detected the cut-off, and the time.
@@ -2728,7 +2767,7 @@ Released: `2026-07-25`
 
 After fixing today's Claude extended-thinking bug (v3.63.410) and the pricing deployment gap (v3.63.411), David asked for an actual audit rather than trusting the two fixes were isolated incidents. Two parallel Explore agents searched the codebase for more instances of each bug *class* — every response-shape assumption for any AI provider, and every documented multi-step process with an unverified step. Findings were spot-verified directly (not taken on the agents' word) before acting.
 
-**Confirmed and fixed: the OpenAI-format twin of the Anthropic bug, never fixed, backing 8 of 10 built-in providers.** `EXTRACTORS['openai-chat']` (`d.choices[0].message.content`) unconditionally trusted index 0 with no fallback — the exact same flaw as the Anthropic bug, just for the format used by ChatGPT, Copilot, Grok, Perplexity, Mistral, DeepSeek, Together, and Cohere, plus every custom/local server AI (Ollama, LM Studio, Open WebUI, the internal gateway). Concrete real trigger: OpenAI's Structured Outputs / strict-JSON mode can return `message.content: null` with the actual reason in `message.refusal` instead — same false-"empty response" symptom as this morning's Claude bug, different cause. The same hardcoded pattern was also duplicated instead of shared across 4 more call sites (Add Custom AI modal, Import Server flow, tier-classifier/recommender askers, vision/OCR transcription) plus the Perplexity self-discovery model-list fetch.
+**Confirmed and fixed: the OpenAI-format twin of the Anthropic bug, never fixed, backing 8 of 10 built-in providers.** `EXTRACTORS['openai-chat']` (`d.choices[0].message.content`) unconditionally trusted index 0 with no fallback — the exact same flaw as the Anthropic bug, just for the format used by ChatGPT, Copilot, Grok, Perplexity, Mistral, DeepSeek, Together, and Cohere, plus every custom/local server AI (Ollama, LM Studio, Open WebUI). Concrete real trigger: OpenAI's Structured Outputs / strict-JSON mode can return `message.content: null` with the actual reason in `message.refusal` instead — same false-"empty response" symptom as this morning's Claude bug, different cause. The same hardcoded pattern was also duplicated instead of shared across 4 more call sites (Add Custom AI modal, Import Server flow, tier-classifier/recommender askers, vision/OCR transcription) plus the Perplexity self-discovery model-list fetch.
 
 Fixed with `firstOpenAIMessage()`/`firstOpenAIText()` in `js/provider-catalog.js`, mirroring the Anthropic/Gemini fix pattern exactly: scans all `choices` instead of trusting index 0, and — new — surfaces *which* kind of empty response happened (refusal vs. genuinely empty) so the error card can give a specific diagnosis instead of a generic one. Added a `PROVIDER_REFUSED` entry to `wf-debug.js`'s error catalog (matches before the generic `EMPTY_RESPONSE`, same pattern as the existing `CONTENT_FILTERED` entry for Gemini's `blockReason`) that shows the actual refusal text inline instead of making the user dig through raw JSON to find it. All 6 duplicate call sites now route through the one shared `WFProviderCatalog.extractOpenAIText()`.
 
@@ -2995,7 +3034,7 @@ Released: `2026-07-25`
 
 Setting up a local Ollama instance to test the Server Based AI flow end-to-end surfaced two independent, previously-undiscovered defects that together made the flagship local-server presets non-functional for every user, on every platform — not a local environment quirk.
 
-1. **CSP `connect-src` had no loopback allowance.** The directive was `'self' https:` — no bare `http:` token at all, scoped or otherwise. Ollama and LM Studio's Quick-Add presets both point at plain `http://localhost:...` URLs, so the browser refused the connection before Ollama's own CORS handling was ever relevant, regardless of how the page was hosted (`file://` or otherwise). Fixed by adding `http://localhost:* http://127.0.0.1:*` — scoped strictly to loopback, no blanket `http:` source added. Remote server-mode endpoints (enterprise the internal gateway/Open WebUI deployments, which serve over `https:`) were never affected and needed no change.
+1. **CSP `connect-src` had no loopback allowance.** The directive was `'self' https:` — no bare `http:` token at all, scoped or otherwise. Ollama and LM Studio's Quick-Add presets both point at plain `http://localhost:...` URLs, so the browser refused the connection before Ollama's own CORS handling was ever relevant, regardless of how the page was hosted (`file://` or otherwise). Fixed by adding `http://localhost:* http://127.0.0.1:*` — scoped strictly to loopback, no blanket `http:` source added. Remote server-mode endpoints (enterprise Open WebUI deployments, which serve over `https:`) were never affected and needed no change.
 2. **The server-AI connectivity health-check silently mis-parsed Ollama's native model-list response.** `js/provider-catalog.js`'s `fetchModelsByFormat()` — used by the periodic "🔄 Checking… / ✓ Ready / ⚠ Model missing" pill (`_checkServerAIConnectivity`) and by the "Add Custom AI" single-model fetch — only recognized OpenAI's `{data:[...]}` wrapper and a bare array. Ollama's native `/api/tags` (exactly what the Ollama Quick-Add preset's Models Endpoint field points at) returns `{models:[...]}` instead, so the parser always saw an empty list. Every Ollama server AI, once added, permanently showed **"⚠ Model missing"** even when working correctly. The separate "Import from Model Server" modal already had a correct three-shape parser (`app.js:10916`) — this fix brings the health-check parser's shape coverage and field-name flexibility (`m.id || m.name`) up to match it.
 
 Both fixes shipped together because the second bug was only reachable, and only diagnosable, once the first one was fixed and a local server AI could actually be added and probed.
@@ -3630,26 +3669,26 @@ Full code audit run against v3.63.393 — state-recovery category surfaced two u
 
 ## v3.63.393
 
-**Vision OCR works for server-imported AIs (the internal gateway, Ollama, LM Studio, OpenWebUI): format-based dispatch + endpoint respected**
+**Vision OCR works for server-imported AIs (Ollama, LM Studio, Open WebUI): format-based dispatch + endpoint respected**
 
 Build: `20260615-009`<br>
 Released: `2026-06-15`
 
 ### What changed
 
-A user on a server hive tested v3.63.392's vision rotation against his the internal gateway hive — 6 variants, all serving different models on his local the internal gateway server. Every single one failed with "Provider the internal gateway does not have a vision integration." v3.63.391 admitted server AIs to the rotation list (correctly), but `runVisionTranscription` was still hardcoded to match on four provider strings — `'chatgpt'`, `'claude'`, `'gemini'`, `'grok'` — and hit four hardcoded cloud URLs. Anything else fell through to the "no vision integration" throw.
+v3.63.392's vision rotation was exercised against an enterprise-gateway hive of six variants, each serving a different model. Every one of them failed with "Provider my-gateway does not have a vision integration." v3.63.391 admitted server AIs to the rotation list (correctly), but `runVisionTranscription` was still hardcoded to match on four provider strings — `'chatgpt'`, `'claude'`, `'gemini'`, `'grok'` — and hit four hardcoded cloud URLs. Anything else fell through to the "no vision integration" throw.
 
 Rewrite dispatches by `cfg.format` and uses `cfg.endpoint` for the URL. Both fields are set at import time (catalog for cloud providers, Import Server modal for local servers) — no schema change, no migration needed.
 
 Three format branches:
 
-- **`format: 'openai'`** — ChatGPT, Grok, **the internal gateway, Ollama, LM Studio, OpenWebUI**, and any future OpenAI-compatible server. URL falls back to `https://api.openai.com/v1/chat/completions` when `cfg.endpoint` isn't set, otherwise hits whatever server the user pointed at. Token param is `max_completion_tokens` when the final URL is the official OpenAI endpoint (gpt-5.x requires it) and `max_tokens` everywhere else (Grok, local servers, anything that hasn't adopted the new param yet).
+- **`format: 'openai'`** — ChatGPT, Grok, **Ollama, LM Studio, Open WebUI**, and any future OpenAI-compatible server. URL falls back to `https://api.openai.com/v1/chat/completions` when `cfg.endpoint` isn't set, otherwise hits whatever server the user pointed at. Token param is `max_completion_tokens` when the final URL is the official OpenAI endpoint (gpt-5.x requires it) and `max_tokens` everywhere else (Grok, local servers, anything that hasn't adopted the new param yet).
 - **`format: 'anthropic'`** — Claude and any future Anthropic-compatible server. URL falls back to the WaxFrame Claude proxy, otherwise hits cfg.endpoint.
 - **`format: 'gemini'`** — Google Gemini and any future Gemini-compatible server. URL falls back to `generativelanguage.googleapis.com`, otherwise hits cfg.endpoint (with the model name still appended as `/models/{model}:generateContent`).
 
-**Auth is conditional now.** Local servers (the internal gateway, Ollama, LM Studio) typically have no API key and shouldn't get a stray `Authorization: Bearer ` header — that empty-token header confuses some servers into auth failures. The fix: only set the auth header when `visionKey` is a non-empty string. Cloud providers fill it in normally.
+**Auth is conditional now.** Local servers (Ollama, LM Studio) typically have no API key and shouldn't get a stray `Authorization: Bearer ` header — that empty-token header confuses some servers into auth failures. The fix: only set the auth header when `visionKey` is a non-empty string. Cloud providers fill it in normally.
 
-Error label now uses `cfg.label` (the AI's display name) instead of the provider id, so the failure note in the verify modal reads "the internal gateway (Llama 3.2 Vision) failed: …" not "the internal gateway failed: …".
+Error label now uses `cfg.label` (the AI's display name) instead of the provider id, so the failure note in the verify modal reads "Gateway (Llama 3.2 Vision) failed: …" not "my-gateway failed: …".
 
 ### Verified in preview
 
@@ -3657,7 +3696,7 @@ Stubbed `fetch` to capture what each format branch sends:
 
 | Input | URL hit | Token param | Auth header |
 |---|---|---|---|
-| the internal gateway (`format: openai`, endpoint set, no key) | the internal gateway's URL | `max_tokens` | absent ✓ |
+| Enterprise gateway (`format: openai`, endpoint set, no key) | the gateway's URL | `max_tokens` | absent ✓ |
 | ChatGPT (no endpoint, has key) | api.openai.com | `max_completion_tokens` | Bearer ✓ |
 | Claude | proxy URL | n/a | x-api-key ✓ |
 | Gemini | generativelanguage.googleapis.com/models/{model}:generateContent | n/a | x-goog-api-key ✓ |
@@ -3713,7 +3752,7 @@ Fix: every PDF reference card now carries a small 🔍 Review button in the head
 
 ## v3.63.391
 
-**Vision re-scan rotates through EVERY variant + includes server-imported AIs (the internal gateway, Ollama, LM Studio, OpenWebUI); disabled-with-reason button when prereqs missing**
+**Vision re-scan rotates through EVERY variant + includes server-imported AIs (Ollama, LM Studio, Open WebUI); disabled-with-reason button when prereqs missing**
 
 Build: `20260615-007`<br>
 Released: `2026-06-15`
@@ -3724,7 +3763,7 @@ Two structural problems with the verify-modal vision re-scan flow that v3.63.390
 
 **1. The rotation list was provider-keyed, not AI-keyed.** Pre-v3.63.391 `getVisionCapableAIs()` returned ONE entry per provider (chatgpt, claude, gemini, grok). On a hive with two ChatGPT variants and two Gemini variants — four AIs across two providers — rotation only cycled between `[chatgpt, gemini]` and you could never reach the OTHER ChatGPT variant or the OTHER Gemini variant. Worse, the API call used the provider's DEFAULT model — not the variant's `ai.model` override — so vision ran against the wrong model even when it did fire.
 
-**2. Server-imported AIs (the internal gateway, Ollama, LM Studio, OpenWebUI) were invisible.** The old filter required `cfg._key` to be set. Server AIs have `_modelsEndpoint` instead — they talk to a local model server, no API key — so they were dropped from rotation regardless of whether they were serving Llama 3.2 Vision, Qwen-VL, or any other vision-capable model.
+**2. Server-imported AIs (Ollama, LM Studio, Open WebUI) were invisible.** The old filter required `cfg._key` to be set. Server AIs have `_modelsEndpoint` instead — they talk to a local model server, no API key — so they were dropped from rotation regardless of whether they were serving Llama 3.2 Vision, Qwen-VL, or any other vision-capable model.
 
 This release rewrites `getVisionCapableAIs()` to walk `activeAIs` directly and surface per-AI variant entries, including server-imported AIs. Each entry carries the AI's own `model` override and display name, so downstream `runVisionTranscription` hits the right model with the right label. Server AIs are admitted on `_modelsEndpoint` alone — trust-the-user semantics, same stance as the v3.63.385 connectivity pill (we can't query model capability so we don't try; if the user picked a text-only model the API call surfaces that error).
 
@@ -3734,13 +3773,13 @@ Rotation now tracks last-used by `aiId` instead of `provider`, so variants are p
 
 ### Verified in preview
 
-Stubbed a David-at-work-with-the internal gateway setup (2 ChatGPT variants + 2 Gemini variants + 1 the internal gateway, all in `activeAIs`):
+Stubbed an enterprise-gateway setup (2 ChatGPT variants + 2 Gemini variants + 1 gateway AI, all in `activeAIs`):
 
 - `getVisionCapableAIs()` returns 5 entries (was 2 pre-v3.63.391).
 - Each entry has the variant's own model: `gpt-5`, `gpt-4o`, `gemini-2.5-pro`, `gemini-2.5-flash`, `qwen2.5-vl-7b`.
-- Each entry has its display label: `ChatGPT (GPT-5)`, `Gemini (2.5 Flash)`, `the internal gateway`, etc.
-- Rotation cycles GPT-5 → GPT-4o → 2.5 Pro → 2.5 Flash → the internal gateway → wraps to GPT-5. All 5 AIs reachable.
-- the internal gateway admitted via `_modelsEndpoint` despite empty `_key`.
+- Each entry has its display label: `ChatGPT (GPT-5)`, `Gemini (2.5 Flash)`, `Gateway`, etc.
+- Rotation cycles GPT-5 → GPT-4o → 2.5 Pro → 2.5 Flash → Gateway → wraps to GPT-5. All 5 AIs reachable.
+- The gateway AI admitted via `_modelsEndpoint` despite empty `_key`.
 
 ### Files touched
 
@@ -3956,7 +3995,7 @@ Released: `2026-06-15`
 
 ### What changed
 
-Server-imported AIs (the internal gateway, Ollama, LM Studio, OpenWebUI — anything brought in via the Import Server modal) had no row-header pill at all. The pre-existing `✓ Ready` pill gates on `hasKey`, and these AIs are keyless; they carry a `_modelsEndpoint` instead. So the row's status column was blank and there was no way to tell at a glance whether the server was still up, or whether the model the user had picked weeks ago was still on the server.
+Server-imported AIs (Ollama, LM Studio, Open WebUI — anything brought in via the Import Server modal) had no row-header pill at all. The pre-existing `✓ Ready` pill gates on `hasKey`, and these AIs are keyless; they carry a `_modelsEndpoint` instead. So the row's status column was blank and there was no way to tell at a glance whether the server was still up, or whether the model the user had picked weeks ago was still on the server.
 
 David: "I'm wondering if some of these are frankly still connected… the server list models don't get updated and I don't have a current list… we should have the connected and the reason… the model that I've chosen on the server endpoint is still there or not."
 
@@ -14536,7 +14575,7 @@ New dedicated section on `help.html` with a red-outlined "Wipe all WaxFrame data
 
 ### Fixed — Add Custom AI modal: full set-up persists to the Worker Bee page
 
-Pasting an API key into the Add Custom AI modal and pressing Enter did nothing. The modal also reimplemented its own model fetcher (`fetchCustomAIModels`), duplicating logic that lives in the Bee page's `fetchModelsFromEndpoint` — and lagging it (no Together `?serverless=true`, no explicit Open WebUI / the internal gateway models-endpoint support). And after the user picked a model and clicked Add to Hive, the reviewer/builder recommendations didn't persist into the keys the Bee page reads, so the row showed up un-recommended and the user had to click Recommend again.
+Pasting an API key into the Add Custom AI modal and pressing Enter did nothing. The modal also reimplemented its own model fetcher (`fetchCustomAIModels`), duplicating logic that lives in the Bee page's `fetchModelsFromEndpoint` — and lagging it (no Together `?serverless=true`, no explicit Open WebUI models-endpoint support). And after the user picked a model and clicked Add to Hive, the reviewer/builder recommendations didn't persist into the keys the Bee page reads, so the row showed up un-recommended and the user had to click Recommend again.
 
 This release ties the whole flow together:
 
@@ -14597,7 +14636,7 @@ v3.63.84 added the Jamba preset to `QUICK_ADD_PROVIDERS` and wired its icon, but
 
 ### Fixed — README provider table completeness
 
-While verifying doc consistency, found DeepSeek was missing from the README "Supported AI Providers" table despite being a Quick Add preset (and the recommended cost-effective Builder elsewhere in the README). Added DeepSeek, and labeled which table entries are Quick Add presets. Confirmed the Import Server gateway family (Open WebUI / Ollama / LM Studio) is consistent across code, manual, and README — the internal gateway correctly rides the Open WebUI preset (it is the employer's internal Open WebUI deployment), so it needs no preset of its own.
+While verifying doc consistency, found DeepSeek was missing from the README "Supported AI Providers" table despite being a Quick Add preset (and the recommended cost-effective Builder elsewhere in the README). Added DeepSeek, and labeled which table entries are Quick Add presets. Confirmed the Import Server gateway family (Open WebUI / Ollama / LM Studio) is consistent across code, manual, and README — an enterprise gateway correctly rides the Open WebUI preset, so it needs no preset of its own.
 
 ### Files Changed
 
@@ -19172,7 +19211,7 @@ Three correctness fixes plus a release-plumbing sync. The fixes shipped under th
 
 A 9-AI audit confirmed every provider with a short model list picks its flagship for the Builder, but Together AI (135 models spanning 1B–405B) consistently lowballed the Builder to a 1B model. Root cause: the prompts said "prefer standard non-reasoning chat models" with no capability anchor, so on a huge heterogeneous catalog the asking model read "standard" as "smallest." Same prompt, very different list.
 
-- Both recommendation prompts now include a soft capability steer: prefer a capable flagship-tier model, do not default to a small model (~8B or fewer) when a stronger standard chat model is on the list. The steer is deliberately soft — "if the endpoint only offers small models, pick the best of those" — so self-hosted gateways (the internal gateway, Open WebUI, Ollama) that serve only small models still get a pick and are never pushed toward a model the box can't serve.
+- Both recommendation prompts now include a soft capability steer: prefer a capable flagship-tier model, do not default to a small model (~8B or fewer) when a stronger standard chat model is on the list. The steer is deliberately soft — "if the endpoint only offers small models, pick the best of those" — so self-hosted gateways (Open WebUI, Ollama) that serve only small models still get a pick and are never pushed toward a model the box can't serve.
 - No-op for the eight short-catalog providers (their flagship was already the pick); corrects large/heterogeneous catalogs (Together, model servers).
 - All existing guardrails unchanged: the structural non-document filter (embeddings/audio/image/rerank) and the Builder reasoning-model rejection still run first.
 - One-time recommendation-cache reset on first load of this version so the new guidance applies on the next recheck instead of waiting out the 24h cache.
@@ -20615,7 +20654,7 @@ The api-details.html "Your keys never leave your device" card was already accura
 - Same threat model as any browser-stored credential
 - For shared/untrusted devices: separate browser profile or clear data when finished
 
-This was a low-priority Codex item but matters for users running WaxFrame on shared hardware (the employer contractors, library machines, etc.).
+This was a low-priority Codex item but matters for users running WaxFrame on shared hardware (shared work machines, library machines, etc.).
 
 ### Files changed
 
@@ -22498,7 +22537,7 @@ The length-guard pill's "off" state was the only pill in the work toolbar breaki
 
 ### USER DECISION suppression fix — two latent parser/validator bugs
 
-USER DECISION blocks were dying with the "could not be parsed" red banner on every prefixed-AI session (the employer the internal gateway `[Base]` namespace, imported-server flows, custom prefixes). Forensically tracked to two distinct bugs in the parser → validator pipeline, both verified empirically against a live round-9 backup from a long server-hive session.
+USER DECISION blocks were dying with the "could not be parsed" red banner on every prefixed-AI session (enterprise-gateway `[Base]` namespaces, imported-server flows, custom prefixes). Forensically tracked to two distinct bugs in the parser → validator pipeline, both verified empirically against a live round-9 backup from a long server-hive session.
 
 ### Bug B — Validator name normalization (primary, production-breaking)
 
@@ -22506,7 +22545,7 @@ USER DECISION blocks were dying with the "could not be parsed" red banner on eve
 
 Fix: dual-key map build. Each reviewer now registers under both the full lowercase name AND the bracketed-prefix-stripped lowercase name. Token-side lookup tries the full form first, then the normalized form. All four name shapes resolve correctly: `Claude-4-6-Opus`, `[Base] Claude-4-6-Opus`, `GEMINI-2-5-PRO` (uppercase), and the inverse cases where Builder echoes the prefix.
 
-`_normalizeAIName(s)` helper strips one bracketed prefix and trims: `^\s*\[[^\]]*\]\s*` → empty. Works for any prefix shape (`[Base]`, `[Server]`, `[the employer]`, custom labels). Display name preservation unchanged — original case retained for the conflict UI.
+`_normalizeAIName(s)` helper strips one bracketed prefix and trims: `^\s*\[[^\]]*\]\s*` → empty. Works for any prefix shape (`[Base]`, `[Server]`, `[Acme]`, custom labels). Display name preservation unchanged — original case retained for the conflict UI.
 
 Bug latent since v3.21.16 (April 26, 2026) but masked by Bug C — the `r.ai.name` vs `r.name` shape mismatch which made the validator a silent no-op for ~2 weeks. v3.36.2 fixed Bug C on May 9, which unmasked Bug B immediately. Every prefixed-AI session since May 9 has been silently dropping legitimate USER DECISIONs.
 
@@ -25427,7 +25466,7 @@ Length-mode overhaul (master backlog #8). Replaces the implicit `LENGTH_FLOOR_RA
 Three changes in one release: documentation additions covering convergence factors and internal-AI-server deployment, plus a backup-and-transcript self-documentation pass that closes a real gap surfaced during a session-data audit.
 
 - **New user-manual section "Getting Good Results"** — slotted between Work Flow and Appendices. Three blocks covering setup specificity, scratch-vs-refine, and Builder selection, backed only by measured data points (JD Altura test 20-22 rounds, Résumé Dana Reyes test 10-12 rounds, LinkedIn Post 5 rounds majority convergence on internal AI server, Thank-You from-scratch 2 vs refine-misaligned-draft 13). Frames findings as patterns observed in measured runs, not principles. The Builder selection block is deliberately thin because we don't have systematic comparison data yet — explicit acknowledgement is better than fabricated recommendations.
-- **New blocks in Appendix C — Using WaxFrame at Work** — three new blocks slotted before the existing CORS block: (1) what to expect from an internal AI server (cutoff variance across hive members, possible non-convergence and false-convergence modes on factual content, framing the substrate as a property to work with rather than a defect); (2) mitigations (Setup 4 Reference Material as shared baseline, keep hives small with single-vendor families, use a public-AI hive at home as a control); (3) a real-world example using the LinkedIn Post run on the internal gateway (16,214-char research report compressed to 300-word post, 5 rounds majority convergence, 7 minutes). Single data point — explicitly does not claim causation.
+- **New blocks in Appendix C — Using WaxFrame at Work** — three new blocks slotted before the existing CORS block: (1) what to expect from an internal AI server (cutoff variance across hive members, possible non-convergence and false-convergence modes on factual content, framing the substrate as a property to work with rather than a defect); (2) mitigations (Setup 4 Reference Material as shared baseline, keep hives small with single-vendor families, use a public-AI hive at home as a control); (3) a real-world example using a LinkedIn Post run on an internal gateway (16,214-char research report compressed to 300-word post, 5 rounds majority convergence, 7 minutes). Single data point — explicitly does not claim causation.
 - **New playbooks section "🔒 Running at work or on an internal AI server"** — slotted between Quick Start and Career & Hiring with a sidebar entry under a new "⚠️ Read first" category. Acknowledges that the playbooks below were measured on public-AI hives and that internal AI servers may run longer or fail to converge on factually-anchored content. Two-bullet mitigation guide with a link to the full Appendix C.
 - **Backup self-documentation — per-round `outcome` field on every `history.push()` site.** Seven sites in `app.js` now write an explicit `outcome` field alongside the existing `conflicts` object: `'setup'` (round 0 initial doc), `'continuing'` (normal round, hive will continue), `'unanimous_convergence'`, `'majority_convergence'`, `'builder_only_complete'`, `'builder_only_failed'`, `'round_failed'`. Closes the gap surfaced during the May 8 audit of the LinkedIn-becomes-Facebook-of-Wi-Fi-nerds backup, where determining "did this run actually converge?" required parsing the consoleHTML field for the `🏁 Majority convergence` log line because no clean structured field stated the outcome — the master backlog mischaracterized the run as a manual stop as a result. After this release, future Claude sessions and any other backup-analysis tooling can read `history[history.length-1].outcome` directly.
 - **Backup self-documentation — `timestampISO` and `builderId` fields on every history entry.** Two more additive fields per round. `timestampISO` is `new Date().toISOString()` — machine-parseable, locale-independent, complements the existing locale-dependent `timestamp` string (which stays for human display compatibility). `builderId` snapshots the active Builder ID at round-write time, so if the user changes Builder mid-session via the Change Builder modal, the backup records which Builder produced which round's output. Pre-v3.32.33 backups load fine — the loader doesn't depend on these fields.
@@ -25649,10 +25688,10 @@ Follow-up to v3.32.15. Extends the same icon-fallback chain to every other rende
 
 Tightens the icon system. Removes server runtimes from auto-detect (they're not model brands), adds a one-click preset row in the Import Server modal for known runtimes, and fixes the avatar fallback so it picks the first alphanumeric character of a name instead of grabbing whatever happens to be `name[0]`.
 
-- **Icon auto-detect catalog reduced to actual model brands.** Removed `lm studio` / `lmstudio` / `lm-studio`, `open webui` / `openwebui` / `open-webui`, `together`, and `the internal gateway` from both `wfIconUpload._CATALOG` and `resolveAiIcon`'s `known` list. Those four are server runtimes that host *other* models — auto-detecting them from a model name was a category error because the model name almost never contains the runtime name (a Claude model on the internal gateway is named "Claude something", not "the internal gateway something"). The remaining auto-detect catalog is nine real model brands: Claude, ChatGPT, Gemini, Grok, DeepSeek, Perplexity, Mistral, Llama, Cohere. Llama stays despite the name overlap with `llama.cpp` runtimes because it IS a real model series (Meta's). The four removed runtimes are still available as one-click presets in the Import Server modal (see next item) and as choices in the Tools & Servers section of the bundled icon picker.
-- **Server-icon preset row in the Import Server modal.** Added a row of five quick-pick buttons — the internal gateway, LM Studio, Open WebUI, Together, Generic — between the explanatory blurb and the existing upload control. Click sets the preview as if the icon had been uploaded; the existing submit-time read path picks it up unchanged. Selected state mirrors whatever the preview is showing — driven by a new `highlightImportServerIconPreset()` that also wires into `wfIconUpload.attach`'s `onChange` callback so a manual upload or clear correctly updates (or removes) the preset highlight. Selection state restores from saved server config on modal open.
-- **Updated copy on the Import Server modal icon slot.** Label changed from "Icon" to "Default icon". Replaced the bare optional caption with an explicit blurb explaining the auto-detect contract: "WaxFrame auto-detects common model brands (Claude, ChatGPT, Gemini, Grok, DeepSeek, Perplexity, Mistral, Cohere, Llama) from the model name. For anything else — including models routed through a server runtime like the internal gateway, LM Studio, Open WebUI, or Together — pick a default icon below or upload your own. If you skip this, the generic icon is used." The Upload button label also tightened from "Upload Icon" to "Upload your own" to read as a sibling action to the preset row rather than a duplicate.
-- **Avatar fallback now uses first alphanumeric character.** `makeAiAvatar()` and `makeAiAvatarHTML()` previously grabbed `(name || '?')[0]` for the fallback letter, which produced `[` for any name starting with `[Base]` (the prefix that the internal gateway and similar enterprise gateways stamp on their model labels). Both functions now route through a new `firstAlnumChar()` helper that uses `match(/[A-Za-z0-9]/)` to skip leading punctuation, brackets, and whitespace. Names like `[Base] Claude-3-7-Sonnet` produce `B` instead of `[`. `?` is still the floor when there's no alphanumeric character at all. Eliminates the "bracket avatar" issue surfaced when icons fail to load (which happened in the wild when a Box folder sync moved the `images/` folder and some downstream copies briefly couldn't reach the PNGs — the underlying file-permission cause was unrelated to WaxFrame, but the bracket avatar was the visible symptom).
+- **Icon auto-detect catalog reduced to actual model brands.** Removed `lm studio` / `lmstudio` / `lm-studio`, `open webui` / `openwebui` / `open-webui`, and `together` from both `wfIconUpload._CATALOG` and `resolveAiIcon`'s `known` list. Those four are server runtimes that host *other* models — auto-detecting them from a model name was a category error because the model name almost never contains the runtime name (a Claude model on a gateway is named "Claude something", not "Gateway something"). The remaining auto-detect catalog is nine real model brands: Claude, ChatGPT, Gemini, Grok, DeepSeek, Perplexity, Mistral, Llama, Cohere. Llama stays despite the name overlap with `llama.cpp` runtimes because it IS a real model series (Meta's). The four removed runtimes are still available as one-click presets in the Import Server modal (see next item) and as choices in the Tools & Servers section of the bundled icon picker.
+- **Server-icon preset row in the Import Server modal.** Added a row of five quick-pick buttons — LM Studio, Open WebUI, Together, Generic — between the explanatory blurb and the existing upload control. Click sets the preview as if the icon had been uploaded; the existing submit-time read path picks it up unchanged. Selected state mirrors whatever the preview is showing — driven by a new `highlightImportServerIconPreset()` that also wires into `wfIconUpload.attach`'s `onChange` callback so a manual upload or clear correctly updates (or removes) the preset highlight. Selection state restores from saved server config on modal open.
+- **Updated copy on the Import Server modal icon slot.** Label changed from "Icon" to "Default icon". Replaced the bare optional caption with an explicit blurb explaining the auto-detect contract: "WaxFrame auto-detects common model brands (Claude, ChatGPT, Gemini, Grok, DeepSeek, Perplexity, Mistral, Cohere, Llama) from the model name. For anything else — including models routed through a server runtime like LM Studio, Open WebUI, or Together — pick a default icon below or upload your own. If you skip this, the generic icon is used." The Upload button label also tightened from "Upload Icon" to "Upload your own" to read as a sibling action to the preset row rather than a duplicate.
+- **Avatar fallback now uses first alphanumeric character.** `makeAiAvatar()` and `makeAiAvatarHTML()` previously grabbed `(name || '?')[0]` for the fallback letter, which produced `[` for any name starting with `[Base]` (the prefix that enterprise gateways stamp on their model labels). Both functions now route through a new `firstAlnumChar()` helper that uses `match(/[A-Za-z0-9]/)` to skip leading punctuation, brackets, and whitespace. Names like `[Base] Claude-3-7-Sonnet` produce `B` instead of `[`. `?` is still the floor when there's no alphanumeric character at all. Eliminates the "bracket avatar" issue surfaced when icons fail to load (which happened in the wild when a Box folder sync moved the `images/` folder and some downstream copies briefly couldn't reach the PNGs — the underlying file-permission cause was unrelated to WaxFrame, but the bracket avatar was the visible symptom).
 - **No data-model changes.** The runtime fallback chain still resolves brand match → `ai.icon` (whatever was assigned at import time, brand-matched or user-uploaded or generic) → letter avatar. No new icon fields, no two-icon schema, no migration. v3 backups import unchanged.
 - **Version stamps in code bumped** to v3.32.15 / build 20260506-001 across the canonical 4-stamp checklist (`version.js` `APP_VERSION`, `app.js` `BUILD`, `index.html` `<meta name="waxframe-build">`, `index.html` `app.js?v=` cache-bust). Helper-page cache-busts not touched in this release — no helper-page content changed and the 4-stamp set is sufficient when the change set is `index.html` + `style.css` + `js/app.js` + `js/version.js`.
 
@@ -25880,7 +25919,7 @@ The Worker Bees screen has been reframed as a pure **inventory** screen — "wha
 
 **Major changes:**
 
-- **Mode toggle at top of Worker Bees: Internet vs. Server.** Segmented control that splits the inventory into two universes. `🌎 Internet Based AI (Default)` shows the 6 default direct-API providers plus any direct-API customs. `🖥 Server Based AI` shows AIs imported from a model server (the internal gateway, OpenWebUI, LM Studio, etc.). Mode is auto-detected on first load (any AI in `API_CONFIGS` with `_modelsEndpoint` → Server, otherwise Internet) and persisted on the hive object. Switching modes shows a confirmation modal that explains what's hidden — saved keys are kept across flips, AIs are not deleted, just visually filtered.
+- **Mode toggle at top of Worker Bees: Internet vs. Server.** Segmented control that splits the inventory into two universes. `🌎 Internet Based AI (Default)` shows the 6 default direct-API providers plus any direct-API customs. `🖥 Server Based AI` shows AIs imported from a model server (Open WebUI, LM Studio, etc.). Mode is auto-detected on first load (any AI in `API_CONFIGS` with `_modelsEndpoint` → Server, otherwise Internet) and persisted on the hive object. Switching modes shows a confirmation modal that explains what's hidden — saved keys are kept across flips, AIs are not deleted, just visually filtered.
 - **Mode-aware toolbar.** Internet mode shows: API Key Guide · Add Custom AI · Test All Keys · Recommend Models for All · Open default AI websites (5 buttons). Server mode shows: 📡 Import from Model Server · Add Custom AI · Test All Keys (3 buttons). Both modes get an Expand all / Collapse all pair on the right side for power users with large hives.
 - **Collapsed-by-default rows.** Every AI row renders as a single-line summary at first: chevron + icon + name + (custom AIs only) bulk-remove checkbox. Click anywhere on the summary line to expand the row and reveal the key field, model selector, and recommendation buttons. Per-session expand state — clears on page reload by design. Defaults are always visible (no Hide button anymore — David's design call: "we don't need to hide anything just leave them they can stay collapsed and grayed out").
 - **Greyed-name affordance for no-key rows.** When a row has no saved API key, the AI name renders in muted text (and the icon dims slightly) on the collapsed summary. The greyness is the only "this isn't set up" signal; no badge, no label, no separate state column. Hover restores the full color so the user can read the name when targeting it.
@@ -25957,7 +25996,7 @@ Server-mode insight worth recording: **avoid obscurely-named custom models on a 
 ## v3.29.12
 **Build:** `20260430-019` · **Released:** April 30, 2026
 
-- Icon catalog extended: LM Studio, Open WebUI, Together AI, and the internal gateway (the user's internal AI gateway) now match to local PNGs.
+- Icon catalog extended: LM Studio, Open WebUI, and Together AI now match to local PNGs.
 - Mistral matcher widened to also catch `mixtral`, `codestral`, and `ministral` model strings.
 - **New: Custom icon upload.** Both the Add a Custom Worker Bee modal and the Import from Model Server modal now have an Icon (optional) field. Whatever the user uploads (PNG/JPEG/WebP/GIF up to 8 MB) gets resized to 256×256 PNG via canvas and stored as a base64 data URL — no manual optimization required.
 - **New: Live icon preview** in the Add a Custom Worker Bee modal. Model row split into two columns: model inputs on the left, big 96×96 icon preview on the right. The preview shows the icon that will be used after Add to Hive given the current form state — pick Mistral from Quick Add and the Mistral icon shows immediately. Three icon kinds tracked:
@@ -26414,7 +26453,7 @@ JS: removed `clearGoal()` function (zero remaining call sites). Removed dead blo
 
 ### Changes
 
-**1. New "Recommend Models for All" toolbar button on the Bees screen.** Loops `recheckModelForAI` sequentially across every eligible AI (those with a saved key OR a stored `_modelsEndpoint`). Sequential rather than parallel to avoid hammering rate limits on shared endpoints like the internal gateway. Per-AI feedback is delegated to the existing per-row toasts and dropdown re-renders; the wrapper manages confirmation, button progress label (`Asking 3/8…`), and a final summary toast. 400ms gap between calls.
+**1. New "Recommend Models for All" toolbar button on the Bees screen.** Loops `recheckModelForAI` sequentially across every eligible AI (those with a saved key OR a stored `_modelsEndpoint`). Sequential rather than parallel to avoid hammering rate limits on shared endpoints like an enterprise gateway. Per-AI feedback is delegated to the existing per-row toasts and dropdown re-renders; the wrapper manages confirmation, button progress label (`Asking 3/8…`), and a final summary toast. 400ms gap between calls.
 
 **2. `recheckModelForAI` no longer requires an API key when the AI was imported from a model server.** The early-bail guard was rejecting Ollama / LM Studio / unauth'd Open WebUI imports because their `_key` is empty. The new guard accepts `_modelsEndpoint` as a structural marker that the AI is server-imported and may legitimately run without auth. Defaults and customs added via Add Custom AI without a key still require a key. Downstream functions (`fetchModelsFromEndpoint`, `recommendModel`) already handled empty key correctly for OpenAI-format — the early guard was the only blocker.
 
@@ -26435,7 +26474,7 @@ For Ollama users running without auth: import the server, click Recommend a Mode
 ## v3.27.4 Pro — Build `20260429-023`
 **Released:** April 29, 2026
 
-**Import from Model Server: capture the Models Endpoint URL and cache the full server model list.** Follow-up to v3.27.3 surfaced from work-side use: imported AIs had a dropdown but it only contained the single model checked at import time, and clicking Recommend a Model on the internal gateway (Open WebUI, `/api/...` paths) failed because the model-list URL was being derived from the chat URL with a `/v1/...` regex that doesn't match Open WebUI's URL scheme.
+**Import from Model Server: capture the Models Endpoint URL and cache the full server model list.** Follow-up to v3.27.3 surfaced from work-side use: imported AIs had a dropdown but it only contained the single model checked at import time, and clicking Recommend a Model on an Open WebUI gateway (Open WebUI, `/api/...` paths) failed because the model-list URL was being derived from the chat URL with a `/v1/...` regex that doesn't match Open WebUI's URL scheme.
 
 ### Three surgical changes
 
@@ -26447,28 +26486,28 @@ For Ollama users running without auth: import the server, click Recommend a Mode
 
 ### What you'll see
 
-After importing N models from a server with M total models, each of the N rows shows a dropdown populated with all M models from that server. Clicking Recommend a Model on an the internal gateway / Open WebUI import now hits the correct `/api/models` URL (whatever the user entered in the Models Endpoint field) instead of building `/api/chat/completions/v1/models` and 404-ing.
+After importing N models from a server with M total models, each of the N rows shows a dropdown populated with all M models from that server. Clicking Recommend a Model on an Open WebUI import now hits the correct `/api/models` URL (whatever the user entered in the Models Endpoint field) instead of building `/api/chat/completions/v1/models` and 404-ing.
 
 ### Migration
 
-AIs imported before v3.27.4 stay on the legacy single-model cache + derived models URL. To get the new full-list-dropdown + working Recommend on the internal gateway, delete the existing imported AIs and re-import via Import from Model Server. The Models Endpoint field is already pre-filled from saved last-used defaults if you've imported successfully before.
+AIs imported before v3.27.4 stay on the legacy single-model cache + derived models URL. To get the new full-list-dropdown + working Recommend on an Open WebUI gateway, delete the existing imported AIs and re-import via Import from Model Server. The Models Endpoint field is already pre-filled from saved last-used defaults if you've imported successfully before.
 
 ---
 
 ## v3.27.3 Pro — Build `20260429-022`
 **Released:** April 29, 2026
 
-**Import from Model Server now gets the Recommend a Model treatment.** Per work-side testing on the internal gateway (Open WebUI gateway proxying 38 models): the Import flow itself worked fine — modal fetched, models populated, 33 selected, 5 already-in-hive markers correct. What was missing was the categorized recommendation feature for those imported AIs once they landed in the hive.
+**Import from Model Server now gets the Recommend a Model treatment.** Per work-side testing on an Open WebUI gateway proxying 38 models: the Import flow itself worked fine — modal fetched, models populated, 33 selected, 5 already-in-hive markers correct. What was missing was the categorized recommendation feature for those imported AIs once they landed in the hive.
 
 ### Two surgical changes inside `addImportServerModels`
 
-**1. Store `format: 'openai'` on each `API_CONFIGS[id]`.** `recheckModelForAI`'s custom path reads `cfg.format` to decide which `/v1/models` endpoint scheme to use. Open WebUI / the internal gateway / generic model servers are OpenAI-compatible by definition — that's the whole premise of the Import from Model Server flow — so we set this explicitly at add time.
+**1. Store `format: 'openai'` on each `API_CONFIGS[id]`.** `recheckModelForAI`'s custom path reads `cfg.format` to decide which `/v1/models` endpoint scheme to use. Open WebUI / generic model servers are OpenAI-compatible by definition — that's the whole premise of the Import from Model Server flow — so we set this explicitly at add time.
 
-**2. Persist a single-model `waxframe_models_${id}` cache** for each imported AI. Without this, the worker bee row's `buildModelSelector` returned `''` (no model list to render), which meant the dropdown didn't render AND the **Recommend a Model** button didn't render either — same gap that bit Custom AI in v3.27.1, just on the Import path. Now: dropdown renders immediately post-add with at least the imported model. When user clicks Recommend a Model, the existing custom path fetches the full live list from the server (the internal gateway's all 38) and the AI returns the categorized 🎯 / ⚡ / 💰 picks.
+**2. Persist a single-model `waxframe_models_${id}` cache** for each imported AI. Without this, the worker bee row's `buildModelSelector` returned `''` (no model list to render), which meant the dropdown didn't render AND the **Recommend a Model** button didn't render either — same gap that bit Custom AI in v3.27.1, just on the Import path. Now: dropdown renders immediately post-add with at least the imported model. When user clicks Recommend a Model, the existing custom path fetches the full live list from the server (the gateway's all 38) and the AI returns the categorized 🎯 / ⚡ / 💰 picks.
 
 ### What you'll see
 
-After importing N models from the internal gateway, each row now shows:
+After importing N models from the gateway, each row now shows:
 
 ```
 Pick a model: [<imported model> ▾]  [Recommend a Model]
@@ -26534,7 +26573,7 @@ All four canonical stamps bumped to `20260429-021` and `3.27.2`. All six pages b
 
 ### 1. Custom AI / Server recommend support
 
-The **Have AI Recommend** button is now rendered on Custom AI rows (the internal gateway, self-hosted Open WebUI, anything else with a /v1/models endpoint). Click flow for custom AIs:
+The **Have AI Recommend** button is now rendered on Custom AI rows (self-hosted Open WebUI, anything else with a /v1/models endpoint). Click flow for custom AIs:
 
 1. Re-fetches the live model list from the configured endpoint (same logic the Add modal uses)
 2. Filters out non-chat structural variants (embeddings, audio, image-gen, etc.)
@@ -27163,7 +27202,7 @@ Match comparison is endpoint URL plus model ID, with trailing-slash normalizatio
 
 Welcome screen: the page promises "many minds, one refined result" with no immediate way to learn what that means without committing to clicking "Let's get started". Every other onboarding surface in the app has had this affordance for a year. Closes the gap.
 
-Custom AI fetch: the single-model add flow was lagging the bulk-import flow on a UX pattern that's already proven. This release brings them into parity for the most common the internal gateway / Open WebUI / Ollama re-import scenario.
+Custom AI fetch: the single-model add flow was lagging the bulk-import flow on a UX pattern that's already proven. This release brings them into parity for the most common Open WebUI / Ollama re-import scenario.
 
 ### Styling
 
@@ -27233,7 +27272,7 @@ The new modal (`#refConfirmModal`) reuses the existing `.finish-modal-overlay` +
 
 Both `removeReferenceDoc(id)` and `clearAllReferenceMaterial()` now check `history.length > 0` to decide which message to show:
 
-- **Pre-launch (no rounds run yet):** simple, plain message — `Remove "the employer_RFP.xlsx → Instructions"?` or `This removes all 7 reference documents. You can re-add them anytime.` The past-rounds caveat is omitted because there are no past rounds to caveat against — mentioning them only created confusion.
+- **Pre-launch (no rounds run yet):** simple, plain message — `Remove "Acme_RFP.xlsx → Instructions"?` or `This removes all 7 reference documents. You can re-add them anytime.` The past-rounds caveat is omitted because there are no past rounds to caveat against — mentioning them only created confusion.
 - **Post-launch (rounds exist):** full warning — `Remove "X"? Past rounds keep their original snapshot — this only affects the next round forward.` The caveat is included only when it's actually relevant to the user's situation.
 
 The empty/near-empty doc shortcut (≤20 chars of content) still removes silently with no confirmation, which prevents nag-popups when the user is just clearing out a paste card they haven't typed in yet.
