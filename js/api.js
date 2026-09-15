@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260915-005
+// Build: 20260915-006
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -173,7 +173,7 @@ async function _fetchModelsViaCatalog(provider, opts, callerName) {
   const cacheKey = `waxframe_models_${provider}`;
 
   try {
-    // v3.63.501 — collect published token limits off the SAME response.
+    // v3.63.502 — collect published token limits off the SAME response.
     // No extra request: Gemini and Anthropic both carry per-model limits on
     // their model-list payloads, and several OpenAI-compatible local
     // servers carry a context length. Persisted separately from the model

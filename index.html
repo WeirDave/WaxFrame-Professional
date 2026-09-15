@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260915-005
+     Build: 20260915-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -24,7 +24,7 @@
        Server Based AI / Import from Model Server flow can reach a locally
        running Ollama, LM Studio, or Open WebUI instance. Scoped to loopback
        only -- no blanket http: allowance. Remote server-mode endpoints
-       (enterprise the internal gateway/Open WebUI, etc.) already work via the https:
+       (enterprise Open WebUI, etc.) already work via the https:
        source and need no exception. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <!-- v3.63.345 — Clickjacking guard + CSP violation listener.
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="v3.63.501 Pro | Build: 20260915-005">
+  <meta name="waxframe-build" content="v3.63.502 Pro | Build: 20260915-006">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A local-first multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No account database, no install, air-gap capable.">
   <meta name="keywords" content="AI document refinement, multi-AI writing tool, browser-based AI editor, self-hosted AI writing tool, no subscription AI writer">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="A local-first multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No account database, no install, air-gap capable.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.501">
+  <link rel="stylesheet" href="style.css?v=3.63.502">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -119,7 +119,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.501",
+    "softwareVersion": "3.63.502",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -729,7 +729,7 @@
           <span class="work-project-version" id="workProjectVersion"></span>
           <span class="work-start-mode" id="workStartMode"></span>
         </div>
-        <!-- v3.63.501 — What is actually loaded in this session. The
+        <!-- v3.63.502 — What is actually loaded in this session. The
              launch-over-active bug was invisible: a session carrying stale
              rounds looked identical to a fresh one. Populated by
              updateLoadedStateIndicator() from live state. -->
@@ -2124,12 +2124,8 @@
         </div>
         <div class="custom-ai-field-wrap">
           <label>Default icon <span class="field-optional">(optional · applied to all imported models)</span></label>
-          <p class="import-server-icon-help-blurb">WaxFrame auto-detects common model brands (Claude, ChatGPT, Gemini, Grok, DeepSeek, Perplexity, Mistral, Cohere, Llama) from the model name. For anything else — including models routed through a server runtime like the internal gateway, LM Studio, Open WebUI, or Together — pick a default icon below or upload your own. If you skip this, the generic icon is used.</p>
+          <p class="import-server-icon-help-blurb">WaxFrame auto-detects common model brands (Claude, ChatGPT, Gemini, Grok, DeepSeek, Perplexity, Mistral, Cohere, Llama) from the model name. For anything else — including models routed through a server runtime like LM Studio, Open WebUI, or Together — pick a default icon below or upload your own. If you skip this, the generic icon is used.</p>
           <div class="import-server-icon-presets" id="importServerIconPresets">
-            <button type="button" class="import-server-icon-preset" data-icon="images/icon-gateway.png"   data-action="call" data-fn="selectImportServerIconPreset" data-arg-this="1" title="the internal gateway">
-              <img src="images/icon-gateway.png"   alt="the internal gateway"    data-dim-on-error>
-              <span>the internal gateway</span>
-            </button>
             <button type="button" class="import-server-icon-preset" data-icon="images/icon-lmstudio.png"  data-action="call" data-fn="selectImportServerIconPreset" data-arg-this="1" title="LM Studio">
               <img src="images/icon-lmstudio.png"  alt="LM Studio"  data-dim-on-error>
               <span>LM Studio</span>
@@ -3100,7 +3096,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">Custom AIs &amp; model servers</span>
-        <span class="goal-info-desc">Running WaxFrame against an internal gateway (the internal gateway), self-hosted Open WebUI, Ollama, or any other custom endpoint? Use <strong>Add Custom AI</strong> or <strong>Import from Model Server</strong> to get those endpoints into your hive. If you want a clean workspace with only your imported models visible, use <strong>Hide All Defaults</strong> to clear the public AIs out of the way — they stay in the system and can be reset back in with one click.</span>
+        <span class="goal-info-desc">Running WaxFrame against an internal gateway, self-hosted Open WebUI, Ollama, or any other custom endpoint? Use <strong>Add Custom AI</strong> or <strong>Import from Model Server</strong> to get those endpoints into your hive. If you want a clean workspace with only your imported models visible, use <strong>Hide All Defaults</strong> to clear the public AIs out of the way — they stay in the system and can be reset back in with one click.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Model diversity matters</span>
@@ -3462,7 +3458,7 @@
      above the minimum" (green) and "✗ Below minimum by N px wide" /
      "✗ Below minimum by M px tall" (red) so the user sees exactly
      which dimension is the problem. -->
-<script src="js/min-screen-viewport.js?v=3.63.501"></script>
+<script src="js/min-screen-viewport.js?v=3.63.502"></script>
 
 <!-- Mobile not supported overlay — but a funnel landing, not a wall.
      Mobile visitors landing on index.html from search results get a
@@ -3548,33 +3544,33 @@
      (and the only Add-Bookmark JS API was killed by browsers years
      ago for security reasons). Falls back to clipboard copy + a
      short instruction toast if navigator.share isn't available. -->
-<script src="js/mobile-share.js?v=3.63.501"></script>
+<script src="js/mobile-share.js?v=3.63.502"></script>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.4MB total. -->
 <!-- v3.63.393 — Hybrid pdf.js loader. Runtime-detects http(s):// vs file:// and dispatches
      to either the ESM 4.10.38 build (hosted, library-level CVE-2024-4367 fix) or the UMD
      3.11.174 build (portable file://, runtime mitigation via isEvalSupported:false). See
      js/pdf-loader-bootstrap.js for the full reasoning. -->
-<script src="js/pdf-loader-bootstrap.js?v=3.63.501"></script>
-<script src="lib/mammoth.browser.min.js?v=3.63.501"></script>
-<script src="lib/jszip.min.js?v=3.63.501"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.501"></script>
-<script src="js/version.js?v=3.63.501"></script>
-<script src="js/update-check.js?v=3.63.501"></script>
-<script src="js/storage.js?v=3.63.501"></script>
-<script src="js/theme.js?v=3.63.501"></script>
-<script src="js/audio.js?v=3.63.501"></script>
-<script src="js/scenes.js?v=3.63.501"></script>
-<script src="js/wf-debug.js?v=3.63.501"></script>
-<script src="js/provider-models.js?v=3.63.501"></script>
-<script src="js/provider-catalog.js?v=3.63.501"></script>
-<script src="js/api.js?v=3.63.501"></script>
-<script src="js/templates.js?v=3.63.501"></script>
-<script src="js/api-links.js?v=3.63.501"></script>
-<script src="js/prompts.js?v=3.63.501"></script>
-<script src="js/app.js?v=3.63.501"></script>
-<script src="js/helper-handlers.js?v=3.63.501"></script>
-<script src="js/app-bootstrap.js?v=3.63.501"></script>
+<script src="js/pdf-loader-bootstrap.js?v=3.63.502"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.502"></script>
+<script src="lib/jszip.min.js?v=3.63.502"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.502"></script>
+<script src="js/version.js?v=3.63.502"></script>
+<script src="js/update-check.js?v=3.63.502"></script>
+<script src="js/storage.js?v=3.63.502"></script>
+<script src="js/theme.js?v=3.63.502"></script>
+<script src="js/audio.js?v=3.63.502"></script>
+<script src="js/scenes.js?v=3.63.502"></script>
+<script src="js/wf-debug.js?v=3.63.502"></script>
+<script src="js/provider-models.js?v=3.63.502"></script>
+<script src="js/provider-catalog.js?v=3.63.502"></script>
+<script src="js/api.js?v=3.63.502"></script>
+<script src="js/templates.js?v=3.63.502"></script>
+<script src="js/api-links.js?v=3.63.502"></script>
+<script src="js/prompts.js?v=3.63.502"></script>
+<script src="js/app.js?v=3.63.502"></script>
+<script src="js/helper-handlers.js?v=3.63.502"></script>
+<script src="js/app-bootstrap.js?v=3.63.502"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
