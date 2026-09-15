@@ -20,3 +20,9 @@ release-artifacts/
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Literal forbidden terms for the confidentiality gate — NEVER commit.
+.confidential-terms
+
+# Stray write-temp files (safe_write pattern leaves these on a crash)
+*.tmp

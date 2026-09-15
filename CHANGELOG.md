@@ -1,5 +1,49 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.504 — Confidentiality rule + enforcing gate; comment provenance restored
+
+**Released:** 2026-09-15
+**Build:** 20260915-008
+
+### Why
+David escalated to an emergency: no product of his may ever carry real data from his workplace. The v3.63.502–503 scrub removed what had already leaked; this release makes the rule explicit and adds a gate so it cannot silently happen again.
+
+### The rule
+`docs/DATA_HANDLING_RULES.md` is new and **committed**, so a fresh clone carries it. `CLAUDE.md` gains a §0 stating the same rule above everything else — it is gitignored and would not survive a clone on its own, which is why the rule lives in both.
+
+Never put real personal or company information into this project without asking first. Employer name, site and building identifiers, addresses, client and vendor names, colleague names, internal hostnames and internal *tool names*, Slack channels, work email, real document filenames, figures tied to an identifiable site, and credentials of every kind. Scope is everything that persists — source, comments, fixtures, docs, the backlog, screenshots, commit messages, published release notes, issue comments. When David shares a real file to settle a technical question, it is read for structure and metadata only. Assume the repository is public. If unsure whether something is traceable, leave it out and ask.
+
+### The gate (release-check stage 17)
+`tools/check-confidentiality.mjs` fails the release gate on a violation, and works two ways:
+
+- **13 structural rules**, committed, matching the *shape* of sensitive data: credential formats (OpenAI/Anthropic, Google, AWS, GitHub, Slack, JWT, bearer, presigned URLs, private keys), RFC1918 and CGNAT addresses, internal-only hostname suffixes, Slack channel names, street addresses.
+- **A literal term list** at `.confidential-terms` — gitignored, never committed, loaded when present. The gate hard-fails if it is ever tracked, because committing it would publish exactly what it protects.
+
+The checker contains **no real identifier**. A gate that hardcoded the forbidden words would itself be the leak. Its failure output names file and line but never quotes the term, so the output stays safe to paste anywhere.
+
+### Also fixed — code comments had been lying about their own version
+Every release sweep since v3.63.488 did a blanket old→new string replace across all files. That dragged **80 `// v3.63.X` annotations** forward on every release, so each claimed the current version rather than the one the work shipped in. The drag-and-drop dispatcher comment read v3.63.503; it shipped in **v3.63.488**.
+
+Each annotation was traced to its introducing commit by binary-searching that file's history, then restored to the version in effect there. The sweep itself is now anchored to the stamps — five version stamps, `?v=` cache-busts, `Build:` headers, `package.json` — and can no longer touch prose.
+
+One comment was beyond recovery: the observed-limit store migration note claimed a single version both stored one number and stored a history. It was already self-contradictory at v3.63.491, corrupted by the sweep on the very release that introduced it. It now describes the data shape instead of a version, and the stored evidence string reads `migrated from the single-number store`.
+
+### Verification
+- Gate: **all 17 checks pass**, including the new one; 132 fixtures pass.
+- Confidentiality gate proven in both directions: passes clean on the tree, and catches a planted secret key, internal hostname, private IP, Slack channel and street address.
+- Searched tracked files for employer, gateway, Slack, work email, and 13 credential shapes: **zero**.
+- Re-scanned **940 published records** — 909 release bodies, issues, PR comments, repository metadata: **zero**.
+- Live site re-fetched and scanned: **zero**.
+- One real street address in a test project name, in `CHANGELOG.md` and a code comment, replaced with an invented one of identical length so the surrounding character-count arithmetic stays true.
+
+### Files touched
+`docs/DATA_HANDLING_RULES.md` (new), `tools/check-confidentiality.mjs` (new), `.confidential-terms.example` (new), `.gitignore`, `tools/release-check.mjs`, `CHANGELOG.md`, `js/app.js`, `js/api.js`, `js/helper-handlers.js`, `js/provider-catalog.js`, `js/wf-debug.js`, `index.html`, `style.css`, `tools/test-provider-extractors.mjs`, plus the routine stamp sweep
+
+### Rollback
+`git revert <sha>`. The gate would stop running; the rule would stop being written down.
+
+---
+
 ## v3.63.503 — Confidentiality follow-up: the scrub notes named the file they removed
 
 **Released:** 2026-09-15
@@ -10741,7 +10785,7 @@ Released: `2026-06-06`
 
 ### Fixed — prefilled template name could exceed the displayed character cap
 
-David caught this 2026-06-06 immediately after the v3.63.194 char counters shipped. His test project name was `"Review - Joe Schmoe's - 5123 Ball Rd, Cypress, CA 90630"` (55 chars). The auto-prefill in `openSaveTemplateModal` writes `"{projectName} — recipe"` directly via `nameEl.value = ...` at `js/app.js:3967`, producing a 64-char value. The counter immediately went red showing `64 / 60` — for content the user hadn't typed.
+David caught this 2026-06-06 immediately after the v3.63.194 char counters shipped. His test project name was `"Review - Joe Schmoe's - 1234 Elm Rd, Fairview, KS 66000"` (55 chars). <!-- confidentiality-allow: invented address --> The auto-prefill in `openSaveTemplateModal` writes `"{projectName} — recipe"` directly via `nameEl.value = ...` at `js/app.js:3967`, producing a 64-char value. The counter immediately went red showing `64 / 60` — for content the user hadn't typed.
 
 Two-part root cause:
 
