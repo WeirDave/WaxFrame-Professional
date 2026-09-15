@@ -612,7 +612,7 @@ const INLINE_HANDLER_BUDGET = {
   'what-are-tokens.html':         0  // migrated in v3.63.348
 };
 
-// v3.63.503 — drag/drop event names added. They were missing from this
+// v3.63.488 — drag/drop event names added. They were missing from this
 // list since the check was written, and it cost a real bug: the
 // v3.63.351 migration left six ondragenter/ondragover/ondragleave/ondrop
 // attributes behind on index.html's two drop zones, this regex could not
@@ -884,6 +884,30 @@ for (const scriptName of UPDATER_SCRIPTS) {
   } else {
     ok(`${scriptName}: verifies the release ZIP against its SHA-256 sidecar`);
   }
+}
+
+// ── Check 17: Confidentiality gate (tools/check-confidentiality.mjs) ──
+
+section('Confidentiality — no real workplace data in tracked files');
+
+// Added 2026-09-15 after David escalated to an emergency: this public repo had
+// been carrying his employer's name, an internal AI gateway's name and
+// branding, and a real work filename — in source, docs, and 43 published
+// release notes. Manual vigilance had already failed once, so the gate is
+// mechanical now. See docs/DATA_HANDLING_RULES.md.
+//
+// The checker holds NO real identifier: structural rules match the SHAPE of
+// sensitive data, and the literal terms live in a gitignored
+// .confidential-terms that never ships. Shell out like Checks 10-14.
+try {
+  const out = execFileSync(process.execPath, [join(ROOT, 'tools/check-confidentiality.mjs')],
+    { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' });
+  ok(out.trim().replace(/^\s*✓\s*/, ''));
+} catch (e) {
+  const out = `${e.stdout || ''}${e.stderr || ''}`;
+  const lines = out.split(/\r?\n/).filter(l => l.includes('•')).slice(0, 12);
+  fail('tools/check-confidentiality.mjs',
+    `real-data check failed — ${lines.length ? lines.map(l => l.trim()).join(' | ') : out.slice(-300)}`);
 }
 
 // ── Report ──────────────────────────────────────────────────

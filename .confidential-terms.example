@@ -1,0 +1,37 @@
+# .confidential-terms.example — copy to ".confidential-terms" and fill in.
+#
+# The real file is GITIGNORED and must never be committed. It holds the
+# literal strings that may not appear in tracked files. The release gate
+# (tools/check-confidentiality.mjs) loads it and fails on any match; when the
+# file is absent, as in CI, the structural rules still run.
+#
+# One term per line, case-insensitive. Blank lines and #-comments ignored.
+# When the gate reports a hit it names the file and line but NEVER quotes the
+# term, so its output stays safe to paste anywhere.
+#
+# Keep terms specific. A term as short and common as "acme" will match inside
+# unrelated words and bury you in false positives.
+#
+# Every example below is INVENTED. Replace them.
+
+# --- employer, and forms of its name ---
+# examplecorp
+# example corp
+
+# --- internal infrastructure: gateway/service names, hosts, IPs, ports ---
+# gw-example-01
+# gateway.example.internal          confidentiality-allow
+# 10.20.30.40                       confidentiality-allow
+
+# --- internal Slack channels ---
+# #eng-example-team
+
+# --- people and work email ---
+# firstname.lastname@examplecorp.com
+
+# --- client / site / building identifiers ---
+# SITE-001
+# 1234 Example Street               confidentiality-allow
+
+# --- real document filenames shared for debugging ---
+# Example_Remediation_Report.docx

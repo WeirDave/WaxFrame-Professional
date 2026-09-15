@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v284
+WaxFrame Backlog Master v285
 2026-09-15
 
 ABOUT THIS DOCUMENT
@@ -357,35 +357,31 @@ actually hits today.
 
 
 11. Historical workplace identifiers outside the working tree
-   ─────────────────────────────────────────────────────────
-   WHAT:   v3.63.502-503 cleaned the tree and all 909 published
-           release bodies. Three surfaces were deliberately NOT
-           touched because every option is destructive:
-             a) Commit history — 1 commit message names the
-                employer, 22 name the gateway; 41 diffs touch the
-                former, 127 the latter; the deleted branded PNG
-                stays retrievable.
-             b) 41 published release ZIP assets, each built from
-                the tree at tag time. Spot-checked v3.63.480 and
-                v3.63.501: ~103 identifier hits apiece, branded
-                PNG present in both.
-             c) GitHub's automatic source archives, generated on
-                demand for every one of 909 tags.
-   WHY:    The repo is public, so these remain reachable. But
-           rewriting history breaks every clone and changes every
-           SHA; deleting release assets breaks the
-           checksum-verified updater path for anyone pinned to an
-           older version; and (c) cannot be removed at all without
-           deleting tags.
-   STATE:  DEFERRED — David's decision, not a technical one.
-           Nothing here is actionable without him choosing which
-           breakage is acceptable.
-   WHERE:  git history; GitHub Releases assets; repo tags.
-   DONE:   David picks one of: leave as-is (accept the residue),
-           delete the 41 ZIP assets only (lowest blast radius,
-           leaves source archives), or full history rewrite
-           (highest cost, only complete option). Record the
-           decision here, then execute it.
+   ─────────────────────────────────────────────────────
+   WHAT:   Surfaces outside the working tree that carried workplace
+           identifiers after the v3.63.502-504 scrub.
+             a) DONE 2026-09-15 - 42 contaminated release ZIP assets
+                and their .sha256 sidecars deleted (84 files). Only
+                v3.63.503+ assets remain, verified clean.
+             b) Commit history - 1 commit message named the employer,
+                22 named the gateway; 41 diffs touched the former, 127
+                the latter. Ten committed release ZIPs each carried
+                39-63 hits INSIDE them plus the branded PNG; invisible
+                to text search, found only by extracting every archive
+                in history.
+             c) GitHub auto-generated source archives, one per tag.
+   WHY:    The repo is public, so (b) and (c) stay reachable until the
+           history itself is rewritten. (c) cannot be removed at all
+           without deleting tags, so a rewrite is the only fix covering
+           both.
+   STATE:  A verified clean rewrite has been built: zero hits in commit
+           messages, paths, all 23,543 blobs, and inside every archive
+           with compressed streams inflated. Current tree byte-identical
+           to live. Full mirror backup taken first.
+   WHERE:  git history; repo tags; the wf-rewrite clone and the
+           WaxFrame-backup mirror, both under the user profile dir.
+   DONE:   Rewrite force-pushed and the working clone reset onto it, or
+           David decides to accept the residue. Record which.
 
 
 ════════════════════════════════════════════════════════════
