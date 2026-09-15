@@ -1,8 +1,8 @@
 # WaxFrame Professional — Changelog
 
-## v3.63.497 — Documentation caught up with the app; the Open WebUI CORS trap fixed
+## v3.63.498 — Documentation caught up with the app; the Open WebUI CORS trap fixed
 **Released:** 2026-09-15
-**Build:** 20260915-001
+**Build:** 20260915-002
 
 ### Why
 An overnight verification sweep drove the real app in real Firefox from `file://` — clicking real controls rather than asserting handlers exist — and checked whether the documentation still describes what WaxFrame actually does. Two places had drifted, and one of them was actively locking offline users out.
