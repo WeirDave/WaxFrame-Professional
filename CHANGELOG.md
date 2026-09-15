@@ -1,5 +1,28 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.497 — DeepSeek V4.1 Flash: model ID + pricing update
+**Released:** 2026-09-14
+**Build:** 20260914-005
+
+### What changed
+DeepSeek renamed their flagship model from `deepseek-v4-flash` to `deepseek-flash` (V4.1 Flash release, Sept 10 2026). Legacy name still routes but is deprecated. Flash pricing dropped: input $0.22→$0.15/M, output $0.66→$0.60/M (off-peak rates). Both models now carry peak/off-peak pricing (peak = 2× off-peak, limited weekday windows) — surfaced via `estNote` on the pricing page. Pro pricing unchanged at $0.66/$1.98.
+
+- Updated canonical model ID `deepseek-v4-flash` → `deepseek-flash` across all surfaces: pricing seed, provider catalog default + fallback, app.js defaultModel, api-details.html (2 spots), user manual (HTML + clean txt), capture.mjs HIVE_SEED.
+- Pricing seed: Flash input $0.22→$0.15, output $0.66→$0.60, estPerRound $0.002→$0.001. Both Flash and Pro entries now carry `estNote` for peak/off-peak awareness.
+- Regenerated pricing-renderer.js FALLBACK_DATA from updated seed.
+
+### Verification
+- release-check: all 16 checks pass.
+- `grep -r deepseek-v4-flash` returns only CHANGELOG.md (historical entries, never edited).
+- Pricing confirmed against https://api-docs.deepseek.com/quick_start/pricing/ on 2026-09-14.
+- Model ID confirmed against https://api-docs.deepseek.com/quick_start/models on 2026-09-14.
+
+### Rollback
+Revert this commit. Old model name `deepseek-v4-flash` still routes on DeepSeek's side.
+
+### Files touched
+tools/pricing-worker/data/pricing-seed.json, js/provider-catalog.js, js/app.js, js/pricing-renderer.js, api-details.html, waxframe-user-manual.html, docs/waxframe-user-manual-clean.txt, tools/capture.mjs, js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/release-check.mjs, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
 ## v3.63.496 — Backlog housekeeping: 16 numbered items down to 11 real ones
 **Released:** 2026-09-14
 **Build:** 20260914-004

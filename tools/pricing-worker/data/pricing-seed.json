@@ -163,7 +163,7 @@
       "id": "deepseek",
       "name": "DeepSeek",
       "shortName": "DeepSeek",
-      "defaultModel": "deepseek-v4-flash",
+      "defaultModel": "deepseek-flash",
       "billingUrl": "https://platform.deepseek.com/top_up",
       "tier1Rpm": "~60",
       "tier1Tpm": "varies",
@@ -173,15 +173,15 @@
       "recommendationNote": "Cheapest reliable paid Builder — roughly 10x cheaper per token than Claude or ChatGPT. Caveat: consistently the slowest responder in the hive, often 60–90 seconds per round. If you don't mind the wait, it's the best value.",
       "models": [
         {
-          "id": "deepseek-v4-flash",
-          "inputPerM": 0.22,
-          "outputPerM": 0.66,
+          "id": "deepseek-flash",
+          "inputPerM": 0.15,
+          "outputPerM": 0.60,
           "contextWindow": "1M",
           "maxOutput": "384K",
-          "estPerRound": 0.002,
-          "estNote": null,
+          "estPerRound": 0.001,
+          "estNote": "Off-peak rate; peak hours (limited weekday windows) are 2×",
           "sourceUrl": "https://api-docs.deepseek.com/quick_start/pricing/",
-          "verifiedAt": "2026-09-06T12:00:00Z",
+          "verifiedAt": "2026-09-14T12:00:00Z",
           "status": "verified"
         },
         {
@@ -191,9 +191,9 @@
           "contextWindow": "1M",
           "maxOutput": "384K",
           "estPerRound": 0.007,
-          "estNote": null,
+          "estNote": "Off-peak rate; peak hours (limited weekday windows) are 2×",
           "sourceUrl": "https://api-docs.deepseek.com/quick_start/pricing/",
-          "verifiedAt": "2026-09-06T12:00:00Z",
+          "verifiedAt": "2026-09-14T12:00:00Z",
           "status": "verified"
         }
       ]
