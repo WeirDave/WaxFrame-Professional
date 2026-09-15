@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — open-webui-setup.html
-     Build: 20260914-004
+     Build: 20260914-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -37,7 +37,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20260914-004">
+  <meta name="waxframe-build" content="20260914-005">
   <title>Local AI Server Guide — WaxFrame</title>
   <meta name="description" content="Set up a local AI server (Ollama, Open WebUI, LM Studio) for WaxFrame hive sessions — installation, hardware sizing, VRAM budgeting, model selection, and tested model results.">
   <link rel="canonical" href="https://waxframe.com/open-webui-setup.html">
@@ -51,7 +51,7 @@
   <meta name="twitter:description" content="Set up a local AI server (Ollama, Open WebUI, LM Studio) for WaxFrame hive sessions — installation, hardware sizing, VRAM budgeting, model selection, and tested model results.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.496">
+  <link rel="stylesheet" href="style.css?v=3.63.497">
 </head>
 <body class="helper-body">
 
@@ -408,6 +408,30 @@
   --restart always `
   ghcr.io/open-webui/open-webui:main</pre>
       <p>The <code>CORS_ALLOW_ORIGIN</code> line is what lets waxframe.com talk to your local Open WebUI. Without it, your browser blocks the cross-origin request.</p>
+      <div class="wf-card is-amber">
+        <p><strong>Running WaxFrame offline, from a file on disk? Use <code>*</code> instead.</strong></p>
+        <p>If you open WaxFrame by double-clicking <code>index.html</code> rather than visiting
+        waxframe.com, your browser sends the origin <code>null</code> &mdash; and
+        <code>CORS_ALLOW_ORIGIN=https://waxframe.com</code> does not include it, so every request is
+        blocked. This is the single most common reason an offline setup fails, and it presents as an
+        opaque CORS error rather than anything that names the cause.</p>
+        <p>For the offline case use:</p>
+        <pre class="wf-code-block">  -e CORS_ALLOW_ORIGIN=* `</pre>
+        <p>Two things worth knowing, both verified against Open WebUI&rsquo;s own source:</p>
+        <ul>
+          <li><strong>You cannot allowlist <code>file://</code> or <code>null</code>.</strong> Open
+          WebUI validates every entry in the list and requires an <code>http</code> or
+          <code>https</code> scheme with a real host. <code>null</code> fails that check and the
+          container will refuse to start. <code>*</code> is the only value that admits a
+          <code>file://</code> page.</li>
+          <li><strong>You cannot mix them.</strong> It is a single wildcard <em>or</em> a list &mdash;
+          <code>*;https://waxframe.com</code> produces CORS errors in the browser.</li>
+        </ul>
+        <p>An untouched Open WebUI install already defaults to <code>*</code>, so if you only ever run
+        WaxFrame offline you can simply omit the <code>CORS_ALLOW_ORIGIN</code> line entirely. The
+        narrower value on this page exists to harden an instance that serves waxframe.com over the
+        network; if that is not your situation, it only costs you access.</p>
+      </div>
       <p>The first launch will download the Open WebUI Docker image, so you'll see some image layers being pulled.</p>
     </div>
 
@@ -559,7 +583,7 @@ Your GPU</pre>
         <li>Click <strong>Fetch Models</strong>.</li>
       </ol>
       <p>WaxFrame will pull the full model list from your local Open WebUI (which includes every model Ollama has). Select the ones you want and click <strong>Add to Hive</strong>.</p>
-      <p>This works because the <code>CORS_ALLOW_ORIGIN</code> flag you set during installation tells Open WebUI to accept requests from waxframe.com, and modern browsers treat <code>localhost</code> as a secure context — so the http://localhost request from an https:// page goes through without being blocked.</p>
+      <p>This works because the <code>CORS_ALLOW_ORIGIN</code> flag you set during installation tells Open WebUI which origins to accept &mdash; waxframe.com if you set that value, or any origin if you set <code>*</code>. If you run WaxFrame offline from a file on disk, it must be <code>*</code>: a <code>file://</code> page sends the origin <code>null</code>, which a named origin does not match. Modern browsers also treat <code>localhost</code> as a secure context, so the local HTTP connection is not blocked as mixed content.</p>
     </div>
 
     <div class="wf-card is-accent">
@@ -570,7 +594,7 @@ Your GPU</pre>
         <li><strong>Docker Desktop is running</strong> and the open-webui container is started (<code>docker ps</code>).</li>
         <li><strong>Ollama is running</strong> — open a terminal and run <code>ollama list</code>.</li>
         <li><strong>You entered the right address</strong> — <code>http://localhost:3000</code> (not https, not 8080).</li>
-        <li><strong>CORS is configured</strong> — if you see a CORS error in your browser console (F12 → Console), your container may not have the <code>CORS_ALLOW_ORIGIN</code> flag. Recreate it using the install command above.</li>
+        <li><strong>CORS is configured for how you actually open WaxFrame</strong> — if you see a CORS error in your browser console (F12 &rarr; Console), check which origin you are coming from. Running from <code>https://waxframe.com</code> needs that value in <code>CORS_ALLOW_ORIGIN</code>; running offline from a file on disk sends origin <code>null</code> and needs <code>*</code>. Recreate the container with the right value for your case — see the offline note in the install step above.</li>
         <li><strong>API key rejected (401)</strong> — regenerate using the console command above. Make sure you copy the key without any surrounding quotes.</li>
       </ol>
       <p>Once your models are green, you're running hive sessions from waxframe.com against your local AI stack — no cloud API keys, no per-token costs, your data never leaves your machine.</p>
@@ -622,7 +646,7 @@ Your GPU</pre>
       <pre class="wf-code-block">docker rm -f open-webui</pre>
       <p>Then:</p>
       <pre class="wf-code-block">docker pull ghcr.io/open-webui/open-webui:main</pre>
-      <p>Then recreate it with the same flags as your original install:</p>
+      <p>Then recreate it with the same flags as your original install &mdash; including whichever <code>CORS_ALLOW_ORIGIN</code> value matches how you open WaxFrame (<code>*</code> if you run it offline from a file on disk):</p>
       <pre class="wf-code-block">docker run -d `
   -p 3000:8080 `
   --add-host=host.docker.internal:host-gateway `
@@ -1002,14 +1026,14 @@ ollama run smollm3-slim "hi"</pre>
 </div>
 
 
-<script src="js/theme.js?v=3.63.496"></script>
-<script src="lib/docx.min.js?v=3.63.496"></script>
-<script src="js/docx-export.js?v=3.63.496"></script>
-<script src="js/nav-helper.js?v=3.63.496"></script>
-<script src="js/license-helper.js?v=3.63.496"></script>
-<script src="js/update-check.js?v=3.63.496"></script>
-<script src="js/helper-handlers.js?v=3.63.496"></script>
-<script src="js/version.js?v=3.63.496"></script>
-<script src="js/docs-scrollspy.js?v=3.63.496"></script>
+<script src="js/theme.js?v=3.63.497"></script>
+<script src="lib/docx.min.js?v=3.63.497"></script>
+<script src="js/docx-export.js?v=3.63.497"></script>
+<script src="js/nav-helper.js?v=3.63.497"></script>
+<script src="js/license-helper.js?v=3.63.497"></script>
+<script src="js/update-check.js?v=3.63.497"></script>
+<script src="js/helper-handlers.js?v=3.63.497"></script>
+<script src="js/version.js?v=3.63.497"></script>
+<script src="js/docs-scrollspy.js?v=3.63.497"></script>
 </body>
 </html>

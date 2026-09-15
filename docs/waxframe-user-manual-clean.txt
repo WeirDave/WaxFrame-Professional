@@ -740,7 +740,7 @@ Default provider/model examples from the manual:
 - Gemini: gemini-3.5-flash.
 - Grok: grok-4.1-fast.
 - Perplexity: sonar-pro.
-- DeepSeek: deepseek-v4-flash.
+- DeepSeek: deepseek-flash.
 
 Change a model from Setup by opening the model dropdown for that AI. Model lists are fetched from the provider/account when available.
 
