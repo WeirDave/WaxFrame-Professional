@@ -1,5 +1,49 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.497 — Documentation caught up with the app; the Open WebUI CORS trap fixed
+**Released:** 2026-09-15
+**Build:** 20260915-001
+
+### Why
+An overnight verification sweep drove the real app in real Firefox from `file://` — clicking real controls rather than asserting handlers exist — and checked whether the documentation still describes what WaxFrame actually does. Two places had drifted, and one of them was actively locking offline users out.
+
+### open-webui-setup.html — our own hardening advice broke `file://` (backlog #3)
+The page told every reader to install with `CORS_ALLOW_ORIGIN=https://waxframe.com`. A page opened from disk sends the origin `null`, which that value excludes, so **every request from an offline WaxFrame was blocked** — presenting as an opaque CORS error that names nothing. The irony is that an untouched Open WebUI install works fine: it defaults to `*`.
+
+Verified against Open WebUI's own source before writing the fix (`backend/open_webui/config.py`):
+- `CORS_ALLOW_ORIGIN` defaults to `'*'`.
+- `'*'` is exempt from validation; every other entry goes through `validate_cors_origin`, which **requires an `http`/`https` scheme and a real host**. So `null` cannot be allowlisted — the container refuses to start.
+- You cannot mix: it is *a single wildcard* **or** *a list*. `*;https://waxframe.com` produces CORS errors.
+
+The page now carries an explicit offline callout stating that `*` is the only value admitting a `file://` page, that `null` cannot be allowlisted, that the two forms cannot be mixed, and that omitting the line entirely is fine for offline-only use. The "why this works" note, the troubleshooting list and the upgrade/recreate command were all updated to match.
+
+### User manual — the troubleshooting section quoted a retired card
+It described *"Builder output was cut off mid-response (token cap)"* verbatim, a title retired in v3.63.493, and listed **two** failure causes where there are now **three**. Rewritten to match what the app actually shows:
+- **Builder stopped at its output limit** — the provider itself reported it, with the token numbers and what WaxFrame asked for.
+- **Builder response was incomplete — cause not established** — and the manual now explains *why* WaxFrame refuses to call this a token limit, naming all three candidate causes.
+- **The gateway timed out waiting for a response** — including why re-sending often returns instantly.
+
+The large-file tip also still advised "switch your Builder to ChatGPT or Gemini" as the first remedy for a token limit. Since v3.63.494 the budget comes from the selected model, so that advice was stale; it now points at the model picker, which shows each model's max output and context window.
+
+### Verified, not asserted
+Real Firefox, real `file://`, real WebDriver gestures. **29 checks, 0 failures.** Highlights:
+- **Reference material, both paths.** Click-to-add driven through the genuine WebDriver file-upload primitive; drag-and-drop through a real `DataTransfer` at the real element. `dragover` confirmed `defaultPrevented` — the exact defect from v3.63.488 — `dropEffect: "copy"`, both files ingested, drop appends rather than replacing.
+- **A large build at his scale against live Ollama.** 52,000-char / 12,570-token prompt: with the resolved budget it completed (`finish_reason: "stop"`, 5,901 output tokens, not truncated); the identical build under the old 4,096 cap truncated (`finish_reason: "length"`). A known per-model limit (8,192) was confirmed as the value actually on the wire.
+- **Launch over an active session** clears history, round counter, resolved decisions and conflicts, bumps the project generation, and leaves reference material and project name intact.
+- **The error screen reports rather than infers**: an evidenced cap names the provider's finish reason and the count; an unevidenced cut-off explicitly says the provider did *not* report running out of room. 504 routes to the gateway card, 502 still to provider-down.
+- **All 17 HTML pages** load complete from `file://` with **zero CSP violations and zero broken images**.
+
+### One measurement worth acting on
+The successful large build took **63.9 seconds**. That is already past a 60-second proxy read-timeout, and the real-world prompt that failed is ~50% larger than the test. Lifting the output cap made builds finish — and longer. Streaming (backlog #1) is the next item.
+
+### Files touched
+open-webui-setup.html, waxframe-user-manual.html, docs/WaxFrame_Backlog_Master_v282.txt (replaces v281), js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>` — documentation only. No code behaviour changes.
+
+---
+
 ## v3.63.497 — DeepSeek V4.1 Flash: model ID + pricing update
 **Released:** 2026-09-14
 **Build:** 20260914-005
