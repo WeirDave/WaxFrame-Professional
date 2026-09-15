@@ -1,5 +1,32 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.500 — Cohere pricing audit: source URLs fixed, two models added
+**Released:** 2026-09-15
+**Build:** 20260915-004
+
+### What changed
+Full pricing source URL audit across all 11 providers. Cohere was the only provider with broken source URLs — the old pages (`dashboard.cohere.com/billing`, `cohere.com/pricing`, `docs.cohere.com/docs/command-a`) either required login or no longer showed per-token pricing. The v2 docs model pages (`docs.cohere.com/v2/docs/<model>`) have pricing cards with verified rates — all `sourceUrl` entries now point there.
+
+- **Cohere source URLs** — all three existing models (`command-r-plus`, `command-r`, `command-a-03-2025`) updated to point to their v2 docs model pages where pricing is publicly visible without login.
+- **Command A+ added** (`command-a-plus-05-2026`) — free for both trial and production keys until rate limits. 128K context, 64K max output. Shows $0/$0 on pricing page with explanatory note.
+- **Command R7B added** (`command-r7b-12-2024`) — $0.0375/$0.15 per M tokens. 128K context, 4K max output.
+- **Cohere free tier** updated from "Trial credits" to "Command A+ free; trial credits for others".
+- **Command R** context/output fields filled in (were null): 128K context, 4K max output.
+- Both new models added to provider-catalog.js fallback list.
+- Regenerated pricing-renderer.js FALLBACK_DATA.
+- All other providers' source URLs verified correct and returning current pricing.
+
+### Verification
+- release-check: all 16 checks pass (Check 11 pricing coverage caught the missing fallback entries — fixed before commit).
+- All Cohere model prices verified against `docs.cohere.com/v2/docs/<model>` pricing cards on 2026-09-14.
+- 10 other providers' source URLs verified via web fetch on 2026-09-14 — all returning current, accurate pricing.
+
+### Rollback
+Revert this commit. Existing Cohere prices were already correct; only source URLs and two new model rows change.
+
+### Files touched
+tools/pricing-worker/data/pricing-seed.json, js/provider-catalog.js, js/pricing-renderer.js, js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/release-check.mjs, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
 ## v3.63.499 — Streaming: the fix for gateway timeouts on long builds
 **Released:** 2026-09-15
 **Build:** 20260915-003
