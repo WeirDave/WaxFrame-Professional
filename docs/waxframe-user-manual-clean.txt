@@ -734,13 +734,18 @@ Monitor spending through provider billing dashboards. Use Get API keys on the Se
 Perplexity note:
 Perplexity may require auto-billing to be enabled before API calls succeed.
 
-Default provider/model examples from the manual:
-- ChatGPT: gpt-5.5.
-- Claude: claude-sonnet-4-6.
-- Gemini: gemini-3.5-flash.
-- Grok: grok-4.1-fast.
-- Perplexity: sonar-pro.
-- DeepSeek: deepseek-flash.
+Default provider/model list (with pricing page and billing page for each):
+- ChatGPT: gpt-5.6-sol — pricing: developers.openai.com/api/docs/pricing — billing: platform.openai.com
+- Claude: claude-sonnet-4-6 — pricing: platform.claude.com/docs/en/about-claude/pricing — billing: platform.claude.com/settings/billing
+- Gemini: gemini-3.5-flash — pricing: ai.google.dev/gemini-api/docs/pricing — billing: aistudio.google.com
+- Grok: grok-4.5 — pricing: docs.x.ai/developers/pricing — billing: console.x.ai
+- Perplexity: sonar-pro — pricing: docs.perplexity.ai/getting-started/pricing — billing: console.perplexity.ai
+- Mistral: mistral-large-latest — pricing: mistral.ai/pricing/api/ — billing: admin.mistral.ai
+- DeepSeek: deepseek-flash — pricing: api-docs.deepseek.com/quick_start/pricing/ — billing: platform.deepseek.com
+- Together AI: meta-llama/Llama-3.3-70B-Instruct-Turbo — pricing: together.ai/models — billing: api.together.ai
+- Cohere: command-r-plus — pricing: docs.cohere.com/v2/docs/command-r-plus — billing: dashboard.cohere.com
+
+For a side-by-side per-token cost comparison across every provider, see the AI API Pricing page (ai-api-pricing.html).
 
 Change a model from Setup by opening the model dropdown for that AI. Model lists are fetched from the provider/account when available.
 

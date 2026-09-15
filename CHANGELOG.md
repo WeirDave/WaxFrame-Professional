@@ -1,5 +1,27 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.501 — User manual: all providers now listed with pricing + billing links
+**Released:** 2026-09-15
+**Build:** 20260915-005
+
+### What changed
+The "Default models and their providers" table in the user manual previously listed only the 7 default-slot providers with billing dashboard links. Now lists all 9 tracked providers (added Together AI, Cohere, Mistral) with two new columns: a **pricing page** link (where per-token rates live) and a **billing page** link (the provider's billing dashboard). Also adds a reference to WaxFrame's own AI API Pricing page above the table.
+
+- **ChatGPT default model** corrected from stale `gpt-5.5` to current `gpt-5.6-sol`.
+- **Grok default model** corrected from stale `grok-4.1-fast` to current `grok-4.5`.
+- Clean-text companion (`docs/waxframe-user-manual-clean.txt`) updated to match: all 9 providers with pricing and billing URLs.
+
+### Verification
+- release-check: all 16 checks pass.
+- All pricing page URLs verified in the provider audit (v3.63.500 session).
+- Billing URLs cross-checked against pricing-seed.json `billingUrl` entries.
+
+### Rollback
+Revert this commit. Documentation-only change, no runtime impact.
+
+### Files touched
+waxframe-user-manual.html, docs/waxframe-user-manual-clean.txt, js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/release-check.mjs, tools/verify-prompts-equivalence.mjs, tools/test-provider-extractors.mjs, CHANGELOG.md
+
 ## v3.63.500 — Cohere pricing audit: source URLs fixed, two models added
 **Released:** 2026-09-15
 **Build:** 20260915-004

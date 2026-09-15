@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260915-004
+   Build: 20260915-005
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4988,7 +4988,7 @@ body.helper-body .page-main {
 }
 .model-select-opt.is-builder-warn-pick:hover { filter: brightness(1.12); }
 .model-select-opt .opt-role.is-builder-warn { color: var(--warn, #fbbf24); }
-/* v3.63.500 — Token-limit chip on each model row. Max output is the number
+/* v3.63.501 — Token-limit chip on each model row. Max output is the number
    that decides whether a model can finish a Builder round, so it belongs at
    the point of choosing rather than in a settings page. Dimmed and smaller
    than the model id: it is reference data, not the thing being picked.
@@ -5012,7 +5012,7 @@ body.helper-body .page-main {
 /* A hand-maintained number carries an explicit staleness caveat. Deliberately
    quieter than the conflict styling — it is a caveat, not a finding. */
 .model-select-note-line .limits-caveat { color: var(--muted); }
-/* v3.63.500 — Loaded-session readout in the work topbar. Reference data
+/* v3.63.501 — Loaded-session readout in the work topbar. Reference data
    about what this session currently holds, so it reads quieter than the
    project name it sits beside. */
 .work-loaded-state {
@@ -5022,7 +5022,7 @@ body.helper-body .page-main {
   white-space: nowrap;
   margin-left: 8px;
 }
-/* v3.63.500 — Observed-cap readout. The measured figure is the one to
+/* v3.63.501 — Observed-cap readout. The measured figure is the one to
    trust when an administrator has capped a model below what it declares,
    so it carries weight the declared figure does not. Confidence is encoded
    in colour because the difference between "stopped once" and "stopped in
