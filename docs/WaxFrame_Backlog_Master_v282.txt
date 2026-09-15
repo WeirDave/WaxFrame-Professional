@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v281
-2026-09-14
+WaxFrame Backlog Master v282
+2026-09-15
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -47,6 +47,12 @@ against the live repo before acting:
   (descoped 2026-08-02) and had accumulated struck entries.
 
 Net: 16 numbered items → 11, and the 11 are all real.
+
+v282 — OVERNIGHT VERIFICATION SWEEP (2026-09-15). Old #3 (the
+open-webui-setup.html CORS trap) SHIPPED in v3.63.497 and is struck;
+items renumbered 1..10. Everything else on the list was re-verified
+against the running app in real Firefox from file:// — 29 checks, 0
+failures. Detail in the v3.63.497 changelog entry.
 
 
 ════════════════════════════════════════════════════════════
@@ -150,37 +156,7 @@ actually hits today.
            real ceiling, which is the exact trap this avoids.
 
 
-3. open-webui-setup.html steers users into a CORS config that breaks file://
-   ─────────────────────────────────────────────────────────
-   (adjacent to #2 — same sitting, different deliverable: #2 is
-   code that reads the endpoint, this is documentation about
-   reaching it at all. Not merged; they can ship separately.)
-   WHAT:   The setup page instructs
-           CORS_ALLOW_ORIGIN=https://waxframe.com. A file://
-           page sends Origin: null, which that value excludes,
-           so the offline/air-gapped mode the page is otherwise
-           written for cannot reach the server at all.
-   WHY:    Documentation bug with real consequences: it is the
-           single most likely reason a local-server setup fails
-           for an offline user, and the failure presents as an
-           opaque CORS error. The irony is that Open WebUI
-           DEFAULTS to permissive — it is our own hardening
-           advice that breaks the offline path.
-   STATE:  OPEN, cheap. Open WebUI's CORS_ALLOW_ORIGIN defaults
-           to '*' (confirmed in backend/open_webui/config.py),
-           so an untouched install works from file://. Note a
-           validator rejects non-http(s) schemes unless
-           CORS_ALLOW_CUSTOM_SCHEME is set, so "allowlist
-           file://" is NOT the fix — '*' or 'null' is.
-   WHERE:  open-webui-setup.html, the CORS section.
-   DONE:   The page documents the offline case separately and
-           does not hand air-gapped users a value that locks
-           them out; WaxFrame surfaces a CORS-shaped failure by
-           naming the env var to change rather than reporting
-           "unknown".
-
-
-4. Cap-aware warning before a build, and coverage for the recovery after
+3. Cap-aware warning before a build, and coverage for the recovery after
    ─────────────────────────────────────────────────────────
    (merged 2026-09-14: old #11 + old #16 — both hang off knowing
    the Builder's output cap. Warn before; recover after.)
@@ -220,7 +196,7 @@ actually hits today.
            without spending tokens.
 
 
-5. scrubFailureRecord has no Node fixture
+4. scrubFailureRecord has no Node fixture
    ─────────────────────────────────────────────────────────
    WHAT:   js/wf-debug.js is not require()-able from Node, so
            WF_DEBUG.scrubFailureRecord (added v3.63.493, and an
@@ -242,7 +218,7 @@ actually hits today.
            they run as part of the release gate.
 
 
-   ITEMS 6-11 were sub-items (a)-(f) of old #8, the follow-ups
+   ITEMS 5-10 were sub-items (a)-(f) of old #8, the follow-ups
    from the 2026-08-13 full code/file audit (v3.63.459). Each
    needs its own product call rather than being safe to
    auto-resolve inside an unrelated release, so each is its own
@@ -250,7 +226,7 @@ actually hits today.
    present in the tree on 2026-09-14.
 
 
-6. Unreferenced .flac master in sounds/
+5. Unreferenced .flac master in sounds/
    ─────────────────────────────────────────────────────────
    WHAT:   sounds/232450__timbre__purely-synthesised-metal-clang-
            with-long-reverb.flac is unreferenced at runtime —
@@ -265,7 +241,7 @@ actually hits today.
            stays.
 
 
-7. Orphaned @keyframes lineNumPulse
+6. Orphaned @keyframes lineNumPulse
    ─────────────────────────────────────────────────────────
    WHAT:   @keyframes lineNumPulse in style.css was orphaned by
            the v3.63.459 audit's .line-highlight deletion — it
@@ -281,7 +257,7 @@ actually hits today.
            the work screen per the CSS-deletion rule.
 
 
-8. Stale :not(.setup-section-img) selector
+7. Stale :not(.setup-section-img) selector
    ─────────────────────────────────────────────────────────
    WHAT:   A `:not(.setup-section-img)` reference in style.css
            now points at a class that no longer exists.
@@ -298,7 +274,7 @@ actually hits today.
            explaining why it stays.
 
 
-9. Reference docs self-date to v3.63.403
+8. Reference docs self-date to v3.63.403
    ─────────────────────────────────────────────────────────
    WHAT:   Five reference docs (WaxFrame_Audit_Methodology_v1,
            WaxFrame_Prompts_Reference_v3, WaxFrame_Storage_
@@ -316,7 +292,7 @@ actually hits today.
            historical and not maintained.
 
 
-10. Stale .claude/worktrees entries
+9. Stale .claude/worktrees entries
    ─────────────────────────────────────────────────────────
    WHAT:   Three .claude/worktrees/ entries (gitignored, local
            disk only) left over from a Dropbox-path change.
@@ -331,7 +307,7 @@ actually hits today.
            them.
 
 
-11. Wire test-server-ai-eligibility.mjs into the release gate
+10. Wire test-server-ai-eligibility.mjs into the release gate
    ─────────────────────────────────────────────────────────
    WHAT:   tools/test-server-ai-eligibility.mjs tests
            isServerImportedAI / isAIReadyForUse /

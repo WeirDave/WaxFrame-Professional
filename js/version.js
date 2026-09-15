@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — version.js
-// Build: 20260914-005
+// Build: 20260915-001
 //  THE ONLY PLACE the version number lives.
 //  Update APP_VERSION here and it propagates to every page.
 // ============================================================
