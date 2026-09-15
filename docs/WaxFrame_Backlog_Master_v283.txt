@@ -155,6 +155,38 @@ actually hits today.
            finish reason and usage preserved, and falls back to
            non-streaming exactly as the OpenAI path does.
 
+   MEASURED 2026-09-15 (local Ollama qwen2.5:3b, num_ctx 32768,
+   streaming, measured at the fetch layer). Establishes the
+   baseline these two shapes must match:
+
+     promptChars   TTFT     max gap AFTER first token
+        2,000      0.23s          0.01s
+       10,000      0.15s          0.01s
+       26,000      0.28s          0.01s
+       52,000      0.54s          0.01s   <- David's prompt scale
+      100,000      1.22s          0.02s
+
+   Two things this settles. (1) Streaming's worst silence is
+   TIME TO FIRST TOKEN, and it scales with PROMPT size, not
+   generation length - 0.54s at his scale, 1.22s at double it.
+   Non-streaming's worst silence is the WHOLE generation (one
+   single read; median gap measured at 6,212ms for a 6.2s
+   build), which is why a 9-minute build dies behind a 60s
+   proxy read-timeout and a streamed one does not. (2) After
+   the first token, gaps are 10-20ms regardless of size.
+
+   CAVEAT, do not over-read this: measured on a 3B model on
+   local hardware with no queueing. A contended shared gateway
+   adds QUEUE TIME before prompt processing even starts, and
+   queue time is invisible to this test. If a 504 ever fires
+   BEFORE any output appears, that is queueing or prompt
+   processing - streaming cannot help there. The tell is
+   whether the "is writing... N chars so far" status ever
+   starts ticking.
+
+   Raw data: sweep-artifacts/ttft-vs-prompt-size.json and
+   stream-gap-measurement.json (scratch, not committed).
+
 3. Cap-aware warning before a build, and coverage for the recovery after
    ─────────────────────────────────────────────────────────
    (merged 2026-09-14: old #11 + old #16 — both hang off knowing
