@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v282
+WaxFrame Backlog Master v283
 2026-09-15
 
 ABOUT THIS DOCUMENT
@@ -52,7 +52,13 @@ v282 — OVERNIGHT VERIFICATION SWEEP (2026-09-15). Old #3 (the
 open-webui-setup.html CORS trap) SHIPPED in v3.63.497 and is struck;
 items renumbered 1..10. Everything else on the list was re-verified
 against the running app in real Firefox from file:// — 29 checks, 0
-failures. Detail in the v3.63.497 changelog entry.
+failures. Detail in the v3.63.498 changelog entry.
+
+v283 — STREAMING SHIPPED (v3.63.499). Old #1 struck; items renumbered
+1..9. Streaming covers the OpenAI shape only — every local server, every
+gateway deployment and 8 of 10 built-in providers, including the path
+that actually times out. Anthropic (CF Worker proxy) and Gemini (needs
+:streamGenerateContent) still need doing; that is now item 9.
 
 
 ════════════════════════════════════════════════════════════
@@ -73,42 +79,7 @@ OPEN FEATURES
 Ordered by value. 1 is the only item that fixes something David
 actually hits today.
 
-1. Stream Builder responses (the real fix for the 504s)
-   ─────────────────────────────────────────────────────────
-   WHAT:   Send chat requests with stream:true and consume the
-           SSE deltas, instead of one blocking POST that waits
-           for the entire answer.
-   WHY:    WaxFrame is fully non-streaming (zero occurrences of
-           stream:true). A Builder round holds a connection open
-           with ZERO bytes flowing for its whole duration —
-           observed max 540s per the timeout constants in
-           app.js. Common proxy read-timeouts are 60s, so a long
-           build is exactly the shape of request a corporate
-           gateway kills. David hit a 504 on 2026-09-14 and a
-           re-send answered immediately, which is the classic
-           signature: the first request completed upstream after
-           the proxy hung up.
-           URGENCY ROSE WITH v3.63.494. The old 4096 cap was
-           MASKING this — the truncated build finished in 49s
-           because it was cut short. Now that requests state a
-           real budget, generations run longer, straight into
-           timeout range.
-   STATE:  OPEN. Largest remaining item. Not started.
-   WHERE:  js/app.js callAPI (single fetch + response.json());
-           js/provider-catalog.js BODY_BUILDERS (all three
-           shapes need stream:true) and EXTRACTORS (need
-           incremental delta accumulation, not whole-object
-           reads). The envelope parser must tolerate partial
-           accumulation. AbortController wiring already exists
-           for timeouts and must keep working.
-   DONE:   A long Builder round completes through a gateway that
-           previously 504'd; the Live Console shows progress
-           while it generates; a genuine mid-stream disconnect
-           is still detected and reported as incomplete rather
-           than silently saving a partial document.
-
-
-2. Read declared limits from local servers
+1. Read declared limits from local servers
    ─────────────────────────────────────────────────────────
    (merged 2026-09-14: old #12 + the surviving half of old #10)
    WHAT:   Harvest the context length local servers already
@@ -155,6 +126,34 @@ actually hits today.
            the architectural number alone would overstate the
            real ceiling, which is the exact trap this avoids.
 
+
+
+2. Stream the Anthropic and Gemini shapes too
+   ─────────────────────────────────────────────────────────
+   WHAT:   v3.63.499 streams the OpenAI shape only. Anthropic
+           and Gemini still send one blocking POST and wait.
+   WHY:    Same reason as the OpenAI shape: a silent connection
+           is what a proxy read-timeout kills. Neither was done
+           in .499 because each needs real testing rather than
+           faith - Anthropic routes through the CF Worker proxy
+           (which may not pass SSE through at all) and Gemini
+           needs a different endpoint entirely
+           (:streamGenerateContent with ?alt=sse), not just a
+           body flag.
+   STATE:  OPEN. The accumulator pattern and the callAPI
+           plumbing already exist and are proven; this is two
+           more parsers plus, for Gemini, an endpoint swap.
+   WHERE:  js/provider-catalog.js - add
+           createAnthropicStreamAccumulator (event types
+           content_block_delta / message_delta, with
+           stop_reason and usage on message_delta) and a Gemini
+           equivalent; supportsStreaming() gates both.
+           js/app.js callAPI already branches on it.
+           tools/claude-proxy/ needs checking for SSE
+           pass-through before the Anthropic half is attempted.
+   DONE:   A long Claude or Gemini Builder round streams, with
+           finish reason and usage preserved, and falls back to
+           non-streaming exactly as the OpenAI path does.
 
 3. Cap-aware warning before a build, and coverage for the recovery after
    ─────────────────────────────────────────────────────────

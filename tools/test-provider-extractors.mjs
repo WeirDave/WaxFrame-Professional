@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260915-002
+// Build: 20260915-003
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -161,7 +161,7 @@ check(
   false
 );
 
-// ── Truncation detection (v3.63.498) ────────────────────────────────
+// ── Truncation detection (v3.63.499) ────────────────────────────────
 // A Builder that hits its output cap returns a response that LOOKS
 // finished. These fixtures pin the two signals that catch it, per provider
 // response shape. Live values were verified against provider docs when
@@ -229,7 +229,7 @@ check('draft-phase response with no APPLIED block is not truncated',
   WFProviderCatalog.looksStructurallyTruncated([DOC_OK, CONF_OK].join(`\n`)), false);
 check('cut off mid-document (no DOCUMENT_END)',
   WFProviderCatalog.looksStructurallyTruncated(`%%DOCUMENT_START%%\nhalf a docum`), true);
-// The pre-v3.63.498 blind spot: this response HAS a conflicts block, so the
+// The pre-v3.63.499 blind spot: this response HAS a conflicts block, so the
 // old check — nested inside `if (!hasConflictBlock)` — never examined it.
 check('cut off inside the conflicts block (the old blind spot)',
   WFProviderCatalog.looksStructurallyTruncated(
@@ -252,14 +252,14 @@ console.log('▶ Anthropic Builder output ceiling');
 // the cap that cut a real build off on 2026-09-11.
 check('default output budget is well above the old 4096/16384 constants',
   WFProviderCatalog.DEFAULT_OUTPUT_BUDGET >= 32768, true);
-// v3.63.498 — the budget now comes from the model, not a constant. With no
+// v3.63.499 — the budget now comes from the model, not a constant. With no
 // resolver installed (the Node test environment), it must fall back to the
 // default rather than to zero or NaN — a zero budget would ask every
 // provider for no output at all.
 check('with no resolver installed, the default applies',
   WFProviderCatalog.resolveOutputBudget('any-model'), WFProviderCatalog.DEFAULT_OUTPUT_BUDGET);
 
-// ── Model token limits (v3.63.498) ──────────────────────────────────
+// ── Model token limits (v3.63.499) ──────────────────────────────────
 // Which model can actually finish a Builder round is decided by its max
 // output tokens. These fixtures pin BOTH the per-provider extraction (the
 // shapes drift) and the provenance precedence (the part that would quietly
@@ -379,7 +379,7 @@ check('observed source label',
 check('table source label',
   WFProviderCatalog.limitSourceLabel('table'), 'from WaxFrame table');
 
-// ── Observed-cap analysis (v3.63.498) ───────────────────────────────
+// ── Observed-cap analysis (v3.63.499) ───────────────────────────────
 // When a server administrator caps token usage, no declared number reveals
 // it — only watching where responses stop. These fixtures pin the part that
 // would mislead if it broke: how much a given set of stop points actually
@@ -476,7 +476,7 @@ check('varied prompts are flagged so the UI can explain the ambiguity',
   ambiguous.promptsVaried, false);
 check('genuinely varied prompts are detected', outCap.promptsVaried, true);
 
-// ── Requested output budget (v3.63.498) ─────────────────────────────
+// ── Requested output budget (v3.63.499) ─────────────────────────────
 // "Stopped after N tokens" is half an answer. What the request ASKED for is
 // the other half: asking for 16K and getting 4K means something clamped us,
 // while asking for NOTHING and getting 4K means a server-side default
@@ -501,6 +501,77 @@ check('zero is not a budget',    RB(JSON.stringify({ max_tokens: 0 })), null);
 check('unparseable body is safe', RB('not json'), null);
 check('null body is safe',        RB(null), null);
 check('non-string body is safe',  RB({ max_tokens: 100 }), null);
+
+// ── Streaming SSE accumulator (v3.63.499) ──────────────────────
+// Streaming is the fix for gateway timeouts on long builds, and the parser
+// sits directly in the response path: if it drops a frame, a document loses
+// text silently. These fixtures pin the cases that actually bite in the wild
+// — chunk boundaries landing mid-JSON, keepalive comments, a missing final
+// blank line — none of which a happy-path test would catch.
+const mkAcc = () => WFProviderCatalog.createOpenAIStreamAccumulator();
+// SSE frames are separated by a blank line; built from a char code so the
+// fixture text stays readable and cannot be mangled by an editor.
+const NL = String.fromCharCode(10);
+
+console.log('\u25b6 Streaming: SSE accumulation');
+
+// The core case: chunk boundaries do not respect frame boundaries.
+const split = mkAcc();
+split.push('data: {"choices":[{"delta":{"content":"Hel"}}]}' + `${NL}${NL}` + 'data: {"choi');
+split.push('ces":[{"delta":{"content":"lo wor"}}]}' + `${NL}${NL}` + ': keepalive' + `${NL}${NL}`);
+split.push('data: {"choices":[{"delta":{"content":"ld"},"finish_reason":"stop"}]}' + `${NL}${NL}`);
+split.push('data: {"choices":[],"usage":{"prompt_tokens":10,"completion_tokens":3}}' + `${NL}${NL}` + 'data: [DONE]' + `${NL}${NL}`);
+const splitOut = split.finish();
+check('text reassembles across a chunk split mid-JSON', splitOut.text, 'Hello world');
+check('finish_reason survives streaming', splitOut.finishReason, 'stop');
+check('usage survives streaming (include_usage)', splitOut.usage.completion_tokens, 3);
+check('a keepalive comment line is ignored, not concatenated',
+  splitOut.text.indexOf('keepalive'), -1);
+
+// A truncated stream must still carry its evidence, or the error screen
+// silently loses the reason.
+const trunc = mkAcc();
+trunc.push('data: {"choices":[{"delta":{"content":"cut"},"finish_reason":"length"}],"usage":{"completion_tokens":4096}}');
+const truncOut = trunc.finish();
+check('a stream with no trailing blank line still yields its last frame', truncOut.text, 'cut');
+check('truncation finish_reason survives streaming', truncOut.finishReason, 'length');
+check('truncation token count survives streaming', truncOut.usage.completion_tokens, 4096);
+
+// The fallback trigger: the endpoint accepted stream:true and sent something
+// that is not SSE. sawAnyChunk is what tells callAPI to retry unstreamed.
+const notSse = mkAcc();
+notSse.push('{"choices":[{"message":{"content":"plain json"}}]}');
+check('a non-SSE body yields sawAnyChunk false (the fallback trigger)',
+  notSse.finish().sawAnyChunk, false);
+
+const empty = mkAcc();
+check('an empty stream is safe', empty.finish().text, '');
+
+// Off-spec servers seen in the wild.
+const camel = mkAcc();
+camel.push('data: {"choices":[{"delta":{"content":"x"},"finishReason":"length"}]}' + `${NL}${NL}`);
+check('camelCase finishReason from off-spec servers is read',
+  camel.finish().finishReason, 'length');
+
+// A server that sends a whole message on the final chunk instead of deltas
+// must not be double-counted against a compliant delta stream.
+const whole = mkAcc();
+whole.push('data: {"choices":[{"message":{"content":"whole"}}]}' + `${NL}${NL}`);
+check('a whole-message chunk is used when no deltas arrived', whole.finish().text, 'whole');
+
+const both = mkAcc();
+both.push('data: {"choices":[{"delta":{"content":"delta"}}]}' + `${NL}${NL}`);
+both.push('data: {"choices":[{"message":{"content":"whole"}}]}' + `${NL}${NL}`);
+check('a whole-message chunk does NOT double-count after deltas', both.finish().text, 'delta');
+
+console.log('\u25b6 Streaming: which shapes stream');
+// Scope is deliberate: the OpenAI shape covers every local server, every
+// gateway deployment and 8 of 10 built-in providers, including the path that
+// actually times out. Anthropic (CF Worker proxy) and Gemini (needs
+// :streamGenerateContent) stay non-streaming until each can be tested.
+check('OpenAI shape streams', WFProviderCatalog.supportsStreaming('openai'), true);
+check('Anthropic shape does not (yet)', WFProviderCatalog.supportsStreaming('anthropic'), false);
+check('Gemini shape does not (yet)', WFProviderCatalog.supportsStreaming('google'), false);
 
 console.log('');
 if (fail === 0) {

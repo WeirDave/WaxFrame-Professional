@@ -1,5 +1,43 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.499 — Streaming: the fix for gateway timeouts on long builds
+**Released:** 2026-09-15
+**Build:** 20260915-003
+
+### Why
+WaxFrame sent every request non-streaming: one POST, then a wait for the whole answer with **nothing crossing the wire in between**. A Builder round can take minutes — the code's own timeout constants record an observed maximum of 540s — and a corporate proxy with a 60-second read-timeout kills a silent connection long before the model finishes. That is the 504, and it explains the tell: re-sending the same prompt sometimes answers almost instantly, because the first request completed upstream after the proxy had already hung up.
+
+Last night's sweep made the urgency concrete. A large build at real-world scale now takes **63.9 seconds** — already past a typical 60s read-timeout — and the prompt that originally failed is about 50% larger than that test. Raising the output cap in v3.63.494 made builds finish, and made them longer. This is the other half of that fix.
+
+### What changed
+- **Requests on the OpenAI shape now stream.** `stream: true` plus `stream_options: { include_usage: true }` — the second is what keeps token counts arriving, without which truncation detection would lose the numbers it reports on the error screen.
+- **A stateful SSE accumulator** in `js/provider-catalog.js` reassembles deltas as they arrive. It handles the cases that actually bite: chunk boundaries landing mid-JSON, keepalive comment lines, a missing final blank line, off-spec `finishReason` camelCasing, and servers that send a whole message on the last chunk instead of deltas (taken only when no deltas arrived, so a compliant stream is never double-counted).
+- **Nothing downstream changed.** After the stream completes, `callAPI` synthesises the ordinary non-streaming response shape, so extractors, usage capture, finish-reason coalescing, truncation detection and the Deep Dive ring buffer all keep working untouched. Streaming changes how bytes arrive, not what the rest of the app reasons about.
+- **The wait is no longer silent for the user either** — a throttled status line reports characters received as they arrive.
+- **Automatic fallback.** If an endpoint accepts `stream: true` and then returns something that is not SSE, WaxFrame retries once without streaming rather than failing. Guarded against looping.
+- **Setting, defaulting ON** (`wfSetStreamingEnabled`). A badly-behaved proxy that buffers SSE can make streaming worse than not; a user hitting that needs a way out that is not "wait for a patch".
+
+### Scope, deliberately
+**The OpenAI shape only.** That covers every local server, every Open WebUI / gateway deployment, and 8 of the 10 built-in providers — including the exact path that times out. Anthropic routes through the CF Worker proxy (which may not pass SSE through at all) and Gemini needs a different endpoint entirely (`:streamGenerateContent` with `?alt=sse`), not just a body flag. Both keep the non-streaming path until each can be tested properly rather than churned on faith. Recorded as backlog item 2.
+
+### Verification
+- release-check: all 16 checks pass. **16 new fixtures, 132 passing.**
+- **Verified end to end against live Ollama from a real `file://` page in Firefox:**
+  - A real request streamed: `streamed: true`, 1,692 output tokens, `finish_reason: "stop"`, usage reported over SSE.
+  - **Parity with non-streaming: byte-identical output** (2,891 chars both ways) and the same finish reason.
+  - The setting genuinely disables it, and the old path still works.
+  - **A truncated streamed response is still detected with evidence** — `finish_reason: "length"`, `bySignal: true`, and the error card reads correctly.
+  - **Fallback exercised:** a config that asks to stream but receives plain JSON recovers and still returns usable text.
+  - Zero CSP violations.
+
+### Files touched
+js/provider-catalog.js, js/app.js, tools/test-provider-extractors.mjs, docs/WaxFrame_Backlog_Master_v283.txt (replaces v282), js/version.js, index.html, style.css, all HTML pages, all JS files, package.json, tools/verify-prompts-equivalence.mjs, CHANGELOG.md
+
+### Rollback
+`git revert <sha>`, or just turn the setting off — `wfSetStreamingEnabled(false)` restores the previous behaviour without a downgrade.
+
+---
+
 ## v3.63.498 — Documentation caught up with the app; the Open WebUI CORS trap fixed
 **Released:** 2026-09-15
 **Build:** 20260915-002
