@@ -1,5 +1,39 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.503 — Confidentiality follow-up: the scrub notes named the file they removed
+
+**Released:** 2026-09-15
+**Build:** 20260915-007
+
+### Why
+The v3.63.502 entry described the deleted runtime icon by its full filename — and that filename contained the very identifier the release existed to remove. The remediation leaked what it was remediating.
+
+### What changed
+- Two occurrences in CHANGELOG.md prose, both now generic. The file itself was already gone; this is only the description of it.
+- The published v3.63.502 release notes carried the same two occurrences and were corrected in place.
+
+Caught by re-running the audit against the tree *after* publishing rather than before it — the only ordering that catches a leak introduced by the remediation itself.
+
+### Also established (no fix applied — see below)
+The release ZIP assets are built from the tree at tag time, so the 41 ZIPs published before v3.63.502 each contain the full pre-scrub tree. Spot-checked v3.63.480 and v3.63.501: ~103 identifier hits apiece, and both still carry the gateway-branded PNG.
+
+### Verification
+- **Zero** occurrences of any workplace identifier in tracked files.
+- **Zero** across all **909** published release bodies, re-fetched from GitHub after editing rather than trusting the write.
+- The v3.63.503 ZIP is the first published archive with a clean tree.
+- release-check: all 16 checks pass. 132 fixtures pass.
+
+### Not done — needs David's decision
+Unchanged from v3.63.502 (commit history), plus: **41 published release ZIPs and every automatic source archive still contain the pre-scrub tree.** Deleting published assets breaks the checksum-verified updater path for anyone pinned to an old version, and the automatic source archives cannot be removed without deleting tags. Both are his call.
+
+### Files touched
+CHANGELOG.md, plus the routine five-stamp version sweep.
+
+### Rollback
+`git revert <sha>`. Nothing functional changed.
+
+---
+
 ## v3.63.502 — Confidentiality pass: workplace identifiers removed
 **Released:** 2026-09-15
 **Build:** 20260915-006
@@ -10,7 +44,7 @@ This repository is public. An audit found the maintainer's employer named direct
 ### What was found and removed
 - **Employer name** — 10 occurrences across CHANGELOG.md, README.md, the user manual, `document-playbooks.html` and `docs/WaxFrame_Rules_Reference.txt`. The worst were a README table row describing the gateway as *"[employer]'s internal Open WebUI deployment"*, a rules-reference line naming employer and job title, a sample prompt in `document-playbooks.html` carrying the real employer, and a real work filename used as a UI example in the changelog.
 - **Internal gateway name** — ~100 occurrences across ~20 files, including 21 code comments in `js/app.js`.
-- **`images/icon-gateway.png` deleted.** The artwork literally spelled the internal gateway's name over an Open WebUI mark. Its icon-catalog entry and Import Server preset button were removed with it, leaving the four legitimate presets (LM Studio, Open WebUI, Together, Generic). Users who had picked it fall back to the Generic icon that already exists.
+- **The gateway-branded runtime icon was deleted.** The artwork literally spelled the internal gateway's name over an Open WebUI mark. Its icon-catalog entry and Import Server preset button were removed with it, leaving the four legitimate presets (LM Studio, Open WebUI, Together, Generic). Users who had picked it fall back to the Generic icon that already exists.
 - **43 published GitHub release notes** rewritten in place, spanning v3.8 to v3.63.492.
 
 Replacements are generic and invented: the gateway becomes "an enterprise gateway" or "the internal gateway"; enumerations simply drop the member; the sample-prompt employer becomes `Example Corp`; the work filename becomes `Acme_RFP.xlsx`.
@@ -32,7 +66,7 @@ Audited and found **no** exposure of: API keys, bearer tokens or JWTs (including
 CLAUDE.md §5 says historical changelog entries are never edited. This pass edited them. Confidentiality outranks that convention, and the alternative was leaving the employer's name published.
 
 ### Files touched
-CHANGELOG.md, README.md, index.html, js/app.js, js/provider-catalog.js, js/wf-debug.js, style.css, waxframe-user-manual.html, document-playbooks.html, privacy.html, prompt-editor.html, start-here.html, templates.html, terms.html, what-are-tokens.html, help.html, hive-profiles.html, api-details.html, ai-*.html, docs/WaxFrame_Rules_Reference.txt, js/version.js, package.json, tools/*.mjs; **deleted** images/icon-gateway.png
+CHANGELOG.md, README.md, index.html, js/app.js, js/provider-catalog.js, js/wf-debug.js, style.css, waxframe-user-manual.html, document-playbooks.html, privacy.html, prompt-editor.html, start-here.html, templates.html, terms.html, what-are-tokens.html, help.html, hive-profiles.html, api-details.html, ai-*.html, docs/WaxFrame_Rules_Reference.txt, js/version.js, package.json, tools/*.mjs; **deleted** one gateway-branded PNG under images/
 
 ### Rollback
 `git revert <sha>` would restore the identifiers. Don't.

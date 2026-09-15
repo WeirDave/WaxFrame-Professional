@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260915-006
+// Build: 20260915-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -170,7 +170,7 @@ function isContentFilteredError(err) {
   return !!(err && (err.contentFiltered || err.code === 'CONTENT_FILTERED' || _isContentFilteredSignal(err.message)));
 }
 
-// ── Truncation detection (v3.63.502) ────────────────────────────────
+// ── Truncation detection (v3.63.503) ────────────────────────────────
 //
 // The detection logic itself lives in js/provider-catalog.js — it is
 // provider-response knowledge, and that module is require()-able from Node
@@ -208,7 +208,7 @@ function _truncEvidence(t) {
 
 // Detail line for the failed-round record and the troubleshooting card.
 function _describeTruncation(ai, prompt, t, provider, model) {
-  // v3.63.502 — this string is what the troubleshooting card shows inline
+  // v3.63.503 — this string is what the troubleshooting card shows inline
   // (ctx.message -> #tcProviderMessage), so it has to READ like an answer,
   // not like a log line. "Response was truncated" is what the user already
   // had, and it is what sent him to ask his IT department.
@@ -301,7 +301,7 @@ function _detectBuilderTruncation(text, meta) {
     bySignal,
     byStructure,
     finishReason: meta?.finishReason ?? null,
-    // v3.63.502 — the whole usage picture, not just the output count. The
+    // v3.63.503 — the whole usage picture, not just the output count. The
     // error screen is where the user is standing when this bites, and it
     // has to answer "where did it stop and why" from data already in hand.
     completionTokens: meta?.completionTokens ?? null,
@@ -312,7 +312,7 @@ function _detectBuilderTruncation(text, meta) {
   };
 }
 
-// ── Model token limits (v3.63.502) ──────────────────────────────────
+// ── Model token limits (v3.63.503) ──────────────────────────────────
 //
 // "we just don't know what the limits are so if different models have
 // different limits then we need to know that so that we can choose the
@@ -371,7 +371,7 @@ function wfStoreApiModelLimits(provider, limitsMap) {
   _writeLimitsStore(LS_MODEL_LIMITS, store);
 }
 
-// ── Empirical cap discovery (v3.63.502) ─────────────────────────────
+// ── Empirical cap discovery (v3.63.503) ─────────────────────────────
 //
 // "I'm sure that our IT people have placed a limit on the token count ...
 // we still should have some sort of a recourse to find out on our own
@@ -412,9 +412,9 @@ function wfObservationKey(provider, model, endpoint) {
   return [provider || '?', model || '?', endpoint || _endpointKey(provider)].join('|');
 }
 
-// v3.63.502 stored one number per provider/model:
+// v3.63.503 stored one number per provider/model:
 //   { provider: { model: { output, at, evidence } } }
-// v3.63.502 stores a history per provider/model/endpoint. Migrate rather
+// v3.63.503 stores a history per provider/model/endpoint. Migrate rather
 // than discard — a cap already learned should survive the upgrade.
 function _migrateObservedStore(store) {
   if (!store || store.__v === 2) return store;
@@ -429,7 +429,7 @@ function _migrateObservedStore(store) {
       out.keys[key] = {
         provider, model, endpoint: _endpointKey(provider),
         observations: [{ out: Number(rec.output), prompt: 0, total: 0,
-                         at: rec.at || null, evidence: rec.evidence || 'migrated from v3.63.502' }]
+                         at: rec.at || null, evidence: rec.evidence || 'migrated from v3.63.503' }]
       };
     });
   });
@@ -489,7 +489,7 @@ function wfGetObservations(provider, model, endpoint) {
     const exact = store.keys[wfObservationKey(provider, model, want)];
     if (exact) return exact.observations || [];
 
-    // v3.63.502 — the endpoint half of the key is derived from live config,
+    // v3.63.503 — the endpoint half of the key is derived from live config,
     // which is not always available: the AI may not be rehydrated yet at
     // first paint, or its endpoint may have been edited since the
     // observations were recorded. Composing the key from whatever config
@@ -540,7 +540,7 @@ function getModelLimits(provider, model) {
   }
 }
 
-// ── Streaming setting (v3.63.502) ───────────────────────────────────
+// ── Streaming setting (v3.63.503) ───────────────────────────────────
 //
 // Defaults ON: it is the fix for gateway timeouts and there is no downside
 // on a healthy endpoint. Exposed as a setting because a badly-behaved proxy
@@ -568,7 +568,7 @@ if (typeof window !== 'undefined') {
   window.wfSetStreamingEnabled = wfSetStreamingEnabled;
 }
 
-// ── Output-budget resolver (v3.63.502) ──────────────────────────────
+// ── Output-budget resolver (v3.63.503) ──────────────────────────────
 //
 // Installed on window so the body builders in provider-catalog.js can ask
 // "how much output should this model be allowed?" without that module
@@ -669,7 +669,7 @@ function _limitsNoteLine(provider, model) {
   const desc = window.WFProviderCatalog.describeObservations;
   const A = L.analysis;
 
-  // v3.63.502 — declared and observed are shown SIDE BY SIDE rather than
+  // v3.63.503 — declared and observed are shown SIDE BY SIDE rather than
   // one replacing the other. The gap between them is the finding: a model
   // that declares 128K and consistently stops at 4K is telling you an
   // administrator capped it, which is precisely the question no single
@@ -715,7 +715,7 @@ function _limitsNoteLine(provider, model) {
          `</span>`;
 }
 
-// ── Deliberate cap probe (v3.63.502) ────────────────────────────────
+// ── Deliberate cap probe (v3.63.503) ────────────────────────────────
 //
 // Passive observation is the default and costs nothing: it learns from
 // truncations that were going to happen anyway. But it only learns when a
@@ -879,7 +879,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
     if (isBuilderIncapableModel(m)) spans.push('<span class="opt-role is-builder-warn" title="Output token cap too low to finish a Builder round — use as Reviewer only">⚠️ Reviewer-only</span>');
     const markerHTML = spans.length ? spans.join(' · ') + ' — ' : '';
     const reasoningBadge = (m === reviewerModel && isReasoningLike(m)) ? ' (reasoning)' : '';
-    // v3.63.502 — token limits on the row itself. Max output is the number
+    // v3.63.503 — token limits on the row itself. Max output is the number
     // that decides whether a model can finish a Builder round, so it has to
     // be visible AT THE MOMENT OF CHOOSING, not buried in a settings page.
     const limitsHTML = withLimits ? _limitsChip(provider, m) : '';
@@ -927,7 +927,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   if (!builderModel && builderCache?.none && builderCache?.why) {
     noteParts.push(`<span class="model-select-note-line is-builder">🔨 Builder: ${esc(builderCache.why)}</span>`);
   }
-  // v3.63.502 — limits line for the currently-selected model, carrying the
+  // v3.63.503 — limits line for the currently-selected model, carrying the
   // provenance in words. Always present (even when nothing is known), so
   // "we don't know" is stated rather than left as an absence the user has
   // to interpret.
@@ -938,7 +938,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const recheckBtn = showRecheck
     ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" data-action="call" data-fn="recheckModelForAI" data-arg="${aiId}" title="Ask the provider for its best Reviewer and Builder models AND classify Cheap / Balanced / Thinker / Fast tier picks — populates all 6 cards on the hive grid">Recommend Models</button>`
     : '';
-  // v3.63.502 — deliberate cap probe. Offered wherever Recommend Models is,
+  // v3.63.503 — deliberate cap probe. Offered wherever Recommend Models is,
   // because it answers the same class of question ("what can this model
   // actually do for me") and belongs next to it. Costs tokens, so it asks
   // first and says what it will spend — never fires on its own.
@@ -1292,7 +1292,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260915-006';         // build stamp — update each session
+const BUILD = '20260915-007';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2836,7 +2836,7 @@ function showRoundErrorModal(reason, details) {
     // "missing conflicts" (model ignored instructions) so it routes to a
     // different troubleshooting card (BUILDER_TRUNCATED).
     truncated:  'builder_truncated',
-    // v3.63.502 — the envelope was incomplete but the provider never said it
+    // v3.63.503 — the envelope was incomplete but the provider never said it
     // ran out of room. Distinct card, because naming a token cap here would
     // be a guess dressed as a diagnosis.
     incomplete: 'builder_incomplete'
@@ -2847,7 +2847,7 @@ function showRoundErrorModal(reason, details) {
       kind,
       message: details || '',
       raw:     details || null,
-      // v3.63.502 — the truncation card's inline message is WaxFrame's own
+      // v3.63.503 — the truncation card's inline message is WaxFrame's own
       // reading of what happened, not the provider's words, so it must not
       // be labelled as a provider quote.
       messageLabel: (kind === 'builder_truncated' || kind === 'builder_incomplete')
@@ -4554,7 +4554,7 @@ function autoHaltPromoteBackup() {
 }
 
 // clearProject — wipe project data only, keep hive intact
-// ── "What is loaded right now" indicator (v3.63.502) ────────────────
+// ── "What is loaded right now" indicator (v3.63.503) ────────────────
 //
 // The launch bug was invisible: a session carrying three stale rounds looked
 // identical to a fresh one. Whatever else is true, the user should be able to
@@ -4581,7 +4581,7 @@ function updateLoadedStateIndicator() {
 }
 if (typeof window !== 'undefined') window.updateLoadedStateIndicator = updateLoadedStateIndicator;
 
-// ── Session-state reset (v3.63.502) ─────────────────────────────────
+// ── Session-state reset (v3.63.503) ─────────────────────────────────
 //
 // Everything that belongs to a RUN, as opposed to a project's setup.
 //
@@ -4708,7 +4708,7 @@ async function clearProject() {
   if (refFileInput) refFileInput.value = '';
   if (typeof renderReferenceCards === 'function') renderReferenceCards();
   if (typeof updateRefGrandTotals === 'function') updateRefGrandTotals();
-  // v3.63.502 — session-scoped reset now lives in resetSessionState() and is
+  // v3.63.503 — session-scoped reset now lives in resetSessionState() and is
   // shared with startSession(). clearProject keeps the project-scoped parts
   // (phase, docText) that a launch must NOT touch.
   resetSessionState();
@@ -6590,7 +6590,7 @@ function _buildCompactModelSelect(ai, currentModel) {
     return b.join('');
   };
 
-  // v3.63.502 — token limits in the option text. This is a NATIVE <select>,
+  // v3.63.503 — token limits in the option text. This is a NATIVE <select>,
   // so there is no markup to hang a styled chip on and no per-option title
   // that browsers render reliably — the limits have to ride the option text
   // itself. Plain-text provenance marker matching the custom combobox:
@@ -6624,7 +6624,7 @@ function _buildCompactModelSelect(ai, currentModel) {
     ? `<option value="" selected disabled>(pick a model)</option>`
     : '';
 
-  // v3.63.502 — the collapsed row's hover tooltip: model id, then the full
+  // v3.63.503 — the collapsed row's hover tooltip: model id, then the full
   // limits breakdown in words (including which source each number came
   // from). Composed here rather than inline in the template so the newline
   // separator stays a plain value.
@@ -15699,7 +15699,7 @@ function updateRefGrandTotals() {
 // PUSHES a new upload-source doc into the array instead of replacing
 // the singleton (the v3.21.0–v3.23.4 behavior).
 //
-// v3.63.502 — the drag half of this used to live in four functions wired
+// v3.63.503 — the drag half of this used to live in four functions wired
 // by inline ondragenter=/ondragover=/ondragleave=/ondrop= attributes on
 // #refDropRow. Inline handlers are inline JavaScript, so v3.63.366's
 // strict script-src stopped the browser compiling them and the whole
@@ -15961,7 +15961,7 @@ async function startSession() {
       { okText: 'Launch new session', destructive: true }
     );
     if (!ok) return;
-    // v3.63.502 — DO the thing the confirm just promised. Before this, the
+    // v3.63.503 — DO the thing the confirm just promised. Before this, the
     // dialog said it would clear the document and round history and nothing
     // in this function ever assigned either; the previous run's rounds,
     // round counter and resolved decisions carried into the new session.
@@ -17153,7 +17153,7 @@ async function callBuilderWithContentFilterFailover(primaryAI, reviews, notes) {
     const modelNote = modelOverride && modelOverride !== originalModel ? ` · model: ${modelOverride}` : '';
     consoleLog(`📤 ${ai.name} (Builder${isFailover ? ' failover' : ''}) — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint}${modelNote})`, 'send');
     try {
-      // v3.63.502 — carry the per-call metadata out with the response so
+      // v3.63.503 — carry the per-call metadata out with the response so
       // the consumer downstream can tell a cut-off build from a finished
       // one. Each attempt owns its own meta object.
       const meta = {};
@@ -18207,8 +18207,8 @@ async function runBuilderOnly() {
     window._lastAppliedChanges = extractAppliedChanges(builderResponse);
     const hasConflictBlock = builderResponse.includes('%%CONFLICTS_START%%');
 
-    // v3.63.502 — Truncation is now checked FIRST, and independently of
-    // the conflicts block. Pre-v3.63.502 this test lived inside the
+    // v3.63.503 — Truncation is now checked FIRST, and independently of
+    // the conflicts block. Pre-v3.63.503 this test lived inside the
     // `if (!hasConflictBlock)` branch, so a response cut off AFTER
     // %%CONFLICTS_START%% was never examined for truncation at all — it
     // took the "has conflicts block" path and could be accepted with an
@@ -18217,7 +18217,7 @@ async function runBuilderOnly() {
     const _trunc = _detectBuilderTruncation(builderResponse, _builderMeta);
     if (_trunc.truncated) {
       builderHadError = true;
-      // v3.63.502 — an EVIDENCED cap and an INFERRED one are now different
+      // v3.63.503 — an EVIDENCED cap and an INFERRED one are now different
       // failures with different cards. See the comment on
       // _detectBuilderTruncation: an unclosed envelope block is evidence the
       // ENVELOPE is incomplete, not evidence a token cap was hit, and
@@ -19670,7 +19670,7 @@ async function runRound(opts) {
       const hasConflictBlock = cleanResponse.includes('%%CONFLICTS_START%%');
 
       // ── GATE 0: Output cut off at the token cap = hard failure ──
-      // v3.63.502 — checked BEFORE the conflicts gate and independently of
+      // v3.63.503 — checked BEFORE the conflicts gate and independently of
       // it. See the matching comment in runBuilderOnly: truncation is a
       // property of the response, not of which block went missing, and a
       // response cut off after %%CONFLICTS_START%% used to skip this test
@@ -19680,7 +19680,7 @@ async function runRound(opts) {
       const _trunc = _detectBuilderTruncation(builderResponse, builderCall.meta);
       if (_trunc.truncated) {
         builderHadError = true;
-        // v3.63.502 — see the matching split in runBuilderOnly.
+        // v3.63.503 — see the matching split in runBuilderOnly.
         _failedRoundReason  = _trunc.bySignal ? 'truncated' : 'incomplete';
         _failedRoundDetails = _describeTruncation(builderAI, builderPrompt, _trunc,
                                                   builderAI.provider, getModelForAI(builderAI));
@@ -20327,7 +20327,7 @@ function _releaseProviderSlot(base) {
 }
 function _noopRelease() { /* no-op for uncapped providers */ }
 
-// v3.63.502 — `metaOut` is an optional caller-owned object that callAPI
+// v3.63.503 — `metaOut` is an optional caller-owned object that callAPI
 // fills with per-call response metadata (finish reason, token usage,
 // model). It exists because callAPI returns a bare string, so the
 // provider's stop reason had nowhere to go: the only previous way to read
@@ -20337,7 +20337,7 @@ function _noopRelease() { /* no-op for uncapped providers */ }
 // the Builder another AI's finish reason. Each caller passes its own
 // object, so there is nothing to race on. Callers that don't care omit it.
 async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut = null, _retryOpts = null) {
-  // v3.63.502 — _retryOpts is internal, set only by the budget-rejection
+  // v3.63.503 — _retryOpts is internal, set only by the budget-rejection
   // retry below. _budgetRetry stops a second rejection from recursing;
   // _budgetOverride carries the ceiling the provider named (0 = send none).
   const _budgetRetry    = !!(_retryOpts && _retryOpts._budgetRetry);
@@ -20373,8 +20373,8 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   const t0 = Date.now();
 
   let response;
-  let _requestedBudget = null;   // v3.63.502 — see the fetch block below
-  let _streaming = false;        // v3.63.502 — see the fetch block below
+  let _requestedBudget = null;   // v3.63.503 — see the fetch block below
+  let _streaming = false;        // v3.63.503 — see the fetch block below
   const _streamFallback = !!(_retryOpts && _retryOpts._streamFallback);
   // v3.57.3 — bound the request with a role-aware timeout (see constants above).
   const _timeoutMs = (role === 'builder') ? BUILDER_TIMEOUT_MS : REVIEWER_TIMEOUT_MS;
@@ -20387,7 +20387,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     // getModelForAI falls back to cfg.model, behavior is unchanged.
     const _model = getModelForAI(ai);
     const endpoint = cfg.endpointFn ? cfg.endpointFn(_model) : cfg.endpoint;
-    // v3.63.502 — hoisted so the serialised body can be read back for the
+    // v3.63.503 — hoisted so the serialised body can be read back for the
     // output budget we actually asked for. When a build is cut off, what we
     // REQUESTED is half the diagnosis: asking for 16K and getting 4K means
     // something clamped us, while asking for nothing and getting 4K means a
@@ -20397,7 +20397,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     // named (or to none at all when it named nothing) for this one call.
     const _prevBudget = window.WF_OUTPUT_BUDGET_OVERRIDE;
     if (_budgetRetry) window.WF_OUTPUT_BUDGET_OVERRIDE = _budgetOverride;
-    // v3.63.502 — Stream when we can. A non-streaming Builder round holds a
+    // v3.63.503 — Stream when we can. A non-streaming Builder round holds a
     // connection open with zero bytes flowing for its entire duration
     // (observed max 540s); a proxy with a 60s read-timeout kills that long
     // before the model finishes, which is the 504 seen on a corporate
@@ -20519,7 +20519,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
       // survives reload via consoleHTML serialization to IDB.
       ai.apiConsole ? { url: ai.apiConsole, label: `Open ${ai.name}` } : null
     );
-    // v3.63.502 — Budget rejection: retry once with the number the provider
+    // v3.63.503 — Budget rejection: retry once with the number the provider
     // named. Stating an output budget (this release) means a model whose real
     // ceiling is lower will refuse the request — and the refusal helpfully
     // contains the true maximum. Rather than surfacing that as an error, take
@@ -20551,7 +20551,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     throw new Error(msg);
   }
 
-  // v3.63.502 — Read the stream if we asked for one, then synthesise the
+  // v3.63.503 — Read the stream if we asked for one, then synthesise the
   // ordinary non-streaming response shape so everything downstream —
   // extractors, usage capture, finish-reason coalescing, truncation
   // detection, the Deep Dive ring buffer — keeps working unchanged. That is
@@ -20607,7 +20607,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   } else {
     data = await response.json();
   }
-  // v3.63.502 — _finishReason is the provider's stop reason via the shared
+  // v3.63.503 — _finishReason is the provider's stop reason via the shared
   // coalescer; `finishReason` below keeps the blockReason fallback that
   // only the content-filter check wants.
   const _finishReason = _extractFinishReason(data);
@@ -20699,7 +20699,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     chars:     text.length,
     words,
     status:    response.status,
-    // v3.63.502 — was `choices[0].finish_reason || stop_reason`, which
+    // v3.63.503 — was `choices[0].finish_reason || stop_reason`, which
     // omitted Gemini's `candidates[0].finishReason` even though the
     // correctly-coalesced value was already being computed a few lines
     // above for the content-filter check. Gemini truncation was invisible
@@ -20719,7 +20719,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     notes:            typeof notesContext === 'string' ? notesContext : ''
   });
 
-  // v3.63.502 — hand the caller everything it needs to decide whether this
+  // v3.63.503 — hand the caller everything it needs to decide whether this
   // response was cut off. Written last so a throw earlier in the function
   // leaves metaOut untouched rather than half-populated.
   if (metaOut && typeof metaOut === 'object') {

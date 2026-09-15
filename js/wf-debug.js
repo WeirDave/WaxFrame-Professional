@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260915-006
+// Build: 20260915-007
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -110,7 +110,7 @@ window.WF_DEBUG = {
     if (this.ringBuffer.length > this.RING_MAX) this.ringBuffer.shift();
   },
 
-  // ── Failure-record scrubbing (v3.63.502) ──────────────────────
+  // ── Failure-record scrubbing (v3.63.503) ──────────────────────
   //
   // The failure record is now included in the Scout bundle, so it is an
   // EXPORT surface and gets the same treatment as every other one: audit
@@ -434,7 +434,7 @@ window.WF_DEBUG = {
       _waxframe_tier_count:    Object.keys(tierCache).length,
       _waxframe_keys_redacted: true,
       ringBuffer:              this.ringBuffer,
-      // v3.63.502 — the ring buffer is written by captureRound, which only
+      // v3.63.503 — the ring buffer is written by captureRound, which only
       // runs AFTER response.json() succeeds. That makes it structurally
       // blind to transport failures: a 504, a dropped connection or a
       // CORS rejection never reaches it, so a bundle could show a hive
@@ -483,7 +483,7 @@ window.WF_DEBUG = {
   // The REFRESH_TOKEN is stored in localStorage on first use (prompted
   // via wfConfirm's input variant) — it's a Worker secret, not an API
   // key for a provider, so localStorage is fine.
-  // ── Forced truncation (v3.63.502) ──────────────────────────────
+  // ── Forced truncation (v3.63.503) ──────────────────────────────
   //
   // David's "test method" ask: a repeatable way to reproduce a Builder
   // token-cap cutoff on demand, instead of discovering one mid-project by
@@ -806,7 +806,7 @@ window.WF_ERROR_CATALOG = [
     ]
   },
   {
-    // v3.63.502 — Placed BEFORE PROVIDER_DOWN because classify() returns the
+    // v3.63.503 — Placed BEFORE PROVIDER_DOWN because classify() returns the
     // first match and a 504 is in the 5xx range. PROVIDER_DOWN's advice
     // ("this is on their side... check the provider status page") is wrong
     // for a gateway timeout: on a corporate endpoint "their side" is the
@@ -990,7 +990,7 @@ window.WF_ERROR_CATALOG = [
     ]
   },
   {
-    // v3.63.502 — Split out of BUILDER_TRUNCATED, which v3.63.489 had made
+    // v3.63.503 — Split out of BUILDER_TRUNCATED, which v3.63.489 had made
     // fire on BOTH a provider stop reason AND a merely-unclosed envelope
     // block. The second is not evidence of a token cap: a model that
     // completes normally (finish reason "stop", full usage) but forgets a
@@ -1215,7 +1215,7 @@ function renderTroubleshootingCard(entry, ctx) {
   // straight through. Hidden when ctx.message is empty.
   const providerWrap = document.getElementById('tcProviderMessage');
   const providerText = document.getElementById('tcProviderMessageText');
-  // v3.63.502 — the label is no longer always true. This block was built for
+  // v3.63.503 — the label is no longer always true. This block was built for
   // verbatim provider error text ("What the provider actually said"), but
   // the truncation card now puts WaxFrame's OWN diagnosis here — where it
   // belongs, since it is the most prominent slot on the card. Attributing
