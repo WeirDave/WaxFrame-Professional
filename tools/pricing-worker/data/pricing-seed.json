@@ -383,11 +383,23 @@
       "billingUrl": "https://dashboard.cohere.com/billing",
       "tier1Rpm": "~100",
       "tier1Tpm": "varies",
-      "freeTier": "Trial credits",
+      "freeTier": "Command A+ free; trial credits for others",
       "rateLimitNotes": "Generous trial credits; not yet hive-tested in production.",
       "recommendationTag": null,
       "recommendationNote": null,
       "models": [
+        {
+          "id": "command-a-plus-05-2026",
+          "inputPerM": 0,
+          "outputPerM": 0,
+          "contextWindow": "128K",
+          "maxOutput": "64K",
+          "estPerRound": 0,
+          "estNote": "Free for trial and production keys until rate limits are reached",
+          "sourceUrl": "https://docs.cohere.com/v2/docs/command-a-plus",
+          "verifiedAt": "2026-09-14T18:00:00Z",
+          "status": "verified"
+        },
         {
           "id": "command-r-plus",
           "inputPerM": 2.5,
@@ -396,20 +408,32 @@
           "maxOutput": "4K",
           "estPerRound": 0.033,
           "estNote": null,
-          "sourceUrl": "https://dashboard.cohere.com/billing",
-          "verifiedAt": "2026-08-01T19:25:30Z",
+          "sourceUrl": "https://docs.cohere.com/v2/docs/command-r-plus",
+          "verifiedAt": "2026-09-14T18:00:00Z",
           "status": "verified"
         },
         {
           "id": "command-r",
           "inputPerM": 0.15,
           "outputPerM": 0.6,
-          "contextWindow": null,
-          "maxOutput": null,
+          "contextWindow": "128K",
+          "maxOutput": "4K",
           "estPerRound": 0.002,
           "estNote": null,
-          "sourceUrl": "https://cohere.com/pricing",
-          "verifiedAt": "2026-08-09T13:00:00Z",
+          "sourceUrl": "https://docs.cohere.com/v2/docs/command-r",
+          "verifiedAt": "2026-09-14T18:00:00Z",
+          "status": "verified"
+        },
+        {
+          "id": "command-r7b-12-2024",
+          "inputPerM": 0.0375,
+          "outputPerM": 0.15,
+          "contextWindow": "128K",
+          "maxOutput": "4K",
+          "estPerRound": 0.001,
+          "estNote": null,
+          "sourceUrl": "https://docs.cohere.com/v2/docs/command-r7b",
+          "verifiedAt": "2026-09-14T18:00:00Z",
           "status": "verified"
         },
         {
@@ -420,8 +444,8 @@
           "maxOutput": "8K",
           "estPerRound": 0.033,
           "estNote": null,
-          "sourceUrl": "https://docs.cohere.com/docs/command-a",
-          "verifiedAt": "2026-08-30T15:00:00Z",
+          "sourceUrl": "https://docs.cohere.com/v2/docs/command-a",
+          "verifiedAt": "2026-09-14T18:00:00Z",
           "status": "verified"
         }
       ]
