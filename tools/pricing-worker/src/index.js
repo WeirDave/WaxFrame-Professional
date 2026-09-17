@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20260809-001
+//  Build: 20260916-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -398,8 +398,8 @@ async function fetchSourcePageText(sourceUrl) {
     if (!resp.ok) return null;
     const html = await resp.text();
     return html
-      .replace(/<script[\s\S]*?<\/script\s*>/gi, ' ')
-      .replace(/<style[\s\S]*?<\/style\s*>/gi, ' ')
+      .replace(/<script[\s\S]*?<\/script[^>]*>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style[^>]*>/gi, ' ')
       .replace(/<[^>]+>/g, ' ')
       .replace(/&nbsp;/gi, ' ')
       .replace(/\s+/g, ' ')
