@@ -1,5 +1,27 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.505 — CodeQL cleanup: stale Python config removed, two pricing-worker alerts fixed
+
+**Released:** 2026-09-16
+**Build:** 20260916-001
+
+### What changed
+- **Stale CodeQL `language:python` analysis deleted** — the repo has zero Python files; the config was a leftover from Jun 9 that showed a permanent yellow warning triangle on the Security tab. Removed via the GitHub API (no code change).
+- **Alert #34 (High) — Bad HTML filtering regexp** in `tools/pricing-worker/src/index.js:401`: the `<script>` / `<style>` strip regex did not match end tags with whitespace before `>` (e.g. `</script >`). Added `\s*` before the closing `>` in both patterns.
+- **Alert #35 (Medium) — Information exposure through a stack trace** in `tools/pricing-worker/src/index.js:749`: the authenticated `/api/refresh` error response leaked `e.message` (potentially containing stack traces). Replaced with a generic `"Refresh failed"` string — the admin caller doesn't need internals.
+
+### Verification
+- Gate: all 17 checks pass.
+- Grepped for old version/build stamps: only CHANGELOG.md and docs (historical, correct).
+
+### Files touched
+`tools/pricing-worker/src/index.js`, `CHANGELOG.md`, plus the routine stamp sweep
+
+### Rollback
+`git revert HEAD` — the regex fix and error-string change are safe to revert independently.
+
+---
+
 ## v3.63.504 — Confidentiality rule + enforcing gate; comment provenance restored
 
 **Released:** 2026-09-15

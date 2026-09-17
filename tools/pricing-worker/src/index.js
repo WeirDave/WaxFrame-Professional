@@ -398,8 +398,8 @@ async function fetchSourcePageText(sourceUrl) {
     if (!resp.ok) return null;
     const html = await resp.text();
     return html
-      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<script[\s\S]*?<\/script\s*>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style\s*>/gi, ' ')
       .replace(/<[^>]+>/g, ' ')
       .replace(/&nbsp;/gi, ' ')
       .replace(/\s+/g, ' ')
@@ -746,7 +746,7 @@ export default {
         await refreshPricing(env);
         return new Response(JSON.stringify({ ok: true, ts: new Date().toISOString() }), { status: 200, headers: JSON_HEADERS });
       } catch (e) {
-        return new Response(JSON.stringify({ ok: false, error: String(e && e.message || e) }), { status: 500, headers: JSON_HEADERS });
+        return new Response(JSON.stringify({ ok: false, error: 'Refresh failed' }), { status: 500, headers: JSON_HEADERS });
       }
     }
 
