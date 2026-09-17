@@ -1,5 +1,24 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.506 — CodeQL alert #36: fully robust HTML tag-strip regex
+
+**Released:** 2026-09-16
+**Build:** 20260916-002
+
+### What changed
+CodeQL opened alert #36 (same `js/bad-tag-filter` rule as #34) against the v3.63.505 fix because `\s*` before `>` still doesn't match closing tags with extra content like `</script\t\nbar>`. The HTML spec allows attributes on closing tags (parsed and ignored), so the regex now uses `[^>]*` instead of `\s*` — matches any characters between the tag name and `>`.
+
+### Verification
+- Gate: all 17 checks pass.
+
+### Files touched
+`tools/pricing-worker/src/index.js`, `CHANGELOG.md`, plus the routine stamp sweep
+
+### Rollback
+`git revert HEAD`
+
+---
+
 ## v3.63.505 — CodeQL cleanup: stale Python config removed, two pricing-worker alerts fixed
 
 **Released:** 2026-09-16
