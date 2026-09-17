@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app-bootstrap.js
-// Build: 20260915-008
+// Build: 20260916-001
 //  Glue shims for index.html's strict-CSP migration (v3.63.351).
 //
 //  Three inline handlers on the work screen had shapes the generic
