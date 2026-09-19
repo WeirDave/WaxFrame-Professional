@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v285
-2026-09-15
+WaxFrame Backlog Master v286
+2026-09-19
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -413,6 +413,30 @@ out of the queue so the count means something.
   counterparts, which is the cheap half of the fix. Consolidation
   is a refactor with no user-visible payoff; revisit only if one
   of the pairs actually drifts.
+
+• CLOUDFLARE AI-CRAWLER CONTROLS DO NOT APPLY (added v286,
+  2026-09-19). Cloudflare emailed about migrating "Block AI Bots"
+  to separate Search / Training / Agent controls. It is a no-op
+  for waxframe.com: the zone is on Cloudflare DNS
+  (drake/cass.ns.cloudflare.com) but DNS-only, grey cloud — the A
+  records point straight at GitHub Pages (185.199.108-111.153)
+  and a live HEAD on /robots.txt returns Server: GitHub.com with
+  Fastly headers and no cf-ray. Crawler controls are enforced at
+  the Cloudflare proxy, which this traffic never touches.
+  robots.txt is served by GitHub from the repo root and is
+  User-agent: * / Allow: / — unchanged and correct.
+  PRACTICE: if the orange cloud is ever turned on for
+  waxframe.com (caching, analytics, hiding the Pages origin),
+  set all three controls to Allow BEFORE proxying, not after.
+  The migrated defaults are Search: Allow / Training: Disallow AI
+  Training / Agent: Block on pages with ads. "Disallow AI
+  Training" is the wrong setting here — there is no content
+  business to protect and being in training corpora is exactly
+  how the brand collision with physical wax frames gets beaten
+  (see SEO campaign context, CLAUDE.md §8B). The Agent default
+  is harmless: no ads on the site. Workers (claude-proxy,
+  pricing-worker) are unaffected either way — crawler controls
+  are a zone-level content feature.
 
 • CHECK 8 CANNOT SEE JS-GENERATED HANDLERS (old #9). Check 8's
   inline-handler regex scans .html only, so an on*= written into a
