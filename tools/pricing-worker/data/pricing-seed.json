@@ -52,7 +52,7 @@
           "estPerRound": 0,
           "estNote": null,
           "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
-          "verifiedAt": "2026-08-02T20:00:00Z",
+          "verifiedAt": "2026-09-20T12:00:00Z",
           "status": "verified"
         }
       ]
@@ -77,9 +77,9 @@
           "contextWindow": "1M",
           "maxOutput": "8K",
           "estPerRound": 0.026,
-          "estNote": null,
+          "estNote": "Standard tier. The same page also lists Batch and Flex at $0.75/$4.50 and Priority at $2.70/$16.20 for this model",
           "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
-          "verifiedAt": "2026-08-02T23:00:00Z",
+          "verifiedAt": "2026-09-20T12:00:00Z",
           "status": "verified"
         },
         {
@@ -89,9 +89,9 @@
           "contextWindow": null,
           "maxOutput": null,
           "estPerRound": 0.034,
-          "estNote": null,
+          "estNote": "long-context pricing: $4.00/$18.00 per M once a request's prompt passes 200K tokens",
           "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
-          "verifiedAt": "2026-08-02T20:00:00Z",
+          "verifiedAt": "2026-09-20T12:00:00Z",
           "status": "verified"
         },
         {
@@ -101,9 +101,9 @@
           "contextWindow": null,
           "maxOutput": null,
           "estPerRound": 0.004,
-          "estNote": null,
+          "estNote": "text, image and video input; audio input is $0.50 per M",
           "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
-          "verifiedAt": "2026-08-02T20:00:00Z",
+          "verifiedAt": "2026-09-20T12:00:00Z",
           "status": "verified"
         }
       ]

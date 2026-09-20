@@ -14,6 +14,34 @@ Gemini 3.1 Pro sits on a much tighter Tier 1 (25 RPM, 250 RPD) than 3.5 Flash's 
 
 `gemini-3.5-flash` paid pricing is still unverified and unchanged at $1.50/$9.00 — that needs Google's pricing page, which this release did not have.
 
+### Gemini pricing verified at source — and the "price drop" was a different tier
+
+`gemini-3.5-flash` paid is **$1.50/$9.00**, unchanged and now confirmed against Google's own pricing page. It never moved.
+
+The $0.75/$4.50 that third-party trackers were reporting as a 50% price cut is the **Batch and Flex** tier for the same model, sitting on the same page. Gemini 3.5 Flash carries four rates — Standard $1.50/$9.00, Batch $0.75/$4.50, Flex $0.75/$4.50, Priority $2.70/$16.20 — and at least one tracker read a sibling tab as the headline rate. Exactly the shape of this release's Perplexity rejection, one page over.
+
+**So Sonar returning `null` on this model two runs running was correct, not a fault.** `buildResearchPrompt` tells it to return null rather than guess when it cannot be certain which row belongs to the requested model; four tiers under one heading is precisely that case. The `NEWLY FAILING` alert was the system declining to guess.
+
+All five tracked Gemini rows confirmed against the page, none changed:
+
+| row | seed | page (Standard) |
+|---|---|---|
+| `gemini-paid/gemini-3.5-flash` | $1.50/$9.00 | $1.50/$9.00 |
+| `gemini-paid/gemini-3.1-pro` | $2.00/$12.00 | $2.00/$12.00 (≤200K) |
+| `gemini-paid/gemini-3.1-flash-lite` | $0.25/$1.50 | $0.25/$1.50 (text) |
+| `gemini-free/gemini-3.5-flash` | $0/$0 | Free of charge |
+| `gemini-free/gemini-3.1-flash-lite` | $0/$0 | Free of charge |
+
+`verifiedAt` bumped to 2026-09-20 on the four priced rows, and three `estNote`s added for rates the page shows that a single figure cannot: the Batch/Flex/Priority tiers on 3.5 Flash, long-context $4.00/$18.00 above 200K on 3.1 Pro (same idiom as `grok-4.20-0309-reasoning`), and $0.50 audio input on 3.1 Flash-Lite.
+
+### One thing flagged, not changed
+
+**The seed and catalog call the Pro model `gemini-3.1-pro`. Google's page names it `gemini-3.1-pro-preview`**, with no bare `gemini-3.1-pro` listed — and `ai-api-pricing.html` already uses the `-preview` form in its own cost-analysis prose. If the bare id is not aliased, selecting that Builder fails outright.
+
+Left alone deliberately: it is a functional change that cannot be verified from here (no key, no network to Google), and a model-id rename touches `provider-catalog.js`, the seed and the pages together — the shape of the v3.63.497 DeepSeek rename. Worth one API call to settle before anyone edits it.
+
+Also visible on that page and out of scope here: Gemini 3.6, 3.7 and 3.8 Flash now exist, and the page describes 3.5 Flash as "our earlier Flash model". The catalog's default is a question for a catalog pass, not a pricing one.
+
 ### Verification
 - Gate: all 17 checks pass.
 - The version sweep rewrote five *provenance* references — comments and headings recording that the v3.63.507 guards landed in build `20260920-001` — to `-002`. Reverted; only the `// Build:` header stamps advance. A blanket find-and-replace on a build stamp will do this every time a comment cites one as history rather than as the current build.
