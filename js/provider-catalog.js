@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260920-002
+// Build: 20260920-003
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -516,7 +516,7 @@
       // Keep this provider-specific: Perplexity's sonar-deep-research really
       // does use its normal chat-completions endpoint.
       filterExtras: [/^deep-research(?:-|$)/i],
-      fallback: ['gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3.1-flash-lite']
+      fallback: ['gemini-3.5-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite']
     },
     {
       id: 'grok', label: 'xAI (Grok)',

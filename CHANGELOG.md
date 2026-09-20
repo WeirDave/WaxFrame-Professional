@@ -1,5 +1,62 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.509 — Gemini Pro model id corrected to the id Google actually publishes
+
+**Released:** 2026-09-20
+**Build:** 20260920-003
+
+### What changed
+
+**The catalog and the pricing seed called the model `gemini-3.1-pro`. No such model exists.**
+v3.63.508 flagged this and deliberately left it, because it could not be verified without a key.
+It has now been verified directly against `generativelanguage.googleapis.com/v1beta/models`, and
+the answer is unambiguous: the account's model list returns `gemini-3.1-pro-preview` and there is
+no bare `gemini-3.1-pro` entry. **The bare id is not an alias** — the hypothesis that it might
+silently resolve is dead, so a call on it fails outright.
+
+Corrected in all three places it appeared: the Gemini `fallback` array in `js/provider-catalog.js`
+and both `gemini-3.1-pro` rows in `data/pricing-seed.json` (free and paid), with `FALLBACK_DATA`
+regenerated from the seed. `ai-api-pricing.html` prose already used the `-preview` form and needed
+no change.
+
+**Real-world severity was narrower than v3.63.508 implied, and worth recording so the next reader
+does not over-correct.** That note said selecting the Builder "fails outright" — true of the id,
+but Gemini is configured with `discovery: 'gemini-list'`, so the model picker normally populates
+from a live `models.list` call and shows whatever ids Google returns. The bad id only reached a
+user when discovery failed and the hardcoded fallback array was used. The pricing-table rows were
+display-only and never call targets; their fault was disagreeing with the picker and with the
+page's own prose.
+
+**`gemini-3.1-flash-lite` was checked at the same time and is correct as-is.** It exists as a bare
+id, with a `-preview` sibling alongside it. Only the Pro model required the suffix, so this was
+one id in three places and not a family-wide rename — which is why the change is this small.
+
+### Verification
+- Gate: all 17 checks pass.
+- Non-stamp diff confirmed to be exactly four lines: the three id sites plus the regenerated
+  `FALLBACK_DATA` literal.
+- style.css diff is the build stamp only; both `min-width: calc(80ch + 8px + 12px)` selectors
+  untouched.
+- KV pushed from the corrected seed and the live endpoint re-read to confirm the id changed and
+  the row count held at 38.
+- Two sweep gaps found and closed by the gate's version-stamp check, both from ordering: the
+  combined `content="vX.Y.Z Pro | Build: N"` meta in index.html had its build half rewritten
+  before the version half could match, and the sixteen helper pages carry a bare
+  `content="<build>"` meta with no `Build:` prefix, which a `Build:`-anchored pattern does not
+  see. Worth knowing there are two distinct `waxframe-build` meta shapes in this repo.
+- `tools/release-check.mjs` carries `(v3.63.275)` as a provenance annotation, not a stamp, and is
+  correctly left alone by an anchored sweep despite being listed as a sweep target.
+
+### Files touched
+`js/provider-catalog.js`, `tools/pricing-worker/data/pricing-seed.json`, `js/pricing-renderer.js`,
+`CHANGELOG.md`, plus the routine stamp sweep
+
+### Rollback
+`git revert HEAD`, then re-push the prior seed to KV. Reverting restores a model id that does not
+exist, so the only reason to do it is if `-preview` is itself retired.
+
+---
+
 ## v3.63.508 — Gemini paid Tier 1 limits corrected
 
 **Released:** 2026-09-20

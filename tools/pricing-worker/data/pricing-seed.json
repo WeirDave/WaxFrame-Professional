@@ -32,7 +32,7 @@
           "status": "verified"
         },
         {
-          "id": "gemini-3.1-pro",
+          "id": "gemini-3.1-pro-preview",
           "inputPerM": null,
           "outputPerM": null,
           "contextWindow": null,
@@ -83,7 +83,7 @@
           "status": "verified"
         },
         {
-          "id": "gemini-3.1-pro",
+          "id": "gemini-3.1-pro-preview",
           "inputPerM": 2,
           "outputPerM": 12,
           "contextWindow": null,
