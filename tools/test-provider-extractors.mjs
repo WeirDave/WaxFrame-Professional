@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260920-005
+// Build: 20260920-006
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -302,6 +302,69 @@ check('LM Studio max_context_length used when nothing is loaded',
 check('Together context_length is picked up',
   WFProviderCatalog.limitsFromModelEntry('openai-models',
     { id: 't', context_length: 131072 }).context, 131072);
+
+// ── Local-server native shapes (v3.63.512) ────────────────────────────
+//
+// A self-hosted server is the one case no maintained table can be right
+// about, because the ceiling is whatever its operator configured. These are
+// the shapes the three servers WaxFrame is tested against actually return.
+// Fixture values are invented; the SHAPES are what matters.
+
+// Ollama /api/tags — the Quick-Add Ollama preset already points Models
+// Endpoint here, and the context length has been arriving in the response
+// and being discarded the whole time.
+const ollamaTag = WFProviderCatalog.limitsFromModelEntry('openai-models',
+  { name: 'llama3.2:3b', details: { family: 'llama', parameter_size: '3.2B', context_length: 131072 } });
+check('Ollama /api/tags details.context_length is read',
+  ollamaTag && ollamaTag.context, 131072);
+
+// Ollama /api/show — model_info keys are architecture-prefixed, so the
+// architecture must not be guessed at.
+check('Ollama model_info architecture-prefixed context_length is read',
+  WFProviderCatalog.limitsFromModelEntry('openai-models',
+    { name: 'q', model_info: { 'qwen2.context_length': 32768, 'qwen2.block_count': 36 } }).context, 32768);
+
+// A Modelfile num_ctx is a deliberate operator override and outranks the
+// architectural figure. Ollama returns `parameters` as a raw Modelfile
+// string, not an object.
+const ollamaShow = WFProviderCatalog.limitsFromModelEntry('openai-models',
+  { name: 'q', parameters: 'stop "<|im_end|>"\nnum_ctx 8192\ntemperature 0.7',
+    model_info: { 'qwen2.context_length': 32768 } });
+check('Ollama Modelfile num_ctx leads over the architectural figure',
+  ollamaShow && ollamaShow.context, 8192);
+check('the architectural figure is kept beside it, not discarded',
+  ollamaShow && ollamaShow.contextMax, 32768);
+
+// Open WebUI /api/models embeds the entire raw Ollama object under .ollama.
+check('Open WebUI nested ollama.details.context_length is read',
+  WFProviderCatalog.limitsFromModelEntry('openai-models',
+    { id: 'llama3.2:3b', name: 'Llama 3.2', ollama: { details: { context_length: 131072 } } }).context, 131072);
+
+// Ollama /api/ps reports the runtime allocation for a LOADED model, which
+// is the configured figure, not the architectural one.
+check('Ollama /api/ps context_length is treated as the configured window',
+  WFProviderCatalog.limitsFromModelEntry('openai-models',
+    { name: 'q', context_length: 16384, details: { context_length: 131072 } }).context, 16384);
+
+// contextMax exists only to name a gap. When the two agree, or when only one
+// figure is published, it must be absent rather than a duplicate number.
+check('contextMax is absent when configured and architectural agree',
+  WFProviderCatalog.limitsFromModelEntry('openai-models',
+    { id: 'q', loaded_context_length: 32768, max_context_length: 32768 }).contextMax, undefined);
+check('contextMax is absent when only one figure is published',
+  WFProviderCatalog.limitsFromModelEntry('openai-models',
+    { id: 'q', context_length: 8192 }).contextMax, undefined);
+// A loaded window ABOVE the reported architectural maximum is not a gap to
+// report — it means the architectural figure is the unreliable one.
+check('contextMax is absent when the configured window is the larger number',
+  WFProviderCatalog.limitsFromModelEntry('openai-models',
+    { id: 'q', loaded_context_length: 32768, max_context_length: 8192 }).contextMax, undefined);
+
+// Open WebUI deliberately withholds per-model limits on some deployments.
+// That must stay "unknown", not become a fabricated number.
+check('a model entry carrying no limits at all still yields null',
+  WFProviderCatalog.limitsFromModelEntry('openai-models',
+    { id: 'x', name: 'X', object: 'model', owned_by: 'openwebui' }), null);
 
 console.log('\u25b6 Provenance precedence (mergeModelLimits)');
 

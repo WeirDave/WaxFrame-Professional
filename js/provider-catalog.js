@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260920-005
+// Build: 20260920-006
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -1071,7 +1071,7 @@
   // when a provider reshapes a response.
   function limitsFromModelEntry(discovery, m) {
     if (!m || typeof m !== 'object') return null;
-    var ctx = null, out = null;
+    var ctx = null, out = null, ctxMax = null;
 
     if (discovery === 'gemini-list') {
       // The only provider that publishes both, cleanly.
@@ -1085,27 +1085,89 @@
       if (m.max_input_tokens) ctx = Number(m.max_input_tokens);
       if (m.max_tokens)       out = Number(m.max_tokens);
     } else {
-      // OpenAI-shape. The official OpenAI endpoint carries nothing, but
-      // several OpenAI-COMPATIBLE servers put a context length on the same
-      // object under various names. Reading them opportunistically costs
-      // nothing and is the only automatic signal available for a local
-      // server. loaded_context_length wins over max_context_length where
-      // both appear (LM Studio): a model can be loaded with a window below
-      // its architectural maximum, and the loaded value is what the server
-      // will actually serve.
-      if (m.loaded_context_length) ctx = Number(m.loaded_context_length);
-      else if (m.context_length)   ctx = Number(m.context_length);
-      else if (m.max_context_length) ctx = Number(m.max_context_length);
-      else if (m.max_model_len)    ctx = Number(m.max_model_len);
+      // OpenAI-shape, plus the native shapes local servers actually return.
+      // The official OpenAI endpoint carries nothing, but a self-hosted
+      // server is the one case where no maintained table can ever be right,
+      // because the ceiling is the operator's own configuration. Everything
+      // read here rides a response WaxFrame already fetches — no extra
+      // endpoint, no extra call, nothing new to keep in sync.
+      //
+      // Two different numbers can appear, and conflating them is the trap
+      // this avoids:
+      //
+      //   CONFIGURED — what this server will actually serve right now.
+      //     LM Studio's loaded_context_length; Ollama's num_ctx when a
+      //     Modelfile sets one; the context_length on Ollama's /api/ps for
+      //     a loaded model.
+      //   ARCHITECTURAL — what the model could do in principle.
+      //     LM Studio's max_context_length; Ollama's
+      //     model_info["<arch>.context_length"]; details.context_length on
+      //     /api/tags.
+      //
+      // The configured number LEADS, because showing the architectural
+      // figure alone overstates the real ceiling — which is the exact
+      // failure a self-hosted user hits. The architectural figure is kept
+      // alongside as contextMax when it is genuinely higher, so the gap is
+      // visible rather than hidden.
+      var det  = (m.details && typeof m.details === 'object') ? m.details : null;
+      // Open WebUI's /api/models embeds the entire raw Ollama object under
+      // `.ollama`, so the same fields arrive one level deeper there.
+      var oll  = (m.ollama && typeof m.ollama === 'object') ? m.ollama : null;
+      var oDet = (oll && oll.details && typeof oll.details === 'object') ? oll.details : null;
+      var info = (m.model_info && typeof m.model_info === 'object') ? m.model_info
+               : (oll && oll.model_info && typeof oll.model_info === 'object') ? oll.model_info : null;
+      var par  = (m.parameters != null) ? m.parameters
+               : (oll && oll.parameters != null) ? oll.parameters : null;
+
+      // model_info keys are architecture-prefixed: "llama.context_length",
+      // "qwen2.context_length". Read whichever one is present rather than
+      // guessing the architecture.
+      var archCtx = null;
+      if (info) {
+        var ik = Object.keys(info);
+        for (var ii = 0; ii < ik.length; ii++) {
+          if (/(^|\.)context_length$/.test(ik[ii]) && info[ik[ii]]) { archCtx = Number(info[ik[ii]]); break; }
+        }
+      }
+
+      // Ollama's /api/show returns `parameters` as a newline-separated
+      // string of Modelfile directives, not an object. num_ctx there is a
+      // deliberate operator override and outranks everything else.
+      var numCtx = null;
+      if (typeof par === 'string') {
+        var pm = par.match(/^\s*num_ctx\s+(\d+)/m);
+        if (pm) numCtx = Number(pm[1]);
+      } else if (par && typeof par === 'object' && par.num_ctx) {
+        numCtx = Number(par.num_ctx);
+      }
+
+      var configured = numCtx
+                    || (m.loaded_context_length ? Number(m.loaded_context_length) : null)
+                    || (m.context_length ? Number(m.context_length) : null)
+                    || (oll && oll.context_length ? Number(oll.context_length) : null);
+      var architectural = archCtx
+                    || (m.max_context_length ? Number(m.max_context_length) : null)
+                    || (det && det.context_length ? Number(det.context_length) : null)
+                    || (oDet && oDet.context_length ? Number(oDet.context_length) : null)
+                    || (m.max_model_len ? Number(m.max_model_len) : null);
+
+      ctx = configured != null ? configured : architectural;
+      if (configured != null && architectural != null && architectural > configured) {
+        ctxMax = architectural;
+      }
+
       // Some OpenAI-compatible servers expose an output cap too. Rare.
-      if (m.max_output_tokens)         out = Number(m.max_output_tokens);
+      if (m.max_output_tokens)          out = Number(m.max_output_tokens);
       else if (m.max_completion_tokens) out = Number(m.max_completion_tokens);
     }
 
     if (!isFinite(ctx) || ctx <= 0) ctx = null;
     if (!isFinite(out) || out <= 0) out = null;
+    if (!isFinite(ctxMax) || ctxMax <= 0 || ctxMax === ctx) ctxMax = null;
     if (ctx == null && out == null) return null;
-    return { context: ctx, output: out, source: 'api' };
+    var rec = { context: ctx, output: out, source: 'api' };
+    if (ctxMax != null) rec.contextMax = ctxMax;
+    return rec;
   }
 
   // Table lookup. Exact id first, then a prefix match so a dated variant
@@ -1141,13 +1203,23 @@
     var out = {
       model: model || '',
       context: null, contextSource: null,
+      contextMax: null,       // architectural ceiling, when a server reports
+                              // both it and a lower configured window
       output: null,  outputSource: null,
       reviewed: null,
       declaredOutput: null,   // set only when observation contradicts it
       observedAt: null
     };
 
-    if (apiLimits && apiLimits.context != null) { out.context = apiLimits.context; out.contextSource = 'api'; }
+    if (apiLimits && apiLimits.context != null) {
+      out.context = apiLimits.context;
+      out.contextSource = 'api';
+      // v3.63.512 — a local server that reports both a configured window and
+      // the model's architectural maximum gets both carried through. The
+      // configured figure is the one that leads; the maximum is the context
+      // for it, and the gap between them is the thing worth seeing.
+      if (apiLimits.contextMax != null) out.contextMax = apiLimits.contextMax;
+    }
     else if (table && table.context != null)    { out.context = table.context;     out.contextSource = 'table'; out.reviewed = table.reviewed; }
 
     var declared = null, declaredSrc = null;
@@ -1373,7 +1445,16 @@
   //   v3.63.284  — direct api.anthropic.com/v1/models branch dropped (it
   //                always CORS-failed from browser origins); custom AIs
   //                with format='anthropic' must use an explicit proxy URL
-  async function fetchModelsByFormat(url, format, key, explicitModelsEndpoint) {
+  // v3.63.512 — `limitsOut` is the same optional caller-owned out-param
+  // fetchModelsList takes, for the same reason: this is the ONLY automatic
+  // signal a self-hosted server gives about its context window, it rides a
+  // response already being fetched, and the return contract (a plain array
+  // of ids) has five call sites that must not change. Callers that don't
+  // care omit it and nothing about this function's behaviour differs.
+  // `opts.deepLimits` additionally permits the Ollama /api/show enrichment
+  // pass described at the bottom of this function. Off by default because it
+  // costs one small request per model.
+  async function fetchModelsByFormat(url, format, key, explicitModelsEndpoint, limitsOut, opts) {
     // ── Derive models endpoint URL ──
     var modelsEndpoint;
     if (format === 'google') {
@@ -1404,13 +1485,23 @@
     var resp = await fetch(modelsEndpoint, { headers: headers });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     var data = await resp.json();
+    var _disc = format === 'google' ? 'gemini-list' : format === 'anthropic' ? 'anthropic-via-proxy' : 'openai-models';
+    var _collect = function (id, raw) {
+      if (!limitsOut || !id) return;
+      var lim = limitsFromModelEntry(_disc, raw);
+      if (lim) limitsOut[id] = lim;
+    };
     var models = [];
     if (format === 'anthropic') {
-      models = ((data && data.data) || []).map(function (m) { return m.id; });
+      models = ((data && data.data) || []).map(function (m) { _collect(m && m.id, m); return m.id; });
     } else if (format === 'google') {
       models = ((data && data.models) || [])
         .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1; })
-        .map(function (m) { return String(m.name || '').replace('models/', ''); });
+        .map(function (m) {
+          var gid = String(m.name || '').replace('models/', '');
+          _collect(gid, m);
+          return gid;
+        });
     } else {
       // OpenAI-shape: accept three wrappers — OpenAI's { data: [...] },
       // Ollama's native { models: [...] } (the Quick-Add Ollama preset points
@@ -1425,7 +1516,11 @@
       var arr = Array.isArray(data) ? data : ((data && data.data) || (data && data.models) || []);
       models = arr
         .filter(function (m) { return !m.type || m.type === 'chat'; })
-        .map(function (m) { return m.id || m.name; })
+        .map(function (m) {
+          var oid = m.id || m.name;
+          _collect(oid, m);
+          return oid;
+        })
         .sort();
     }
 
@@ -1437,7 +1532,40 @@
     models = models.filter(function (m) { return !STRUCT.test(m); });
     // v3.32.11 — dedup. Mistral's /v1/models returns duplicate ids; Set
     // preserves insertion order so first occurrence wins.
-    return Array.from(new Set(models));
+    models = Array.from(new Set(models));
+
+    // v3.63.512 — Ollama-only enrichment, opt-in via opts.deepLimits.
+    //
+    // /api/tags gives the model's ARCHITECTURAL context length, which is
+    // the wrong number whenever a Modelfile sets num_ctx lower — and a
+    // lower num_ctx is a normal thing for someone running models on their
+    // own hardware to do. Reporting 32K at a server configured for 16K
+    // overstates the ceiling, which is precisely the failure this whole
+    // feature exists to prevent.
+    //
+    // /api/show carries the Modelfile parameters and costs one small POST
+    // per model with no model load. That is too chatty for the 60-second
+    // connectivity probe, so it is off by default and switched on only by
+    // the deliberate refresh paths. Any failure here is swallowed: the
+    // architectural figure already collected stays, and the model list —
+    // the actual return contract — is never put at risk by it.
+    if (limitsOut && opts && opts.deepLimits && /\/api\/tags\/?$/.test(modelsEndpoint)) {
+      var showUrl = modelsEndpoint.replace(/\/api\/tags\/?$/, '/api/show');
+      for (var mi = 0; mi < models.length && mi < 40; mi++) {
+        try {
+          var sResp = await fetch(showUrl, {
+            method: 'POST',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+            body: JSON.stringify({ model: models[mi] })
+          });
+          if (!sResp.ok) continue;
+          var sLim = limitsFromModelEntry('openai-models', await sResp.json());
+          if (sLim && sLim.context != null) limitsOut[models[mi]] = sLim;
+        } catch (e) { /* enrichment is best-effort by design */ }
+      }
+    }
+
+    return models;
   }
 
   // Wire catalog-derived MODEL_FILTERS into WFProviderModels so help.html's

@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v287
+WaxFrame Backlog Master v288
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -21,6 +21,27 @@ Changelog content does NOT belong here. Released work goes
 to CHANGELOG.md and is removed from this file the moment it
 ships.
 
+
+
+v288 — LOCAL-SERVER LIMITS SHIPPED (v3.63.512). Old #1 struck; items
+renumbered 1..3. The declared half of the declared-vs-observed comparison
+is populated for self-hosted AIs now, from responses WaxFrame was already
+fetching. Verified against a live Ollama 0.34.2 rather than fixtures alone,
+which is what caught the part that mattered: /api/tags publishes the
+model's ARCHITECTURAL context length, and four of the ten models on that
+machine carry a Modelfile num_ctx of 16384 sitting well under it. Shipping
+/api/tags alone would have reported 256K at a server configured for 16K —
+overstating the ceiling by 16x, which is the exact failure the entry's DONE
+criterion was written to prevent. /api/show carries the override and is now
+read on the deliberate refresh paths (one small POST per model, no model
+load, ~420ms for ten models); it is deliberately NOT on the 60-second
+connectivity probe.
+
+LM Studio's /api/v0/models shape remains UNVERIFIED against a live
+instance — the max_context_length / loaded_context_length pair is covered
+by fixtures and by the pre-existing extractor code, not by a real run. Open
+WebUI's nested .ollama shape is likewise fixture-only. Neither is a blocker;
+both are worth a live pass next time those servers are up.
 
 v287 — BACKLOG KNOCK-DOWN (2026-09-20, v3.63.511). Seven of the
 eleven items shipped in one release. STRUCK, all verified in the
@@ -118,59 +139,9 @@ the current code looks like.)
 ════════════════════════════════════════════════════════════
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
-Ordered by value. 1 is the only item that fixes something David
-actually hits today.
+Ordered by value.
 
-1. Read declared limits from local servers
-   ─────────────────────────────────────────────────────────
-   (merged 2026-09-14: old #12 + the surviving half of old #10)
-   WHAT:   Harvest the context length local servers already
-           publish, so the "declared" half of the declared-vs-
-           observed comparison is populated for self-hosted AIs
-           instead of reading "not published".
-   WHY:    v3.63.491 measures the real cap by observation, which
-           is what matters when a gateway imposes one. But the
-           comparison is far more legible with a declared figure
-           beside it: "declared 32K, observed 4K" names the gap,
-           where "not published vs 4K" only reports a number.
-   STATE:  OPEN. Reachability PROVEN from file:// on 2026-09-11
-           against a live Ollama 0.33.3, driven from WaxFrame's
-           own page with its strict CSP, zero CSP violations:
-             /api/tags  -> details.context_length per model,
-                           every model, one call, no load
-                           needed. ALREADY CALLED by the Ollama
-                           import preset; the field is discarded.
-             /api/show  -> parameters carries num_ctx when a
-                           Modelfile sets one, plus
-                           model_info["<arch>.context_length"]
-             /api/ps    -> context_length for LOADED models =
-                           the actual runtime allocation
-             /v1/models -> id/object/created/owned_by only.
-                           Sparse; the native API is strictly
-                           better.
-           Open WebUI /api/models embeds the ENTIRE raw Ollama
-           object as `.ollama`, so `.ollama.details.context_
-           length` already arrives there too, and that endpoint
-           is ALREADY CALLED by the Open WebUI preset. It also
-           proxies Ollama at /ollama/api/{tags,ps,show}.
-           LM Studio /api/v0/models returns max_context_length
-           AND loaded_context_length (loaded wins — a model can
-           be loaded below its architectural maximum). NOT
-           verified live; no instance was running.
-   WHERE:  js/provider-catalog.js limitsFromModelEntry already
-           reads several OpenAI-compatible context fields;
-           IMPORT_SERVER_PRESETS in js/app.js holds the
-           per-server endpoints.
-   DONE:   A local server AI shows its context length as
-           API-sourced rather than unknown; where a Modelfile
-           num_ctx differs from the architectural figure, the
-           CONFIGURED number leads and both are shown — showing
-           the architectural number alone would overstate the
-           real ceiling, which is the exact trap this avoids.
-
-
-
-2. Stream the Anthropic and Gemini shapes too
+1. Stream the Anthropic and Gemini shapes too
    ─────────────────────────────────────────────────────────
    WHAT:   v3.63.499 streams the OpenAI shape only. Anthropic
            and Gemini still send one blocking POST and wait.
@@ -229,7 +200,7 @@ actually hits today.
    Raw data: sweep-artifacts/ttft-vs-prompt-size.json and
    stream-gap-measurement.json (scratch, not committed).
 
-3. Cap-aware warning before a build, and coverage for the recovery after
+2. Cap-aware warning before a build, and coverage for the recovery after
    ─────────────────────────────────────────────────────────
    (merged 2026-09-14: old #11 + old #16 — both hang off knowing
    the Builder's output cap. Warn before; recover after.)
@@ -269,7 +240,7 @@ actually hits today.
            without spending tokens.
 
 
-4. Historical workplace identifiers outside the working tree
+3. Historical workplace identifiers outside the working tree
    ─────────────────────────────────────────────────────
    WHAT:   Surfaces outside the working tree that carried workplace
            identifiers after the v3.63.502-504 scrub.

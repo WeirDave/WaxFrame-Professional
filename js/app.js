@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-005
+// Build: 20260920-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -366,7 +366,11 @@ function wfStoreApiModelLimits(provider, limitsMap) {
   Object.keys(limitsMap).forEach(model => {
     const l = limitsMap[model];
     if (!l) return;
+    // contextMax is the architectural ceiling when it is higher than what
+    // the server is configured to serve (v3.63.512). Only local servers
+    // publish both; it is omitted everywhere else rather than stored null.
     bucket[model] = { context: l.context, output: l.output, fetchedAt: stamp };
+    if (l.contextMax != null) bucket[model].contextMax = l.contextMax;
   });
   _writeLimitsStore(LS_MODEL_LIMITS, store);
 }
@@ -657,6 +661,14 @@ function _limitsTooltip(L) {
   }
   if (L.context != null) {
     lines.push(`Context window: ${L.context.toLocaleString()} tokens (${lab(L.contextSource)})`);
+    // v3.63.512 — a self-hosted server can report both what it is configured
+    // to serve and what the model could do. The configured number is the one
+    // that governs; naming the higher one beside it is what turns a bare
+    // figure into an answer about this machine.
+    if (L.contextMax != null) {
+      lines.push(`This server is configured below the model's maximum of ${L.contextMax.toLocaleString()} tokens. ` +
+                 'The configured figure is what it will actually serve.');
+    }
   } else {
     lines.push('Context window: unknown');
   }
@@ -692,7 +704,13 @@ function _limitsNoteLine(provider, model) {
     parts.push('max output <strong>not published</strong> by this endpoint');
   }
   if (L.context != null) {
-    parts.push(`context <strong>${esc(fmt(L.context))}</strong> (${esc(lab(L.contextSource))})`);
+    // v3.63.512 — when a local server reports a configured window below the
+    // model's architectural maximum, both are shown: "context 8K of 32K".
+    // Showing the maximum alone would overstate what this machine serves,
+    // which is the exact trap a self-hosted setup springs.
+    parts.push(L.contextMax != null
+      ? `context <strong>${esc(fmt(L.context))}</strong> of ${esc(fmt(L.contextMax))} (${esc(lab(L.contextSource))})`
+      : `context <strong>${esc(fmt(L.context))}</strong> (${esc(lab(L.contextSource))})`);
   }
 
   // No measurements yet — say what would produce one, rather than leaving
@@ -1298,7 +1316,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-005';         // build stamp — update each session
+const BUILD = '20260920-006';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2189,7 +2207,7 @@ async function _autoUpdateRefreshOneAI(ai) {
   try {
     const models = usesCatalogDiscovery
       ? await fetchModelsForProviderLive(ai.provider)
-      : await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
+      : await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint, ai.provider, true);
     if (!Array.isArray(models) || !models.length) {
       return { id: ai.id, error: 'no models returned' };
     }
@@ -6776,7 +6794,7 @@ async function _checkServerAIConnectivity(ai, opts) {
   _refreshServerConnectivityPillInDom(ai.id);
   let models = [];
   try {
-    models = await fetchModelsFromEndpoint(cfg.endpoint, cfg.format, cfg._key || '', cfg._modelsEndpoint);
+    models = await fetchModelsFromEndpoint(cfg.endpoint, cfg.format, cfg._key || '', cfg._modelsEndpoint, ai.provider);
     if (!Array.isArray(models)) models = [];
   } catch (e) {
     if (window._serverConnectivityGen[ai.id] !== myGen) return; // superseded by a newer probe
@@ -10676,7 +10694,7 @@ async function recheckModelForAI(id, opts) {
       // addCustomAI already wrote it with the same data; re-writing is waste.
       const models = _handedOffModels
         ? _handedOffModels
-        : await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
+        : await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint, ai.provider, true);
       if (!models?.length) throw new Error('No chat-compatible models returned');
       if (!_handedOffModels) {
         // Cache the model list so buildModelSelector renders the full dropdown.
@@ -11042,8 +11060,23 @@ function resetModelField() {
 // (per-catalog-entry path) lives, so any per-format quirk fix touches one
 // file. All v3.27.4 / v3.53.0 / v3.56.28 / v3.60.7 / v3.63.284 history
 // commentary is preserved in the catalog's fetchModelsByFormat docblock.
-async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint = null) {
-  return window.WFProviderCatalog.fetchModelsByFormat(url, format, key, explicitModelsEndpoint);
+//
+// v3.63.512 — optional `providerForLimits`. When a caller knows which
+// configured AI this fetch belongs to, whatever context window the response
+// happened to publish is harvested and stored against that provider. This is
+// the only automatic source of a context figure for a self-hosted server: no
+// maintained table can be right about a machine whose ceiling is set by its
+// own operator, and the number is already sitting in a response WaxFrame
+// fetches anyway. Callers that omit it behave exactly as before.
+async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint = null, providerForLimits = null, deepLimits = false) {
+  const limits = providerForLimits ? {} : null;
+  const models = await window.WFProviderCatalog.fetchModelsByFormat(
+    url, format, key, explicitModelsEndpoint, limits, deepLimits ? { deepLimits: true } : null);
+  if (limits && Object.keys(limits).length) {
+    try { wfStoreApiModelLimits(providerForLimits, limits); }
+    catch (e) { console.warn('[model-limits] could not store endpoint limits', e); }
+  }
+  return models;
 }
 
 // v3.56.29 — Advanced-options disclosure for the Add Custom Worker Bee modal.

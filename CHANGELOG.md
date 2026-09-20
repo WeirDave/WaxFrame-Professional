@@ -1,5 +1,77 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.512 — Self-hosted AIs report their real context window
+
+**Released:** 2026-09-20
+**Build:** 20260920-006
+
+### What changed
+
+**A local server's context window is now read from the server itself.** Until now a self-hosted AI
+showed nothing for context, because no maintained table can be right about a machine whose ceiling
+is set by its own operator. The figure was in fact already arriving — the Ollama Quick-Add preset
+points Models Endpoint at `/api/tags`, whose response carries a context length per model, and that
+field was being discarded. Open WebUI's `/api/models` embeds the whole raw Ollama object under
+`.ollama`, so the same field arrives there one level deeper. LM Studio's `/api/v0/models` reports
+both an architectural maximum and the window the loaded model is actually serving.
+
+`limitsFromModelEntry` now reads all of those shapes, and the model-list fetch used by custom and
+server AIs carries the harvested limits back the same way the built-in provider path already did.
+No new endpoint, no extra call on the common path, nothing new to keep in sync.
+
+**Configured beats architectural, and both are shown.** Two different numbers can come back and
+conflating them is the whole trap. What the server will actually serve — LM Studio's
+`loaded_context_length`, an Ollama Modelfile's `num_ctx`, the runtime allocation on `/api/ps` — is
+the number that governs, and it leads. What the model could do in principle — LM Studio's
+`max_context_length`, Ollama's architecture-prefixed `model_info` entry, `details.context_length`
+on `/api/tags` — is carried alongside when it is higher. The picker reads **context 16K of 32K**,
+and the tooltip says the server is configured below the model's maximum and which figure will
+actually be served.
+
+This is not hypothetical. On the Ollama instance this was verified against, four of ten installed
+models carry a Modelfile `num_ctx` of 16,384 while their architectural windows are 32K, 64K, 128K
+and 256K. Reading `/api/tags` alone would have reported 256K for a model that will serve 16K.
+
+**Ollama's `/api/show` is read on deliberate refreshes only.** The Modelfile override is visible
+only there, at one small POST per model with no model load — about 420ms for ten models. That is
+too chatty for the 60-second connectivity probe, so the probe keeps using the single `/api/tags`
+call and the enrichment runs on the paths a user actually triggers: Recommend Models and the
+scheduled model Auto-Update.
+
+### Verification
+- Gate: all 19 stages pass.
+- Driven against a live Ollama 0.34.2, not fixtures alone: all ten installed models returned a
+  context figure through the real `fetchModelsByFormat` path, and the four with a Modelfile
+  `num_ctx` correctly resolved to 16,384 with their architectural ceiling preserved beside them.
+  The shallow and deep passes were run back to back and diffed, which is what demonstrated the
+  overstatement the deep pass fixes.
+- 21 new fixtures in the provider-extractor suite cover every shape above, including the cases
+  where `contextMax` must be absent: the two figures agreeing, only one being published, and a
+  loaded window larger than the reported architectural maximum. A model entry carrying no limits
+  at all still yields nothing rather than a fabricated number — Open WebUI deliberately withholds
+  per-model limits on some deployments and that has to keep reading as unknown.
+- Rendering confirmed in a browser against a seeded limits store: `context 16K of 32K (from
+  provider API)` for a capped model, `context 32K (from provider API)` for an uncapped one, with
+  the tooltip carrying the exact token counts.
+- The no-limits call signature is unchanged: a caller that passes no out-param gets the same model
+  array it always did, verified by calling both forms against the live server.
+
+### Known gaps
+LM Studio's `/api/v0/models` and Open WebUI's nested `.ollama` shapes are covered by fixtures and
+by pre-existing extractor code, not by a live run — neither server was up. Both are worth a live
+pass when they next are.
+
+### Files touched
+`js/provider-catalog.js`, `js/app.js`, `tools/test-provider-extractors.mjs`,
+`docs/WaxFrame_Backlog_Master_v288.txt` (replaces v287), `CHANGELOG.md`, plus the routine stamp
+sweep.
+
+### Rollback
+`git revert HEAD`. Harvesting is additive — a reverted build shows no context figure for local
+servers, exactly as v3.63.511 did, and the stored limits are simply ignored.
+
+---
+
 ## v3.63.511 — Bearer tokens were never redacted from Scout bundles; seven backlog items cleared
 
 **Released:** 2026-09-20
