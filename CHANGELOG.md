@@ -1,5 +1,76 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.514 — Cap-aware launch warning; the learned ceiling was recorded against the wrong model
+
+**Released:** 2026-09-20
+**Build:** 20260920-008
+
+### What changed
+
+**The v3.63.494 reject-and-learn retry was recording the ceiling under the wrong model id.** When a
+provider refuses an output budget and names its real maximum, WaxFrame takes that number, records
+it, and retries. It recorded it against `cfg.model` — the provider's *default* model — rather than
+the model the request actually used. `getModelForAI` returns `ai.model` whenever a row carries one,
+which is every variant row and every row where a model was picked, so the two differ routinely.
+
+Two silent consequences. The picker showed an API-sourced output ceiling for a model that never
+reported one. And the model that really was capped never learned its ceiling, so the rejection
+repeated on every single round instead of once — the retry worked each time and the learning never
+stuck. Now recorded against the model that was rejected.
+
+**The retry has been driven end to end for the first time.** It had only ever been verified in
+isolation, because no live provider would reject a budget during testing — Ollama silently clamps
+rather than refusing. A mock endpoint returning OpenAI's exact 400 wording supplies the rejection
+for free. The full path now runs: 32,768 requested → 400 naming a 4,096 ceiling → one retry at
+4,096 → 200 → ceiling recorded → picker reads `✓ 4K out` sourced from the provider API. That run is
+what surfaced the wrong-model-id bug; the same run against the fix records it correctly and leaves
+the provider default untouched.
+
+**A length target that cannot fit the Builder's output limit now warns before the build starts.**
+Launching with a 20,000-word target against a Builder that can emit 4,096 tokens per round used to
+produce a document cut short with no prior indication. Launch now says so, with both numbers and
+where the limit came from, and offers Cancel or Launch anyway.
+
+It is deliberately a warning and never a promise. Output length is not reliably predictable from
+input length and a round may stop short for its own reasons, so the wording says that plainly and
+nothing is ever blocked. It stays silent when no length target is set, when no Builder is chosen,
+when the Builder's output ceiling is unknown — which is most local servers and several gateways —
+and when the target is within 15% of the estimated ceiling, since a target near the cap is a normal
+thing to attempt.
+
+**Streaming has a Settings control.** `wfSetStreamingEnabled` has existed since v3.63.499 and was
+reachable only from the browser console, which is not a way out for anyone who is not reading the
+source. It matters more now that Claude and Gemini stream too. **Settings → Workflow & Updates →
+"Stream responses"**, default on, sitting between Slow-AI alerts and Auto-update model lists. The
+help text names the case for turning it off: a proxy that buffers a stream and holds it to the end
+makes the wait worse rather than better.
+
+### Verification
+- Gate: all 19 stages pass.
+- The retry was driven through the real `callAPI` in a browser against a mock endpoint, configured
+  the way a Quick-Add server AI configures itself and deliberately carrying a picked model that
+  differs from `cfg.model`. Before the fix the ceiling landed under `provider-default-model` and
+  the model actually sent read back with no limit at all; after it, under the sent model with
+  source `api` and the provider default untouched. Exactly three requests in both runs: the
+  rejected one, the retry, and the existing non-streaming fallback the JSON-only mock triggers.
+- The warning was exercised across every branch: 20,000 words against a 4,096-token Builder warns;
+  2,000 words is silent; 3,100 words — just past the estimate but inside the margin — is silent;
+  50 pages warns; an unknown cap, no target, and no Builder are each silent. Range mode reads
+  "15,000–20,000 words". The dialog was rendered and checked at 1440×900.
+- The Settings row was confirmed present and visible in Workflow & Updates, hydrating checked on a
+  browser that has never set the key, and persisting correctly in both directions.
+
+### Files touched
+`js/app.js`, `index.html`, `docs/WaxFrame_Backlog_Master_v290.txt` (replaces v289), `CHANGELOG.md`,
+plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD`. The warning is additive and the Settings row only exposes an existing setting;
+reverting restores the wrong-model recording, so revert the warning and the retry fix separately if
+only one is unwanted.
+
+---
+
 ## v3.63.513 — Claude and Gemini stream too; the relay stopped buffering
 
 **Released:** 2026-09-20

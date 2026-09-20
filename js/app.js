@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-007
+// Build: 20260920-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1316,7 +1316,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-007';         // build stamp — update each session
+const BUILD = '20260920-008';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -1667,6 +1667,10 @@ function renderSettings() {
   // WF_DEBUG.setDeepDive() which updates both.
   const dd = document.getElementById('setDeepDive');
   if (dd && typeof WF_DEBUG !== 'undefined') dd.checked = !!WF_DEBUG.deepDiveOn;
+  // v3.63.513 — Streaming toggle. Defaults ON, so an unset key must hydrate
+  // as checked rather than as false.
+  const st = document.getElementById('setStreaming');
+  if (st) st.checked = wfStreamingEnabled();
   // v3.56.12 — Vision/OCR provider picker. List all four vision providers,
   // flagging which are keyed; the saved pick is restored (falls back to
   // Automatic at runtime if it's later un-keyed).
@@ -1987,6 +1991,17 @@ async function settingsToggleLengthGuard(wantArmed) {
 // console log + toast + label/title update happen exactly as they do
 // when the user clicks the footer pill. Slow Alerts is a global pref
 // (no confirm step), so this is a direct passthrough.
+// v3.63.513 — the Settings row for streaming. wfSetStreamingEnabled has
+// existed since v3.63.499 and was reachable only from the console, which is
+// not a way out for anyone who is not reading the source. It matters more
+// now that Claude and Gemini stream too: the escape hatch has to be usable
+// by the person whose proxy is the problem.
+function settingsToggleStreaming(wantOn) {
+  wfSetStreamingEnabled(!!wantOn);
+  const el = document.getElementById('setStreaming');
+  if (el) el.checked = wfStreamingEnabled();
+}
+
 function settingsToggleSlowAlerts(wantOn) {
   if (wantOn === _slowResponderEnabled) return;
   toggleSlowResponder();
@@ -3575,6 +3590,19 @@ function saveSettings() { saveHive(); saveProject(); }
 // 600 wpp aligns with industry-standard typewriter math (Word's
 // default page count, Gemini and ChatGPT's stated conversion) and
 // represents a single typed page at standard formatting.
+// v3.63.514 — Words per output token, for the pre-launch cap warning only.
+// English averages roughly 0.75 words per token, and this deliberately does
+// NOT try to be clever: the warning is a warning, not a prediction. Output
+// length is not reliably derivable from anything known before a run, so the
+// number is only ever used to answer "is the target so far past the ceiling
+// that it is worth saying something".
+const WORDS_PER_OUTPUT_TOKEN = 0.75;
+// How far past the ceiling the target has to sit before it is worth
+// interrupting a launch. A target close to the cap is a normal thing to
+// attempt — a model stops where it stops and the document may well be
+// shorter than the target. 1.15 keeps the warning for cases where the target
+// genuinely cannot fit rather than merely might not.
+const CAP_WARNING_MARGIN = 1.15;
 const WORDS_PER_PAGE      = 600;
 const WORDS_PER_PARAGRAPH = 125; // fallback estimate for hint display only — bloat gate direct-counts paragraphs
 const CHARS_PER_WORD      = 5.5; // average chars per word for estimation
@@ -3715,6 +3743,57 @@ function getLengthConstraint() {
   }
   return { mode, limit, min: (mode === 'range' ? minV : null), unit, wordLimit, wordMin: wordMin || null };
 }
+
+// ── Cap-aware pre-launch warning (v3.63.514) ────────────────────────
+//
+// Returns the warning body to show at Launch, or null to stay silent.
+// Silence is the common case and the correct one: it stays quiet when no
+// length target is set, when no Builder is chosen, when the Builder's output
+// ceiling is unknown — which is most local servers and several gateways —
+// and when the target plausibly fits.
+//
+// This is explicitly a WARNING and never a promise. Output length is not
+// reliably predictable from input length, a model can stop early for its own
+// reasons, and the token-to-word ratio is an average over English prose. The
+// case worth interrupting for is the one where the arithmetic cannot work at
+// all: asking for 20,000 words from a Builder that can emit 4,096 tokens.
+function _lengthTargetVsBuilderCap() {
+  try {
+    const c = getLengthConstraint();
+    if (!c || !c.wordLimit) return null;
+    const ai = builder && activeAIs.find(a => a.id === builder);
+    if (!ai) return null;
+    const model = getModelForAI(ai);
+    if (!model) return null;
+    const L = getModelLimits(ai.provider, model);
+    if (!L || L.output == null) return null;   // unknown cap — say nothing
+
+    const capWords = Math.round(L.output * WORDS_PER_OUTPUT_TOKEN);
+    if (!capWords || c.wordLimit <= capWords * CAP_WARNING_MARGIN) return null;
+
+    const fmt = window.WFProviderCatalog.formatTokenLimit;
+    const lab = window.WFProviderCatalog.limitSourceLabel;
+    const unitNote = c.unit === 'words' ? '' : ` (about ${c.wordLimit.toLocaleString()} words)`;
+    const target = c.mode === 'range'
+      ? `${c.min.toLocaleString()}–${c.limit.toLocaleString()} ${c.unit}`
+      : `${c.limit.toLocaleString()} ${c.unit}`;
+
+    return `Your length target is ${target}${unitNote}.\n\n` +
+           `${ai.name} can emit at most ${L.output.toLocaleString()} output tokens per round ` +
+           `(${fmt(L.output)}, ${lab(L.outputSource)}) — roughly ${capWords.toLocaleString()} words. ` +
+           `The target is past that, so the Builder will probably be cut off before it reaches the ` +
+           `target and the document will come back short.\n\n` +
+           `This is an estimate, not a measurement: output length is not reliably predictable, and ` +
+           `a round may stop short of the target for its own reasons. Nothing is blocked either way. ` +
+           `To give the target room, pick a Builder with a larger output limit or lower the target.`;
+  } catch (e) {
+    // A warning that throws would block a launch, which is far worse than a
+    // warning that never appears.
+    console.warn('[cap-warning] skipped', e);
+    return null;
+  }
+}
+if (typeof window !== 'undefined') window._lengthTargetVsBuilderCap = _lengthTargetVsBuilderCap;
 
 function updateLengthConstraintHint() {
   const hintEl = document.getElementById('lengthConstraintHint');
@@ -16082,6 +16161,19 @@ async function startSession() {
     return;
   }
 
+  // v3.63.514 — Cap-aware warning. Warning before a long build beats
+  // discovering the cutoff after it, and the numbers needed to say so are
+  // already known: the length target from the Project screen and the
+  // Builder's output ceiling from the limits store. Never blocks, and says
+  // nothing at all when the cap is unknown — most of the time it is.
+  const capWarning = _lengthTargetVsBuilderCap();
+  if (capWarning) {
+    const proceed = await wfConfirm('Target may not fit the Builder\'s output limit', capWarning, {
+      okText: 'Launch anyway'
+    });
+    if (!proceed) return;
+  }
+
   // Auto-select phase: if a document was provided, start in Refine — no need to Draft
   phase = docText ? 'refine' : 'draft';
 
@@ -20578,7 +20670,16 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
         if (learned) {
           consoleLog(`📐 ${ai.name} rejected our output budget and named its real ceiling: ` +
                      `${learned.toLocaleString()} tokens. Recording it and retrying.`, 'warn');
-          try { wfStoreApiModelLimits(ai.provider, { [cfg.model]: { context: null, output: learned } }); }
+          // v3.63.514 — record against the model that was ACTUALLY rejected,
+          // not cfg.model. cfg.model is the provider's default; a variant row
+          // or any row where a model was picked carries its own ai.model, and
+          // the two differ routinely. Recording under the wrong id had two
+          // effects, both silent: the picker showed an API-sourced ceiling for
+          // a model that never reported one, and the model that really was
+          // capped never learned its ceiling — so the same rejection repeated
+          // every single round instead of once.
+          const _rejectedModel = getModelForAI(ai) || cfg.model;
+          try { wfStoreApiModelLimits(ai.provider, { [_rejectedModel]: { context: null, output: learned } }); }
           catch (e) { /* recording is best-effort; the retry matters more */ }
         } else {
           consoleLog(`📐 ${ai.name} rejected our output budget without naming a limit — ` +

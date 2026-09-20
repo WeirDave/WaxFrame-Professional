@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v289
+WaxFrame Backlog Master v290
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -23,6 +23,31 @@ ships.
 
 
 
+
+
+v290 — CAP WARNING AND RETRY COVERAGE SHIPPED (v3.63.514). Old #1 struck;
+one item remains, and it is the one that is David's decision rather than a
+task. Both halves done:
+
+  (a) A length target past the Builder's known output ceiling warns at
+      Launch with both numbers and the limit's provenance, stays silent when
+      the cap is unknown, and never blocks.
+  (b) The reject-and-learn retry was driven end to end for the first time,
+      against a mock endpoint returning OpenAI's exact 400 wording. It found
+      a real bug: the learned ceiling was recorded against cfg.model, the
+      provider's DEFAULT model, instead of the model the request used. Every
+      variant row and every row with a picked model differs from cfg.model,
+      so the capped model never learned its ceiling and the rejection
+      repeated every round while the picker showed an API-sourced number for
+      a model that had never reported one.
+
+Also shipped: the streaming setting finally has a UI control (Settings →
+Workflow & Updates → "Stream responses"). It had existed since v3.63.499
+reachable only from the console.
+
+THE QUEUE IS NOW ONE ITEM, and that item needs David, not an assistant.
+When it is resolved this file holds no numbered work at all — which is the
+point, not a gap to fill. Do not invent entries to keep it populated.
 
 v289 — ANTHROPIC + GEMINI STREAMING SHIPPED (v3.63.513). Old #1 struck;
 items renumbered 1..2. The blocker named in that entry was real: the relay
@@ -157,47 +182,7 @@ OPEN FEATURES
 ════════════════════════════════════════════════════════════
 Ordered by value.
 
-1. Cap-aware warning before a build, and coverage for the recovery after
-   ─────────────────────────────────────────────────────────
-   (merged 2026-09-14: old #11 + old #16 — both hang off knowing
-   the Builder's output cap. Warn before; recover after.)
-   WHAT:   (a) When a length target is set on the Project screen
-           AND the Builder's max output is known, warn before
-           the build starts if the target plausibly will not fit.
-           (b) Drive the v3.63.494 reject-and-learn retry end to
-           end against a real 400, which has never happened.
-   WHY:    (a) Warning before a long build beats discovering the
-           cutoff after, and is cheap now that the cap and its
-           provenance are known. (b) That retry is the recovery
-           path for the one new failure mode v3.63.494 adds; if
-           it is broken, a model whose real ceiling is under
-           32768 fails outright where it used to work.
-   STATE:  OPEN.
-           (a) Explicitly a WARNING, never a promise — output
-           length is not reliably predictable from input length.
-           (b) parseBudgetRejection verified in isolation:
-           returns 4096 from OpenAI's wording, 0 for a budget
-           error naming no number, null for unrelated errors.
-           Guarded against looping via _budgetRetry. No live
-           provider rejected a budget during testing — Ollama
-           silently clamps rather than rejecting, so the local
-           rig cannot produce this failure.
-   WHERE:  js/app.js getLengthConstraint / getModelLimits, the
-           Launch Session path and the Builder screen;
-           js/provider-catalog.js parseBudgetRejection and
-           js/app.js callAPI (the !response.ok branch).
-   DONE:   (a) A target that cannot fit the known cap warns at
-           Launch with both numbers and the limit's provenance;
-           silent when the cap is unknown; never blocks.
-           (b) A provider that really rejects 32768 is driven end
-           to end: the retry fires once, the named ceiling is
-           recorded, the second request succeeds, and the picker
-           shows that ceiling as API-sourced. A mock endpoint
-           returning OpenAI's exact 400 body satisfies this
-           without spending tokens.
-
-
-2. Historical workplace identifiers outside the working tree
+1. Historical workplace identifiers outside the working tree
    ─────────────────────────────────────────────────────
    WHAT:   Surfaces outside the working tree that carried workplace
            identifiers after the v3.63.502-504 scrub.
