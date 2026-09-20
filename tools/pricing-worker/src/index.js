@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20260916-002
+//  Build: 20260920-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -246,13 +246,124 @@ function hostnameMatchesDomain(hostname, domain) {
   return hostname === domain || hostname.endsWith('.' + domain);
 }
 
+// Build 20260920-001 — a provider's own announcement post is on the
+// provider's own domain, so the hostname allowlist above waves it
+// through, but it is a dated snapshot rather than a current price list.
+// mistral.ai/news/ministraux/ is the launch announcement for the
+// Ministral family and still quotes the launch price; a run on
+// 2026-09-06 applied the $0.10 figure off it over the then-current
+// $0.15, and the 2026-09-20 run re-proposed the same change off the
+// same page. buildResearchPrompt already tells Sonar not to cite a news
+// article — this is the same requirement enforced rather than requested.
+// Deliberately a short, specific list: a "pricing", "docs" or "console"
+// path is the normal shape and nothing in the seed hits any of these.
+const SOURCE_PATH_DENY = ['news', 'blog', 'newsroom', 'press', 'announcements', 'changelog'];
+
+function hasDeniedSourcePath(pathname) {
+  return pathname.toLowerCase().split('/').filter(Boolean).some(seg => SOURCE_PATH_DENY.includes(seg));
+}
+
 function isTrustedSource(providerId, sourceUrl) {
   const allowed = SOURCE_DOMAINS[providerId];
+  if (typeof sourceUrl === 'string' && sourceUrl) {
+    // Path check runs even with no per-provider allowlist configured —
+    // an announcement post is the wrong KIND of page whoever published it.
+    try {
+      if (hasDeniedSourcePath(new URL(sourceUrl).pathname)) return false;
+    } catch (e) { return false; }
+  }
   if (!allowed || !allowed.length) return true; // no allowlist configured — don't block
   if (typeof sourceUrl !== 'string' || !sourceUrl) return false;
   let hostname;
   try { hostname = new URL(sourceUrl).hostname.toLowerCase(); } catch (e) { return false; }
   return allowed.some(d => hostnameMatchesDomain(hostname, d));
+}
+
+// ── modelAttributionMismatch (Build 20260920-001) ────────────────────
+// The confirmedModel guardrail (v3.63.422) requires Sonar to name the
+// model the price sat next to, and the build header above says plainly
+// what it does NOT do: compare that name against the model actually
+// asked for. Three real proposals have now turned on exactly that gap —
+// claude-sonnet-4-6 answered with claude-sonnet-5's introductory rate,
+// ministral-8b-latest answered with its 3B sibling's price, and the
+// 2026-09-20 run proposing $2/$8 for sonar-reasoning off the row for
+// "Sonar Reasoning Pro", a model this seed already tracks separately at
+// exactly $2/$8.
+//
+// A full string match is what the earlier note correctly ruled out —
+// "gpt-5.5" and "GPT-5.5" and "mistral-large-latest" vs "Mistral Large 3"
+// are all the same model written three ways. What IS comparable is the
+// small set of tokens that distinguish SIBLINGS from each other:
+//   - tier words (pro / mini / lite / flash / …) — flagged when one side
+//     carries one the other does not. That asymmetry is the whole
+//     signature of a sibling-row mix-up.
+//   - parameter sizes (8b vs 3b) — flagged only when both sides name one
+//     and they disagree.
+//   - version numbers (4.6 vs 5) — flagged only when both sides name one
+//     and neither is a prefix of the other, so "Grok 4.20 Reasoning"
+//     still matches grok-4.20-0309-reasoning and a bare "Mistral Large"
+//     never fires.
+// Returns a human-readable reason, or null when nothing disagrees. This
+// never rejects a proposal or changes a live price — every proposal is
+// already held for review; this only changes what the review says.
+const TIER_TOKENS = new Set([
+  'pro', 'mini', 'nano', 'lite', 'flash', 'turbo', 'max', 'ultra', 'plus',
+  'air', 'thinking', 'reasoning', 'deep', 'research',
+  'haiku', 'sonnet', 'opus', 'sol', 'terra', 'luna'
+]);
+
+function modelTokens(name) {
+  return String(name || '')
+    .toLowerCase()
+    .replace(/\+/g, ' plus ')
+    .replace(/(\d)-(\d)/g, '$1.$2')   // claude-sonnet-4-6 -> …4.6, matching "Claude Sonnet 4.6"
+    .split(/[^a-z0-9.]+/)
+    .map(t => t.replace(/^\.+|\.+$/g, ''))
+    .filter(Boolean);
+}
+
+function classifyTokens(name) {
+  const tiers = new Set();
+  const sizes = new Set();
+  const versions = [];
+  for (const t of modelTokens(name)) {
+    if (TIER_TOKENS.has(t)) tiers.add(t);
+    else if (/^\d+(\.\d+)?b$/.test(t)) sizes.add(t);
+    else if (/^\d+(\.\d+)*$/.test(t)) versions.push(t);
+  }
+  return { tiers, sizes, versions };
+}
+
+function versionsAgree(a, b) {
+  return a === b || a.startsWith(b + '.') || b.startsWith(a + '.');
+}
+
+function modelAttributionMismatch(requestedId, confirmedModel) {
+  if (typeof confirmedModel !== 'string' || !confirmedModel.trim()) return null;
+  const req = classifyTokens(requestedId);
+  const got = classifyTokens(confirmedModel);
+
+  const onlyGot = [...got.tiers].filter(t => !req.tiers.has(t));
+  const onlyReq = [...req.tiers].filter(t => !got.tiers.has(t));
+  if (onlyGot.length || onlyReq.length) {
+    const parts = [];
+    if (onlyGot.length) parts.push(`the source names "${onlyGot.join('/')}"`);
+    if (onlyReq.length) parts.push(`the requested model is "${onlyReq.join('/')}"`);
+    return `tier mismatch — ${parts.join(' but ')}`;
+  }
+
+  if (req.sizes.size && got.sizes.size) {
+    const shared = [...req.sizes].some(s => got.sizes.has(s));
+    if (!shared) return `parameter-size mismatch — asked for ${[...req.sizes].join('/')}, source names ${[...got.sizes].join('/')}`;
+  }
+
+  if (req.versions.length && got.versions.length) {
+    if (!versionsAgree(req.versions[0], got.versions[0])) {
+      return `version mismatch — asked for ${req.versions[0]}, source names ${got.versions[0]}`;
+    }
+  }
+
+  return null;
 }
 
 function buildStatusHtml(log) {
@@ -261,6 +372,7 @@ function buildStatusHtml(log) {
       const label = `${escapeHtml(c.providerId)}/${escapeHtml(c.modelId)}`;
       const reason = escapeHtml(c.reason || '');
       const style = c.status === 'unverified-source' ? `<strong style="color:#b3261e">${label}: needs review — UNVERIFIED SOURCE</strong> — ${reason}`
+        : c.status === 'model-mismatch' ? `<strong style="color:#b3261e">${label}: needs review — MODEL MISMATCH</strong> — ${reason}`
         : c.status === 'needs-review' ? `<strong style="color:#b3261e">${label}: needs review</strong> — ${reason}`
         : c.status === 'confirmed' ? `${label}: confirmed unchanged`
         : `<span style="color:#a15c00">${label}: retained old value (${reason || 'unknown reason'})</span>`;
@@ -447,16 +559,7 @@ function decideModelUpdate(provider, model, result, wasHealthyLastRun, nowIso) {
     // (still needs-verification, still null) — the proposal is reviewed
     // and applied by hand, same as any other needs-review row.
     const reason = `first price found: $${inputPerM}/$${outputPerM} per M — confirmed as "${confirmedModel}" — ${source || 'no source'}`;
-    return {
-      nextModel: model,
-      change: {
-        providerId: provider.id, modelId: model.id, requestedModel: model.id, status: 'needs-review',
-        confirmedModel, oldInputPerM: model.inputPerM, proposedInputPerM: inputPerM,
-        oldOutputPerM: model.outputPerM, proposedOutputPerM: outputPerM,
-        sourceUrl: source || null, ts: nowIso, reason
-      },
-      alertLine: `NEEDS REVIEW  ${label} (${provider.name}): ${reason}`
-    };
+    return heldProposal(provider, model, result, reason, nowIso, label);
   }
 
   const priceMoved = inputPerM !== model.inputPerM || outputPerM !== model.outputPerM;
@@ -476,15 +579,33 @@ function decideModelUpdate(provider, model, result, wasHealthyLastRun, nowIso) {
   // Price moved from an already-verified value — held for review no matter
   // how large or small the delta. The old verified value stays live.
   const reason = `proposed $${inputPerM}/$${outputPerM} per M (was $${model.inputPerM}/$${model.outputPerM}) — confirmed as "${confirmedModel}" — ${source || 'no source'}`;
+  return heldProposal(provider, model, result, reason, nowIso, label);
+}
+
+// Shared tail of both held-for-review branches above. The live model is
+// never touched either way; the only question is how loudly the run log
+// and the alert email describe what is being proposed. A confirmedModel
+// that disagrees with the model actually asked for (see
+// modelAttributionMismatch) downgrades the row from `needs-review` to
+// `model-mismatch` — same held value, same recorded proposal, but the
+// reviewer is told which sibling row the number probably came off
+// instead of being handed a plausible-looking price to apply.
+function heldProposal(provider, model, result, reason, nowIso, label) {
+  const { inputPerM, outputPerM, source, confirmedModel } = result;
+  const mismatch = modelAttributionMismatch(model.id, confirmedModel);
+  const status = mismatch ? 'model-mismatch' : 'needs-review';
+  const fullReason = mismatch
+    ? `${reason} — WARNING: ${mismatch}; verify this is not a sibling model's price before applying`
+    : reason;
   return {
     nextModel: model,
     change: {
-      providerId: provider.id, modelId: model.id, requestedModel: model.id, status: 'needs-review',
+      providerId: provider.id, modelId: model.id, requestedModel: model.id, status,
       confirmedModel, oldInputPerM: model.inputPerM, proposedInputPerM: inputPerM,
       oldOutputPerM: model.outputPerM, proposedOutputPerM: outputPerM,
-      sourceUrl: source || null, ts: nowIso, reason
+      sourceUrl: source || null, ts: nowIso, reason: fullReason
     },
-    alertLine: `NEEDS REVIEW  ${label} (${provider.name}): ${reason}`
+    alertLine: `${mismatch ? 'MODEL MISMATCH' : 'NEEDS REVIEW '} ${label} (${provider.name}): ${fullReason}`
   };
 }
 
@@ -611,7 +732,14 @@ async function refreshPricing(env) {
     if (log[0] && Array.isArray(log[0].changes)) {
       log[0].changes.forEach(c => { prevStatusByKey[`${c.providerId}::${c.modelId}`] = c.status; });
     }
-    const wasHealthy = status => status === 'confirmed' || status === 'needs-review';
+    // "Healthy" means the research call came back with a usable answer —
+    // not that the answer was accepted. A row held for review (including
+    // one downgraded to unverified-source or model-mismatch) was read
+    // fine, so a run where it can't be read at all is still the
+    // "their page probably changed" regression signal the alert exists
+    // for. Only `retained` — nothing readable — is unhealthy.
+    const HEALTHY_STATUSES = ['confirmed', 'needs-review', 'unverified-source', 'model-mismatch'];
+    const wasHealthy = status => HEALTHY_STATUSES.includes(status);
 
     // Flatten to (provider, model) tasks. `unsupported` models (e.g.
     // Copilot's — API unavailable to personal M365 accounts) are never
@@ -661,6 +789,10 @@ async function refreshPricing(env) {
     // corroborateProposal/corroboratesSource above.
     await mapWithConcurrency(decisions, RESEARCH_CONCURRENCY, async d => {
       const c = d.decision.change;
+      // `model-mismatch` rows are deliberately not corroborated: the
+      // proposed number IS on the cited page — on the sibling model's
+      // row — so a fetch would come back corroborated and read as
+      // reassurance about the one thing already known to be wrong.
       if (c.status !== 'needs-review' || !c.sourceUrl) return;
       const corroborated = await corroborateProposal(c.sourceUrl, c.proposedInputPerM, c.proposedOutputPerM);
       if (corroborated === false) {
@@ -790,4 +922,4 @@ export default {
 // Named exports alongside the default Worker export — consumed only by
 // tools/pricing-worker/test-refresh-logic.mjs (pure-function unit tests,
 // no KV/network). Cloudflare's runtime ignores exports it doesn't call.
-export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError };
+export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath };
