@@ -181,7 +181,7 @@
           "estPerRound": 0.002,
           "estNote": "Off-peak rate; peak hours (limited weekday windows) are 2×",
           "sourceUrl": "https://api-docs.deepseek.com/quick_start/pricing/",
-          "verifiedAt": "2026-09-14T12:00:00Z",
+          "verifiedAt": "2026-09-20T12:00:00Z",
           "status": "verified"
         },
         {
@@ -193,7 +193,7 @@
           "estPerRound": 0.007,
           "estNote": "Off-peak rate; peak hours (limited weekday windows) are 2×",
           "sourceUrl": "https://api-docs.deepseek.com/quick_start/pricing/",
-          "verifiedAt": "2026-09-14T12:00:00Z",
+          "verifiedAt": "2026-09-20T12:00:00Z",
           "status": "verified"
         }
       ]
