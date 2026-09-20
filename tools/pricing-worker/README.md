@@ -97,7 +97,7 @@ Confirm the returned `lastUpdated` matches what you just set. v3.63.251 (2026-06
 
 The 2026-09-20 reconcile found exactly that. `v3.63.497` repriced `deepseek-flash` from $0.22/$0.60 to $0.15/$0.60 and moved `estPerRound` 0.002 → 0.001, when the new price works out to 0.002 — halving the displayed per-round cost of the one provider already tagged `cheapest`, and floating it to the top of the ranking it was being judged on.
 
-`tools/check-pricing-coverage.mjs` now recomputes it for every priced row. The expected value is round-half-up to 3dp, floored at 0.001 so a paid model never displays as "$0.000/round"; that rule reproduces all 33 priced rows exactly, so it is checked for equality rather than with a tolerance — a tolerance loose enough to absorb the rounding would have been loose enough to absorb the defect.
+`tools/check-pricing-coverage.mjs` now recomputes it for every priced row. The expected value is round-half-up to 3dp, floored at 0.001 so a paid model never displays as "$0.000/round"; that rule reproduces all 36 priced rows exactly, so it is checked for equality rather than with a tolerance — a tolerance loose enough to absorb the rounding would have been loose enough to absorb the defect.
 
 ---
 

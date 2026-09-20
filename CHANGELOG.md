@@ -39,17 +39,22 @@ Unconfirmed: the Worker endpoint is not reachable from this session, so this is 
 ### Verification
 - Gate: all 17 checks pass.
 - `modelAttributionMismatch` exercised against every model id in the seed paired with a plausible provider-page spelling: all three real incidents flag, and no currently-tracked model flags on an ordinary spelling difference.
-- Mutation-checked: disabling the guard fails 11 assertions, emptying `SOURCE_PATH_DENY` fails 3.
+- Mutation-checked: disabling the guard fails 11 assertions, emptying `SOURCE_PATH_DENY` fails 3, restoring the stale `estPerRound` fails the coverage check by name.
+- The `estPerRound` rule was derived from the data rather than assumed — round-half-up to 3dp with a 0.001 floor reproduces all 36 priced rows exactly, which is why it is checked for equality rather than with a tolerance.
+- Offline reconcile also confirmed: seed and generated `FALLBACK_DATA` byte-identical, every seed `sourceUrl` passes the new `isTrustedSource` path rule, and no row disagrees with its own `status`.
 - Prices cross-checked against published third-party pricing trackers; the Worker endpoint and the provider pricing pages were not reachable from this session's network, so the Mistral and Perplexity figures rest on that plus the seed's own internal agreement, not on a fetch of the official page.
 
 ### Deploy
-The data fix ships with the site. The Worker changes need `wrangler deploy` from a token scoped to both `Workers Scripts:Edit` and `Workers KV Storage:Edit` — **not** done from this session and still outstanding. Until then the guards are in the repo but not in the live run.
+Two steps, both outstanding and neither done from this session.
+
+1. **`wrangler deploy`** for the Worker changes, from a token scoped to both `Workers Scripts:Edit` and `Workers KV Storage:Edit`. Until then the guards are in the repo but not in the live weekly run.
+2. **`wrangler kv key put --binding=PRICING_DATA latest --path=data/pricing-seed.json --remote`** — but check the pricing page's DeepSeek model id first. `deepseek-flash` means KV is current and this only carries the corrections; `deepseek-v4-flash` means KV never received the 2026-09-14 pushes and this is also what repairs the roster. Either way the corrected seed is now the better copy, which is the opposite of what was true before this release.
 
 ### Files touched
 `tools/pricing-worker/src/index.js`, `tools/pricing-worker/test-refresh-logic.mjs`, `tools/pricing-worker/data/pricing-seed.json`, `tools/pricing-worker/README.md`, `tools/check-pricing-coverage.mjs`, `js/pricing-renderer.js`, `CHANGELOG.md`, plus the routine stamp sweep
 
 ### Rollback
-`git revert HEAD`. The seed correction and the two guards are independent — reverting the guards alone leaves the corrected price in place.
+`git revert` either commit on the branch independently. The seed corrections, the two Worker guards and the `estPerRound` check are all separable — reverting the guards leaves the corrected prices in place.
 
 ---
 
