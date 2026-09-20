@@ -1,5 +1,64 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.510 — Manual: prepay billing guidance, and the free-tier privacy trade-off named
+
+**Released:** 2026-09-20
+**Build:** 20260920-004
+
+### What changed
+
+**New billing block: "Prepay, and turn auto-reload off."** Nothing in the manual, the API Key
+Guide or any other page mentioned prepay versus pay-as-you-go, auto-reload, or what a leaked key
+can actually cost — a search for those terms returned zero hits across every page. The new block
+sits in the manual's API Costs & Billing section, between "Monitoring your spending" and the
+Perplexity note, and makes the case in two parts: a hive run is a retry loop, so a misbehaving run
+on pay-as-you-go bills until someone notices; and an API key is an unusually leak-prone secret, so
+a prepaid balance with auto-reload off bounds the loss to whatever is loaded. It names the trade-off
+honestly (calls stop at zero balance) and points at Gemini's "Choose how you pay" dialog, including
+its account-wide warning.
+
+This matters more than general prudence given `api-details.html` already tells users to keep every
+key in a plain note — advice that makes capping the downside more relevant, not less.
+
+**The Gemini tier caveat was rewritten to cover data use, not just cost.** It previously ended with
+"For casual use, keep billing off on AI Studio" — sound on price, but Google's API terms state that
+free-tier content is used to develop and improve Google's products and that human reviewers may read
+it, while paid-tier content is not used for product improvement. For an application whose entire
+function is putting the user's documents through these APIs, advice that steers casual users to the
+free tier was steering them into making their working documents training data without saying so.
+
+Rewritten as a genuine two-sided decision: the cost paragraph is kept, a second paragraph states the
+data-use difference and suggests deciding per document rather than once (free tier fine for a blog
+post or cover letter, worth avoiding for anything confidential, commercial, or written for a client),
+and a third keeps the usage-page link and the Reviewer-not-Builder tip while adding the two-project
+pattern for running a free reviewer and paid access side by side. Links to the Privacy page for what
+WaxFrame itself sends. No claim is made about other providers beyond advising users to check the
+terms of any AI they add.
+
+### Verification
+- Gate: all 17 checks pass.
+- Rendered on a local server: the new block renders with its four paragraphs in the correct position
+  above the Perplexity note, with bold runs intact.
+- The rewritten caveat was confirmed present and laid out (770×119 px, computed visible) but could
+  not be captured in a screenshot — the preview pane returned blank frames at that scroll depth
+  across four attempts and three navigation methods, while reporting correct geometry. A rendering
+  limitation of the capture path, not a layout fault; the change replaces paragraphs inside an
+  existing block with paragraphs of the same shape.
+- Internal link corrected to the in-body house pattern
+  (`target="_blank" rel="noopener noreferrer" class="link-accent"`) after a first pass used a bare
+  `class="link-accent"`, which only the nav links do.
+- Stamp sweep completed in a single pass by ordering the combined `content="vX.Y.Z Pro | Build: N"`
+  substitution ahead of the bare `Build:` rule and adding an explicit rule for the sixteen helper
+  pages' `content="<build>"` form — the two failures that needed correcting mid-release in v3.63.509.
+
+### Files touched
+`waxframe-user-manual.html`, `CHANGELOG.md`, plus the routine stamp sweep
+
+### Rollback
+`git revert HEAD` — documentation only, no code or data paths touched.
+
+---
+
 ## v3.63.509 — Gemini Pro model id corrected to the id Google actually publishes
 
 **Released:** 2026-09-20
