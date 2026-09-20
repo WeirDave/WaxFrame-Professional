@@ -24,6 +24,18 @@ The 2026-09-20 scheduled run held two price proposals and reported two Gemini ro
 
 **`wasHealthy` widened.** A row held as `unverified-source` or `model-mismatch` was read fine, so it now counts as healthy for the "was OK last run, now can't be read at all" regression signal. Previously only `confirmed`/`needs-review` did, which would have silently suppressed that alert for a held row.
 
+### Full seed reconcile (added after the initial review)
+
+A reconcile of the whole seed, prompted by the Ministral drift, found two more things.
+
+**`deepseek-flash`'s per-round estimate was half what its price implies.** `estPerRound` is derived from the price but stored, and `v3.63.497` repriced that model from $0.22/$0.60 to $0.15/$0.60 while moving `estPerRound` 0.002 → 0.001; the new price computes to 0.002. It is not cosmetic — `js/pricing-renderer.js` sorts by `estPerRound` and picks the "cheapest" recommendation from it, so DeepSeek, the one provider already tagged `cheapest`, was displayed at half its real per-round cost and sorted above rows it actually ties with. Corrected, and `tools/check-pricing-coverage.mjs` now recomputes the field for every priced row so a price edit cannot leave it behind again.
+
+**KV is probably missing three model rows, not just one price.** A push writes the whole seed, so a push that never ran holds back everything in it. KV reported `$0.15/$0.15` for `ministral-8b-latest` on 2026-09-20, a value the seed abandoned on 2026-09-06 — so no full-seed push has landed since then, and two commits in that window changed the roster: `v3.63.497` renamed `deepseek-v4-flash` to `deepseek-flash` and repriced it, and `v3.63.500` added `command-a-plus-05-2026` and `command-r7b-12-2024`. The weekly run cannot repair this — it maps over the rows already in KV and never adds, renames or removes one, so it has been researching a `deepseek-v4-flash` that exists nowhere else in the codebase.
+
+Unconfirmed: the Worker endpoint is not reachable from this session, so this is inference from the one KV value the run log quoted, not a read of KV. The test needs no tooling — the pricing page showing `deepseek-flash` means the pushes landed, `deepseek-v4-flash` means they did not and Cohere will show three models instead of five.
+
+**This inverts the push advice above, and deliberately.** While the seed carried the bad $0.10 Ministral value, pushing it would have put that live. With the seed corrected the seed is the better copy in every row, and a push is what repairs the roster.
+
 ### Verification
 - Gate: all 17 checks pass.
 - `modelAttributionMismatch` exercised against every model id in the seed paired with a plausible provider-page spelling: all three real incidents flag, and no currently-tracked model flags on an ordinary spelling difference.
@@ -34,7 +46,7 @@ The 2026-09-20 scheduled run held two price proposals and reported two Gemini ro
 The data fix ships with the site. The Worker changes need `wrangler deploy` from a token scoped to both `Workers Scripts:Edit` and `Workers KV Storage:Edit` — **not** done from this session and still outstanding. Until then the guards are in the repo but not in the live run.
 
 ### Files touched
-`tools/pricing-worker/src/index.js`, `tools/pricing-worker/test-refresh-logic.mjs`, `tools/pricing-worker/data/pricing-seed.json`, `tools/pricing-worker/README.md`, `js/pricing-renderer.js`, `CHANGELOG.md`, plus the routine stamp sweep
+`tools/pricing-worker/src/index.js`, `tools/pricing-worker/test-refresh-logic.mjs`, `tools/pricing-worker/data/pricing-seed.json`, `tools/pricing-worker/README.md`, `tools/check-pricing-coverage.mjs`, `js/pricing-renderer.js`, `CHANGELOG.md`, plus the routine stamp sweep
 
 ### Rollback
 `git revert HEAD`. The seed correction and the two guards are independent — reverting the guards alone leaves the corrected price in place.
