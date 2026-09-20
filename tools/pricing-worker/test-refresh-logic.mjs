@@ -18,7 +18,7 @@
 // Exit 0 if every assertion passes; exit 1 with FAIL lines otherwise.
 // ============================================================
 
-import { decideModelUpdate, mapWithConcurrency, isTrustedSource, isValidSizeString, corroboratesSource, buildStatusHtml, isSafeEmailAddress, isTransientError } from './src/index.js';
+import { decideModelUpdate, mapWithConcurrency, isTrustedSource, isValidSizeString, corroboratesSource, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath } from './src/index.js';
 
 let failures = 0;
 function assertEqual(actual, expected, label) {
@@ -62,13 +62,18 @@ console.log('\ndecideModelUpdate — any changed price holds the old value for r
   const d = decideModelUpdate({ id: 'claude', name: 'Claude' }, model, result, false, NOW);
   assertEqual(d.nextModel.inputPerM, 3.00, 'OLD verified inputPerM stays live in nextModel');
   assertEqual(d.nextModel.outputPerM, 15.00, 'OLD verified outputPerM stays live in nextModel');
-  assertEqual(d.change.status, 'needs-review', 'change status is needs-review');
+  // Build 20260920-001: this fixture IS a version mix-up, so the held
+  // row now carries the more specific `model-mismatch` status rather
+  // than a bare `needs-review`. What this section is about — the old
+  // price stays live and the run still alerts — is unchanged; see the
+  // modelAttributionMismatch section below for the guard itself.
+  assertEqual(d.change.status, 'model-mismatch', 'change status is a held proposal, named as a version mismatch');
   assertEqual(d.change.oldInputPerM, 3.00, 'change record captures old price');
   assertEqual(d.change.proposedInputPerM, 2.00, 'change record captures proposed price');
-  assertEqual(d.change.confirmedModel, 'Claude Sonnet 5', 'change record captures the model Sonar actually confirmed — lets a human catch a version mismatch against the requested "claude-sonnet-4-6"');
+  assertEqual(d.change.confirmedModel, 'Claude Sonnet 5', 'change record captures the model Sonar actually confirmed — the field the mismatch guard reads');
   assertEqual(d.change.sourceUrl, 'https://anthropic.com/pricing', 'change record captures source URL');
   assertEqual(d.change.ts, NOW, 'change record captures timestamp');
-  assert(typeof d.alertLine === 'string' && d.alertLine.includes('NEEDS REVIEW'), 'a changed price always alerts, regardless of delta size');
+  assert(typeof d.alertLine === 'string' && /^(NEEDS REVIEW|MODEL MISMATCH)/.test(d.alertLine), 'a changed price always alerts, regardless of delta size');
 }
 
 // ── decideModelUpdate: large delta is ALSO just held (no special path) ──
@@ -210,6 +215,98 @@ console.log('\nbuildStatusHtml — escapes every value read from KV/run-log');
   assert(html.includes('&lt;script&gt;') && html.includes('&lt;img src=x onerror=alert(1)&gt;'), 'unsafe characters remain visible as encoded text');
   assert(isSafeEmailAddress('alerts@example.com') === true, 'valid private alert recipient accepted');
   assert(isSafeEmailAddress('alerts@example.com\r\nBcc: attacker@example.com') === false, 'email header injection rejected');
+}
+
+// ── modelAttributionMismatch (Build 20260920-001) ───────────────────
+// Every case below is a real proposal shape, not an invented one. The
+// three "must flag" rows are the three incidents this guard exists for;
+// the "must not flag" rows are every model id currently in
+// data/pricing-seed.json paired with the way a provider page plausibly
+// writes it, because a guard that fires on the normal case is worse than
+// no guard — it teaches the reader to skim past the warning.
+console.log('\nmodelAttributionMismatch — sibling-row mix-ups are named, normal spellings are not');
+{
+  // 2026-09-20: $2/$8 proposed for sonar-reasoning off the "Sonar
+  // Reasoning Pro" row — a model this seed already tracks separately at
+  // exactly $2/$8.
+  assert(/tier mismatch/.test(modelAttributionMismatch('sonar-reasoning', 'Sonar Reasoning Pro') || ''), 'sonar-reasoning answered with Sonar Reasoning Pro is flagged');
+  // Build 20260809-001: a price for ministral-8b-latest that belonged to
+  // its 3B sibling.
+  assert(/parameter-size mismatch/.test(modelAttributionMismatch('ministral-8b-latest', 'Ministral 3B') || ''), 'ministral-8b answered with the 3B sibling is flagged');
+  // v3.63.422: claude-sonnet-4-6 answered with claude-sonnet-5's
+  // introductory rate — the incident that bought the confirmedModel
+  // field in the first place, which this closes the other half of.
+  assert(/version mismatch/.test(modelAttributionMismatch('claude-sonnet-4-6', 'Claude Sonnet 5') || ''), 'claude-sonnet-4-6 answered with Sonnet 5 is flagged');
+
+  assert(modelAttributionMismatch('sonar', 'Sonar Pro') !== null, 'a tier word the requested model lacks is flagged');
+  assert(modelAttributionMismatch('sonar-pro', 'Sonar') !== null, 'a tier word the source lacks is flagged');
+  assert(modelAttributionMismatch('gpt-5.6-sol', 'GPT-5.6 Terra') !== null, 'same-version sibling variants are flagged');
+  assert(modelAttributionMismatch('gemini-3.5-flash', 'Gemini 3.5 Flash-Lite') !== null, 'flash answered with flash-lite is flagged');
+
+  const spelledDifferently = [
+    ['sonar-reasoning', 'Sonar Reasoning'],
+    ['sonar-reasoning-pro', 'Sonar Reasoning Pro'],
+    ['sonar-deep-research', 'Sonar Deep Research'],
+    ['ministral-8b-latest', 'Ministral 8B'],
+    ['claude-sonnet-4-6', 'Claude Sonnet 4.6'],          // 4-6 and 4.6 are one version
+    ['claude-haiku-4-5', 'Claude Haiku 4.5'],
+    ['mistral-large-latest', 'Mistral Large 3'],         // a floating alias has no version to disagree with
+    ['mistral-large-latest', 'Mistral Large'],
+    ['gemini-3.1-flash-lite', 'Gemini 3.1 Flash-Lite'],
+    ['grok-4.20-0309-reasoning', 'Grok 4.20 Reasoning'], // a datestamp is not a version disagreement
+    ['command-r-plus', 'Command R+'],                    // "+" and "plus" are one word
+    ['command-a-plus-05-2026', 'Command A+'],
+    ['command-r7b-12-2024', 'Command R7B'],
+    ['deepseek-flash', 'DeepSeek-V4 Flash'],
+    ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Llama 3.3 70B Instruct Turbo'],
+    ['gpt-5.4-nano', 'GPT-5.4-nano']
+  ];
+  const wrongly = spelledDifferently.filter(([id, conf]) => modelAttributionMismatch(id, conf) !== null);
+  assertEqual(wrongly, [], 'no currently-tracked model is flagged for an ordinary spelling difference');
+}
+
+// ── decideModelUpdate: a mismatched proposal is held AND labelled ────
+console.log('\ndecideModelUpdate — a sibling-row price is held and named as a mismatch');
+{
+  const model = { id: 'sonar-reasoning', inputPerM: 1.00, outputPerM: 5.00, status: 'verified', verifiedAt: '2026-08-09T13:00:00Z' };
+  const result = { ok: true, inputPerM: 2.00, outputPerM: 8.00, source: 'https://docs.perplexity.ai/getting-started/pricing', confirmedModel: 'Sonar Reasoning Pro' };
+  const d = decideModelUpdate({ id: 'perplexity', name: 'Perplexity' }, model, result, true, NOW);
+  assertEqual(d.change.status, 'model-mismatch', 'status downgraded from needs-review to model-mismatch');
+  assertEqual(d.nextModel.inputPerM, 1.00, 'live price still untouched');
+  assertEqual(d.nextModel.outputPerM, 5.00, 'live output price still untouched');
+  assertEqual(d.change.proposedInputPerM, 2.00, 'the proposal is still recorded in full');
+  assertEqual(d.change.confirmedModel, 'Sonar Reasoning Pro', 'the name the source gave is still recorded');
+  assert(/^MODEL MISMATCH /.test(d.alertLine), 'alert line leads with MODEL MISMATCH, not NEEDS REVIEW');
+  assert(/sibling/.test(d.change.reason), 'the reason tells the reviewer what to check');
+}
+
+// ── decideModelUpdate: a clean proposal is unaffected by the new guard ──
+console.log('\ndecideModelUpdate — a proposal whose attribution agrees is still plain needs-review');
+{
+  const model = { id: 'sonar-reasoning', inputPerM: 1.00, outputPerM: 5.00, status: 'verified', verifiedAt: '2026-08-09T13:00:00Z' };
+  const result = { ok: true, inputPerM: 1.50, outputPerM: 6.00, source: 'https://docs.perplexity.ai/getting-started/pricing', confirmedModel: 'Sonar Reasoning' };
+  const d = decideModelUpdate({ id: 'perplexity', name: 'Perplexity' }, model, result, true, NOW);
+  assertEqual(d.change.status, 'needs-review', 'status unchanged for an agreeing attribution');
+  assert(/^NEEDS REVIEW /.test(d.alertLine), 'alert line still reads NEEDS REVIEW');
+  assert(!/WARNING/.test(d.change.reason), 'no warning is added to a clean proposal');
+}
+
+// ── isTrustedSource: an announcement post is the wrong kind of page ──
+// mistral.ai/news/ministraux/ is on Mistral's own domain and still
+// quotes the Ministral launch price. A run applied it over the current
+// price on 2026-09-06 and re-proposed the same change on 2026-09-20.
+console.log('\nisTrustedSource — a provider announcement post is not a current price list');
+{
+  assertEqual(isTrustedSource('mistral', 'https://mistral.ai/news/ministraux/'), false, 'the launch announcement that caused this is rejected');
+  assertEqual(isTrustedSource('mistral', 'https://mistral.ai/pricing/api/'), true, 'the real pricing page is still accepted');
+  assertEqual(hasDeniedSourcePath('/blog/2026/new-prices'), true, 'a blog post is rejected');
+  assertEqual(hasDeniedSourcePath('/changelog/'), true, 'a changelog is rejected');
+  const seedPaths = [
+    '/gemini-api/docs/pricing', '/api-keys', '/developers/pricing', '/quick_start/pricing/',
+    '/models/llama-3-3-70b', '/pricing/api/', '/api/docs/pricing', '/v2/docs/command-r',
+    '/docs/en/about-claude/pricing', '/getting-started/pricing', '/'
+  ];
+  assertEqual(seedPaths.filter(hasDeniedSourcePath), [], 'no source path currently in the seed is rejected');
 }
 
 console.log('');
