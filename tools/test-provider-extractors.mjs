@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260920-006
+// Build: 20260920-007
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -27,7 +27,13 @@ import path from 'path';
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const { WFProviderCatalog } = require(path.join(__dirname, '..', 'js', 'provider-catalog.js'));
+// The catalog is a classic script that publishes onto a root object —
+// `window` in a browser, this module's exports under Node. CATALOG_ROOT is
+// that root, which is where the body builders look for
+// WF_STREAM_THIS_REQUEST, so the streaming fixtures can flip the real switch
+// instead of simulating it.
+const CATALOG_ROOT = require(path.join(__dirname, '..', 'js', 'provider-catalog.js'));
+const { WFProviderCatalog } = CATALOG_ROOT;
 
 let pass = 0;
 let fail = 0;
@@ -628,13 +634,205 @@ both.push('data: {"choices":[{"message":{"content":"whole"}}]}' + `${NL}${NL}`);
 check('a whole-message chunk does NOT double-count after deltas', both.finish().text, 'delta');
 
 console.log('\u25b6 Streaming: which shapes stream');
-// Scope is deliberate: the OpenAI shape covers every local server, every
-// gateway deployment and 8 of 10 built-in providers, including the path that
-// actually times out. Anthropic (CF Worker proxy) and Gemini (needs
-// :streamGenerateContent) stay non-streaming until each can be tested.
+// v3.63.513 \u2014 all three. Anthropic needed the relay Worker to stop buffering
+// the upstream response; Gemini needed the endpoint swap below.
 check('OpenAI shape streams', WFProviderCatalog.supportsStreaming('openai'), true);
-check('Anthropic shape does not (yet)', WFProviderCatalog.supportsStreaming('anthropic'), false);
-check('Gemini shape does not (yet)', WFProviderCatalog.supportsStreaming('google'), false);
+check('Anthropic shape streams', WFProviderCatalog.supportsStreaming('anthropic'), true);
+check('Gemini shape streams', WFProviderCatalog.supportsStreaming('google'), true);
+
+console.log('\u25b6 Streaming: Gemini endpoint swap (streamingEndpoint)');
+
+// Gemini is the only shape where streaming is a different METHOD rather than
+// a body flag, and ?alt=sse is not optional: without it the same endpoint
+// returns a growing JSON array, which cannot be parsed incrementally.
+check('Gemini :generateContent becomes :streamGenerateContent?alt=sse',
+  WFProviderCatalog.streamingEndpoint('google',
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent'),
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:streamGenerateContent?alt=sse');
+check('an endpoint already carrying a query string gets alt=sse appended with &',
+  WFProviderCatalog.streamingEndpoint('google',
+    'https://example.invalid/v1beta/models/m:generateContent?key=x'),
+  'https://example.invalid/v1beta/models/m:streamGenerateContent?key=x&alt=sse');
+check('an already-streaming Gemini endpoint is left alone',
+  WFProviderCatalog.streamingEndpoint('google',
+    'https://example.invalid/v1beta/models/m:streamGenerateContent?alt=sse'),
+  'https://example.invalid/v1beta/models/m:streamGenerateContent?alt=sse');
+check('the OpenAI shape streams from the same URL',
+  WFProviderCatalog.streamingEndpoint('openai', 'https://api.example.invalid/v1/chat/completions'),
+  'https://api.example.invalid/v1/chat/completions');
+check('the Anthropic shape streams from the same URL',
+  WFProviderCatalog.streamingEndpoint('anthropic', 'https://relay.example.invalid/v1/messages'),
+  'https://relay.example.invalid/v1/messages');
+
+console.log('\u25b6 Streaming: Anthropic SSE accumulator');
+
+const mkAnt = () => WFProviderCatalog.createAnthropicStreamAccumulator();
+const antFrames = (...frames) => {
+  const a = mkAnt();
+  for (const f of frames) a.push(f + `${NL}${NL}`);
+  return a.finish();
+};
+
+const antBasic = antFrames(
+  'event: message_start' + NL + 'data: {"type":"message_start","message":{"usage":{"input_tokens":25}}}',
+  'event: content_block_start' + NL + 'data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}',
+  'event: content_block_delta' + NL + 'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello "}}',
+  'event: content_block_delta' + NL + 'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"world"}}',
+  'event: message_delta' + NL + 'data: {"type":"message_delta","delta":{"stop_reason":"end_turn"},"usage":{"output_tokens":15}}',
+  'event: message_stop' + NL + 'data: {"type":"message_stop"}');
+check('Anthropic text deltas concatenate', antBasic.text, 'Hello world');
+check('Anthropic stop_reason comes off message_delta', antBasic.finishReason, 'end_turn');
+check('Anthropic output_tokens is captured', antBasic.usage.output_tokens, 15);
+check('Anthropic input_tokens from message_start survives the message_delta merge',
+  antBasic.usage.input_tokens, 25);
+
+// The v3.63.410 lesson, applied to the streaming path before it can bite:
+// an extended-thinking model emits thinking_delta events ahead of the real
+// answer. Folding those into the text pastes the model's reasoning into the
+// user's document.
+const antThinking = antFrames(
+  'data: {"type":"content_block_start","index":0,"content_block":{"type":"thinking"}}',
+  'data: {"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"let me consider"}}',
+  'data: {"type":"content_block_start","index":1,"content_block":{"type":"text"}}',
+  'data: {"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"the real answer"}}');
+check('Anthropic thinking deltas are excluded from the text',
+  antThinking.text, 'the real answer');
+
+// A server that omits delta.type must still be readable; fall back to the
+// block type opened by content_block_start.
+check('Anthropic falls back to the block type when the delta omits its own',
+  antFrames(
+    'data: {"type":"content_block_start","index":0,"content_block":{"type":"text"}}',
+    'data: {"type":"content_block_delta","index":0,"delta":{"text":"typeless"}}').text,
+  'typeless');
+check('a thinking block with a typeless delta is still excluded',
+  antFrames(
+    'data: {"type":"content_block_start","index":0,"content_block":{"type":"thinking"}}',
+    'data: {"type":"content_block_delta","index":0,"delta":{"text":"reasoning"}}').text,
+  '');
+
+check('Anthropic truncation arrives as stop_reason max_tokens',
+  antFrames('data: {"type":"message_delta","delta":{"stop_reason":"max_tokens"},"usage":{"output_tokens":4096}}').finishReason,
+  'max_tokens');
+
+// Split mid-frame: the reader hands over whatever bytes arrived, which is
+// routinely half a frame.
+const antSplit = mkAnt();
+antSplit.push('data: {"type":"content_block_delta","index":0,"delta":{"type":"text_de');
+antSplit.push('lta","text":"split across reads"}}' + `${NL}${NL}`);
+check('Anthropic frames split across reads reassemble', antSplit.finish().text, 'split across reads');
+
+// A ping event carries no useful payload but must not break the stream.
+check('Anthropic ping events are harmless',
+  antFrames('event: ping' + NL + 'data: {"type":"ping"}',
+            'data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"after ping"}}').text,
+  'after ping');
+
+check('an Anthropic stream that carried nothing parseable reports sawAnyChunk false',
+  mkAnt().finish().sawAnyChunk, false);
+
+console.log('\u25b6 Streaming: Gemini SSE accumulator');
+
+const mkGem = () => WFProviderCatalog.createGeminiStreamAccumulator();
+const gemFrames = (...frames) => {
+  const a = mkGem();
+  for (const f of frames) a.push(f + `${NL}${NL}`);
+  return a.finish();
+};
+
+const gemBasic = gemFrames(
+  'data: {"candidates":[{"content":{"parts":[{"text":"Hello "}],"role":"model"},"index":0}]}',
+  'data: {"candidates":[{"content":{"parts":[{"text":"world"}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":12,"candidatesTokenCount":34,"totalTokenCount":46}}');
+check('Gemini text parts concatenate', gemBasic.text, 'Hello world');
+check('Gemini finishReason is captured', gemBasic.finishReason, 'STOP');
+check('Gemini usageMetadata is captured', gemBasic.usage.candidatesTokenCount, 34);
+
+check('Gemini thought parts are excluded from the text',
+  gemFrames('data: {"candidates":[{"content":{"parts":[{"thought":true,"text":"reasoning"},{"text":"answer"}]}}]}').text,
+  'answer');
+
+check('Gemini truncation arrives as finishReason MAX_TOKENS',
+  gemFrames('data: {"candidates":[{"content":{"parts":[{"text":"cut"}]},"finishReason":"MAX_TOKENS"}]}').finishReason,
+  'MAX_TOKENS');
+
+const gemSplit = mkGem();
+gemSplit.push('data: {"candidates":[{"content":{"parts":[{"text":"split ac');
+gemSplit.push('ross reads"}]}}]}' + `${NL}${NL}`);
+check('Gemini frames split across reads reassemble', gemSplit.finish().text, 'split across reads');
+
+check('a Gemini stream that carried nothing parseable reports sawAnyChunk false',
+  mkGem().finish().sawAnyChunk, false);
+
+console.log('\u25b6 Streaming: streamed responses are rewrapped in each provider shape');
+
+// Everything downstream \u2014 the text extractors, the finish-reason coalescer,
+// truncation detection, usage capture, the Deep Dive ring buffer \u2014 reads the
+// provider's own response shape. A streamed round must hand back exactly
+// what a non-streamed one would, or every one of those has to learn a second
+// shape.
+const antShape = WFProviderCatalog.streamedResponseShape('anthropic',
+  { text: 'streamed answer', finishReason: 'end_turn', usage: { output_tokens: 9 } });
+check('a streamed Anthropic response reads back through the normal extractor',
+  WFProviderCatalog.extractAnthropicText(antShape), 'streamed answer');
+check('a streamed Anthropic finish reason reads back through the coalescer',
+  WFProviderCatalog.extractFinishReason(antShape), 'end_turn');
+
+const gemShape = WFProviderCatalog.streamedResponseShape('google',
+  { text: 'streamed answer', finishReason: 'MAX_TOKENS', usage: { candidatesTokenCount: 9 } });
+check('a streamed Gemini response reads back through the normal extractor',
+  WFProviderCatalog.extractGeminiText(gemShape), 'streamed answer');
+check('a streamed Gemini finish reason reads back through the coalescer',
+  WFProviderCatalog.extractFinishReason(gemShape), 'MAX_TOKENS');
+check('a streamed Gemini MAX_TOKENS still trips truncation detection',
+  WFProviderCatalog.isTruncationSignal(WFProviderCatalog.extractFinishReason(gemShape)), true);
+
+const oaiShape = WFProviderCatalog.streamedResponseShape('openai',
+  { text: 'streamed answer', finishReason: 'stop', usage: { completion_tokens: 9 } });
+check('a streamed OpenAI response reads back through the normal extractor',
+  WFProviderCatalog.extractOpenAIText(oaiShape), 'streamed answer');
+check('every streamed shape is flagged as streamed',
+  [antShape, gemShape, oaiShape].every(s => s._wfStreamed === true), true);
+
+check('output-token count is read from the right field per provider \u2014 Anthropic',
+  WFProviderCatalog.streamedOutputTokens('anthropic', { output_tokens: 11 }), 11);
+check('output-token count is read from the right field per provider \u2014 Gemini',
+  WFProviderCatalog.streamedOutputTokens('google', { candidatesTokenCount: 12 }), 12);
+check('output-token count is read from the right field per provider \u2014 OpenAI',
+  WFProviderCatalog.streamedOutputTokens('openai', { completion_tokens: 13 }), 13);
+check('no usage means no token count rather than a zero',
+  WFProviderCatalog.streamedOutputTokens('openai', null), null);
+
+console.log('\u25b6 Streaming: request bodies carry the flag only when asked');
+
+// The body builders read WF_STREAM_THIS_REQUEST off the module root, which is
+// `window` in the browser and this module's own exports under Node \u2014 so the
+// real switch can be flipped here rather than simulated.
+const CONFIGS = WFProviderCatalog.buildApiConfigs();
+const ENVELOPE = 'the document body\n\n\u26a0\ufe0f BUILDER: build instructions here';
+
+const antBodyPlain = JSON.parse(CONFIGS.claude.bodyFn('claude-sonnet-4-6', ENVELOPE));
+check('the Anthropic body has no stream flag by default', antBodyPlain.stream, undefined);
+
+CATALOG_ROOT.WF_STREAM_THIS_REQUEST = true;
+const antBodyStream = JSON.parse(CONFIGS.claude.bodyFn('claude-sonnet-4-6', ENVELOPE));
+const gemBodyStream = JSON.parse(CONFIGS.gemini.bodyFn('gemini-3.5-flash', ENVELOPE));
+const oaiBodyStream = JSON.parse(CONFIGS.chatgpt.bodyFn('gpt-5.6-sol', ENVELOPE));
+CATALOG_ROOT.WF_STREAM_THIS_REQUEST = false;
+
+check('the Anthropic body carries stream:true when streaming', antBodyStream.stream, true);
+check('the Anthropic system prompt is unchanged by streaming',
+  antBodyStream.system, antBodyPlain.system);
+check('the Anthropic max_tokens is unchanged by streaming',
+  antBodyStream.max_tokens, antBodyPlain.max_tokens);
+// Gemini has no body flag at all \u2014 streaming there is an endpoint swap, and
+// sending an unknown field would be a request Google rejects.
+check('the Gemini body carries no stream flag', gemBodyStream.stream, undefined);
+check('the OpenAI body still carries stream:true', oaiBodyStream.stream, true);
+check('the OpenAI body still asks for usage on the stream',
+  oaiBodyStream.stream_options && oaiBodyStream.stream_options.include_usage, true);
+
+const antBodyAfter = JSON.parse(CONFIGS.claude.bodyFn('claude-sonnet-4-6', ENVELOPE));
+check('the flag does not leak into the next request', antBodyAfter.stream, undefined);
 
 console.log('');
 if (fail === 0) {

@@ -147,9 +147,27 @@ export default {
       const timedOut = error && (error.name === 'TimeoutError' || error.name === 'AbortError');
       return respond(request, JSON.stringify({ error: { type: 'api_error', message: timedOut ? 'Anthropic request timed out' : 'Anthropic request failed' } }), timedOut ? 504 : 502, { 'Content-Type': 'application/json; charset=utf-8' });
     }
-    const responseBody = await anthropicResponse.text();
+    // v3.63.513 — stream the upstream body through instead of buffering it.
+    //
+    // This previously read the whole response with .text() before replying.
+    // That is fine for a short answer and fatal for a streamed one: a
+    // streamed Claude round would have arrived here as SSE and left as one
+    // silent wait, which is the exact failure streaming exists to fix — and
+    // it made the relay hold the entire response in memory, up to whatever
+    // a long Builder round produces.
+    //
+    // Passing `anthropicResponse.body` straight through costs nothing for a
+    // non-streamed response (the client still just reads it to completion)
+    // and is what lets a streamed one reach the browser byte by byte. Every
+    // guard above — origin, path, method, key, rate limit, size — has
+    // already run; none of them inspect the response.
+    //
+    // A 204/205/304 must carry no body; Response rejects one that does.
+    const passThroughBody = [204, 205, 304].includes(anthropicResponse.status)
+      ? null
+      : anthropicResponse.body;
 
-    return respond(request, responseBody, anthropicResponse.status, {
+    return respond(request, passThroughBody, anthropicResponse.status, {
       'Content-Type': anthropicResponse.headers.get('Content-Type') || 'application/json; charset=utf-8',
       'Cache-Control': 'no-store'
     });

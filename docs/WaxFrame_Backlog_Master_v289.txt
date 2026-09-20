@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v288
+WaxFrame Backlog Master v289
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -22,6 +22,22 @@ to CHANGELOG.md and is removed from this file the moment it
 ships.
 
 
+
+
+v289 — ANTHROPIC + GEMINI STREAMING SHIPPED (v3.63.513). Old #1 struck;
+items renumbered 1..2. The blocker named in that entry was real: the relay
+Worker read the whole upstream response with .text() before replying, so
+SSE could not have passed through it at all. Worker now streams the body
+through and its test drives the real fetch handler against a stubbed
+upstream, asserting the first frame is readable before the upstream closes.
+
+NOT VERIFIED, and worth doing on the first real round: no request has gone
+to the live Anthropic or Gemini APIs on the streaming path — this session
+had no key for either. The mock reproduces both providers' documented SSE
+shapes with frames split mid-payload, and everything downstream was driven
+off it in a real browser, but a mock cannot stand in for a provider's real
+byte timing. The tell is whether the "is writing... N chars so far" status
+starts ticking; if it does not, streaming is not reaching the browser.
 
 v288 — LOCAL-SERVER LIMITS SHIPPED (v3.63.512). Old #1 struck; items
 renumbered 1..3. The declared half of the declared-vs-observed comparison
@@ -141,66 +157,7 @@ OPEN FEATURES
 ════════════════════════════════════════════════════════════
 Ordered by value.
 
-1. Stream the Anthropic and Gemini shapes too
-   ─────────────────────────────────────────────────────────
-   WHAT:   v3.63.499 streams the OpenAI shape only. Anthropic
-           and Gemini still send one blocking POST and wait.
-   WHY:    Same reason as the OpenAI shape: a silent connection
-           is what a proxy read-timeout kills. Neither was done
-           in .499 because each needs real testing rather than
-           faith - Anthropic routes through the CF Worker proxy
-           (which may not pass SSE through at all) and Gemini
-           needs a different endpoint entirely
-           (:streamGenerateContent with ?alt=sse), not just a
-           body flag.
-   STATE:  OPEN. The accumulator pattern and the callAPI
-           plumbing already exist and are proven; this is two
-           more parsers plus, for Gemini, an endpoint swap.
-   WHERE:  js/provider-catalog.js - add
-           createAnthropicStreamAccumulator (event types
-           content_block_delta / message_delta, with
-           stop_reason and usage on message_delta) and a Gemini
-           equivalent; supportsStreaming() gates both.
-           js/app.js callAPI already branches on it.
-           tools/claude-proxy/ needs checking for SSE
-           pass-through before the Anthropic half is attempted.
-   DONE:   A long Claude or Gemini Builder round streams, with
-           finish reason and usage preserved, and falls back to
-           non-streaming exactly as the OpenAI path does.
-
-   MEASURED 2026-09-15 (local Ollama qwen2.5:3b, num_ctx 32768,
-   streaming, measured at the fetch layer). Establishes the
-   baseline these two shapes must match:
-
-     promptChars   TTFT     max gap AFTER first token
-        2,000      0.23s          0.01s
-       10,000      0.15s          0.01s
-       26,000      0.28s          0.01s
-       52,000      0.54s          0.01s   <- David's prompt scale
-      100,000      1.22s          0.02s
-
-   Two things this settles. (1) Streaming's worst silence is
-   TIME TO FIRST TOKEN, and it scales with PROMPT size, not
-   generation length - 0.54s at his scale, 1.22s at double it.
-   Non-streaming's worst silence is the WHOLE generation (one
-   single read; median gap measured at 6,212ms for a 6.2s
-   build), which is why a 9-minute build dies behind a 60s
-   proxy read-timeout and a streamed one does not. (2) After
-   the first token, gaps are 10-20ms regardless of size.
-
-   CAVEAT, do not over-read this: measured on a 3B model on
-   local hardware with no queueing. A contended shared gateway
-   adds QUEUE TIME before prompt processing even starts, and
-   queue time is invisible to this test. If a 504 ever fires
-   BEFORE any output appears, that is queueing or prompt
-   processing - streaming cannot help there. The tell is
-   whether the "is writing... N chars so far" status ever
-   starts ticking.
-
-   Raw data: sweep-artifacts/ttft-vs-prompt-size.json and
-   stream-gap-measurement.json (scratch, not committed).
-
-2. Cap-aware warning before a build, and coverage for the recovery after
+1. Cap-aware warning before a build, and coverage for the recovery after
    ─────────────────────────────────────────────────────────
    (merged 2026-09-14: old #11 + old #16 — both hang off knowing
    the Builder's output cap. Warn before; recover after.)
@@ -240,7 +197,7 @@ Ordered by value.
            without spending tokens.
 
 
-3. Historical workplace identifiers outside the working tree
+2. Historical workplace identifiers outside the working tree
    ─────────────────────────────────────────────────────
    WHAT:   Surfaces outside the working tree that carried workplace
            identifiers after the v3.63.502-504 scrub.

@@ -1,5 +1,94 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.513 — Claude and Gemini stream too; the relay stopped buffering
+
+**Released:** 2026-09-20
+**Build:** 20260920-007
+
+### What changed
+
+**All three request shapes stream now.** v3.63.499 shipped streaming for the OpenAI shape only,
+which left Claude and Gemini rounds holding a connection open with nothing crossing the wire for
+their entire duration — the condition a proxy read-timeout kills, and the reason a long Builder
+round dies behind a corporate gateway. Both were deliberately deferred because each needed real
+work rather than a flag: Anthropic routes through the relay Worker, and Gemini streams from a
+different method entirely.
+
+**The relay Worker was buffering every response, which made Anthropic streaming impossible.** It
+read the whole upstream body with `.text()` before replying. A streamed Claude round would have
+arrived at the browser as one silent wait, exactly like a non-streamed one, and the relay would
+have held an entire Builder response in memory on the way through. It now passes the upstream body
+straight through. Every guard — origin allowlist, path allowlist, method, key presence, rate limit,
+8 MiB size cap — runs before the upstream call and none of them read the response, so nothing is
+weakened by it. A null-body status (204/205/304) is relayed with no body rather than throwing.
+
+**Gemini needed an endpoint swap, not a body flag.** `:generateContent` becomes
+`:streamGenerateContent?alt=sse`. The `alt=sse` is not optional: without it that endpoint returns a
+growing JSON array rather than SSE frames, which cannot be parsed incrementally. Gemini's request
+body is unchanged — sending it an unknown `stream` field would be a request Google rejects.
+
+**Reasoning stays out of the document.** Both new accumulators skip the model's thinking output:
+Anthropic's `thinking_delta` events, which an extended-thinking model emits ahead of the real
+answer, and Gemini's `thought: true` parts. This is the streaming-side version of the v3.63.410
+bug, handled before it could happen rather than after. The Anthropic accumulator tracks each
+content block's type from `content_block_start`, so a delta that omits its own type is still
+classified correctly.
+
+**A streamed response is rewrapped in its own provider's shape.** Anthropic gets
+`content[[{type:'text'}]]` with `stop_reason`, Gemini gets `candidates[0].content.parts` with
+`finishReason`, OpenAI keeps `choices[0].message`. Everything downstream — the text extractors, the
+finish-reason coalescer, truncation detection, usage capture, the Deep Dive ring buffer — keeps
+reading exactly what it already handles. Streaming changes how bytes arrive, not what the rest of
+the app reasons about.
+
+The existing fallback is unchanged: an endpoint that accepts the request and then sends something
+that is not SSE gets retried once without streaming, and the Settings toggle still turns the whole
+thing off.
+
+### Verification
+- Gate: all 19 stages pass. 42 new fixtures across the extractor suite and the relay test.
+- Driven in a real browser against a mock server speaking both providers' actual SSE shapes,
+  chunked over time with every frame deliberately split in half across two writes: Anthropic
+  reassembled over 20 reads and Gemini over 6, both producing the exact document text, both
+  excluding the planted reasoning string, both preserving finish reason and output-token count.
+  Gemini's `MAX_TOKENS` was confirmed to still trip truncation detection through the rewrapped
+  shape.
+- The live catalog entries were checked in the same browser session: Claude's relay endpoint is
+  passed through unchanged, and Gemini's resolves to
+  `…/gemini-3.5-flash:streamGenerateContent?alt=sse`.
+- The relay's no-buffering behaviour is asserted by driving the real fetch handler with a stubbed
+  upstream and reading the first SSE frame *before* the upstream stream closes — impossible if the
+  body were still buffered. The same test re-asserts that a bad origin, a missing key and a path
+  outside the allowlist are all rejected before any upstream call is made.
+- Deployed relay verified live after the deploy: a request with an invented key still relays
+  Anthropic's own 401 body, `/v1/models` still relays, and the three guards return 403 / 404 / 401
+  as before. Previous version id `f51415ba-ca72-4906-bae4-16e56086876e`; deployed
+  `f295a576-6992-4d10-a6f7-af70b80684a2`.
+- Request bodies checked both ways: Anthropic carries `stream: true` only when streaming and is
+  otherwise byte-identical, Gemini carries no stream field at all, the OpenAI body still asks for
+  usage on the stream, and the flag does not leak into the following request.
+
+### Not yet verified
+No round has been driven against the live Anthropic or Gemini APIs — this session had no API key
+for either, and neither the mock nor the fixtures can stand in for a provider's real byte timing.
+The first real Claude or Gemini Builder round should be watched for the "is writing… N chars so
+far" status ticking; if it never starts, streaming is not reaching the browser and the Settings
+toggle turns it off.
+
+### Files touched
+`js/provider-catalog.js`, `js/app.js`, `tools/claude-proxy/src/index.js`,
+`tools/claude-proxy/test-security.mjs`, `tools/test-provider-extractors.mjs`,
+`docs/WaxFrame_Backlog_Master_v289.txt` (replaces v288), `CHANGELOG.md`, plus the routine stamp
+sweep.
+
+### Rollback
+`git revert HEAD` reverts the client. The relay is a separate artifact: roll it back with
+`npx wrangler rollback --version-id f51415ba-ca72-4906-bae4-16e56086876e` from
+`tools/claude-proxy/`. Reverting the client alone is safe — a non-streaming request through a
+pass-through relay behaves exactly as it did before.
+
+---
+
 ## v3.63.512 — Self-hosted AIs report their real context window
 
 **Released:** 2026-09-20

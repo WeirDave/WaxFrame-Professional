@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-006
+// Build: 20260920-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1316,7 +1316,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-006';         // build stamp — update each session
+const BUILD = '20260920-007';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -20453,7 +20453,13 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     window.WF_STREAM_THIS_REQUEST = false;
     if (_budgetRetry) window.WF_OUTPUT_BUDGET_OVERRIDE = _prevBudget;
     _requestedBudget = window.WFProviderCatalog.requestedOutputBudget(_sentBody);
-    response = await fetch(endpoint, {
+    // v3.63.513 — Gemini streams from a different METHOD, not a body flag:
+    // :generateContent becomes :streamGenerateContent?alt=sse. Every other
+    // shape streams from the same URL, so this is a no-op for them.
+    const _sendTo = _streaming
+      ? window.WFProviderCatalog.streamingEndpoint(cfg.format, endpoint)
+      : endpoint;
+    response = await fetch(_sendTo, {
       method: 'POST',
       headers: cfg.headersFn(cfg._key),
       body: _sentBody,
@@ -20598,7 +20604,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   // of the app reasons about.
   let data;
   if (_streaming && response.body && typeof response.body.getReader === 'function') {
-    const acc = window.WFProviderCatalog.createOpenAIStreamAccumulator();
+    const acc = window.WFProviderCatalog.createStreamAccumulator(cfg.format);
     const reader = response.body.getReader();
     const dec = new TextDecoder('utf-8');
     let lastTick = Date.now();
@@ -20631,18 +20637,15 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
         ...(_retryOpts || {}), _streamFallback: true
       });
     }
+    // v3.63.513 — output-token count and response shape are both per-format
+    // now. The shape matters most: everything downstream reads the
+    // provider's own response, so a streamed round has to hand back the same
+    // thing a non-streamed one would.
+    const _outTokens = window.WFProviderCatalog.streamedOutputTokens(cfg.format, streamed.usage);
     consoleLog(`📡 ${ai.name} streamed ${chunks.toLocaleString()} chunks · ` +
                `${streamed.text.length.toLocaleString()} chars` +
-               (streamed.usage && streamed.usage.completion_tokens
-                 ? ` · ${streamed.usage.completion_tokens.toLocaleString()} output tokens` : ''), 'info');
-    data = {
-      choices: [{
-        message: { role: 'assistant', content: streamed.text },
-        finish_reason: streamed.finishReason
-      }],
-      usage: streamed.usage || undefined,
-      _wfStreamed: true
-    };
+               (_outTokens ? ` · ${_outTokens.toLocaleString()} output tokens` : ''), 'info');
+    data = window.WFProviderCatalog.streamedResponseShape(cfg.format, streamed);
   } else {
     data = await response.json();
   }

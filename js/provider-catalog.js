@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260920-006
+// Build: 20260920-007
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -329,26 +329,34 @@
       // prompt already owns the instruction surface.
       var s = splitEnvelope(prompt);
       var split = s.split, isBuilder = s.isBuilder;
+      // v3.63.513 — Anthropic streams on a body flag, like the OpenAI shape.
+      // Usage needs no opt-in here: it rides message_start and message_delta
+      // unconditionally.
+      var wantStream = !!(root && root.WF_STREAM_THIS_REQUEST);
       if (split === -1) {
         // No envelope marker (rare — synthetic builder calls). Fall back to
         // pre-v3.63.278 shape so this never crashes a round if framing
         // changes upstream.
-        return JSON.stringify({
+        var fallbackBody = {
           model: model,
           max_tokens: resolveOutputBudget(model),
           messages: [{ role: 'user', content: prompt }]
-        });
+        };
+        if (wantStream) fallbackBody.stream = true;
+        return JSON.stringify(fallbackBody);
       }
       var sysText = (isBuilder ? '' : REVIEWER_GUARD) + prompt.slice(split).trim();
       var usrText = isBuilder
         ? '⚠️ YOU ARE NOW IN THE BUILD STEP. Read your system instructions carefully and follow the output format exactly.\n\n' + prompt.slice(0, split).trim() + '\n\nProduce the complete updated document now, wrapped in the required delimiters. Do not skip the conflicts block.'
         : prompt.slice(0, split).trim() + '\n\nBegin your review now.';
-      return JSON.stringify({
+      var aBody = {
         model: model,
         max_tokens: resolveOutputBudget(model),
         system: sysText,
         messages: [{ role: 'user', content: usrText }]
-      });
+      };
+      if (wantStream) aBody.stream = true;
+      return JSON.stringify(aBody);
     },
     'gemini-generate': function (model, prompt) {
       var s = splitEnvelope(prompt);
@@ -879,10 +887,193 @@
     };
   }
 
-  // Does this config stream? Only the OpenAI shape, and only when the caller
-  // has not opted out.
+  // ── Anthropic SSE (v3.63.513) ─────────────────────────────────────
+  //
+  // Anthropic's stream is event-typed rather than one repeated chunk shape:
+  //
+  //   message_start         carries the initial usage (input tokens)
+  //   content_block_start   opens a block and NAMES ITS TYPE
+  //   content_block_delta   text_delta / thinking_delta / input_json_delta
+  //   message_delta         carries stop_reason and the final output usage
+  //   message_stop          end
+  //
+  // The block type matters. An extended-thinking model emits thinking_delta
+  // events ahead of the real answer, and folding those into the text would
+  // paste the model's reasoning into the user's document. This mirrors
+  // firstAnthropicTextBlock, which takes only type:'text' blocks — the
+  // non-streaming path already learned that lesson in v3.63.410.
+  function createAnthropicStreamAccumulator() {
+    var text = '';
+    var finishReason = null;
+    var usage = null;
+    var sawAnyChunk = false;
+    var blockTypes = {};   // index -> block type, from content_block_start
+
+    return makeSseAccumulator(function (payload) {
+      var obj;
+      try { obj = JSON.parse(payload); } catch (e) { return; }
+      sawAnyChunk = true;
+      var t = obj.type;
+      if (t === 'message_start' && obj.message) {
+        if (obj.message.usage) usage = obj.message.usage;
+        if (obj.message.stop_reason) finishReason = obj.message.stop_reason;
+      } else if (t === 'content_block_start') {
+        blockTypes[obj.index] = (obj.content_block && obj.content_block.type) || 'text';
+      } else if (t === 'content_block_delta') {
+        var d = obj.delta || {};
+        // Trust the delta's own type first; fall back to the block type for a
+        // server that omits it. Anything that is not text is skipped.
+        var isText = d.type ? d.type === 'text_delta'
+                            : (blockTypes[obj.index] || 'text') === 'text';
+        if (isText && typeof d.text === 'string') text += d.text;
+      } else if (t === 'message_delta') {
+        if (obj.delta && obj.delta.stop_reason) finishReason = obj.delta.stop_reason;
+        // output_tokens arrives here; merge rather than replace so the
+        // input_tokens from message_start survive.
+        if (obj.usage) usage = Object.assign({}, usage || {}, obj.usage);
+      }
+    }, function () {
+      return { text: text, finishReason: finishReason, usage: usage, sawAnyChunk: sawAnyChunk };
+    }, function () { return text; });
+  }
+
+  // ── Gemini SSE (v3.63.513) ────────────────────────────────────────
+  //
+  // Gemini streams only from a DIFFERENT endpoint — :streamGenerateContent
+  // with ?alt=sse — and there is no body flag for it. Without alt=sse the
+  // same endpoint returns a growing JSON array instead of SSE frames, which
+  // is not incrementally parseable. Each frame then carries a complete
+  // GenerateContentResponse holding the latest slice.
+  //
+  // Thought parts are skipped for the same reason as Anthropic's thinking
+  // blocks, matching firstGeminiTextPart.
+  function createGeminiStreamAccumulator() {
+    var text = '';
+    var finishReason = null;
+    var usage = null;
+    var sawAnyChunk = false;
+
+    return makeSseAccumulator(function (payload) {
+      var obj;
+      try { obj = JSON.parse(payload); } catch (e) { return; }
+      sawAnyChunk = true;
+      if (obj.usageMetadata) usage = obj.usageMetadata;
+      var cands = obj.candidates || [];
+      for (var i = 0; i < cands.length; i++) {
+        var c = cands[i];
+        if (!c) continue;
+        if (c.finishReason) finishReason = c.finishReason;
+        var parts = (c.content && c.content.parts) || [];
+        for (var p = 0; p < parts.length; p++) {
+          if (parts[p] && parts[p].thought) continue;
+          if (parts[p] && typeof parts[p].text === 'string') text += parts[p].text;
+        }
+      }
+    }, function () {
+      return { text: text, finishReason: finishReason, usage: usage, sawAnyChunk: sawAnyChunk };
+    }, function () { return text; });
+  }
+
+  // Shared SSE frame handling. All three providers speak the same transport
+  // — `data:` lines, blank-line-separated frames, a tail that may be a
+  // partial frame — and differ only in what the payload means. Extracted so
+  // a transport fix lands once rather than three times.
+  function makeSseAccumulator(handlePayload, finishFn, peekFn) {
+    var buf = '';
+    function drainLines(lines) {
+      for (var j = 0; j < lines.length; j++) {
+        if (lines[j].indexOf('data:') !== 0) continue;   // skip event:/id:/: comments
+        var payload = lines[j].slice(5).trim();
+        if (payload === STREAM_DONE) continue;
+        handlePayload(payload);
+      }
+    }
+    return {
+      push: function (chunkStr) {
+        buf += chunkStr;
+        var frames = buf.split(/\r?\n\r?\n/);
+        buf = frames.pop();
+        for (var i = 0; i < frames.length; i++) drainLines(frames[i].split(/\r?\n/));
+      },
+      finish: function () {
+        if (buf) { drainLines(buf.split(/\r?\n/)); buf = ''; }
+        return finishFn();
+      },
+      peekText: peekFn
+    };
+  }
+
+  // One factory so callAPI does not carry a per-format switch.
+  function createStreamAccumulator(format) {
+    if (format === 'anthropic') return createAnthropicStreamAccumulator();
+    if (format === 'google')    return createGeminiStreamAccumulator();
+    return createOpenAIStreamAccumulator();
+  }
+
+  // The URL a streaming request goes to. Only Gemini differs: streaming is
+  // a separate method there, not a body flag.
+  function streamingEndpoint(format, endpoint) {
+    if (format !== 'google' || !endpoint) return endpoint;
+    if (endpoint.indexOf(':streamGenerateContent') !== -1) return endpoint;
+    if (endpoint.indexOf(':generateContent') === -1) return endpoint;
+    var swapped = endpoint.replace(':generateContent', ':streamGenerateContent');
+    return swapped + (swapped.indexOf('?') !== -1 ? '&' : '?') + 'alt=sse';
+  }
+
+  // Wrap a streamed result back into the provider's OWN response shape, so
+  // every extractor, the finish-reason coalescer, truncation detection and
+  // the Deep Dive capture keep working on exactly what they already handle.
+  // Streaming changes how bytes arrive, not what the rest of the app reasons
+  // about — the same principle the OpenAI path shipped with in v3.63.499.
+  function streamedResponseShape(format, streamed) {
+    if (format === 'anthropic') {
+      return {
+        content: [{ type: 'text', text: streamed.text }],
+        stop_reason: streamed.finishReason,
+        usage: streamed.usage || undefined,
+        _wfStreamed: true
+      };
+    }
+    if (format === 'google') {
+      return {
+        candidates: [{
+          content: { parts: [{ text: streamed.text }], role: 'model' },
+          finishReason: streamed.finishReason
+        }],
+        usageMetadata: streamed.usage || undefined,
+        _wfStreamed: true
+      };
+    }
+    return {
+      choices: [{
+        message: { role: 'assistant', content: streamed.text },
+        finish_reason: streamed.finishReason
+      }],
+      usage: streamed.usage || undefined,
+      _wfStreamed: true
+    };
+  }
+
+  // How many output tokens did a streamed response report? The field name
+  // differs per provider and the console line that names it should not.
+  function streamedOutputTokens(format, usage) {
+    if (!usage) return null;
+    var n = format === 'anthropic' ? usage.output_tokens
+          : format === 'google'    ? usage.candidatesTokenCount
+          :                          usage.completion_tokens;
+    return (typeof n === 'number' && isFinite(n) && n > 0) ? n : null;
+  }
+
+  // Does this config stream? All three request shapes, and only when the
+  // caller has not opted out.
+  //
+  // v3.63.513 — Anthropic and Gemini joined the OpenAI shape. Anthropic
+  // needed the relay Worker to stop buffering the upstream response before
+  // it could work at all: it read the whole body with .text() and then
+  // replied, so a streamed Claude round arrived as one silent wait exactly
+  // like a non-streamed one. Gemini needed the endpoint swap above.
   function supportsStreaming(format) {
-    return format === 'openai';
+    return format === 'openai' || format === 'anthropic' || format === 'google';
   }
 
   // ── Observed-cap analysis (v3.63.491) ─────────────────────────────
@@ -1620,6 +1811,12 @@
     parseBudgetRejection: parseBudgetRejection,
     // v3.63.499 — streaming
     createOpenAIStreamAccumulator: createOpenAIStreamAccumulator,
+    createAnthropicStreamAccumulator: createAnthropicStreamAccumulator,
+    createGeminiStreamAccumulator: createGeminiStreamAccumulator,
+    createStreamAccumulator: createStreamAccumulator,
+    streamingEndpoint: streamingEndpoint,
+    streamedResponseShape: streamedResponseShape,
+    streamedOutputTokens: streamedOutputTokens,
     supportsStreaming: supportsStreaming,
     // v3.63.489 — truncation detection. app.js wraps these; the wrappers
     // exist so call sites read naturally, not because the logic differs.
