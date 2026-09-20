@@ -47,6 +47,15 @@ Bump the `lastUpdated` field in the JSON so the page displays the new timestamp.
 
 **Applying a scheduled-refresh proposal** (a `needs-review` row from the run log — see "Review-before-publish" below) is the same manual step: edit the specific model's `inputPerM`/`outputPerM`/`contextWindow`/`maxOutput`/`sourceUrl`/`verifiedAt`/`status` in `data/pricing-seed.json` to match the reviewed proposal, then push with the command above. There's no separate approval/promotion tooling — the run log already carries everything needed (requested model, confirmed model, old/proposed prices, source, timestamp) to make that edit by hand.
 
+**Applying a proposal means editing the seed AND pushing it — and the seed can be the wrong half.** On 2026-09-06 a proposal for `ministral-8b-latest` ($0.15/$0.15 → $0.10/$0.10, cited to `mistral.ai/news/ministraux/`) was applied to `data/pricing-seed.json` and never pushed to KV. That left the seed at $0.10 and KV at $0.15 for two weeks, with no symptom anywhere: the live page reads KV, so it kept serving the correct number, and the only visible trace was the 2026-09-20 run re-proposing the identical change and reporting "was $0.15/$0.15" against a seed that said $0.10.
+
+Two things follow. `js/pricing-renderer.js`'s `FALLBACK_DATA` is generated from the **seed**, so during that window the page's offline fallback carried a price the live path did not — the drift was one Worker outage away from being visible. And when a run log's "was $X" disagrees with the seed, **the seed is not automatically the stale one** — here KV was right and the seed carried the bad proposal, so pushing the seed would have introduced the bug rather than fixed it. Reconcile against the provider's own pricing page before pushing either way:
+
+```sh
+curl -s "https://waxframe-pricing.weirdave.workers.dev/api/pricing" | python3 -m json.tool > live.json
+# diff live.json against data/pricing-seed.json — any disagreement is a bug in one of them
+```
+
 **Verify the push actually landed** — don't trust the local edit alone:
 
 ```sh
@@ -114,6 +123,28 @@ Fix: the prompt now requires a `confirmedModel` field — the exact model name/v
 Applying a `needs-review` proposal is a manual step — see "Applying a scheduled-refresh proposal" above. No candidate/promotion KV service was built for this; the run log already carries everything needed to review and apply a proposal by hand, and this data has never been high-enough-stakes (a public reference page, not a billing system) to justify more machinery than that.
 
 The decision logic above lives in `decideModelUpdate()` in `src/index.js`, exported and covered by `tools/pricing-worker/test-refresh-logic.mjs` (pure-function tests, no KV/network — run as part of `tools/release-check.mjs`).
+
+### Model-attribution and source-kind guards (Build 20260920-001)
+
+Two held proposals in the 2026-09-20 run were both wrong, in two different ways, and both ways were already written down above as known residual gaps. This closes each one.
+
+**A confirmedModel is now compared against the model that was asked for.** The v3.63.421 note above says plainly that `confirmedModel` is "never compared against the requested model id, just required to be non-empty". That gap has now produced three bad proposals: `claude-sonnet-4-6` answered with `claude-sonnet-5`'s introductory rate, `ministral-8b-latest` answered with its 3B sibling's price, and the 2026-09-20 run proposing $2/$8 for `sonar-reasoning` off the row for **Sonar Reasoning Pro** — a model this seed already tracks separately at exactly $2/$8.
+
+A full string match is what the earlier note correctly ruled out; `mistral-large-latest` and "Mistral Large 3" are the same model written two ways. `modelAttributionMismatch()` compares only the small set of tokens that distinguish *siblings*:
+
+- **tier words** (`pro`, `mini`, `nano`, `lite`, `flash`, `turbo`, `plus`, `sonnet`/`opus`/`haiku`, …) — flagged when one side carries one the other does not. That asymmetry is the whole signature of a sibling-row mix-up.
+- **parameter sizes** (8B vs 3B) — flagged only when both sides name one and they disagree.
+- **version numbers** (4.6 vs 5) — flagged only when both sides name one and neither is a prefix of the other, so "Grok 4.20 Reasoning" still matches `grok-4.20-0309-reasoning` and a bare "Mistral Large" never fires.
+
+A flagged row is **still held, still recorded in full, and still emailed** — nothing is dropped. The only thing that changes is what the reviewer is told: status `model-mismatch` instead of `needs-review`, and an alert line leading `MODEL MISMATCH` instead of `NEEDS REVIEW`. That distinction is the whole value; a mismatched proposal is otherwise indistinguishable from a real price move, which is how the Sonnet one got applied. These rows deliberately skip source corroboration — the proposed number *is* on the cited page, on the sibling's row, so a corroboration pass would come back green about the one thing already known to be wrong.
+
+The token lists are checked in `test-refresh-logic.mjs` against every model id currently in the seed paired with the way a provider page plausibly writes it. **A guard that fires on the normal case is worse than no guard**, so adding a tier word means re-running that test, not just appending to the set.
+
+**A source must now be the right *kind* of page, not just the right domain.** `isTrustedSource` only ever checked the hostname, so a provider's own announcement post passed — and an announcement post is a dated snapshot, not a current price list. `https://mistral.ai/news/ministraux/` is the Ministral launch announcement and still quotes the launch price; a run applied its $0.10 figure over the then-current $0.15 on 2026-09-06, and the 2026-09-20 run re-proposed the same change off the same page. Source corroboration could never catch this — the number genuinely *is* on the page.
+
+`SOURCE_PATH_DENY` rejects a URL whose path contains a `news`, `blog`, `newsroom`, `press`, `announcements` or `changelog` segment. `buildResearchPrompt` already tells Sonar not to cite a news article; this is the same requirement enforced rather than requested. The list is deliberately short and specific — a `pricing`, `docs` or `console` path is the normal shape, and no source URL in the seed hits any of it. A rejected source is an ordinary `retained` row: the old value stays live and the run log says why.
+
+**One consequence worth knowing:** if a provider ever publishes pricing *only* in a blog post, that model will retain its old value indefinitely and quietly. The run log shows it as retained every week, so it is visible rather than silent — but the fix then is to widen `SOURCE_DOMAINS`/`SOURCE_PATH_DENY` deliberately for that provider, not to assume the check is broken.
 
 ### Email alerts (v3.63.413, widened v3.63.421 and v3.63.437)
 

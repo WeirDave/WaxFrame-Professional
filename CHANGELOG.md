@@ -1,5 +1,46 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.507 — Pricing refresh review: both proposals rejected, two guards added
+
+**Released:** 2026-09-20
+**Build:** 20260920-001
+
+### Why
+The 2026-09-20 scheduled run held two price proposals and reported two Gemini rows as newly failing. Both proposals were wrong, in the two different ways this Worker's own README already described as known residual gaps.
+
+### What changed
+
+**Both held proposals rejected. No live price moved.**
+- `perplexity/sonar-reasoning` — proposed $2/$8 (from $1/$5), attributed to **"Sonar Reasoning Pro"**. That is a different model, and the seed already tracks `sonar-reasoning-pro` at exactly $2/$8. `sonar-reasoning` stays $1/$5.
+- `mistral/ministral-8b-latest` — proposed $0.10/$0.10, cited to `mistral.ai/news/ministraux/`, the Ministral launch announcement, which still quotes the launch price. Current price is $0.15/$0.15.
+
+**`ministral-8b-latest` corrected in the seed, which had the bad version of this same proposal.** v3.63.484 applied the identical $0.10 change to `data/pricing-seed.json` — including swapping its `sourceUrl` from the real pricing page to that announcement post — and never pushed it to KV. KV kept the correct $0.15 and the live page was never wrong, but the seed carried $0.10 for two weeks, and so did `FALLBACK_DATA`, which the page serves when the Worker is unreachable. Seed restored to $0.15/$0.15 and `sourceUrl` to `https://mistral.ai/pricing/api/`; `FALLBACK_DATA` regenerated from it. **No KV push is needed or wanted for this — KV already holds the correct value, and pushing the old seed would have introduced the bug live.**
+
+**`confirmedModel` is now compared against the model that was asked for.** Required non-empty since v3.63.422 and never compared, which that release's own note called out. Three bad proposals have now turned on that gap (Sonnet 4.6/5, Ministral 8B/3B, and this week's Sonar Reasoning/Pro). `modelAttributionMismatch()` compares only the tokens that distinguish siblings — tier words asymmetrically, parameter sizes and version numbers only when both sides name one and they disagree — so `mistral-large-latest` still matches "Mistral Large 3" and `grok-4.20-0309-reasoning` still matches "Grok 4.20 Reasoning". A flagged row is still held, still recorded in full and still emailed; it just reads `MODEL MISMATCH` instead of `NEEDS REVIEW`, with the disagreement named.
+
+**A cited source must now be the right kind of page, not just the right domain.** `isTrustedSource` only checked the hostname, so a provider's own announcement post passed — and that is exactly how the Ministral price got in twice. `SOURCE_PATH_DENY` rejects a `news`, `blog`, `newsroom`, `press`, `announcements` or `changelog` path segment. The research prompt already asked Sonar not to cite a news article; this enforces it. Nothing in the seed hits the list.
+
+**Both Gemini "newly failing" rows are the expected shape, not a fault.** `invalid or missing price fields` means Sonar returned null rather than guess, which is what the prompt asks for; `isValidPrice(0)` was verified to accept the free tier's legitimate `$0`, so this is not a falsy-zero bug. Both rows are `retained` — old values untouched — and need no action. One thing to verify by hand: aggregators now disagree about whether `gemini-3.5-flash` paid is still $1.50/$9.00, and a price restructure on Google's side would explain Sonar suddenly declining to answer. Not changed here — that needs Google's own pricing page, not a third-party number.
+
+**`wasHealthy` widened.** A row held as `unverified-source` or `model-mismatch` was read fine, so it now counts as healthy for the "was OK last run, now can't be read at all" regression signal. Previously only `confirmed`/`needs-review` did, which would have silently suppressed that alert for a held row.
+
+### Verification
+- Gate: all 17 checks pass.
+- `modelAttributionMismatch` exercised against every model id in the seed paired with a plausible provider-page spelling: all three real incidents flag, and no currently-tracked model flags on an ordinary spelling difference.
+- Mutation-checked: disabling the guard fails 11 assertions, emptying `SOURCE_PATH_DENY` fails 3.
+- Prices cross-checked against published third-party pricing trackers; the Worker endpoint and the provider pricing pages were not reachable from this session's network, so the Mistral and Perplexity figures rest on that plus the seed's own internal agreement, not on a fetch of the official page.
+
+### Deploy
+The data fix ships with the site. The Worker changes need `wrangler deploy` from a token scoped to both `Workers Scripts:Edit` and `Workers KV Storage:Edit` — **not** done from this session and still outstanding. Until then the guards are in the repo but not in the live run.
+
+### Files touched
+`tools/pricing-worker/src/index.js`, `tools/pricing-worker/test-refresh-logic.mjs`, `tools/pricing-worker/data/pricing-seed.json`, `tools/pricing-worker/README.md`, `js/pricing-renderer.js`, `CHANGELOG.md`, plus the routine stamp sweep
+
+### Rollback
+`git revert HEAD`. The seed correction and the two guards are independent — reverting the guards alone leaves the corrected price in place.
+
+---
+
 ## v3.63.506 — CodeQL alert #36: fully robust HTML tag-strip regex
 
 **Released:** 2026-09-16

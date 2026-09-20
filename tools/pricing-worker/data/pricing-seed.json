@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-30T15:00:00Z",
+  "lastUpdated": "2026-09-20T12:00:00Z",
   "schemaVersion": 3,
   "tokensPerRound": {
     "input": 5000,
@@ -264,14 +264,14 @@
         },
         {
           "id": "ministral-8b-latest",
-          "inputPerM": 0.1,
-          "outputPerM": 0.1,
+          "inputPerM": 0.15,
+          "outputPerM": 0.15,
           "contextWindow": null,
           "maxOutput": null,
           "estPerRound": 0.001,
           "estNote": null,
-          "sourceUrl": "https://mistral.ai/news/ministraux/",
-          "verifiedAt": "2026-09-06T12:00:00Z",
+          "sourceUrl": "https://mistral.ai/pricing/api/",
+          "verifiedAt": "2026-09-20T12:00:00Z",
           "status": "verified"
         }
       ]
