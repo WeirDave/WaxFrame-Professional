@@ -1,5 +1,118 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.511 — Bearer tokens were never redacted from Scout bundles; seven backlog items cleared
+
+**Released:** 2026-09-20
+**Build:** 20260920-005
+
+### What changed
+
+**A redaction rule that had never worked.** `WF_DEBUG.scrubFailureRecord` scrubs credentials out of
+the failure record before it goes into a Scout bundle. Its Bearer/Basic rule was written as
+`/\b(Bearer|Basic)\s+.../` — but the file did not contain a backslash followed by `b`. It contained a
+literal `0x08` BACKSPACE byte, so the pattern required an actual backspace character immediately
+before the word "Bearer" and could never match anything. Bearer tokens, including Open WebUI's JWTs,
+and HTTP Basic credentials have therefore travelled into Scout bundles unredacted since v3.63.493.
+The `sk-*`, `AIza*`, query-string and JSON-header rules on either side of it were unaffected and
+always worked.
+
+The byte is invisible in an editor, `node --check` accepts it, and `grep` for the pattern text finds
+the line and shows nothing wrong. It was found by the first test ever written against that function.
+
+**That test now exists and gates.** `tools/test-debug-redaction.mjs` loads the real `js/wf-debug.js`
+in a sandbox — the whole shipped file, not a copied-out snippet, so a load-time break fails it too —
+and runs 19 checks: Open WebUI JWT bearer tokens in both a message and a raw body, `sk-*` keys,
+`AIza*` keys bare and in query strings, `access_token` query parameters, HTTP Basic, `x-api-key` and
+`authorization` values echoed inside JSON, benign prose left untouched, non-string fields, non-object
+input, input not mutated, and raw-body truncation including a key sitting on the truncation boundary.
+Every credential-shaped fixture is assembled at runtime, so the test file's own source contains no
+string matching a secret pattern. It runs as release-check stage 14.
+
+**The gate now rejects raw control characters in source.** Same class of fault, found the same way:
+`node --check` cannot see it, because the byte is legal inside a regex literal — it just means
+something other than what was typed. Stage 1 now scans every `js/`, `tools/`, `.html` and `.css`
+source file byte by byte and fails on any C0 control character other than tab, newline and carriage
+return.
+
+**Two more gate stages, and the stamp sweep stopped relying on a hand-kept list.**
+`tools/test-server-ai-eligibility.mjs` covered server-AI readiness but was wired into nothing, so it
+only ran when somebody remembered it existed; it is stage 15 now. Stage 1's syntax check and stage
+2's build-stamp check both grew from `js/*.js` to `js/**/*.{js,mjs}` plus `tools/**/*.mjs`. That
+closes two known gaps at once — `js/pdf-loader.mjs` had never been syntax-checked or stamp-checked,
+and the `tools/` scripts were swept off a list maintained by hand that had already let
+`tools/indexnow-ping.mjs` fall about ninety releases behind. The rule is now simply that a file
+carrying a `Build:` header must carry the current one. The gate runs 19 stages.
+
+**Dead weight removed.** The unreferenced `sounds/…-metal-clang-with-long-reverb.flac` — the
+freesound.org master, 271 KB, shipped in every release ZIP while only the `.mp3` sibling is ever
+loaded — is deleted. Worth noting for anyone auditing: the v3.63.91 changelog already listed this
+file as removed. It was still tracked. A changelog line is not evidence that a file is gone.
+
+**Two dead CSS references cleared.** `@keyframes lineNumPulse` was orphaned by the v3.63.459
+`.line-highlight` deletion and has no reference anywhere in the tree, including JS template literals.
+The `:not(.setup-section-img)` exclusion on the setup-screen stacking rule named a class that no
+longer exists; removing it drops the rule's specificity from (0,2,0) to (0,1,0), which changes no
+outcome here because nothing else in the stylesheet sets `position` or `z-index` on a direct child of
+`.fs-body-single` at any specificity.
+
+**Four reference documents reviewed against the live tree,** not merely re-dated. All four had been
+carrying "reviewed against v3.63.403" for roughly ninety releases.
+
+- *Prompts Reference* — the documented `builder_refine` prompt was about 55 lines behind what ships.
+  Replaced from `js/prompts.js` and the surrounding notes rewritten to describe what the prompt now
+  does: the user named as the source of voice and intent, engagement-based conflict counting, the
+  exclusivity rule between applying a change and raising a user decision, the mandatory self-check,
+  the APPLIED CHANGES block, and the anti-hallucination block. The document's own overview listed
+  four delimiters; there are six.
+- *Rules Reference* — said 16 HTML pages and 28 JS files (17 and 29), described release-check as four
+  checks (19), and did not mention the strict CSP at all, which has been a live hard constraint since
+  v3.63.366. All corrected, with the CSP entry including the failure mode a blocked inline handler
+  produces: the named function still exists on `window`, so a check that asserts the function exists
+  passes while the element has no listener.
+- *Storage Schema* — counts re-derived: 248 storage calls across ten `js/` files, 49 static keys and
+  4 dynamic-name patterns, against the original 224 / 4 files / 42 keys. Two keys are reachable only
+  through the `_readLimitsStore`/`_writeLimitsStore` wrappers and so are invisible to a direct-call
+  scan; that is recorded rather than left as an apparent discrepancy. The per-key sections are
+  explicitly marked as still being the v3.63.403 inventory.
+- *Audit Methodology* — its release-artifact category was written for a hand-built ZIP. Publishing a
+  release has built the ZIP, its `.sha256` sidecar and a build attestation automatically for some
+  time now, so the category is re-framed around confirming the workflow ran and both assets are
+  attached, with the manual checks retained for the case where an archive is ever built by hand
+  again. Its "four canonical version stamps" is now five.
+
+### Verification
+- Gate: all 19 stages pass. Stage count confirmed by counting the printed stages, not by trusting a
+  written number.
+- The redaction bug was reproduced before the fix (3 of 19 checks failing, all three the Bearer/Basic
+  rule) and the whole suite passes after it. The repair was verified at the byte level with `od`.
+- A byte-level sweep of every tracked source file found exactly one control character in the whole
+  tree — this one. The vendored `lib/` bundles are excluded from that scan.
+- The new control-character stage was confirmed to catch the real fault, and the widened stamp check
+  was confirmed to catch real rot: it failed on `tools/check-confidentiality.mjs` and
+  `tools/indexnow-ping.mjs` the moment it was switched on. Both were swept current.
+- CSS deletions smoke-tested in a browser at 1440×900: the setup screens render with their panels
+  above the honeycomb background as before, and all six `.fs-body-single` containers — Worker Bees,
+  Project, Reference, Starting Document, Settings and Checkpoint — were confirmed to still compute
+  `position: relative` and `z-index: 1` on their panel.
+- The Working Document 80ch column width is untouched; the `style.css` diff is five lines of deletion
+  and one selector.
+- Documented prompt text now matches `js/prompts.js` line for line for all four core prompts, checked
+  mechanically rather than by eye.
+
+### Files touched
+`js/wf-debug.js`, `tools/release-check.mjs`, `tools/test-debug-redaction.mjs` (new), `style.css`,
+`docs/WaxFrame_Prompts_Reference_v3.txt`, `docs/WaxFrame_Rules_Reference.txt`,
+`docs/WaxFrame_Storage_Schema_v1.txt`, `docs/WaxFrame_Audit_Methodology_v1.txt`,
+`docs/WaxFrame_Backlog_Master_v287.txt` (replaces v286), `sounds/…clang-with-long-reverb.flac`
+(deleted), `CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD`. The only runtime change is one byte in a regex in `js/wf-debug.js`; reverting
+restores the broken redaction rule, so revert the gate and test changes separately if the intent is
+to keep the fix.
+
+---
+
 ## v3.63.510 — Manual: prepay billing guidance, and the free-tier privacy trade-off named
 
 **Released:** 2026-09-20

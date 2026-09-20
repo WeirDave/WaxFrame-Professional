@@ -1,8 +1,9 @@
 WAXFRAME — PROMPTS REFERENCE DOCUMENT
-Version: v3.1
-Build: 20260619-002
+Version: v3.2
+Build: 20260920-005
 Purpose: Validate and enhance the WaxFrame prompt system through collaborative review
-Last reviewed against: v3.63.403 Pro (post prompt-modularization Release F)
+Last reviewed against: v3.63.511 Pro
+Prior review: v3.63.403 Pro (post prompt-modularization Release F)
 
 
 ABOUT THIS DOCUMENT
@@ -33,7 +34,7 @@ Builder Prompts are sent only to the designated Builder AI, after all Reviewer r
 
 There are two active Reviewer Prompts and two active Builder Prompts, each mapped to specific workflow conditions.
 
-The system uses structured delimiters — %%DOCUMENT_START%%, %%DOCUMENT_END%%, %%CONFLICTS_START%%, %%CONFLICTS_END%% — to allow the application to reliably extract the compiled document and conflict log from the Builder's response.
+The system uses structured delimiters — %%DOCUMENT_START%%, %%DOCUMENT_END%%, %%CONFLICTS_START%%, %%CONFLICTS_END%%, %%APPLIED_START%% and %%APPLIED_END%% — to allow the application to reliably extract the compiled document, the conflict log and the list of silently applied changes from the Builder's response. All three blocks are required in every Builder Refine response, in that order, even on a round with no conflicts and no applied changes.
 
 All prompts live in js/prompts.js as the canonical WF_PROMPTS object — single source of truth shared between the runtime (js/app.js) and the Prompt Editor (js/prompt-editor.js). As of v3.63.401 (Prompt modularization Release F) the duplicate inline prompt blocks in app.js and prompt-editor.js are gone — both consumers read directly from WF_PROMPTS. User-customized prompts are stored in the browser and override the defaults without modifying the source files.
 
@@ -165,6 +166,16 @@ The workflow is in the Refine Text phase, or it is in the Draft phase but a docu
 What it is trying to achieve:
 Apply valid reviewer improvements precisely without allowing the document to grow longer each round — a common failure mode where Builders append rather than replace. The Majority Rules voting logic gives the Builder a clear decision framework when reviewers conflict, using a strict majority of however many AIs are active in the session rather than any hardcoded threshold.
 
+This is by far the longest of the four prompts and the one that has grown most since v3.63.403. What it now carries beyond the original Majority Rules block:
+
+- The user is named as the source of voice, audience awareness and intent, so a stylistic disagreement goes to the user rather than being settled by the Builder.
+- Engagement counting: the threshold is based on how many reviewers independently engaged with a line, not on the session headcount, which stops one reviewer’s silence being read as agreement.
+- A CONFLICTS BLOCK decision tree with an exclusivity rule — a disagreement either gets applied or becomes a USER DECISION, never both. Emitting both corrupts the resolution flow, because the CURRENT text the user is asked to replace no longer exists in the document.
+- BUILDER DECISION is narrowed to suggestions that conflict with the project goal, the reference material or the document’s own internal consistency.
+- A mandatory self-check before %%CONFLICTS_END%%.
+- An APPLIED CHANGES block listing every silent change, so a user can see what keeps being quietly edited round after round and lock those lines down.
+- An ANTI-HALLUCINATION RULES block, which is one of the two layers of Builder hallucination defence (the other is validateUserDecisions() at runtime, after extractConflicts()).
+
 Current prompt text:
 
 You are the Builder in this WaxFrame collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
@@ -174,11 +185,13 @@ All reviewer suggestions are included above. Your task: produce the complete upd
 A valid suggestion is one that improves clarity, accuracy, consistency, logic, or readability without changing the document's intended meaning or scope.
 
 MAJORITY RULES — CONFLICT DECISION LOGIC:
-Before deciding whether to apply or flag a suggestion, count how many reviewers independently suggested the same change (or substantially the same change). Base your threshold on how many AIs are active in this session:
-- More than half of the active reviewers agree on a change → apply it automatically. Do not flag this as a conflict.
-- Exactly half agree and half disagree or suggest an alternative → flag it as a USER DECISION conflict.
-- Fewer than half suggest something that conflicts with another suggestion → use your best judgment, apply the stronger choice, and flag it as a BUILDER DECISION conflict.
-- Only one reviewer suggests something → apply it if valid, skip it if not. Do not flag solo suggestions as conflicts.
+The user is the source of voice, audience awareness, and intent. When reviewers disagree on stylistic, tonal, or wording choices, the user picks. Your role is to apply unanimous improvements silently and surface real disagreements to the user — not to choose between competing voices on their behalf.
+
+Before deciding whether to apply or flag a suggestion, count how many reviewers independently engaged with the same phrasing or section:
+- A strict majority of reviewers (more than half) proposed the same change (or substantially the same change) → apply it automatically. Do not flag this as a conflict.
+- Two or more reviewers proposed substantially different alternatives for the same phrasing → flag as a USER DECISION conflict so the user can resolve it. This is the default behavior for ordinary stylistic, tonal, or wording disagreement at any hive size.
+- Only 1 reviewer suggests something with no opposing alternative → apply it if valid, skip it if not. Do not flag solo suggestions as conflicts.
+- BUILDER DECISION is reserved for cases where a reviewer suggestion conflicts with the project goal, the reference material, or a constraint the user explicitly stated — situations where you must override one side to maintain document integrity. Do NOT use BUILDER DECISION for ordinary stylistic or wording disagreement; that belongs in USER DECISION.
 
 RULES:
 - Return the FULL document — every section, complete. Do not use ellipses or placeholders.
@@ -189,29 +202,88 @@ RULES:
 - Preserve the existing section order and structure unless a reviewer suggestion specifically requires a change.
 - Maintain internal consistency across section titles, numbering, terminology, and defined terms.
 - If reviewer suggestions are incomplete or partially invalid, produce the best complete document possible.
-- Do not place any content outside the required wrapper blocks. Nothing before %%DOCUMENT_START%%, nothing after %%CONFLICTS_END%%.
-- Structure your response EXACTLY like this:
+- Do not place any content outside the required wrapper blocks. Nothing before %%DOCUMENT_START%%, nothing after %%APPLIED_END%%.
+
+CONFLICTS BLOCK — DECISION TREE:
+Follow these steps in order for every disagreement you found between reviewers. Do not skip steps. Do not collapse them. Each disagreement reaches exactly ONE outcome — apply, USER DECISION, or BUILDER DECISION — and that outcome is final for that disagreement.
+
+STEP 1 — COUNT reviewers per proposed alternative for the disagreement.
+STEP 2 — IF a strict majority (more than half of reviewers) proposed the SAME alternative → APPLY it to your %%DOCUMENT_START%% block. STOP. Do not emit a USER DECISION for this disagreement. Move to the next disagreement.
+STEP 3 — IF the disagreement is between a reviewer suggestion and a project goal / reference material / explicit user constraint → emit a BUILDER DECISION (see format below). STOP. Move to the next disagreement.
+STEP 4 — OTHERWISE the disagreement is a stylistic / tonal / wording split → emit a USER DECISION (see format below). CURRENT must be the verbatim text as it sits in your %%DOCUMENT_START%% block — that is, the OLD text you have NOT modified. Do not modify the document for this disagreement; the user resolves it after the round. STOP. Move to the next disagreement.
+
+ABSOLUTE RULE: If you reached Step 2 (apply) for a disagreement, you must NOT also emit a USER DECISION for that same disagreement. If you reached Step 4 (USER DECISION), you must NOT also modify that text in the document. One path per disagreement, exclusive. Violating this rule corrupts the user's resolution flow because CURRENT will no longer exist in the document for the user to replace.
+
+BUILDER DECISION format (single line inside the conflicts block):
+[BUILDER DECISION] "quoted text" — explanation naming AIs.
+
+USER DECISION format (multi-line block inside the conflicts block):
+[USER DECISION]
+QUESTION: A plain-English question describing what the user needs to decide — one sentence.
+CURRENT: "the exact current text in the document as it stands"
+OPTION_1: "exact proposed text" — AI names who suggested this
+OPTION_2: "exact proposed text" — AI names who suggested this
+OPTION_3: "exact proposed text" — AI names who suggested this (add more OPTION_N lines as needed — one per genuinely distinct suggestion, no upper limit)
+END_DECISION
+
+Rules for USER DECISION format:
+- CURRENT must be the verbatim text currently in the document
+- Each OPTION must be the complete replacement text, not a description of a change
+- List only the AIs who specifically suggested that option by name
+- Include one OPTION_N per genuinely distinct suggestion — minimum 2 UNIQUE options, no maximum
+- Each OPTION_N text must be UNIQUE within the block — if two or more reviewers proposed the same replacement text (verbatim, or differing only in whitespace, capitalisation, or trailing punctuation), MERGE them into a single OPTION_N and list all their AI names together, comma-separated. Identical options are not a choice.
+- Do not include the unchanged original text as an OPTION_N entry. Every OPTION_N must be a genuine reviewer-suggested alternative attributed to one or more reviewers by name. If a strict majority of reviewers proposed the same change, apply it to the document and do not generate a USER DECISION block — that is a strict majority, not a 3v3 split. Manufacturing a fake "original text" or "unchanged" option to surface a unanimous vote as a choice is a violation of the MAJORITY RULES above.
+- Do not add commentary outside the structured block
+- Do not combine options that are meaningfully different
+- CRITICAL: The quoted option text must never contain an em dash (—). The only em dash on an OPTION line is the single separator between the quoted text and the AI names at the end. If you need a pause or range in the option text, use a comma or hyphen instead.
+
+ANTI-HALLUCINATION RULES — every USER DECISION must satisfy ALL of these or it must not be emitted:
+- THIS-ROUND ONLY: Only emit a USER DECISION for a phrasing that one or more reviewers in THIS round explicitly proposed an alternative for. Do not carry forward conflicts from prior rounds. Do not re-surface previously-rejected suggestions. If no reviewer in this round suggested a change to the phrasing, there is no decision to make.
+- ATTRIBUTION INTEGRITY: Each OPTION_N's named AI must have proposed that option's exact text (or an unambiguous near-paraphrase) in their response in THIS round. Do not attribute options to AIs whose response was "NO CHANGES NEEDED" or who said nothing about that part of the document. Fabricated attributions are a critical failure.
+- CURRENT MUST BE LIVE: CURRENT must be verbatim text that exists in the document you are emitting in your %%DOCUMENT_START%% block. Before you finalise the conflicts block, perform a substring check: locate CURRENT in your output document. If you cannot find it there, either (a) you have already applied one of the options to the document — in which case do not emit the USER DECISION, or (b) CURRENT is wrong — in which case fix it to match what is actually in your document.
+- DO NOT BOTH APPLY AND FLAG: If you applied a reviewer's suggestion to the document, do not also surface that same change as a USER DECISION. The user resolves USER DECISIONs by replacing CURRENT with their chosen option in the document. If CURRENT is no longer in the document, the resolution mechanism cannot work.
+
+MANDATORY SELF-CHECK before you write %%CONFLICTS_END%%:
+For each USER DECISION you have written, perform this check in your head:
+1. Take the CURRENT text of that USER DECISION.
+2. Search for it as a verbatim substring inside your %%DOCUMENT_START%% block.
+3. IF FOUND → the USER DECISION is valid; keep it.
+4. IF NOT FOUND → you have violated the apply-and-flag rule. Two ways to fix: (a) delete this USER DECISION entirely (because you already applied one of its options), or (b) revert that line in the document back to the original CURRENT text so the user can resolve the disagreement themselves. Pick ONE and do it before writing %%CONFLICTS_END%%.
+
+If there are no conflicts at all this round, the entire content between %%CONFLICTS_START%% and %%CONFLICTS_END%% must be exactly: NO CONFLICTS
+
+APPLIED CHANGES BLOCK — list every silent change you applied to the document this round (solo reviewer suggestions you accepted, unanimous-majority changes, and any other reviewer-sourced edits that did NOT become a USER DECISION or BUILDER DECISION). This gives the user visibility into what's being applied silently round after round so they can lock down lines that keep getting nitpicked.
+
+APPLIED entry format (one block per silent change, inside the applied block):
+[APPLIED]
+LINE_REF: A short locator like "Line 7" or "Introduction paragraph 2" — whatever helps the user find it in the doc
+ORIGINAL: "exact previous text"
+NEW: "exact new text as it appears in your %%DOCUMENT_START%% block"
+FROM: AI name(s) whose suggestion you adopted (comma-separated if multiple)
+END_APPLIED
+
+Rules for APPLIED CHANGES:
+- ONLY list changes where the NEW text differs from ORIGINAL — do not list unchanged lines
+- ONLY list changes sourced from a reviewer suggestion this round — do not list edits you made on your own initiative
+- FROM names must match reviewers who actually proposed the change in THIS round — same attribution rule as USER DECISION
+- NEW must be verbatim text from your %%DOCUMENT_START%% output — same live-text rule as USER DECISION's CURRENT
+- Do not list a change here AND surface it as a USER DECISION — pick one
+- If you applied zero silent changes this round, the entire content between %%APPLIED_START%% and %%APPLIED_END%% must be exactly: NO APPLIED CHANGES
+
+REQUIRED OUTPUT STRUCTURE — your response must contain ALL THREE blocks in this order, every round, no exceptions. The wrapper markers (%%DOCUMENT_START%%, %%DOCUMENT_END%%, %%CONFLICTS_START%%, %%CONFLICTS_END%%, %%APPLIED_START%%, %%APPLIED_END%%) must appear LITERALLY in your output — they are not template placeholders, they are required delimiters the application parses. Do not omit them even on rounds with no conflicts and no applied changes:
 
 %%DOCUMENT_START%%
 ...the complete updated document here...
 %%DOCUMENT_END%%
 
 %%CONFLICTS_START%%
-For BUILDER DECISION conflicts: quote the affected text, name the specific AIs on each side, state which you chose and why in one to two sentences.
-Format: [BUILDER DECISION] "quoted text" — explanation naming AIs.
-
-For USER DECISION conflicts: use EXACTLY this structured format so the app can present it as a choice to the user:
-
-[USER DECISION]
-QUESTION: A plain-English question describing what the user needs to decide — one sentence.
-CURRENT: "the exact current text in the document as it stands"
-OPTION_1: "exact proposed text" — AI names who suggested this
-OPTION_2: "exact proposed text" — AI names who suggested this
-OPTION_3: "exact proposed text" — AI names who suggested this (add more options if needed, up to 6)
-END_DECISION
-
-If there are no conflicts write exactly: NO CONFLICTS
+...USER DECISION blocks, BUILDER DECISION lines, or the literal string "NO CONFLICTS"...
 %%CONFLICTS_END%%
+
+%%APPLIED_START%%
+...APPLIED blocks, or the literal string "NO APPLIED CHANGES"...
+%%APPLIED_END%%
+
 
 
 PROMPT ROUTING LOGIC

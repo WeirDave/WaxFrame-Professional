@@ -1,5 +1,6 @@
 WaxFrame Professional — Project Rules Reference
-Last updated: 2026-06-19 (current production: v3.63.403)
+Last updated: 2026-09-20 (current production: v3.63.511)
+Prior review: 2026-06-19 against v3.63.403
 
 Living reference of the conventions and hard rules this project runs under.
 Update when a rule changes; this is the onboarding/consistency anchor for any
@@ -33,6 +34,16 @@ CORE CODE CONSTRAINTS
   Audit any work-screen CSS diff for this before shipping.
 - Desktop-only. Minimum viewport 1366x768 (enforced via min-screen-overlay).
   Modal max-widths stay inside 1366 - 48px overlay padding = 1318px usable.
+- STRICT CSP IS LIVE AND ENFORCED (since v3.63.366). script-src is 'self'
+  plus 'unsafe-eval' (required by the vendored SheetJS / mammoth / pdf.js
+  builds) plus one sha256-pinned head guard. Zero inline on*= handlers;
+  exactly ONE inline <script> per page, the head guard. release-check
+  ratchets both counts, so any new inline JS fails the gate. A new HTML
+  page needs an INLINE_HANDLER_BUDGET entry in tools/release-check.mjs.
+  Note the failure mode a CSP-blocked inline handler produces: the named
+  function is still defined on window, so a check asserting the function
+  exists passes while the element has no listener at all. Verify the
+  LISTENER (el.ondragover === null), never the function.
 - Code comments can lie. Read the actual runtime behavior, not the comments.
 - node --check every modified .js before output. For files with unicode/emoji
   in template-literal strings, edit via Python open(path,'r',encoding='utf-8')
@@ -103,15 +114,32 @@ RELEASE CEREMONY (every release)
    - ?v=                 — cache-bust query strings across HTML/JS
    - "X.Y.Z"             — package.json + JSON-LD softwareVersion
    - 'vX.Y.Z Pro'        — APP_VERSION in js/version.js
-   - Build: 20260619-NNN — build-stamp header lines in every js/*.js
-   The narrow patterns sweep all 16 HTML pages and all 28 js/*.js files
-   (every JS file carries a "// Build: YYYYMMDD-NNN" header so an audit
-   reads ONE identical build stamp across the source tree). Build stamp
-   format: YYYYMMDD-NNN (date + zero-padded session sequence).
+   - Build: 20260920-NNN — build-stamp header lines in every js/ file
+   The narrow patterns sweep all 17 HTML pages and all 29 js/ files
+   (28 .js + pdf-loader.mjs — glob BOTH extensions; the .mjs evaded the
+   sweep for weeks), plus style.css, package.json and the tools/ scripts
+   that carry a build header. Every one of those files carries a
+   "// Build: YYYYMMDD-NNN" line so an audit reads ONE identical build
+   stamp across the source tree. Build stamp format: YYYYMMDD-NNN (date
+   + zero-padded session sequence). Two waxframe-build meta SHAPES exist:
+   index.html carries the combined 'vX.Y.Z Pro | Build: N', the other
+   sixteen pages a bare 'N' — sweep the combined form FIRST or the
+   sixteen are silently missed.
+   NEVER sweep bare version numbers. A blanket old-to-new replace drags
+   historical '// v3.63.X' code comments forward so each claims the
+   current version instead of the one the work shipped in. Anchor every
+   substitution to a stamp; prose and comments are never swept.
 
 2a. Pre-flight: tools/release-check.mjs runs in CI on every push and PR,
-    and locally via `node tools/release-check.mjs`. Four checks:
-    (1) JS syntax via node --check on every js/*.js,
+    and locally via `node tools/release-check.mjs`. 19 checks as of
+    v3.63.511 — re-run it and count the ▶ stages rather than trusting a
+    number written down anywhere, this one has drifted silently before.
+    The four original checks, which are still checks 1-4:
+    (1) JS syntax via node --check on every js/ .js and .mjs file and
+        every tools/ .mjs file, plus a byte-level scan rejecting raw C0
+        control characters in source (added v3.63.511 after a literal
+        0x08 sat where a regex  was meant, silently disabling a
+        redaction rule while node --check passed),
     (2) Version-stamp consistency — APP_VERSION matches package.json,
         JSON-LD softwareVersion in index.html, every ?v= cache-bust,
         every waxframe-build meta, every // Build: comment,
@@ -125,6 +153,14 @@ RELEASE CEREMONY (every release)
         serving stale files. Combined with check 2, this closes the loop:
         ship code → bump APP_VERSION → ?v= follows. The workflow checkout
         uses fetch-depth: 0 so tags are present in CI.
+    Checks 5-19 cover: CSP meta tags, the clickjacking guard and CSP
+    violation listener, vendored library version floors, the inline-
+    handler and inline-script ratchets, prompt/DEFAULTS equivalence,
+    pricing coverage, Pricing Worker review-gate behaviour, provider
+    extractor fixtures, Scout-bundle redaction fixtures, server AI
+    eligibility, Claude relay security, the vendored dependency
+    inventory and its SHA-256 hashes, the companion updater scripts,
+    and the confidentiality scan.
     If any check fails the build is red; fix the underlying drift, don't
     skip the hook.
 
@@ -286,13 +322,14 @@ TEMPLATES (built-in + custom)
 ARCHITECTURE NOTES (load-bearing)
 ====================================================================
 
-- JS lives in js/ (28 files): app.js, app-bootstrap.js, version.js,
+- JS lives in js/ (29 files): app.js, app-bootstrap.js, version.js,
   templates.js, templates-page.js, storage.js, prompts.js, prompt-editor.js,
   provider-catalog.js, provider-models.js, api.js, api-links.js,
   api-details-page.js, audio.js, scenes.js, theme.js, nav-helper.js,
   helper-handlers.js, help-page.js, license-helper.js, wf-debug.js,
   docs-scrollspy.js, docx-export.js, mobile-share.js, min-screen-viewport.js,
-  pricing-renderer.js, pdf-loader.mjs, pdf-loader-bootstrap.js.
+  pricing-renderer.js, update-check.js, pdf-loader.mjs,
+  pdf-loader-bootstrap.js.
   8 vendor libs in lib/ (self-hosted for air-gap): docx.min.js, jszip.min.js,
   mammoth.browser.min.js, pdf.min.mjs, pdf.worker.min.mjs, pdf.min.js,
   pdf.worker.min.js, xlsx.full.min.js. The pdf.min.js + pdf.worker.min.js

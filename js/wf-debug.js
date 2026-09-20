@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260920-004
+// Build: 20260920-005
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -130,7 +130,7 @@ window.WF_DEBUG = {
       return v
         .replace(/sk-[A-Za-z0-9_\-]{12,}/g, 'sk-[REDACTED]')
         .replace(/AIza[0-9A-Za-z_\-]{30,}/g, 'AIza[REDACTED]')
-        .replace(/(Bearer|Basic)\s+[A-Za-z0-9._\-~+\/=]{12,}/gi, '$1 [REDACTED]')
+        .replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._\-~+\/=]{12,}/gi, '$1 [REDACTED]')
         .replace(/([?&](?:key|api[_-]?key|access[_-]?token)=)[^&\s"']+/gi, '$1[REDACTED]')
         .replace(/("(?:x-api-key|authorization|api[_-]?key)"\s*:\s*")[^"]*(")/gi, '$1[REDACTED]$2');
     };

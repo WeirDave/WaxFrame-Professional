@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260920-004
+   Build: 20260920-005
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2557,11 +2557,6 @@ body.helper-body .page-main {
   flex-shrink: 0;
   padding-right: var(--space-6);
 }
-@keyframes lineNumPulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.35; }
-}
-
 /* Inner wrapper — no scroll, just sizes the textarea correctly */
 .work-doc-inner {
   flex: 0 0 auto;
@@ -6055,11 +6050,16 @@ kbd {
 }
 
 /* ══════════════════════════════════════
-   SETUP SCREEN — BEE IMAGES & DIVIDER
+   SETUP SCREEN — PANEL STACKING
 ══════════════════════════════════════ */
 
-/* Make sure col content sits above the image */
-.fs-body-single > *:not(.setup-section-img) { position: relative; z-index: 1; }
+/* Setup-screen panels sit above any decorative background the body carries.
+   v3.63.511 dropped a `:not(.setup-section-img)` exclusion from this
+   selector — the class it named had already been deleted, so the exclusion
+   matched nothing. Specificity fell from (0,2,0) to (0,1,0) with it, which
+   changes no outcome: nothing else in this file sets position or z-index on
+   a direct child of .fs-body-single, at any specificity. */
+.fs-body-single > * { position: relative; z-index: 1; }
 
 /* ── ROUND HISTORY CARDS ── */
 .round-hist-item {

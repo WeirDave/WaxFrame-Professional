@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — help-page.js
-// Build: 20260920-004
+// Build: 20260920-005
 //  Self-contained break-glass help screen behavior. Renders the
 //  version line, environment capture, copy-to-clipboard buttons,
 //  and Slack/email links. Deliberately does NOT depend on app.js

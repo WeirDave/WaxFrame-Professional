@@ -2,8 +2,9 @@
 WAXFRAME — CODE AUDIT METHODOLOGY (v1)
 ════════════════════════════════════════════════════════════
 Created:             2026-05-16
-Last reviewed:       2026-06-19 against v3.63.403 Pro
-WaxFrame version:    v3.63.403 Pro
+Last reviewed:       2026-09-20 against v3.63.511 Pro
+Prior review:        2026-06-19 against v3.63.403 Pro
+WaxFrame version:    v3.63.511 Pro
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Audit_Methodology_v1.txt
 
@@ -360,7 +361,9 @@ Updated procedure for bulk edits:
 3. CHECKLIST FORMAT
 ──────────────────────────────────────────────────────────
 Before shipping any audit finding:
-  ☐ Configuration-drift check passes (release-check.mjs)
+  ☐ Configuration-drift check passes (release-check.mjs —
+    19 stages as of v3.63.511; count the ▶ stages rather
+    than trusting a number, this one drifts)
   ☐ Reference page identified for parity findings; visual
     side-by-side opened
   ☐ Anchor strings verified unique-per-file before bulk
@@ -389,7 +392,24 @@ working metadata (cache-bust queries, version stamps,
 syntax checks all clean) but the actual app.js code never
 reached production.
 
-CHECKS REQUIRED BEFORE EVERY ZIP DELIVERY:
+STATUS 2026-09-20: this category was written when the
+release ZIP was built by hand. It is not built by hand any
+more — publishing a GitHub release triggers
+.github/workflows/release-assets.yml, which packages the
+tagged tree, publishes a .sha256 sidecar beside the ZIP and
+records a build attestation, and the portable updater
+refuses to extract an archive whose hash does not match.
+The path-layout failure this category exists to catch can no
+longer be introduced by a packaging mistake, because nobody
+packages. What replaces these four checks is confirming,
+after every release, that the workflow ran and that BOTH
+assets (the ZIP and its .sha256) are attached before the
+portable update is announced.
+
+The checks below are retained for the case where an archive
+is ever produced by hand again:
+
+CHECKS REQUIRED BEFORE EVERY MANUAL ZIP DELIVERY:
 
   [1] unzip -l <zip> | grep -E "(^|/)app\.js$"
       Expected output: ONLY "js/app.js" line(s).
@@ -411,8 +431,10 @@ CHECKS REQUIRED BEFORE EVERY ZIP DELIVERY:
 
 RATIONALE — WHY THIS NEEDS ITS OWN CATEGORY:
 
-The four canonical version stamps (meta build, APP_VERSION,
-BUILD const, app.js?v= cache-bust) all passed for v3.40.1
+The canonical version stamps — four at the time (meta
+build, APP_VERSION, BUILD const, app.js?v= cache-bust),
+five since the JSON-LD softwareVersion on index.html was
+added to the ceremony — all passed for v3.40.1
 through v3.42.0. The cache-bust discipline worked perfectly.
 Syntax checks passed on every file. The release ceremony
 looked flawless. None of those checks caught that the actual

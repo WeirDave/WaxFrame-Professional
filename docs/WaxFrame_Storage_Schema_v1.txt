@@ -1,15 +1,54 @@
 WaxFrame Storage Schema v1
-2026-06-19 (line anchors refreshed against v3.63.403 Pro)
+Last reviewed:  2026-09-20 against v3.63.511 Pro
+Prior review:   2026-06-19 against v3.63.403 Pro
+Inventory body: written against v3.63.403 - see COUNTS below
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
-First-pass inventory of every localStorage key written or
-read by WaxFrame Professional. Produced for backlog item #7
-(localStorage migration audit). Built from an AST scan of
-every js/*.js file plus every inline <script> block in the
-HTML helper pages — 224 setItem/getItem/removeItem
-operations across 4 JS files and 2 HTML files, normalized
-to 42 unique keys (29 static + 13 dynamic-name patterns).
+Inventory of every localStorage key written or read by
+WaxFrame Professional. Produced for a localStorage migration
+audit (a backlog entry numbered #7 at the time - backlog
+numbers have been reused since, so that reference no longer
+resolves to anything; do not follow it).
+
+COUNTS - 2026-09-20 re-derivation against v3.63.511
+────────────────────────────────────────────────────────────
+The original pass counted 224 operations across 4 JS files
+and 2 HTML files, normalizing to 42 keys (29 static + 13
+dynamic patterns). Re-derived today:
+
+  248 setItem/getItem/removeItem calls across 10 js/ files
+  (api, app, help-page, license-helper, prompt-editor,
+  storage, templates-page, theme, update-check, wf-debug)
+
+  49 static keys - 47 reachable by a direct-call scan, plus
+  waxframe_model_limits and waxframe_observed_limits, which
+  are only ever touched through the _readLimitsStore /
+  _writeLimitsStore wrappers in js/app.js and so are
+  invisible to one. A scan that reports 47 is not wrong
+  about the code, only about the wrapper.
+
+  4 dynamic-name patterns: waxframe_models_<provider>,
+  waxframe_tiers_<provider>, waxframe_recommend_default-<id>
+  and waxframe_recommend_custom-<id>. The original 13 counted
+  per-provider instances rather than patterns.
+
+  1 transient probe key, __wf_probe__, written and removed
+  by the storage-availability test.
+
+The two HTML hits a scan reports (open-webui-setup.html,
+waxframe-user-manual.html) are documentation code samples
+shown to the reader, not storage WaxFrame performs. The
+strict-CSP migration removed every real inline script, so no
+HTML page touches storage any more.
+
+waxframe_fsa_sync_dir is deliberately absent from the
+localStorage inventory: it is an IndexedDB key.
+
+The per-key entries below are the v3.63.403 inventory and
+have NOT been rewritten key by key. Keys added since that
+pass are covered by the counts above but do not yet have
+their own sections.
 
 The static enumeration found ZERO orphan keys. Two patterns
 look orphan to a static reference scan but are intentional:

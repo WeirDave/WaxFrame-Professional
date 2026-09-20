@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v286
-2026-09-19
+WaxFrame Backlog Master v287
+2026-09-20
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -20,6 +20,48 @@ Companion document: docs/WaxFrame_Playbook_Test_Master_vN.txt
 Changelog content does NOT belong here. Released work goes
 to CHANGELOG.md and is removed from this file the moment it
 ships.
+
+
+v287 — BACKLOG KNOCK-DOWN (2026-09-20, v3.63.511). Seven of the
+eleven items shipped in one release. STRUCK, all verified in the
+tree before removal:
+
+  old #4  scrubFailureRecord Node fixture — tools/test-debug-
+          redaction.mjs, 19 checks, wired as release-check stage 14.
+          The first run of it found a real bug: js/wf-debug.js held a
+          literal 0x08 BACKSPACE byte where the regex \b was meant, so
+          the Bearer/Basic redaction rule had never matched anything
+          since v3.63.493. Fixed, and the gate now rejects raw control
+          characters anywhere in source.
+  old #5  unreferenced .flac — deleted. Decision recorded: it is the
+          freesound.org master, unused at runtime, re-downloadable from
+          freesound.org id 232450, and it shipped 271 KB in every
+          release ZIP. Note the v3.63.91 changelog had already CLAIMED
+          this deletion; the file was still tracked, so a changelog
+          line is not evidence a file is gone.
+  old #6  @keyframes lineNumPulse — removed. Zero references anywhere
+          in the tree, including JS template literals.
+  old #7  :not(.setup-section-img) — exclusion removed, comment
+          rewritten. Specificity drop from (0,2,0) to (0,1,0) verified
+          harmless: nothing else sets position or z-index on a direct
+          child of .fs-body-single, and all six setup screens were
+          confirmed in-browser still computing position:relative /
+          z-index:1 on their panels.
+  old #8  reference docs self-dating to v3.63.403 — all four reviewed
+          against the live tree, not just re-dated. Real drift found
+          and corrected in three of them; the Prompts Reference's
+          builder_refine text was ~55 lines behind the shipped prompt
+          and was replaced from js/prompts.js.
+  old #9  stale .claude/worktrees entries — nothing left to prune;
+          git worktree prune reported nothing and the directory is
+          empty. The old Dropbox path is gone from disk entirely.
+  old #10 test-server-ai-eligibility.mjs — wired as release-check
+          stage 15.
+
+Items renumbered 1..4 with no gaps. The gate went from 17 stages to
+19, and its stamp sweep now covers js/**/*.mjs and tools/**/*.mjs
+instead of a hand-kept list in CLAUDE.md — the list had already let
+tools/indexnow-ping.mjs rot ~90 releases behind.
 
 v281 — HOUSEKEEPING PASS (2026-09-14). The item count had drifted
 away from the amount of real work. Every claim below was verified
@@ -227,136 +269,7 @@ actually hits today.
            without spending tokens.
 
 
-4. scrubFailureRecord has no Node fixture
-   ─────────────────────────────────────────────────────────
-   WHAT:   js/wf-debug.js is not require()-able from Node, so
-           WF_DEBUG.scrubFailureRecord (added v3.63.493, and an
-           EXPORT-surface redaction path) is covered only by
-           browser verification, not by the release gate.
-   WHY:    Redaction is exactly the code that must not silently
-           rot. It was hoisted out of a closure into a method
-           specifically so a test COULD reach it; the test does
-           not exist yet.
-   STATE:  OPEN, small.
-   WHERE:  js/wf-debug.js (the WF_DEBUG const is a bare
-           declaration, not assigned to a root object the way
-           provider-catalog.js does it);
-           tools/test-provider-extractors.mjs is the natural
-           home once it is reachable.
-   DONE:   Fixtures cover Open WebUI JWT bearer tokens, sk-*,
-           AIza* keys in query strings, HTTP Basic, benign text
-           surviving untouched, and raw-body truncation — and
-           they run as part of the release gate.
-
-
-   ITEMS 5-10 were sub-items (a)-(f) of old #8, the follow-ups
-   from the 2026-08-13 full code/file audit (v3.63.459). Each
-   needs its own product call rather than being safe to
-   auto-resolve inside an unrelated release, so each is its own
-   entry now and the count is honest. All six re-verified
-   present in the tree on 2026-09-14.
-
-
-5. Unreferenced .flac master in sounds/
-   ─────────────────────────────────────────────────────────
-   WHAT:   sounds/232450__timbre__purely-synthesised-metal-clang-
-           with-long-reverb.flac is unreferenced at runtime —
-           js/scenes.js only loads the .mp3 sibling. It is the
-           freesound.org master.
-   WHY:    Ships in every release zip. Either it is a re-encode
-           source worth keeping, or it is dead weight.
-   STATE:  OPEN — needs a keep/delete call. Verified present
-           2026-09-14.
-   WHERE:  sounds/ ; js/scenes.js for the .mp3 reference.
-   DONE:   Deleted, or an explicit note here recording why it
-           stays.
-
-
-6. Orphaned @keyframes lineNumPulse
-   ─────────────────────────────────────────────────────────
-   WHAT:   @keyframes lineNumPulse in style.css was orphaned by
-           the v3.63.459 audit's .line-highlight deletion — it
-           was not in that cleanup's scope.
-   WHY:    Dead CSS. An unreferenced @keyframes cannot fire (it
-           only applies via an animation: property), so this is
-           inert, not risky.
-   STATE:  OPEN, trivial. Verified 2026-09-14: exactly one
-           occurrence in style.css, the definition itself —
-           nothing references it.
-   WHERE:  style.css.
-   DONE:   Removed, with the usual visual smoke-test pass over
-           the work screen per the CSS-deletion rule.
-
-
-7. Stale :not(.setup-section-img) selector
-   ─────────────────────────────────────────────────────────
-   WHAT:   A `:not(.setup-section-img)` reference in style.css
-           now points at a class that no longer exists.
-   WHY:    Inert — :not() against a non-existent class matches
-           everything — but stale and confusing to read.
-   STATE:  OPEN, trivial but NOT a pure no-op: :not() contributes
-           its argument's specificity, so simply deleting it
-           LOWERS the rule's specificity and can change which
-           rule wins. Needs the smoke-test, not a blind strip.
-   WHERE:  style.css (was ~line 5870; verified still present
-           2026-09-14).
-   DONE:   Either removed with specificity checked and the
-           affected screens smoke-tested, or annotated in place
-           explaining why it stays.
-
-
-8. Reference docs self-date to v3.63.403
-   ─────────────────────────────────────────────────────────
-   WHAT:   Five reference docs (WaxFrame_Audit_Methodology_v1,
-           WaxFrame_Prompts_Reference_v3, WaxFrame_Storage_
-           Schema_v1, WaxFrame_Rules_Reference) say "reviewed
-           against v3.63.403" — now ~90 versions stale.
-   WHY:    A stale review date makes a reader distrust content
-           that may be perfectly accurate, or trust content that
-           has drifted. A spot-check of the storage schema
-           against live js/storage.js passed, so the content is
-           stale-dated rather than wrong.
-   STATE:  OPEN — needs a review pass, not a rewrite.
-   WHERE:  docs/.
-   DONE:   Each doc re-checked against the live tree and its
-           review-date line bumped, or explicitly marked as
-           historical and not maintained.
-
-
-9. Stale .claude/worktrees entries
-   ─────────────────────────────────────────────────────────
-   WHAT:   Three .claude/worktrees/ entries (gitignored, local
-           disk only) left over from a Dropbox-path change.
-   WHY:    Pure local housekeeping. Not a repo file, ships
-           nothing, affects nobody but this machine.
-   STATE:  OPEN, trivial. `git worktree prune` clears them.
-           Deliberately NOT done during the v281 pass: other
-           sessions may hold worktrees, and pruning under them
-           is not this task's business.
-   WHERE:  .claude/worktrees/ (local only).
-   DONE:   Pruned on a machine where no other session is using
-           them.
-
-
-10. Wire test-server-ai-eligibility.mjs into the release gate
-   ─────────────────────────────────────────────────────────
-   WHAT:   tools/test-server-ai-eligibility.mjs tests
-           isServerImportedAI / isAIReadyForUse /
-           getConfiguredAIsForMode / continueFromBees but is not
-           wired into tools/release-check.mjs as a gate stage.
-   WHY:    A test nothing runs is a test that rots. Same pattern
-           as the provider-extractor fixtures, which ARE wired.
-   STATE:  OPEN, small. Verified 2026-09-14: zero references to
-           it in tools/release-check.mjs.
-   WHERE:  tools/test-server-ai-eligibility.mjs;
-           tools/release-check.mjs (follow the existing
-           shell-out stages).
-   DONE:   It runs as a numbered release-check stage and fails
-           the gate when it fails. Update the check count in
-           CLAUDE.md §4 the same day.
-
-
-11. Historical workplace identifiers outside the working tree
+4. Historical workplace identifiers outside the working tree
    ─────────────────────────────────────────────────────
    WHAT:   Surfaces outside the working tree that carried workplace
            identifiers after the v3.63.502-504 scrub.

@@ -75,11 +75,20 @@ function findLine(content, needle, fromIdx = 0) {
   return content.slice(0, idx).split('\n').length;
 }
 
-// ── Check 1: JS syntax ──────────────────────────────────────
+// ── Check 1: JS syntax + source integrity ───────────────────
 
-section('JS syntax (node --check)');
-const jsFiles = walk(join(ROOT, 'js'), p => p.endsWith('.js'));
-for (const file of jsFiles) {
+section('JS syntax (node --check) + source integrity');
+
+// .mjs added v3.63.511: js/pdf-loader.mjs had evaded both this check and the
+// Build-stamp sweep in Check 2 for weeks purely because the walk filtered on
+// `.js`. tools/**/*.mjs joins it here — those files are the release gate
+// itself and its fixtures, and a syntax error in one of them is a gate that
+// silently stops gating. tools/**/*.js is deliberately NOT included: the two
+// Cloudflare Worker sources are ES modules carrying a `.js` extension, which
+// `node --check` would reject as CommonJS.
+const jsFiles = walk(join(ROOT, 'js'), p => p.endsWith('.js') || p.endsWith('.mjs'));
+const toolFiles = walk(join(ROOT, 'tools'), p => p.endsWith('.mjs'));
+for (const file of [...jsFiles, ...toolFiles]) {
   try {
     execFileSync(process.execPath, ['--check', file], { stdio: 'pipe' });
     ok(rel(file));
@@ -88,6 +97,33 @@ for (const file of jsFiles) {
     fail(rel(file), `node --check failed: ${stderr.trim().split('\n')[0]}`);
   }
 }
+
+// Raw C0 control characters in source. Added v3.63.511 after a real one:
+// js/wf-debug.js line 133 held a literal 0x08 BACKSPACE where the regex
+// `\b` word-boundary escape was meant, so the Bearer/Basic redaction rule in
+// scrubFailureRecord could never match and bearer tokens went into Scout
+// bundles unredacted from v3.63.493 on. `node --check` passes on it — the
+// byte is legal inside a regex literal, it just means something else — and
+// it is invisible in an editor, so nothing but a byte-level scan finds it.
+// Tab, LF and CR are the only control characters a source file may hold.
+const CONTROL_RE = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
+const integrityFiles = [
+  ...jsFiles,
+  ...toolFiles,
+  ...walk(ROOT, p => p.endsWith('.html') || p.endsWith('.css'))
+].filter(p => !rel(p).startsWith('lib/')); // vendored minified bundles are not ours to police
+let controlHits = 0;
+for (const file of integrityFiles) {
+  const content = read(file);
+  const idx = content.search(CONTROL_RE);
+  if (idx >= 0) {
+    controlHits++;
+    const code = content.charCodeAt(idx).toString(16).padStart(2, '0');
+    fail(rel(file), `raw control character 0x${code} in source — almost certainly a mangled backslash escape`,
+      content.slice(0, idx).split('\n').length);
+  }
+}
+if (controlHits === 0) ok(`${integrityFiles.length} source files: no raw control characters`);
 
 // ── Check 2: Version-stamp consistency ──────────────────────
 
@@ -165,8 +201,14 @@ for (const file of htmlFiles) {
   }
 }
 
-// Every JS file's Build: comment should match
-for (const file of jsFiles) {
+// Every JS file's Build: comment should match. v3.63.511 widened this from
+// js/*.js to js/**/*.{js,mjs} plus tools/**/*.mjs, which closes two known
+// gaps at once: js/pdf-loader.mjs was never stamp-checked, and the tools/
+// scripts were swept off a hand-maintained list in CLAUDE.md that had already
+// let tools/indexnow-ping.mjs rot ~90 releases behind. The rule is now simply
+// "a file carrying a Build: header must carry the current one" — files with
+// no header are skipped, so adding one is opt-in.
+for (const file of [...jsFiles, ...toolFiles]) {
   if (!buildStamp) break;
   const content = read(file);
   const m = content.match(/\/\/\s*Build:\s*(\d{8}-\d{3})/);
@@ -776,7 +818,42 @@ try {
   fail('tools/test-provider-extractors.mjs', `provider extractor fixture failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
-// ── Check 14: Claude relay security behavior ────────────────────────
+// ── Check 14: Scout-bundle redaction fixtures (tools/test-debug-redaction.mjs) ──
+
+section('Scout-bundle redaction fixtures (tools/test-debug-redaction.mjs)');
+
+// v3.63.511 — backlog item 4. WF_DEBUG.scrubFailureRecord is the redaction
+// pass on the failure record that ships inside a Scout bundle, and it was
+// hoisted out of a closure into a method in v3.63.493 specifically so a test
+// could reach it. No test did, and the first one written found that the
+// Bearer/Basic rule had never worked at all. Redaction is exactly the code
+// that must not silently rot, so it gates now.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/test-debug-redaction.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/test-debug-redaction.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.trim().startsWith('✗'));
+  fail('tools/test-debug-redaction.mjs', `redaction fixture failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
+// ── Check 15: Server AI eligibility (tools/test-server-ai-eligibility.mjs) ──
+
+section('Server AI eligibility (tools/test-server-ai-eligibility.mjs)');
+
+// v3.63.511 — backlog item 10. This test covered isServerImportedAI /
+// isAIReadyForUse / getConfiguredAIsForMode / continueFromBees since it was
+// written but was wired into nothing, so it only ran when somebody
+// remembered it existed. A test nothing runs is a test that rots.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/test-server-ai-eligibility.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/test-server-ai-eligibility.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  fail('tools/test-server-ai-eligibility.mjs', `server AI eligibility failure — run it locally for full output. ${out.slice(-400) || 'Non-zero exit, no output captured'}`);
+}
+
+// ── Check 16: Claude relay security behavior ────────────────────────
 
 section('Claude relay security behavior (tools/claude-proxy/test-security.mjs)');
 
@@ -788,7 +865,7 @@ try {
   fail('tools/claude-proxy/test-security.mjs', `relay security test failure — run it locally for full output. ${out.slice(-400) || 'Non-zero exit, no output captured'}`);
 }
 
-// ── Check 15: vendored dependency inventory + hashes ───────────────
+// ── Check 17: vendored dependency inventory + hashes ───────────────
 
 section('Vendored dependency inventory + hashes');
 
@@ -824,7 +901,7 @@ if (inventory) {
   }
 }
 
-// ── Check 16: companion updater scripts presence + repo reference ────
+// ── Check 18: companion updater scripts presence + repo reference ────
 
 section('Companion updater scripts presence + repo reference');
 
@@ -834,7 +911,7 @@ section('Companion updater scripts presence + repo reference');
 // execution-based check is possible here — CI runs on ubuntu-latest,
 // which can't run .ps1, and .command needs a real double-click/terminal
 // context — so this is presence/shape only, mirroring Check 2's
-// in-process regex style rather than Checks 10-13's execFileSync pattern.
+// in-process regex style rather than Checks 10-16's execFileSync pattern.
 
 const UPDATER_SCRIPTS = ['Update-WaxFrame.ps1', 'Update-WaxFrame.command'];
 
@@ -886,7 +963,7 @@ for (const scriptName of UPDATER_SCRIPTS) {
   }
 }
 
-// ── Check 17: Confidentiality gate (tools/check-confidentiality.mjs) ──
+// ── Check 19: Confidentiality gate (tools/check-confidentiality.mjs) ──
 
 section('Confidentiality — no real workplace data in tracked files');
 
@@ -898,7 +975,7 @@ section('Confidentiality — no real workplace data in tracked files');
 //
 // The checker holds NO real identifier: structural rules match the SHAPE of
 // sensitive data, and the literal terms live in a gitignored
-// .confidential-terms that never ships. Shell out like Checks 10-14.
+// .confidential-terms that never ships. Shell out like Checks 10-16.
 try {
   const out = execFileSync(process.execPath, [join(ROOT, 'tools/check-confidentiality.mjs')],
     { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' });
