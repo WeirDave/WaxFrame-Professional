@@ -182,7 +182,7 @@ for (const p of seed.providers) {
     //
     // The expected value is round-half-up to 3dp (what the page prints
     // with toFixed(3)), floored at 0.001 for any non-zero price so a paid
-    // model never displays as "$0.000/round". That rule reproduces all 33
+    // model never displays as "$0.000/round". That rule reproduces all 36
     // priced rows in the seed exactly, so this is an equality check rather
     // than a tolerance — a tolerance wide enough to absorb the rounding
     // would have been wide enough to absorb the defect above.
