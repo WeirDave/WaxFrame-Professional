@@ -1,5 +1,31 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.508 — Gemini paid Tier 1 limits corrected
+
+**Released:** 2026-09-20
+**Build:** 20260920-002
+
+### What changed
+`gemini-paid`'s `tier1Rpm`/`tier1Tpm` read `2K`/`4M`. The published Tier 1 limits for Gemini 3.5 Flash — the model that provider row defaults to — are **1K RPM and 2M TPM**, so both were overstated by exactly 2×. Corrected, and `FALLBACK_DATA` regenerated.
+
+These are hand-curated prose fields, outside what the scheduled refresh touches, so nothing would ever have caught this on its own — the refresh only moves numeric pricing, and `check-pricing-coverage.mjs` checks the model roster and the derived `estPerRound`, not the rate-limit copy. Worth knowing that this class of field has no automated check at all.
+
+Gemini 3.1 Pro sits on a much tighter Tier 1 (25 RPM, 250 RPD) than 3.5 Flash's 1K/10K, which the schema cannot express — `tier1Rpm`/`tier1Tpm` are one pair per provider, tied to its default model. Left as-is rather than widened; noting it so the next reader knows the displayed figure describes the default model only.
+
+`gemini-3.5-flash` paid pricing is still unverified and unchanged at $1.50/$9.00 — that needs Google's pricing page, which this release did not have.
+
+### Verification
+- Gate: all 17 checks pass.
+- The version sweep rewrote five *provenance* references — comments and headings recording that the v3.63.507 guards landed in build `20260920-001` — to `-002`. Reverted; only the `// Build:` header stamps advance. A blanket find-and-replace on a build stamp will do this every time a comment cites one as history rather than as the current build.
+
+### Files touched
+`tools/pricing-worker/data/pricing-seed.json`, `js/pricing-renderer.js`, `CHANGELOG.md`, plus the routine stamp sweep
+
+### Rollback
+`git revert HEAD` — a two-field data change, independent of everything in v3.63.507.
+
+---
+
 ## v3.63.507 — Pricing refresh review: both proposals rejected, two guards added
 
 **Released:** 2026-09-20
