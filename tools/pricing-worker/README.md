@@ -56,6 +56,19 @@ curl -s "https://waxframe-pricing.weirdave.workers.dev/api/pricing" | python3 -m
 # diff live.json against data/pricing-seed.json — any disagreement is a bug in one of them
 ```
 
+**And the drift is wider than one price — it is the model roster.** A full reconcile on 2026-09-20 followed the consequence through. `wrangler kv key put --path=data/pricing-seed.json` writes the **whole seed**, so a push that never ran holds back everything in it, not just the row that prompted the look. Working backwards from the one known fact — KV still reported `$0.15/$0.15` for `ministral-8b-latest`, a value the seed abandoned on 2026-09-06 — no full-seed push can have landed since. Two commits in that window changed which models exist:
+
+| commit | change to the roster |
+|---|---|
+| `v3.63.497` (09-14) | `deepseek-v4-flash` renamed to `deepseek-flash`, repriced to $0.15/$0.60 |
+| `v3.63.500` (09-14) | `command-a-plus-05-2026` and `command-r7b-12-2024` added |
+
+**The weekly scheduled run cannot repair any of that.** `refreshPricing()` maps over the `providers[].models[]` it finds in KV — it refreshes rows, and never adds, renames or removes one. So if no push landed, KV is still serving the old DeepSeek model id at the old price and is missing both new Cohere rows, and the weekly run has been dutifully researching a `deepseek-v4-flash` that no longer exists anywhere else in the codebase.
+
+**The two-second test, needing no tooling:** open the pricing page and look at DeepSeek's model id. `deepseek-flash` means the pushes landed and only `ministral` was odd; `deepseek-v4-flash` means they did not, and Cohere will show three models instead of five.
+
+**Which way to push, once you know.** This is the part worth getting right, because the honest answer changed inside a single release. While the seed carried the bad `$0.10` Ministral value, pushing it would have put that live — so "don't push" was correct. With the seed corrected it inverts: the seed is now the better copy in every row, and a push is what repairs the roster. Reconcile first, push second, and confirm with the `lastUpdated` check below.
+
 **Verify the push actually landed** — don't trust the local edit alone:
 
 ```sh
@@ -75,6 +88,16 @@ Confirm the returned `lastUpdated` matches what you just set. v3.63.251 (2026-06
 1. Update `data/pricing-seed.json`
 2. `node tools/generate-pricing-fallback.mjs` — regenerates `FALLBACK_DATA` in `js/pricing-renderer.js` from the seed. Structurally impossible to forget one half of the update; run it as part of any release that touches pricing.
 3. `wrangler kv key put ... --remote` (this updates KV; live page picks up within 1 hr)
+
+---
+
+## Derived fields in the seed
+
+`estPerRound` is computed from `inputPerM`/`outputPerM` and `tokensPerRound`, but it is **stored**, not computed at render time — so a price edit that forgets it leaves a stale number behind. It is not cosmetic: `js/pricing-renderer.js` sorts the table by it (`var sortColumn = 'estPerRound'`) and draws the "cheapest" recommendation from it.
+
+The 2026-09-20 reconcile found exactly that. `v3.63.497` repriced `deepseek-flash` from $0.22/$0.60 to $0.15/$0.60 and moved `estPerRound` 0.002 → 0.001, when the new price works out to 0.002 — halving the displayed per-round cost of the one provider already tagged `cheapest`, and floating it to the top of the ranking it was being judged on.
+
+`tools/check-pricing-coverage.mjs` now recomputes it for every priced row. The expected value is round-half-up to 3dp, floored at 0.001 so a paid model never displays as "$0.000/round"; that rule reproduces all 33 priced rows exactly, so it is checked for equality rather than with a tolerance — a tolerance loose enough to absorb the rounding would have been loose enough to absorb the defect.
 
 ---
 

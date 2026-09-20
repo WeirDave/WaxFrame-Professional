@@ -164,12 +164,46 @@ for (const p of seed.providers) {
     if (m.status === 'needs-verification' && hasPrice) {
       fail(`pricing-seed.json provider '${p.id}' model '${m.id}' is status "needs-verification" but already has pricing — should be "verified"`);
     }
+
+    // estPerRound is DERIVED from inputPerM/outputPerM and tokensPerRound,
+    // but it is stored rather than computed, so a price edit that forgets
+    // it leaves a stale number behind — and it is not cosmetic:
+    // js/pricing-renderer.js sorts the table by estPerRound by default
+    // (`var sortColumn = 'estPerRound'`) and picks the "cheapest"
+    // recommendation from it, so a wrong value moves a provider up or
+    // down the page.
+    //
+    // Found on 2026-09-20 reconciling the seed: v3.63.497 repriced
+    // deepseek-flash from $0.22/$0.66 to $0.15/$0.60 and moved
+    // estPerRound 0.002 -> 0.001, when $0.15/$0.60 computes to 0.002 —
+    // halving DeepSeek's displayed per-round cost and floating it to the
+    // top of the cheapest-paid ranking, on the one provider already
+    // tagged "cheapest".
+    //
+    // The expected value is round-half-up to 3dp (what the page prints
+    // with toFixed(3)), floored at 0.001 for any non-zero price so a paid
+    // model never displays as "$0.000/round". That rule reproduces all 33
+    // priced rows in the seed exactly, so this is an equality check rather
+    // than a tolerance — a tolerance wide enough to absorb the rounding
+    // would have been wide enough to absorb the defect above.
+    //
+    // Arithmetic is done in thousandths of a dollar rather than dollars:
+    // dividing first puts values like 0.0255 a hair below the .5 boundary
+    // in binary floating point, and Math.round would then silently pick
+    // the wrong side.
+    if (hasPrice && typeof m.estPerRound === 'number') {
+      const milli = (m.inputPerM * seed.tokensPerRound.input + m.outputPerM * seed.tokensPerRound.output) / 1000;
+      const expected = milli === 0 ? 0 : Math.max(1, Math.round(milli)) / 1000;
+      if (Math.abs(expected - m.estPerRound) > 1e-9) {
+        fail(`pricing-seed.json provider '${p.id}' model '${m.id}' has estPerRound ${m.estPerRound}, but $${m.inputPerM}/$${m.outputPerM} per M over ${seed.tokensPerRound.input}+${seed.tokensPerRound.output} tokens works out to ${expected} — recompute it alongside the price (it drives the page's default sort and the "cheapest" pick)`);
+      }
+    }
   }
   if (p.defaultModel && !seen.has(p.defaultModel)) {
     fail(`pricing-seed.json provider '${p.id}' has defaultModel '${p.defaultModel}' with no matching entry in its own models[]`);
   }
 }
-ok('internal seed consistency (duplicate ids, status/price agreement, defaultModel presence)');
+ok('internal seed consistency (duplicate ids, status/price agreement, estPerRound vs price, defaultModel presence)');
 
 // ── Report ───────────────────────────────────────────────────────────
 

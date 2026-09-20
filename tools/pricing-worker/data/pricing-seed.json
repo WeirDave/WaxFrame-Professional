@@ -178,7 +178,7 @@
           "outputPerM": 0.60,
           "contextWindow": "1M",
           "maxOutput": "384K",
-          "estPerRound": 0.001,
+          "estPerRound": 0.002,
           "estNote": "Off-peak rate; peak hours (limited weekday windows) are 2×",
           "sourceUrl": "https://api-docs.deepseek.com/quick_start/pricing/",
           "verifiedAt": "2026-09-14T12:00:00Z",
