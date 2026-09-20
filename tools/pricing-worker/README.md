@@ -65,6 +65,8 @@ curl -s "https://waxframe-pricing.weirdave.workers.dev/api/pricing" | python3 -m
 
 **The weekly scheduled run cannot repair any of that.** `refreshPricing()` maps over the `providers[].models[]` it finds in KV — it refreshes rows, and never adds, renames or removes one. So if no push landed, KV is still serving the old DeepSeek model id at the old price and is missing both new Cohere rows, and the weekly run has been dutifully researching a `deepseek-v4-flash` that no longer exists anywhere else in the codebase.
 
+**A stale DeepSeek row misprices, it does not break.** Confirmed against DeepSeek's own Models & Pricing page on 2026-09-20: `deepseek-v4-flash` is a *legacy alias* that is still accepted, served by DeepSeek-V4.1-Flash and billed at the Flash price. So if KV is still serving the old id, calls keep working and are charged $0.15/$0.60 — the damage is confined to the page displaying the retired model's old, higher number. Worth knowing before treating the roster drift as urgent: it is a pricing-accuracy bug, not an outage.
+
 **The two-second test, needing no tooling:** open the pricing page and look at DeepSeek's model id. `deepseek-flash` means the pushes landed and only `ministral` was odd; `deepseek-v4-flash` means they did not, and Cohere will show three models instead of five.
 
 **Which way to push, once you know.** This is the part worth getting right, because the honest answer changed inside a single release. While the seed carried the bad `$0.10` Ministral value, pushing it would have put that live — so "don't push" was correct. With the seed corrected it inverts: the seed is now the better copy in every row, and a push is what repairs the roster. Reconcile first, push second, and confirm with the `lastUpdated` check below.
