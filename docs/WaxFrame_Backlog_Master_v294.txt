@@ -272,12 +272,31 @@ acceptance test. Items needing David rather than an assistant say so.
            entire lesson of v3.63.512, where /api/tags turned out to report
            the architectural figure and overstate the ceiling 16x on the
            very machine it was built for.
-   STATE:  OPEN. Both servers are installed on the dev machine and
-           start-on-demand by design. Attempted 2026-09-20: Ollama came up,
-           LM Studio's app launched but was NOT serving on 1234 (the
-           documented trap — app open never means endpoint up; the server
-           has to be switched on in its Developer tab), and Docker's daemon
-           had not finished starting.
+   STATE:  OPEN, and each half is blocked on something different.
+           Second attempt 2026-09-20, with David starting the servers:
+
+           OPEN WEBUI — container up and healthy on :3000, but every model
+           endpoint returns 401. /api/models, /api/v1/models and the Ollama
+           proxy paths /ollama/api/tags and /ollama/api/ps are all
+           authenticated; only /api/config and /health are open. This is not
+           a misconfiguration, it IS the shape the catalog documents (a
+           bearer token on a nominally local server). Verifying it needs an
+           Open WebUI API key — generated in its Settings, Account, API Keys
+           — pasted into the Open WebUI row IN WAXFRAME, never into a chat
+           or a file. Then a Recheck drives the real harvest.
+           Note what is already proven and what is not: the INNER object is
+           a raw Ollama model entry, and that shape was verified live
+           against Ollama 0.34.2. What remains unverified is Open WebUI's
+           wrapping of it under .ollama.
+
+           LM STUDIO — app processes running, nothing listening on 1234,
+           checked at the TCP layer rather than by curl alone. The
+           documented trap again: app open never means endpoint up. The
+           server switch is in the Developer tab, and LM Studio will not
+           serve with no model loaded. This is the half that matters most:
+           LM Studio is the ONLY server reporting both max_context_length
+           and loaded_context_length, so it is the only way to prove the
+           two-number context display against something real.
    WHERE:  js/provider-catalog.js limitsFromModelEntry, the OpenAI-shape
            branch; tools/test-provider-extractors.mjs for the fixtures.
    DONE:   A model from each server shows a context figure sourced from the
