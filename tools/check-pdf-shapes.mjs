@@ -39,6 +39,7 @@ import path from 'node:path';
 import os from 'node:os';
 import http from 'node:http';
 import crypto from 'node:crypto';
+import zlib from 'node:zlib';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -180,6 +181,112 @@ function encryptedPDF(userPw = '') {
   ], `/Encrypt 6 0 R /ID [${hex(idBuf)} ${hex(idBuf)}] `);
 }
 
+// ── PDF 1.5+ cross-reference STREAM, and object streams ────────────────
+// Everything above emits a classic `xref` table plus `trailer`. Most PDFs
+// produced this century do neither: they put the cross-reference data in a
+// /Type /XRef stream and pack most objects into /Type /ObjStm streams. That
+// is a different parse path in pdf.js, so a corpus of classic-xref files
+// leaves it entirely untested.
+
+// entries: [type, field2, field3] per object number, index 0 = free head.
+function xrefStreamBytes(entries, w = [1, 4, 2]) {
+  const buf = Buffer.alloc(entries.length * (w[0] + w[1] + w[2]));
+  let o = 0;
+  for (const [t, f2, f3] of entries) {
+    buf.writeUIntBE(t, o, w[0]); o += w[0];
+    buf.writeUIntBE(f2, o, w[1]); o += w[1];
+    buf.writeUIntBE(f3, o, w[2]); o += w[2];
+  }
+  return buf;
+}
+
+// pageCount pages of dense text. useObjStm packs the catalog, pages node,
+// font and every page dict into one compressed object stream, which is what
+// a modern producer actually does.
+function modernPDF(pageCount = 3, useObjStm = true) {
+  const NL = '\n';
+  const contentFor = (p) => {
+    let ops = 'BT /F1 11 Tf 72 740 Td 14 TL';
+    for (let ln = 0; ln < 45; ln++) {
+      ops += ` (Page ${p} of the modern-structure document, line ${ln + 1}. Filler prose for density.) Tj T*`;
+    }
+    return ops + ' ET';
+  };
+
+  // Object numbering:
+  //   1 catalog, 2 pages, 3 font, 4..(3+n) page dicts,
+  //   then content streams, then ObjStm, then XRef stream.
+  const pageDictNums = [];
+  const contentNums = [];
+  for (let i = 0; i < pageCount; i++) pageDictNums.push(4 + i);
+  for (let i = 0; i < pageCount; i++) contentNums.push(4 + pageCount + i);
+  const objStmNum = 4 + pageCount * 2;
+  const xrefNum = objStmNum + 1;
+
+  const catalog = '<< /Type /Catalog /Pages 2 0 R >>';
+  const pagesNode = `<< /Type /Pages /Kids [${pageDictNums.map(n => `${n} 0 R`).join(' ')}] /Count ${pageCount} >>`;
+  const font = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+  const pageDicts = pageDictNums.map((n, i) =>
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${contentNums[i]} 0 R ` +
+    `/Resources << /Font << /F1 3 0 R >> >> >>`);
+
+  let out = '%PDF-1.5' + NL + '%\xE2\xE3\xCF\xD3' + NL;
+  const offsets = {};
+  const push = (num, body) => {
+    offsets[num] = Buffer.byteLength(out, 'latin1');
+    out += `${num} 0 obj${NL}${body}${NL}endobj${NL}`;
+  };
+
+  // Content streams always stand alone — a stream cannot live in an ObjStm.
+  contentNums.forEach((n, i) => {
+    const data = contentFor(i + 1);
+    push(n, `<< /Length ${Buffer.byteLength(data, 'latin1')} >>${NL}stream${NL}${data}${NL}endstream`);
+  });
+
+  const inObjStm = {};   // objnum -> index within the stream
+  if (useObjStm) {
+    const packed = [[1, catalog], [2, pagesNode], [3, font],
+                    ...pageDictNums.map((n, i) => [n, pageDicts[i]])];
+    let body = '';
+    const pairs = [];
+    packed.forEach(([num, src], idx) => {
+      pairs.push(`${num} ${Buffer.byteLength(body, 'latin1')}`);
+      inObjStm[num] = idx;
+      body += src + ' ';
+    });
+    const header = pairs.join(' ') + ' ';
+    const full = Buffer.from(header + body, 'latin1');
+    const comp = zlib.deflateSync(full);
+    offsets[objStmNum] = Buffer.byteLength(out, 'latin1');
+    out += `${objStmNum} 0 obj${NL}<< /Type /ObjStm /N ${packed.length} /First ${header.length} ` +
+           `/Filter /FlateDecode /Length ${comp.length} >>${NL}stream${NL}`;
+    out += comp.toString('latin1');
+    out += `${NL}endstream${NL}endobj${NL}`;
+  } else {
+    push(1, catalog); push(2, pagesNode); push(3, font);
+    pageDictNums.forEach((n, i) => push(n, pageDicts[i]));
+  }
+
+  // The xref stream itself.
+  const maxNum = xrefNum;
+  const entries = [[0, 0, 65535]];
+  for (let n = 1; n <= maxNum; n++) {
+    if (useObjStm && inObjStm[n] !== undefined) entries.push([2, objStmNum, inObjStm[n]]);
+    else if (offsets[n] !== undefined) entries.push([1, offsets[n], 0]);
+    else entries.push([0, 0, 0]);
+  }
+  const xrefPos = Buffer.byteLength(out, 'latin1');
+  entries[xrefNum] = [1, xrefPos, 0];
+  const raw = xrefStreamBytes(entries);
+  const comp = zlib.deflateSync(raw);
+  out += `${xrefNum} 0 obj${NL}<< /Type /XRef /Size ${maxNum + 1} /W [1 4 2] /Root 1 0 R ` +
+         `/Filter /FlateDecode /Length ${comp.length} >>${NL}stream${NL}`;
+  out += comp.toString('latin1');
+  out += `${NL}endstream${NL}endobj${NL}`;
+  out += `startxref${NL}${xrefPos}${NL}%%EOF${NL}`;
+  return Buffer.from(out, 'latin1');
+}
+
 const LARGE_PAGES = 600;
 const FIXTURES = {
   'control':     { buf: textPDF(3),        label: '3 dense pages of text' },
@@ -191,6 +298,13 @@ const FIXTURES = {
                    label: 'broken cross-reference offset' },
   'encopen':     { buf: encryptedPDF(''),        label: 'encrypted, empty user password' },
   'encpw':       { buf: encryptedPDF('secret123'), label: 'encrypted, password required' },
+  // PDF 1.5+ structure. Everything above emits a classic `xref` table plus
+  // `trailer`; almost nothing produced this century does. Real producers put
+  // the cross-reference data in a /Type /XRef stream and pack most objects
+  // into /Type /ObjStm streams, which is a different parse path in pdf.js and
+  // was completely untested by a corpus of classic-xref files.
+  'xrefstream':  { buf: modernPDF(4, false), label: 'PDF 1.5 xref STREAM, objects standalone' },
+  'objstm':      { buf: modernPDF(4, true),  label: 'PDF 1.5 xref stream + OBJECT streams' },
 };
 
 let bad = 0;
@@ -256,6 +370,16 @@ function assertShapes(res, engine) {
   check(`[${engine}] a password-protected PDF says so, and does not leak "No password given"`,
     /password-protected/i.test(g('encpw').err || '') && !/no password given/i.test(g('encpw').err || ''),
     g('encpw'));
+  check(`[${engine}] a PDF 1.5 cross-reference STREAM parses`,
+    g('xrefstream').err === null && g('xrefstream').chars > 10000, g('xrefstream'));
+  check(`[${engine}] objects packed into an OBJECT STREAM parse`,
+    g('objstm').err === null && g('objstm').chars > 10000, g('objstm'));
+  // The two are the same document packed two ways, so the text must match
+  // exactly. Asserting only that each "parses" would pass on a build that
+  // silently dropped the objects inside the compressed stream.
+  check(`[${engine}] both packings yield identical text`,
+    g('xrefstream').chars === g('objstm').chars && g('xrefstream').chars > 0,
+    { xrefstream: g('xrefstream').chars, objstm: g('objstm').chars });
 }
 
 // ══ Driver ════════════════════════════════════════════════════════════

@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v316
+WaxFrame Backlog Master v317
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,32 @@ ships.
 
 
 
+
+v317 — LONG-FILE HALF CLOSED WITH A PUBLIC PDF (2026-09-21).
+Two things, and the second matters more than the first.
+
+The corpus gained PDF 1.5+ structure: a /Type /XRef cross-
+reference stream, and objects packed into a /Type /ObjStm object
+stream. Everything before this emitted a classic xref table plus
+trailer, which almost nothing produced this century does — so a
+different parse path in pdf.js was entirely untested. Both
+fixtures pass on both engines and are asserted to yield IDENTICAL
+text, since they are the same document packed two ways; asserting
+only that each "parses" would pass on a build that silently
+dropped the objects inside the compressed stream.
+
+Then a real 490-page public standards PDF, downloaded rather than
+supplied — which is the correction worth keeping. The item said
+the long-file test needed David's own files. It did not. Length
+was already covered synthetically; what a real long PDF adds is
+PRODUCER STRUCTURE, and a public document carries that with no §0
+exposure whatsoever. Asking for a private file would have been
+asking for risk that bought nothing.
+
+It immediately found what the synthetic corpus could not: the two
+engines disagree by 0.11 percent on the same real file. See the
+entry above. Every claim of "identical" has been narrowed to
+"identical on synthetic input".
 
 v316 — VISION CONFIRMED ON A REAL FILE (2026-09-21). The
 whole-document vision branch ran against a real image-heavy PDF
@@ -816,13 +842,32 @@ Ordered by value.
            real file with a real provider — the one thing
            tools/check-ocr-handoff.mjs is structurally unable to
            answer.
-           STILL OUTSTANDING, and both matter more than the two
-           above: a genuinely SCANNED document (photographed or
-           flatbed, no text layer anywhere, skew and noise —
-           a clean vector drawing is an easier input than a
-           scan), and a large multi-hundred-page file. Each on
-           waxframe.com AND on a portable file:// copy, because
-           those run different pdf.js builds.
+           THIRD RESULT — the long file, and it did NOT need to
+           be David's. A public standards PDF of ~490 pages
+           (PDF 1.6, xref streams, object streams, linearized —
+           i.e. real modern producer structure) parses cleanly
+           on BOTH engines: 12.2 s / 211 MB heap on 6.3.289,
+           10.7 s on 3.11.174, document outline extracted, no
+           warnings, no errors.
+           🔴 AND IT FOUND SOMETHING A SYNTHETIC FILE CANNOT:
+           the two engines do NOT agree. 1,580,803 characters on
+           the hosted build against 1,582,600 on the portable
+           one — 0.11 percent apart on the same file. Every
+           synthetic fixture in check-pdf-shapes matches
+           exactly, so the corpus alone would have supported the
+           conclusion that the engines are equivalent. They are
+           not, quite. The difference is almost certainly
+           whitespace, ligature and hyphenation handling, and it
+           is immaterial for document refinement — but the CLAIM
+           "both engines behave identically" was only ever true
+           of synthetic input and has been corrected wherever it
+           was written down.
+           STILL OUTSTANDING, and now the only thing left: a
+           genuinely SCANNED document — photographed or flatbed,
+           no text layer anywhere, skew and noise. A clean
+           vector drawing is an easier input than a scan, and
+           the long-file half is now covered by a public file
+           that carries no confidentiality question at all.
    WHERE:  js/app.js extractPDF (including the new
            PasswordException / InvalidPDFException translation)
            and the OCR fallback for sparse pages;

@@ -144,8 +144,15 @@ and needs no library, which matters in a repo that vendors its dependencies.
 
 Testing only the hosted build tests the half that was never in doubt. The
 portable build is three years older and permanently pinned, so it is the one
-likelier to choke. As of the first run both behave identically on all eight
-shapes, which is the useful result.
+likelier to choke. Both behave identically on every synthetic shape here.
+
+**That is not the same as saying the engines agree.** A real 490-page
+public standards PDF — PDF 1.6, xref streams, object streams, linearized —
+parses cleanly on both and yields text that differs by about 0.11 percent
+(1,580,803 characters against 1,582,600). Immaterial for document
+refinement, but it is the kind of divergence a synthetic corpus cannot
+produce, and it is why the real-file half of the backlog item stays open
+rather than being declared covered.
 
 It found two things on that first run, both since fixed: a 2,000,000-character
 import cap that refused a legitimate 600-page document, and a
