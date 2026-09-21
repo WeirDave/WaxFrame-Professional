@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-debug-redaction.mjs
-// Build: 20260920-012
+// Build: 20260920-013
 // ============================================================
 // Fixture-based regression test for WF_DEBUG.scrubFailureRecord, the
 // redaction pass applied to the failure record before it is written into a
@@ -206,6 +206,46 @@ check('truncation is measured after redaction, not before', () => {
 check('only the raw field is length-capped', () => {
   const long = 'm'.repeat(10000);
   assert.equal(scrub({ message: long }).message.length, 10000);
+});
+
+console.log('▶ The Troubleshooting card\'s technical details are an EXPORT surface');
+
+// v3.63.519 — two buttons on that card publish this block: "Report on GitHub"
+// prefills an issue on a PUBLIC repository with up to 1,500 characters of it,
+// and "Copy report" puts it on the clipboard. It was built straight from the
+// provider's error message and response body with no redaction, while the
+// Scout bundle — the less dangerous of the two — had been scrubbed since
+// v3.63.493. Providers echo credentials in error text routinely.
+check('the details shape scrubs credentials out of message and raw', () => {
+  const details = {
+    code: 'AUTH_FAILED', ai: 'ChatGPT', provider: 'chatgpt', status: 401,
+    message: `Incorrect API key provided: ${OPENAI_KEY}.`,
+    raw: JSON.stringify({ error: { message: `key ${OPENAI_KEY}` }, headers: { authorization: `Bearer ${JWT}` } }),
+    version: 'v0.0.0', build: '00000000-000', ts: new Date().toISOString(),
+    deepDiveOn: true, ringBufferLen: 12
+  };
+  const out = scrub(details);
+  const text = JSON.stringify(out);
+  assert.ok(!text.includes(OPENAI_KEY), 'the API key reached the published details');
+  assert.ok(!text.includes(JWT), 'a bearer token reached the published details');
+  // The block still has to be USEFUL as a bug report afterwards.
+  assert.equal(out.status, 401, 'status must survive redaction');
+  assert.equal(out.ringBufferLen, 12, 'non-string fields must survive redaction');
+  assert.equal(out.deepDiveOn, true);
+  assert.equal(out.code, 'AUTH_FAILED');
+  assert.equal(out.provider, 'chatgpt');
+});
+
+check('the card builds those details THROUGH scrubFailureRecord', () => {
+  // Source-level guard. The DOM path cannot be driven from here, and this is
+  // the specific regression worth catching: someone editing the details
+  // object and dropping the scrub call would silently re-open a one-click
+  // path from a provider error to a public issue.
+  const idx = source.indexOf('tcDetails');
+  assert.notEqual(idx, -1, 'tcDetails is gone — re-point this guard');
+  const region = source.slice(source.indexOf('Technical details'), source.indexOf('Reset expand state'));
+  assert.ok(/scrubFailureRecord\s*\(/.test(region),
+    'the card details block no longer passes through scrubFailureRecord');
 });
 
 console.log('▶ WF_DEBUG.classify — a rejected API key must reach the AUTH_FAILED card');

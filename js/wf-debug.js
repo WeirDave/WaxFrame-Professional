@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260920-012
+// Build: 20260920-013
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -1650,8 +1650,22 @@ function renderTroubleshootingCard(entry, ctx) {
   }
 
   // Technical details (collapsed by default)
+  //
+  // v3.63.519 — SCRUBBED. This block is an EXPORT SURFACE and was being
+  // treated as a display surface. Two buttons on this card publish it:
+  // "Report on GitHub" opens a prefilled issue on a PUBLIC repository with
+  // up to 1,500 characters of it, and "Copy report" puts it on the
+  // clipboard. It was built straight from ctx.message and ctx.raw — the
+  // provider's own error text and response body — with no redaction.
+  //
+  // That is exactly the content scrubFailureRecord exists for. Providers
+  // echo credentials in error messages as a matter of course; OpenAI's own
+  // wording is "Incorrect API key provided: sk-…". The Scout bundle has
+  // applied the scrub since v3.63.493, but this path never did, so the
+  // more dangerous of the two — one click to a public issue — was the
+  // unprotected one.
   if (detailsEl) {
-    const details = {
+    const details = WF_DEBUG.scrubFailureRecord({
       code:        entry.code,
       ai:          ctx.aiName || null,
       provider:    ctx.provider || null,
@@ -1663,7 +1677,7 @@ function renderTroubleshootingCard(entry, ctx) {
       ts:          new Date().toISOString(),
       deepDiveOn:  WF_DEBUG.deepDiveOn,
       ringBufferLen: WF_DEBUG.ringBuffer.length
-    };
+    }) || {};
     detailsEl.textContent = JSON.stringify(details, null, 2);
   }
 

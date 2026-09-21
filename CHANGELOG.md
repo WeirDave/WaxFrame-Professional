@@ -1,5 +1,48 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.519 — The Troubleshooting card could publish an API key to a public issue
+
+**Released:** 2026-09-20
+**Build:** 20260920-013
+
+### What changed
+
+**The card's technical-details block was an export surface being treated as a display surface.**
+Two buttons on that card publish it: **Report on GitHub** opens a prefilled issue on this public
+repository carrying up to 1,500 characters of it, and **Copy report** puts it on the clipboard. The
+block was built directly from the provider's own error message and raw response body, with no
+redaction applied.
+
+Providers echo credentials in error text as a matter of routine — OpenAI's own wording is
+*"Incorrect API key provided: sk-…"*. So a rejected key could travel from a provider error, through
+a card, to a public GitHub issue, in one click.
+
+The Scout bundle has been scrubbed since v3.63.493, and had its Bearer/Basic rule repaired in
+v3.63.511. This path never had any scrub at all — meaning the more dangerous of the two surfaces was
+the unprotected one. It now runs through the same `scrubFailureRecord` as the bundle.
+
+Anyone who filed an issue from a Troubleshooting card on v3.63.493 through v3.63.518 should check
+it for credential text and rotate anything exposed.
+
+### Verification
+- Gate: all 19 stages pass. 33 checks in the redaction suite.
+- Driven in a browser with OpenAI's real key-echoing message shape plus a bearer token in the raw
+  body: the published block now carries neither, shows redaction markers, and still contains the
+  status, provider and code that make it a useful bug report.
+- Two guards added. One pins the details shape itself — credentials removed from both `message` and
+  `raw`, while `status`, `ringBufferLen`, `deepDiveOn`, `code` and `provider` survive, because a
+  redacted report still has to be worth filing. The other is a source-level check that the block is
+  built through `scrubFailureRecord`, since the DOM path cannot be driven from the test harness and
+  the regression worth catching is someone editing that object and dropping the call.
+
+### Files touched
+`js/wf-debug.js`, `tools/test-debug-redaction.mjs`, `CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD` restores the unredacted export. Not advisable.
+
+---
+
 ## v3.63.518 — Deep Dive records whether a response actually streamed
 
 **Released:** 2026-09-20
