@@ -1,5 +1,48 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.536 — An unreproducible report closed out
+
+**Released:** 2026-09-20
+**Build:** 20260920-030
+
+### What changed
+
+**A lock-button report from June has been struck.** It described the Conflicts panel occasionally
+continuing to show a line as locked after it was unlocked. It was never reproduced — not when it was
+first raised, and not in the several hundred releases since, during which that panel went through a
+security migration and more than one rework. Whatever the original behaviour was may no longer exist
+to find.
+
+It has not been deleted. It is recorded with what was reported, why it was closed, and what would
+reopen it — which is somebody actually seeing it happen, at which point it becomes a fresh report
+with evidence attached rather than a revival of a five-line note nobody could act on.
+
+Carrying an unreproducible report indefinitely is not diligence. It is clutter that makes the real
+queue harder to read, and it was already doing that: it spent three months invisible in an old
+release note before surfacing yesterday.
+
+**The diagnostic stays.** The instrumentation added when the report was first investigated remains in
+place, switched on only under Deep Dive. It costs nothing when that is off, and it is the one thing
+that would immediately distinguish the two possible causes if this ever does recur. Removing it on
+the grounds that the issue is closed would mean throwing away the only instrument for a problem that
+might come back with none.
+
+**That leaves one open item**, which needs real PDFs rather than any further code.
+
+### Verification
+- Backlog section structure verified after the move: one open item, two recorded decisions.
+- Gate: all 19 stages. Flow harness: 23. Injection checks: 14. Debug tests: 37. Portable check: 9.
+  Dead-code audit: zero findings.
+
+### Files touched
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v307.txt`, plus the routine stamp sweep. No
+application code changed.
+
+### Rollback
+Nothing to roll back — this release records a decision and changes no behaviour.
+
+---
+
 ## v3.63.535 — Deliberate decisions now have somewhere to live
 
 **Released:** 2026-09-20

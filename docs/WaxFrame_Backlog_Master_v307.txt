@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v306
+WaxFrame Backlog Master v307
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,25 @@ ships.
 
 
 
+
+v307 — LOCK BUG STRUCK (v3.63.536). ONE open item: the PDF import test.
+
+David: "That conflicts lock bug is a dead issue, we were never able to
+reproduce it. Strike it from the record and I'll open up something else if it
+somehow magically returns."
+
+Moved to SETTLED DECISIONS rather than deleted, so the next reader finds the
+history instead of rediscovering a June release note and filing it again —
+which is exactly how it surfaced in the first place.
+
+The [wf:lock] diagnostic in lockAppliedChange STAYS, Deep-Dive-gated since
+v3.63.533. Do not remove it on the grounds that the issue is closed. It costs
+nothing when Deep Dive is off and it is the only instrument that separates
+"the data never changed" from "the data changed and the re-render did not".
+Closing a report is not the same as gaining the ability to diagnose it.
+
+If it recurs it is a NEW entry with the [wf:lock] output attached, not a
+revival of this one.
 
 v306 — HSTS DECIDED, NOT DONE (v3.63.535). Two open items; both need David.
 
@@ -575,34 +594,6 @@ Ordered by value.
            (NOT the file itself, and NOT its content — see §0 of the
            handover; a real work PDF must never reach this repo).
 
-2. Conflicts panel: unlocking a line can leave it displayed as locked
-   ─────────────────────────────────────────────────────────
-   WHAT:   In the Conflicts panel, clicking Unlock on a per-line
-           Applied Change does not always return the row to its
-           unlocked state. Reported by David in the v3.63.164 era.
-   WHY:    Both branches of the toggle exist, both write state and
-           both call renderConflicts(), so on paper it works. That
-           makes a data/render divergence the likely cause — the
-           stored value changes and the drawn row does not, or the
-           row is drawn from a different source than the one written.
-           Two independent lock mechanisms exist and may be being
-           conflated: per-line change.locked, and decision locks
-           derived from window._resolvedDecisions.
-   STATE:  OPEN, blocked on a reproduction. Deferred in June pending
-           one; never reproduced since, and never recorded here until
-           v3.63.533 — it lived only in a release note.
-   WHERE:  js/app.js lockAppliedChange (the toggle, both branches);
-           the per-row button markup near the Applied Changes card;
-           the separate _resolvedDecisions-derived lock further down.
-           The [wf:lock] diagnostic line is in lockAppliedChange and
-           now only prints with Deep Dive ON.
-   DONE:   Turn Deep Dive on, reproduce the stuck lock, and capture
-           the [wf:lock] line. If wasLocked is TRUE on a row reading
-           "Unlock", the data is right and the re-render is wrong. If
-           it is FALSE, the drawn state and the stored state had
-           already diverged before the click. Either answer points at
-           one half of the code and the fix follows from it.
-
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.
 
@@ -656,6 +647,36 @@ back into OPEN FEATURES with that trigger named.
            fresh browser profile loads the site before raising
            it. Preload only after a long max-age has run clean.
            Verify: curl -sI https://waxframe.com/ | grep -i strict
+
+2. Conflicts panel lock bug — STRUCK, never reproduced
+   (decided 2026-09-20)
+   ─────────────────────────────────────────────────────────
+   WHAT:   Reported around v3.63.164: clicking Unlock on a
+           per-line Applied Change in the Conflicts panel did
+           not always return the row to its unlocked state.
+   DECIDED: Struck. David: "That conflicts lock bug is a dead
+           issue, we were never able to reproduce it. Strike it
+           from the record and I'll open up something else if it
+           somehow magically returns."
+   WHY:    Deferred in June pending a reproduction that never
+           came, and nothing in the ~370 releases since has
+           pointed at it. The code has been through the strict-
+           CSP migration and several Conflicts-panel reworks in
+           that time, so whatever the original behaviour was may
+           no longer exist. Carrying an unreproducible report
+           indefinitely is not tracking — it is clutter that
+           makes the real queue harder to read.
+   NOTE:   The [wf:lock] diagnostic line in lockAppliedChange
+           is KEPT, gated behind Deep Dive since v3.63.533. It
+           costs nothing when Deep Dive is off, and it is
+           exactly what would be needed if this ever recurs: it
+           distinguishes "the data never changed" from "the data
+           changed and the re-render did not". Do not remove it
+           on the grounds that the bug is closed — it is cheap
+           insurance against a report with no other instrument.
+   REVISIT IF: someone reproduces it. Then it is a NEW entry
+           with the [wf:lock] output attached, not a revival of
+           this one.
 
 NOTES ON FORMAT
 ════════════════════════════════════════════════════════════
