@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v315
+WaxFrame Backlog Master v316
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,22 @@ ships.
 
 
 
+
+v316 — VISION CONFIRMED ON A REAL FILE (2026-09-21). The
+whole-document vision branch ran against a real image-heavy PDF
+and transcribed it correctly. That is the half
+tools/check-ocr-handoff.mjs cannot reach: the mock proves the
+plumbing, a real provider proves the transcription.
+
+Recorded without the document, its name, or anything in it. The
+letterhead in that file carried a third-party company name, a
+street address and a phone number — the exact category §0 names
+— so only the shape and the outcome are here.
+
+That is now twice in one day that a real document has been loaded
+to test this item, which is the only way to close it and is also
+the thing to stay awake to: see the note under v315 about what a
+checkpoint or Scout bundle taken from such a session contains.
 
 v315 — FIRST REAL-WORLD PDF RECORDED (2026-09-21). One data
 point against the PDF item, written down WITHOUT the filename,
@@ -783,12 +799,30 @@ Ordered by value.
            alone; no import-bound error, so neither the raised
            character cap nor the zip-expansion guard catches a
            small legitimate file.
-           That is the EASY shape and it proves the happy path
-           on real input, nothing more. The two that matter are
-           still outstanding: a scanned / image-only file, and a
-           large multi-hundred-page one — each on waxframe.com
-           AND on a portable file:// copy, because those run
-           different pdf.js builds.
+           SECOND REAL-WORLD RESULT, same day, same build: a
+           two-page product drawing — almost the whole page is a
+           line rendering, with a small letterhead block at the
+           top of each page. It took the WHOLE-DOCUMENT VISION
+           branch, which is the one a mock cannot validate:
+           sourceType came back pdf-vision (proved by the Verify
+           panel opening on its own, which only happens for that
+           sourceType), and the transcription matched the
+           original pane on inspection. The rendering itself
+           correctly produced no text — there is none in it.
+           The letterhead appears twice in the output because it
+           appears on both pages. That is correct, not a
+           duplication bug: vision transcribes per page.
+           So the OCR path is now confirmed end to end against a
+           real file with a real provider — the one thing
+           tools/check-ocr-handoff.mjs is structurally unable to
+           answer.
+           STILL OUTSTANDING, and both matter more than the two
+           above: a genuinely SCANNED document (photographed or
+           flatbed, no text layer anywhere, skew and noise —
+           a clean vector drawing is an easier input than a
+           scan), and a large multi-hundred-page file. Each on
+           waxframe.com AND on a portable file:// copy, because
+           those run different pdf.js builds.
    WHERE:  js/app.js extractPDF (including the new
            PasswordException / InvalidPDFException translation)
            and the OCR fallback for sparse pages;
