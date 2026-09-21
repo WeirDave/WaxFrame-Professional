@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v292
+WaxFrame Backlog Master v293
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -24,6 +24,22 @@ ships.
 
 
 
+
+
+v293 — ONE SYSTEM OF RECORD (2026-09-20). David, on finding that an
+empty backlog did not mean an empty queue: "I don't understand how we can have
+more stuff hidden in different spaces, that seems ridiculous. We need to do a
+better job of cleaning that up and being more fluid and transparent so that I
+can understand exactly what the hell is going on."
+
+He was right. CLAUDE.md §8 had been carrying real code items while this file
+carried the rest, so "the backlog is empty" was true and misleading at the same
+time. Those items are now entries HERE, written to the same five-field shape as
+everything else, and §8 is a pointer with nothing of its own.
+
+RULE, going forward: if it is work, it goes in this file. CLAUDE.md holds
+process, standing orders and verified state — never a task list. A second place
+to look is how items get lost.
 
 
 v292 — QUEUE EMPTY (2026-09-20). The last numbered item — the refs the
@@ -214,16 +230,105 @@ that actually times out. Anthropic (CF Worker proxy) and Gemini (needs
 ════════════════════════════════════════════════════════════
 OPEN BUGS
 ════════════════════════════════════════════════════════════
-
 None currently open.
-
 
 ════════════════════════════════════════════════════════════
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
 Ordered by value.
 
-None currently open.
+
+Ordered by value. Everything here is real work with a real
+acceptance test. Items needing David rather than an assistant say so.
+
+1. Live-verify the LM Studio and Open WebUI context-limit shapes
+   ─────────────────────────────────────────────────────────
+   WHAT:   v3.63.512 reads the context length local servers publish.
+           Ollama was verified against a live 0.34.3 instance. LM Studio's
+           /api/v0/models (max_context_length + loaded_context_length) and
+           Open WebUI's nested .ollama object are covered by FIXTURES ONLY.
+   WHY:    A fixture pins the shape someone believed was correct. Only a
+           live run pins the shape the server actually sends — which is the
+           entire lesson of v3.63.512, where /api/tags turned out to report
+           the architectural figure and overstate the ceiling 16x on the
+           very machine it was built for.
+   STATE:  OPEN. Both servers are installed on the dev machine and
+           start-on-demand by design. Attempted 2026-09-20: Ollama came up,
+           LM Studio's app launched but was NOT serving on 1234 (the
+           documented trap — app open never means endpoint up; the server
+           has to be switched on in its Developer tab), and Docker's daemon
+           had not finished starting.
+   WHERE:  js/provider-catalog.js limitsFromModelEntry, the OpenAI-shape
+           branch; tools/test-provider-extractors.mjs for the fixtures.
+   DONE:   A model from each server shows a context figure sourced from the
+           API, checked against what that server actually reports. Where LM
+           Studio reports a loaded window below the architectural maximum,
+           the picker reads "context <loaded> of <max>".
+
+2. PDF.js 4.10.38 → 6.x migration
+   ─────────────────────────────────────────────────────────
+   WHAT:   Major-version upgrade of the vendored PDF.js pair.
+   WHY:    Staying several majors behind eventually stops being free. Not
+           urgent: no open advisories against 4.10.38, and
+           isEvalSupported:false is verified.
+   STATE:  OPEN, deliberately deferred. Wants a dedicated release — it is
+           the kind of change that breaks one of the two load paths
+           silently.
+   WHERE:  lib/pdf.min.mjs + lib/pdf.worker.min.mjs (ESM) and
+           lib/pdf.min.js + lib/pdf.worker.min.js (UMD, file:// fallback);
+           js/pdf-loader.mjs, js/pdf-loader-bootstrap.js;
+           docs/vendored-dependencies.json for the hashes.
+   DONE:   Both paths smoke-tested — ESM from https AND the UMD fallback
+           from file:// — the dependency inventory updated with new hashes,
+           and the superseded vendor files deleted in the SAME release
+           (spell the extensions out; .mjs vs .js has burned this project).
+
+3. tools/flow-check.mjs — an end-to-end harness
+   ─────────────────────────────────────────────────────────
+   WHAT:   Reuse the capture.mjs CDP architecture (local server, disposable
+           headless Chrome, seeded state) but assert DOM instead of
+           screenshotting, driven against a same-origin mock provider so a
+           full multi-round hive flow costs nothing.
+   WHY:    Every bug found on 2026-09-20 — the budget retry that never
+           worked, the wrong model recorded, the auth card with no way out,
+           the rejected parameter — was found by running the real thing,
+           and most were invisible to unit tests. David asked for this
+           because the work screen is less solid than he wants.
+   STATE:  OPEN. Proposed and wanted; never started. CSP connect-src 'self'
+           already permits a same-origin mock endpoint.
+   WHERE:  tools/capture.mjs for the architecture to copy.
+   DONE:   Runs headless, spends nothing, and covers: every Back-button
+           path through the five setup screens, Change Builder pill
+           refresh, checkpoint save/return, and a full two-round hive
+           against the mock.
+
+4. Re-run the orphan-function and eval audit
+   ─────────────────────────────────────────────────────────
+   WHAT:   The zero-orphan / zero-eval baseline was last established
+           2026-07-25 and has not been re-verified since.
+   WHY:    Roughly 65 releases of drift. Cheap to check, and the audit
+           methodology doc exists precisely so it can be repeated.
+   STATE:  OPEN, mechanical.
+   WHERE:  docs/WaxFrame_Audit_Methodology_v1.txt is the procedure.
+   DONE:   The audit is re-run, findings are either fixed or recorded here
+           as entries, and the doc's review line is bumped.
+
+5. Confirm the vendored docx.min.js version for Dependabot
+   ─────────────────────────────────────────────────────────
+   WHAT:   docx is absent from package.json's Dependabot manifest because
+           the vendored artifact embeds no version string.
+   WHY:    Every other vendored library is tracked; this one is a blind
+           spot. Deferred at v3.63.406 on the correct reasoning that a
+           guessed version makes Dependabot lie, which is worse than an
+           absence.
+   STATE:  OPEN, small, blocked on identifying the release.
+   WHERE:  lib/docx.min.js; package.json; docs/vendored-dependencies.json.
+   DONE:   The release is identified by matching the artifact against
+           published builds — not guessed — and added to the manifest, or
+           this entry records why it cannot be and is closed.
+
+
+
 
 
 ════════════════════════════════════════════════════════════
@@ -354,6 +459,7 @@ A. Direct outreach to AI-document-workflow writers/bloggers
            logged here or in project notes either way.
 
 
+
 B. Submit to AI tool directories + self-hosted listings
    ─────────────────────────────────────────────────────────
    WHAT:   Submit WaxFrame to AI-tool discovery directories
@@ -410,6 +516,24 @@ B. Submit to AI tool directories + self-hosted listings
            log per-directory as submitted/live here (or delete
            this entry once all are live and move to CHANGELOG-
            style notes, per normal backlog hygiene).
+
+C. Search-console verification and sitemap submission
+   ─────────────────────────────────────────────────────────
+   WHAT:   Verify waxframe.com in Google Search Console (DNS TXT) and in
+           Bing Webmaster Tools, submit sitemap.xml in both, and Request
+           Indexing on the homepage and top pages.
+   WHY:    On-page SEO is healthy — robots, sitemap, canonicals and JSON-LD
+           are all correct, and IndexNow fires on every release. What is
+           missing is that nobody has ever told the indexes the site
+           exists. Bing matters disproportionately because AI search stacks
+           read it.
+   STATE:  OPEN. Moved here from CLAUDE.md §8B in v293 so it stops being
+           invisible. NEEDS DAVID — his accounts, his DNS.
+   WHERE:  N/A. search.google.com/search-console and
+           bing.com/webmasters.
+   DONE:   Both properties verified, sitemap.xml submitted in both, and
+           indexing requested. Record the date here.
+
 
 
 ════════════════════════════════════════════════════════════
