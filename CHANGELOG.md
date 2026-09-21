@@ -1,5 +1,43 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.518 — Deep Dive records whether a response actually streamed
+
+**Released:** 2026-09-20
+**Build:** 20260920-012
+
+### What changed
+
+**A Scout bundle could not answer "did this round stream?"** The ring buffer recorded round, role,
+AI, model, status, elapsed, finish reason, token counts and previews — but nothing about streaming.
+Found the hard way: a real bundle from a completed two-round session, captured with Deep Dive on,
+had no way to show whether the Builder streamed or fell back.
+
+That matters because streaming is the fix for a proxy read-timeout killing a long Builder round,
+and Deep Dive is the forensic tool for exactly that class of failure. The one being invisible to
+the other left the bundle unable to diagnose the thing it exists to diagnose. Every captured round
+now records `streamed`.
+
+**`requestedBudget` joins it**, for the reason v3.63.492 gave when it added the same field to the
+error path: asking for 16K and getting 4K means something clamped the request, while asking for
+nothing and getting 4K means a server default filled the gap. Those are different problems and
+they are indistinguishable unless the request is recorded alongside the response.
+
+### Verification
+- Gate: all 19 stages pass.
+- Both branches driven through the real `callAPI` in a browser. A JSON-only endpoint records
+  `streamed: false` after the existing non-streaming fallback; an SSE endpoint speaking the
+  Anthropic event shape records `streamed: true` with the finish reason and output-token count
+  preserved, the envelope intact and no reasoning text in the document.
+- `requestedBudget` recorded as 32768 on both.
+
+### Files touched
+`js/app.js`, `CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD`. Capture-only change; bundles simply stop carrying the two fields.
+
+---
+
 ## v3.63.517 — A rejected API key can be replaced from the card, mid-round
 
 **Released:** 2026-09-20

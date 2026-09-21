@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-011
+// Build: 20260920-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-011';         // build stamp — update each session
+const BUILD = '20260920-012';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -20911,6 +20911,21 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     // above for the content-filter check. Gemini truncation was invisible
     // here. Both now share _extractFinishReason so they cannot drift.
     finishReason: _finishReason,
+    // v3.63.518 — whether this response actually streamed, and what output
+    // budget was asked for. Both were missing, and their absence was found
+    // the hard way: a real Scout bundle from a completed two-round session
+    // could not answer "did the Builder stream?" at all, because nothing in
+    // the ring buffer recorded it. Streaming is the fix for a gateway
+    // read-timeout killing a long Builder round, and Deep Dive is the
+    // forensic tool for exactly that class of failure — the one being
+    // invisible to the other made the bundle unable to diagnose the thing
+    // it exists to diagnose. requestedBudget rides along for the same
+    // reason v3.63.492 added it to the error path: asking for 16K and
+    // getting 4K means something clamped us, while asking for nothing and
+    // getting 4K means a server default filled the gap, and the two are
+    // indistinguishable without recording the request.
+    streamed:         !!(data && data._wfStreamed),
+    requestedBudget:  _requestedBudget != null ? _requestedBudget : null,
     promptPreview:    typeof prompt === 'string' ? prompt.slice(0, 500) : '',
     promptChars:      typeof prompt === 'string' ? prompt.length : 0,
     promptTokens:     _pt,
