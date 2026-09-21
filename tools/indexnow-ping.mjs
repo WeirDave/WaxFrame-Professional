@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/indexnow-ping.mjs
-// Build: 20260920-026
+// Build: 20260920-027
 //
 //  IndexNow release ping (added v3.63.406). GitHub Pages is a
 //  static host and cannot push index notifications itself, so

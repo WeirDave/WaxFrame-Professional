@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-026
+// Build: 20260920-027
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-026';         // build stamp — update each session
+const BUILD = '20260920-027';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13478,8 +13478,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.532'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.532';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.533'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.533';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -22634,13 +22634,22 @@ function lockAppliedChange(roundNum, idx) {
   // change). If it shows falsy when the button reads "🔒 Unlock", the
   // problem is that the rendered state and the data state diverged
   // (most likely cause: re-render skipped or stale reference).
-  console.log('[wf:lock]', {
-    round: roundNum, idx,
-    wasLocked: !!change.locked,
-    rawLocked: change.locked,
-    lockedTextLen: (change.new || '').trim().length,
-    fromField: change.from
-  });
+  // v3.63.533 — gated behind Deep Dive. This has printed to every user's
+  // console on every lock click since v3.63.165, for a bug that was deferred
+  // the same week pending a reproduction and has not been reproduced since.
+  // The instrument is worth keeping — it is the only thing that will
+  // distinguish "the data never changed" from "the data changed and the
+  // re-render did not" when someone finally hits it — but a permanent
+  // console line in a shipped build is debug output, not diagnostics.
+  if (window.WF_DEBUG && WF_DEBUG.deepDiveOn) {
+    console.log('[wf:lock]', {
+      round: roundNum, idx,
+      wasLocked: !!change.locked,
+      rawLocked: change.locked,
+      lockedTextLen: (change.new || '').trim().length,
+      fromField: change.from
+    });
+  }
   const lockedText = (change.new || '').trim();
   if (!lockedText) {
     consoleLog(`⚠️ lockAppliedChange: empty NEW text — refusing to ${change.locked ? 'unlock' : 'lock'}`, 'warn');

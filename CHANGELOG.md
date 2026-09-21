@@ -1,5 +1,43 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.533 — A debug line stopped printing to everyone's console
+
+**Released:** 2026-09-20
+**Build:** 20260920-027
+
+### What changed
+
+**The Conflicts panel no longer writes a diagnostic line to the browser console every time a lock
+button is clicked.** It had done so in every build since v3.63.165 — roughly three hundred and
+seventy releases — for an investigation that was paused the same week and never resumed.
+
+The line still exists and still captures exactly what it was written to capture. It now only prints
+when **Deep Dive** is switched on, which is where diagnostic output belongs. A permanent console
+line in a shipped build is not diagnostics; it is debug output that everybody carries.
+
+**The unresolved issue it was written for is now in the backlog**, where it can be seen. It was
+recorded in a release note in June, waiting on a reproduction that never arrived, and nothing since
+has pointed at it. A known issue that lives only in an old release note is, in practice, a forgotten
+one.
+
+The issue: after unlocking a line in the Conflicts panel, it can continue to display as locked. Both
+halves of the toggle are present in the code and both save and redraw, so the fault is most likely a
+divergence between what is stored and what is drawn, rather than a missing branch. That is precisely
+what the diagnostic line distinguishes — which is why it has been kept rather than deleted.
+
+### Verification
+- No ungated console output remains anywhere in the application's scripts.
+- Gate: all 19 stages. Flow harness: 23 assertions. Injection checks: 14. Debug tests: 37. Portable
+  check: 9. Dead-code audit: zero findings.
+
+### Files touched
+`js/app.js`, `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v304.txt`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD` restores the unconditional console line.
+
+---
+
 ## v3.63.532 — Documentation caught up with what the code actually does
 
 **Released:** 2026-09-20
