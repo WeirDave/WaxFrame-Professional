@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-debug-redaction.mjs
-// Build: 20260920-022
+// Build: 20260920-023
 // ============================================================
 // Fixture-based regression test for WF_DEBUG.scrubFailureRecord, the
 // redaction pass applied to the failure record before it is written into a
@@ -299,6 +299,50 @@ check('a quota/billing message is not an auth failure', () => {
 });
 check('an ordinary server error is not an auth failure', () => {
   assert.notEqual(classifyCode('Internal server error', 500), 'AUTH_FAILED');
+});
+
+// ── Catalog placeholders ───────────────────────────────────────────────
+// v3.63.529. Catalog entries are written with {ai}, {elapsed}, {filename} and
+// friends, and until this release the only code that filled them in lived
+// inside renderTroubleshootingCard(). The Import from Model Server screen
+// showed catalog text without going through that renderer, so a user was shown
+// the literal string "{ai} rejected the API key". These checks exist so the
+// substitution stays shared and stays total: a placeholder that survives is a
+// placeholder a user reads.
+check('WF_DEBUG.substitute is exported', () => {
+  assert.equal(typeof WF_DEBUG.substitute, 'function');
+});
+check('{ai} is replaced when a name is supplied', () => {
+  assert.equal(WF_DEBUG.substitute('{ai} rejected the key', { aiName: 'Claude' }),
+               'Claude rejected the key');
+});
+check('{ai} falls back to prose when no AI is in scope', () => {
+  const out = WF_DEBUG.substitute('{ai} rejected the key', {});
+  assert.ok(!out.includes('{ai}'), 'placeholder survived: ' + out);
+  assert.ok(/^[A-Z]/.test(out), 'fallback should read as a sentence: ' + out);
+});
+check('every placeholder the catalog uses is substituted, with an empty ctx', () => {
+  // Walk the real catalog rather than a hand-listed set, so a placeholder
+  // added to an entry later is covered the day it is added.
+  const cat = sandbox.window.WF_ERROR_CATALOG;
+  const texts = [];
+  const collect = (o) => {
+    if (!o || typeof o !== 'object') return;
+    for (const k of Object.keys(o)) {
+      const v = o[k];
+      if (typeof v === 'string') texts.push(v);
+      else if (v && typeof v === 'object') collect(v);
+    }
+  };
+  collect(cat);
+  assert.ok(texts.length > 0, 'no catalog text found to check');
+  const leaked = [];
+  for (const t of texts) {
+    const out = WF_DEBUG.substitute(t, {});
+    const m = out.match(/\{[a-zA-Z][a-zA-Z0-9_]*\}/g);
+    if (m) leaked.push(m.join(',') + '  in: ' + out.slice(0, 60));
+  }
+  assert.deepEqual(leaked, [], 'placeholders survived substitution: ' + leaked.join(' | '));
 });
 
 console.log('');

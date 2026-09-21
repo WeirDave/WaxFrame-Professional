@@ -1,5 +1,55 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.529 — Error messages no longer show "{ai}" instead of a name
+
+**Released:** 2026-09-20
+**Build:** 20260920-023
+
+### What changed
+
+**An error on the Import from Model Server screen printed a raw placeholder.** When a model server
+rejected the API key, the explanation read *"{ai} rejected the API key … rotated in the {ai} provider
+console"* — the template token itself, rather than a name.
+
+Error explanations are written with placeholders like `{ai}` that get filled in before the text is
+shown. The code that filled them in lived inside the troubleshooting card. The import screen shows
+the same explanations without going through that card, so nothing ever substituted, and the token
+reached the reader.
+
+The substitution is now one shared function that every surface calls. Putting a second copy in the
+import screen would have fixed the symptom and recreated the cause, which is how these two drifted
+apart in the first place.
+
+On a screen where no AI is in scope — adding a server is not running a round — `{ai}` now reads
+**"The server"** rather than a token or an empty gap.
+
+**A test now walks the entire error catalog** and fails if any placeholder survives substitution. It
+reads the catalog itself rather than a hand-written list, so a placeholder added to an entry later is
+covered the day it is added. That is the actual fix; the one-line correction above is just today's
+instance of it.
+
+**Open WebUI context limits are confirmed against a live server.** Open WebUI wraps the model server's
+own data one level deeper than other servers, and that wrapping had only ever been checked against a
+recorded sample. It is now verified against a real one: eleven models, and every one of the ten with a
+context figure was read correctly — 8K through 262K. The eleventh has no such figure to read and
+correctly reports none.
+
+### Verification
+- Live Open WebUI: the real extraction function run against the real response. 10 of 10 exact
+  matches, 0 mismatches.
+- Error catalog: every placeholder in every entry substitutes cleanly with no context supplied.
+- Gate: all 19 stages. Flow harness: 23 assertions. Debug tests: 37 checks. Dead-code audit: zero
+  findings.
+
+### Files touched
+`js/wf-debug.js`, `js/app.js`, `tools/test-debug-redaction.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v300.txt`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD` restores the placeholder leak.
+
+---
+
 ## v3.63.528 — PDF.js upgraded, and the cache-busting that had quietly stopped working
 
 **Released:** 2026-09-20

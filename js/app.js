@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-022
+// Build: 20260920-023
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-022';         // build stamp — update each session
+const BUILD = '20260920-023';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -12202,7 +12202,16 @@ async function fetchImportServerModels() {
         kind:   'models_endpoint',
         status: resp.status
       });
-      const hints = [entry.meaning, 'See the raw response panel for full details.'];
+      // v3.63.529 — entry.meaning is catalog text and carries {ai}-style
+      // placeholders. This screen does not go through
+      // renderTroubleshootingCard, which is what used to fill them in, so
+      // the raw token reached the user: "{ai} rejected the API key". There
+      // is no AI in scope here — the user is adding a server, not running a
+      // round — so the substitution falls back to prose.
+      const meaning = (typeof WF_DEBUG !== 'undefined' && WF_DEBUG.substitute)
+        ? WF_DEBUG.substitute(entry.meaning, { aiName: 'The server' })
+        : entry.meaning;
+      const hints = [meaning, 'See the raw response panel for full details.'];
       showImportServerError(`HTTP ${resp.status} — ${resp.statusText || 'request failed'}`,
         `The server responded, but not with the model list WaxFrame expected.`, hints);
       writeRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
@@ -13469,8 +13478,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.528'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.528';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.529'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.529';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 

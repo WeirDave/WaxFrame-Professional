@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260920-022
+// Build: 20260920-023
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -60,7 +60,54 @@
 //  declarations auto-attach to window via standard hoisting.
 // ============================================================
 
+// v3.63.529 — catalog placeholder substitution, shared.
+//
+// Catalog entries are written with {ai}, {elapsed}, {filename} and friends.
+// Until now the only code that filled them in lived inside
+// renderTroubleshootingCard(), so any other surface that showed catalog text
+// printed the placeholder verbatim. The Import from Model Server screen did
+// exactly that, and a user saw "{ai} rejected the API key".
+//
+// Keep this the ONLY implementation. A second copy is what let the two drift.
+// ctx is whatever the caller has; every field is optional and each falls back
+// to something that reads as a sentence, so a surface with no AI in scope
+// (the import screen has no AI yet) still produces prose rather than a token.
+function wfSubstitutePlaceholders(text, ctx) {
+  ctx = ctx || {};
+  const parseField = (raw, re, path) => {
+    if (typeof raw !== 'string' || !raw) return 'unknown';
+    const m = raw.match(re);
+    if (m) return m[1];
+    try {
+      const j = JSON.parse(raw);
+      const v = path(j);
+      if (typeof v === 'string') return v;
+    } catch { /* not JSON — fine */ }
+    return 'unknown';
+  };
+  return String(text == null ? '' : text)
+    .replace(/\{ai\}/g,       ctx.aiName   != null ? ctx.aiName   : 'The provider')
+    .replace(/\{elapsed\}/g,  ctx.elapsed  != null ? ctx.elapsed  : '?')
+    .replace(/\{avg\}/g,      ctx.avg      != null ? ctx.avg      : '?')
+    .replace(/\{filename\}/g, ctx.filename != null ? ctx.filename : 'this file')
+    .replace(/\{warnings\}/g, typeof ctx.warnings === 'string' ? ctx.warnings
+                             : Array.isArray(ctx.warnings) ? ctx.warnings.join('; ') : '')
+    .replace(/\{blockReason\}/g, parseField(ctx.raw, /"blockReason"\s*:\s*"([^"]+)"/,
+      (j) => j && j.promptFeedback && j.promptFeedback.blockReason))
+    .replace(/\{refusal\}/g, parseField(ctx.raw, /"refusal"\s*:\s*"([^"]+)"/,
+      (j) => {
+        const cs = (j && j.choices) || [];
+        for (const c of cs) if (c && c.message && typeof c.message.refusal === 'string') return c.message.refusal;
+        return null;
+      }));
+}
+window.wfSubstitutePlaceholders = wfSubstitutePlaceholders;
+
 window.WF_DEBUG = {
+  // Exposed so any surface showing catalog text fills placeholders the same
+  // way. See the note above wfSubstitutePlaceholders.
+  substitute: wfSubstitutePlaceholders,
+
   // ── State ──
   // v3.28.2: Troubleshooting Cards are always-on now. The "toggle" was a
   // mistake — better error messages are strictly better than worse ones,
@@ -1242,14 +1289,10 @@ function renderTroubleshootingCard(entry, ctx) {
     } catch { /* not JSON — fine */ }
     return 'unknown';
   };
-  const subst = (s) => String(s || '')
-    .replace(/\{ai\}/g,          ctx.aiName   ?? 'AI')
-    .replace(/\{elapsed\}/g,     ctx.elapsed  ?? '?')
-    .replace(/\{avg\}/g,         ctx.avg      ?? '?')
-    .replace(/\{filename\}/g,    ctx.filename ?? 'this file')
-    .replace(/\{warnings\}/g,    fmtWarnings(ctx.warnings))
-    .replace(/\{blockReason\}/g, parseBlockReason(ctx.raw))
-    .replace(/\{refusal\}/g,     parseRefusal(ctx.raw));
+  // v3.63.529 — delegates to the shared implementation so this surface and
+  // the import screen cannot drift apart again. parseBlockReason and
+  // parseRefusal above are still used by the capture path.
+  const subst = (str) => wfSubstitutePlaceholders(str, ctx);
 
   if (titleEl)   titleEl.textContent   = subst(entry.title) || 'Something went wrong';
   if (meaningEl) meaningEl.textContent = subst(entry.meaning) || '';

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — update-check.js
-// Build: 20260920-022
+// Build: 20260920-023
 //  Portable-install ("file://") update notifier. Checks GitHub's
 //  Releases API for a newer tag than the running APP_VERSION and,
 //  if one exists, shows a footer pill + an About-modal row pointing
