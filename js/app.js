@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-013
+// Build: 20260920-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-013';         // build stamp — update each session
+const BUILD = '20260920-014';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -20900,7 +20900,31 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     role,
     aiName:    ai.name,
     provider:  ai.provider,
-    model:     cfg.model,
+    // v3.63.520 — the model that was ACTUALLY used, not cfg.model. cfg.model
+    // is the provider's default; getModelForAI returns ai.model whenever the
+    // row carries one, which is every variant and every row where a model was
+    // picked. Recording the default meant a bundle could attribute a response
+    // to a model that never ran — the same mistake the v3.63.494 budget retry
+    // made when recording learned ceilings, fixed in v3.63.514. The default is
+    // kept alongside only when the two differ, so the discrepancy is visible
+    // rather than silently resolved one way.
+    model:     getModelForAI(ai) || cfg.model,
+    providerDefaultModel: (getModelForAI(ai) && getModelForAI(ai) !== cfg.model) ? cfg.model : undefined,
+    // Whether the finish reason means this response was CUT OFF. Derivable
+    // from finishReason, but a bundle is read by a human under time pressure
+    // and "truncated: true" is not something they should have to infer from
+    // a provider-specific string.
+    truncated: _isTruncationSignal(_finishReason),
+    // v3.63.520 — how this call got here. A round that took three requests
+    // looked identical to one that took a single request, which is exactly
+    // what happened on 2026-09-20: a ChatGPT round went reject → param retry
+    // → stream fallback, and the bundle showed one clean call. Recovery paths
+    // that are invisible cannot be evaluated.
+    via: [
+      _budgetRetry    ? 'budget-retry'    : null,
+      _paramRetry     ? 'param-retry'     : null,
+      _streamFallback ? 'stream-fallback' : null
+    ].filter(Boolean).join('+') || 'first-attempt',
     elapsed:   parseFloat(elapsed),
     chars:     text.length,
     words,
@@ -20949,7 +20973,8 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     metaOut.promptTokens     = _pt;
     metaOut.completionTokens = _ct;
     metaOut.totalTokens      = _tt;
-    metaOut.model            = cfg.model;
+    // v3.63.520 — same correction as the ring-buffer capture above.
+    metaOut.model            = getModelForAI(ai) || cfg.model;
     metaOut.chars            = text.length;
     metaOut.requestedOutput  = _requestedBudget;
     // Distinguishes "the endpoint reports no usage" from "the endpoint

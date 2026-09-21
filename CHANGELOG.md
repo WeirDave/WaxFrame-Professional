@@ -1,5 +1,49 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.520 — Deep Dive was recording the wrong model, and hiding retries
+
+**Released:** 2026-09-20
+**Build:** 20260920-014
+
+### What changed
+
+**A captured round recorded the provider's default model, not the one that ran.** The ring buffer
+stored `cfg.model`, while `getModelForAI` returns `ai.model` whenever a row carries one — which is
+every variant row and every row where a model was picked. A bundle could therefore attribute a
+response to a model that never ran, which makes every number beside it suspect. This is the same
+mistake the v3.63.494 budget retry made when recording learned ceilings, fixed separately in
+v3.63.514; it was in the capture path too. The provider default is now kept alongside only when the
+two differ, so the discrepancy is visible rather than silently resolved.
+
+**Recovery paths were invisible.** A round that took three requests looked identical to one that
+took a single request. That is not hypothetical — a ChatGPT round on 2026-09-20 went rejected
+parameter → retry with the corrected parameter → non-streaming fallback, and the bundle showed one
+clean call. Each capture now records how it got there: `first-attempt`, or a combination of
+`budget-retry`, `param-retry` and `stream-fallback`. A recovery path nobody can see is one nobody
+can evaluate.
+
+**`truncated` is recorded explicitly** rather than left to be inferred from a provider-specific
+finish-reason string. It is derivable, but a bundle is read by a human under time pressure.
+
+Together with v3.63.518's `streamed` and `requestedBudget`, the capture now carries everything
+`callAPI` computes about a response rather than a subset of it.
+
+### Verification
+- Gate: all 19 stages pass.
+- Driven through the real `callAPI` against an endpoint that rejects the budget parameter and
+  returns JSON rather than SSE, so one logical call becomes a rejection, a parameter retry and a
+  stream fallback. The capture records `model: the-actually-used-model` with the provider default
+  noted beside it, and `via: param-retry+stream-fallback` — previously it would have shown the
+  wrong model and no sign that two extra requests happened.
+
+### Files touched
+`js/app.js`, `CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD`. Capture-only change.
+
+---
+
 ## v3.63.519 — The Troubleshooting card could publish an API key to a public issue
 
 **Released:** 2026-09-20
