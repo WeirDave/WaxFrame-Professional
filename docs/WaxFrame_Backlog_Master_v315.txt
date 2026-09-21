@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v314
+WaxFrame Backlog Master v315
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,28 @@ ships.
 
 
 
+
+v315 — FIRST REAL-WORLD PDF RECORDED (2026-09-21). One data
+point against the PDF item, written down WITHOUT the filename,
+the vendor, the document number or any content — the source was
+confirmed to be a genuine business document, so §0 applies and
+only the shape and the numbers are recorded.
+
+Worth stating once, because it is a live hazard rather than a
+hypothetical: a real document loaded into WaxFrame is in
+docText / pastedDocument, and v3.63.537 deliberately does NOT
+scrub those. Credential scrubbing covers the debug channels only,
+because a checkpoint has to restore the user's document byte for
+byte. So a checkpoint or a Scout bundle taken from a session
+holding a real document CONTAINS that document, and a Scout
+bundle is the thing help.html describes as safe for a public bug
+report — meaning safe from CREDENTIALS, not from content.
+
+The filename does not travel with it: the upload status line
+writes file.name into a DOM element only, and saveSession
+captures #liveConsole, not that element. The document text is the
+exposure, and for most real documents the text names the source
+anyway.
 
 v314 — OCR HAND-OFF COVERED WITHOUT A KEY (2026-09-21). Tools
 only; no shipped code changed and no release.
@@ -753,6 +775,20 @@ Ordered by value.
            portable build is not a liability.
    STATE:  PARTIAL, and the remainder is blocked on David — it
            needs real files, and the useful ones are his own.
+           FIRST REAL-WORLD RESULT, 2026-09-21, v3.63.540 on
+           waxframe.com in Firefox: a short business document
+           with a real text layer, well under one page, imported
+           cleanly — 721 characters, 112 words, 3 paragraphs. No
+           OCR warning, so the sparse heuristic correctly left it
+           alone; no import-bound error, so neither the raised
+           character cap nor the zip-expansion guard catches a
+           small legitimate file.
+           That is the EASY shape and it proves the happy path
+           on real input, nothing more. The two that matter are
+           still outstanding: a scanned / image-only file, and a
+           large multi-hundred-page one — each on waxframe.com
+           AND on a portable file:// copy, because those run
+           different pdf.js builds.
    WHERE:  js/app.js extractPDF (including the new
            PasswordException / InvalidPDFException translation)
            and the OCR fallback for sparse pages;
