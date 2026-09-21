@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260920-030
+// Build: 20260921-001
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1741,6 +1741,44 @@ async function confirmSaveCheckpoint() {
 // for the scope splice + filename + blob. Returns { filename, json, blob,
 // tagsToast, scope } or null if no sections had data — callers handle the
 // destination (download anchor vs FileSystemFileHandle).
+// v3.63.537 — Checkpoint session scrubbing. Thin wrappers over
+// WF_DEBUG.scrubSessionDebug so there is exactly ONE definition of what a
+// credential looks like, shared with the Scout-bundle path. See the long
+// note on scrubSessionDebug in js/wf-debug.js for why only the three debug
+// channels are in scope and user content deliberately is not.
+//
+// wf-debug.js loads AFTER storage.js in index.html, so WF_DEBUG is resolved
+// at call time rather than at module eval. These only ever run from a user
+// action long after both have loaded, but the guard is cheap and the
+// failure mode without it is a checkpoint that silently ships raw.
+//
+// FAILS CLOSED. If the scrubber is missing for any reason, the channels are
+// emptied rather than passed through. A checkpoint that restores without a
+// ring buffer is a restored session; a checkpoint that leaks one is a
+// published credential.
+function _scrubSessionBlob(session) {
+  if (!session || typeof session !== 'object') return session;
+  if (typeof WF_DEBUG !== 'undefined' && typeof WF_DEBUG.scrubSessionDebug === 'function') {
+    return WF_DEBUG.scrubSessionDebug(session);
+  }
+  console.warn('[checkpoint] WF_DEBUG.scrubSessionDebug unavailable — emptying debug channels rather than exporting them raw');
+  return { ...session, lastFailure: null, ringBuffer: [], consoleHTML: '' };
+}
+
+function _scrubSessionJSON(raw) {
+  if (!raw || typeof raw !== 'string') return raw;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return raw;
+    return JSON.stringify(_scrubSessionBlob(parsed));
+  } catch (e) {
+    // Unparseable, so it cannot be restored either. Dropping it costs
+    // nothing and is the only way to be sure it carries nothing.
+    console.warn('[checkpoint] LS_SESSION did not parse — omitted rather than exported unscrubbed');
+    return null;
+  }
+}
+
 async function _buildCheckpointEnvelope(scope) {
   // v3.35.2 — Flush in-memory state to IDB before reading the snapshot.
   // Without this, a checkpoint taken while in-memory state hadn't yet been
@@ -1802,8 +1840,18 @@ async function _buildCheckpointEnvelope(scope) {
   if (scope.license && licenseRaw) outLicense = licenseRaw;
   let outRoundState = null;
   if (scope.session) {
-    outSessionLS  = sessionLS;
-    outSessionIDB = sessionIDB;
+    // v3.63.537 — both session copies go out through the debug-channel
+    // scrub. A checkpoint is the surface most likely to be handed to
+    // someone else — it is the documented way to share an exact-model
+    // recipe — and it was the one export with no redaction at all.
+    // The API-keys row already defaults OFF and is spliced out above, so a
+    // user who leaves it unticked reasonably believes no credential is in
+    // the file; lastFailure (which carries the provider's raw error body),
+    // ringBuffer and consoleHTML rode in under `session`, which is ON by
+    // default. Only those three channels are touched — docText, history
+    // and the reference docs must restore byte for byte.
+    outSessionLS  = _scrubSessionJSON(sessionLS);
+    outSessionIDB = _scrubSessionBlob(sessionIDB);
     const rs = {
       resolvedDecisions: localStorage.getItem('waxframe_resolved_decisions') || null,
       conflictLedger:    localStorage.getItem('waxframe_conflict_ledger')    || null,

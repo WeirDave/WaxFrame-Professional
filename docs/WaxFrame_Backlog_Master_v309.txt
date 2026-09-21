@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v308
+WaxFrame Backlog Master v309
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,25 @@ ships.
 
 
 
+
+v309 — EXPORT REDACTION FIXED (v3.63.537). Old bug 1 shipped and
+is deleted from this file; remaining bugs renumbered 1..2. The
+fix is one shared scrubber (WF_DEBUG.scrubSessionDebug) called
+from both export paths, so there is one definition of what a
+credential looks like rather than two that can drift.
+tools/check-export-redaction.mjs is now GREEN and stays as the
+end-to-end proof; the structural half — that both paths still
+CALL it — moved into tools/test-debug-redaction.mjs, which the
+gate runs. The gate is browser-free by design, so the browser
+check stays a hand-run one; between them the gate catches the
+call being deleted and the browser check catches it being wrong.
+
+NEW ITEM 3 below: tools/flow-check.mjs has a real false-failure
+rate. Measured while verifying this fix — 1 in 4 runs on an
+UNMODIFIED tree fails Flow 1 with "timed out waiting for
+screen-bees visible". That cost a wrong conclusion here: a single
+red run was read as "this change broke boot" before measuring the
+baseline. A check that cries wolf teaches people to ignore it.
 
 v308 — SECURITY REVIEW (2026-09-21). THREE new open bugs, all
 reproduced against the running app rather than inferred from
@@ -587,89 +606,7 @@ that actually times out. Anthropic (CF Worker proxy) and Gemini (needs
 OPEN BUGS
 ════════════════════════════════════════════════════════════
 
-1. Exported files carry an unscrubbed copy of the session
-   debug channels
-   ─────────────────────────────────────────────────────────
-   WHAT:   Two export surfaces ship the raw IndexedDB session
-           blob, which carries lastFailure, ringBuffer and
-           consoleHTML exactly as captured.
-
-           (a) SCOUT BUNDLE. bundleForScout() scrubs
-               envelope.lastFailure through scrubFailureRecord
-               and scrubs envelope.liveConsole, then embeds
-               checkpoint.IDB_SESSION straight from idbGet().
-               The scrubbed and unscrubbed copies sit in the
-               same file. Measured on the real bundle, with a
-               credential-shaped canary seeded through
-               captureFailure and consoleLog:
-                 envelope.lastFailure            clean, [REDACTED]
-                 envelope.liveConsole            clean
-                 checkpoint.IDB_SESSION.lastFailure   CANARY
-                 checkpoint.IDB_SESSION.consoleHTML   CANARY
-                 checkpoint.IDB_SESSION.ringBuffer    CANARY
-               envelope.ringBuffer is unscrubbed too — same
-               class, and it is the top-level copy, so fixing
-               only the embedded one leaves it.
-               LS_HIVE *is* redacted (_redactKeysIn, v3.63.140),
-               which is what makes this an oversight rather
-               than a policy: IDB_SESSION was added later
-               (v3.63.286) and never audited against it.
-
-           (b) CHECKPOINT. _buildCheckpointEnvelope applies no
-               redaction at all. _redactSessionContent exists
-               but only ever runs on the diagnostic path, and
-               only when the user ticks a box. With the
-               shipping defaults (session ON, API keys OFF) the
-               file carries all three channels. The API-keys
-               row is correctly off and correctly excluded —
-               the leak rides in on `session`, which is on.
-               The Save panel's own summary says
-               "session (0 rounds)" while the file carries the
-               ring buffer and the failure record.
-
-   WHY:    js/storage.js:2226 states the contract: these blobs
-           are "safe to share in a public bug report", and
-           help.html owns that flow. lastFailure.raw is the
-           provider's entire error body; consoleHTML is the
-           console transcript as markup, including provider
-           error text verbatim. Checkpoints are shared more
-           casually still — they are the documented way to hand
-           someone an exact-model recipe.
-           scrubFailureRecord's own comment (v3.63.493) sets
-           the right standard and this breaks it: "Neither is
-           expected to contain a credential — but 'not expected
-           to' is exactly the assumption that puts secrets in
-           exports."
-           This is the side-channel case CLAUDE.md warns about
-           under diagnostic redaction: audit EVERY field,
-           because ring buffers and separate blobs are where
-           secrets hide.
-
-   STATE:  OPEN. Reproduced end to end; no fix attempted.
-           Not known to have leaked a real credential — the
-           point is that nothing stops it and the file claims
-           otherwise.
-
-   WHERE:  js/wf-debug.js bundleForScout — the `checkpoint`
-           object (IDB_SESSION) and the top-level `ringBuffer`.
-           js/storage.js _buildCheckpointEnvelope — outSessionIDB
-           / outSessionLS go in raw.
-           js/storage.js _redactSessionContent — the redactor
-           that already exists and is not called from either.
-           js/wf-debug.js scrubFailureRecord — the scrubber to
-           reuse.
-
-   DONE:   node tools/check-export-redaction.mjs exits 0. That
-           means no canary survives anywhere in either artifact,
-           while the liveness assertions still confirm the
-           canaries reached live state and IndexedDB, and the
-           legitimate content is still present. Then wire it
-           into release-check.mjs as a gate stage and correct
-           the tools/README row for test-debug-redaction.mjs,
-           which currently overclaims.
-
-
-2. A failed project save destroys the whole project blob and
+1. A failed project save destroys the whole project blob and
    says nothing
    ─────────────────────────────────────────────────────────
    WHAT:   saveProject() wraps its localStorage write in a
@@ -709,7 +646,7 @@ OPEN BUGS
            rather than a console line.
 
 
-3. Document import has no size or expansion bound
+2. Document import has no size or expansion bound
    ─────────────────────────────────────────────────────────
    WHAT:   extractFromFile has no cap of any kind. HARD_INPUT_CAP
            (8 MB) is the ICON upload path only. .docx and .xlsx
@@ -722,7 +659,7 @@ OPEN BUGS
            The practical ceiling is V8's ~512 MB string limit,
            not anything WaxFrame enforces.
 
-   WHY:    Feeds bug 2 directly — the extracted text goes into
+   WHY:    Feeds bug 1 directly — the extracted text goes into
            referenceDocs and then into LS_PROJECT — and then
            into the prompt sent to every AI in the hive. The
            import is the one place a bound costs nothing and
@@ -745,6 +682,38 @@ OPEN BUGS
            real limit when one is chosen. A bound on the
            EXTRACTED length is what matters; a bound on file
            size alone does not stop a 279 KB bomb.
+
+
+3. tools/flow-check.mjs fails about 1 run in 4 for no reason
+   ─────────────────────────────────────────────────────────
+   WHAT:   Flow 1 times out waiting for screen-bees to become
+           visible and the whole run aborts with
+           "harness error: timed out waiting for screen-bees
+           visible (last: false)". Measured 2026-09-21 on an
+           UNMODIFIED tree: 1 failure in 4 runs, and separately
+           1 in 3 on a modified tree. Same message every time,
+           always Flow 1, never past it.
+   WHY:    A check with a known false-failure rate stops being
+           evidence. It cost a wrong conclusion the day it was
+           measured: a single red run was read as "this change
+           broke app boot", and only running the baseline four
+           times showed the change was innocent. The next person
+           to hit it either wastes the same hour or — worse —
+           learns to re-run until green, which is how a REAL
+           regression gets waved through.
+           This is the one check that covers the round loop and
+           the Back-button state-leak paths, so it is the one
+           that most needs to be trusted.
+   STATE:  OPEN. Cause not diagnosed. It is a startup race in
+           the harness, not in the app — the app boots fine in
+           check-html-injection and check-export-redaction,
+           which drive it the same way.
+   WHERE:  tools/flow-check.mjs — the wait helper Flow 1 uses to
+           poll for screen visibility, and whatever it does
+           between Page.navigate and the first assertion.
+   DONE:   20 consecutive runs green on an unmodified tree. Fix
+           the wait rather than raising the timeout blindly: a
+           longer sleep that hides a race still hides it.
 
 ════════════════════════════════════════════════════════════
 OPEN FEATURES

@@ -1,5 +1,58 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.537 — Credentials stripped from the diagnostic fields of every exported file
+
+**Released:** 2026-09-21
+**Build:** 20260921-001
+
+### What changed
+
+**Saved checkpoints and diagnostic bundles no longer carry credentials in their diagnostic
+fields.** Both file types embed a copy of the saved session, and that copy holds three fields
+written by capture code that did not clean them: the most recent provider failure, including the
+provider's raw error response; the Deep Dive per-round captures; and the Live Console transcript.
+A provider that echoes an API key, a bearer token or an authorization header into an error message
+put that value into the file.
+
+Both file types already stripped credentials elsewhere. The bundle cleaned its own copy of the
+failure record and its own copy of the console, and both stripped saved API keys out of the hive
+block. The embedded session copy was not covered, so a file could contain a cleaned copy and an
+uncleaned copy of the same text. Cleaning now runs on both copies, from one shared definition of
+what a credential looks like, so the two paths cannot drift apart.
+
+**Where this applies.** Checkpoints saved from Checkpoint - Save, reached from the app menu, and
+bundles saved with the "Bundle for Scout" button on the developer toolbar. The Checkpoint - Save
+panel's "API keys" row is unchanged and still off by default; this fixes the credentials that were
+reaching the file through the "Session" row, which is on by default.
+
+**The document itself is deliberately untouched.** Cleaning is limited to those three diagnostic
+fields. The working document, the round history and the reference material pass through byte for
+byte, because a checkpoint has to restore exactly what was written — a document that happens to
+contain a key-shaped string is left exactly as it is.
+
+**If the cleaning step is ever unreachable, the diagnostic fields are emptied rather than written
+out unfiltered.** A restored session without its round captures is an inconvenience; a published
+credential is not.
+
+### Verification
+- New end-to-end check `tools/check-export-redaction.mjs`: builds a real bundle and a real
+  checkpoint in a browser and searches the finished bytes. 18 assertions, including that the
+  diagnostic content and the working document both survive — a cleaning step that deleted its
+  input would otherwise pass every absence test.
+- `tools/test-debug-redaction.mjs` extended from 37 to 44 checks, covering the shared cleaner, the
+  three fields, the "leaves user content alone" rule, and that both export paths still call it.
+- Gate: all 19 stages. Injection checks: 14. Flow harness: 23.
+
+### Files touched
+`js/wf-debug.js`, `js/storage.js`, `tools/check-export-redaction.mjs`,
+`tools/test-debug-redaction.mjs`, `tools/README.md`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v309.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The change is additive — two new helpers in `js/wf-debug.js`, two thin wrappers
+in `js/storage.js`, and three call sites routed through them. No stored data format changed, and
+checkpoints written by this release restore on earlier ones.
+
 ## v3.63.536 — An unreproducible report closed out
 
 **Released:** 2026-09-20

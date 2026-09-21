@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-debug-redaction.mjs
-// Build: 20260920-030
+// Build: 20260921-001
 // ============================================================
 // Fixture-based regression test for WF_DEBUG.scrubFailureRecord, the
 // redaction pass applied to the failure record before it is written into a
@@ -246,6 +246,97 @@ check('the card builds those details THROUGH scrubFailureRecord', () => {
   const region = source.slice(source.indexOf('Technical details'), source.indexOf('Reset expand state'));
   assert.ok(/scrubFailureRecord\s*\(/.test(region),
     'the card details block no longer passes through scrubFailureRecord');
+});
+
+// ── v3.63.537 — the session debug channels ──────────────────────────────
+//
+// The saved session carries lastFailure, ringBuffer and consoleHTML, all
+// written by capture paths that do not scrub. Two export surfaces ship the
+// blob whole, and both used to ship it raw while carefully scrubbing their
+// OTHER copy of the same data in the same file.
+//
+// These are behavioural where they can be and source-level where they
+// cannot: the checkpoint envelope lives in storage.js, which needs the DOM
+// and IndexedDB and will not run in this sandbox. The end-to-end proof is
+// tools/check-export-redaction.mjs, which builds both real artifacts in a
+// browser — it is not a gate stage because the gate is deliberately
+// browser-free. What is pinned here is that the CALLS still exist, which is
+// the regression that would otherwise pass every test in this file.
+
+console.log('▶ WF_DEBUG.scrubSessionDebug — the session debug channels');
+
+check('scrubText is exported as its own method', () => {
+  assert.equal(typeof WF_DEBUG.scrubText, 'function',
+    'scrubText is gone — every other export surface shares that one definition');
+  assert.ok(!WF_DEBUG.scrubText(`key ${OPENAI_KEY}`).includes(OPENAI_KEY));
+  assert.equal(WF_DEBUG.scrubText(42), 42, 'non-strings must pass through');
+});
+
+check('all three debug channels are cleaned', () => {
+  const out = WF_DEBUG.scrubSessionDebug({
+    docText: `the document, which mentions ${OPENAI_KEY} on purpose`,
+    lastFailure: { message: `rejected ${OPENAI_KEY}`, raw: `{"sent":"Bearer ${JWT}"}`, status: 401 },
+    ringBuffer: [{ round: 1, prompt: `prompt with ${GOOGLE_KEY}`, nested: { deep: `Bearer ${JWT}` } }],
+    consoleHTML: `<div>auth failed for ${OPENAI_KEY}</div>`
+  });
+  const failure = JSON.stringify(out.lastFailure);
+  assert.ok(!failure.includes(OPENAI_KEY), 'lastFailure.message survived');
+  assert.ok(!failure.includes(JWT), 'lastFailure.raw survived');
+  assert.ok(!JSON.stringify(out.ringBuffer).includes(GOOGLE_KEY), 'ringBuffer prompt survived');
+  assert.ok(!JSON.stringify(out.ringBuffer).includes(JWT), 'ringBuffer nested value survived');
+  assert.ok(!out.consoleHTML.includes(OPENAI_KEY), 'consoleHTML survived');
+});
+
+check('user content is NOT scrubbed — a checkpoint must restore it byte for byte', () => {
+  const docText = `the document, which mentions ${OPENAI_KEY} on purpose`;
+  const out = WF_DEBUG.scrubSessionDebug({ docText, history: [{ doc: docText }] });
+  assert.equal(out.docText, docText, 'docText was altered — restore would be corrupted');
+  assert.equal(out.history[0].doc, docText, 'history document text was altered');
+});
+
+check('cleaning FILTERS rather than deletes', () => {
+  const out = WF_DEBUG.scrubSessionDebug({
+    lastFailure: { message: `rejected ${OPENAI_KEY}`, status: 401, code: 'AUTH_FAILED' },
+    ringBuffer: [{ round: 7, prompt: 'the critique', tokens: 1200 }],
+    consoleHTML: '<div class="console-entry">round 1 complete</div>'
+  });
+  assert.equal(out.lastFailure.status, 401, 'non-string fields must survive');
+  assert.equal(out.lastFailure.code, 'AUTH_FAILED');
+  assert.equal(out.ringBuffer[0].round, 7, 'ring-buffer numbers must survive');
+  assert.equal(out.ringBuffer[0].prompt, 'the critique', 'benign prompt text must survive');
+  assert.ok(out.consoleHTML.includes('round 1 complete'), 'benign console text must survive');
+});
+
+check('odd shapes pass through rather than throwing', () => {
+  assert.equal(WF_DEBUG.scrubSessionDebug(null), null);
+  assert.equal(WF_DEBUG.scrubSessionDebug(undefined), undefined);
+  assert.equal(WF_DEBUG.scrubSessionDebug('a string'), 'a string');
+  const noChannels = WF_DEBUG.scrubSessionDebug({ round: 3 });
+  assert.equal(noChannels.round, 3);
+});
+
+check('the Scout bundle routes BOTH session copies through the scrub', () => {
+  const region = source.slice(source.indexOf('const envelope = {'), source.indexOf('const filename'));
+  assert.ok(/ringBuffer:\s*this\.scrubRingBuffer\(/.test(region),
+    'envelope.ringBuffer is no longer scrubbed — captureRound stores raw prompts and responses');
+  const cp = source.slice(source.indexOf('checkpoint = {'), source.indexOf('const envelope = {'));
+  assert.ok(/IDB_SESSION:\s*this\.scrubSessionDebug\(/.test(cp),
+    'checkpoint.IDB_SESSION is raw again — this is the copy that defeated every other scrub in the file');
+});
+
+check('the checkpoint envelope routes BOTH session copies through the scrub', () => {
+  const storage = fs.readFileSync(path.join(ROOT, 'js', 'storage.js'), 'utf8');
+  assert.ok(/function\s+_scrubSessionBlob\s*\(/.test(storage),
+    '_scrubSessionBlob is gone from storage.js');
+  assert.ok(/outSessionIDB\s*=\s*_scrubSessionBlob\(/.test(storage),
+    'the checkpoint IDB session is exported unscrubbed again');
+  assert.ok(/outSessionLS\s*=\s*_scrubSessionJSON\(/.test(storage),
+    'the checkpoint LS session is exported unscrubbed again');
+  // Fails CLOSED: if the scrubber is missing the channels must be emptied,
+  // never passed through.
+  const fn = storage.slice(storage.indexOf('function _scrubSessionBlob'), storage.indexOf('function _scrubSessionJSON'));
+  assert.ok(/lastFailure:\s*null/.test(fn) && /ringBuffer:\s*\[\]/.test(fn),
+    '_scrubSessionBlob no longer fails closed when WF_DEBUG is unavailable');
 });
 
 console.log('▶ WF_DEBUG.classify — a rejected API key must reach the AUTH_FAILED card');

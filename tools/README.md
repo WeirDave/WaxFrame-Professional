@@ -36,7 +36,7 @@ debugging one:
 | `check-pricing-coverage.mjs` | Every provider in the catalog has pricing data |
 | `pricing-worker/test-refresh-logic.mjs` | The weekly pricing refresh cannot corrupt KV |
 | `test-provider-extractors.mjs` | 210+ fixtures pinning every provider response shape |
-| `test-debug-redaction.mjs` | Secrets never reach a Scout bundle; catalog placeholders always substitute |
+| `test-debug-redaction.mjs` | The redaction helpers behave, and both export paths still call them; catalog placeholders always substitute |
 | `test-server-ai-eligibility.mjs` | Which model-server entries may join a hive |
 | `claude-proxy/test-security.mjs` | The Claude relay's origin, path, method and key guards |
 | `check-confidentiality.mjs` | No real workplace data in tracked files |
@@ -60,13 +60,16 @@ person to read the result, and `release-check.mjs` stays dependency-free.
 | `audit-html-sinks.mjs` | Alongside `check-html-injection.mjs`, to get the list of sites to read | — |
 | `capture.mjs` | Producing screenshots | Chrome |
 
-> **Two of these are RED against the shipped code, on purpose.**
-> `check-export-redaction.mjs` and `check-import-bounds.mjs` were written from
-> the 2026-09-21 security review and reproduce open backlog bugs 1–3. They are
-> the acceptance tests for those entries, so they stay red until the fixes
-> land — which is also why neither is a gate stage yet. Wire both in once they
-> go green. `check-hostile-provider.mjs` passes today and can be wired in
-> whenever.
+> **`check-import-bounds.mjs` is RED against the shipped code, on purpose.**
+> It is the acceptance test for open backlog bugs 1 and 2 (unbounded import,
+> silent save failure) and stays red until those are fixed. That is why it is
+> not a gate stage.
+>
+> `check-export-redaction.mjs` was red for the same reason and went **green in
+> v3.63.537**. It stays out of the gate anyway — it needs Chrome, and the gate
+> is browser-free by design. Its structural half is pinned in
+> `test-debug-redaction.mjs`, which the gate does run.
+> `check-hostile-provider.mjs` has passed since it was written.
 
 ### What each one actually answers
 

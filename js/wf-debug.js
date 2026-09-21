@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260920-030
+// Build: 20260921-001
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -170,17 +170,25 @@ window.WF_DEBUG = {
   // A method rather than a closure inside bundleForScout on purpose: a
   // redaction path that cannot be called from a test is a redaction path
   // nobody has verified.
+  //
+  // v3.63.537 — the cleaning pass is its own method now. It was a closure
+  // in here, which meant every OTHER export surface that needed the same
+  // definition of "what a secret looks like" either did without one or
+  // would have grown a second copy. There is one definition and everything
+  // calls it. See scrubSessionDebug directly below for what that bought.
+  scrubText(v) {
+    if (typeof v !== 'string') return v;
+    return v
+      .replace(/sk-[A-Za-z0-9_\-]{12,}/g, 'sk-[REDACTED]')
+      .replace(/AIza[0-9A-Za-z_\-]{30,}/g, 'AIza[REDACTED]')
+      .replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._\-~+\/=]{12,}/gi, '$1 [REDACTED]')
+      .replace(/([?&](?:key|api[_-]?key|access[_-]?token)=)[^&\s"']+/gi, '$1[REDACTED]')
+      .replace(/("(?:x-api-key|authorization|api[_-]?key)"\s*:\s*")[^"]*(")/gi, '$1[REDACTED]$2');
+  },
+
   scrubFailureRecord(rec) {
     if (!rec || typeof rec !== 'object') return null;
-    const clean = (v) => {
-      if (typeof v !== 'string') return v;
-      return v
-        .replace(/sk-[A-Za-z0-9_\-]{12,}/g, 'sk-[REDACTED]')
-        .replace(/AIza[0-9A-Za-z_\-]{30,}/g, 'AIza[REDACTED]')
-        .replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._\-~+\/=]{12,}/gi, '$1 [REDACTED]')
-        .replace(/([?&](?:key|api[_-]?key|access[_-]?token)=)[^&\s"']+/gi, '$1[REDACTED]')
-        .replace(/("(?:x-api-key|authorization|api[_-]?key)"\s*:\s*")[^"]*(")/gi, '$1[REDACTED]$2');
-    };
+    const clean = (v) => this.scrubText(v);
     const out = {};
     for (const k of Object.keys(rec)) {
       let v = rec[k];
@@ -196,6 +204,75 @@ window.WF_DEBUG = {
       out[k] = v;
     }
     return out;
+  },
+
+  // ── Session debug-channel scrubbing (v3.63.537) ───────────────
+  //
+  // The saved session carries three debug channels that nothing else in
+  // the blob does: lastFailure (the provider's error, raw response body
+  // included), ringBuffer (Deep Dive per-round prompt/response captures)
+  // and consoleHTML (the Live Console as markup, provider error text
+  // included). All three are written by capture paths that do NOT scrub —
+  // captureFailure and captureRound store what they were handed.
+  //
+  // That was fine while the session stayed in IndexedDB. It stopped being
+  // fine when two export surfaces started shipping the blob whole:
+  // bundleForScout embeds it at checkpoint.IDB_SESSION, and
+  // _buildCheckpointEnvelope writes it into every checkpoint. Both already
+  // scrubbed their OTHER copies of the same data — the bundle's top-level
+  // lastFailure and liveConsole, the hive's API keys — so each file
+  // carried a redacted copy and a raw one, and the raw one won.
+  //
+  // Scope is deliberately the three debug channels and nothing else.
+  // docText, history and the reference docs are the USER'S CONTENT and a
+  // checkpoint has to restore them byte for byte; running a redaction pass
+  // over a document that happens to contain a key-shaped string would
+  // corrupt the restore. Credentials do not belong in those fields in the
+  // first place, and if one is there the user put it there knowingly.
+  //
+  // Returns a shallow copy with the three channels cleaned. Never throws:
+  // an export path must not be able to fail because a session was an odd
+  // shape.
+  scrubSessionDebug(session) {
+    if (!session || typeof session !== 'object') return session;
+    try {
+      const out = { ...session };
+      if (out.lastFailure && typeof out.lastFailure === 'object') {
+        out.lastFailure = this.scrubFailureRecord(out.lastFailure);
+      }
+      if (typeof out.consoleHTML === 'string') {
+        out.consoleHTML = this.scrubText(out.consoleHTML);
+      }
+      if (Array.isArray(out.ringBuffer)) {
+        out.ringBuffer = this.scrubRingBuffer(out.ringBuffer);
+      }
+      return out;
+    } catch (e) {
+      // Cleaning failed on a shape we did not anticipate. Ship the channels
+      // EMPTY rather than raw — a bundle missing its ring buffer is a
+      // diagnostic inconvenience, a bundle leaking one is not.
+      try {
+        return { ...session, lastFailure: null, ringBuffer: [], consoleHTML: '' };
+      } catch (e2) { return null; }
+    }
+  },
+
+  // Ring-buffer entries are free-form capture objects, so this walks them
+  // to any depth rather than guessing at a field list — the field that
+  // carries the secret next release is the one nobody listed.
+  scrubRingBuffer(buf) {
+    const walk = (v, depth) => {
+      if (depth > 12) return v;
+      if (typeof v === 'string') return this.scrubText(v);
+      if (Array.isArray(v)) return v.map(x => walk(x, depth + 1));
+      if (v && typeof v === 'object') {
+        const o = {};
+        for (const k of Object.keys(v)) o[k] = walk(v[k], depth + 1);
+        return o;
+      }
+      return v;
+    };
+    return walk(buf, 0);
   },
 
   // ── Capture (Troubleshooting always-on lightweight) ──
@@ -467,7 +544,14 @@ window.WF_DEBUG = {
       checkpoint = {
         LS_PROJECT:  localStorage.getItem('waxframe_v2_project'),
         LS_HIVE:     _redactKeysIn(localStorage.getItem('waxframe_v2_hive')),
-        IDB_SESSION: idbSession
+        // v3.63.537 — was `idbSession` raw. The envelope's own lastFailure
+        // and liveConsole are scrubbed below, and this embedded copy of the
+        // same session made both of those pointless: one redacted copy and
+        // one raw copy in the same file, and the raw one is the one that
+        // mattered. LS_HIVE had already been given this treatment in
+        // v3.63.140; IDB_SESSION arrived later (v3.63.286) and was never
+        // audited against it.
+        IDB_SESSION: this.scrubSessionDebug(idbSession)
       };
     } catch (e) { /* defensive */ }
 
@@ -480,7 +564,11 @@ window.WF_DEBUG = {
       _waxframe_ring_count:    this.ringBuffer.length,
       _waxframe_tier_count:    Object.keys(tierCache).length,
       _waxframe_keys_redacted: true,
-      ringBuffer:              this.ringBuffer,
+      // v3.63.537 — was `this.ringBuffer` raw. captureRound stores whatever
+      // it was handed, and what it is handed is a prompt and a provider
+      // response, so this is an export surface like any other. Fixing only
+      // the embedded copy above would have left this one leaking.
+      ringBuffer:              this.scrubRingBuffer(this.ringBuffer),
       // v3.63.493 — the ring buffer is written by captureRound, which only
       // runs AFTER response.json() succeeds. That makes it structurally
       // blind to transport failures: a 504, a dropped connection or a

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260920-030
+// Build: 20260921-001
 // check-export-redaction.mjs — do the files WaxFrame hands out actually
 // carry what the redaction code says they carry?
 //
@@ -17,6 +17,11 @@
 // should not be in it. A redaction control is only worth what the shipped
 // file says it is worth.
 //
+// Fixed in v3.63.537 (WF_DEBUG.scrubSessionDebug, called from both export
+// paths). This check is the proof, and it stays because the regression it
+// catches — someone dropping one of those two calls — would pass every
+// other test in the repo.
+//
 // Why it matters: js/storage.js calls these blobs "safe to share in a public
 // bug report", and help.html owns that flow. lastFailure.raw is the
 // provider's entire error body; consoleHTML is the console transcript as
@@ -32,11 +37,14 @@
 //     or anyone else's — to trip over. They are invented and match nothing.
 //
 // Usage:  node tools/check-export-redaction.mjs
-// Exit 0 = every export surface is clean.
+// Exit 0 = every export surface is clean. GREEN as of v3.63.537.
 //
-// NOT a release-check stage today: it currently FAILS against the shipped
-// code, by design, and wiring a known-red check into the gate would block
-// every release. Wire it in once the embedded-copy fix lands.
+// Deliberately NOT a release-check stage: it needs Chrome, and the gate is
+// pure Node standard library by design so it runs anywhere including CI.
+// The structural half — that both export paths still CALL the scrubber —
+// is pinned in tools/test-debug-redaction.mjs, which the gate does run.
+// Between them: the gate catches the call being deleted, this catches the
+// call being wrong.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -75,6 +83,14 @@ const TAGS = {
 };
 const keyish = (tag) => ['sk', 'ant', tag + 'A'.repeat(26)].join('-');
 const CANARIES = Object.fromEntries(Object.entries(TAGS).map(([k, t]) => [k, keyish(t)]));
+
+// The mirror image, and the reason this test is not just "grep for secrets".
+// This one is credential-SHAPED text sitting in the user's own document. It
+// must come through byte for byte: the debug channels get scrubbed, user
+// content does not, because a checkpoint has to restore what was written.
+// Passed in alongside the canaries but asserted PRESENT, never absent.
+CANARIES.docBody = keyish('DOCBODY');
+const MUST_BE_ABSENT = Object.keys(TAGS);
 
 const HIVE_SEED = {
   activeAIIds: ['claude'],
@@ -128,15 +144,26 @@ let ws;
 // so they stay readable and lintable instead of becoming string soup.
 
 // Seed the debug side-channels the way the app itself does, then flush to IDB.
+// Every canary travels next to a KEEP marker in the same field. A scrubber
+// that deletes its input passes every absence check ever written, so each
+// artifact is also asked whether the diagnostic content it exists to carry
+// is still there.
 async function seedCanaries(C) {
   WF_DEBUG.captureFailure({
     code: 'HTTP_ERROR', provider: 'claude', status: 401,
-    message: 'Incorrect API key provided: ' + C.failMessage,
-    raw: JSON.stringify({ error: { message: 'Incorrect API key provided: ' + C.failRaw } })
+    message: 'KEEPMSG Incorrect API key provided: ' + C.failMessage,
+    raw: JSON.stringify({ error: { message: 'KEEPRAW rejected ' + C.failRaw, type: 'invalid_request_error' } })
   });
   WF_DEBUG.deepDiveOn = true;
-  WF_DEBUG.captureRound({ round: 1, prompt: 'p', response: 'r', note: C.ringBuffer });
-  try { consoleLog('auth failed for key ' + C.console, 'error'); } catch (e) {}
+  WF_DEBUG.captureRound({
+    round: 1, prompt: 'KEEPPROMPT the working document', response: 'KEEPRESPONSE the critique',
+    note: C.ringBuffer
+  });
+  try { consoleLog('KEEPCONSOLE auth failed for key ' + C.console, 'error'); } catch (e) {}
+  // A document that CONTAINS a credential-shaped string on purpose. It must
+  // survive byte for byte: a checkpoint has to restore what the user wrote,
+  // and a redaction pass over user content would corrupt the restore.
+  try { docText = 'KEEPDOC the working document, mentioning ' + C.docBody + ' in its body'; } catch (e) {}
   try { await saveSession({ force: true }); } catch (e) {}
   await new Promise(r => setTimeout(r, 600));
   const idb = await idbGet();
@@ -174,11 +201,14 @@ async function captureScoutBundle(C) {
     if (JSON.stringify(obj.checkpoint && obj.checkpoint.LS_HIVE || '').indexOf(needle) !== -1) hits.push('checkpoint.LS_HIVE');
     return hits;
   };
+  const KEEP = ['KEEPMSG', 'KEEPRAW', 'KEEPPROMPT', 'KEEPRESPONSE', 'KEEPCONSOLE'];
   return JSON.stringify({
     built: true, bytes: text.length,
     embeddedCheckpointPresent: !!idbs,
     anywhere: Object.fromEntries(Object.keys(C).map(k => [k, text.indexOf(C[k]) !== -1])),
-    located:  Object.fromEntries(Object.keys(C).map(k => [k, where(C[k])]))
+    located:  Object.fromEntries(Object.keys(C).map(k => [k, where(C[k])])),
+    kept:     KEEP.filter(m => text.indexOf(m) !== -1),
+    keptAll:  KEEP.every(m => text.indexOf(m) !== -1)
   });
 }
 
@@ -192,10 +222,14 @@ async function captureCheckpoint(C) {
   const env = await _buildCheckpointEnvelope(scope);
   if (!env) return JSON.stringify({ built: false, why: 'envelope was null' });
   const j = env.json;
+  const KEEP = ['KEEPMSG', 'KEEPRAW', 'KEEPPROMPT', 'KEEPRESPONSE', 'KEEPCONSOLE'];
   return JSON.stringify({
     built: true, bytes: j.length, tags: env.tags,
     scopeKeysWasOff: JSON.parse(j)._waxframe_backup_scope.keys === false,
-    anywhere: Object.fromEntries(Object.keys(C).map(k => [k, j.indexOf(C[k]) !== -1]))
+    anywhere: Object.fromEntries(Object.keys(C).map(k => [k, j.indexOf(C[k]) !== -1])),
+    kept:    KEEP.filter(m => j.indexOf(m) !== -1),
+    keptAll: KEEP.every(m => j.indexOf(m) !== -1)
+
   });
 }
 
@@ -253,10 +287,12 @@ try {
   check('a bundle was actually produced (liveness)', b.built === true, b);
   if (b.built) {
     console.log(`      ${b.bytes} bytes; embedded checkpoint present: ${b.embeddedCheckpointPresent}`);
-    for (const field of Object.keys(CANARIES)) {
+    for (const field of MUST_BE_ABSENT) {
       check(`no ${field} canary anywhere in the bundle`, b.anywhere[field] === false,
         b.anywhere[field] ? `found in: ${b.located[field].join(', ') || '(unlocated — raw text match)'}` : undefined);
     }
+    check('the bundle still carries its diagnostic content', b.keptAll === true,
+      `a scrubber that deletes everything passes every check above — kept ${JSON.stringify(b.kept)}`);
   }
 
   console.log('\n  > A checkpoint saved with the shipping defaults (session on, keys off)');
@@ -269,6 +305,12 @@ try {
     check('no failure-record message canary in the checkpoint', c.anywhere.failMessage === false, c.anywhere);
     check('no failure-record raw-body canary in the checkpoint', c.anywhere.failRaw === false, c.anywhere);
     check('no console-transcript canary in the checkpoint', c.anywhere.console === false, c.anywhere);
+    check('the checkpoint still carries its session content', c.keptAll === true,
+      `a scrubber that deletes everything passes every check above — kept ${JSON.stringify(c.kept)}`);
+    check('credential-shaped text in the USER\'S DOCUMENT is left alone',
+      c.anywhere.docBody === true,
+      'docText was scrubbed — a checkpoint has to restore the document exactly as written, ' +
+      'and redaction must not reach into user content');
   }
 
 } catch (err) {
