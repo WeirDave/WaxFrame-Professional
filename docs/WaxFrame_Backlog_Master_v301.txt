@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v300
+WaxFrame Backlog Master v301
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -26,6 +26,34 @@ ships.
 
 
 
+v301 — HTML-SINK AUDIT DONE (v3.63.530). One open item, and it needs David.
+
+The claim "all the code has been examined against security stuff" was NOT true
+before this release and is now true for one specific class: HTML injection into
+the UI. It is not a general security audit and nobody should describe it as one.
+
+Result: 126 HTML sinks in js/, 103 static or fully escaped. Reviewer suggestion
+text, AI display names and server-supplied model names are all escaped at their
+render sites. A runtime check seeded hostile markup into AI names, project name
+and reference titles, walked every screen that renders them, and found zero
+elements created — the text arrived escaped.
+
+Method note worth keeping, because two attempts failed first: static analysis of
+this codebase does not work for this question. A hand-rolled scanner cannot find
+where a template literal ends, and both attempts reported consoleLog() and
+toast() strings as sinks. The third approach — seed hostile data, boot the real
+app, ask the DOM what became an element — is the one that answers it.
+
+The committed check asserts LIVENESS before safety: it fails if the hostile
+value never loaded or never reached the DOM. Its first version passed while
+proving nothing, which is the failure mode to watch for in every check here.
+
+Mitigation context: script-src has no 'unsafe-inline', so injected handlers do
+not run. Escaping is the first line, CSP the second.
+
+NOT covered and not claimed: dependency vulnerability review beyond Dependabot,
+the Cloudflare relay beyond its own test, and the storage import sanitiser.
+
 v300 — OPEN WEBUI VERIFIED, BACKLOG EMPTY (v3.63.529). Old #1 struck. There
 are no open items.
 
@@ -47,7 +75,8 @@ Found while verifying, and fixed in the same release: the Import from Model
 Server error card printed the literal "{ai}" because it renders catalog text
 without going through renderTroubleshootingCard, which was the only code that
 substituted placeholders. Now one shared WF_DEBUG.substitute, and a test walks
-the whole catalog asserting no placeholder survives. STANDING PRACTICE: catalog
+the whole catalog asserting no placeholder survives.
+STANDING PRACTICE: catalog
 text is a template; any surface that displays it substitutes first.
 
 v299 — PDF.JS UPGRADED (v3.63.528). Old #2 struck; one item remains.
@@ -385,6 +414,31 @@ None currently open.
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
 Ordered by value.
+
+1. Exercise PDF import against real-world PDFs
+   ─────────────────────────────────────────────────────────
+   WHAT:   v3.63.528 moved the hosted PDF engine to 6.3.289. It was
+           verified against a generated two-page PDF — text, outline,
+           page render, and the app's own import routine — and the
+           portable file:// path was verified against the same file.
+   WHY:    A generated PDF exercises the happy path only. The shapes
+           that break PDF engines are the ones a generator does not
+           produce: scanned pages with no text layer, encrypted or
+           password-protected files, very large documents, unusual
+           embedded fonts, and PDFs written by tools that bend the
+           spec. A major-version engine change is exactly when those
+           surface.
+   STATE:  OPEN, blocked on David — needs real files, and the useful
+           ones are his own. Nothing to code until it fails.
+   WHERE:  js/app.js extractPDF (the import path) and the OCR
+           fallback that renders pages when text extraction is sparse;
+           tools/check-file-protocol.mjs for the portable path.
+   DONE:   Several real PDFs imported through the app on waxframe.com
+           — at minimum one scanned/image-only and one large multi-
+           hundred-page file — with the extracted text checked for
+           sanity. Any failure reported with the file's characteristics
+           (NOT the file itself, and NOT its content — see §0 of the
+           handover; a real work PDF must never reach this repo).
 
 
 Ordered by value. Everything here is real work with a real

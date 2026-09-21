@@ -1,5 +1,64 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.530 — HTML injection checked properly, and two tools that keep checking it
+
+**Released:** 2026-09-20
+**Build:** 20260920-024
+
+### What changed
+
+**Nothing was broken. This release is the evidence that nothing was broken, plus the means to keep
+knowing it.**
+
+WaxFrame builds its interface by writing HTML strings into the page. That is safe as long as every
+value dropped into those strings is escaped first, and until now nobody had checked all of them —
+there are 126 such places. Three kinds of text WaxFrame does not control can reach them: documents
+you import, replies from AI providers, and sessions restored from a checkpoint file. Checkpoints
+are meant to be shared, so that last one is a real route in.
+
+**The result: 103 of the 126 are static or fully escaped, and the ones that matter are escaped.**
+Reviewer suggestion text, AI display names, and model names taken from a model server all pass
+through the escaper before reaching the page.
+
+**How that was established matters, because the first two attempts were wrong.** Reading the code
+with a script produced confident false alarms — it could not reliably tell where one HTML string
+ended, so it reported ordinary status messages and console lines as if they were page content.
+
+So the question went to the browser instead. `tools/check-html-injection.mjs` seeds WaxFrame with
+AI names, a project name and a reference title that all contain markup, boots the real app, walks
+every screen that displays them, and then asks the page a single question: did any of that text
+become an element? It did not. It arrived as visible characters, escaped, with nothing created.
+
+That check asserts it is **live** before it asserts anything is safe: it fails if the hostile name
+never loaded, or never reached the page. A test that passes because it tested nothing is worse than
+no test, and the first version of this one did exactly that.
+
+**`tools/audit-html-sinks.mjs`** is the companion inventory — every place HTML is written, and which
+values are not escaped. It over-reports by design and says so; its job is to hand a person a short
+list to read, not to give a verdict.
+
+**Worth stating plainly: WaxFrame's Content-Security-Policy does not allow inline scripts.** Even if
+markup were injected, an `onerror=` handler would not run and a `<script>` tag would not execute.
+That is why this was a question to answer carefully rather than an emergency. Escaping is the first
+line; the policy is the second; both are in place.
+
+### Verification
+- Runtime injection check: 6 assertions, including two that prove the test is live. Zero elements
+  created from seeded markup, which arrived escaped.
+- Sink inventory: 126 sinks, 103 static or fully escaped.
+- Reviewer text, AI names and server-supplied model names confirmed escaped at their render sites.
+- Gate: all 19 stages. Flow harness: 23 assertions. Debug tests: 37. Dead-code audit: zero findings.
+- Portable `file://` check: 9 assertions.
+
+### Files touched
+`tools/check-html-injection.mjs` (new), `tools/audit-html-sinks.mjs` (new), `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v301.txt`, plus the routine stamp sweep. No application code changed.
+
+### Rollback
+`git revert HEAD` removes the two checks. Nothing in the app is affected.
+
+---
+
 ## v3.63.529 — Error messages no longer show "{ai}" instead of a name
 
 **Released:** 2026-09-20
