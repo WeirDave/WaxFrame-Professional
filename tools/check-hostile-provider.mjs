@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260921-001
+// Build: 20260921-002
 // check-hostile-provider.mjs — pins the defences that stop a hostile or
 // compromised provider (or model server) from reshaping WaxFrame's requests.
 //
@@ -218,7 +218,22 @@ try {
     source: `try { localStorage.setItem('waxframe_v2_hive', ${JSON.stringify(JSON.stringify(HIVE_SEED))}); } catch (e) {}`
   });
   await cdp('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html` });
-  await sleep(5000);
+  // Wait for the app's OWN async boot to finish rather than sleeping and
+  // hoping. app.js's DOMContentLoaded handler awaits an IndexedDB read before
+  // it settles on a screen, and every function it defines exists long before
+  // that resolves — so "the function is there" is not "the app is ready".
+  // __wfBootComplete is the last statement of that handler. A fixed sleep
+  // here was a race waiting to be reported as a product bug; see the
+  // flow-check entry in the backlog for what that cost.
+  {
+    const deadline = Date.now() + 30000;
+    let booted = false;
+    while (Date.now() < deadline) {
+      try { if (await evaluate('window.__wfBootComplete === true')) { booted = true; break; } } catch (e) {}
+      await sleep(150);
+    }
+    if (!booted) throw new Error('the app never signalled boot complete');
+  }
 
   console.log('\n  > A hostile model server tries to claim a configured provider id');
   const a = JSON.parse(await evaluate(`(${probeIds.toString()})()`));

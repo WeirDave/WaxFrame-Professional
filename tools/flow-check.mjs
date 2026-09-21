@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ============================================================
 //  WaxFrame — tools/flow-check.mjs
-// Build: 20260921-001
+// Build: 20260921-002
 // ============================================================
 // End-to-end flow harness. Asserts DOM and app state instead of capturing
 // screenshots, and drives a full hive against a same-origin mock provider so a
@@ -311,7 +311,18 @@ async function bootWithSeed() {
     } catch (e) {}`
   });
   await cdp('Page.navigate', { url: `${MOCK_BASE}/index.html` });
-  await until('app boot', `(typeof goToScreen === 'function' && typeof aiList !== 'undefined' && Array.isArray(aiList))`);
+  // Wait for the app's OWN boot to finish, not merely for its functions to
+  // exist. app.js's DOMContentLoaded handler is async: it awaits loadSession()
+  // (an IndexedDB read) and only then decides which screen to land on. Every
+  // function it defines, goToScreen included, exists as soon as app.js parses
+  // — far earlier. The previous gate checked exactly that, so on a slow IDB
+  // read this harness navigated first and the app's own goToScreen() landed
+  // afterwards and moved the screen back. Flow 1 then timed out waiting for a
+  // screen it had already asked for, about one run in four.
+  //
+  // window.__wfBootComplete is set as the last statement of that handler, so
+  // it is the only signal that means "the app has stopped moving on its own".
+  await until('app boot complete', `window.__wfBootComplete === true`);
   // Point the three seeded AIs at the mock. Done at runtime rather than through
   // the persisted custom-AI schema on purpose: the schema is a product surface
   // that may legitimately change, and pinning a test to it would make this

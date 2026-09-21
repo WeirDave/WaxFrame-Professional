@@ -1,5 +1,45 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.538 — A boot-complete signal for the test harnesses
+
+**Released:** 2026-09-21
+**Build:** 20260921-002
+
+### What changed
+
+**No change to how the app behaves.** This adds one flag the application itself never reads.
+
+The page's startup handler is asynchronous: it reads the saved session out of IndexedDB and only
+then decides which screen to open on. Every function it defines exists much earlier, as soon as the
+script is parsed. Nothing in the page exposed the difference between those two moments, so an
+automated test could see the functions, navigate somewhere, and then have the startup handler finish
+and move the screen out from under it.
+
+The flow harness did exactly that and failed roughly one run in four, always pointing at the screen
+it had just asked for. That reads as a fault in the setup screens and is not one. Raising the
+timeout would not have helped, because the app had already settled somewhere else and was never
+going to move back.
+
+A `__wfBootComplete` flag is now set as the final statement of the startup handler, with a matching
+`wf:boot-complete` event, so a harness can wait for the app to have finished rather than guess. The
+same wait replaced a fixed five-second sleep in the three checks added in the previous release,
+which carried the identical race.
+
+### Verification
+- Flow harness: 20 consecutive runs green, against a measured 1-in-4 failure rate before the change.
+  23 assertions each.
+- Gate: all 19 stages. Injection checks: 14. Debug redaction: 44. Export redaction: 20.
+  Hostile-provider guards: green. Portable `file://` path: 9.
+
+### Files touched
+`js/app.js`, `tools/flow-check.mjs`, `tools/check-export-redaction.mjs`,
+`tools/check-import-bounds.mjs`, `tools/check-hostile-provider.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v310.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The application change is two statements at the end of one event handler, read by
+nothing that ships.
+
 ## v3.63.537 — Credentials stripped from the diagnostic fields of every exported file
 
 **Released:** 2026-09-21

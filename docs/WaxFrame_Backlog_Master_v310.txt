@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v309
+WaxFrame Backlog Master v310
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,24 @@ ships.
 
 
 
+
+v310 — FLOW-CHECK FLAKE FIXED (v3.63.538). Old bug 3 shipped and
+is deleted; two open bugs remain. The cause was not the harness
+being slow, which is why raising the timeout would never have
+worked: app.js's DOMContentLoaded handler is async and awaits
+loadSession() before choosing a screen, while every function it
+defines — goToScreen included — exists the moment app.js parses.
+The harness gated on the function existing, navigated, and then
+the app's own goToScreen() landed and moved the screen back.
+
+app.js now sets window.__wfBootComplete as the last statement of
+that handler, and every browser-driven tool waits on it. That
+also removed a fixed 5-second sleep from the three checks added
+in v3.63.537, which had the identical latent race and were one
+slow IndexedDB read away from reporting the same phantom.
+
+Measured after the fix: 20 consecutive flow-check runs green,
+against 1-in-4 failing before.
 
 v309 — EXPORT REDACTION FIXED (v3.63.537). Old bug 1 shipped and
 is deleted from this file; remaining bugs renumbered 1..2. The
@@ -683,37 +701,6 @@ OPEN BUGS
            EXTRACTED length is what matters; a bound on file
            size alone does not stop a 279 KB bomb.
 
-
-3. tools/flow-check.mjs fails about 1 run in 4 for no reason
-   ─────────────────────────────────────────────────────────
-   WHAT:   Flow 1 times out waiting for screen-bees to become
-           visible and the whole run aborts with
-           "harness error: timed out waiting for screen-bees
-           visible (last: false)". Measured 2026-09-21 on an
-           UNMODIFIED tree: 1 failure in 4 runs, and separately
-           1 in 3 on a modified tree. Same message every time,
-           always Flow 1, never past it.
-   WHY:    A check with a known false-failure rate stops being
-           evidence. It cost a wrong conclusion the day it was
-           measured: a single red run was read as "this change
-           broke app boot", and only running the baseline four
-           times showed the change was innocent. The next person
-           to hit it either wastes the same hour or — worse —
-           learns to re-run until green, which is how a REAL
-           regression gets waved through.
-           This is the one check that covers the round loop and
-           the Back-button state-leak paths, so it is the one
-           that most needs to be trusted.
-   STATE:  OPEN. Cause not diagnosed. It is a startup race in
-           the harness, not in the app — the app boots fine in
-           check-html-injection and check-export-redaction,
-           which drive it the same way.
-   WHERE:  tools/flow-check.mjs — the wait helper Flow 1 uses to
-           poll for screen visibility, and whatever it does
-           between Page.navigate and the first assertion.
-   DONE:   20 consecutive runs green on an unmodified tree. Fix
-           the wait rather than raising the timeout blindly: a
-           longer sleep that hides a race still hides it.
 
 ════════════════════════════════════════════════════════════
 OPEN FEATURES

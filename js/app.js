@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260921-001
+// Build: 20260921-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260921-001';         // build stamp — update each session
+const BUILD = '20260921-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13478,8 +13478,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.537'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.537';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.538'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.538';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -23834,4 +23834,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) {}
     }, 50);
   }
+
+  // v3.63.538 — Boot-complete signal. Nothing in the app reads it; it exists
+  // so an automated harness can tell that THIS handler has finished.
+  //
+  // The distinction matters and was costing real time. This handler is async
+  // and awaits loadSession(), an IndexedDB read, before deciding which screen
+  // to land on. Every function it defines — goToScreen included — exists the
+  // moment app.js parses, which is long before that await resolves. A harness
+  // that waits for `typeof goToScreen === 'function'` and then navigates is
+  // racing the boot: when the IDB read is slow, the app's own goToScreen()
+  // lands afterwards and silently moves the screen out from under the test.
+  //
+  // That produced a harness that failed about one run in four with a timeout
+  // pointing at the screen it had asked for, which reads as a product bug and
+  // is not one. The alternative fixes are all worse: a fixed sleep hides the
+  // race at a cost paid on every run, and polling for a specific screen ties
+  // the harness to a product decision that is allowed to change.
+  window.__wfBootComplete = true;
+  try { document.dispatchEvent(new CustomEvent('wf:boot-complete')); } catch (e) {}
 });
