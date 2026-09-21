@@ -53,3 +53,20 @@ No secrets or KV data to seed — `wrangler deploy` provisions the declared rate
 ## CORS
 
 The Worker echoes `Access-Control-Allow-Origin` only for `https://waxframe.com`, `https://www.waxframe.com`, `https://weirdave.github.io`, portable opaque (`null`) origins, and loopback HTTP development origins. Add a new production origin to `ALLOWED_ORIGINS` before serving WaxFrame from it.
+
+**Requests with no `Origin` header at all are allowed through**, which is broader than the
+`null`-origin case above and is worth stating plainly. A browser always sends `Origin` on a
+cross-origin request, so this does not widen anything for a page; what it permits is a non-browser
+client — curl, a script, another application — calling the relay directly. That is deliberate:
+refusing it would also refuse some portable `file://` configurations, which is the deployment this
+allowance exists for.
+
+The consequence is that the relay is usable by anyone who brings their **own** Anthropic API key.
+It is not an open door to anyone else's key or data: the key travels per-request from the caller,
+is never stored, and the Worker holds no secrets and no bindings other than the rate limiter. The
+cost of abuse is Cloudflare Worker invocations on the account hosting it, which is why the rate
+limiter is keyed on a truncated hash of the caller's key rather than on IP.
+
+There is no `Access-Control-Allow-Credentials` header, so echoing the caller's origin back cannot
+be used to read a cross-origin authenticated response. Do not add that header without re-reading
+this section first.

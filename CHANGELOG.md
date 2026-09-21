@@ -1,5 +1,65 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.531 — Checkpoint files, library advisories, and a guard that can't be dropped by accident
+
+**Released:** 2026-09-20
+**Build:** 20260920-025
+
+### What changed
+
+**Opening a checkpoint file from someone else is now verified safe, not assumed safe.** Checkpoints
+are meant to be shared, and one field inside them — the saved console output — is deliberately turned
+back into page content when a session is restored. That is the only place in WaxFrame where saved
+data becomes markup again, and it has had a purpose-built filter since v3.53.1.
+
+That filter is now tested against the attacks it exists to stop: a script-loading image, a
+`javascript:` link, an inline event handler, an `<svg onload>`, and an embedded frame. None of them
+survived, and nothing executed. Ordinary console output from the same file came through intact —
+which is the check that matters most, because a filter that simply deletes everything passes every
+safety test while quietly breaking the feature.
+
+**Every bundled library was checked against published security advisories.** Five of the six are
+clear at the versions WaxFrame ships. The sixth is the PDF engine used only by the portable copy,
+which is pinned to an old version for a reason covered in v3.63.528 — no newer release can load from
+a local folder. Its known issue is neutralised by a setting passed wherever a PDF is opened.
+
+**That setting is now checked by the release process.** It is one word in two places, it is easy to
+lose during an unrelated edit, and nothing would have noticed. Removing it from either place now
+stops a release. Verified by deliberately removing it and confirming the build failed, then putting
+it back.
+
+**A version floor was added for the main PDF engine.** Several releases in the 6.x line carry a
+high-severity advisory; the version WaxFrame ships is past it. Taking one of the affected releases
+would have looked like an upgrade while moving onto a known issue. That is now a build failure
+rather than something that depends on picking carefully.
+
+**The Claude relay's documentation now states a property it had always had:** requests arriving with
+no origin header are allowed through, because refusing them would break some portable installs. The
+relay is therefore usable by non-browser clients that bring their own Anthropic key. It exposes
+nobody else's key or data — keys travel per-request and are never stored — but it was an
+undocumented trade-off and is now a documented one.
+
+### Verification
+- Restored-console filter: 8 assertions, two of which prove the filter actually ran and produced
+  output before anything is claimed about safety.
+- Injection checks overall: 14 assertions, all passing.
+- Advisory review: docx 9.7.1, jszip 3.10.1, mammoth 1.13.1, SheetJS 0.20.3 and the main PDF engine
+  6.3.289 are all past every published fix. The portable PDF engine's residual issue is mitigated and
+  now enforced.
+- The mitigation check was mutation-tested: removing the setting from one of the two call sites fails
+  the build and names the line.
+- Gate: all 19 stages. Flow harness: 23. Debug tests: 37. Portable check: 9. Dead-code audit: zero.
+
+### Files touched
+`tools/check-html-injection.mjs`, `tools/release-check.mjs`, `tools/claude-proxy/README.md`,
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v302.txt`, plus the routine stamp sweep. No application
+code changed.
+
+### Rollback
+`git revert HEAD` removes the checks and the documentation. Nothing in the app is affected.
+
+---
+
 ## v3.63.530 — HTML injection checked properly, and two tools that keep checking it
 
 **Released:** 2026-09-20

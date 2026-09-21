@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v301
+WaxFrame Backlog Master v302
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,42 @@ ships.
 
 
 
+
+v302 — SECURITY SURFACES CLOSED OUT (v3.63.531). Open list unchanged: the one
+PDF item, which needs David.
+
+The three areas v3.63.530 explicitly did NOT claim are now covered.
+
+1. STORAGE IMPORT SANITISER. consoleHTML is the only field in a checkpoint
+   that is deliberately re-rendered as markup (storage.js:794). Tested live
+   against img-onerror, javascript: href, inline on* attribute, svg onload and
+   iframe: none survived, window.__wfPwned never set. Critically the check also
+   asserts a LEGITIMATE console entry survives — a sanitiser that nukes all
+   input passes every safety assertion while breaking the feature, and the
+   first version of this test failed exactly that way (it was reading
+   body.innerText, which skips the hidden work-screen console).
+
+2. DEPENDENCY ADVISORIES. Checked every vendored lib against the GitHub
+   advisory database. Clear: docx 9.7.1, jszip 3.10.1, mammoth 1.13.1, sheetjs
+   0.20.3, pdfjs-dist-esm 6.3.289. NOT clear and cannot be: pdfjs-dist-classic
+   3.11.174 is below the fix for GHSA-wgrm-67xf-hhpq (CVE-2024-4367) and is
+   pinned there permanently — see v299's note. Mitigated by isEvalSupported:
+   false, which the gate now asserts at every getDocument() call site and which
+   was mutation-tested.
+   NOTE WORTH KEEPING: GHSA-hq66-cqwq-w95j (HIGH) covers pdfjs >= 5.6.83 and
+   < 6.2.108. v3.63.528 landed on 6.3.289 and is past it, but 6.0.227, 6.1.200
+   and 6.2.x-before-.108 are all INSIDE it. A floor now enforces that.
+
+3. CLOUDFLARE RELAY. Reviewed: origin allowlist, path allowlist, method
+   allowlist, key required and never stored, rate limit on a hashed key, size
+   guard checking BOTH declared Content-Length and actual byteLength, no
+   Access-Control-Allow-Credentials. No findings. One undocumented property
+   written up: absent-Origin requests are allowed (needed for file://), so the
+   relay is reachable by non-browser clients bringing their own key.
+
+STILL NOT CLAIMED: this is not a general security audit. No penetration test,
+no review of the AI providers themselves, no threat model for a hostile
+provider beyond output escaping.
 
 v301 — HTML-SINK AUDIT DONE (v3.63.530). One open item, and it needs David.
 

@@ -582,6 +582,35 @@ section('Vendored library floors (CVE-tracked minimums)');
 
 const LIB_FLOORS = [
   {
+    file: 'lib/pdf.min.mjs',
+    name: 'pdf.js (ESM, served over http)',
+    // GHSA-hq66-cqwq-w95j — HIGH, affects >= 5.6.83 and < 6.2.108.
+    // v3.63.528 moved this build 4.10.38 -> 6.3.289. The old version was not
+    // in that range and the new one is past it, but several 6.x releases sit
+    // INSIDE it: taking 6.0.227 or 6.1.200 would have looked like an upgrade
+    // while moving onto a high-severity advisory. This floor makes that a
+    // build failure instead of something nobody notices.
+    //
+    // The classic build in lib/pdf.min.js is deliberately NOT floored here.
+    // It is pinned at 3.11.174 because pdfjs-dist has published ESM only
+    // since 4.x and browsers refuse ESM imports across file:// origins, so
+    // no newer version exists in a form the portable copy can load. It is
+    // therefore below the fix for GHSA-wgrm-67xf-hhpq (CVE-2024-4367), and
+    // the mitigation is isEvalSupported:false passed at every getDocument()
+    // call site — asserted separately below. A floor here would fail every
+    // build forever and teach people to ignore this stage.
+    floor: '6.2.108',
+    extract: (content) => {
+      // The bundle is minified, so the exported `version` const is renamed
+      // to something like Lt. What survives minification is the apiVersion
+      // field pdf.js sends to its own worker for a compatibility check — it
+      // is a string literal with a stable key, present in every 2.x-6.x
+      // build, and it is by definition the version of this file.
+      const m = content.match(/apiVersion\s*:\s*["']([\d.]+)["']/);
+      return m ? m[1] : null;
+    }
+  },
+  {
     file: 'lib/xlsx.full.min.js',
     name: 'SheetJS xlsx',
     // SECURITY.md: tracked manually against cdn.sheetjs.com.
@@ -629,6 +658,30 @@ for (const lib of LIB_FLOORS) {
     continue;
   }
   ok(`${lib.name} = ${ver} (floor ${lib.floor})`);
+}
+
+// The classic build (lib/pdf.min.js, 3.11.174) sits below the fix for
+// GHSA-wgrm-67xf-hhpq / CVE-2024-4367 and cannot be upgraded: pdfjs-dist has
+// shipped ESM only since 4.x, and browsers refuse ESM imports across file://
+// origins, so no newer version can load in the portable copy at all. What
+// carries that risk is a runtime option — isEvalSupported:false — passed
+// wherever a PDF is opened. It is one word, it is easy to drop during an
+// unrelated edit, and nothing else in this repo would notice.
+{
+  const appJs = read(join(ROOT, 'js/app.js'));
+  const calls = [...appJs.matchAll(/getDocument\s*\(\s*\{([^}]*)\}/g)];
+  if (!calls.length) {
+    fail('js/app.js', 'no getDocument() call found — the CVE-2024-4367 mitigation check can no longer see the call sites it guards');
+  } else {
+    const unguarded = calls.filter(c => !/isEvalSupported\s*:\s*false/.test(c[1]));
+    if (unguarded.length) {
+      fail('js/app.js',
+        `${unguarded.length} of ${calls.length} getDocument() call(s) omit isEvalSupported:false — that option is the mitigation for CVE-2024-4367 on the portable file:// build, which is pinned below the library-level fix and cannot be upgraded`,
+        findLine(appJs, unguarded[0][0].slice(0, 40)));
+    } else {
+      ok(`CVE-2024-4367 mitigation present at all ${calls.length} getDocument() call site(s)`);
+    }
+  }
 }
 
 // ── Check 8: Inline-handler budget (strict-CSP migration ratchet) ──

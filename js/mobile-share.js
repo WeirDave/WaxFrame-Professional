@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — mobile-share.js
-// Build: 20260920-024
+// Build: 20260920-025
 //  navigator.share() helper for the mobile-overlay save/share
 //  button. Falls back to clipboard.writeText + a brief toast
 //  if navigator.share is unavailable. Extracted from the

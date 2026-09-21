@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260920-024
+// Build: 20260920-025
 // check-html-injection.mjs — does hostile text in saved state become markup?
 //
 // WaxFrame builds its UI by assigning template literals to .innerHTML. That is
@@ -106,6 +106,32 @@ const PROJECT_SEED = {
   referenceDocs: [{ title: PAYLOADS.refTitle, text: 'reference body' }]
 };
 
+// A restored session carries consoleHTML, which storage.js deliberately turns
+// back into markup with innerHTML — the one place in the app where saved data
+// is meant to become elements again. storage.js sanitises it first, in a
+// detached document with an allowlist rebuild. This seed is what proves that
+// sanitiser holds, rather than trusting the comment above it.
+//
+// Every payload here is a technique a crafted checkpoint would actually use.
+const HOSTILE_CONSOLE = [
+  '<div class="console-entry"><span>legitimate looking line</span></div>',
+  '<wfinject id="wfx-console"></wfinject>',
+  '<div class="console-entry"><img src="x" onerror="window.__wfPwned=1"></div>',
+  '<div class="console-entry"><a href="javascript:window.__wfPwned=2" id="wfx-jsurl">click</a></div>',
+  '<div class="console-entry"><a href="https://example.invalid/ok" id="wfx-okurl">fine</a></div>',
+  '<svg onload="window.__wfPwned=3"><desc id="wfx-svg"></desc></svg>',
+  '<iframe src="javascript:window.__wfPwned=4" id="wfx-frame"></iframe>',
+  '<div class="console-entry" onmouseover="window.__wfPwned=5" id="wfx-attr">hover</div>'
+].join('');
+
+const SESSION_SEED = {
+  round: 1, phase: 'refine', history: [], docText: 'doc body',
+  consoleHTML: HOSTILE_CONSOLE,
+  notes: '', standingNotes: '', projClockSeconds: 0,
+  lengthGuardOverride: false, cleanThisRound: [], sessionAIs: [],
+  ringBuffer: [], lastFailure: null
+};
+
 let bad = 0;
 const check = (label, cond, detail) => {
   if (cond) console.log(`    ✓ ${label}`);
@@ -179,6 +205,7 @@ try {
     source: `try {
       localStorage.setItem('waxframe_v2_hive', ${JSON.stringify(JSON.stringify(HIVE_SEED))});
       localStorage.setItem('waxframe_v2_project', ${JSON.stringify(JSON.stringify(PROJECT_SEED))});
+      localStorage.setItem('waxframe_v2_session', ${JSON.stringify(JSON.stringify(SESSION_SEED))});
     } catch (e) {}`
   });
   await cdp('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html` });
@@ -223,6 +250,56 @@ try {
     r.injectedNodes + ' node(s); markers: ' + JSON.stringify(r.byMarker));
   check('no injected marker id is reachable', r.byMarker.length === 0, r.byMarker);
   check('the page actually rendered (sanity — not an empty DOM)', r.bodyLen > 5000, r.bodyLen);
+
+  console.log('\n  ▶ Restored console HTML — the one place saved data becomes markup again');
+  await evaluate('window.HOSTILE = ' + JSON.stringify(HOSTILE_CONSOLE) + '; 1');
+  const c = JSON.parse(await evaluate(`(() => {
+    const HOSTILE = window.HOSTILE;
+    // Drive the restore function DIRECTLY rather than loadSession(), which
+    // reads IndexedDB and may take a different path. This is the exact call
+    // storage.js makes on restore, so the sanitiser runs the way it does in
+    // production.
+    let ran = false;
+    try {
+      const el = document.getElementById('liveConsole');
+      if (el && typeof sanitizeConsoleHTML === 'function') {
+        el.innerHTML = sanitizeConsoleHTML(HOSTILE);
+        ran = true;
+      }
+    } catch (e) {}
+    return JSON.stringify({
+      sanitizerRan: ran,
+      consoleLen: (document.getElementById('liveConsole') || {}).innerHTML ?
+                  document.getElementById('liveConsole').innerHTML.length : 0,
+      pwned: typeof window.__wfPwned !== 'undefined' ? window.__wfPwned : null,
+      injectMarkers: ['wfx-console','wfx-jsurl','wfx-svg','wfx-frame','wfx-attr']
+        .filter(id => document.getElementById(id) !== null),
+      scripts: document.querySelectorAll('script[data-wfx]').length,
+      iframes: document.querySelectorAll('iframe').length,
+      svgs: document.querySelectorAll('svg[onload]').length,
+      jsHrefs: [...document.querySelectorAll('a')].filter(a => /^javascript:/i.test(a.getAttribute('href')||'')).length,
+      inlineHandlers: [...document.querySelectorAll('*')].filter(e =>
+        e.getAttributeNames && e.getAttributeNames().some(n => /^on[a-z]+$/i.test(n))).length,
+      // The legitimate entry SHOULD survive, otherwise the sanitiser is just
+      // deleting everything and the test proves nothing about filtering.
+      // textContent, not body.innerText: liveConsole sits on the work screen
+      // and innerText skips hidden elements, which made this look like the
+      // sanitiser had deleted everything when it had not.
+      keptLegit: ((document.getElementById('liveConsole') || {}).textContent || '')
+                   .includes('legitimate looking line'),
+      keptEntries: document.querySelectorAll('#liveConsole .console-entry').length
+    });
+  })()`));
+
+  check('the sanitiser actually ran (test is live)', c.sanitizerRan === true, c);
+  check('it produced output rather than an empty string', c.consoleLen > 0, c);
+  check('no payload executed (window.__wfPwned never set)', c.pwned === null, c);
+  check('no hostile element from console HTML is in the DOM', c.injectMarkers.length === 0, c.injectMarkers);
+  check('no javascript: href survived', c.jsHrefs === 0, c);
+  check('no inline on* handler attribute survived', c.inlineHandlers === 0, c);
+  check('no <svg onload> survived', c.svgs === 0, c);
+  check('the sanitiser FILTERS rather than deletes everything', c.keptLegit === true,
+    'the legitimate console entry did not survive — a sanitiser that drops all input passes every safety check while breaking the feature');
 
   // A useful secondary signal: if escaping worked, the raw characters appear
   // as visible text somewhere. Not a failure if absent — a screen may simply
