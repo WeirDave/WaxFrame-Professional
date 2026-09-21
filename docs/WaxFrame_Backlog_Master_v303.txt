@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v302
+WaxFrame Backlog Master v303
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,33 @@ ships.
 
 
 
+
+v303 — DOCUMENTATION PASS (v3.63.532). Open list unchanged: the one PDF item,
+which needs David.
+
+Three fixes, all found by checking docs against code rather than reading them.
+
+1. SECURITY.md claimed lib/docx.min.js version "cannot be established" and was
+   "marked unknown". False since v3.63.527. A security policy understating its
+   own coverage is worse than one that is silent, because it reads as a gap
+   that needs work. Corrected, including why that file's hash will never match
+   upstream (local IIFE wrapper) so the difference is not read as tampering.
+
+2. SECURITY.md now DISCLOSES pdfjs-dist-classic 3.11.174 sitting below the fix
+   for CVE-2024-4367, why it cannot move, and that the gate enforces the
+   isEvalSupported:false mitigation. Disclosing a known-and-handled issue is
+   cheaper than a researcher rediscovering it, and it points them at the report
+   that would actually matter: a way past the mitigation.
+
+3. tools/README.md is new. Seventeen scripts, several documented NOWHERE. It
+   says for each: what it protects, when to run it, whether release-check runs
+   it, what it needs. Same failure mode as the dead-code audit — a check nobody
+   can find does not get run.
+
+STANDING PRACTICE: adding a script to tools/ without adding its row to
+tools/README.md is the thing that is now out of place. And never write a
+literal cache-bust stamp into prose anywhere in tools/ — gate stage 2 has no
+comment awareness and fails the build on an example.
 
 v302 — SECURITY SURFACES CLOSED OUT (v3.63.531). Open list unchanged: the one
 PDF item, which needs David.

@@ -458,10 +458,39 @@ WHEN AN ARTIFACT VERIFICATION FAILS:
 
 LAST RUN
 ────────────────────────────────────────────────────────────
-2026-09-20, at v3.63.524. Clean: zero orphans, zero dynamic
-execution in shipped code, zero dangling DOM lookups, zero
-write-only storage keys other than the intentional recovery
-stash.
+2026-09-20, at v3.63.531.
+
+Dead code (tools/audit-dead-code.mjs): clean. Zero orphans,
+zero dynamic execution in shipped code, zero dangling DOM
+lookups, zero write-only storage keys other than the
+intentional recovery stash.
+
+HTML injection (tools/check-html-injection.mjs): clean.
+126 sinks in js/, 103 static or fully escaped. Hostile markup
+seeded into AI names, project name, reference titles and a
+restored session's console HTML produced zero elements.
+
+Portable path (tools/check-file-protocol.mjs): clean. The
+file:// branch loads the classic pdf.js build and reads a PDF.
+
+Dependency advisories: five of six vendored libraries are past
+every published fix. The sixth is pdfjs-dist-classic 3.11.174,
+pinned below CVE-2024-4367's fix because no later release can
+load on file:// at all; mitigated by isEvalSupported:false,
+now asserted by the gate at every getDocument() call site.
+
+A NOTE ON METHOD, because two attempts failed before one
+worked. Static analysis does NOT answer the injection question
+in this codebase. A hand-rolled scanner cannot reliably find
+where a template literal ends, and both attempts reported
+consoleLog() and toast() strings as if they were sinks. Seed
+hostile data, boot the real app, and ask the DOM what became
+an element.
+
+And assert LIVENESS before safety. The first version of the
+injection check passed while proving nothing, because the
+seeded value never rendered. A check that cannot fail is worse
+than no check, because it is believed.
 
 Run it with:  node tools/audit-dead-code.mjs
 

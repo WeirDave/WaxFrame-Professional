@@ -1,5 +1,54 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.532 — Documentation caught up with what the code actually does
+
+**Released:** 2026-09-20
+**Build:** 20260920-026
+
+### What changed
+
+**The security policy was understating its own coverage.** It still said the version of the bundled
+document-export library could not be determined and was recorded as unknown. That stopped being true
+in v3.63.527, when the version was established by matching the file against published releases. The
+policy now says what is actually the case, including why that file's recorded fingerprint will never
+match the published one — its wrapper is modified deliberately — so nobody reads an expected
+difference as tampering.
+
+**The security policy now discloses the one dependency that is pinned below a published fix.** It is
+the PDF engine used only by the portable copy, it cannot be upgraded for reasons covered in
+v3.63.528, and the setting that neutralises it is enforced by the release process. Stating this
+plainly means a security researcher does not spend time rediscovering something already known,
+handled, and deliberately accepted — and it invites the report that would actually matter: a way past
+the mitigation.
+
+**The development tools now have an index.** That folder had grown to seventeen scripts and several
+were documented nowhere at all. `tools/README.md` lists every one: what it protects, when to run it,
+whether the release check runs it automatically, and what it needs. Adding a script without adding
+its row is now the thing that is out of place.
+
+This is the same failure that produced the dead-code tool two days ago: a check nobody can find does
+not get run, and a check that does not get run is not a check.
+
+**The audit record was refreshed** to cover everything verified since it was last written — dead
+code, HTML injection, the portable path, and dependency advisories — along with the two method notes
+worth keeping. Reading code to answer the injection question produced confident false alarms twice;
+asking the browser answered it. And a check must prove it is live before it is allowed to claim
+anything is safe, because the first version of one passed while testing nothing.
+
+### Verification
+- Gate: all 19 stages. Flow harness: 23 assertions. Injection checks: 14. Debug tests: 37. Portable
+  check: 9. Dead-code audit: zero findings.
+- Every claim edited here was re-checked against the code rather than carried forward.
+
+### Files touched
+`SECURITY.md`, `tools/README.md` (new), `docs/WaxFrame_Audit_Methodology_v1.txt`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v303.txt`, plus the routine stamp sweep. No application code changed.
+
+### Rollback
+`git revert HEAD` restores the previous documentation. Nothing in the app is affected.
+
+---
+
 ## v3.63.531 — Checkpoint files, library advisories, and a guard that can't be dropped by accident
 
 **Released:** 2026-09-20

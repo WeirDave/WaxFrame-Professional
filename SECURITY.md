@@ -28,14 +28,26 @@ WaxFrame is a **local-first, static browser application** with one disclosed rel
 - Because secrets live in browser storage, the most serious class of vulnerability is **anything that can execute script in the page** (XSS) — that could read stored keys. Reports of injection vectors (crafted backups, reference material, custom-AI configs, imported data of any kind) are especially valued.
 - Full session backups intentionally contain your content and credentials. This is by design and is clearly warned at export time. Only restore backups you created or trust — the restore warning is intentionally non-dismissable.
 
+## Known, accepted, and mitigated
+
+One vendored dependency is pinned below a published fix and cannot be upgraded. It is disclosed here so nobody spends time rediscovering it.
+
+**PDF.js 3.11.174, used only by the portable `file://` copy** - below the fix for GHSA-wgrm-67xf-hhpq (CVE-2024-4367). It cannot be upgraded: `pdfjs-dist` has published an ES-module build only since 4.x, and browsers refuse module imports across `file://` origins, so no later release can load from a local folder at all. Moving off it would require adding a build step, which this project deliberately does not have.
+
+The mitigation is `isEvalSupported: false`, passed wherever a PDF is opened. The release check asserts it at every such call site and fails the build if one is missing, so it cannot be dropped silently during an unrelated edit.
+
+The copy served over the web is unaffected - it runs a current PDF.js and is past every published advisory, including GHSA-hq66-cqwq-w95j, which covers several releases in the same major version.
+
+If you can demonstrate script execution through the portable PDF path despite that mitigation, that is a genuine finding and very much worth reporting.
+
 ## Dependency tracking
 
 WaxFrame self-hosts its front-end libraries as minified files in `lib/` (for air-gapped / offline use). To keep them watched for advisories:
 
 - [`docs/vendored-dependencies.json`](docs/vendored-dependencies.json) records every executable bundle, its identified upstream version, license, and SHA-256 hash. The release check fails on an unlisted or changed bundle.
-- The version of `lib/docx.min.js` cannot be established from the minified artifact. It remains explicitly marked `unknown`; it should be replaced from a documented upstream release before making version-specific security claims about it.
+- `lib/docx.min.js` carries no version string of its own, so its version was established by matching: every docx release in the plausible window had its published browser bundle hashed against ours. It is **9.7.1**, and it is now declared for Dependabot like the others. The file is not byte-identical to the published artifact - the UMD wrapper was replaced locally with a plain IIFE - so its recorded hash will never match upstream. That is expected, and is recorded next to the version so it does not read as tampering. When upgrading, take the published bundle from the new release and re-apply the same wrapper change.
 
-- **PDF.js (`pdfjs-dist`), Mammoth (`mammoth`), and JSZip (`jszip`)** are declared in `package.json` purely so **Dependabot** can alert on known CVEs. That manifest is not a build system — WaxFrame has no build step.
+- **PDF.js (`pdfjs-dist`), Mammoth (`mammoth`), JSZip (`jszip`) and docx (`docx`)** are declared in `package.json` purely so **Dependabot** can alert on known CVEs. That manifest is not a build system — WaxFrame has no build step.
 - **SheetJS (`xlsx`)** is *not* tracked via Dependabot. SheetJS no longer publishes to the npm registry (npm is permanently stuck at the old `0.18.5`), so npm-based scanners report stale and misleading results. WaxFrame ships SheetJS from the authoritative SheetJS CDN and its version is tracked manually against <https://cdn.sheetjs.com/>. The shipped version is kept ahead of known advisories.
 
 ## Known mitigations in place
