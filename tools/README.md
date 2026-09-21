@@ -5,7 +5,7 @@ release ZIP is built from the repository root by
 `.github/workflows/release-assets.yml`, and nothing here is referenced by any
 page WaxFrame serves.
 
-This file exists because the folder grew to seventeen scripts and several of
+This file exists because the folder grew to twenty scripts and several of
 them were documented nowhere. That is the same failure as an audit nobody can
 re-run in one command: a check that people cannot find does not get run, and a
 check that does not get run is not a check. If you add a script here, add a row
@@ -53,9 +53,20 @@ person to read the result, and `release-check.mjs` stays dependency-free.
 | `flow-check.mjs` | Touching setup-screen navigation, the round loop, Change Builder, or checkpoints | Chrome |
 | `check-html-injection.mjs` | Touching anything that renders user, AI, or imported text | Chrome |
 | `check-file-protocol.mjs` | Touching the pdf.js loader or the vendored pdf.js builds | Chrome |
+| `check-export-redaction.mjs` | Touching anything that lands in a Scout bundle or a checkpoint | Chrome |
+| `check-import-bounds.mjs` | Touching document import or anything that writes `LS_PROJECT` | Chrome |
+| `check-hostile-provider.mjs` | Touching the model-server import, `makeCleanProviderId`, or the budget/param learning path | Chrome |
 | `audit-dead-code.mjs` | Every few releases, and after removing anything | — |
 | `audit-html-sinks.mjs` | Alongside `check-html-injection.mjs`, to get the list of sites to read | — |
 | `capture.mjs` | Producing screenshots | Chrome |
+
+> **Two of these are RED against the shipped code, on purpose.**
+> `check-export-redaction.mjs` and `check-import-bounds.mjs` were written from
+> the 2026-09-21 security review and reproduce open backlog bugs 1–3. They are
+> the acceptance tests for those entries, so they stay red until the fixes
+> land — which is also why neither is a gate stage yet. Wire both in once they
+> go green. `check-hostile-provider.mjs` passes today and can be wired in
+> whenever.
 
 ### What each one actually answers
 
@@ -93,6 +104,39 @@ callers.
 interpolated values are not escaped. **It over-reports on purpose.** Its job is
 to hand a person a short list to read, not to give a verdict;
 `check-html-injection.mjs` is what gives the verdict.
+
+**`check-export-redaction.mjs`** — seeds credential-shaped canaries into the
+failure record, the ring buffer and the console, then builds a **real** Scout
+bundle and a **real** checkpoint and searches the finished bytes for them.
+
+This exists because `test-debug-redaction.mjs` passes and is not enough. That
+test proves `scrubFailureRecord` works *when called*; it never assembles a
+bundle, so it cannot see a second unscrubbed copy of the same data elsewhere in
+the same file. Which is what shipped: `bundleForScout()` scrubs
+`envelope.lastFailure` and `envelope.liveConsole`, then embeds
+`checkpoint.IDB_SESSION` straight from `idbGet()` — carrying `lastFailure`,
+`ringBuffer` and `consoleHTML` verbatim. A redaction control is worth exactly
+what the shipped file says it is worth, so this reads the shipped file.
+
+**`check-import-bounds.mjs`** — generates a decompression bomb with the
+project's own vendored JSZip (never committed — a public repo has no business
+carrying one), feeds it to the real `extractFromFile`, and measures the cost.
+Then it overflows `saveProject()` and asks what the user was told.
+
+The second half is the one that bites without any attacker: `saveProject`
+wraps its write in a try/catch that only `console.warn`s, so going over quota
+silently drops the **entire** project blob — name, version, goal fields,
+starting document — with nothing on screen.
+
+**`check-hostile-provider.mjs`** — pins three guards that all currently hold
+and that a refactor could delete without anything going red: the
+`makeCleanProviderId` `taken()` check that stops a model server claiming a
+configured provider's id (and therefore repointing its endpoint), the
+`budgetKeyFor` allowlist that stops a provider's error text putting an
+arbitrary key into the request body, and the absence of prototype pollution
+from either. It asserts the hostile input really is parsed through before
+asserting the guard held — otherwise it would pass on a parser that returns
+`null` for everything.
 
 ---
 

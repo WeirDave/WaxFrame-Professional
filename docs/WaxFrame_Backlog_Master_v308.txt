@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v307
-2026-09-20
+WaxFrame Backlog Master v308
+2026-09-21
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,30 @@ ships.
 
 
 
+
+v308 — SECURITY REVIEW (2026-09-21). THREE new open bugs, all
+reproduced against the running app rather than inferred from
+reading it, and all three shipped with an executable acceptance
+test rather than a description of one:
+  tools/check-export-redaction.mjs  -> bug 1
+  tools/check-import-bounds.mjs     -> bugs 2 and 3
+Both are RED today on purpose. They go green when the bugs are
+fixed, and only then should either become a gate stage.
+
+The review also pinned three guards that currently HOLD, in
+tools/check-hostile-provider.mjs (green today): the
+makeCleanProviderId taken() check, the budgetKeyFor allowlist,
+and the absence of prototype pollution from either. Nothing to
+do — the file exists so that deleting one of them is loud.
+
+One lesson worth keeping, because it is the reason bug 1 went
+unnoticed: tools/test-debug-redaction.mjs passes, and the
+tools/README row for it claimed "secrets never reach a Scout
+bundle". It proves no such thing. It unit-tests scrubFailureRecord
+against fixtures and never assembles a bundle, so it is
+structurally blind to a second unscrubbed copy of the same data
+elsewhere in the same file. A redaction test that does not read
+the finished artifact is testing the scrubber, not the export.
 
 v307 — LOCK BUG STRUCK (v3.63.536). ONE open item: the PDF import test.
 
@@ -562,7 +586,165 @@ that actually times out. Anthropic (CF Worker proxy) and Gemini (needs
 ════════════════════════════════════════════════════════════
 OPEN BUGS
 ════════════════════════════════════════════════════════════
-None currently open.
+
+1. Exported files carry an unscrubbed copy of the session
+   debug channels
+   ─────────────────────────────────────────────────────────
+   WHAT:   Two export surfaces ship the raw IndexedDB session
+           blob, which carries lastFailure, ringBuffer and
+           consoleHTML exactly as captured.
+
+           (a) SCOUT BUNDLE. bundleForScout() scrubs
+               envelope.lastFailure through scrubFailureRecord
+               and scrubs envelope.liveConsole, then embeds
+               checkpoint.IDB_SESSION straight from idbGet().
+               The scrubbed and unscrubbed copies sit in the
+               same file. Measured on the real bundle, with a
+               credential-shaped canary seeded through
+               captureFailure and consoleLog:
+                 envelope.lastFailure            clean, [REDACTED]
+                 envelope.liveConsole            clean
+                 checkpoint.IDB_SESSION.lastFailure   CANARY
+                 checkpoint.IDB_SESSION.consoleHTML   CANARY
+                 checkpoint.IDB_SESSION.ringBuffer    CANARY
+               envelope.ringBuffer is unscrubbed too — same
+               class, and it is the top-level copy, so fixing
+               only the embedded one leaves it.
+               LS_HIVE *is* redacted (_redactKeysIn, v3.63.140),
+               which is what makes this an oversight rather
+               than a policy: IDB_SESSION was added later
+               (v3.63.286) and never audited against it.
+
+           (b) CHECKPOINT. _buildCheckpointEnvelope applies no
+               redaction at all. _redactSessionContent exists
+               but only ever runs on the diagnostic path, and
+               only when the user ticks a box. With the
+               shipping defaults (session ON, API keys OFF) the
+               file carries all three channels. The API-keys
+               row is correctly off and correctly excluded —
+               the leak rides in on `session`, which is on.
+               The Save panel's own summary says
+               "session (0 rounds)" while the file carries the
+               ring buffer and the failure record.
+
+   WHY:    js/storage.js:2226 states the contract: these blobs
+           are "safe to share in a public bug report", and
+           help.html owns that flow. lastFailure.raw is the
+           provider's entire error body; consoleHTML is the
+           console transcript as markup, including provider
+           error text verbatim. Checkpoints are shared more
+           casually still — they are the documented way to hand
+           someone an exact-model recipe.
+           scrubFailureRecord's own comment (v3.63.493) sets
+           the right standard and this breaks it: "Neither is
+           expected to contain a credential — but 'not expected
+           to' is exactly the assumption that puts secrets in
+           exports."
+           This is the side-channel case CLAUDE.md warns about
+           under diagnostic redaction: audit EVERY field,
+           because ring buffers and separate blobs are where
+           secrets hide.
+
+   STATE:  OPEN. Reproduced end to end; no fix attempted.
+           Not known to have leaked a real credential — the
+           point is that nothing stops it and the file claims
+           otherwise.
+
+   WHERE:  js/wf-debug.js bundleForScout — the `checkpoint`
+           object (IDB_SESSION) and the top-level `ringBuffer`.
+           js/storage.js _buildCheckpointEnvelope — outSessionIDB
+           / outSessionLS go in raw.
+           js/storage.js _redactSessionContent — the redactor
+           that already exists and is not called from either.
+           js/wf-debug.js scrubFailureRecord — the scrubber to
+           reuse.
+
+   DONE:   node tools/check-export-redaction.mjs exits 0. That
+           means no canary survives anywhere in either artifact,
+           while the liveness assertions still confirm the
+           canaries reached live state and IndexedDB, and the
+           legitimate content is still present. Then wire it
+           into release-check.mjs as a gate stage and correct
+           the tools/README row for test-debug-redaction.mjs,
+           which currently overclaims.
+
+
+2. A failed project save destroys the whole project blob and
+   says nothing
+   ─────────────────────────────────────────────────────────
+   WHAT:   saveProject() wraps its localStorage write in a
+           try/catch that only console.warn()s. Go over quota
+           and setItem never lands, so LS_PROJECT is not
+           partially written — it is not written at all.
+           Measured with a 12 MB reference doc against the
+           ~5 MB quota:
+             doc present in memory (UI looks fine)  true
+             saveProject threw to the caller        no
+             waxframe_v2_project in localStorage    ABSENT
+             project name survived                  no
+             toasts shown to the user               none
+           Project name, version, the six goal fields, the
+           starting document and the reference list all stop
+           persisting together. The user finds out on reload.
+
+   WHY:    No attacker needed — an ordinary large document does
+           it. The failure is silent by construction: the catch
+           swallows it, nothing re-raises, nothing toasts, and
+           the screen still shows the document as imported. It
+           presents as "WaxFrame lost my work", which is the
+           worst possible way to learn about a storage limit.
+
+   STATE:  OPEN. Reproduced; no fix attempted.
+
+   WHERE:  js/storage.js saveProject — the catch that warns and
+           returns. saveHive has the same shape and should be
+           checked in the same pass.
+
+   DONE:   Part 2 of node tools/check-import-bounds.mjs exits 0:
+           the user is told the save failed, and the rest of the
+           project still persists. Shape of the fix is a product
+           call — most likely keep the oversized doc out of
+           LS_PROJECT (IndexedDB already holds session state
+           without a size limit) and surface a real message
+           rather than a console line.
+
+
+3. Document import has no size or expansion bound
+   ─────────────────────────────────────────────────────────
+   WHAT:   extractFromFile has no cap of any kind. HARD_INPUT_CAP
+           (8 MB) is the ICON upload path only. .docx and .xlsx
+           are ZIP containers, so the on-disk size says nothing
+           about the cost. Measured against the real import
+           routine with a bomb built from the vendored JSZip:
+             279 KB .docx  ->  200 MB decompressed  (734:1)
+             heap 16 MB -> 618 MB  (+602 MB), 4.3 s
+             208,103,998 chars accepted, no error, no warning
+           The practical ceiling is V8's ~512 MB string limit,
+           not anything WaxFrame enforces.
+
+   WHY:    Feeds bug 2 directly — the extracted text goes into
+           referenceDocs and then into LS_PROJECT — and then
+           into the prompt sent to every AI in the hive. The
+           import is the one place a bound costs nothing and
+           buys both.
+           Reachable by social engineering rather than by
+           attack: reference material and checkpoints are meant
+           to be passed between people, so "someone sent me this
+           .docx" is the normal case, not the exotic one.
+
+   STATE:  OPEN. Reproduced; no fix attempted.
+
+   WHERE:  js/app.js extractFromFile and its per-format
+           branches; js/app.js:16776 HARD_INPUT_CAP for the
+           existing icon-path precedent to copy.
+
+   DONE:   Part 1 of node tools/check-import-bounds.mjs exits 0:
+           the bomb is refused, or the extracted text is capped,
+           with the user told which. The test's
+           MAX_REASONABLE_CHARS is a placeholder — set it to the
+           real limit when one is chosen. A bound on the
+           EXTRACTED length is what matters; a bound on file
+           size alone does not stop a 279 KB bomb.
 
 ════════════════════════════════════════════════════════════
 OPEN FEATURES
