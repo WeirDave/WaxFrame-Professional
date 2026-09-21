@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v312
+WaxFrame Backlog Master v313
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,12 @@ ships.
 
 
 
+
+v313 — PDF PASSWORD PROMPT SETTLED (2026-09-21). No code
+change; the behaviour shipped in v3.63.540 and David confirmed it
+should stay. Recorded in SETTLED DECISIONS because it is exactly
+the shape of thing a later reader files as a missing feature:
+pdf.js accepts a password and WaxFrame declines to pass one.
 
 v312 — SYNTHETIC PDF CORPUS (v3.63.540). The PDF item is now
 PARTIAL rather than OPEN: the half that can be generated is done
@@ -824,6 +830,44 @@ back into OPEN FEATURES with that trigger named.
    REVISIT IF: someone reproduces it. Then it is a NEW entry
            with the [wf:lock] output attached, not a revival of
            this one.
+
+3. Password-protected PDFs — NO password prompt, by design
+   (decided 2026-09-21)
+   ─────────────────────────────────────────────────────────
+   WHAT:   A password-protected PDF is refused with an
+           explanation. WaxFrame does not offer a password field
+           and does not pass a password to pdf.js, which
+           supports one.
+   DECIDED: Keep it that way. Confirmed by David 2026-09-21:
+           "no prompt, keep it failing with an explanation."
+   WHY:    A password box is a credential surface, and this
+           project's rules treat those as something to avoid
+           rather than something to add carefully. The
+           alternative costs a field that must not be logged,
+           must not reach a Scout bundle or a checkpoint, must
+           not be autofilled, and must not be persisted — four
+           new ways for the export-redaction work of v3.63.537
+           to be undone by a later change.
+           Removing the protection at source is also more
+           reliable: it happens once in the tool that applied
+           it, rather than every time the document is imported.
+           The user keeps a working copy either way.
+   NOTE:   This is a DELIBERATE gap, not a missing feature, and
+           it will read as one to a fresh auditor — pdf.js takes
+           a password parameter and WaxFrame simply does not use
+           it. The message names the reason and the fix, which
+           is what makes the refusal acceptable:
+           js/app.js extractPDF, PasswordException branch.
+           tools/check-pdf-shapes.mjs asserts both halves: that
+           the wording says "password-protected", and that
+           pdf.js's own "No password given" never reaches the
+           user.
+   REVISIT IF: someone reports that removing the password at
+           source is not possible for their files — a
+           read-only-protected document they did not create and
+           cannot re-export. That is a real case and would
+           change the balance. Not on a schedule, and not
+           because the gap looks untidy.
 
 NOTES ON FORMAT
 ════════════════════════════════════════════════════════════
