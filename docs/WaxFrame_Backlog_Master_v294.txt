@@ -40,8 +40,9 @@ It earned its keep twice before it was even committed:
     card while state said otherwise. A test that has never failed proves
     nothing, so this was run deliberately rather than assumed.
   • Building it surfaced dead code: updateBuilderRequirements() wrote to
-    #req-builder and #builderContinueBtn, neither of which has existed since
-    the standalone Builder screen was retired in v3.63.147. Removed. The first
+    the req-builder and builderContinueBtn elements, neither of which has
+    existed since the standalone Builder screen was retired in v3.63.147.
+    Removed. The first
     removal attempt broke navigation and the harness caught THAT too, within a
     minute of being written.
 
