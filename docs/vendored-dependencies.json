@@ -36,16 +36,18 @@
       "files": {
         "lib/pdf.min.js": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
         "lib/pdf.worker.min.js": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b"
-      }
+      },
+      "note": "Pinned at 3.11.174 because that is the last pdfjs-dist major to publish a classic (non-module) build, and browsers refuse ESM imports across file:// origins. It loads ONLY on file://, and the runtime mitigation for CVE-2024-4367 is isEvalSupported:false, passed at every getDocument() call site. Upgrading this is not a matter of picking a newer version: no newer version exists in a form that can load here without adding a build step."
     },
     {
       "name": "pdfjs-dist-esm",
-      "version": "4.10.38",
+      "version": "6.3.289",
       "license": "Apache-2.0",
       "files": {
-        "lib/pdf.min.mjs": "27fc2a057a00f92a4334ad06e17dbd7259912954e9fb7f76400bcca5fd190a9c",
-        "lib/pdf.worker.min.mjs": "1baa1844c89c80a5b2797c916e75ab29254be46d8e9cb53cb6364d7aad84be36"
-      }
+        "lib/pdf.min.mjs": "f80490490320511e5df18c580b9edd6b5db8058dceebaf6f161992e0a964b9e2",
+        "lib/pdf.worker.min.mjs": "8ab0e5e30031b4a06ecfddd5ae9562f0227f830ee7ec9ed1a968b134243d2386"
+      },
+      "note": "The build served over http(s). pdfjs-dist ships ESM only from 4.x onward — there is no classic build in any 4.x, 5.x or 6.x release, which is why the file:// fallback below is pinned to the last major that had one."
     },
     {
       "name": "sheetjs",

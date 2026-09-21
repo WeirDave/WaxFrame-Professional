@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v298
+WaxFrame Backlog Master v299
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,32 @@ ships.
 
 
 
+
+v299 — PDF.JS UPGRADED (v3.63.528). Old #2 struck; one item remains.
+
+Closed, but not the way the entry assumed. The ESM build went 4.10.38 ->
+6.3.289 and verified clean. The file:// fallback CANNOT follow and this is
+permanent: pdfjs-dist has published ESM only since 4.x, so no 4.x, 5.x or 6.x
+release exists in a form a file:// page can load. 3.11.174 is the last major
+with a classic build. Recorded in docs/vendored-dependencies.json so nobody
+re-opens it as "the fallback is 200 releases behind" — it is pinned by a
+browser rule, not by neglect. Getting off it would mean adding a build step,
+which §3 forbids.
+
+Found on the way, and the more useful finding: five URLs in the pdf.js load
+path had no working cache-bust — two frozen ~90 releases, three with none.
+Replacing lib/pdf.min.mjs did not change what a returning browser ran. Proved
+live: the page kept reporting 4.10.38 after the file was replaced.
+
+STANDING PRACTICE, because this will recur: a release sweep rewrites the stamp
+it is replacing and nothing else, so a stamp that misses ONE release is skipped
+by every release after it and freezes silently. The gate now checks ?v= stamps
+in js/ as well as HTML, which is where the frozen pair lived.
+
+tools/check-file-protocol.mjs is new: opens the real index.html from disk in
+headless Chrome and asserts the portable path. Run it when touching the pdf.js
+loader or the vendored builds. Not a gate stage — release-check is pure Node
+stdlib by design and would start needing a browser.
 
 v298 — DOCX VERSION IDENTIFIED (v3.63.527). Old #3 struck; items renumbered
 1..2.
@@ -363,24 +389,6 @@ acceptance test. Items needing David rather than an assistant say so.
            or a file — a Recheck is run, and a model shows a context figure
            sourced from the API.
 
-
-2. PDF.js 4.10.38 → 6.x migration
-   ─────────────────────────────────────────────────────────
-   WHAT:   Major-version upgrade of the vendored PDF.js pair.
-   WHY:    Staying several majors behind eventually stops being free. Not
-           urgent: no open advisories against 4.10.38, and
-           isEvalSupported:false is verified.
-   STATE:  OPEN, deliberately deferred. Wants a dedicated release — it is
-           the kind of change that breaks one of the two load paths
-           silently.
-   WHERE:  lib/pdf.min.mjs + lib/pdf.worker.min.mjs (ESM) and
-           lib/pdf.min.js + lib/pdf.worker.min.js (UMD, file:// fallback);
-           js/pdf-loader.mjs, js/pdf-loader-bootstrap.js;
-           docs/vendored-dependencies.json for the hashes.
-   DONE:   Both paths smoke-tested — ESM from https AND the UMD fallback
-           from file:// — the dependency inventory updated with new hashes,
-           and the superseded vendor files deleted in the SAME release
-           (spell the extensions out; .mjs vs .js has burned this project).
 
 NOTES ON FORMAT
 ════════════════════════════════════════════════════════════

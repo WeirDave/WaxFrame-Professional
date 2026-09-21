@@ -37,7 +37,7 @@
 //     fixing it.
 //   • Regex-based, not AST-based. Trading completeness for speed +
 //     zero deps. The patterns target the specific shapes WaxFrame's
-//     codebase uses (e.g. `?v=3.X.Y` cache-bust idiom, `var(--token)`
+//     codebase uses (e.g. the query-string cache-bust idiom, `var(--token)`
 //     CSS calls). A more general validator would over-fit.
 // ============================================================
 
@@ -209,12 +209,29 @@ for (const file of htmlFiles) {
 // "a file carrying a Build: header must carry the current one" — files with
 // no header are skipped, so adding one is opt-in.
 for (const file of [...jsFiles, ...toolFiles]) {
-  if (!buildStamp) break;
   const content = read(file);
-  const m = content.match(/\/\/\s*Build:\s*(\d{8}-\d{3})/);
-  if (m && m[1] !== buildStamp) {
-    const lineNum = findLine(content, m[0]);
-    fail(rel(file), `stale // Build: ${m[1]} (expected ${buildStamp})`, lineNum);
+  if (buildStamp) {
+    const m = content.match(/\/\/\s*Build:\s*(\d{8}-\d{3})/);
+    if (m && m[1] !== buildStamp) {
+      const lineNum = findLine(content, m[0]);
+      fail(rel(file), `stale // Build: ${m[1]} (expected ${buildStamp})`, lineNum);
+    }
+  }
+  // v3.63.528 — the ?v= cache-bust check above walked HTML only, so a stamp
+  // written into a JS file was never checked. Two were: the pdf.js loader
+  // builds its own <script> src and its own dynamic import(), and both sat at
+  // version 3.63.436 for ninety releases. A release sweep rewrites the stamp
+  // it is replacing and nothing else, so a
+  // stamp that misses a single sweep is skipped by every sweep after it and
+  // freezes silently. That is not cosmetic — a returning browser keeps running
+  // the cached file, so replacing a vendored library changed nothing for
+  // anyone who had loaded the page before.
+  if (appVersion) {
+    for (const m of content.matchAll(/\?v=([\d.]+)/g)) {
+      if (m[1] !== appVersion) {
+        fail(rel(file), `stale ?v=${m[1]} (expected ${appVersion})`, findLine(content, m[0]));
+      }
+    }
   }
 }
 

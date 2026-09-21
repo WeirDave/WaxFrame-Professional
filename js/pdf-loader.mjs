@@ -1,7 +1,7 @@
 // ============================================================
 //  WaxFrame — pdf-loader.mjs
-// Build: 20260920-021
-//  Bootstraps pdf.js 4.x by importing the ESM build and
+// Build: 20260920-022
+//  Bootstraps pdf.js 6.x by importing the ESM build and
 //  stashing it on window so the rest of app.js (which
 //  references window.pdfjsLib) keeps working unchanged.
 //  Extracted from the formerly-inline <script type=module>
@@ -23,7 +23,7 @@
 // ============================================================
 
 try {
-  const pdfjsLib = await import("../lib/pdf.min.mjs");
+  const pdfjsLib = await import("../lib/pdf.min.mjs?v=3.63.528");
   window.pdfjsLib = pdfjsLib;
 } catch (err) {
   window._pdfjsLoadError = err;

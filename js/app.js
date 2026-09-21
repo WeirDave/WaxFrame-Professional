@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-021
+// Build: 20260920-022
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-021';         // build stamp — update each session
+const BUILD = '20260920-022';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13469,8 +13469,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs';  // 4.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.528'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.528';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -13478,7 +13478,7 @@ async function extractPDF(file) {
   const arrayBuffer = await file.arrayBuffer();
   // isEvalSupported: false — was the runtime mitigation for CVE-2024-4367
   // (arbitrary JS execution via crafted font FontMatrix in a malicious PDF).
-  // As of pdf.js 4.10.38 this is fixed at the library level, but we keep the
+  // As of pdf.js 4.2.67 this is fixed at the library level, but we keep the
   // option set as defense-in-depth — WaxFrame only extracts text from PDFs
   // and never renders them interactively, so disabling eval has no cost.
   const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;

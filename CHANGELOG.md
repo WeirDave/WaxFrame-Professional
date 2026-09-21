@@ -1,5 +1,63 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.528 — PDF.js upgraded, and the cache-busting that had quietly stopped working
+
+**Released:** 2026-09-20
+**Build:** 20260920-022
+
+### What changed
+
+**The PDF engine used on waxframe.com moves from 4.10.38 to 6.3.289.** PDF import was verified
+end-to-end on the new build: document outline, per-page text, page rendering and the sparse-page
+detection that decides when to offer OCR all behave as before.
+
+**The portable copy still runs 3.11.174, and now it is clear why.** WaxFrame ships two ways — served
+over the web, and as a folder you unzip and open by double-clicking `index.html`. The second runs on
+`file://`, where browsers refuse to load the modern module build at all, so a different build is
+loaded there. PDF.js has published **only** the module build since 4.x; there is no 4.x, 5.x or 6.x
+release in a form that can load from a local folder. 3.11.174 is the last one that can, which makes
+this a fixed constraint rather than an upgrade nobody got round to. The dependency inventory now says
+so, so the question does not get reopened every time someone notices the version gap.
+
+Nothing about the portable copy's safety changes: the runtime mitigation that closes CVE-2024-4367
+is passed at every call that opens a PDF, on both builds, and both call sites were re-checked.
+
+**Replacing a library had stopped reaching anyone who had visited before.** Files are versioned by a
+stamp in their address so browsers know to re-fetch them. Two of the addresses in the PDF loader had
+been frozen at an old stamp for about ninety releases, and three others carried none at all. The
+effect: a returning browser kept using its cached copy. This was not theoretical — during this
+upgrade the page kept reporting the old PDF.js version after the file on disk had already been
+replaced. All five now carry the current version and move with every release.
+
+The release gate checked these stamps in HTML files only, which is exactly how a stamp written into
+a script file went unnoticed for ninety releases. It now checks script files too. The failure mode
+is worth naming: a release sweep updates the stamp it is replacing, so a stamp that misses a single
+release is skipped by every release afterwards and freezes silently.
+
+**A new development check, `tools/check-file-protocol.mjs`.** It opens the real `index.html` from
+disk in a real browser and confirms the portable path picks the right build and can read a PDF. No
+existing check could see that branch: the release gate never opens a browser, and the flow harness
+drives one over the web, which is the half that was never in doubt. It builds its own PDF rather
+than carrying a sample file.
+
+### Verification
+- PDF.js 6.3.289 over http: outline, both pages of text, page render producing real ink rather than
+  a blank canvas, and WaxFrame's own import routine returning the expected document.
+- PDF.js 3.11.174 on a genuine `file://` page in real headless Chrome: correct build selected,
+  correct script injected, no error surfaced, and a PDF parsed with its outline and text intact.
+- Gate: all 19 stages. Flow harness: 23 assertions. Dead-code audit: zero findings.
+
+### Files touched
+`lib/pdf.min.mjs`, `lib/pdf.worker.min.mjs`, `js/pdf-loader.mjs`, `js/pdf-loader-bootstrap.js`,
+`js/app.js`, `tools/check-file-protocol.mjs` (new), `tools/release-check.mjs`, `package.json`,
+`docs/vendored-dependencies.json`, `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v299.txt`, plus the
+routine stamp sweep.
+
+### Rollback
+`git revert HEAD` restores PDF.js 4.10.38 and the frozen cache-busts.
+
+---
+
 ## v3.63.527 — The vendored docx library's version is known, not guessed
 
 **Released:** 2026-09-20
