@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260921-002
+// Build: 20260921-003
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -913,9 +913,107 @@ function saveProject() {
     pastedDocument: document.getElementById('pasteText')?.value || '',
     referenceDocs: snapshotReferenceDocs(),
   };
-  try { localStorage.setItem(LS_PROJECT, JSON.stringify(proj)); } catch(e) { console.warn('[saveProject] write failed:', e); }
+  _writeProjectWithFallback(proj);
   updateLaunchRequirements();
   updateMaskPreview();
+}
+
+// v3.63.539 — Quota-aware project write.
+//
+// The previous version was one try/catch that console.warn()'d and returned.
+// That had two consequences and neither was visible on screen:
+//
+//   1. localStorage.setItem is all-or-nothing. When the write threw, NOTHING
+//      landed — so an oversized reference doc did not cost the user that doc,
+//      it cost them the entire project blob: name, version, all six goal
+//      fields, the starting document and the reference list, together.
+//   2. The only signal was a console line. The document still showed as
+//      imported, every field still had its value on screen, and the loss
+//      surfaced on the next reload as "WaxFrame lost my work".
+//
+// Now the oversized reference text is dropped and the write is retried, so
+// the small, irreplaceable, hand-typed fields survive — and the user is told
+// which document could not be kept, while it is still open in front of them.
+// Reference text is the right thing to shed: it came from a file the user
+// still has, and the card keeps its name and its character count so the doc
+// is re-addable rather than silently gone.
+//
+// Returns true when the full blob landed, false when it degraded or failed.
+function _writeProjectWithFallback(proj) {
+  try {
+    localStorage.setItem(LS_PROJECT, JSON.stringify(proj));
+    return true;
+  } catch (e) {
+    if (!_isQuotaError(e)) {
+      console.warn('[saveProject] write failed:', e);
+      if (typeof toast === 'function') {
+        toast('⚠️ Could not save this project to browser storage. Save a checkpoint before closing the tab.', 12000);
+      }
+      return false;
+    }
+  }
+
+  // Over quota. Shed reference-doc TEXT, biggest first, until it fits.
+  const docs = Array.isArray(proj.referenceDocs) ? proj.referenceDocs : [];
+  const order = docs
+    .map((d, i) => ({ i, len: (d && typeof d.text === 'string') ? d.text.length : 0 }))
+    .filter(x => x.len > 0)
+    .sort((a, b) => b.len - a.len);
+
+  const shed = [];
+  const degraded = { ...proj, referenceDocs: docs.map(d => ({ ...d })) };
+  for (const { i, len } of order) {
+    const d = degraded.referenceDocs[i];
+    shed.push({ name: (d && d.name) || 'a reference document', len });
+    d.text = '';
+    d._droppedForQuota = true;
+    d._droppedChars = len;
+    try {
+      localStorage.setItem(LS_PROJECT, JSON.stringify(degraded));
+      const names = shed.map(s => `"${s.name}"`).join(', ');
+      console.warn('[saveProject] over quota — saved without reference text for:', names);
+      if (typeof toast === 'function') {
+        toast(`⚠️ Browser storage is full. The project was saved, but the text of ${names} ` +
+              `could not be kept — re-import ${shed.length === 1 ? 'that file' : 'those files'} ` +
+              `after freeing space, or save a checkpoint instead.`, 16000);
+      }
+      return false;
+    } catch (e2) {
+      if (!_isQuotaError(e2)) { console.warn('[saveProject] degraded write failed:', e2); break; }
+    }
+  }
+
+  // Still will not fit with every reference text dropped. Keep the typed
+  // fields, which are the ones that cannot be re-imported from a file.
+  try {
+    localStorage.setItem(LS_PROJECT, JSON.stringify({ ...proj, referenceDocs: [], pastedDocument: '' }));
+    console.warn('[saveProject] over quota — saved project fields only');
+    if (typeof toast === 'function') {
+      toast('⚠️ Browser storage is full. Your project details were saved, but the starting document ' +
+            'and reference material were not. Save a checkpoint to keep this session.', 18000);
+    }
+  } catch (e3) {
+    console.warn('[saveProject] write failed even after shedding everything:', e3);
+    if (typeof toast === 'function') {
+      toast('⚠️ Browser storage is full and this project could NOT be saved. Save a checkpoint ' +
+            'before closing the tab, or your work will be lost.', 20000);
+    }
+  }
+  return false;
+}
+
+// Quota errors are reported inconsistently across browsers: Chrome throws
+// QuotaExceededError (code 22), Firefox NS_ERROR_DOM_QUOTA_REACHED (1014),
+// and older Safari QUOTA_EXCEEDED_ERR. Matching on name alone misses two of
+// the three, and a non-quota failure must NOT take the shedding path.
+function _isQuotaError(e) {
+  if (!e) return false;
+  const name = String(e.name || '');
+  const code = e.code;
+  return name === 'QuotaExceededError' ||
+         name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+         name === 'QUOTA_EXCEEDED_ERR' ||
+         code === 22 || code === 1014;
 }
 
 // v3.56.38 — Import-trust hardening. Custom AIs entered through "Add Custom

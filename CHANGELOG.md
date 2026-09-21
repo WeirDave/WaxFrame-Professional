@@ -1,5 +1,64 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.539 — Imported files are bounded, and a failed save now says so
+
+**Released:** 2026-09-21
+**Build:** 20260921-003
+
+### What changed
+
+**Importing a document now has limits, and hitting one says which.** Until this release nothing
+capped an import at any stage. `.docx`, `.pptx` and `.xlsx` files are compressed containers, so the
+size on disk says very little about the cost of opening one: a 279 KB file can expand to 200 MB of
+text, and that text was accepted whole — into memory, into browser storage, and into the prompt sent
+to every AI in the hive.
+
+Three limits now apply, each catching something the others cannot:
+
+- A **100 MB** limit on the file itself, checked before it is read.
+- A **32 MB** limit on any single text part inside a compressed container. The size is read from the
+  container's own index before anything is decompressed, so an over-sized file is refused in
+  milliseconds rather than after the damage.
+- A **2,000,000 character** limit on the extracted text. This is the only one that applies to `.txt`
+  and `.pdf`, which have no container to inspect.
+
+**Embedded images and video are exempt from the middle limit.** They are legitimately large and are
+never read as text, so a document carrying 40 MB of pictures imports normally.
+
+Files over a limit are **refused with a message naming the limit and the actual size**, not
+truncated. Handing back half a document silently would leave no way to know the AIs were reviewing a
+fragment.
+
+### Saving
+
+**A project that is too large for browser storage no longer disappears.** Browser storage writes are
+all-or-nothing, so when a project exceeded the quota the write failed completely: the project name,
+version, all six goal fields, the starting document and the reference list were lost together, not
+just the oversized item. Nothing on screen changed, every field still showed its value, and the loss
+only surfaced on the next reload.
+
+Reference-document text is now dropped, largest first, and the save retried, so the typed fields —
+the ones that cannot be re-imported from a file — survive. A message names the documents whose text
+could not be kept, while they are still on screen, and each keeps its name and character count so it
+can be re-added. If nothing fits even then, the project details are saved on their own and the
+message says so.
+
+### Verification
+- `tools/check-import-bounds.mjs` passes. The bomb costs 5 ms and no measurable memory, against 4.3
+  seconds and 602 MB before. The same check imports an ordinary document and one carrying 40 MB of
+  embedded media, and both must succeed — a limit that refused everything would otherwise pass.
+- Gate: all 19 stages. Flow harness: 23 assertions, 8 consecutive runs. Injection checks: 14.
+  Debug redaction: 44. Export redaction: 20. Portable `file://` path: 9.
+
+### Files touched
+`js/app.js`, `js/storage.js`, `tools/check-import-bounds.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v311.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The import limits are three constants and two guards at one chokepoint; the save
+change is one function. No stored data format changed — a project saved by an earlier release loads
+unchanged, and one saved by this release loads on an earlier one.
+
 ## v3.63.538 — A boot-complete signal for the test harnesses
 
 **Released:** 2026-09-21

@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260921-002
+// Build: 20260921-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260921-002';         // build stamp — update each session
+const BUILD = '20260921-003';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13353,27 +13353,109 @@ async function processRefFile(file, batchLabel = '', verifyCollector = null) {
 // XLSX may return multiple elements (one per selected sheet in multi mode).
 // options.xlsxMode: 'single' (starting doc — radio picker, returns 1)
 //                   'multi'  (reference — checkbox picker, returns N)
+// ── Import bounds (v3.63.539) ─────────────────────────────────────────
+//
+// Until this release nothing capped an import at any layer. HARD_INPUT_CAP
+// is the ICON upload path and was never reached from here, so a document
+// could be any size at all. A 279 KB .docx expanding to 200 MB of text was
+// accepted whole: ~600 MB of heap, then pushed into referenceDocs, then into
+// LS_PROJECT (which silently blew the quota — see saveProject), and then into
+// the prompt sent to every AI in the hive.
+//
+// Three layers, because they stop three different things:
+//
+//   MAX_IMPORT_FILE_BYTES — an absurd upload, rejected before it is read.
+//
+//   MAX_ZIP_TEXT_PART_BYTES — the bomb. .docx/.pptx/.xlsx are ZIP
+//     containers and deflate happily turns a few hundred KB into a few
+//     hundred MB. The DECLARED uncompressed size of each entry is in the
+//     central directory, so this is checked BEFORE a byte is decompressed:
+//     JSZip.loadAsync on the 200 MB bomb takes 3 ms and reports
+//     word/document.xml at 209,716,168 bytes. Only text-bearing parts are
+//     measured — embedded media is legitimately large and is never parsed
+//     as text, so capping it would reject real documents for no gain.
+//
+//   MAX_EXTRACTED_CHARS — the backstop, and the only one that covers .txt
+//     and .pdf, which have no container to inspect. It is also the figure
+//     that actually protects storage and the prompt.
+//
+// These REJECT rather than truncate. Silently handing back half a document
+// is worse than refusing it: the user would have no way to know the AIs were
+// reviewing a fragment. The message names the limit and the actual size so
+// splitting the file is an obvious next step.
+const MAX_IMPORT_FILE_BYTES    = 100 * 1024 * 1024;  // 100 MB on disk
+const MAX_ZIP_TEXT_PART_BYTES  = 32 * 1024 * 1024;   // 32 MB per XML part
+const MAX_EXTRACTED_CHARS      = 2000000;            // ~2 MB of text
+
+const _fmtMB = (b) => (b / 1048576).toFixed(1) + ' MB';
+
+// Sum the DECLARED uncompressed size of the parts an extractor will parse.
+// Media is skipped on purpose (see above). Never throws on a non-zip or an
+// unreadable container — the real extractor will produce a better error.
+async function _zipTextPartBytes(file) {
+  if (!window.JSZip) return null;
+  let zip;
+  try { zip = await window.JSZip.loadAsync(await file.arrayBuffer()); }
+  catch (e) { return null; }
+  let largest = 0, largestName = '';
+  zip.forEach((p, entry) => {
+    if (entry.dir) return;
+    if (/^(word|ppt|xl)\/media\//i.test(p)) return;          // images, video
+    if (!/\.(xml|rels|txt)$/i.test(p)) return;               // parsed parts only
+    const n = entry._data && entry._data.uncompressedSize;
+    if (typeof n === 'number' && n > largest) { largest = n; largestName = p; }
+  });
+  return { largest, largestName };
+}
+
 async function extractFromFile(file, options = {}) {
   const ext = file.name.split('.').pop().toLowerCase();
 
+  if (file.size > MAX_IMPORT_FILE_BYTES) {
+    throw new Error(
+      `That file is ${_fmtMB(file.size)}, over the ${_fmtMB(MAX_IMPORT_FILE_BYTES)} import limit. ` +
+      `Split it into smaller documents and import them separately.`);
+  }
+
+  if (['docx', 'pptx', 'xlsx', 'xlsm'].includes(ext)) {
+    const z = await _zipTextPartBytes(file);
+    if (z && z.largest > MAX_ZIP_TEXT_PART_BYTES) {
+      throw new Error(
+        `That file expands to ${_fmtMB(z.largest)} of text in one part (${z.largestName}), over the ` +
+        `${_fmtMB(MAX_ZIP_TEXT_PART_BYTES)} limit — ${_fmtMB(file.size)} on disk. A file that expands this ` +
+        `far is usually corrupt or machine-generated rather than a document.`);
+    }
+  }
+
+  const _guard = (docs) => {
+    const total = (docs || []).reduce((a, d) => a + ((d && d.text || '').length), 0);
+    if (total > MAX_EXTRACTED_CHARS) {
+      throw new Error(
+        `That file produced ${total.toLocaleString()} characters of text, over the ` +
+        `${MAX_EXTRACTED_CHARS.toLocaleString()}-character import limit. Split it into smaller ` +
+        `documents and import them separately.`);
+    }
+    return docs;
+  };
+
   if (ext === 'txt' || ext === 'md') {
     const text = await file.text();
-    return [{ text, warnings: [], sourceType: ext, suggestedName: file.name }];
+    return _guard([{ text, warnings: [], sourceType: ext, suggestedName: file.name }]);
   }
   if (ext === 'pdf') {
     const r = await extractPDF(file);
-    return [{ ...r, suggestedName: file.name }];
+    return _guard([{ ...r, suggestedName: file.name }]);
   }
   if (ext === 'docx') {
     const r = await extractDOCX(file);
-    return [{ ...r, suggestedName: file.name }];
+    return _guard([{ ...r, suggestedName: file.name }]);
   }
   if (ext === 'pptx') {
     const r = await extractPPTX(file);
-    return [{ ...r, suggestedName: file.name }];
+    return _guard([{ ...r, suggestedName: file.name }]);
   }
   if (ext === 'xlsx' || ext === 'xlsm') {
-    return await extractXLSX(file, options);
+    return _guard(await extractXLSX(file, options));
   }
   throw new Error(`Unsupported file type: .${ext}. Accepted: .txt, .md, .pdf, .docx, .pptx, .xlsx, .xlsm`);
 }
@@ -13478,8 +13560,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.538'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.538';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.539'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.539';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 

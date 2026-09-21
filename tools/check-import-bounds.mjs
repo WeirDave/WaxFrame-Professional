@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260921-002
+// Build: 20260921-003
 // check-import-bounds.mjs — is there a ceiling anywhere on an imported file?
 //
 // Two questions, both answered against the real app rather than by reading it.
@@ -80,14 +80,18 @@ const check = (label, cond, detail) => {
 
 // ── Build the bomb with the vendored JSZip, so the artifact is exactly the
 // shape mammoth would be handed in the browser.
-function buildBombDocx(targetMB) {
+function buildDocx({ bodyMB = 0, bodyChars = 0, mediaMB = 0 }) {
   const JSZip = require(path.join(ROOT, 'lib', 'jszip.min.js'));
   const MB = 1024 * 1024;
   const para = '<w:p><w:r><w:t>' + 'A'.repeat(4000) + '</w:t></w:r></w:p>';
   const chunk = para.repeat(1000);
-  const rounds = Math.ceil(Math.ceil((targetMB * MB) / para.length) / 1000);
   let body = '';
-  for (let i = 0; i < rounds; i++) body += chunk;
+  if (bodyMB) {
+    const rounds = Math.ceil(Math.ceil((bodyMB * MB) / para.length) / 1000);
+    for (let i = 0; i < rounds; i++) body += chunk;
+  } else {
+    body = '<w:p><w:r><w:t>' + 'Legitimate document text. '.repeat(Math.max(1, Math.ceil(bodyChars / 25))) + '</w:t></w:r></w:p>';
+  }
   const documentXml =
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
@@ -106,6 +110,14 @@ function buildBombDocx(targetMB) {
     '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
     '</Relationships>');
   zip.folder('word').file('document.xml', documentXml);
+  // Embedded media is legitimately large and is never parsed as text, so the
+  // bound must skip it. A .docx with 40 MB of images and a small body has to
+  // import, or the cap rejects real documents in order to stop a fake one.
+  if (mediaMB) {
+    const img = Buffer.alloc(mediaMB * MB);
+    for (let i = 0; i < img.length; i += 997) img[i] = i & 0xff;  // defeat deflate
+    zip.folder('word').folder('media').file('image1.png', img);
+  }
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 9 } })
     .then(buf => ({ buf, decompressed: documentXml.length }));
 }
@@ -113,10 +125,14 @@ function buildBombDocx(targetMB) {
 const BROWSER = findChrome();
 if (!BROWSER) { console.error('No Chrome or Chromium found. Set WF_CHROME to a browser binary.'); process.exit(2); }
 
-console.log(`check-import-bounds — generating a ${BOMB_MB} MB .docx bomb…`);
-const { buf: BOMB, decompressed } = await buildBombDocx(BOMB_MB);
+console.log('check-import-bounds — generating fixtures…');
+const { buf: BOMB, decompressed } = await buildDocx({ bodyMB: BOMB_MB });
 const ratio = Math.round(decompressed / BOMB.length);
-console.log(`  ${(BOMB.length / 1024).toFixed(1)} KB on disk -> ${(decompressed / 1048576).toFixed(1)} MB decompressed (${ratio}:1)\n`);
+console.log(`  bomb:   ${(BOMB.length / 1024).toFixed(1)} KB on disk -> ${(decompressed / 1048576).toFixed(1)} MB decompressed (${ratio}:1)`);
+const { buf: NORMAL } = await buildDocx({ bodyChars: 20000 });
+console.log(`  normal: ${(NORMAL.length / 1024).toFixed(1)} KB, ~20,000 chars of body text`);
+const { buf: MEDIA } = await buildDocx({ bodyChars: 5000, mediaMB: 40 });
+console.log(`  media:  ${(MEDIA.length / 1048576).toFixed(1)} MB, 40 MB of embedded image, small body\n`);
 
 const PORT = 8790 + (process.pid % 150);
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',
@@ -125,9 +141,10 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   '.wav': 'audio/wav', '.pdf': 'application/pdf' };
 const server = http.createServer((req, res) => {
   const rel = decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/, '') || 'index.html';
-  if (rel === '__bomb.docx') {
+  const FIXTURES = { '__bomb.docx': BOMB, '__normal.docx': NORMAL, '__media.docx': MEDIA };
+  if (FIXTURES[rel]) {
     res.writeHead(200, { 'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-    return res.end(BOMB);
+    return res.end(FIXTURES[rel]);
   }
   const f = path.join(ROOT, rel);
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end('nope'); }
@@ -149,11 +166,11 @@ let ws;
 
 // ── In-page routines.
 
-// Feed the bomb to the real import routine and measure what it cost.
-async function importTheBomb() {
+// Feed a fixture to the real import routine and measure what it cost.
+async function importFixture(which) {
   const t0 = performance.now();
   const h0 = performance.memory.usedJSHeapSize;
-  const r = await fetch('/__bomb.docx');
+  const r = await fetch('/' + which);
   const b = await r.blob();
   const f = new File([b], 'quarterly-report.docx',
     { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
@@ -264,7 +281,7 @@ try {
   check('the app booted with its import machinery present (liveness)', !/undefined/.test(boot), boot);
 
   console.log('\n  > 1. What does the bomb cost?');
-  const r = JSON.parse(await callInPage(importTheBomb));
+  const r = JSON.parse(await callInPage(importFixture, '__bomb.docx'));
   const grewMB = r.heapAfterMB - r.heapBeforeMB;
   check('the file really was processed (liveness)', r.extractedChars > 0 || r.refused === true, r);
   console.log(`      ${r.ms} ms; heap ${r.heapBeforeMB} -> ${r.heapAfterMB} MB (+${grewMB} MB); ` +
@@ -273,6 +290,19 @@ try {
     r.refused === true || r.extractedChars <= MAX_REASONABLE_CHARS,
     `accepted ${r.extractedChars.toLocaleString()} chars (${(r.extractedChars / 1048576).toFixed(1)} MB) ` +
     `from a ${(BOMB.length / 1024).toFixed(1)} KB file — no cap at any layer`);
+
+  console.log('\n  > 1b. Do legitimate documents still import?');
+  // A bound that rejects everything passes every check above. These two
+  // fixtures are what the cap must NOT reject: an ordinary document, and one
+  // carrying 40 MB of embedded image with a small body — media is never parsed
+  // as text, so capping it would reject real files in order to stop a fake one.
+  const okNormal = JSON.parse(await callInPage(importFixture, '__normal.docx'));
+  check('an ordinary .docx still imports', okNormal.refused === false && okNormal.extractedChars > 1000,
+    okNormal.err || `${okNormal.extractedChars} chars extracted`);
+  const okMedia = JSON.parse(await callInPage(importFixture, '__media.docx'));
+  check('a .docx with 40 MB of embedded media still imports',
+    okMedia.refused === false && okMedia.extractedChars > 100,
+    okMedia.err || `${okMedia.extractedChars} chars extracted`);
 
   console.log('\n  > 2. What happens when the save overflows the quota?');
   const q = JSON.parse(await callInPage(overflowTheProjectSave, 12 * 1024 * 1024));

@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v310
+WaxFrame Backlog Master v311
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,40 @@ ships.
 
 
 
+
+v311 — IMPORT BOUNDS AND A VISIBLE SAVE FAILURE (v3.63.539).
+Both remaining bugs shipped together, because they were one
+failure with two halves: nothing bounded an import, and the
+oversized result then blew the storage quota silently.
+
+OPEN BUGS is empty for the first time since the security review.
+
+Three layers now bound an import, each stopping something the
+others cannot: a file-size cap; a per-part cap on the DECLARED
+uncompressed size inside .docx/.pptx/.xlsx, read from the zip
+central directory before a byte is decompressed; and a cap on
+extracted characters, which is the only one that covers .txt and
+.pdf and the only one that protects storage and the prompt.
+Embedded media is deliberately exempt from the middle layer —
+it is legitimately large and is never parsed as text, so capping
+it would reject real documents in order to stop a fake one.
+
+Measured: the 279 KB / 200 MB bomb now costs 5 ms and 0 MB of
+heap, against 4.3 s and 602 MB before.
+
+saveProject sheds reference-doc TEXT largest-first and retries,
+so the hand-typed fields survive, and it toasts. Before, a quota
+failure lost the ENTIRE blob — name, version, all six goal
+fields, starting document and reference list — with only a
+console line.
+
+METHOD NOTE worth keeping. The bounds test originally proved only
+that the bomb was refused, which a cap that rejects everything
+would also pass. It now imports an ordinary .docx and one
+carrying 40 MB of embedded media, and both must succeed. The
+media fixture is the load-bearing one: its media part declares
+40 MB, over the 32 MB part cap, so it fails the moment the media
+exemption is removed.
 
 v310 — FLOW-CHECK FLAKE FIXED (v3.63.538). Old bug 3 shipped and
 is deleted; two open bugs remain. The cause was not the harness
@@ -624,83 +658,7 @@ that actually times out. Anthropic (CF Worker proxy) and Gemini (needs
 OPEN BUGS
 ════════════════════════════════════════════════════════════
 
-1. A failed project save destroys the whole project blob and
-   says nothing
-   ─────────────────────────────────────────────────────────
-   WHAT:   saveProject() wraps its localStorage write in a
-           try/catch that only console.warn()s. Go over quota
-           and setItem never lands, so LS_PROJECT is not
-           partially written — it is not written at all.
-           Measured with a 12 MB reference doc against the
-           ~5 MB quota:
-             doc present in memory (UI looks fine)  true
-             saveProject threw to the caller        no
-             waxframe_v2_project in localStorage    ABSENT
-             project name survived                  no
-             toasts shown to the user               none
-           Project name, version, the six goal fields, the
-           starting document and the reference list all stop
-           persisting together. The user finds out on reload.
-
-   WHY:    No attacker needed — an ordinary large document does
-           it. The failure is silent by construction: the catch
-           swallows it, nothing re-raises, nothing toasts, and
-           the screen still shows the document as imported. It
-           presents as "WaxFrame lost my work", which is the
-           worst possible way to learn about a storage limit.
-
-   STATE:  OPEN. Reproduced; no fix attempted.
-
-   WHERE:  js/storage.js saveProject — the catch that warns and
-           returns. saveHive has the same shape and should be
-           checked in the same pass.
-
-   DONE:   Part 2 of node tools/check-import-bounds.mjs exits 0:
-           the user is told the save failed, and the rest of the
-           project still persists. Shape of the fix is a product
-           call — most likely keep the oversized doc out of
-           LS_PROJECT (IndexedDB already holds session state
-           without a size limit) and surface a real message
-           rather than a console line.
-
-
-2. Document import has no size or expansion bound
-   ─────────────────────────────────────────────────────────
-   WHAT:   extractFromFile has no cap of any kind. HARD_INPUT_CAP
-           (8 MB) is the ICON upload path only. .docx and .xlsx
-           are ZIP containers, so the on-disk size says nothing
-           about the cost. Measured against the real import
-           routine with a bomb built from the vendored JSZip:
-             279 KB .docx  ->  200 MB decompressed  (734:1)
-             heap 16 MB -> 618 MB  (+602 MB), 4.3 s
-             208,103,998 chars accepted, no error, no warning
-           The practical ceiling is V8's ~512 MB string limit,
-           not anything WaxFrame enforces.
-
-   WHY:    Feeds bug 1 directly — the extracted text goes into
-           referenceDocs and then into LS_PROJECT — and then
-           into the prompt sent to every AI in the hive. The
-           import is the one place a bound costs nothing and
-           buys both.
-           Reachable by social engineering rather than by
-           attack: reference material and checkpoints are meant
-           to be passed between people, so "someone sent me this
-           .docx" is the normal case, not the exotic one.
-
-   STATE:  OPEN. Reproduced; no fix attempted.
-
-   WHERE:  js/app.js extractFromFile and its per-format
-           branches; js/app.js:16776 HARD_INPUT_CAP for the
-           existing icon-path precedent to copy.
-
-   DONE:   Part 1 of node tools/check-import-bounds.mjs exits 0:
-           the bomb is refused, or the extracted text is capped,
-           with the user told which. The test's
-           MAX_REASONABLE_CHARS is a placeholder — set it to the
-           real limit when one is chosen. A bound on the
-           EXTRACTED length is what matters; a bound on file
-           size alone does not stop a 279 KB bomb.
-
+None currently open.
 
 ════════════════════════════════════════════════════════════
 OPEN FEATURES
