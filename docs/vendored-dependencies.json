@@ -5,12 +5,13 @@
   "dependencies": [
     {
       "name": "docx",
-      "version": "unknown",
+      "version": "9.7.1",
       "license": "MIT",
       "files": {
         "lib/docx.min.js": "d5ec4f5a8b99740845974f5f6f020d6e5b1b6c27026195befc67eb37035c84c7"
       },
-      "note": "The minified bundle does not identify its version. Replace it from a documented upstream release before claiming a version or assessing version-specific advisories."
+      "note": "Identified by matching, not by reading a version string: the bundle carries none of its own, and the 0.132.0 inside it belongs to @oxc-project/runtime, a build-toolchain dependency. Every docx release in the plausible window had its dist/index.umd.cjs hashed; 9.7.1 differed by 267 bytes and a full diff placed the entire difference in three lines at the top and one at the bottom. The published UMD wrapper has been replaced locally with a plain IIFE assigning 'var docx', so the file is not byte-identical to any published artifact and its hash above will not match upstream. All 33,170 body lines are. When upgrading, take dist/index.umd.cjs from the new release and re-apply the same wrapper swap.",
+      "localModification": "UMD wrapper replaced with an IIFE exposing the global 'docx'"
     },
     {
       "name": "jszip",

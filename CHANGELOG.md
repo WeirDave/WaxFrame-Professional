@@ -1,5 +1,50 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.527 — The vendored docx library's version is known, not guessed
+
+**Released:** 2026-09-20
+**Build:** 20260920-021
+
+### What changed
+
+**docx is now watched by Dependabot like every other vendored library.** It was the one gap in
+that coverage. The bundle in `lib/` carries no version string of its own, and adding a guessed
+version would make Dependabot report on a release WaxFrame does not ship — worse than an absence,
+which is why the gap was left open when it was found.
+
+The version is **9.7.1**, established by matching rather than by reading. Every docx release in the
+plausible window had its published browser bundle downloaded and hashed. None matched outright.
+9.7.1 differed by 267 bytes, and a full line diff put the whole difference in three lines at the top
+and one at the bottom: the published UMD wrapper has been replaced locally with a plain IIFE that
+exposes `docx` as a global. All 33,170 lines of the body are byte-identical.
+
+That local change is now recorded in the dependency inventory alongside the version, because it
+explains something that would otherwise look like corruption: the file's recorded hash does not and
+cannot match any published artifact. Anyone upgrading should take the published bundle from the new
+release and re-apply the same wrapper swap.
+
+The stray `0.132.0` inside the bundle belongs to `@oxc-project/runtime`, part of the toolchain that
+built it. Reading it as the library's version is the exact mistake the earlier "unknown" entry was
+written to prevent.
+
+No security advisories affect docx at any version.
+
+### Verification
+- The identification is reproducible: download `dist/index.umd.cjs` from docx 9.7.1 and diff it
+  against `lib/docx.min.js`. The diff is eleven lines and contains no code.
+- Both `package.json` and the dependency inventory still parse as JSON.
+- Gate: all 19 stages pass, including the vendored-inventory stage that checks every recorded
+  SHA-256 against the file on disk.
+
+### Files touched
+`package.json`, `docs/vendored-dependencies.json`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v298.txt`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD` returns docx to being untracked by Dependabot.
+
+---
+
 ## v3.63.526 — The workplace details are out of git history too
 
 **Released:** 2026-09-20
