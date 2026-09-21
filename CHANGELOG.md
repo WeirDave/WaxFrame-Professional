@@ -1,5 +1,50 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.523 — LM Studio's models were being filtered out entirely
+
+**Released:** 2026-09-20
+**Build:** 20260920-017
+
+### What changed
+
+**Pointing WaxFrame at a live LM Studio returned an empty model list.** The model-list filter kept
+an entry only when it declared `type: 'chat'` or declared no type at all. That rule was written for
+Together AI's mixed catalog, where it is correct. LM Studio labels its models **`llm`** and
+**`vlm`**, never `chat` — so every single one was discarded.
+
+That mattered more than an empty dropdown. LM Studio's `/api/v0/models` is the **only** endpoint it
+serves that carries `max_context_length` and `loaded_context_length`; `/v1/models` returns nothing
+but `id`, `object` and `owned_by`. So the local-server context-limit support shipped in v3.63.512
+could not be reached for LM Studio at all — the one server whose response makes the two-number
+display meaningful.
+
+`llm` and `vlm` now pass. It stays an **allowlist** rather than becoming a denylist of non-chat
+types: flipping it would newly admit Together's `language` and `code` base-completion entries, which
+are excluded deliberately and make poor reviewers. Embeddings, image, audio, moderation and rerank
+entries are still dropped.
+
+The predicate moved out of the fetch into a named, exported function for the same reason
+`limitsFromModelEntry` lives outside one: a filter buried inside a network call cannot be
+fixture-tested, and this one quietly emptied a provider's model list for eleven releases.
+
+### Verification
+- Gate: all 19 stages pass. 210 extractor fixtures, 23 flow-harness assertions.
+- **Verified against a live LM Studio**, which is how the bug was found. With a Gemma model loaded
+  at a reduced window, the app's own `fetchModelsByFormat` path now returns the model and harvests
+  `context 8K of 128K` — loaded 8,192 against an architectural 131,072. Before the fix the same call
+  returned no models and no limits.
+- The embedding model on the same server is still correctly excluded.
+- 14 new fixtures pin the real labels observed live, and pin that `language` and `code` stay out.
+
+### Files touched
+`js/provider-catalog.js`, `tools/test-provider-extractors.mjs`,
+`docs/WaxFrame_Backlog_Master_v294.txt`, `CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD` restores the empty LM Studio model list.
+
+---
+
 ## v3.63.522 — An end-to-end flow harness, and the dead code it found
 
 **Released:** 2026-09-20

@@ -262,48 +262,29 @@ Ordered by value.
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.
 
-1. Live-verify the LM Studio and Open WebUI context-limit shapes
+1. Live-verify the Open WebUI context-limit shape
    ─────────────────────────────────────────────────────────
-   WHAT:   v3.63.512 reads the context length local servers publish.
-           Ollama was verified against a live 0.34.3 instance. LM Studio's
-           /api/v0/models (max_context_length + loaded_context_length) and
-           Open WebUI's nested .ollama object are covered by FIXTURES ONLY.
+   WHAT:   Open WebUI embeds the raw Ollama object under .ollama, and that
+           wrapping is covered by fixtures only.
    WHY:    A fixture pins the shape someone believed was correct. Only a
-           live run pins the shape the server actually sends — which is the
-           entire lesson of v3.63.512, where /api/tags turned out to report
-           the architectural figure and overstate the ceiling 16x on the
-           very machine it was built for.
-   STATE:  OPEN, and each half is blocked on something different.
-           Second attempt 2026-09-20, with David starting the servers:
-
-           OPEN WEBUI — container up and healthy on :3000, but every model
-           endpoint returns 401. /api/models, /api/v1/models and the Ollama
-           proxy paths /ollama/api/tags and /ollama/api/ps are all
-           authenticated; only /api/config and /health are open. This is not
-           a misconfiguration, it IS the shape the catalog documents (a
-           bearer token on a nominally local server). Verifying it needs an
-           Open WebUI API key — generated in its Settings, Account, API Keys
-           — pasted into the Open WebUI row IN WAXFRAME, never into a chat
-           or a file. Then a Recheck drives the real harvest.
-           Note what is already proven and what is not: the INNER object is
-           a raw Ollama model entry, and that shape was verified live
-           against Ollama 0.34.2. What remains unverified is Open WebUI's
-           wrapping of it under .ollama.
-
-           LM STUDIO — app processes running, nothing listening on 1234,
-           checked at the TCP layer rather than by curl alone. The
-           documented trap again: app open never means endpoint up. The
-           server switch is in the Developer tab, and LM Studio will not
-           serve with no model loaded. This is the half that matters most:
-           LM Studio is the ONLY server reporting both max_context_length
-           and loaded_context_length, so it is the only way to prove the
-           two-number context display against something real.
+           live run pins the shape the server actually sends.
+   STATE:  OPEN, blocked on a credential rather than on work. Container is
+           up and healthy on :3000, but every model endpoint returns 401 —
+           /api/models, /api/v1/models and the Ollama proxy paths
+           /ollama/api/tags and /ollama/api/ps. Only /api/config and
+           /health are open. That is the documented shape, not a
+           misconfiguration: a bearer token on a nominally local server.
+           The inner object is a raw Ollama entry and THAT is already
+           verified live; only the wrapping is unproven.
+           LM STUDIO IS DONE — see the v295 note. It is struck from this
+           entry rather than left hanging.
    WHERE:  js/provider-catalog.js limitsFromModelEntry, the OpenAI-shape
            branch; tools/test-provider-extractors.mjs for the fixtures.
-   DONE:   A model from each server shows a context figure sourced from the
-           API, checked against what that server actually reports. Where LM
-           Studio reports a loaded window below the architectural maximum,
-           the picker reads "context <loaded> of <max>".
+   DONE:   An Open WebUI API key (its Settings, Account, API Keys) is
+           pasted into the Open WebUI row IN WAXFRAME — never into a chat
+           or a file — a Recheck is run, and a model shows a context figure
+           sourced from the API.
+
 
 2. PDF.js 4.10.38 → 6.x migration
    ─────────────────────────────────────────────────────────

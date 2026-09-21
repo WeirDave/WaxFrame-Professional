@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260920-016
+// Build: 20260920-017
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -1315,6 +1315,36 @@
     'jamba-1.6-large':    { context: 256000, output:   4096 }
   };
 
+  // Does this model-list entry describe something we can hold a conversation
+  // with? Only entries that declare a `type` are judged; providers that omit
+  // it (OpenAI, Mistral, DeepSeek, Ollama) pass through untouched.
+  //
+  // v3.63.523 — 'llm' and 'vlm' added. `type === 'chat'` was written for
+  // Together AI's mixed catalog and is correct there, but LM Studio labels
+  // its models "llm" and "vlm" and never "chat", so every LM Studio model
+  // was filtered out. That mattered more than it sounds: /api/v0/models is
+  // the ONLY LM Studio endpoint carrying max_context_length and
+  // loaded_context_length, so the context-limit support shipped in
+  // v3.63.512 could not be reached at all. Verified live against LM Studio,
+  // which returned type "vlm" for a loaded Gemma and "embeddings" for a
+  // text-embedding model.
+  //
+  // Deliberately still an ALLOWLIST rather than a denylist of non-chat
+  // types. Flipping it would newly admit Together's "language" and "code"
+  // base-completion entries, which are excluded on purpose and make poor
+  // reviewers. This adds the two labels that genuinely mean "chat-capable"
+  // and changes nothing for any other provider.
+  //
+  // Split out of fetchModelsByFormat for the same reason limitsFromModelEntry
+  // is: a predicate buried inside a fetch cannot be fixture-tested, and this
+  // one silently emptied a provider's model list for an entire release.
+  var CHAT_CAPABLE_TYPES = { chat: 1, llm: 1, vlm: 1 };
+  function entryLooksChatCapable(m) {
+    if (!m || typeof m !== 'object') return false;
+    if (!m.type) return true;
+    return CHAT_CAPABLE_TYPES[String(m.type).toLowerCase()] === 1;
+  }
+
   // Pull limits out of ONE model entry, per response shape. Returns null
   // when the shape carries nothing usable, which is the common case.
   //
@@ -1767,7 +1797,7 @@
       // flagged a working model as "⚠ Model missing".
       var arr = Array.isArray(data) ? data : ((data && data.data) || (data && data.models) || []);
       models = arr
-        .filter(function (m) { return !m.type || m.type === 'chat'; })
+        .filter(entryLooksChatCapable)
         .map(function (m) {
           var oid = m.id || m.name;
           _collect(oid, m);
@@ -1885,6 +1915,7 @@
     // exist so call sites read naturally, not because the logic differs.
     extractFinishReason: extractFinishReason,
     // v3.63.490 — model token limits.
+    entryLooksChatCapable: entryLooksChatCapable,
     limitsFromModelEntry: limitsFromModelEntry,
     limitsFromTable: limitsFromTable,
     mergeModelLimits: mergeModelLimits,

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260920-016
+// Build: 20260920-017
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -308,6 +308,39 @@ check('LM Studio max_context_length used when nothing is loaded',
 check('Together context_length is picked up',
   WFProviderCatalog.limitsFromModelEntry('openai-models',
     { id: 't', context_length: 131072 }).context, 131072);
+
+console.log('▶ Model-list entry types (entryLooksChatCapable)');
+
+// v3.63.523 — found by pointing WaxFrame at a live LM Studio. The filter
+// required type === 'chat', which LM Studio never sends: it labels models
+// "llm" and "vlm". Every LM Studio model was dropped, and since
+// /api/v0/models is the ONLY LM Studio endpoint carrying context limits, the
+// v3.63.512 support for them could not be reached at all.
+const chatCapable = WFProviderCatalog.entryLooksChatCapable;
+
+// Providers that omit `type` entirely must pass through untouched.
+check('an entry with no type passes (OpenAI, Mistral, DeepSeek, Ollama)',
+  chatCapable({ id: 'gpt-6-astra' }), true);
+// Together AI's mixed catalog — the case the original filter was written for.
+check("Together's chat type passes", chatCapable({ id: 'x', type: 'chat' }), true);
+// LM Studio's real labels, verified live.
+check('LM Studio llm passes', chatCapable({ id: 'x', type: 'llm' }), true);
+check('LM Studio vlm passes (a vision-language model is still chat-capable)',
+  chatCapable({ id: 'x', type: 'vlm' }), true);
+check('type casing does not matter', chatCapable({ id: 'x', type: 'LLM' }), true);
+
+// Must still be excluded — these are the reason the filter exists.
+check('embeddings excluded', chatCapable({ id: 'x', type: 'embeddings' }), false);
+check('embedding excluded', chatCapable({ id: 'x', type: 'embedding' }), false);
+check('image excluded', chatCapable({ id: 'x', type: 'image' }), false);
+check('audio excluded', chatCapable({ id: 'x', type: 'audio' }), false);
+check('moderation excluded', chatCapable({ id: 'x', type: 'moderation' }), false);
+check('rerank excluded', chatCapable({ id: 'x', type: 'rerank' }), false);
+// Deliberately still excluded: base-completion models make poor reviewers, and
+// admitting them is the cost of flipping this to a denylist.
+check("Together's language type stays excluded", chatCapable({ id: 'x', type: 'language' }), false);
+check("Together's code type stays excluded", chatCapable({ id: 'x', type: 'code' }), false);
+check('a null entry is not chat-capable', chatCapable(null), false);
 
 // ── Local-server native shapes (v3.63.512) ────────────────────────────
 //
