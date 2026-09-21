@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260920-017
+   Build: 20260920-018
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -8318,6 +8318,19 @@ kbd {
   font-size: var(--fs-sm);
   color: var(--text-dim);
   line-height: 1.5;
+}
+/* v3.63.524 — a button rendered as an inline text link. The one place that
+   needed this was an <a href="javascript:void(0)"> which the strict CSP
+   blocks, so each click filed a CSP violation for a navigation that never
+   did anything. The element runs a function rather than going anywhere, so
+   it is a button; all it needs is its chrome removed. .link-accent supplies
+   the colour and hover underline. */
+button.link-accent {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }
 /* v3.63.301 — Inline link inside .settings-row-help. Used by the
    Concurrency overrides section to deep-link each row to the provider's

@@ -455,3 +455,18 @@ WHEN AN ARTIFACT VERIFICATION FAILS:
     bumped cache-busts. Do not silently re-upload — the
     cache-bust bump is what forces user browsers to fetch
     the corrected file.
+
+LAST RUN
+────────────────────────────────────────────────────────────
+2026-09-20, at v3.63.524. Clean: zero orphans, zero dynamic
+execution in shipped code, zero dangling DOM lookups, zero
+write-only storage keys other than the intentional recovery
+stash.
+
+Run it with:  node tools/audit-dead-code.mjs
+
+The tool is the procedure now. This document explains what
+each pass is looking for and why; the tool is what actually
+looks. Do not re-derive a one-off script from this file —
+that is how the audit went fifty-odd releases without being
+run, and five dead things accumulated in the gap.

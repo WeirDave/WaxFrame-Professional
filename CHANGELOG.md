@@ -1,5 +1,72 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.524 — Dead code removed, and a tool so the next audit is one command
+
+**Released:** 2026-09-20
+**Build:** 20260920-018
+
+### What changed
+
+**A dead-code audit found five things that were being called and doing nothing**, plus two
+functions nothing called at all. None of it was visible to users; all of it was reachable code
+that could not have any effect.
+
+Two Builder renderers, `renderBuilderPicker` and `renderBuilderScreenModel`, both opened by
+looking up an element deleted from index.html in v3.63.163 and returned immediately. They had
+live callers the whole time. The same pattern held for the round timer's display writes and for a
+diff-mode button lookup: elements gone, writes still there.
+
+The round timer went with them. Its two display elements no longer existed, so the interval that
+formatted mm:ss every second had nothing to write to, and `stopRoundTimer` was left with an empty
+body — its twelve call sites were already paired with the function that actually restores the
+button label. What survives is the half that was always live: the label on the **Smoke the Hive**
+button.
+
+Two more only appeared once the audit learned to ignore comments. A tier classifier last widened
+in v3.63.140 had never been called, and the singular `getVisionCapableAI()` was replaced by the
+plural in v3.63.393 with its final callers migrated in v3.63.426. Both were "referenced" purely by
+comments naming them, which is enough to convince a reference count that a function is alive.
+
+**A link in Settings no longer files a security violation when clicked.** The row under backup
+contents that reads "See section details on the Checkpoint screen" was an anchor with a
+`javascript:` href. The strict CSP blocks those, so each click reported a policy violation for a
+navigation that did nothing either way. The click always worked — a dispatcher handles it — but the
+violation landed in diagnostic exports, which is the worst place for a false alarm. It is now a
+button, which is what an element that runs a function rather than going anywhere should be.
+
+**The audit itself is now `tools/audit-dead-code.mjs`.** That is the part worth keeping. The
+previous audit of this kind ran on 2026-07-25 and the next ran on 2026-09-20, and five dead things
+accumulated in between, because repeating it meant re-deriving a script from a methodology
+document. It runs five passes — orphan functions, export-only functions, dynamic code execution,
+dangling DOM lookups and write-only storage keys — and prints findings without failing a build.
+
+It is deliberately **not** a release gate. Two of its passes need a person to read the result, and
+a gate that people route around is worse than no gate.
+
+The dangling-DOM pass is the one that earns its keep, and it exists because reference counting is
+blind to this whole category: a function called on every render, writing to an element that was
+deleted two hundred releases ago, looks perfectly alive by every other measure.
+
+### Verification
+- Gate: all 19 stages pass.
+- 23 flow-harness assertions pass, including zero uncaught page errors across two full hive rounds.
+- The harness caught a real break mid-change: a first pass at the timer removal left three
+  statements reading variables it had just deleted, and `stopRoundTimer` threw on every call. The
+  setup screens stopped advancing and the harness failed on the first flow.
+- The audit reports zero findings against the finished tree.
+- Both remaining reports from the first run were confirmed false positives — matches inside
+  comments — and the tool was corrected rather than the findings waved through.
+
+### Files touched
+`js/app.js`, `index.html`, `style.css`, `tools/audit-dead-code.mjs` (new),
+`docs/WaxFrame_Backlog_Master_v295.txt`, `docs/WaxFrame_Audit_Methodology_v1.txt`,
+`CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD` restores the removed functions and the `javascript:` link.
+
+---
+
 ## v3.63.523 — LM Studio's models were being filtered out entirely
 
 **Released:** 2026-09-20

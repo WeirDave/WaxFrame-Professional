@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-017
+// Build: 20260920-018
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-017';         // build stamp — update each session
+const BUILD = '20260920-018';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2379,40 +2379,22 @@ function startAutoUpdateHeartbeat() {
 // playBuilderSound, playRosieSound, playFlyingCarSound.
 
 
-let _roundTimerInterval = null;
-let _roundTimerStart    = null;
 // v3.52.7 — _clockInterval removed (was declared "reserved for future
 // use" but never wired to anything in 30+ releases).
 
+// v3.63.524 — the rest of the round timer followed it. #roundTimerDisplay and
+// #roundTimerLabel were deleted from index.html releases ago, so the interval
+// that formatted mm:ss every second had nothing to write to, and the two
+// module vars behind it had no other reader. stopRoundTimer() was left with an
+// empty body once those writes went, so it and its twelve call sites are gone
+// too — each was already paired with _setRunBtnLabel(), which is what actually
+// restores the button when a round ends.
+//
+// What survives is the half that was always live: the label on the Smoke the
+// Hive button. The name is kept because four call sites read well with it.
 function startRoundTimer(btn, baseLabel) {
-  _roundTimerStart = Date.now();
-  clearInterval(_roundTimerInterval);
-  const clock   = document.getElementById('roundTimerDisplay');
-  const labelEl = document.getElementById('roundTimerLabel');
-  clock?.classList.add('running');
-  labelEl?.classList.add('running');
-  if (clock)   clock.textContent = '00:00';
-  if (labelEl) labelEl.textContent = baseLabel.toUpperCase();
   const btnLabel = btn?.querySelector('.shake-wide-label');
   if (btnLabel) btnLabel.textContent = baseLabel;
-  _roundTimerInterval = setInterval(() => {
-    const secs = Math.floor((Date.now() - _roundTimerStart) / 1000);
-    const m = String(Math.floor(secs / 60)).padStart(2, '0');
-    const s = String(secs % 60).padStart(2, '0');
-    if (clock) clock.textContent = `${m}:${s}`;
-  }, 1000);
-}
-
-function stopRoundTimer() {
-  clearInterval(_roundTimerInterval);
-  _roundTimerInterval = null;
-  _roundTimerStart    = null;
-  const clock   = document.getElementById('roundTimerDisplay');
-  const labelEl = document.getElementById('roundTimerLabel');
-  clock?.classList.remove('running');
-  labelEl?.classList.remove('running');
-  if (clock)   clock.textContent = '00:00';
-  if (labelEl) labelEl.textContent = 'READY';
 }
 
 
@@ -3428,9 +3410,9 @@ function goToScreen(id) {
     // bypasses throttle when the user wants a fresh answer.
     setTimeout(probeAllServerAIConnectivity, 50);
   }
-  // v3.63.163 — screen-builder handler removed (DOM was deleted from
-  // index.html in this release). renderBuilderPicker now only fires
-  // from the v3.63.69 Builder-console roster which no longer renders.
+  // v3.63.163 — screen-builder handler removed (DOM deleted from index.html
+  // in that release). v3.63.524 — renderBuilderPicker is gone too; it had been
+  // a no-op ever since, which this comment had been quietly recording.
   if (id === 'screen-project') {
     setTimeout(updateProjectRequirements, 0);
     updateGoalCounter();
@@ -4013,7 +3995,6 @@ function _abandonInFlightRoundUI() {
     const lbl = btn.querySelector('.shake-wide-label');
     if (lbl) lbl.textContent = 'Smoke the Hive';
   }
-  if (typeof stopRoundTimer === 'function') stopRoundTimer();
   if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
   if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
   // v3.63.252 — Abandonment also voids any retry-eligible partial round; the
@@ -4128,7 +4109,6 @@ function _autoBuildLengthDirective(cstat) {
 function _autoConvergenceLengthReroll(cstat) {
   // Stop the in-flight round's UI before we reroll or halt.
   _setRunBtnLabel('Smoke the Hive');
-  if (typeof stopRoundTimer === 'function') stopRoundTimer();
   if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
   if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
 
@@ -4159,7 +4139,6 @@ function _autoConvergenceLengthReroll(cstat) {
 async function _manualLengthFix(cstat) {
   // Stop the in-flight (just-converged) round's UI before handing to the Builder.
   _setRunBtnLabel('Smoke the Hive');
-  if (typeof stopRoundTimer === 'function') stopRoundTimer();
   if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
   if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
 
@@ -6385,7 +6364,6 @@ function renderAISetupGrid() {
     listHTML = html;
   }
   grid.innerHTML = prefixedBulkSelectHTML + listHTML;
-  renderBuilderPicker();
   renderHiveCountChip();
   // v3.63.159 — Re-fire bee tooltips so any dynamically-rendered
   // mascot imgs (sidebar, expanded panels, etc.) get their friendly
@@ -8368,39 +8346,6 @@ function renderAIRow(id, keepExpanded = true) {
 }
 
 
-function renderBuilderPicker() {
-  const grid = document.getElementById('builderPickGrid');
-  if (!grid) return;
-  if (activeAIs.length === 0) return;
-  if (!builder || !activeAIs.find(a => a.id === builder)) {
-    builder = _aiListAlpha(activeAIs)[0].id;
-  }
-  // v3.63.69 — Builder Console layout. The selected Builder is now the primary
-  // control surface beside the roster, so the chips stay compact while the
-  // chosen AI and model picker remain visually anchored.
-  const builderCountClass = activeAIs.length <= 3 ? 'builder-count-small'
-    : activeAIs.length <= 6 ? 'builder-count-medium'
-    : activeAIs.length <= 9 ? 'builder-count-normal'
-    : activeAIs.length <= 12 ? 'builder-count-dozen'
-    : 'builder-count-many';
-  grid.className = `builder-pick-grid-large ${builderCountClass}`;
-
-  grid.innerHTML = _aiListAlpha(activeAIs).map(ai => {
-    const iconEl = resolveAiIcon(ai, 'builder-chip-icon', 28);
-    const isSel = builder === ai.id;
-    return `
-    <button class="builder-chip${isSel ? ' is-selected' : ''}"
-      title="${escapeHtml(ai.name)}"
-      data-action="call" data-fn="setBuilder" data-arg="${ai.id}">
-      ${iconEl}
-      <span class="builder-chip-name">${escapeHtml(ai.name)}</span>
-      ${isSel ? '<span class="builder-chip-check">🔨</span>' : ''}
-    </button>
-  `;
-  }).join('');
-  // v3.63.69 — render the selected Builder panel.
-  renderBuilderScreenModel();
-}
 
 // v3.63.69 — Selected Builder panel for Setup Step 2. Shows the
 // selected AI large (big icon, name, "Your Builder" treatment) with the model
@@ -8408,45 +8353,22 @@ function renderBuilderPicker() {
 // buildModelSelector (the same combobox as Worker Bees + Change Builder modal),
 // defaults to the cached 🔨 Builder pick, persists on change via
 // wfModelSelectPick -> saveModelForAI.
-function renderBuilderScreenModel() {
-  const wrap = document.getElementById('builderScreenModelWrap');
-  if (!wrap) return;
-  const ai = builder && activeAIs.find(a => a.id === builder);
-  if (!ai) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
-  const cfg = API_CONFIGS[ai.provider];
-  const builderRec = getBuilderRecommendation(ai.id);
-  // v3.63.307 — Resolve through getModelForAI so a variant-as-Builder
-  // shows its OWN model in the spotlight panel, not the parent's
-  // cfg.model. Variants and parent share cfg; only ai.model distinguishes.
-  const cur = getModelForAI(ai);
-  const defaultModel = (builderRec && builderRec.model) ? builderRec.model : cur;
-  const sel = buildModelSelector(ai.id, ai.provider, defaultModel, false);
-  const iconEl = resolveAiIcon(ai, 'builder-spotlight-icon', 52);
 
-  // Body: either the model selector, or a guide when no model list is cached.
-  const body = sel
-    ? `<div class="builder-spotlight-model-label">Pick the model this Builder runs</div>${sel}`
-    : `<p class="cb-model-empty">No model list cached yet — run <strong>Recommend Models</strong> on the Worker Bees screen (Setup 1) to populate it, or this Builder will use its provider default.</p>`;
-
-  wrap.style.display = 'block';
-  wrap.innerHTML = `
-    <div class="builder-spotlight-head">
-      ${iconEl}
-      <div class="builder-spotlight-id">
-        <div class="builder-spotlight-role">🔨 Your Builder</div>
-        <div class="builder-spotlight-name">${escapeHtml(ai.name)}</div>
-      </div>
-    </div>
-    <div class="builder-spotlight-body">${body}</div>
-  `;
-
-  // Keep shown model and committed model in lockstep — persist the defaulted 🔨
-  // pick if it differs from what's saved (saveModelForAI also recomputes the
-  // Gemini endpoint, v3.63.65).
-  if (sel && defaultModel && cfg && defaultModel !== cfg.model) {
-    saveModelForAI(ai.id, defaultModel);
-  }
-}
+// v3.63.524 — renderBuilderPicker() and renderBuilderScreenModel() removed.
+// Both belonged to the standalone Builder screen retired in v3.63.147, whose
+// DOM was deleted in v3.63.163. Each opened by looking up an element that has
+// not existed since — #builderPickGrid and #builderScreenModelWrap — and
+// returned immediately, so removing them is provably behaviour-neutral: they
+// were already no-ops on every call path. A comment at the screen-builder
+// handler has said exactly that since v3.63.163 without anyone acting on it.
+//
+// The stale-Builder fallback they contained (pick the first active AI when the
+// saved one is missing) sat behind that early return and so never ran; it is
+// duplicated live elsewhere in this file, so nothing is lost.
+//
+// Found by the orphan/eval audit's dangling-DOM pass, which exists because
+// plain reference counting cannot see this class of death — both functions
+// HAD callers.
 
 function setBuilder(id) {
   builder = id;
@@ -8457,7 +8379,6 @@ function setBuilder(id) {
   // persists too. loadHive() at boot restores `builder = h.builder`,
   // so the round trip is complete.
   saveHive();
-  renderBuilderPicker();
   // Refresh the work-screen bee grid so the BUILDER pill moves to the
   // new card immediately. Without this, opening Change Builder from
   // screen-work and picking a new Builder persisted state correctly
@@ -10343,31 +10264,12 @@ const _PERPLEXITY_GROUNDED_PROVIDERS = new Set(['together-ai']);
 // { provider -> tier result }. Resets the per-provider error log at the
 // top of the run so the bundle reflects the current state, not stale
 // failures from a prior call.
-async function classifyTiersForAllKeyed(opts) {
-  opts = opts || {};
-  // Reset the error log so the bundle reflects this run's outcomes only.
-  window._lastTierClassificationErrors = {};
-  // Walk every aiList entry with a key (defaults + customs). Dedupe by
-  // provider in case the same provider has multiple AI rows (rare but
-  // possible with custom imports).
-  const seen = new Set();
-  const providers = [];
-  const source = (typeof aiList !== 'undefined' && Array.isArray(aiList)) ? aiList : [];
-  for (const a of source) {
-    if (!a || !a.provider || seen.has(a.provider)) continue;
-    const cfg = API_CONFIGS[a.provider];
-    if (!cfg || !cfg._key) continue;
-    seen.add(a.provider);
-    providers.push(a.provider);
-  }
-  const entries = await Promise.all(
-    providers.map(p => classifyTiersForProvider(p, opts).then(r => [p, r]).catch(e => {
-      _recordTierError(p, 'runner-exception', e);
-      return [p, null];
-    }))
-  );
-  return Object.fromEntries(entries);
-}
+// v3.63.524 — classifyTiersForAllKeyed() removed. It was a convenience
+// runner that classified every keyed provider in one parallel pass, last
+// widened in v3.63.140 to cover customs as well as defaults. Nothing ever
+// called it. Individual classifyTier() calls do the work, and the tier
+// results the bundle reports come from those.
+
 
 function setCachedRecommendation(cacheId, model, why, labels, none, filterMeta) {
   if (!cacheId) return;
@@ -12673,8 +12575,9 @@ function continueFromBees() {
   // v3.63.147 — Builder screen consolidation. Selection now happens
   // inline on the Worker Bees screen via the per-row 🔨 "Make this the
   // Builder" affordance. If the user didn't explicitly pick a Builder,
-  // auto-default to the first active AI alphabetically — same fallback
-  // renderBuilderPicker uses today. The Worker Bees screen surfaces
+  // auto-default to the first active AI alphabetically. This is now the ONLY
+  // live copy of that fallback — renderBuilderPicker carried a duplicate that
+  // never ran and was removed in v3.63.524. The Worker Bees screen surfaces
   // which AI is currently the Builder via the Builder Bee chip on the
   // active row's collapsed state, so the user can always see and change
   // it without bouncing through a dedicated screen.
@@ -13086,21 +12989,12 @@ function saveVisionProvider(val) {
 // Find the first vision-capable AI from the user's keyed providers.
 // Returns { cfg, key, provider } or null. Used by both initial PDF OCR
 // and the work-screen re-extract button.
-function getVisionCapableAI() {
-  // v3.56.12 — honor an explicit user pick first, but only if it's actually
-  // keyed; otherwise fall through to the Automatic first-available scan so OCR
-  // never fails just because the preferred provider has no key.
-  const pref = getVisionProviderPref();
-  if (pref) {
-    const pcfg = API_CONFIGS[pref];
-    if (pcfg?._key) return { cfg: { ...pcfg, provider: pref }, key: pcfg._key, provider: pref };
-  }
-  for (const provider of VISION_PROVIDERS) {
-    const cfg = API_CONFIGS[provider];
-    if (cfg?._key) return { cfg: { ...cfg, provider }, key: cfg._key, provider };
-  }
-  return null;
-}
+// v3.63.524 — getVisionCapableAI() (singular) removed. getVisionCapableAIs()
+// below replaced it in v3.63.393 and v3.63.426 moved the last two callers
+// across; the singular has been unreachable since. It survived two audits
+// because the comments left at those call sites name it, which is enough to
+// make a plain reference count believe it is alive.
+
 
 // v3.58.7 — Ordered list of ALL keyed vision-capable AIs, user pick first,
 // then VISION_PROVIDERS order. Used by runVisionWithFallback so OCR tries
@@ -13110,11 +13004,12 @@ function getVisionCapableAI() {
 // Pre-v3.63.393 this returned ONE entry per provider (chatgpt, claude,
 // gemini, grok) and skipped server-imported AIs entirely. Two problems:
 //
-//   1. A hive can hold 2× ChatGPT + 2× Gemini variants — 4 AIs across
-//      2 providers. The old code returned just [chatgpt, gemini] and
-//      rotated between them, ignoring variant model overrides. Vision
-//      ran against the provider's DEFAULT model, not the variant's
-//      model. And rotation could never reach the OTHER ChatGPT variant.
+//   1. A hive can hold several variants of the same provider — say two
+//      ChatGPT rows and two Gemini rows, four AIs across two providers.
+//      The old code returned just [chatgpt, gemini] and rotated between
+//      them, ignoring variant model overrides. Vision ran against the
+//      provider's DEFAULT model, not the variant's, and rotation could
+//      never reach the second variant of either.
 //
 //   2. Server-imported AIs (Ollama, LM Studio, Open WebUI) have
 //      no `_key` — they carry `_modelsEndpoint` instead. The old filter
@@ -18218,7 +18113,6 @@ async function _handleConvergenceLengthGate(cstat, builderName) {
     consoleLog(`📏 Convergence blocked — document is ${cstat.status} the length ${cstat.status === 'over' ? 'target' : 'floor'} (${cstat.actual} ${cstat.unitName} vs ${cstat.status === 'over' ? cstat.limitName : cstat.floorNum + ' ' + cstat.unitName + ' floor'}). Edit the document and re-run.`, 'warn');
     toast(`📏 Convergence blocked — adjust document length and re-run`, 5000);
     _setRunBtnLabel('Smoke the Hive');
-    stopRoundTimer();
     hideSmokerOverlay();
     setStatus(`📏 Convergence blocked — document is ${cstat.status === 'over' ? 'over' : 'under'} length ${cstat.status === 'over' ? 'target' : 'floor'}`);
     return 'aborted';
@@ -18747,7 +18641,6 @@ async function runBuilderOnly() {
   }
 
   btn.disabled = false;
-  stopRoundTimer();
   hideBuilderOverlay();
   _setRunBtnLabel('Smoke the Hive');
 }
@@ -18914,7 +18807,6 @@ async function retrySingleAIInPartialRound(aiId) {
       const lbl = btn.querySelector('.shake-wide-label');
       if (lbl) lbl.textContent = 'Smoke the Hive';
     }
-    if (typeof stopRoundTimer === 'function') stopRoundTimer();
     if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
     setStatus(`⚠️ Retry failed: ${e.message}`);
     window._roundUiState = 'idle';
@@ -19397,7 +19289,6 @@ async function runRound(opts) {
       const lbl = btn.querySelector('.shake-wide-label');
       if (lbl) lbl.textContent = 'Smoke the Hive';
     }
-    if (typeof stopRoundTimer === 'function') stopRoundTimer();
     if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
     if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
     window._roundUiState = 'idle';
@@ -19605,7 +19496,6 @@ async function runRound(opts) {
     // populated until the next round's 'sending' wave clears it.
     setStatus(`🏁 Unanimous — all AIs agree the document is ready`);
     _setRunBtnLabel('Smoke the Hive');
-    stopRoundTimer();
     projectClockPause(); // pause project clock at convergence — user can resume manually if they keep iterating
     hideSmokerOverlay();
     // 🎉 Unanimous — full scene: black → fog + whirr → image + fanfare + fireworks.
@@ -19712,7 +19602,6 @@ async function runRound(opts) {
     // their suggestions or finish.
     setStatus(`🏁 Hive converged — review holdout suggestions or finish the project`);
     _setRunBtnLabel('Smoke the Hive');
-    stopRoundTimer();
     projectClockPause(); // pause project clock at convergence — user can resume manually if they keep iterating
     hideSmokerOverlay();
     // 🎉 Hive Approved — majority convergence earns the fanfare
@@ -19747,9 +19636,9 @@ async function runRound(opts) {
     consoleLog(`🔨 ${builderAI.name} (Builder) — compiling document from ${successfulReviews.length} review${successfulReviews.length!==1?'s':''} (including its own)…`, 'info');
     setBeeStatus(builderAI.id, 'sending', 'Building…');
     setStatus(`🔨 ${builderAI.name} is building the updated document…`);
-    // Update label to BUILDING… without resetting the clock
-    const _rtLabel = document.getElementById('roundTimerLabel');
-    if (_rtLabel) _rtLabel.textContent = 'BUILDING…';
+    // v3.63.524 — the BUILDING… label write was removed: #roundTimerLabel
+    // has not existed in any HTML file since the round-timer UI went. The
+    // Builder overlay below is what the user actually sees at this moment.
     hideSmokerOverlay();
     showBuilderOverlay();
 
@@ -20174,7 +20063,6 @@ async function runRound(opts) {
 
   // Reset button
   if (btn) {
-    stopRoundTimer();
     hideSmokerOverlay();
     hideBuilderOverlay();
     _setRunBtnLabel('Smoke the Hive');
@@ -21960,9 +21848,7 @@ function _wfSyncDiffModeButtons() {
   const labels = { off: 'Off', words: 'Words', sentence: 'Sentences' };
   const txt = `🔀 Diff: ${labels[window._wfDecisionDiffMode] || 'Words'}`;
   const a = document.getElementById('conflictDiffBtn');
-  const b = document.getElementById('wfDiffModeBtn');
   if (a) a.textContent = txt;
-  if (b) b.textContent = txt;
 }
 
 function wfDecisionDiffHtml(currentText, optionText, mode) {

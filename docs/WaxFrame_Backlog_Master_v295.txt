@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v294
+WaxFrame Backlog Master v295
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,26 @@ ships.
 
 
 
+
+v295 — AUDIT ITEM CLOSED (v3.63.524). Old #3 struck; items renumbered 1..3.
+The orphan/eval audit was re-run and everything it found was fixed in the same
+release rather than recorded here, so the entry closes empty.
+
+It is now a committed tool — tools/audit-dead-code.mjs — and not a procedure
+somebody re-derives from a methodology doc. That is the actual finding. The
+previous audit ran 2026-07-25, the next ran 2026-09-20, and in between five
+genuinely dead things accumulated in code that nobody could check in one
+command. The doc describes what to look for; the tool is what gets run.
+
+The audit gained a pass it did not have before: dangling DOM lookups. Plain
+reference counting cannot see a function that is called constantly and does
+nothing, which is how two Builder renderers, a pair of round-timer writes and
+a diff-mode button lookup all stayed in the file after the elements they wrote
+to were deleted from index.html. Every one of them had live callers.
+
+Two more only surfaced once the tool learned to ignore comments: a tier
+classifier with no caller, and the singular getVisionCapableAI() that
+v3.63.426 replaced — each was "referenced" solely by comments naming it.
 
 v294 — FLOW HARNESS SHIPPED (v3.63.522). Old #3 struck; items
 renumbered 1..4. tools/flow-check.mjs runs headless against a same-origin mock
@@ -304,18 +324,7 @@ acceptance test. Items needing David rather than an assistant say so.
            and the superseded vendor files deleted in the SAME release
            (spell the extensions out; .mjs vs .js has burned this project).
 
-3. Re-run the orphan-function and eval audit
-   ─────────────────────────────────────────────────────────
-   WHAT:   The zero-orphan / zero-eval baseline was last established
-           2026-07-25 and has not been re-verified since.
-   WHY:    Roughly 65 releases of drift. Cheap to check, and the audit
-           methodology doc exists precisely so it can be repeated.
-   STATE:  OPEN, mechanical.
-   WHERE:  docs/WaxFrame_Audit_Methodology_v1.txt is the procedure.
-   DONE:   The audit is re-run, findings are either fixed or recorded here
-           as entries, and the doc's review line is bumped.
-
-4. Confirm the vendored docx.min.js version for Dependabot
+3. Confirm the vendored docx.min.js version for Dependabot
    ─────────────────────────────────────────────────────────
    WHAT:   docx is absent from package.json's Dependabot manifest because
            the vendored artifact embeds no version string.
