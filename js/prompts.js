@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — prompts.js
-// Build: 20260920-019
+// Build: 20260920-020
 //  Canonical source for every AI-facing prompt WaxFrame sends.
 //  Both js/app.js (the runtime) and js/prompt-editor.js (the
 //  Prompt Editor "defaults" mirror) read from this single

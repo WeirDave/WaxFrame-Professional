@@ -1,5 +1,64 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.526 — The workplace details are out of git history too
+
+**Released:** 2026-09-20
+**Build:** 20260920-020
+
+### What changed
+
+**v3.63.525 removed workplace details from the working tree. This removes them from history.** Git
+keeps every version of every file forever, so editing a line in the current release leaves the old
+line reachable in every commit that ever contained it, and in the source archive GitHub generates
+for every tag. Those archives are the surface that matters: they are one click from a release page
+and they are what a crawler downloads.
+
+Every branch and every tag was rewritten and force-pushed. All 938 tags and all 16 branches now
+point at rewritten commits, every commit hash changed, and GitHub regenerated the per-tag source
+archives from the new trees. All 932 releases and their attached assets survived untouched.
+
+**The scan found more than the working tree did.** Two entries in the local term list — the identity
+software named in the v3.63.525 note — had never been targeted by any previous pass and were present
+in ten blobs across three documents, including one the working-tree sweep had not looked at. A
+document name and an author-attributed sentence were also still in a commit message, which
+`--replace-text` does not reach; commit messages needed their own pass.
+
+**Content on `main` is unchanged except for one line**, which was a real find: a historical release
+note still named a real work document, in a sentence the working-tree sweep had missed. It now names
+the kind of document rather than the document.
+
+### Verification
+- Every term in the local list and every targeted phrase: zero occurrences across all 24,426 text
+  blobs reachable from any branch or tag, and zero in any commit message.
+- 16 branches and 938 tags before and after. `git fsck` clean. 932 releases intact, "Latest"
+  correct.
+- The regenerated source archive for an old tag was downloaded and searched: zero occurrences,
+  which is the proof that the archives really are rebuilt from the rewritten trees rather than
+  cached.
+- Gate: all 19 stages pass against the reset working tree. The dead-code audit reports zero findings.
+
+### Known limits
+GitHub's six pull-request refs still point at pre-rewrite commits. A force-push is refused on those
+and only GitHub Support can remove them. This is the same accepted position recorded when the
+earlier rewrite ran: nothing reachable by browsing — no branch, no tag, no source archive — carries
+any of it, and reaching what remains requires a full 40-character commit hash for a ref that is not
+fetched by default. The repository has no forks.
+
+A verification pass that ran mid-rewrite reported a string as absent when it was plainly present. It
+had been skipping any batch of objects that overflowed a buffer, silently, and reporting the rest as
+clean. It was rebuilt to treat a failed batch as a hard error and to check that it read as many
+objects as it set out to read. Nothing was pushed until it passed with that check in place.
+
+### Files touched
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v297.txt`, plus the routine stamp sweep. The
+history rewrite itself changed one line of `CHANGELOG.md` on `main` and every commit hash.
+
+### Rollback
+There is none, and that is the point of the operation. A pre-rewrite mirror of the remote exists on
+the author's machine and is deliberately not published.
+
+---
+
 ## v3.63.525 — Workplace details removed from a published page, release notes and docs
 
 **Released:** 2026-09-20

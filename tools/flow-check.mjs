@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ============================================================
 //  WaxFrame — tools/flow-check.mjs
-// Build: 20260920-019
+// Build: 20260920-020
 // ============================================================
 // End-to-end flow harness. Asserts DOM and app state instead of capturing
 // screenshots, and drives a full hive against a same-origin mock provider so a

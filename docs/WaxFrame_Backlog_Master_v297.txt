@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v296
+WaxFrame Backlog Master v297
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,28 @@ ships.
 
 
 
+
+v297 — HISTORY REWRITTEN AGAIN (v3.63.526). Open list unchanged at 1..3.
+
+The v3.63.525 sweep cleaned the working tree; this cleaned history. Recorded
+because two things learned here will matter the next time.
+
+First: --replace-text does not touch commit messages. It needs --replace-message
+as well, with the same rules file. A pass that used only the first reported
+success while a document name sat in a commit body.
+
+Second, and worse: a verification script reported a string absent when it was
+plainly in the file. It read every blob including binaries, so a batch holding a
+large image overflowed the child-process buffer, the spawn failed, and the loop
+did "continue" — dropping four hundred objects and calling the rest clean. A
+verification that can silently pass is worse than none, because it is the only
+thing standing between a force-push and a leak. Any future scanner treats a
+failed batch as a hard error and asserts it read as many objects as it listed.
+
+Also worth keeping: a replacement rule is a substring match. A rule written to
+rewrite "at David's work" also rewrote the middle of "that David's workflow" in
+398 blobs. Always diff the rewritten tip against the live tip before pushing —
+that diff is what exposed it.
 
 v296 — CONFIDENTIALITY SWEEP (v3.63.525). No item opened or closed; the open
 list is unchanged at 1..3.
