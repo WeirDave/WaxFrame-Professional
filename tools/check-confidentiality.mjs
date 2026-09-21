@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ── Confidentiality gate ────────────────────────────────────────────────
-// Build: 20260920-018
+// Build: 20260920-019
 //
 // WHY THIS EXISTS
 // This repository is public, and on 2026-09-15 David escalated to an
@@ -110,6 +110,24 @@ const RULES = [
   { id: 'street-address',
     re: /\b\d{2,5}\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)?\s+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Parkway|Pkwy|Way)\b\.?/,
     msg: 'what looks like a street address' },
+  // Author-attributed workplace context. The 2026-09-15 pass searched for the
+  // employer's name and the gateway's name and found both, but it could not
+  // see a sentence that names neither and still describes the author's own
+  // situation at their job: how many model variants a hive at their workplace
+  // holds, what identity software is in use there, the title of a real work
+  // document used to reproduce a bug. Six such sentences survived that pass
+  // and stayed published for months, in source comments, in release notes and
+  // on a live documentation page. The instances are not quoted here, because
+  // writing them into a tracked file is the thing this rule exists to stop.
+  //
+  // Every pattern here is author-attributed on purpose. Second-person product
+  // copy — "keys you save on your work laptop", "different access tiers at
+  // work vs home" — is addressed to the reader about their own workplace, is
+  // correct, and must not trip this. The distinguishing feature is whose
+  // workplace the sentence is about.
+  { id: 'authored-workplace',
+    re: /\b(?:David(?:'s)?\s+(?:at\s+work|work\s+(?:setup|laptop|machine|hive|gateway|server|network))|at\s+(?:his|David's|my)\s+employer|(?:his|my)\s+work\s+(?:laptop|machine|hive|gateway|server|network)|people\s+at\s+work|session\s+at\s+work|tested\s+at\s+work)\b/i,
+    msg: 'a sentence describing the author\'s own workplace (second-person copy about the reader\'s workplace is fine — this rule is for first/third-person attribution)' },
 ];
 
 // Comment markers that mean "this line deliberately shows the shape".

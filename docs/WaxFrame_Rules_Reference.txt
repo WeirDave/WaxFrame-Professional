@@ -418,11 +418,12 @@ CREDITS
 ENVIRONMENT
 ====================================================================
 
-- David is a Senior Wireless Network Engineer (CWNA, CWDP, CWAP) at his employer
-  (contractor). WaxFrame is a side project separate from the day
-  job, though it is also used against enterprise gateways
-  (Open WebUI proxy). Air-gapped work laptop requires manual file transfer via
-  GitHub releases — which is part of why docs/ now ships in the zip.
+- David is a Senior Wireless Network Engineer (CWNA, CWDP, CWAP). WaxFrame is
+  a personal project. Assume RF and Wi-Fi fundamentals are known and never
+  explain them.
+- Some users run WaxFrame against an enterprise gateway on a machine with no
+  direct internet access, which is part of why docs/ ship inside the release
+  zip: the portable copy has to carry its own documentation.
 - Two editions: Pro (github.com/WeirDave/WaxFrame-Professional, live at
   waxframe.com, sold via weirdave.gumroad.com/l/WaxFrame) and Free
   (weirdave.github.io/WaxFrame-Free/).

@@ -1,5 +1,65 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.525 — Workplace details removed from a published page, release notes and docs
+
+**Released:** 2026-09-20
+**Build:** 20260920-019
+
+### What changed
+
+**A playbook example named a real identity and device-management stack.** The LinkedIn About
+playbook on the Document Playbooks page uses genuine reference material as its worked example,
+which is what makes the example useful. One line of that material listed the specific identity
+software in use at a real workplace. It has been replaced with a description of the constraints
+those systems impose, which is what the example was actually demonstrating. Credentials, RF
+platforms and survey tools stay — those belong in a LinkedIn About and are the point of the page.
+
+**Five more places described a real workplace.** A source comment explaining how vision rotation
+handles provider variants; three release notes, one of which named a real work document used to
+reproduce a parser bug, and one of which quoted a conversation; and an environment note in the
+rules reference. Each has been rewritten to keep the technical content and drop the attribution.
+In every case the fact being illustrated — a hive can hold several variants of one provider, a
+long server-hive session reproduced the bug — survives without it.
+
+**Two earlier redactions left broken sentences behind.** A pass in v3.63.502 substituted terms
+inside sentences and produced text that read as broken English, one instance of which disclosed
+the shape of the name it was meant to remove. Both are now rewritten as sentences.
+
+**The release gate now checks for this whole class.** The existing confidentiality stage matches
+the shape of sensitive data — keys, tokens, internal hostnames, private addresses — and a local,
+never-committed list of literal terms. Neither could see a sentence that names no employer and no
+system and still describes the author's own workplace, which is why these survived a pass that was
+specifically looking for leaks. A fourteenth structural rule now catches author-attributed
+workplace phrasing.
+
+The rule is deliberately narrow: it matches first- and third-person attribution only. Copy
+addressed to the reader about the reader's own workplace — how keys stored on a work laptop
+behave, what to expect from an employer's AI platform — is correct, useful and untouched. The
+difference the rule turns on is whose workplace the sentence is about.
+
+### Verification
+- Gate: all 19 stages pass.
+- The new rule was checked against twelve strings before shipping: six real instances that it must
+  catch, and six pieces of legitimate reader-facing copy from the manual, the privacy page and the
+  playbooks that it must not. Twelve of twelve correct.
+- The rule then fired on its own explanatory comment, which had quoted the instances it was written
+  to catch. The comment was rewritten rather than exempted — reproducing those sentences in a
+  tracked file is the thing the rule exists to prevent.
+- The gate's control-character scan, added in v3.63.511, caught a mangled escape in the new rule on
+  its first run: written through a template literal, its word boundaries had become literal
+  backspace bytes and it could never have matched anything. That is the second time that check has
+  caught a regex that looked correct in an editor and was not.
+
+### Files touched
+`document-playbooks.html`, `waxframe-user-manual.html`, `CHANGELOG.md`,
+`docs/WaxFrame_Rules_Reference.txt`, `tools/check-confidentiality.mjs`,
+`docs/WaxFrame_Backlog_Master_v296.txt`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD` restores the removed workplace details. There is no reason to do this.
+
+---
+
 ## v3.63.524 — Dead code removed, and a tool so the next audit is one command
 
 **Released:** 2026-09-20
@@ -4978,7 +5038,7 @@ Released: `2026-06-15`
 
 Two structural problems with the verify-modal vision re-scan flow that v3.63.390 didn't address:
 
-**1. The rotation list was provider-keyed, not AI-keyed.** Pre-v3.63.391 `getVisionCapableAIs()` returned ONE entry per provider (chatgpt, claude, gemini, grok). On a hive with two ChatGPT variants and two Gemini variants — four AIs across two providers — rotation only cycled between `[chatgpt, gemini]` and you could never reach the OTHER ChatGPT variant or the OTHER Gemini variant. Worse, the API call used the provider's DEFAULT model — not the variant's `ai.model` override — so vision ran against the wrong model even when it did fire.
+**1. The rotation list was provider-keyed, not AI-keyed.** Pre-v3.63.391 `getVisionCapableAIs()` returned ONE entry per provider (chatgpt, claude, gemini, grok). On a hive holding two ChatGPT variants and two Gemini variants — four AIs across two providers — rotation only cycled between `[chatgpt, gemini]` and you could never reach the OTHER ChatGPT variant or the OTHER Gemini variant. Worse, the API call used the provider's DEFAULT model — not the variant's `ai.model` override — so vision ran against the wrong model even when it did fire.
 
 **2. Server-imported AIs (Ollama, LM Studio, Open WebUI) were invisible.** The old filter required `cfg._key` to be set. Server AIs have `_modelsEndpoint` instead — they talk to a local model server, no API key — so they were dropped from rotation regardless of whether they were serving Llama 3.2 Vision, Qwen-VL, or any other vision-capable model.
 
@@ -5017,7 +5077,7 @@ Released: `2026-06-15`
 David hit two real bugs in the PDF Verify & edit modal that had been silently broken for a while:
 
 1. **Left "Original" preview pane was always blank.** The iframe at `#verifyPdfFrame` gets `src=blob:...` pointing at the uploaded PDF so the browser can render it via its own built-in PDF viewer (Firefox's pdf.js / Chrome's PDF plugin). But the CSP had no `frame-src` directive, so the iframe load fell back to `default-src 'self'`, which doesn't whitelist `blob:`. Both Firefox and Chrome blocked the iframe load. Result: every user saw a blank gray pane labeled "Original" next to the extracted text. Fix: add `frame-src 'self' blob:` to the CSP. Same restriction surface as before — only `'self'` and `blob:`, no third-party iframes — just unblocks the local preview.
-2. **No way to force a vision pass on text-extracted PDFs.** David: *"there is no way to re-run extraction against a different vision model once text has been produced."* The 🔁 Re-scan button was gated on `_lastPDFPages` (the page-image cache from a prior vision run), so for PDFs where pdf.js's text extraction succeeded — even with messy output — the button never appeared. Users were stuck with whatever pdf.js produced. Worst case: if extraction was wonky enough to be unusable, they had no in-app recovery path. Fix: button now also shows whenever we have a renderable PDF blob URL + at least one vision-capable AI keyed; clicking renders the pages on-demand (via pdf.js → JPEG data URLs) and sends them to vision. Same exact path that the initial OCR'd-PDF code already exercises.
+2. **No way to force a vision pass on text-extracted PDFs.** There was no way to re-run extraction against a different vision model once pdf.js had produced text, however poor that text was. The 🔁 Re-scan button was gated on `_lastPDFPages` (the page-image cache from a prior vision run), so for PDFs where pdf.js's text extraction succeeded — even with messy output — the button never appeared. Users were stuck with whatever pdf.js produced. Worst case: if extraction was wonky enough to be unusable, they had no in-app recovery path. Fix: button now also shows whenever we have a renderable PDF blob URL + at least one vision-capable AI keyed; clicking renders the pages on-demand (via pdf.js → JPEG data URLs) and sends them to vision. Same exact path that the initial OCR'd-PDF code already exercises.
 
 Also fixed in passing:
 
@@ -13859,7 +13919,7 @@ Closes [task #37] and advances tasks #32, #33, #34. The five-screen setup flow (
 
 **Why now**: the standalone Builder screen has been a friction point for new users (one extra click between "I picked my AIs" and "let me start working") and the audit (docs/worker-bees-audit.md) confirmed there was no functional capability on the Builder screen that couldn't move into the Worker Bees row. Removing the screen entirely is cleaner than dual maintenance.
 
-**Mascot preservation** (David's explicit hard constraint — "I don't want to lose my worker bee or my builder bee! They're so awesome and people who saw the site asked about the artwork first"): the Builder Bee mascot now lives inside each AI's expanded row, large + prominent next to the role indicator. When an AI is the active Builder, the row also gets a small Builder Bee chip in the collapsed summary so the active-Builder identity is visible at a glance without expanding.
+**Mascot preservation** (a hard constraint — the worker bee and builder bee stay): the Builder Bee mascot now lives inside each AI's expanded row, large + prominent next to the role indicator. When an AI is the active Builder, the row also gets a small Builder Bee chip in the collapsed summary so the active-Builder identity is visible at a glance without expanding.
 
 **Changes**:
 

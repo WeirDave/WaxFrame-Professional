@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v295
+WaxFrame Backlog Master v296
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,27 @@ ships.
 
 
 
+
+v296 — CONFIDENTIALITY SWEEP (v3.63.525). No item opened or closed; the open
+list is unchanged at 1..3.
+
+Recorded here because it changes what a future pass should look for. Searching
+for the employer's name and the gateway's name — which is what the 2026-09-15
+pass did, and it found them — cannot find a sentence that names neither and
+still describes the author's own workplace. Six of those survived that pass and
+stayed published for months: one in a source comment, three in release notes,
+one on a live documentation page, one in this folder.
+
+The live one was the worst of them and had nothing to do with code. A playbook
+uses real reference material as its worked example, and one line of it listed
+the identity software in use at a real workplace. It was on waxframe.com.
+
+Standing practice, which is the part worth keeping: search for the SHAPE of a
+sentence about a workplace, not for the names of things in it. The gate now
+carries a rule for that, matching author-attributed phrasing only, so that
+second-person copy addressed to the reader about the reader's own workplace
+keeps working. Rules Reference's ENVIRONMENT section was rewritten in the same
+pass and no longer describes a specific employment situation.
 
 v295 — AUDIT ITEM CLOSED (v3.63.524). Old #3 struck; items renumbered 1..3.
 The orphan/eval audit was re-run and everything it found was fixed in the same
