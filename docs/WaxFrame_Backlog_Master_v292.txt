@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v291
+WaxFrame Backlog Master v292
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -26,6 +26,24 @@ ships.
 
 
 
+v292 — QUEUE EMPTY (2026-09-20). The last numbered item — the refs the
+v3.63.515 rewrite could not reach — was closed as ACCEPTED RESIDUE on
+David's decision rather than escalated. The reasoning lives in the private
+process notes and is deliberately not restated here: this file is public,
+and the entry as previously written was a map of where to look.
+
+There are now NO numbered items. **That is the finished state, not a gap.**
+Do not invent entries to keep the count above zero. The habit this document
+kept failing at was the opposite one — carrying items that were already done
+— so an empty queue is the point of all that housekeeping, not a problem
+with it.
+
+Also fixed here: v287..v291 had left the v290..v283 notes stranded below the
+OPEN FEATURES section instead of with the other notes. Section order is back
+to ABOUT / history / OPEN BUGS / OPEN FEATURES / STANDING PRACTICE /
+OUTREACH / NOTES ON FORMAT.
+
+
 v291 — HISTORY REWRITE DONE (2026-09-20, v3.63.515). Old #1 is struck:
 the rewrite was rebuilt against current main and force-pushed. What that
 covered, verified by scanning the rewritten mirror end to end:
@@ -51,48 +69,6 @@ covered, verified by scanning the rewritten mirror end to end:
   assumed: the v3.63.393 archive now contains 18 occurrences of the
   REDACTED token that only exists because of this rewrite, and its file
   count matches the rewritten tag's tree exactly.
-
-
-════════════════════════════════════════════════════════════
-OPEN BUGS
-════════════════════════════════════════════════════════════
-
-None currently open.
-
-
-════════════════════════════════════════════════════════════
-OPEN FEATURES
-════════════════════════════════════════════════════════════
-Ordered by value.
-
-1. Pull-request refs still carry the pre-rewrite history
-   ─────────────────────────────────────────────────────────
-   WHAT:   The six refs/pull/N/head refs on GitHub still point at
-           pre-rewrite commits. A force-push cannot touch them —
-           they are server-side refs GitHub derives from the pull
-           requests themselves and refuses writes to.
-   WHY:    1,473 commits are reachable only through those refs, and
-           5,719 text blobs under them carry a term. They are not
-           discoverable through the UI, the API listing, tags,
-           branches or source archives — but a 40-character SHA
-           resolves, and SHAs leak. Two of the eight commit SHAs
-           that CHANGELOG.md was citing turned out to expose a term
-           on their live GitHub page; those citations were remapped
-           to their rewritten equivalents in v3.63.515, which is a
-           patch on the symptom rather than the cause.
-   STATE:  OPEN, and it needs David plus GitHub Support — there is
-           no API for it and no amount of pushing will do it.
-           Garbage collection alone will NOT help: PR refs are
-           referenced, so gc keeps them.
-   WHERE:  refs/pull/1, /2, /3, /8, /12, /13 on
-           github.com/WeirDave/WaxFrame-Professional.
-   DONE:   Support has removed the pull-request refs (or the pull
-           requests themselves), and
-             git ls-remote origin 'refs/pull/*'
-           either returns nothing or returns only post-rewrite
-           commits. Record the outcome here either way; if Support
-           declines, record that as the accepted residue and close
-           this entry.
 
 
 v290 — CAP WARNING AND RETRY COVERAGE SHIPPED (v3.63.514). Old #1 struck;
@@ -236,11 +212,37 @@ that actually times out. Anthropic (CF Worker proxy) and Gemini (needs
 
 
 ════════════════════════════════════════════════════════════
+OPEN BUGS
+════════════════════════════════════════════════════════════
+
+None currently open.
+
+
+════════════════════════════════════════════════════════════
+OPEN FEATURES
+════════════════════════════════════════════════════════════
+Ordered by value.
+
+None currently open.
+
+
+════════════════════════════════════════════════════════════
 STANDING PRACTICE — NOT QUEUE ITEMS
 ════════════════════════════════════════════════════════════
 These were numbered features but cannot be "completed": they are
 ongoing habits or settled decisions. Kept for the reasoning, moved
 out of the queue so the count means something.
+
+• HISTORY-REWRITE RESIDUE — ACCEPTED (2026-09-20, after v3.63.515). The
+  rewrite cleaned every surface a push can reach: branches, tags, and the
+  per-tag source archives anyone can download. What a push cannot reach was
+  weighed and accepted rather than escalated to GitHub Support. The detail
+  lives in the private process notes, not here.
+  PRACTICE: a settled decision, not a dormant task. Do not re-open it as one
+  and do not re-audit it periodically. The triggers that WOULD justify
+  revisiting are specific: a fork of the repository appearing where there are
+  currently none, or somebody reporting they actually found something.
+
 
 • BUILDER-INCAPABLE FAMILY LIST (old #1). Some model families
   cannot reliably act as Builder — they break the
