@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260920-014
+// Build: 20260920-015
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -443,6 +443,39 @@ window.WF_DEBUG = {
       // it was simply never included here. Now it is, so the next
       // gateway failure arrives with evidence instead of a guess.
       lastFailure:             this.scrubFailureRecord(this.lastFailure),
+      // v3.63.521 — the Live Console, as text.
+      //
+      // This was the single most useful troubleshooting artifact in the app
+      // and the bundle did not contain it. On 2026-09-20 a bundle from a
+      // failing session could not explain that session; the console could,
+      // and had to be copied out of the browser and pasted by hand. It holds
+      // what nothing else does: the per-call streaming lines with chunk
+      // counts, the retry and fallback lines, the provider's own error text,
+      // round banners with timings, and the halt/resume flow.
+      //
+      // Captured as textContent rather than innerHTML — the markup carries
+      // no diagnostic value and innerHTML would drag styling and injected
+      // buttons into the file. Scrubbed on the way out for the same reason
+      // everything else here is: a bundle is a file, and files travel.
+      liveConsole:             (() => {
+        try {
+          const el = document.getElementById('liveConsole');
+          if (!el) return null;
+          const text = String(el.textContent || '').trim();
+          if (!text) return null;
+          // Reuse the shared scrub, then cap. NOT under the key `raw` —
+          // scrubFailureRecord length-caps that specific field at 4,000
+          // characters for the failure record, which would gut a console
+          // transcript. Any other key gets the credential cleaning without
+          // the truncation.
+          const scrubbed = this.scrubFailureRecord({ consoleText: text });
+          const out = (scrubbed && scrubbed.consoleText) || '';
+          const LIMIT = 200000;
+          return out.length > LIMIT
+            ? '[…earlier console trimmed…]\n' + out.slice(-LIMIT)
+            : out;
+        } catch (e) { return null; }
+      })(),
       tierClassifications:     tierCache,
       tierClassificationErrors: tierErrors,
       checkpoint:              checkpoint
@@ -463,6 +496,7 @@ window.WF_DEBUG = {
     if (this.ringBuffer.length) parts.push(`${this.ringBuffer.length} round capture${this.ringBuffer.length === 1 ? '' : 's'}`);
     if (Object.keys(tierCache).length) parts.push(`${Object.keys(tierCache).length} tier classification${Object.keys(tierCache).length === 1 ? '' : 's'}`);
     if (checkpoint && checkpoint.LS_PROJECT) parts.push('project checkpoint');
+    if (envelope.liveConsole) parts.push('live console');
     const summary = parts.length ? parts.join(' + ') : 'metadata only';
     if (typeof toast === 'function') toast(`📦 Bundle saved — ${summary}`, 5000);
   },

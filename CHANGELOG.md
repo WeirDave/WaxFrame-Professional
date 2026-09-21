@@ -1,5 +1,44 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.521 — The Scout bundle now contains the Live Console
+
+**Released:** 2026-09-20
+**Build:** 20260920-015
+
+### What changed
+
+**The bundle did not include the single most useful troubleshooting artifact in the app.** On
+2026-09-20 a bundle captured from a failing session could not explain that session — the Live
+Console could, and had to be copied out of the browser and pasted in by hand. The console holds
+what nothing else in the bundle does: per-call streaming lines with chunk counts, retry and
+fallback lines, the provider's own error text verbatim, round banners with timings, and the
+halt-and-resume flow.
+
+It is now in the bundle, captured as text rather than markup — the styling and any injected buttons
+carry no diagnostic value. It is scrubbed on the way out, capped at 200,000 characters keeping the
+tail, since a long session's console runs to hundreds of kilobytes and the end is the part that
+matters.
+
+Worth recording for anyone extending this: the scrub length-caps the field named `raw` at 4,000
+characters, which is correct for a failure record and would have gutted a console transcript. The
+console is scrubbed under a different key for that reason.
+
+### Verification
+- Gate: all 19 stages pass.
+- A bundle was built in a browser and inspected without writing it to disk. It carries the console
+  with its streaming and request lines intact; an API key echoed by a provider into an error line is
+  redacted, while the masked key hint WaxFrame itself prints (`sk-p••••…`) survives — that hint is
+  what identifies *which* key is in play without exposing it, so losing it would have cost real
+  diagnostic value.
+
+### Files touched
+`js/wf-debug.js`, `CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+`git revert HEAD`. Bundles simply stop carrying the console.
+
+---
+
 ## v3.63.520 — Deep Dive was recording the wrong model, and hiding retries
 
 **Released:** 2026-09-20
