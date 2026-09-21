@@ -1,5 +1,47 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.540 — Large PDFs import again, and a locked PDF says why
+
+**Released:** 2026-09-21
+**Build:** 20260921-004
+
+### What changed
+
+**A long PDF is no longer refused.** The previous release added a 2,000,000-character limit on
+imported text to stop a crafted file expanding to 200 MB. That figure was set without measuring a
+real long document, and it was too low: 600 pages of ordinary prose comes to roughly 2.7 million
+characters, so a legitimate multi-hundred-page PDF was turned away. The limit is now 8,000,000
+characters — about two thousand pages — which still refuses the crafted file by a wide margin.
+
+**A password-protected PDF now says so.** It previously failed with `No password given`, which is
+the PDF library's own internal wording: it names neither the file nor the reason, and reads like a
+malfunction. It now says the PDF is password-protected and suggests saving an unprotected copy from
+the application that locked it. WaxFrame does not ask for the password — a password box is a
+credential surface, and removing the protection at source is both safer and more reliable.
+
+**A truncated or corrupt PDF** likewise now says that, instead of `Invalid PDF structure.`
+
+### Verification
+
+A new check generates the PDF shapes that actually break PDF engines — no text layer, encrypted with
+and without a password, 600 dense pages, truncated, broken cross-reference table, empty pages — and
+runs all eight against **both** PDF engines WaxFrame ships: the hosted one and the older one the
+portable copy is pinned to.
+
+Both engines handled all eight identically, which is the first direct evidence that the portable
+copy's older engine is not a weak point.
+
+- Gate: all 19 stages. Flow harness: 23. Injection checks: 14. Debug redaction: 44. Export
+  redaction: 20. Import bounds: green. Portable `file://` path: 9.
+
+### Files touched
+`js/app.js`, `tools/check-pdf-shapes.mjs`, `tools/README.md`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v312.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The application change is one constant and a translation of two library
+exceptions into plain wording, both inside the PDF import path.
+
 ## v3.63.539 — Imported files are bounded, and a failed save now says so
 
 **Released:** 2026-09-21

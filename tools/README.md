@@ -5,7 +5,7 @@ release ZIP is built from the repository root by
 `.github/workflows/release-assets.yml`, and nothing here is referenced by any
 page WaxFrame serves.
 
-This file exists because the folder grew to twenty scripts and several of
+This file exists because the folder grew to twenty-one scripts and several of
 them were documented nowhere. That is the same failure as an audit nobody can
 re-run in one command: a check that people cannot find does not get run, and a
 check that does not get run is not a check. If you add a script here, add a row
@@ -56,20 +56,24 @@ person to read the result, and `release-check.mjs` stays dependency-free.
 | `check-export-redaction.mjs` | Touching anything that lands in a Scout bundle or a checkpoint | Chrome |
 | `check-import-bounds.mjs` | Touching document import or anything that writes `LS_PROJECT` | Chrome |
 | `check-hostile-provider.mjs` | Touching the model-server import, `makeCleanProviderId`, or the budget/param learning path | Chrome |
+| `check-pdf-shapes.mjs` | Touching PDF extraction, the OCR hand-off, or either vendored pdf.js build | Chrome |
 | `audit-dead-code.mjs` | Every few releases, and after removing anything | — |
 | `audit-html-sinks.mjs` | Alongside `check-html-injection.mjs`, to get the list of sites to read | — |
 | `capture.mjs` | Producing screenshots | Chrome |
 
-> **`check-import-bounds.mjs` is RED against the shipped code, on purpose.**
-> It is the acceptance test for open backlog bugs 1 and 2 (unbounded import,
-> silent save failure) and stays red until those are fixed. That is why it is
-> not a gate stage.
+> **All of these are green as of v3.63.540.** Three were written red on
+> purpose, as the acceptance tests for the bugs the 2026-09-21 security review
+> found, and each went green with its fix: `check-export-redaction.mjs` in
+> v3.63.537, `check-import-bounds.mjs` in v3.63.539.
 >
-> `check-export-redaction.mjs` was red for the same reason and went **green in
-> v3.63.537**. It stays out of the gate anyway — it needs Chrome, and the gate
-> is browser-free by design. Its structural half is pinned in
-> `test-debug-redaction.mjs`, which the gate does run.
-> `check-hostile-provider.mjs` has passed since it was written.
+> None of them is a gate stage, and that is deliberate rather than pending —
+> every one needs Chrome, and `release-check.mjs` is pure Node by design so it
+> runs anywhere including CI. Where a structural half can be pinned without a
+> browser it has been: `test-debug-redaction.mjs` asserts both export paths
+> still call the scrubber, and the gate runs that.
+>
+> Writing the test red first is worth keeping as a habit. A check authored
+> after the fix has never been observed failing, so nothing proves it would.
 
 ### What each one actually answers
 
@@ -130,6 +134,23 @@ The second half is the one that bites without any attacker: `saveProject`
 wraps its write in a try/catch that only `console.warn`s, so going over quota
 silently drops the **entire** project blob — name, version, goal fields,
 starting document — with nothing on screen.
+
+**`check-pdf-shapes.mjs`** — generates the PDF shapes that actually break PDF
+engines — no text layer, encrypted, 600 pages, truncated, broken xref — and
+runs every one against **both** vendored builds: pdf.js 6.3.289 on `http://`
+and 3.11.174 on `file://`. A PDF is a text format, so the generator is inline
+and needs no library, which matters in a repo that vendors its dependencies.
+
+Testing only the hosted build tests the half that was never in doubt. The
+portable build is three years older and permanently pinned, so it is the one
+likelier to choke. As of the first run both behave identically on all eight
+shapes, which is the useful result.
+
+It found two things on that first run, both since fixed: a 2,000,000-character
+import cap that refused a legitimate 600-page document, and a
+password-protected PDF surfacing pdf.js's own `No password given` rather than
+saying what was wrong. The large fixture asserts its own density for that
+reason — under 2.4 M characters it would stop testing the cap at all.
 
 **`check-hostile-provider.mjs`** — pins three guards that all currently hold
 and that a refactor could delete without anything going red: the

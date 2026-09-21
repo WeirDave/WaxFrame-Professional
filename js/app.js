@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260921-003
+// Build: 20260921-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260921-003';         // build stamp — update each session
+const BUILD = '20260921-004';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13379,13 +13379,22 @@ async function processRefFile(file, batchLabel = '', verifyCollector = null) {
 //     and .pdf, which have no container to inspect. It is also the figure
 //     that actually protects storage and the prompt.
 //
+//     v3.63.540 — raised from 2,000,000 after the synthetic PDF corpus
+//     showed the old figure refusing a LEGITIMATE document: 600 dense pages
+//     extract to ~2.5 M characters, and a multi-hundred-page import is a
+//     named requirement rather than an edge case. A full page of prose runs
+//     3,000–4,000 characters, so 2 M is only about 500 pages. 8 M is roughly
+//     2,000 pages and still refuses the 208 M-character bomb by a factor of
+//     26. Storage pressure is no longer this constant's job — saveProject
+//     sheds reference text and says so when the quota is hit.
+//
 // These REJECT rather than truncate. Silently handing back half a document
 // is worse than refusing it: the user would have no way to know the AIs were
 // reviewing a fragment. The message names the limit and the actual size so
 // splitting the file is an obvious next step.
 const MAX_IMPORT_FILE_BYTES    = 100 * 1024 * 1024;  // 100 MB on disk
 const MAX_ZIP_TEXT_PART_BYTES  = 32 * 1024 * 1024;   // 32 MB per XML part
-const MAX_EXTRACTED_CHARS      = 2000000;            // ~2 MB of text
+const MAX_EXTRACTED_CHARS      = 8000000;            // ~8 MB of text
 
 const _fmtMB = (b) => (b / 1048576).toFixed(1) + ' MB';
 
@@ -13560,8 +13569,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.539'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.539';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.540'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.540';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -13572,7 +13581,31 @@ async function extractPDF(file) {
   // As of pdf.js 4.2.67 this is fixed at the library level, but we keep the
   // option set as defense-in-depth — WaxFrame only extracts text from PDFs
   // and never renders them interactively, so disabling eval has no cost.
-  const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
+  // v3.63.540 — Translate pdf.js's own exceptions into something a reader can
+  // act on. A password-protected PDF surfaced as the library's bare internal
+  // string, "No password given", which names neither the file nor the reason
+  // and reads like a WaxFrame malfunction. WaxFrame deliberately does NOT
+  // offer a password field: a credential prompt is a surface this app has a
+  // standing rule about, and the user can remove the protection in the tool
+  // that applied it.
+  let pdf;
+  try {
+    pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
+  } catch (e) {
+    const nm = (e && e.name) || '';
+    const msg = String((e && e.message) || e);
+    if (nm === 'PasswordException' || /password/i.test(msg)) {
+      throw new Error(
+        'That PDF is password-protected, so its text cannot be read. Open it in the app that ' +
+        'made it, save a copy without the password, and import that.');
+    }
+    if (nm === 'InvalidPDFException' || /invalid pdf/i.test(msg)) {
+      throw new Error(
+        'That file is not a readable PDF — it looks truncated or corrupt. Try re-downloading or ' +
+        're-exporting it.');
+    }
+    throw e;
+  }
 
   // ── Outline (TOC) capture ──
   let outlineText = '';
