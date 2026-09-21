@@ -1,5 +1,55 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.534 — A sweep for work that was recorded but never queued
+
+**Released:** 2026-09-20
+**Build:** 20260920-028
+
+### What changed
+
+**Every release note that ever deferred something was re-read and checked against the code.** Work
+that gets postponed in a release note and never written down anywhere else stops existing — that is
+how a lock-button issue stayed invisible from June until yesterday.
+
+Most of it turned out to be finished. The strict content-security migration shipped. The end-to-end
+flow tests exist and run. The spreadsheet library's advisory gap is covered by an automated version
+floor. The deferred retry that re-runs only the Builder against already-collected reviews is
+implemented. A deferred inline-style cleanup on the help page landed in the release it was promised
+to. None of these needed anything; the point was confirming rather than assuming.
+
+**One deliberate decision is worth recording because it looks like an omission and is not.** The
+page's security policy has no `frame-ancestors` directive. That directive only functions when sent
+as a server header, and this site is served from a host that cannot send one — which is exactly why
+the protection is a script that hides the page if it is ever framed. Omitting a directive that would
+do nothing is correct.
+
+**A real gap was found outside the code.** Every address correctly sends visitors from HTTP to
+HTTPS, but no response tells a browser to use HTTPS next time. A browser that has never visited
+before still makes one unprotected request before it learns. That first request is the one an
+attacker on a shared network can answer, and this app keeps API keys in browser storage.
+
+Nothing in this repository can fix that — it needs a response header, and the host does not send
+any. The domain is, however, already on a provider that can add one without changing a single file.
+That is now written down as an open item, with the exact steps, the verification command, and the
+warning that matters: the setting is sticky, so it starts short and gets raised only after a clean
+run.
+
+### Verification
+- Each deferred item was checked against the current code, not against a later note claiming it was
+  done.
+- Live checks against all three hostnames confirmed the redirects work and the header is absent.
+- Gate: all 19 stages. Flow harness: 23. Injection checks: 14. Debug tests: 37. Portable check: 9.
+  Dead-code audit: zero findings.
+
+### Files touched
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v305.txt`, plus the routine stamp sweep. No
+application code changed.
+
+### Rollback
+Nothing to roll back — this release records findings and changes no behaviour.
+
+---
+
 ## v3.63.533 — A debug line stopped printing to everyone's console
 
 **Released:** 2026-09-20

@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v304
+WaxFrame Backlog Master v305
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,33 @@ ships.
 
 
 
+
+v305 — CHANGELOG DEFERRAL SWEEP (v3.63.534). Three open items; all need David.
+
+Triggered by the lock bug: if one deferred item lived only in a release note,
+others might. Re-read every "DEFERRED / known issue / still open" line in
+CHANGELOG.md and checked each against the code.
+
+CLOSED, verified in code rather than trusted:
+  • Strict CSP migration — shipped; script-src has no 'unsafe-inline'.
+  • CI behaviour tests — tools/flow-check.mjs exists and is CI-wired.
+  • SheetJS Dependabot gap — covered by the release-check CVE floor.
+  • Builder-malformed retry — retrySingleAIInPartialRound implements the
+    cached-reviewer path that was deferred.
+  • help.html wipeStatus inline style — landed in v3.63.380 as promised; the
+    only remaining match is the comment describing the fix.
+
+DELIBERATE, not an omission: the CSP meta has no frame-ancestors. That
+directive is IGNORED when delivered via <meta> — header only — and GitHub
+Pages cannot send headers. Hence the JS frame-buster. Do not "fix" this by
+adding the directive; it would be decorative.
+
+NEW ITEM 3: no HSTS on waxframe.com. All hostnames 301 to https correctly, but
+nothing tells a browser to use https NEXT time, so a first-ever visit makes one
+plaintext request. DNS is already on Cloudflare but records are grey-cloud
+(A records resolve straight to GitHub Pages IPs), so no edge headers are added.
+Fixable in Cloudflare settings alone, no repo change. Entry carries the steps,
+the verify command, and the warning that HSTS is sticky — short max-age first.
 
 v304 — LOCK BUG SURFACED FROM A RELEASE NOTE (v3.63.533). Two open items now;
 both need David.
@@ -547,6 +574,46 @@ Ordered by value.
            it is FALSE, the drawn state and the stored state had
            already diverged before the click. Either answer points at
            one half of the code and the fix follows from it.
+
+3. No HSTS header on waxframe.com — one plaintext first request
+   ─────────────────────────────────────────────────────────
+   WHAT:   Every hostname redirects HTTP to HTTPS correctly
+           (apex, www, and the github.io origin all 301 to
+           https://waxframe.com/). But no response carries a
+           Strict-Transport-Security header, so a browser that
+           has never visited before still makes ONE plaintext
+           request before it learns to use HTTPS.
+   WHY:    That first hop is interceptable on a hostile network.
+           The 301 does not protect it — an attacker sitting in
+           the path answers it themselves. WaxFrame keeps API
+           keys in browser storage, so JavaScript served from a
+           stripped connection reads them. Low probability,
+           high impact, and cheap to close.
+   STATE:  OPEN, blocked on David — infrastructure, not code.
+           Nothing in this repository can set a response header:
+           GitHub Pages does not offer them, which is also why
+           the clickjacking guard is JavaScript rather than a
+           frame-ancestors directive.
+   WHERE:  Not in the repo. DNS for waxframe.com is already on
+           Cloudflare (cass/drake.ns.cloudflare.com), but the A
+           records resolve straight to GitHub Pages addresses
+           (185.199.108-111.153), i.e. DNS-only / grey cloud.
+           Nothing is proxied, so no edge headers are added.
+   DONE:   Either:
+             (a) Proxy apex + www through Cloudflare (orange
+                 cloud), set SSL/TLS mode to Full (strict), then
+                 enable HSTS under SSL/TLS -> Edge Certificates.
+                 START WITH A SHORT max-age (300s) and confirm
+                 the site loads on a fresh browser profile before
+                 raising it. HSTS is sticky: a wrong setting with
+                 a long max-age locks browsers out for that long
+                 and cannot be undone from the server side.
+                 Consider preload only once a long max-age has
+                 run without incident.
+             (b) Decide the residual risk is acceptable and
+                 record that decision here, with the reasoning,
+                 so it is a decision rather than an oversight.
+           Verify with:  curl -sI https://waxframe.com/ | grep -i strict
 
 
 Ordered by value. Everything here is real work with a real
