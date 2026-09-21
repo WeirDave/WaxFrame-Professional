@@ -5,7 +5,7 @@ release ZIP is built from the repository root by
 `.github/workflows/release-assets.yml`, and nothing here is referenced by any
 page WaxFrame serves.
 
-This file exists because the folder grew to twenty-one scripts and several of
+This file exists because the folder grew to twenty-two scripts and several of
 them were documented nowhere. That is the same failure as an audit nobody can
 re-run in one command: a check that people cannot find does not get run, and a
 check that does not get run is not a check. If you add a script here, add a row
@@ -56,7 +56,8 @@ person to read the result, and `release-check.mjs` stays dependency-free.
 | `check-export-redaction.mjs` | Touching anything that lands in a Scout bundle or a checkpoint | Chrome |
 | `check-import-bounds.mjs` | Touching document import or anything that writes `LS_PROJECT` | Chrome |
 | `check-hostile-provider.mjs` | Touching the model-server import, `makeCleanProviderId`, or the budget/param learning path | Chrome |
-| `check-pdf-shapes.mjs` | Touching PDF extraction, the OCR hand-off, or either vendored pdf.js build | Chrome |
+| `check-pdf-shapes.mjs` | Touching PDF extraction or either vendored pdf.js build | Chrome |
+| `check-ocr-handoff.mjs` | Touching the vision/OCR path, provider fallback, or `runVisionTranscription` | Chrome |
 | `audit-dead-code.mjs` | Every few releases, and after removing anything | — |
 | `audit-html-sinks.mjs` | Alongside `check-html-injection.mjs`, to get the list of sites to read | — |
 | `capture.mjs` | Producing screenshots | Chrome |
@@ -151,6 +152,31 @@ import cap that refused a legitimate 600-page document, and a
 password-protected PDF surfacing pdf.js's own `No password given` rather than
 saying what was wrong. The large fixture asserts its own density for that
 reason — under 2.4 M characters it would stop testing the cap at all.
+
+**`check-ocr-handoff.mjs`** — what happens AFTER a page is found to have no
+text. `check-pdf-shapes.mjs` stops at "extracts zero characters, correctly
+flagged sparse", because the next step calls a vision provider and that harness
+has no key. Everything past that point — the hand-off, the request shape, the
+response parse, the fallback between providers, what the user is told when they
+all fail — had never been exercised by anything.
+
+It drives that against a **mock vision provider on the same origin**, the way
+`flow-check.mjs` mocks a chat provider. No key, no spend, no network, and
+deterministic: the mock decides what comes back, so the empty-200 and
+total-failure branches are driven on demand instead of waited for.
+
+Both OCR branches are covered, because they are different code: a wholly
+image-only document takes the whole-document vision path and is marked
+`pdf-vision`, while a mostly-text document with one picture page takes the
+sparse-page path, which sends only that page and **appends** the result rather
+than replacing the real text. The mixed fixture asserts both halves are present
+in the output — an append that silently became a replacement would otherwise
+still look like a pass.
+
+What it does NOT cover, and does not claim to: whether a real provider
+transcribes a real scanned page usefully. That needs a real key against a real
+document, it costs money, and the answer is a property of the provider rather
+than of this code.
 
 **`check-hostile-provider.mjs`** — pins three guards that all currently hold
 and that a refactor could delete without anything going red: the

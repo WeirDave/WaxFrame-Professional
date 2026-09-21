@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v313
+WaxFrame Backlog Master v314
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,37 @@ ships.
 
 
 
+
+v314 — OCR HAND-OFF COVERED WITHOUT A KEY (2026-09-21). Tools
+only; no shipped code changed and no release.
+
+David confirmed he has a vision key configured, which does NOT
+make the path testable from a harness — his key lives in his
+browser on his machine, it is a credential, and it is never asked
+for. What it enables is the one manual check that remains.
+
+Everything else was mocked instead: a vision provider on the same
+origin, the way flow-check mocks a chat provider. Free,
+deterministic, and it drives the empty-200 and total-failure
+branches on demand rather than waiting for a provider to
+misbehave.
+
+Both OCR branches are covered, and they are different code —
+whole-document vision marks the result pdf-vision, while the
+sparse-page path sends ONLY the offending page and APPENDS its
+text. The mixed fixture asserts both the OCR text and the
+original text are present, because an append that silently became
+a replacement would otherwise still read as a pass.
+
+Nothing was found. Recording that as a result rather than saying
+nothing: the failure message alone names both providers, the HTTP
+status, the model, and two next steps.
+
+One thing caught in review of my own work: a first draft of the
+append assertion contained "|| true", which made it incapable of
+failing. Removed. That is the third time this session that
+pattern has come up — it is worth reading every new assertion
+once with the question "what input makes this go red?"
 
 v313 — PDF PASSWORD PROMPT SETTLED (2026-09-21). No code
 change; the behaviour shipped in v3.63.540 and David confirmed it
@@ -741,11 +772,18 @@ Ordered by value.
            issue, or a chat — see §0 of the handover. WaxFrame's
            own error strings are ours and are safe to quote;
            anything the PDF says is not.
-   NOTE:   The OCR/vision path cannot be exercised without a
-           keyed vision provider (ChatGPT, Claude, Gemini or
-           Grok). An image-only PDF currently extracts zero
-           characters and is correctly flagged sparse; what
-           happens AFTER that hand-off is untested.
+   NOTE:   The OCR/vision PLUMBING is now covered without a key,
+           by tools/check-ocr-handoff.mjs against a same-origin
+           mock vision provider — 18 assertions over both
+           branches (whole-document vision for an image-only
+           file, sparse-page OCR for a mostly-text one), the
+           provider fallback, and the all-providers-failed
+           message. No bugs found; the path is sound.
+           What a mock cannot answer is whether a REAL provider
+           transcribes a REAL scanned page usefully. That is a
+           property of the provider rather than of this code,
+           and it is the only part of the OCR story still
+           needing David and a funded key.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.
