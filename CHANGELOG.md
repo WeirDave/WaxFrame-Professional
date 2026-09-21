@@ -1,5 +1,57 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.522 — An end-to-end flow harness, and the dead code it found
+
+**Released:** 2026-09-20
+**Build:** 20260920-016
+
+### What changed
+
+**`tools/flow-check.mjs` drives the real application and asserts on state.** It borrows the
+architecture that `tools/capture.mjs` already proved — a static server, headless Chrome over the
+DevTools Protocol, state seeded through localStorage before the app boots, and readiness polling
+rather than timers — and adds a same-origin mock provider. CSP already permits `connect-src 'self'`,
+so nothing had to be loosened to make the app callable in a test.
+
+23 assertions across five flows: every setup screen reachable and back again with the project,
+hive and Builder intact; two complete hive rounds with a real Builder envelope; the Change Builder
+pill; a checkpoint round trip; and no uncaught page errors throughout. Two full rounds cost nothing
+and need no API key.
+
+It is wired into the CI job that already provisions Chrome — deliberately **not** into
+`release-check.mjs`, which is pure Node stdlib by design and would start requiring a browser on
+every local run.
+
+**It was verified by being made to fail.** A mutation re-introduced the v3.63.405 bug — `setBuilder`
+no longer refreshing the bee grid — and the harness caught it: the pill stayed on the old card while
+state said otherwise. A test that has never failed proves nothing, so this was run deliberately
+rather than assumed. The mutation was reverted and the tree confirmed unchanged.
+
+**Building it found dead code.** `updateBuilderRequirements()` wrote to `#req-builder` and
+`#builderContinueBtn`, neither of which has existed in any HTML file since the standalone Builder
+screen was retired in v3.63.147 and its DOM deleted in v3.63.163. The function and its only call
+site are gone. It surfaced because the harness went looking for a Builder indicator on the work
+screen and could not find one.
+
+Worth recording: the first attempt at that removal broke setup-screen navigation, and the harness
+caught it within a minute of having been written. The removal was redone precisely.
+
+### Verification
+- Gate: all 19 stages pass. Flow harness: 23 of 23.
+- The mutation test above, run against a deliberately broken build and then reverted.
+- Re-run clean after the dead-code removal.
+
+### Files touched
+`tools/flow-check.mjs` (new), `js/app.js`, `.github/workflows/release-check.yml`,
+`docs/WaxFrame_Backlog_Master_v294.txt` (replaces v293), `CHANGELOG.md`, plus the routine stamp
+sweep.
+
+### Rollback
+`git revert HEAD`. The harness is a tool — reverting removes coverage, not behaviour — but the same
+commit removes dead code, so revert the two separately if only one is unwanted.
+
+---
+
 ## v3.63.521 — The Scout bundle now contains the Live Console
 
 **Released:** 2026-09-20

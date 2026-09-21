@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v293
+WaxFrame Backlog Master v294
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -24,6 +24,26 @@ ships.
 
 
 
+
+
+v294 — FLOW HARNESS SHIPPED (v3.63.522). Old #3 struck; items
+renumbered 1..4. tools/flow-check.mjs runs headless against a same-origin mock
+provider: 23 assertions over the setup screens, two complete hive rounds, the
+Change Builder pill and a checkpoint round trip, for zero API spend. Wired into
+the CI job that already has Chrome — NOT into release-check.mjs, which is pure
+Node stdlib by design and would start requiring a browser.
+
+It earned its keep twice before it was even committed:
+
+  • A mutation test re-introduced the v3.63.405 bug (setBuilder no longer
+    refreshing the bee grid) and the harness caught it — pill stayed on the old
+    card while state said otherwise. A test that has never failed proves
+    nothing, so this was run deliberately rather than assumed.
+  • Building it surfaced dead code: updateBuilderRequirements() wrote to
+    #req-builder and #builderContinueBtn, neither of which has existed since
+    the standalone Builder screen was retired in v3.63.147. Removed. The first
+    removal attempt broke navigation and the harness caught THAT too, within a
+    minute of being written.
 
 
 v293 — ONE SYSTEM OF RECORD (2026-09-20). David, on finding that an
@@ -283,26 +303,7 @@ acceptance test. Items needing David rather than an assistant say so.
            and the superseded vendor files deleted in the SAME release
            (spell the extensions out; .mjs vs .js has burned this project).
 
-3. tools/flow-check.mjs — an end-to-end harness
-   ─────────────────────────────────────────────────────────
-   WHAT:   Reuse the capture.mjs CDP architecture (local server, disposable
-           headless Chrome, seeded state) but assert DOM instead of
-           screenshotting, driven against a same-origin mock provider so a
-           full multi-round hive flow costs nothing.
-   WHY:    Every bug found on 2026-09-20 — the budget retry that never
-           worked, the wrong model recorded, the auth card with no way out,
-           the rejected parameter — was found by running the real thing,
-           and most were invisible to unit tests. David asked for this
-           because the work screen is less solid than he wants.
-   STATE:  OPEN. Proposed and wanted; never started. CSP connect-src 'self'
-           already permits a same-origin mock endpoint.
-   WHERE:  tools/capture.mjs for the architecture to copy.
-   DONE:   Runs headless, spends nothing, and covers: every Back-button
-           path through the five setup screens, Change Builder pill
-           refresh, checkpoint save/return, and a full two-round hive
-           against the mock.
-
-4. Re-run the orphan-function and eval audit
+3. Re-run the orphan-function and eval audit
    ─────────────────────────────────────────────────────────
    WHAT:   The zero-orphan / zero-eval baseline was last established
            2026-07-25 and has not been re-verified since.
@@ -313,7 +314,7 @@ acceptance test. Items needing David rather than an assistant say so.
    DONE:   The audit is re-run, findings are either fixed or recorded here
            as entries, and the doc's review line is bumped.
 
-5. Confirm the vendored docx.min.js version for Dependabot
+4. Confirm the vendored docx.min.js version for Dependabot
    ─────────────────────────────────────────────────────────
    WHAT:   docx is absent from package.json's Dependabot manifest because
            the vendored artifact embeds no version string.

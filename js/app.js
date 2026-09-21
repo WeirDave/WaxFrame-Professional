@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-015
+// Build: 20260920-016
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-015';         // build stamp — update each session
+const BUILD = '20260920-016';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -3544,22 +3544,16 @@ function updateBeesRequirements() {
   if (btn) btn.classList.toggle('btn-accent', configuredCount >= 2);
 }
 
-function updateBuilderRequirements() {
-  const hasBuilder = !!builder;
-  const builderName = builder ? (aiList.find(a => a.id === builder)?.name || builder) : '';
-  const reqBuilder = document.getElementById('req-builder');
-  if (reqBuilder) {
-    reqBuilder.textContent = (hasBuilder ? '✓' : '✗') + (hasBuilder ? ` Builder: ${builderName}` : ' Builder selected');
-    reqBuilder.classList.toggle('met', hasBuilder);
-  }
-  const btn = document.getElementById('builderContinueBtn');
-  if (btn) btn.classList.toggle('btn-accent', hasBuilder);
-}
+// v3.63.522 — updateBuilderRequirements() removed. It was a straggler from the
+// standalone Builder screen retired in v3.63.147 (its DOM deleted in
+// v3.63.163): the function wrote to #req-builder and #builderContinueBtn,
+// neither of which has existed in any HTML file since. Found while building
+// tools/flow-check.mjs, whose first attempt at a Builder assertion went looking
+// for an indicator element and could not find one.
 
 // Legacy alias used by renderAISetupGrid / renderBuilderPicker callbacks
 function updateSetupRequirements() {
   updateBeesRequirements();
-  updateBuilderRequirements();
 }
 
 function updateProjectRequirements() {

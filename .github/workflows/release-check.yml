@@ -135,3 +135,17 @@ jobs:
         run: |
           mkdir -p /tmp/wf-smoke
           node tools/capture.mjs "$PWD" "${{ steps.chrome.outputs.path }}" /tmp/wf-smoke dark --smoke
+
+      # v3.63.522 — Flow harness. The smoke above proves the app BOOTS and
+      # RENDERS; this proves it WORKS. It drives the setup screens, runs two
+      # complete hive rounds against a same-origin mock provider (no API key,
+      # no spend), and asserts on state rather than pixels.
+      #
+      # It lives here rather than in release-check.mjs deliberately: the
+      # validator is pure Node stdlib with no external dependencies by
+      # design, and requiring Chrome would break that and every local run on
+      # a machine without it. This job already has a browser.
+      - name: Run end-to-end flow harness
+        env:
+          WF_CHROME: ${{ steps.chrome.outputs.path }}
+        run: node tools/flow-check.mjs
