@@ -1,5 +1,59 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.517 — A rejected API key can be replaced from the card, mid-round
+
+**Released:** 2026-09-20
+**Build:** 20260920-011
+
+### What changed
+
+**A rotated Gemini key was not even reaching the API-key card.** It produced the generic "Something
+went wrong" card instead. Google returns HTTP **400** for a bad key — not 401 or 403 — with the
+wording *"API key not valid. Please pass a valid API key."*, and the AUTH_FAILED matcher tested only
+for 401/403, "unauthorized", "forbidden", "invalid api key" and "incorrect api key". None of those
+match. The matcher now covers the phrasings providers actually use: Gemini's wording and its
+`API_KEY_INVALID` reason string, OpenAI's "Invalid Authentication", Anthropic's "invalid x-api-key"
+and `authentication_error`, plus expired-key and `unauthenticated` forms.
+
+**And the card now takes a new key inline.** A rejected key was a dead end: the card offered the
+provider console, the docs, a re-send and a retry — every one of which fails again until the key is
+actually replaced. Replacing it meant leaving the work screen, and nothing said whether the round
+would survive the trip. It does survive, but the card never said so, so the honest reading was "this
+round is over."
+
+There is now a password field on the card itself. Saving goes through the same path the Worker Bees
+row uses, so the key lands in one place and the invalid-key marker clears exactly as it does there.
+The card then points at **Re-send [AI]'s prompt only**, which re-runs that one AI and splices it back
+into the round in progress — no re-billing the other bees, no restart. The card's explanation now
+states plainly that the round is not lost, because that was the actual source of the dead end.
+
+This mirrors the v3.60.2 inline model picker, which solved the same shape of problem for
+model-related errors. Auth errors never got the equivalent.
+
+### Verification
+- Gate: all 19 stages pass. 12 new classification fixtures, 31 in the debug suite.
+- Every provider's real auth wording is pinned as a fixture, including the exact Gemini string that
+  started this, and checked to still classify as AUTH_FAILED. Rate limits, quota/billing messages
+  and plain server errors are checked to **not** be swallowed by the widened matcher.
+- The card was fired in a browser with Gemini's verbatim message: it renders as "Gemini — API key
+  was rejected" with the inline field, at the card's full width, `type="password"`.
+- The save path was driven end to end: the key persists through `saveKeyForAI`, the field clears,
+  the stale invalid-key flag is dropped, the note updates to point at the re-send button, and the
+  show/hide toggle works. The test key was removed and the original restored afterwards.
+- The round genuinely survives a trip to Worker Bees and back — verified against a seeded two-round
+  session, with history, round counter and document all intact and the launch button correctly
+  reading "Return to Work Screen". That was true before this release; nothing surfaced it.
+- The Working Document 80ch column is untouched; the `style.css` diff adds only the new block.
+
+### Files touched
+`js/wf-debug.js`, `style.css`, `tools/test-debug-redaction.mjs`, `CHANGELOG.md`, plus the routine
+stamp sweep.
+
+### Rollback
+`git revert HEAD`. Keys already saved are unaffected — they live where they always did.
+
+---
+
 ## v3.63.516 — ChatGPT's newer models were failing outright on the first round
 
 **Released:** 2026-09-20

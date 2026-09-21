@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260920-010
+// Build: 20260920-011
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -768,13 +768,28 @@ window.WF_ERROR_CATALOG = [
   },
   {
     code: 'AUTH_FAILED',
+    // v3.63.517 — the wording list was too narrow and Gemini fell straight
+    // through it. Google returns HTTP 400 (not 401/403) with "API key not
+    // valid. Please pass a valid API key." — which matches neither
+    // "invalid api key" nor "incorrect api key", so a rotated Gemini key
+    // produced a generic "Something went wrong" card with no route to fixing
+    // it. Matched on the phrases providers actually use rather than the two
+    // that happened to be seen first.
     matches: (err, ctx, msg, status) =>
       status === '401' || status === '403' || ctx.status === 401 || ctx.status === 403 ||
       msg.includes('unauthorized') || msg.includes('forbidden') ||
-      msg.includes('invalid api key') || msg.includes('incorrect api key'),
+      msg.includes('invalid api key') || msg.includes('incorrect api key') ||
+      msg.includes('api key not valid') || msg.includes('api_key_invalid') ||
+      msg.includes('api key expired') || msg.includes('invalid authentication') ||
+      msg.includes('unauthenticated') || msg.includes('invalid_api_key') ||
+      msg.includes('authentication_error') || msg.includes('invalid x-api-key'),
     title: '{ai} — API key was rejected',
-    meaning: '{ai} rejected the API key. Common causes: the key was deleted or rotated in the {ai} provider console, billing failed and the account is suspended, or the key was copied with extra whitespace. Re-test the key on Worker Bees → Test All Keys.',
+    meaning: '{ai} rejected the API key. Common causes: the key was deleted or rotated in the {ai} provider console, billing failed and the account is suspended, or the key was copied with extra whitespace. Paste a replacement below — your round is not lost, and you can re-send just this AI once the key is saved.',
     actions: [
+      // v3.63.517 — fix-key renders an inline key field on the card. Listed
+      // FIRST because replacing the key is the only action that actually
+      // resolves this error; everything below it fails again until it is done.
+      { label: 'Paste a new API key', kind: 'fix-key' },
       { label: 'Open provider console', kind: 'console-link' },
       { label: 'Open provider docs', kind: 'docs-link' },
       // v3.63.252 — Auth fix is bee-specific (rotate one key, not the whole
@@ -1378,11 +1393,89 @@ function renderTroubleshootingCard(entry, ctx) {
       renderPicker();
     }
 
+    // v3.63.517 — Inline API-key field for auth failures.
+    //
+    // Same reasoning as the model picker above, for the other half of the
+    // problem. A rejected key was a dead end on this card: it offered the
+    // provider console, the docs, a re-send and a retry — every one of which
+    // fails again until the key is actually replaced, and replacing it meant
+    // leaving the work screen with no indication that the round would
+    // survive the trip. It does survive, but nothing said so, so the card
+    // read as "your round is over".
+    //
+    // Saving goes through saveKeyForAI, the same path the Worker Bees row
+    // uses, so the key lands in one place and the invalid-key flags clear
+    // exactly as they do there. The field is type=password and its value is
+    // never logged, never echoed into the card, and never reaches a bundle.
+    const hasFixKey = (entry.actions || []).some(a => a.kind === 'fix-key');
+    const canShowKeyField =
+      hasFixKey && ctx?.aiId &&
+      typeof saveKeyForAI === 'function' &&
+      typeof aiList !== 'undefined' && aiList.find(a => a.id === ctx.aiId);
+
+    if (canShowKeyField) {
+      const wrap = document.createElement('div');
+      wrap.className = 'tc-fix-block';
+
+      const label = document.createElement('div');
+      label.className = 'tc-fix-label';
+      label.textContent = `Paste a new API key for ${ctx.aiName || 'this AI'}:`;
+
+      const row = document.createElement('div');
+      row.className = 'tc-fix-row';
+
+      const input = document.createElement('input');
+      input.type = 'password';
+      input.className = 'tc-fix-key-input';
+      input.placeholder = 'Paste key — Enter to save…';
+      input.autocomplete = 'off';
+      input.spellcheck = false;
+
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'tc-action-btn';
+      saveBtn.textContent = 'Save key';
+
+      const eyeBtn = document.createElement('button');
+      eyeBtn.className = 'tc-action-btn';
+      eyeBtn.textContent = '👁️';
+      eyeBtn.title = 'Show/hide key';
+      eyeBtn.onclick = () => {
+        input.type = input.type === 'password' ? 'text' : 'password';
+      };
+
+      const note = document.createElement('div');
+      note.className = 'tc-fix-note';
+      note.textContent =
+        'Your round is not lost. Saving here keeps you on this screen — then use ' +
+        'the re-send button below to run just this AI again.';
+
+      const commit = () => {
+        const v = input.value.trim();
+        if (!v) return;
+        saveKeyForAI(ctx.aiId, v, input);
+        input.value = '';
+        note.textContent = 'Key saved. Now use the re-send button below to run just this AI again.';
+      };
+      saveBtn.onclick = commit;
+      input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } };
+
+      row.appendChild(input);
+      row.appendChild(eyeBtn);
+      row.appendChild(saveBtn);
+      wrap.appendChild(label);
+      wrap.appendChild(row);
+      wrap.appendChild(note);
+      actionsEl.insertBefore(wrap, actionsEl.firstChild);
+    }
+
     (entry.actions || []).forEach(a => {
       // v3.60.2 — fix-bee button is suppressed when the inline dropdown
       // above already covers the same need. Keeps a single, surgical
       // affordance on the card instead of two ways to do the same thing.
       if (a.kind === 'fix-bee' && canShowModelPicker) return;
+      // Same idea for fix-key: the inline field above is the affordance, so a
+      // button that says the same thing would be a second way to do one job.
+      if (a.kind === 'fix-key' && canShowKeyField) return;
       // v3.63.252 — resend-ai only renders when we have a partial round to
       // splice into AND a specific aiId in context. No partial round → the
       // round either never started or already cleanly finished, so a

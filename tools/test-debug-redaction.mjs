@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-debug-redaction.mjs
-// Build: 20260920-010
+// Build: 20260920-011
 // ============================================================
 // Fixture-based regression test for WF_DEBUG.scrubFailureRecord, the
 // redaction pass applied to the failure record before it is written into a
@@ -206,6 +206,59 @@ check('truncation is measured after redaction, not before', () => {
 check('only the raw field is length-capped', () => {
   const long = 'm'.repeat(10000);
   assert.equal(scrub({ message: long }).message.length, 10000);
+});
+
+console.log('▶ WF_DEBUG.classify — a rejected API key must reach the AUTH_FAILED card');
+
+// v3.63.517 — a rotated Gemini key produced a generic "Something went wrong"
+// card with no route to fixing it. Google returns HTTP 400, not 401/403, and
+// says "API key not valid" — matching neither of the two phrasings the
+// matcher had. The card that classification picks is what decides whether the
+// user is offered a way out, so each provider's real wording is pinned here.
+const classifyCode = (message, status) =>
+  WF_DEBUG.classify(new Error(message), { status, message }).code;
+
+check('Gemini: "API key not valid" on HTTP 400', () => {
+  assert.equal(classifyCode('API key not valid. Please pass a valid API key.', 400), 'AUTH_FAILED');
+});
+check('Gemini: API_KEY_INVALID reason string', () => {
+  assert.equal(classifyCode('{"error":{"status":"INVALID_ARGUMENT","details":[{"reason":"API_KEY_INVALID"}]}}', 400), 'AUTH_FAILED');
+});
+check('OpenAI: "Incorrect API key provided"', () => {
+  assert.equal(classifyCode('Incorrect API key provided: sk-xxx', 401), 'AUTH_FAILED');
+});
+check('OpenAI: "Invalid Authentication"', () => {
+  assert.equal(classifyCode('Invalid Authentication', 401), 'AUTH_FAILED');
+});
+check('Anthropic: "invalid x-api-key"', () => {
+  assert.equal(classifyCode('invalid x-api-key', 401), 'AUTH_FAILED');
+});
+check('Anthropic: authentication_error type', () => {
+  assert.equal(classifyCode('{"type":"error","error":{"type":"authentication_error"}}', 401), 'AUTH_FAILED');
+});
+check('a bare 403 still classifies as auth', () => {
+  assert.equal(classifyCode('Forbidden', 403), 'AUTH_FAILED');
+});
+check('an expired key classifies as auth', () => {
+  assert.equal(classifyCode('API key expired. Please renew the API key.', 400), 'AUTH_FAILED');
+});
+
+check('the AUTH_FAILED card offers an inline key field', () => {
+  const entry = WF_DEBUG.classify(new Error('API key not valid. Please pass a valid API key.'), { status: 400 });
+  const kinds = (entry.actions || []).map(a => a.kind);
+  assert.ok(kinds.includes('fix-key'), `AUTH_FAILED actions were ${JSON.stringify(kinds)}`);
+  assert.ok(kinds.includes('resend-ai'), 'the re-send action is what makes the key fix useful');
+});
+
+// Must NOT be swallowed by the auth matcher.
+check('a rate limit is not an auth failure', () => {
+  assert.notEqual(classifyCode('Rate limit reached for requests', 429), 'AUTH_FAILED');
+});
+check('a quota/billing message is not an auth failure', () => {
+  assert.notEqual(classifyCode('You exceeded your current quota, please check your plan and billing details', 429), 'AUTH_FAILED');
+});
+check('an ordinary server error is not an auth failure', () => {
+  assert.notEqual(classifyCode('Internal server error', 500), 'AUTH_FAILED');
 });
 
 console.log('');
