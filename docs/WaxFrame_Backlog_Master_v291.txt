@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v290
+WaxFrame Backlog Master v291
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -23,6 +23,76 @@ ships.
 
 
 
+
+
+
+v291 — HISTORY REWRITE DONE (2026-09-20, v3.63.515). Old #1 is struck:
+the rewrite was rebuilt against current main and force-pushed. What that
+covered, verified by scanning the rewritten mirror end to end:
+
+  BEFORE: 21 commit messages · 2 paths · 5,719 text blobs · 12 of 23
+          archives carrying a term inside.
+  AFTER:  0 · 0 · 0 · 0. No ZIP-shaped blob remains in history at all.
+
+  Every archive artifact ever committed was removed rather than rewritten,
+  because a term inside a compressed stream cannot be substituted in place:
+  10 release ZIPs, 6 .docx, a favicon bundle, a Word lock file, and a whole
+  committed unpacked release directory (123 files). Two branded PNGs went
+  with them. The repository went from 982 MB to 141 MB.
+
+  main lost exactly ONE commit, "Add the partnered Word Doc", which added
+  nothing but a .docx. Its tree is byte-identical to what was live before
+  the rewrite — checked by tree hash, not by eye. All 927 tags and all 16
+  branches were rewritten and force-pushed; all 921 GitHub releases and
+  their assets survived; the live site serves the same version it did.
+
+  GitHub's auto-generated source archives — the part that could never be
+  fixed without a rewrite — are regenerated and clean. Proven rather than
+  assumed: the v3.63.393 archive now contains 18 occurrences of the
+  REDACTED token that only exists because of this rewrite, and its file
+  count matches the rewritten tag's tree exactly.
+
+
+════════════════════════════════════════════════════════════
+OPEN BUGS
+════════════════════════════════════════════════════════════
+
+None currently open.
+
+
+════════════════════════════════════════════════════════════
+OPEN FEATURES
+════════════════════════════════════════════════════════════
+Ordered by value.
+
+1. Pull-request refs still carry the pre-rewrite history
+   ─────────────────────────────────────────────────────────
+   WHAT:   The six refs/pull/N/head refs on GitHub still point at
+           pre-rewrite commits. A force-push cannot touch them —
+           they are server-side refs GitHub derives from the pull
+           requests themselves and refuses writes to.
+   WHY:    1,473 commits are reachable only through those refs, and
+           5,719 text blobs under them carry a term. They are not
+           discoverable through the UI, the API listing, tags,
+           branches or source archives — but a 40-character SHA
+           resolves, and SHAs leak. Two of the eight commit SHAs
+           that CHANGELOG.md was citing turned out to expose a term
+           on their live GitHub page; those citations were remapped
+           to their rewritten equivalents in v3.63.515, which is a
+           patch on the symptom rather than the cause.
+   STATE:  OPEN, and it needs David plus GitHub Support — there is
+           no API for it and no amount of pushing will do it.
+           Garbage collection alone will NOT help: PR refs are
+           referenced, so gc keeps them.
+   WHERE:  refs/pull/1, /2, /3, /8, /12, /13 on
+           github.com/WeirDave/WaxFrame-Professional.
+   DONE:   Support has removed the pull-request refs (or the pull
+           requests themselves), and
+             git ls-remote origin 'refs/pull/*'
+           either returns nothing or returns only post-rewrite
+           commits. Record the outcome here either way; if Support
+           declines, record that as the accepted residue and close
+           this entry.
 
 
 v290 — CAP WARNING AND RETRY COVERAGE SHIPPED (v3.63.514). Old #1 struck;
@@ -163,51 +233,6 @@ v283 — STREAMING SHIPPED (v3.63.499). Old #1 struck; items renumbered
 gateway deployment and 8 of 10 built-in providers, including the path
 that actually times out. Anthropic (CF Worker proxy) and Gemini (needs
 :streamGenerateContent) still need doing; that is now item 9.
-
-
-════════════════════════════════════════════════════════════
-OPEN BUGS
-════════════════════════════════════════════════════════════
-
-None currently open. (Lock-button one-way-unlock entry removed
-2026-07-25 — David: not encountered in a long time, killing it
-rather than carrying a stale repro-blocked entry indefinitely.
-If it resurfaces, re-add fresh rather than resurrecting this
-one — the old hypotheses may no longer be relevant to whatever
-the current code looks like.)
-
-
-════════════════════════════════════════════════════════════
-OPEN FEATURES
-════════════════════════════════════════════════════════════
-Ordered by value.
-
-1. Historical workplace identifiers outside the working tree
-   ─────────────────────────────────────────────────────
-   WHAT:   Surfaces outside the working tree that carried workplace
-           identifiers after the v3.63.502-504 scrub.
-             a) DONE 2026-09-15 - 42 contaminated release ZIP assets
-                and their .sha256 sidecars deleted (84 files). Only
-                v3.63.503+ assets remain, verified clean.
-             b) Commit history - 1 commit message named the employer,
-                22 named the gateway; 41 diffs touched the former, 127
-                the latter. Ten committed release ZIPs each carried
-                39-63 hits INSIDE them plus the branded PNG; invisible
-                to text search, found only by extracting every archive
-                in history.
-             c) GitHub auto-generated source archives, one per tag.
-   WHY:    The repo is public, so (b) and (c) stay reachable until the
-           history itself is rewritten. (c) cannot be removed at all
-           without deleting tags, so a rewrite is the only fix covering
-           both.
-   STATE:  A verified clean rewrite has been built: zero hits in commit
-           messages, paths, all 23,543 blobs, and inside every archive
-           with compressed streams inflated. Current tree byte-identical
-           to live. Full mirror backup taken first.
-   WHERE:  git history; repo tags; the wf-rewrite clone and the
-           WaxFrame-backup mirror, both under the user profile dir.
-   DONE:   Rewrite force-pushed and the working clone reset onto it, or
-           David decides to accept the residue. Record which.
 
 
 ════════════════════════════════════════════════════════════

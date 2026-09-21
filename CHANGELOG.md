@@ -1,5 +1,84 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.515 — Git history rewritten; every commit SHA has changed
+
+**Released:** 2026-09-20
+**Build:** 20260920-009
+
+### Read this if you have a clone
+
+**The entire git history of this repository was rewritten and force-pushed on 2026-09-20.** Every
+commit SHA on every branch and every one of the 927 tags is different. An existing clone cannot
+fast-forward and `git pull` will not reconcile it. Re-clone, or reset an existing clone onto the
+new history:
+
+```
+git fetch origin --prune --prune-tags --force --tags
+git reset --hard origin/main
+```
+
+Nothing about the released software changed. `main`'s tree after the rewrite is byte-identical to
+`main`'s tree before it, verified by comparing tree hashes rather than by inspection. The live site,
+all 921 GitHub releases and every release asset are untouched.
+
+### What changed and why
+
+Material that should never have been committed had reached this public repository's history — in
+commit messages, in file contents, in two image filenames, and inside archives that had been
+committed as build artifacts. The working tree was cleaned in v3.63.502–504 and a gate has enforced
+it since (release-check stage 19), but a clean tree does not clean history, and GitHub regenerates a
+downloadable source archive for every tag from whatever that tag points at. Only a rewrite reaches
+those.
+
+**Archive artifacts were removed from history rather than rewritten.** A term inside a compressed
+stream is invisible to text search and cannot be substituted in place, so every archive ever
+committed is gone: ten release ZIPs, six `.docx` files, a favicon bundle, a Word lock file, and a
+committed unpacked release directory of 123 files. Two image files were removed with them. None of
+these existed in the current tree, so nothing shipped is affected. The repository fell from 982 MB
+to 141 MB as a side effect.
+
+**`main` lost exactly one commit** — one whose only content was adding a `.docx`. Commits elsewhere
+whose entire content was an archive were dropped the same way, which is why the abandoned working
+branches are shorter than they were.
+
+**Eight commit SHAs cited in this changelog were remapped** to their post-rewrite equivalents. Two
+of the eight resolved to commits that displayed redacted material on their GitHub page.
+
+### Verification
+- The rewritten history was scanned end to end before pushing: commit messages, every path ever
+  committed, every text blob, and the inside of every archive with compressed streams inflated.
+  Before: 21 commit messages, 2 paths, 5,719 text blobs and 12 of 23 archives carried a term.
+  After: zero on all four, with no archive-shaped blob left in history at all.
+- `main`'s tree hash is identical before and after. The working clone was reset onto the rewritten
+  history and its tree hash still matches.
+- All 927 tags resolve; all 16 branches pushed; `git fsck` clean; the release gate passes on the
+  reset tree.
+- GitHub's auto-generated source archives were re-downloaded for six tags spanning v3.63.81 to
+  v3.63.514, extracted, and scanned — all clean. That they are genuinely regenerated rather than
+  cached was proven rather than assumed: the v3.63.393 archive now contains the redaction token
+  introduced by this rewrite, and its file count matches the rewritten tag's tree exactly.
+- Two full backup mirrors were taken before any of this, one cloned from the live remote.
+
+### Known residue
+GitHub's pull-request refs (`refs/pull/N/head`) still point at pre-rewrite commits. A force-push
+cannot change them — they are server-side refs GitHub derives from the pull requests and refuses
+writes to — and garbage collection will not remove them, because they are referenced. They are not
+reachable through the UI's file views, the API listing, tags, branches or source archives, but a
+full SHA still resolves. Removing them requires GitHub Support. Tracked as the only open item in
+`docs/WaxFrame_Backlog_Master_v291.txt`.
+
+### Files touched
+`CHANGELOG.md` (eight commit SHAs remapped), `docs/WaxFrame_Backlog_Master_v291.txt` (replaces
+v290), plus the routine stamp sweep. The rewrite itself changed no file content in the current
+tree.
+
+### Rollback
+The pre-rewrite history is preserved in two local mirrors taken before the push. Restoring it would
+mean force-pushing a mirror back, which would republish the material the rewrite removed; it is a
+recovery path for catastrophe, not a change of mind.
+
+---
+
 ## v3.63.514 — Cap-aware launch warning; the learned ceiling was recorded against the wrong model
 
 **Released:** 2026-09-20
@@ -4549,7 +4628,7 @@ The `isEvalSupported: false` flag has been on the `getDocument()` call since pre
 
 ### What got restored
 
-`lib/pdf.min.js` (320KB, pdf.js 3.11.174 UMD) and `lib/pdf.worker.min.js` (1MB, matching classic-script worker) were vendored in the repo through v3.63.16 and deleted in v3.63.51 as orphans of the 4.10.38 upgrade. Restored from git history (commit d1b775b7^) so the bytes are identical to what WaxFrame shipped pre-v3.63.16 — no fresh downloads, no provenance ambiguity.
+`lib/pdf.min.js` (320KB, pdf.js 3.11.174 UMD) and `lib/pdf.worker.min.js` (1MB, matching classic-script worker) were vendored in the repo through v3.63.16 and deleted in v3.63.51 as orphans of the 4.10.38 upgrade. Restored from git history (commit f192f281^) so the bytes are identical to what WaxFrame shipped pre-v3.63.16 — no fresh downloads, no provenance ambiguity.
 
 ### Why a runtime split, not just "always use UMD"
 
@@ -8572,11 +8651,11 @@ Released: `2026-06-12`
 
 Rollup of three docs-fix commits that landed on `main` after v3.63.289 without their own version tag — the original plan was to ship them as v3.63.290 individually, but Dropbox locked the entire worktree mid-sweep and blocked the stamp bump. This release wraps them properly now that the locks cleared.
 
-**1. Hero logo halves on laptop viewports** (commit [`f8c89ed5`](https://github.com/WeirDave/WaxFrame-Professional/commit/f8c89ed5)). The 720px hero logo that anchored a big desktop monitor in v3.63.289 was eating most of the fold on 1366×768 laptops. Added a `@media (max-width: 1599px)` rule that drops `.logo` to 360px on anything narrower than a large desktop monitor.
+**1. Hero logo halves on laptop viewports** (commit [`881d3139`](https://github.com/WeirDave/WaxFrame-Professional/commit/881d3139)). The 720px hero logo that anchored a big desktop monitor in v3.63.289 was eating most of the fold on 1366×768 laptops. Added a `@media (max-width: 1599px)` rule that drops `.logo` to 360px on anything narrower than a large desktop monitor.
 
-**2. Worker Bee hero follows the same responsive rule** (commit [`73a096e1`](https://github.com/WeirDave/WaxFrame-Professional/commit/73a096e1)). The `.bug-hero-bee` was added to the same `@media` block so it also halves to 360px on laptops, keeping visual parity with the logo across breakpoints.
+**2. Worker Bee hero follows the same responsive rule** (commit [`3a32a551`](https://github.com/WeirDave/WaxFrame-Professional/commit/3a32a551)). The `.bug-hero-bee` was added to the same `@media` block so it also halves to 360px on laptops, keeping visual parity with the logo across breakpoints.
 
-**3. Bee cascade-ordering bug fix** (commit [`84b15198`](https://github.com/WeirDave/WaxFrame-Professional/commit/84b15198)). #2 didn't actually work in practice: the `.bug-hero-bee` base rule was defined LATER in the source than the `@media` block that overrode it, so CSS source-order resolved every render back to 720px. The `.logo` worked because its base rule was above the `@media` block. Reordered the source so `.bug-hero-bee` base sits next to `.logo` base, BEFORE the shared `@media` block. Both heroes now halve correctly at <1600px wide. David caught the visual mismatch — methodology-doc lesson worth noting: when a responsive CSS rule looks selector-correct but doesn't render, check source order before doubting the selector.
+**3. Bee cascade-ordering bug fix** (commit [`dd8eedf0`](https://github.com/WeirDave/WaxFrame-Professional/commit/dd8eedf0)). #2 didn't actually work in practice: the `.bug-hero-bee` base rule was defined LATER in the source than the `@media` block that overrode it, so CSS source-order resolved every render back to 720px. The `.logo` worked because its base rule was above the `@media` block. Reordered the source so `.bug-hero-bee` base sits next to `.logo` base, BEFORE the shared `@media` block. Both heroes now halve correctly at <1600px wide. David caught the visual mismatch — methodology-doc lesson worth noting: when a responsive CSS rule looks selector-correct but doesn't render, check source order before doubting the selector.
 
 ### Files touched
 
@@ -8751,7 +8830,7 @@ David asked for a sweep of everything I'd put on the back burner during the v3.6
 
 A four-line checklist sits at the end of the doc for the next quarterly audit.
 
-**5. v3.63.274 "missing tag" turned out to be a local-clone artifact.** The v3.63.275 changelog flagged "v3.63.274 was never tagged" based on `git tag -l 'v3.63.274'` returning empty locally. Investigating now: the tag and the GitHub Release for v3.63.274 had existed on the remote since 2026-06-11T13:56:27Z all along — the local worktree just hadn't fetched the tag, and `release-check.mjs`'s diff-against-tag check was therefore comparing HEAD against v3.63.273 (the most recent locally-known tag) the entire time, not against v3.63.274. No code action needed; the paper-trail "gap" was a false positive. Local tag fetched via `git tag v3.63.274 8a6c0963 && git push origin v3.63.274` (no-op on remote: "Everything up-to-date") so future local diff-against-tag checks see the right baseline.
+**5. v3.63.274 "missing tag" turned out to be a local-clone artifact.** The v3.63.275 changelog flagged "v3.63.274 was never tagged" based on `git tag -l 'v3.63.274'` returning empty locally. Investigating now: the tag and the GitHub Release for v3.63.274 had existed on the remote since 2026-06-11T13:56:27Z all along — the local worktree just hadn't fetched the tag, and `release-check.mjs`'s diff-against-tag check was therefore comparing HEAD against v3.63.273 (the most recent locally-known tag) the entire time, not against v3.63.274. No code action needed; the paper-trail "gap" was a false positive. Local tag fetched via `git tag v3.63.274 9a1f8f63 && git push origin v3.63.274` (no-op on remote: "Everything up-to-date") so future local diff-against-tag checks see the right baseline.
 
 ### Deliberately NOT addressed (defer per audit recommendation)
 
@@ -9074,7 +9153,7 @@ Items 1 and 3 were behind the same hole in CI: there are more build stamps than 
 
 ### Note on v3.63.274's tag
 
-v3.63.274's commit (`8a6c0963`) landed on main but the git tag / GitHub Release was never cut, which means the release-check `Cache-bust drift since last tag` step in this run compared HEAD against `v3.63.273` rather than `v3.63.274`. Not something to silently retro-fix — flagging here so the gap is visible in the timeline.
+v3.63.274's commit (`9a1f8f63`) landed on main but the git tag / GitHub Release was never cut, which means the release-check `Cache-bust drift since last tag` step in this run compared HEAD against `v3.63.273` rather than `v3.63.274`. Not something to silently retro-fix — flagging here so the gap is visible in the timeline.
 
 ---
 
@@ -10064,7 +10143,7 @@ The "Checkpoints screen — Save mode" block on Step 7 now leads with a screensh
 - Updated: `CHANGELOG.md`
 - Version/build stamps to v3.63.245 / 20260608-021 across HTML, JS, CSS, and `package.json`
 
-The screenshot PNGs (`screenshot_template-gallery_{dark,light}.png`, `screenshot_checkpoint-save_{dark,light}.png`) landed in commit `223adfbc` after David ran `tools/capture-screenshots.ps1` against the v3.63.245-extended capture pipeline.
+The screenshot PNGs (`screenshot_template-gallery_{dark,light}.png`, `screenshot_checkpoint-save_{dark,light}.png`) landed in commit `b2de3766` after David ran `tools/capture-screenshots.ps1` against the v3.63.245-extended capture pipeline.
 
 ---
 
@@ -11386,7 +11465,7 @@ Anyone landing on the GitHub README or the in-app User Manual now sees screensho
 ### Files Changed
 
 - Updated: `README.md` (3 `src=` paths bumped), `waxframe-user-manual.html` (3 image figures: `src=`, `alt=`, `<figcaption>` numbers), `tools/README.txt` (architecture-notes wording fix), `CHANGELOG.md`, `js/version.js`, `package.json`
-- Regenerated: 12 PNGs in `screenshots/` (setup1/2/3/4 + welcome + settings + work, both themes — pushed by David in commit `0876bc6`)
+- Regenerated: 12 PNGs in `screenshots/` (setup1/2/3/4 + welcome + settings + work, both themes — pushed by David in commit `828aab7`)
 - Deleted: `screenshots/screenshot_setup5_dark.png`, `screenshots/screenshot_setup5_light.png` (orphans)
 - Version/build stamps to v3.63.196 / 20260606-014 across 9 HTML, 14 JS, style.css, package.json
 
@@ -23324,7 +23403,7 @@ New **TEST UNIVERSE** section at the top of the test master replaces three older
 
 ### What didn't change
 
-No JS logic. No HTML structure. No template content. No round / hive / Notes mechanics. No new selectors, no new classes. No CSS — `.dp-rounds` fix already on main from v3.38.12 (commit `fe7bb93`). Restaurant Review playbook page is NOT touched in this release; the fix is parked in Backlog v26 Section 1.
+No JS logic. No HTML structure. No template content. No round / hive / Notes mechanics. No new selectors, no new classes. No CSS — `.dp-rounds` fix already on main from v3.38.12 (commit `e6e3da3`). Restaurant Review playbook page is NOT touched in this release; the fix is parked in Backlog v26 Section 1.
 
 ---
 ## v3.38.12
