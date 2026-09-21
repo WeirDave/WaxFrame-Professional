@@ -1,5 +1,56 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.535 — Deliberate decisions now have somewhere to live
+
+**Released:** 2026-09-20
+**Build:** 20260920-029
+
+### What changed
+
+**The transport-security question raised in v3.63.534 has been decided, and the decision is
+recorded rather than left as an open task.**
+
+The finding was real: every address correctly sends visitors to the secure site, but nothing tells
+a browser to insist on it next time, so a first-ever visit makes one unprotected request. The fix
+would mean routing the domain through a second content network purely to add one response header.
+
+That is not worth doing here. The attack it prevents requires someone positioned on a visitor's
+network during their very first visit. Against that, the site already sits behind one content
+network; adding another brings its own caching and failure behaviour, requires a specific
+certificate mode or the site breaks, and the header itself cannot be withdrawn once sent — a wrong
+setting locks browsers out for however long it was set for. That is a permanent piece of operating
+surface for a narrow threat at this scale.
+
+**The record now says what would change the answer:** a genuinely larger audience, or moving off a
+host that cannot send its own headers — at which point it stops being an architecture change and
+becomes one line of configuration. It is not on a review schedule, because a decision that gets
+re-litigated on a timer is not a decision.
+
+**The backlog gained a section for exactly this.** Until now there were two possible fates for a
+finding: do it, or delete it. Deleting throws away the reasoning, so the next person finds the same
+gap and files it again as a defect — and the one after that does it once more. Settled decisions now
+sit alongside open work, saying what was decided, why, and what would justify revisiting.
+
+The same section records why a related protection is a script rather than a policy directive: the
+directive is ignored unless sent as a header, and this host sends none. That looks like an oversight
+to anyone reading the policy, and now it is not left to be rediscovered.
+
+### Verification
+- Backlog section order verified end to end after the edit, including a prose sentence the first
+  insertion attempt split in half.
+- Two open items remain, both needing David.
+- Gate: all 19 stages. Flow harness: 23. Injection checks: 14. Debug tests: 37. Portable check: 9.
+  Dead-code audit: zero findings.
+
+### Files touched
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v306.txt`, plus the routine stamp sweep. No
+application code changed.
+
+### Rollback
+Nothing to roll back — this release records a decision and changes no behaviour.
+
+---
+
 ## v3.63.534 — A sweep for work that was recorded but never queued
 
 **Released:** 2026-09-20

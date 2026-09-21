@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v305
+WaxFrame Backlog Master v306
 2026-09-20
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,34 @@ ships.
 
 
 
+
+v306 — HSTS DECIDED, NOT DONE (v3.63.535). Two open items; both need David.
+
+New SETTLED DECISIONS section. Until now a finding had two fates: do it, or
+delete it. Deleting loses the reasoning, so the next reader finds the same gap
+and files it again — and the one after that does it once more. The refs/pull
+residue decision had this problem and survived only because it is written into
+CLAUDE.md §4 at length.
+
+Item 3 (no HSTS on waxframe.com) moved there as a decision, not a deletion.
+David's call, and correct: the attack needs an active MITM at a user's FIRST
+EVER visit; the cost is a second CDN in front of one that already exists
+(Pages runs on Fastly), an SSL-mode dependency that breaks the site if wrong,
+and a header that cannot be withdrawn once sent.
+
+REVISIT TRIGGERS, and nothing else: a real user base beyond a handful of
+customers, or hosting moving off GitHub Pages to anything that sets its own
+headers. NOT on a schedule — a decision re-litigated on a timer is not a
+decision.
+
+The section also records why the clickjacking guard is JS rather than a
+frame-ancestors directive: that directive is IGNORED via <meta>, header only,
+and Pages sends none. It reads as an omission to anyone auditing the CSP, so
+it is now written down instead of waiting to be rediscovered.
+
+FORMAT RULE ADDED: an item deliberately not done moves to SETTLED DECISIONS
+with what was decided, why, and the revisit trigger. Deleting it instead is
+how a closed question comes back as a bug report.
 
 v305 — CHANGELOG DEFERRAL SWEEP (v3.63.534). Three open items; all need David.
 
@@ -575,49 +603,59 @@ Ordered by value.
            already diverged before the click. Either answer points at
            one half of the code and the fix follows from it.
 
-3. No HSTS header on waxframe.com — one plaintext first request
-   ─────────────────────────────────────────────────────────
-   WHAT:   Every hostname redirects HTTP to HTTPS correctly
-           (apex, www, and the github.io origin all 301 to
-           https://waxframe.com/). But no response carries a
-           Strict-Transport-Security header, so a browser that
-           has never visited before still makes ONE plaintext
-           request before it learns to use HTTPS.
-   WHY:    That first hop is interceptable on a hostile network.
-           The 301 does not protect it — an attacker sitting in
-           the path answers it themselves. WaxFrame keeps API
-           keys in browser storage, so JavaScript served from a
-           stripped connection reads them. Low probability,
-           high impact, and cheap to close.
-   STATE:  OPEN, blocked on David — infrastructure, not code.
-           Nothing in this repository can set a response header:
-           GitHub Pages does not offer them, which is also why
-           the clickjacking guard is JavaScript rather than a
-           frame-ancestors directive.
-   WHERE:  Not in the repo. DNS for waxframe.com is already on
-           Cloudflare (cass/drake.ns.cloudflare.com), but the A
-           records resolve straight to GitHub Pages addresses
-           (185.199.108-111.153), i.e. DNS-only / grey cloud.
-           Nothing is proxied, so no edge headers are added.
-   DONE:   Either:
-             (a) Proxy apex + www through Cloudflare (orange
-                 cloud), set SSL/TLS mode to Full (strict), then
-                 enable HSTS under SSL/TLS -> Edge Certificates.
-                 START WITH A SHORT max-age (300s) and confirm
-                 the site loads on a fresh browser profile before
-                 raising it. HSTS is sticky: a wrong setting with
-                 a long max-age locks browsers out for that long
-                 and cannot be undone from the server side.
-                 Consider preload only once a long max-age has
-                 run without incident.
-             (b) Decide the residual risk is acceptable and
-                 record that decision here, with the reasoning,
-                 so it is a decision rather than an oversight.
-           Verify with:  curl -sI https://waxframe.com/ | grep -i strict
-
-
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.
+
+SETTLED DECISIONS
+════════════════════════════════════════════════════════════
+Things that were considered and deliberately NOT done. They
+live here so a later reader does not re-raise them as
+oversights, which is what happens when a decision is only
+recorded in someone's memory.
+
+An entry here is not permanent. It says what was decided, why,
+and what would justify revisiting. If a trigger fires, move it
+back into OPEN FEATURES with that trigger named.
+
+1. HSTS on waxframe.com — NOT doing it (decided 2026-09-20)
+   ─────────────────────────────────────────────────────────
+   WHAT:   No Strict-Transport-Security header is sent. Every
+           hostname 301s HTTP to HTTPS correctly, but nothing
+           tells a browser to use HTTPS next time, so a first-
+           ever visit makes one plaintext request first.
+   DECIDED: Accept the residual risk. Do not proxy DNS through
+           Cloudflare to add the header.
+   WHY:    The attack needs an active network attacker sitting
+           in the path at a user's FIRST EVER visit. Against
+           that, the cost is real and ongoing:
+             • GitHub Pages already runs behind Fastly, so
+               proxying adds a SECOND CDN with its own caching
+               and failure modes.
+             • Cloudflare proxy in front of Pages needs SSL/TLS
+               mode Full (strict) or the site breaks or loops.
+             • HSTS is sticky and NOT revocable from the server.
+               A wrong setting with a long max-age locks
+               browsers out for that whole duration.
+           That is more permanent operating surface than the
+           threat justifies at current scale.
+   NOTE:   The reason this cannot be fixed in the repo at all:
+           GitHub Pages sends no custom response headers. That
+           is the same reason the clickjacking guard is a script
+           rather than a frame-ancestors directive, and why the
+           CSP meta correctly OMITS frame-ancestors (that
+           directive is ignored unless sent as a header).
+   REVISIT IF: WaxFrame gains a real user base beyond a handful
+           of customers, OR hosting moves off GitHub Pages to
+           anything that can set its own headers — at which
+           point this is a one-line config rather than an
+           architecture change. Not on a schedule; no periodic
+           re-audit.
+   IF REVISITED: proxy apex + www (orange cloud), SSL/TLS mode
+           Full (strict), then HSTS under SSL/TLS -> Edge
+           Certificates. START at max-age 300 and confirm a
+           fresh browser profile loads the site before raising
+           it. Preload only after a long max-age has run clean.
+           Verify: curl -sI https://waxframe.com/ | grep -i strict
 
 NOTES ON FORMAT
 ════════════════════════════════════════════════════════════
@@ -638,6 +676,11 @@ State vocabulary:
 When an item ships, it moves to CHANGELOG.md and is
 DELETED from this file. No "CLOSED" section here — the
 changelog is the system of record for completed work.
+
+When an item is deliberately NOT done, it moves to SETTLED
+DECISIONS with what was decided, why, and what would justify
+revisiting. Deleting it instead loses the reasoning, and the
+next reader finds the same gap and files it again as a bug.
 
 Two habits this document keeps failing at, both fixed in v281:
   • Shipped items must be DELETED the day they ship. Old #7 sat
