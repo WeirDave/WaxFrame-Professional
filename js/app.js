@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260921-004
+// Build: 20260921-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260921-004';         // build stamp — update each session
+const BUILD = '20260921-005';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13466,7 +13466,16 @@ async function extractFromFile(file, options = {}) {
   if (ext === 'xlsx' || ext === 'xlsm') {
     return _guard(await extractXLSX(file, options));
   }
-  throw new Error(`Unsupported file type: .${ext}. Accepted: .txt, .md, .pdf, .docx, .pptx, .xlsx, .xlsm`);
+  // v3.63.541 — a photographed or scanned page. No _guard: vision returns a
+  // transcription, not a parsed text layer, and it cannot run away with the
+  // character count the way a decompression bomb can.
+  if (IMAGE_EXTENSIONS.includes(ext)) {
+    const r = await extractImage(file);
+    return [{ ...r, suggestedName: file.name }];
+  }
+  throw new Error(
+    `Unsupported file type: .${ext}. Accepted: .txt, .md, .pdf, .docx, .pptx, .xlsx, .xlsm, ` +
+    `and photos or scans (.jpg, .png, .webp, .gif, .bmp).`);
 }
 
 // ============================================================
@@ -13569,8 +13578,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.540'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.540';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.541'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.541';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -13963,6 +13972,113 @@ async function renderPDFToImages(pdf) {
     images.push(canvas.toDataURL('image/jpeg', 0.85).split(',')[1]);
   }
   return images;
+}
+
+// ── Photographed / scanned documents (v3.63.541) ──────────────────────
+//
+// A photo of a page is the single most common scanned artifact there is,
+// and until this release WaxFrame refused it: "Unsupported file type: .jpg".
+// That was the odd part — the machinery to read one was already here and
+// wired up. runVisionWithFallback takes base64 JPEG images and is what the
+// PDF path hands page renders to. The only thing missing was accepting the
+// file and handing it over, which is what this does.
+//
+// Normalised through a canvas rather than sent as-is, for three reasons:
+//   • it makes PNG, WebP and GIF all arrive as the JPEG the vision request
+//     already declares (`data:image/jpeg;base64,...`), instead of a data URL
+//     whose header lies about its contents;
+//   • a modern phone photo is 3-12 MB and 4000+ px on the long edge, which
+//     is far past what any vision model reads and is billed by the pixel.
+//     Capping the long edge at IMAGE_VISION_MAX_EDGE keeps the request sane
+//     without the user having to think about it;
+//   • EXIF orientation is applied by the browser on draw, so a photo taken
+//     sideways is transcribed the right way up.
+const IMAGE_VISION_MAX_EDGE = 2200;   // px on the long edge, before encoding
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'];
+
+function _imageFileToJpegB64(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, IMAGE_VISION_MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale));
+        const h = Math.max(1, Math.round(img.naturalHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        // White underneath: a transparent PNG would otherwise flatten to
+        // black and the text would vanish into it.
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve({
+          b64: canvas.toDataURL('image/jpeg', 0.85).split(',')[1],
+          width: img.naturalWidth, height: img.naturalHeight,
+          sentW: w, sentH: h, scaledDown: scale < 1
+        });
+      } catch (e) { reject(e); }
+      finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('That image could not be decoded. It may be corrupt, or in a format this browser cannot read (HEIC from an iPhone is a common one — export it as JPEG first).'));
+    };
+    img.src = url;
+  });
+}
+
+async function extractImage(file) {
+  const status = _activeStatusEl();
+  const result = { text: '', warnings: [], sourceType: 'image-vision' };
+
+  // Fail early and specifically. Without a keyed vision provider there is
+  // nothing this path can do — an image has no text layer to fall back on,
+  // unlike a PDF — so say that rather than returning an empty document.
+  const visionAIs = (typeof getVisionCapableAIs === 'function') ? getVisionCapableAIs() : [];
+  if (!visionAIs.length) {
+    throw new Error(
+      'Reading a photo or scan needs a vision-capable AI, and none is set up yet. Add a key for ' +
+      'ChatGPT, Claude, Gemini or Grok in Setup, then try again — or paste the text in directly.');
+  }
+
+  if (status) { status.textContent = '⏳ Preparing the image…'; setFileStatusState(status, 'loading'); }
+  const prepped = await _imageFileToJpegB64(file);
+
+  window._visionActiveLabel = '';
+  const _hb = _startStatusHeartbeat(status, () => {
+    const who = window._visionActiveLabel ? `${window._visionActiveLabel} vision` : 'AI vision';
+    return `⏳ Reading the image with ${who} (can take a minute) —`;
+  });
+  let vr;
+  try { vr = await runVisionWithFallback([prepped.b64], null); }
+  finally { _hb(); }
+
+  const { text, used, errors } = vr;
+  if (!text || !text.trim()) {
+    throw new Error(
+      `No text could be read from that image (${(errors || []).join('; ') || 'the AI returned nothing'}). ` +
+      `If the photo is blurry or at a steep angle, retake it square-on in good light. ` +
+      `You can also paste the text in directly.`);
+  }
+
+  result.text = text.trim();
+  result.warnings.push(`Read from an image via AI vision (${used}) — check it against the original before running rounds`);
+  if (prepped.scaledDown) {
+    result.warnings.push(`Image was scaled to ${prepped.sentW}x${prepped.sentH} for the AI — retake closer if small text was missed`);
+  }
+  if (errors && errors.length) result.warnings.push(`Earlier OCR attempts skipped: ${errors.join('; ')}`);
+
+  // Keep the prepared image for the work screen's Re-extract, exactly as the
+  // PDF path keeps its page renders.
+  try {
+    window._lastPDFPages = [prepped.b64];
+    localStorage.setItem('waxframe_v2_has_pdf_pages', '1');
+  } catch (e) { /* re-extract is a convenience, not a requirement */ }
+
+  return result;
 }
 
 // Store PDF pages in memory for re-extract on work screen

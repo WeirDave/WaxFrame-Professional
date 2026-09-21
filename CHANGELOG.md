@@ -1,5 +1,52 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.541 — Photos and scans of a page can be imported directly
+
+**Released:** 2026-09-21
+**Build:** 20260921-005
+
+### What changed
+
+**A photograph or scan of a page can now be uploaded as a document.** Drop a `.jpg`, `.png`,
+`.webp`, `.gif` or `.bmp` onto either the **Starting Document** or the **Reference Material** upload
+area, and the text is read out of it by a vision-capable AI — the same way an image-only PDF already
+was.
+
+Until now those files were refused with "Unsupported file type", while the app already contained the
+feature that reads them. A photo of a page is the most common scanned document there is, and it had
+to be converted to a PDF first for no reason the person doing it could see.
+
+**The image is prepared before it is sent.** A modern phone photo is several thousand pixels on the
+long edge, which is more than any AI reads and is charged for by the pixel. It is scaled to at most
+2200 pixels and a note says so, so small print that was missed can be retaken closer. Sideways
+photos are rotated upright automatically, and formats other than JPEG are converted, so what reaches
+the AI is always what it expects.
+
+**With no vision AI set up it says so, rather than producing an empty document.** An image has no
+text layer to fall back on, so the message names the providers that can do the job and offers
+pasting the text in instead.
+
+**HEIC photos from an iPhone cannot be decoded by browsers** and are reported as such, with the fix:
+export as JPEG first. A phone's own document scanner already produces PDF or JPEG and needs no
+conversion.
+
+### Verification
+- `tools/check-ocr-handoff.mjs` extended to 27 assertions, including a 3200×2000 image: that it is
+  accepted, reaches vision, becomes the document, is marked as image-sourced so the verification
+  panel opens beside the photo, reports the downscale, and fails with a useful message when no
+  vision AI is configured.
+- Gate: all 19 stages. Flow harness: 23. Injection checks: 14. Debug redaction: 44. Export
+  redaction: 20. Import bounds: green. PDF shapes: both engines. Portable `file://` path: 9.
+
+### Files touched
+`js/app.js`, `index.html`, `tools/check-ocr-handoff.mjs`, `tools/README.md`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v318.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The change adds one branch to the import dispatcher and one image-preparation
+helper; no existing format behaves differently, and no stored data format changed.
+
+
 ## v3.63.540 — Large PDFs import again, and a locked PDF says why
 
 **Released:** 2026-09-21

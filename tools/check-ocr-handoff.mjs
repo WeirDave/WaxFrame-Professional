@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260921-004
+// Build: 20260921-005
 // check-ocr-handoff.mjs — what happens AFTER a page is found to have no text.
 //
 // tools/check-pdf-shapes.mjs proves an image-only PDF extracts zero characters
@@ -31,6 +31,7 @@ import os from 'node:os';
 import http from 'node:http';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import zlib from 'node:zlib';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -130,6 +131,55 @@ endstream`;
 }
 const MIXED_PDF = mixedPDF();
 
+// ── A photograph of a page, as far as the app is concerned ────────────
+// A real PNG, built by hand so the tool stays dependency-free. Deliberately
+// large on the long edge so the downscale path is exercised: a phone photo
+// is 4000+ px and the import caps it before spending tokens on pixels no
+// model reads.
+function buildPNG(w, h) {
+  const raw = Buffer.alloc((w * 3 + 1) * h);
+  let o = 0;
+  for (let y = 0; y < h; y++) {
+    raw[o++] = 0;                                   // filter: none
+    for (let x = 0; x < w; x++) {
+      const ink = ((x >> 4) + (y >> 5)) % 7 === 0;   // coarse text-like marks
+      raw[o++] = ink ? 0x20 : 0xf4;
+      raw[o++] = ink ? 0x20 : 0xf4;
+      raw[o++] = ink ? 0x20 : 0xf0;
+    }
+  }
+  const chunk = (type, data) => {
+    const len = Buffer.alloc(4); len.writeUInt32BE(data.length, 0);
+    const td = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+    const crcBuf = Buffer.alloc(4); crcBuf.writeUInt32BE(crc32(td) >>> 0, 0);
+    return Buffer.concat([len, td, crcBuf]);
+  };
+  let table = null;
+  function crc32(buf) {
+    if (!table) {
+      table = [];
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+        table[n] = c >>> 0;
+      }
+    }
+    let c = 0xffffffff;
+    for (let i = 0; i < buf.length; i++) c = table[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8; ihdr[9] = 2; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlib.deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0))
+  ]);
+}
+const PHOTO_PNG = buildPNG(3200, 2000);
+
 // The text the mock "reads" off the page. Distinctive so its arrival in the
 // extracted document is unambiguous.
 const OCR_TEXT = 'TRANSCRIBED BY MOCK VISION: the quick brown fox jumps over the lazy dog.';
@@ -172,6 +222,10 @@ const server = http.createServer(async (req, res) => {
   if (p === '/__mixed.pdf') {
     res.writeHead(200, { 'Content-Type': 'application/pdf' });
     return res.end(MIXED_PDF);
+  }
+  if (p === '/__photo.png') {
+    res.writeHead(200, { 'Content-Type': 'image/png' });
+    return res.end(PHOTO_PNG);
   }
   if (p === '/__mock/calls') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -262,7 +316,13 @@ async function importScan(which) {
   const t0 = performance.now();
   const r = await fetch(which || '/__scan.pdf');
   const b = await r.blob();
-  const f = new File([b], 'scanned-document.pdf', { type: 'application/pdf' });
+  // Name and MIME follow the URL, not a hardcoded .pdf — an image handed to
+  // the app under a .pdf name goes straight to the PDF parser and the image
+  // branch is never reached. That is exactly what the first run of this did.
+  const isPng = /.png$/i.test(which || '');
+  const name = isPng ? 'page-photo.png' : 'scanned-document.pdf';
+  const mime = isPng ? 'image/png' : 'application/pdf';
+  const f = new File([b], name, { type: mime });
   let text = '', err = null, warn = [], stype = null;
   try {
     const docs = await extractFromFile(f);
@@ -376,6 +436,41 @@ try {
     rMix.stype !== 'pdf-vision', rMix.stype);
   check('the user is told which pages were OCR-ed',
     (rMix.warn || []).some(w => /OCR pass added content from sparse pages/i.test(w)), rMix.warn);
+
+  // ── 2c. A photograph, which has no text layer to fall back on ───────
+  console.log('\n  > 2c. A photo of a page imports and is read by vision');
+  mode = 'ok';
+  await fetch(`${MOCK}/__mock/reset`);
+  const rImg = JSON.parse(await callInPage(importScan, '/__photo.png'));
+  const cImg = await (await fetch(`${MOCK}/__mock/calls`)).json();
+  console.log(`      ${rImg.chars} chars, sourceType=${rImg.stype}, ${cImg.length} vision call(s)`);
+  check('an image file is accepted at all (this was "Unsupported file type" before v3.63.541)',
+    rImg.err === null, rImg.err);
+  check('it was sent to vision (liveness)', cImg.length === 1, cImg);
+  check('the transcription became the document', rImg.hasOcrText === true, rImg);
+  check('it is marked image-vision so the Verify panel opens beside the photo',
+    rImg.stype === 'image-vision', rImg.stype);
+  check('the user is told it came from an image and to check it',
+    (rImg.warn || []).some(w => /image via AI vision/i.test(w) && /check it/i.test(w)), rImg.warn);
+  check('an oversized photo is scaled before being sent, and the user is told',
+    (rImg.warn || []).some(w => /scaled to \d+x\d+/i.test(w)), rImg.warn);
+
+  // ── 2d. The same photo with NO vision provider configured ───────────
+  console.log('\n  > 2d. A photo with no vision AI set up');
+  await fetch(`${MOCK}/__mock/reset`);
+  const rNoKey = JSON.parse(await ev(`(async () => {
+    const saved = {};
+    ['chatgpt','claude'].forEach(p => { saved[p] = API_CONFIGS[p]._key; API_CONFIGS[p]._key = ''; });
+    let out;
+    try { out = await (${importScan.toString()})('/__photo.png'); }
+    finally { ['chatgpt','claude'].forEach(p => { API_CONFIGS[p]._key = saved[p]; }); }
+    return out;
+  })()`));
+  const cNoKey = await (await fetch(`${MOCK}/__mock/calls`)).json();
+  check('it fails rather than returning an empty document', rNoKey.err !== null, rNoKey);
+  check('the message says a vision AI is needed and how to proceed',
+    /vision-capable AI/i.test(rNoKey.err || '') && /paste/i.test(rNoKey.err || ''), rNoKey.err);
+  check('no provider was called with no key configured', cNoKey.length === 0, cNoKey);
 
   // ── 3. Every provider failing is visible, not silent ────────────────
   console.log('\n  > 3. Every provider failing');

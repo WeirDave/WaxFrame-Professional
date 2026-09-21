@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v317
+WaxFrame Backlog Master v318
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,39 @@ ships.
 
 
 
+
+v318 — PHOTOS AND SCANS IMPORT DIRECTLY (v3.63.541).
+
+A photo of a page is the most common scanned artifact there is,
+and WaxFrame refused it: "Unsupported file type: .jpg". The odd
+part was that the machinery to read one was already present and
+wired up — runVisionWithFallback takes base64 JPEG images and is
+what the PDF path already hands page renders to. The only missing
+piece was accepting the file and handing it over.
+
+.jpg .jpeg .png .webp .gif .bmp now import on both the Starting
+Document and Reference Material drop zones. Normalised through a
+canvas rather than sent as-is, for three reasons worth keeping:
+formats other than JPEG would otherwise arrive under a data URL
+whose header lies about the contents; a phone photo is 4000+ px
+and billed by the pixel, so the long edge is capped at 2200 and
+the user is told when that happened; and the browser applies EXIF
+orientation on draw, so a sideways photo transcribes upright.
+
+Fails loudly with no vision key rather than returning an empty
+document — an image has no text layer to fall back on, unlike a
+PDF, so silence would be the wrong answer.
+
+tools/check-ocr-handoff.mjs now covers it: a real 3200x2000 PNG
+built by hand, asserting acceptance, the vision hand-off, the
+image-vision sourceType, the downscale notice, and the no-key
+failure path. 27 assertions.
+
+METHOD NOTE. The first run of that test failed against working
+code: the harness hardcoded a .pdf filename for every fixture, so
+the PNG went to the PDF parser and the image branch was never
+reached. A test that feeds the wrong input reports a bug that
+does not exist, which costs exactly as much as missing one.
 
 v317 — LONG-FILE HALF CLOSED WITH A PUBLIC PDF (2026-09-21).
 Two things, and the second matters more than the first.

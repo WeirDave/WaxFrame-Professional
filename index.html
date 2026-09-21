@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260921-004
+     Build: 20260921-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="v3.63.540 Pro | Build: 20260921-004">
+  <meta name="waxframe-build" content="v3.63.541 Pro | Build: 20260921-005">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A local-first multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No account database, no install, air-gap capable.">
   <meta name="keywords" content="AI document refinement, multi-AI writing tool, browser-based AI editor, self-hosted AI writing tool, no subscription AI writer">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="A local-first multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No account database, no install, air-gap capable.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.540">
+  <link rel="stylesheet" href="style.css?v=3.63.541">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -119,7 +119,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.540",
+    "softwareVersion": "3.63.541",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -555,8 +555,8 @@
                data-drop-fn="processRefFiles">
             <div class="ref-action-icon"><svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-upload-cluster" aria-hidden="true"><g transform="translate(8,8) rotate(-12 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#F57C00"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><rect x="7" y="13" width="15" height="5" rx="0.5" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><line x1="7" y1="20.5" x2="22" y2="20.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">PPT</text></g><g transform="translate(15,5) rotate(4 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#1976D2"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="14" x2="22" y2="14" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="17.5" x2="22" y2="17.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="21" x2="18" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">DOC</text></g><g transform="translate(22,11)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#2E7D32"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="13" x2="22" y2="13" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="17" x2="22" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="21" x2="22" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="11.5" y1="11" x2="11.5" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="17" y1="11" x2="17" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">XLS</text></g></svg></div>
             <div class="ref-action-text">Upload File</div>
-            <div class="ref-action-sub">Drag &amp; drop one or more files, or click to browse — Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx, .xlsm), .txt, .md</div>
-            <input type="file" id="refFileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm" multiple hidden data-change-action="call" data-fn="handleRefFileSelect" data-arg-event="1">
+            <div class="ref-action-sub">Drag &amp; drop one or more files, or click to browse — Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx, .xlsm), .txt, .md, or a photo / scan (.jpg, .png)</div>
+            <input type="file" id="refFileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm,.jpg,.jpeg,.png,.webp,.gif,.bmp" multiple hidden data-change-action="call" data-fn="handleRefFileSelect" data-arg-event="1">
           </div>
         </div>
         <div id="refFileStatus" class="file-status is-hidden"></div>
@@ -645,8 +645,8 @@
                data-drop-fn="processDocFiles">
             <div class="drop-zone-icon"><svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-upload-cluster" aria-hidden="true"><g transform="translate(8,8) rotate(-12 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#F57C00"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><rect x="7" y="13" width="15" height="5" rx="0.5" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><line x1="7" y1="20.5" x2="22" y2="20.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">PPT</text></g><g transform="translate(15,5) rotate(4 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#1976D2"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="14" x2="22" y2="14" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="17.5" x2="22" y2="17.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="21" x2="18" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">DOC</text></g><g transform="translate(22,11)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#2E7D32"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="13" x2="22" y2="13" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="17" x2="22" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="21" x2="22" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="11.5" y1="11" x2="11.5" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="17" y1="11" x2="17" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">XLS</text></g></svg></div>
             <div class="drop-zone-text">Drag &amp; drop a single file, or click to browse</div>
-            <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), or Markdown (.md)</div>
-            <input type="file" id="fileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm" hidden data-change-action="call" data-fn="handleFileSelect" data-arg-event="1">
+            <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), Markdown (.md), or a photo / scan of a page (.jpg, .png) read by AI vision</div>
+            <input type="file" id="fileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm,.jpg,.jpeg,.png,.webp,.gif,.bmp" hidden data-change-action="call" data-fn="handleFileSelect" data-arg-event="1">
           </div>
           <div id="fileStatus" class="file-status is-hidden"></div>
           <div id="fileClearRow" class="file-clear-row is-hidden">
@@ -3469,7 +3469,7 @@
      above the minimum" (green) and "✗ Below minimum by N px wide" /
      "✗ Below minimum by M px tall" (red) so the user sees exactly
      which dimension is the problem. -->
-<script src="js/min-screen-viewport.js?v=3.63.540"></script>
+<script src="js/min-screen-viewport.js?v=3.63.541"></script>
 
 <!-- Mobile not supported overlay — but a funnel landing, not a wall.
      Mobile visitors landing on index.html from search results get a
@@ -3555,33 +3555,33 @@
      (and the only Add-Bookmark JS API was killed by browsers years
      ago for security reasons). Falls back to clipboard copy + a
      short instruction toast if navigator.share isn't available. -->
-<script src="js/mobile-share.js?v=3.63.540"></script>
+<script src="js/mobile-share.js?v=3.63.541"></script>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.4MB total. -->
 <!-- v3.63.393 — Hybrid pdf.js loader. Runtime-detects http(s):// vs file:// and dispatches
      to either the ESM 4.10.38 build (hosted, library-level CVE-2024-4367 fix) or the UMD
      3.11.174 build (portable file://, runtime mitigation via isEvalSupported:false). See
      js/pdf-loader-bootstrap.js for the full reasoning. -->
-<script src="js/pdf-loader-bootstrap.js?v=3.63.540"></script>
-<script src="lib/mammoth.browser.min.js?v=3.63.540"></script>
-<script src="lib/jszip.min.js?v=3.63.540"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.540"></script>
-<script src="js/version.js?v=3.63.540"></script>
-<script src="js/update-check.js?v=3.63.540"></script>
-<script src="js/storage.js?v=3.63.540"></script>
-<script src="js/theme.js?v=3.63.540"></script>
-<script src="js/audio.js?v=3.63.540"></script>
-<script src="js/scenes.js?v=3.63.540"></script>
-<script src="js/wf-debug.js?v=3.63.540"></script>
-<script src="js/provider-models.js?v=3.63.540"></script>
-<script src="js/provider-catalog.js?v=3.63.540"></script>
-<script src="js/api.js?v=3.63.540"></script>
-<script src="js/templates.js?v=3.63.540"></script>
-<script src="js/api-links.js?v=3.63.540"></script>
-<script src="js/prompts.js?v=3.63.540"></script>
-<script src="js/app.js?v=3.63.540"></script>
-<script src="js/helper-handlers.js?v=3.63.540"></script>
-<script src="js/app-bootstrap.js?v=3.63.540"></script>
+<script src="js/pdf-loader-bootstrap.js?v=3.63.541"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.541"></script>
+<script src="lib/jszip.min.js?v=3.63.541"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.541"></script>
+<script src="js/version.js?v=3.63.541"></script>
+<script src="js/update-check.js?v=3.63.541"></script>
+<script src="js/storage.js?v=3.63.541"></script>
+<script src="js/theme.js?v=3.63.541"></script>
+<script src="js/audio.js?v=3.63.541"></script>
+<script src="js/scenes.js?v=3.63.541"></script>
+<script src="js/wf-debug.js?v=3.63.541"></script>
+<script src="js/provider-models.js?v=3.63.541"></script>
+<script src="js/provider-catalog.js?v=3.63.541"></script>
+<script src="js/api.js?v=3.63.541"></script>
+<script src="js/templates.js?v=3.63.541"></script>
+<script src="js/api-links.js?v=3.63.541"></script>
+<script src="js/prompts.js?v=3.63.541"></script>
+<script src="js/app.js?v=3.63.541"></script>
+<script src="js/helper-handlers.js?v=3.63.541"></script>
+<script src="js/app-bootstrap.js?v=3.63.541"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

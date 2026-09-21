@@ -57,7 +57,7 @@ person to read the result, and `release-check.mjs` stays dependency-free.
 | `check-import-bounds.mjs` | Touching document import or anything that writes `LS_PROJECT` | Chrome |
 | `check-hostile-provider.mjs` | Touching the model-server import, `makeCleanProviderId`, or the budget/param learning path | Chrome |
 | `check-pdf-shapes.mjs` | Touching PDF extraction or either vendored pdf.js build | Chrome |
-| `check-ocr-handoff.mjs` | Touching the vision/OCR path, provider fallback, or `runVisionTranscription` | Chrome |
+| `check-ocr-handoff.mjs` | Touching the vision/OCR path, image import, provider fallback, or `runVisionTranscription` | Chrome |
 | `audit-dead-code.mjs` | Every few releases, and after removing anything | — |
 | `audit-html-sinks.mjs` | Alongside `check-html-injection.mjs`, to get the list of sites to read | — |
 | `capture.mjs` | Producing screenshots | Chrome |
@@ -172,7 +172,7 @@ It drives that against a **mock vision provider on the same origin**, the way
 deterministic: the mock decides what comes back, so the empty-200 and
 total-failure branches are driven on demand instead of waited for.
 
-Both OCR branches are covered, because they are different code: a wholly
+Three inputs are covered, because they are different code paths: a wholly
 image-only document takes the whole-document vision path and is marked
 `pdf-vision`, while a mostly-text document with one picture page takes the
 sparse-page path, which sends only that page and **appends** the result rather

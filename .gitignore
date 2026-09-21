@@ -26,3 +26,7 @@ Thumbs.db
 
 # Stray write-temp files (safe_write pattern leaves these on a crash)
 *.tmp
+
+# Local build output. The release ZIP is built by GitHub Actions, never
+# committed — a committed archive is what forced the 2026-09 history rewrite.
+dist/
