@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260920-009
+// Build: 20260920-010
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -358,6 +358,43 @@ function _writeLimitsStore(key, obj) {
 // Called by api.js after a model-list fetch. Merges rather than replaces so
 // a provider that publishes limits for only some of its models does not
 // wipe what we already knew about the others.
+// ── Learned request-parameter style (v3.63.516) ─────────────────────
+//
+// OpenAI's newer models reject `max_tokens` outright:
+//
+//   "Unsupported parameter: 'max_tokens' is not supported with this model.
+//    Use 'max_completion_tokens' instead."
+//
+// Every other OpenAI-shape endpoint WaxFrame talks to — every local server,
+// Together, DeepSeek, Mistral, Grok, Perplexity — still wants `max_tokens`,
+// so this cannot be switched globally, and the model id cannot be pattern-
+// matched without guessing at a naming convention that keeps changing. The
+// key is learned from the provider's own rejection the first time it happens
+// and remembered per provider+model, so it costs exactly one refused request
+// per model rather than one per round.
+const LS_BUDGET_KEYS = 'waxframe_budget_keys';
+
+function wfBudgetKeyFor(model) {
+  try {
+    if (!model) return 'max_tokens';
+    const store = _readLimitsStore(LS_BUDGET_KEYS);
+    for (const provider of Object.keys(store)) {
+      const hit = store[provider] && store[provider][model];
+      if (hit) return hit;
+    }
+  } catch (e) { /* fall through */ }
+  return 'max_tokens';
+}
+if (typeof window !== 'undefined') window.WF_BUDGET_KEY_FOR = wfBudgetKeyFor;
+
+function wfRecordBudgetKey(provider, model, key) {
+  if (!provider || !model || !key) return;
+  const store = _readLimitsStore(LS_BUDGET_KEYS);
+  const bucket = store[provider] || (store[provider] = {});
+  bucket[model] = key;
+  _writeLimitsStore(LS_BUDGET_KEYS, store);
+}
+
 function wfStoreApiModelLimits(provider, limitsMap) {
   if (!provider || !limitsMap) return;
   const store = _readLimitsStore(LS_MODEL_LIMITS);
@@ -859,7 +896,10 @@ async function wfProbeModelCap(aiId) {
   } finally {
     // Always clear, however the probe exited. A budget override left set
     // would silently cap every subsequent Builder round.
-    window.WF_OUTPUT_BUDGET_OVERRIDE = 0;
+    // v3.63.516 — null, NOT 0. Zero is now a meaningful value on this hook
+    // ("send no budget key at all"), so clearing with 0 would have left
+    // every request after a cap probe with no budget stated.
+    window.WF_OUTPUT_BUDGET_OVERRIDE = null;
   }
 }
 if (typeof window !== 'undefined') window.wfProbeModelCap = wfProbeModelCap;
@@ -1316,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260920-009';         // build stamp — update each session
+const BUILD = '20260920-010';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -20471,8 +20511,12 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   // v3.63.494 — _retryOpts is internal, set only by the budget-rejection
   // retry below. _budgetRetry stops a second rejection from recursing;
   // _budgetOverride carries the ceiling the provider named (0 = send none).
+  // v3.63.516 — _paramRetry is the same idea for a rejected PARAMETER NAME
+  // rather than a rejected value, and is tracked separately so one of each
+  // can happen in a round without either blocking the other.
   const _budgetRetry    = !!(_retryOpts && _retryOpts._budgetRetry);
   const _budgetOverride = (_retryOpts && _retryOpts._budgetOverride) || 0;
+  const _paramRetry     = !!(_retryOpts && _retryOpts._paramRetry);
   const cfg = API_CONFIGS[ai.provider];
   // v3.63.408 — isCustomEndpoint must be known BEFORE the key gate: server-
   // imported AIs (the internal gateway, Ollama, LM Studio, unauth'd Open WebUI) are
@@ -20663,6 +20707,25 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     // the number, record it so the picker and every later request use it, and
     // retry. A hard ceiling is then learned the first time it is met instead
     // of after a bug report. Guarded by _budgetRetry so this can never loop.
+    // v3.63.516 — Parameter-name rejection. A provider that refuses a
+    // parameter AND names the one it wants has handed us the fix; surfacing
+    // that as an error card is throwing away an answer we were given. Learn
+    // the key, remember it, retry once. Guarded by _paramRetry so a provider
+    // that renames in a loop cannot recurse.
+    if (!_paramRetry) {
+      const rename = window.WFProviderCatalog.parseParamRename(msg);
+      if (rename && rename.to) {
+        const _m = getModelForAI(ai) || cfg.model;
+        consoleLog(`🔧 ${ai.name} rejected "${rename.from}" and asked for "${rename.to}" — ` +
+                   `recording that for ${_m} and retrying.`, 'warn');
+        try { wfRecordBudgetKey(ai.provider, _m, rename.to); }
+        catch (e) { /* recording is best-effort; the retry matters more */ }
+        _slotRelease();
+        return callAPI(ai, prompt, notesContext, role, metaOut, {
+          ...(_retryOpts || {}), _paramRetry: true
+        });
+      }
+    }
     if (!_budgetRetry) {
       const stated = window.WFProviderCatalog.parseBudgetRejection(msg);
       if (stated !== null) {

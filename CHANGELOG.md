@@ -1,5 +1,67 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.516 — ChatGPT's newer models were failing outright on the first round
+
+**Released:** 2026-09-20
+**Build:** 20260920-010
+
+### What changed
+
+**A round with a newer ChatGPT model failed immediately with an error card.** The provider's
+message was explicit:
+
+> Unsupported parameter: `max_tokens` is not supported with this model. Use
+> `max_completion_tokens` instead.
+
+WaxFrame has stated an output budget on every OpenAI-shape request since v3.63.494, using
+`max_tokens`. OpenAI's newer models reject that parameter outright. Every other endpoint WaxFrame
+speaks to in this shape — every local server, Together, DeepSeek, Mistral, Grok, Perplexity —
+still requires `max_tokens`, so the key cannot simply be switched, and the model id cannot be
+pattern-matched without guessing at a naming convention that keeps changing.
+
+**So the key is learned from the provider's own rejection and remembered.** A rejection that names
+both the parameter it refused and the one it wants has handed over the fix; surfacing that as an
+error card threw away an answer already given. WaxFrame now records the correct key per provider
+and model and retries once. It costs one refused request per model, ever — the round after it goes
+straight to the right key.
+
+**The reject-and-learn retry from v3.63.494 could never recover from this, or from anything like
+it.** When a provider refuses the output budget without naming a ceiling, the intended behaviour is
+to re-send with no budget at all. The retry set the override to `0`, and the resolver treated `0`
+as "nothing set" and substituted the 32,768 default — so the retry re-sent a byte-identical request
+and failed identically. That path has existed since v3.63.494 and had never once worked; it was
+verified in isolation, and the isolated test always named a number, which is the half that did
+work. "Send no budget" is now a distinct value the body builders honour.
+
+Two details that fall out of that. Anthropic **requires** `max_tokens`, so a null budget falls back
+to the default there rather than omitting the key, which would turn every Claude call into a 400.
+And the cap probe's cleanup was clearing the override with `0` — now a meaningful value — so it
+clears with `null` instead. Left alone, every request after a cap probe would have carried no
+budget at all.
+
+### Verification
+- Gate: all 19 stages pass. 12 new fixtures, 196 in the extractor suite.
+- Driven end to end through the real `callAPI` against a mock reproducing the exact live wording.
+  First round: `max_tokens` → 400 → retry with `max_completion_tokens` → 200, document returned.
+  The learned key is persisted, and the next round issues no failing request at all.
+- The parser was checked against the live message verbatim, a double-quoted variant, and the
+  phrasing without the `Unsupported parameter` prefix. It deliberately does **not** fire on a
+  budget-*value* rejection (`max_tokens is too large: 32768…`), which belongs to the other recovery
+  path, nor on an unrelated error, nor on a message naming the same parameter twice.
+- Omit-vs-default behaviour pinned per provider: the OpenAI body drops the key entirely, Gemini
+  drops `generationConfig`, Anthropic still states 32,768, and clearing the override with `null`
+  restores normal budgets.
+
+### Files touched
+`js/provider-catalog.js`, `js/app.js`, `tools/test-provider-extractors.mjs`, `CHANGELOG.md`, plus
+the routine stamp sweep.
+
+### Rollback
+`git revert HEAD` restores the failure — newer ChatGPT models error on the first round again. The
+learned keys live in `waxframe_budget_keys` in browser storage and are ignored by older builds.
+
+---
+
 ## v3.63.515 — Git history rewritten; every commit SHA has changed
 
 **Released:** 2026-09-20

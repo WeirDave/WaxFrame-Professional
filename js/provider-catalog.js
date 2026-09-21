@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20260920-009
+// Build: 20260920-010
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -148,8 +148,10 @@
   var DEFAULT_OUTPUT_BUDGET = 32768;
   var MIN_OUTPUT_BUDGET     = 1024;
 
+  // Returns a token count, or null meaning "send no budget key at all".
   function resolveOutputBudget(model) {
     var forced = forcedTinyTokens();
+    if (forced === OMIT_BUDGET) return null;
     if (forced) return forced;          // test hooks win, see below
     var v = null;
     try {
@@ -284,11 +286,60 @@
   //
   // An explicit override wins, so a probe run while Force Truncate is on
   // measures the probe ceiling rather than silently measuring 64.
+  // v3.63.516 — OMIT_BUDGET is a real, distinct answer, not a missing one.
+  // The reject-and-learn retry has a case where the provider refuses the
+  // budget without naming a ceiling; the only correct response there is to
+  // send NO budget key at all and let the provider default apply. Before
+  // this, that case set the override to 0, `0 > 0` was false, and the code
+  // fell straight through to DEFAULT_OUTPUT_BUDGET — so the retry re-sent
+  // the identical request and failed identically. The whole recovery path
+  // was a no-op for every rejection that named no number.
+  var OMIT_BUDGET = '__wf_omit_budget__';
+
   function forcedTinyTokens() {
     if (!root) return null;
-    var explicit = Number(root.WF_OUTPUT_BUDGET_OVERRIDE);
+    var raw = root.WF_OUTPUT_BUDGET_OVERRIDE;
+    var explicit = Number(raw);
+    if (raw !== undefined && raw !== null && isFinite(explicit) && explicit === 0) return OMIT_BUDGET;
     if (isFinite(explicit) && explicit > 0) return explicit;
     return root.WF_FORCE_TINY_OUTPUT ? FORCED_TINY_TOKENS : null;
+  }
+
+  // Which key carries the output budget on an OpenAI-shape request.
+  //
+  // OpenAI's newer models reject `max_tokens` outright and require
+  // `max_completion_tokens`; everything else WaxFrame talks to in this shape
+  // — every local server, Together, DeepSeek, Mistral, Grok, Perplexity —
+  // still wants `max_tokens`. There is no way to tell from the model id
+  // without guessing at a naming convention that changes, so the key is
+  // LEARNED from the provider's own rejection and remembered. app.js owns
+  // the persistence; this is the lookup.
+  function budgetKeyFor(model) {
+    try {
+      if (root && typeof root.WF_BUDGET_KEY_FOR === 'function') {
+        var k = root.WF_BUDGET_KEY_FOR(model);
+        if (k === 'max_completion_tokens') return k;
+      }
+    } catch (e) { /* fall through to the default */ }
+    return 'max_tokens';
+  }
+
+  // "Unsupported parameter: 'max_tokens' is not supported with this model.
+  //  Use 'max_completion_tokens' instead."
+  //
+  // Returns { from, to } when a provider names both the parameter it refused
+  // and the one it wants, so the request can be re-sent correctly instead of
+  // surfacing as a dead end. Returns null for anything else.
+  function parseParamRename(message) {
+    if (!message || typeof message !== 'string') return null;
+    var m = message.match(
+      /unsupported parameter:\s*'?"?([A-Za-z0-9_]+)'?"?[^.]*?\buse\s+'?"?([A-Za-z0-9_]+)'?"?\s+instead/i);
+    if (m && m[1] && m[2] && m[1] !== m[2]) return { from: m[1], to: m[2] };
+    // Some gateways phrase it the other way round without "unsupported".
+    var m2 = message.match(
+      /\b'?"?([A-Za-z0-9_]+)'?"?\s+is not supported with this model\.?\s*use\s+'?"?([A-Za-z0-9_]+)'?"?\s+instead/i);
+    if (m2 && m2[1] && m2[2] && m2[1] !== m2[2]) return { from: m2[1], to: m2[2] };
+    return null;
   }
 
   // Body builders — one per WaxFrame format.
@@ -306,7 +357,13 @@
       // apply. That handed every gateway in front of us the right to cap the
       // build silently. Now stated explicitly, which also suppresses an Open
       // WebUI admin default (it fills the key only when absent).
-      body.max_tokens = resolveOutputBudget(model);
+      // v3.63.516 — the KEY is learned, not assumed: OpenAI's newer models
+      // reject max_tokens and require max_completion_tokens, while every
+      // other OpenAI-shape endpoint still wants max_tokens. A null budget
+      // means send neither, which is what the reject-and-learn retry needs
+      // when a provider refuses the budget without naming a ceiling.
+      var oaiBudget = resolveOutputBudget(model);
+      if (oaiBudget != null) body[budgetKeyFor(model)] = oaiBudget;
       // v3.63.499 — stream when the caller asked for it. stream_options
       // include_usage is what makes a streamed response still report token
       // counts; without it the usage block never arrives and truncation
@@ -339,7 +396,9 @@
         // changes upstream.
         var fallbackBody = {
           model: model,
-          max_tokens: resolveOutputBudget(model),
+          // Anthropic REQUIRES max_tokens, so a null budget falls back here
+          // rather than omitting the key the way the OpenAI shape can.
+          max_tokens: resolveOutputBudget(model) || DEFAULT_OUTPUT_BUDGET,
           messages: [{ role: 'user', content: prompt }]
         };
         if (wantStream) fallbackBody.stream = true;
@@ -351,7 +410,7 @@
         : prompt.slice(0, split).trim() + '\n\nBegin your review now.';
       var aBody = {
         model: model,
-        max_tokens: resolveOutputBudget(model),
+        max_tokens: resolveOutputBudget(model) || DEFAULT_OUTPUT_BUDGET,
         system: sysText,
         messages: [{ role: 'user', content: usrText }]
       };
@@ -363,7 +422,8 @@
       var split = s.split, isBuilder = s.isBuilder;
       if (split === -1) {
         var fBody = { contents: [{ parts: [{ text: prompt }] }] };
-        fBody.generationConfig = { maxOutputTokens: resolveOutputBudget(model) };
+        var fBudget = resolveOutputBudget(model);
+        if (fBudget != null) fBody.generationConfig = { maxOutputTokens: fBudget };
         return JSON.stringify(fBody);
       }
       // v3.63.278 — Hoisted the guard to the module-level REVIEWER_GUARD
@@ -378,7 +438,8 @@
         system_instruction: { parts: [{ text: sysText }] },
         contents: [{ parts: [{ text: usrText }] }]
       };
-      gBody.generationConfig = { maxOutputTokens: resolveOutputBudget(model) };
+      var gBudget = resolveOutputBudget(model);
+      if (gBudget != null) gBody.generationConfig = { maxOutputTokens: gBudget };
       return JSON.stringify(gBody);
     }
   };
@@ -1810,6 +1871,8 @@
     resolveOutputBudget: resolveOutputBudget,
     parseBudgetRejection: parseBudgetRejection,
     // v3.63.499 — streaming
+    parseParamRename: parseParamRename,
+    budgetKeyFor: budgetKeyFor,
     createOpenAIStreamAccumulator: createOpenAIStreamAccumulator,
     createAnthropicStreamAccumulator: createAnthropicStreamAccumulator,
     createGeminiStreamAccumulator: createGeminiStreamAccumulator,

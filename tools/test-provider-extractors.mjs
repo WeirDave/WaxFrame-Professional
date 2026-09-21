@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20260920-009
+// Build: 20260920-010
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -801,6 +801,60 @@ check('output-token count is read from the right field per provider \u2014 OpenA
   WFProviderCatalog.streamedOutputTokens('openai', { completion_tokens: 13 }), 13);
 check('no usage means no token count rather than a zero',
   WFProviderCatalog.streamedOutputTokens('openai', null), null);
+
+const CONFIGS_FOR_BUDGET = WFProviderCatalog.buildApiConfigs();
+const ENVELOPE_FOR_BUDGET = 'the document body\n\n\u26a0\ufe0f BUILDER: build instructions here';
+
+console.log('\u25b6 Rejected parameter NAMES (parseParamRename)');
+
+// v3.63.516 \u2014 live failure on gpt-6-astra: the newer OpenAI models refuse
+// max_tokens outright and name the replacement. Surfacing that as an error
+// card threw away an answer the provider had already given us.
+check('the exact live OpenAI wording yields the replacement key',
+  JSON.stringify(WFProviderCatalog.parseParamRename(
+    "Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.")),
+  JSON.stringify({ from: 'max_tokens', to: 'max_completion_tokens' }));
+check('double-quoted variant parses too',
+  JSON.stringify(WFProviderCatalog.parseParamRename(
+    'Unsupported parameter: "max_tokens" is not supported with this model. Use "max_completion_tokens" instead.')),
+  JSON.stringify({ from: 'max_tokens', to: 'max_completion_tokens' }));
+check('the phrasing without the "Unsupported parameter" prefix parses too',
+  JSON.stringify(WFProviderCatalog.parseParamRename(
+    "'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.")),
+  JSON.stringify({ from: 'max_tokens', to: 'max_completion_tokens' }));
+
+// Must NOT fire \u2014 these belong to other recovery paths or to nothing.
+check('a budget-VALUE rejection is not a rename', WFProviderCatalog.parseParamRename(
+  'max_tokens is too large: 32768. This model supports at most 4096 completion tokens.'), null);
+check('an unrelated error is not a rename',
+  WFProviderCatalog.parseParamRename('You exceeded your current quota'), null);
+check('null input is handled', WFProviderCatalog.parseParamRename(null), null);
+check('a message naming the same parameter twice is not a rename',
+  WFProviderCatalog.parseParamRename(
+    "Unsupported parameter: 'max_tokens'. Use 'max_tokens' instead."), null);
+
+console.log('\u25b6 Output budget: a null budget means OMIT, not a default');
+
+// The reject-and-learn retry has a case where the provider refuses the budget
+// without naming a ceiling. Before v3.63.516 that set the override to 0, which
+// fell through to the 32768 default \u2014 so the retry re-sent the identical
+// request and failed identically. The recovery path was a no-op.
+CATALOG_ROOT.WF_OUTPUT_BUDGET_OVERRIDE = 0;
+const omitOAI = JSON.parse(CONFIGS_FOR_BUDGET.chatgpt.bodyFn('m', ENVELOPE_FOR_BUDGET));
+const omitGem = JSON.parse(CONFIGS_FOR_BUDGET.gemini.bodyFn('m', ENVELOPE_FOR_BUDGET));
+const omitAnt = JSON.parse(CONFIGS_FOR_BUDGET.claude.bodyFn('m', ENVELOPE_FOR_BUDGET));
+CATALOG_ROOT.WF_OUTPUT_BUDGET_OVERRIDE = null;
+const clearedOAI = JSON.parse(CONFIGS_FOR_BUDGET.chatgpt.bodyFn('m', ENVELOPE_FOR_BUDGET));
+
+check('an omit override drops max_tokens from the OpenAI body', omitOAI.max_tokens, undefined);
+check('an omit override drops max_completion_tokens too', omitOAI.max_completion_tokens, undefined);
+check('an omit override drops generationConfig from the Gemini body', omitGem.generationConfig, undefined);
+// Anthropic REQUIRES max_tokens \u2014 omitting it would make every Claude call a 400.
+check('Anthropic still states max_tokens when the budget is omitted', omitAnt.max_tokens, 32768);
+// Clearing the hook with null (not 0) must restore normal behaviour \u2014 the cap
+// probe clears it in a finally block, and clearing with 0 would have left every
+// later request with no budget at all.
+check('clearing the override with null restores the budget', clearedOAI.max_tokens, 32768);
 
 console.log('\u25b6 Streaming: request bodies carry the flag only when asked');
 
