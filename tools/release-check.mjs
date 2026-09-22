@@ -1057,6 +1057,58 @@ try {
     `real-data check failed — ${lines.length ? lines.map(l => l.trim()).join(' | ') : out.slice(-300)}`);
 }
 
+// -- Check 20: every download script refuses an unverified download --
+
+section('Download scripts - absent and wrong checksums are the same answer');
+
+// Added 2026-09-22. The two UPDATE scripts verified correctly; the two INSTALL
+// scripts did not, and the gate could not see it because Check 18 iterates
+// UPDATER_SCRIPTS only. Both installers carried
+//
+//     if (checksum published) { verify } else { warn; install anyway }
+//
+// which hands the whole check to anyone able to serve a malicious ZIP: they
+// simply do not publish a hash beside it. The macOS one was worse - the fetch
+// WAS the `if` condition, so a dropped connection took the same branch as a
+// genuinely absent checksum and a flaky network skipped verification too.
+//
+// The property is asserted over all four scripts, because the bug was not that
+// one file was wrong but that half the family was never looked at.
+
+const DOWNLOAD_SCRIPTS = [
+  'Update-WaxFrame.ps1', 'Update-WaxFrame.command',
+  'Install-WaxFrame.ps1', 'Install-WaxFrame.command',
+];
+
+for (const scriptName of DOWNLOAD_SCRIPTS) {
+  let content = null;
+  try {
+    content = read(join(ROOT, scriptName));
+  } catch (e) {
+    fail(scriptName, 'file missing at repo root');
+    continue;
+  }
+
+  const skips = /skipping verification|skip(ping)? the checksum|no checksum published/i.exec(content);
+  if (skips) {
+    fail(scriptName,
+      'contains a skip-verification branch ("' + skips[0] + '") - an absent checksum must refuse the download, not warn and continue');
+  } else if (!/\.sha256/.test(content)) {
+    fail(scriptName, 'never references the .sha256 sidecar, so nothing is verified');
+  } else if (!/(Get-FileHash|sha256sum|shasum)/i.test(content)) {
+    fail(scriptName, 'references a checksum but never computes one to compare against');
+  } else {
+    ok(scriptName + ': an unverifiable download is refused');
+  }
+}
+
+// Checks 21-23 deliberately do NOT live here. The three security checks from
+// the 2026-09-21 review each drive a real browser, and this gate is browser-free
+// by design -- CI runs it on a runner with no browser setup and no npm install.
+// Each check file says the same thing in its own header. They run as steps in
+// the `smoke` job of .github/workflows/release-check.yml, which already locates
+// Chrome, and they are hand-runnable the same way locally.
+
 // ── Report ──────────────────────────────────────────────────
 
 console.log('');

@@ -1,5 +1,58 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.547 — A first install refuses a download it cannot verify
+
+**Released:** 2026-09-22
+**Build:** 20260922-004
+
+### What changed
+
+**Both install scripts now refuse a release whose checksum is missing.** They verified a checksum
+when one was published and installed anyway when one was not, announcing it as a warning. That
+hands the check to anyone able to serve a malicious ZIP, because they simply do not publish a
+correct hash beside it. Absent and wrong are the same answer now: the install stops, says why,
+and points at the releases page — which is also what a half-failed asset build looks like.
+
+`Install-WaxFrame.command` had a second form of the same fault. The checksum download *was* the
+`if` condition, so a dropped connection took the same branch as a genuinely absent checksum and a
+flaky network skipped verification too. The fetch is now its own statement and a failure is fatal.
+
+Both update scripts were already correct and are unchanged. Every recent release publishes its
+`.sha256`, so nothing about an ordinary install or update changes.
+
+**The gate now checks all four download scripts.** Check 18 iterated the updaters only, which is
+why the installers drifted while their siblings stayed right. New Check 20 asserts the property
+across the whole family: no skip-verification branch, a `.sha256` reference, and something that
+actually computes a hash to compare against.
+
+**The three security checks from the 2026-09-21 review now run on every push.** They were written
+RED on purpose, reproducing real bugs, and deliberately left out of CI because a known-red check
+blocks every release. Both bugs shipped fixed — export redaction in v3.63.537, import bounds in
+v3.63.539 — so they run as steps in the browser smoke job rather than only by hand. They are not
+gate stages and must not become them: each drives a real browser and release-check.mjs is
+browser-free by design, which is the same reason the flow harness lives in that job.
+
+### Verification
+- Gate: all 20 stages, 14s. Check 20 was mutation-tested — the skip-verification branch put back
+  in `Install-WaxFrame.ps1`, the gate watched failing with the file and reason named, then the fix
+  restored and the gate green again.
+- `Install-WaxFrame.ps1` parses clean through the PowerShell AST parser; `Install-WaxFrame.command`
+  passes `bash -n`.
+- Security checks, run against this tree: export redaction 20 assertions, import bounds 9, hostile
+  provider 18. Measured cost 9s for all three, against the smoke job's 8-minute budget.
+- Flow harness: 23 assertions. No uncaught page errors.
+- The vendored-library hashes were confirmed unchanged — they are the gate's stage 17 and they pass.
+
+### Files touched
+`Install-WaxFrame.ps1`, `Install-WaxFrame.command`, `tools/release-check.mjs`,
+`.github/workflows/release-check.yml`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v324.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The install scripts return to warning-and-continuing, Check 20 disappears, and
+the three security checks go back to being hand-run. No application code, stored data format or
+user-visible behaviour is involved.
+
 ## v3.63.546 — The original image can no longer be dragged out of view
 
 **Released:** 2026-09-22

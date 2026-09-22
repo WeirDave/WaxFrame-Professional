@@ -149,3 +149,26 @@ jobs:
         env:
           WF_CHROME: ${{ steps.chrome.outputs.path }}
         run: node tools/flow-check.mjs
+      # v3.63.547 - The three security checks from the 2026-09-21 review.
+      # They were written RED on purpose, reproducing real bugs, and kept out
+      # of CI because a known-red check blocks every release. Both bugs shipped
+      # fixed - export redaction in v3.63.537, import bounds in v3.63.539 - and
+      # all three pass, so they run here now rather than only by hand.
+      #
+      # Here and not in release-check.mjs, for the same reason the flow harness
+      # is here: each drives a real browser, and the validator is browser-free
+      # by design. Each check file's own header says so too.
+      - name: Security check - export redaction
+        env:
+          WF_CHROME: ${{ steps.chrome.outputs.path }}
+        run: node tools/check-export-redaction.mjs
+
+      - name: Security check - import bounds
+        env:
+          WF_CHROME: ${{ steps.chrome.outputs.path }}
+        run: node tools/check-import-bounds.mjs
+
+      - name: Security check - hostile provider
+        env:
+          WF_CHROME: ${{ steps.chrome.outputs.path }}
+        run: node tools/check-hostile-provider.mjs

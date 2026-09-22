@@ -161,17 +161,29 @@ else
   curl -fsSL -o "$STAGING/waxframe.zip" "$BASE/$ASSET" \
     || { log_err "Release download failed."; exit 1; }
 
-  if curl -fsSL -o "$STAGING/waxframe.sha256" "$BASE/$ASSET.sha256" 2>/dev/null; then
-    log_step "Verifying SHA-256…"
-    EXPECTED="$(awk 'NR==1 && $1 ~ /^[0-9A-Fa-f]{64}$/ { print tolower($1) }' "$STAGING/waxframe.sha256")"
-    [ -n "$EXPECTED" ] || { log_err "Checksum file is malformed."; exit 1; }
-    ACTUAL="$(sha256_of "$STAGING/waxframe.zip")" || { log_err "No SHA-256 tool available."; exit 1; }
-    [ "$ACTUAL" = "$EXPECTED" ] \
-      || { log_err "SHA-256 mismatch — expected $EXPECTED, got $ACTUAL. The download was not used."; exit 1; }
-    log_ok "  Verified $ACTUAL"
-  else
-    log_warn "  No checksum published for this release; skipping verification."
+  # The checksum is required, not best-effort. A release with none published
+  # cannot be verified, and anyone able to serve a malicious ZIP simply does
+  # not publish a correct hash beside it.
+  #
+  # Fetched as its own statement rather than as an `if` condition,
+  # deliberately: as the condition, a dropped connection and a genuinely
+  # absent checksum took the same branch, so a flaky network silently
+  # skipped verification too.
+  if ! curl -fsSL -o "$STAGING/waxframe.sha256" "$BASE/$ASSET.sha256"; then
+    log_err "Could not fetch $ASSET.sha256, so the download cannot be verified. Nothing was installed."
+    log_err "If the release is incomplete, see https://github.com/$REPO/releases"
+    exit 1
   fi
+
+  log_step "Verifying SHA-256…"
+  EXPECTED="$(awk 'NR==1 && $1 ~ /^[0-9A-Fa-f]{64}$/ { print tolower($1) }' "$STAGING/waxframe.sha256")"
+  if [ -z "$EXPECTED" ]; then log_err "Checksum file is malformed. Nothing was installed."; exit 1; fi
+  if ! ACTUAL="$(sha256_of "$STAGING/waxframe.zip")"; then log_err "No SHA-256 tool available."; exit 1; fi
+  if [ "$ACTUAL" != "$EXPECTED" ]; then
+    log_err "SHA-256 mismatch — expected $EXPECTED, got $ACTUAL. The download was not used."
+    exit 1
+  fi
+  log_ok "  Verified $ACTUAL"
 
   log_step "Extracting…"
   mkdir -p "$STAGING/extracted"

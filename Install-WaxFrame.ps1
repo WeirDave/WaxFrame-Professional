@@ -180,6 +180,14 @@ try {
     $asset = $release.assets | Where-Object { $_.name -eq $assetName } | Select-Object -First 1
     if (-not $asset) { throw "Release $tag has no $assetName asset." }
     $sum = $release.assets | Where-Object { $_.name -eq "$assetName.sha256" } | Select-Object -First 1
+    # Absent and wrong are the same answer. A release with no published checksum
+    # is refused rather than installed with a warning: anyone able to serve a
+    # malicious ZIP simply does not publish a correct hash beside it, so
+    # "skip verification when none is offered" hands them the whole check.
+    # This also fires when an asset build half-fails, hence the releases page.
+    if (-not $sum) {
+      throw "Release $tag publishes no $assetName.sha256 checksum, so the download cannot be verified. Nothing was installed. See https://github.com/$Repo/releases for a complete release."
+    }
 
     $staging = Join-Path $env:TEMP "WaxFrameInstall-$([guid]::NewGuid().ToString('N'))"
     New-Item -ItemType Directory -Path $staging -Force | Out-Null
@@ -188,21 +196,17 @@ try {
       Write-Step "Downloading $tag..."
       Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zip -UseBasicParsing
 
-      if ($sum) {
-        Write-Step 'Verifying SHA-256...'
-        $sumFile = Join-Path $staging 'waxframe.sha256'
-        Invoke-WebRequest -Uri $sum.browser_download_url -OutFile $sumFile -UseBasicParsing
-        $text = (Get-Content -Raw -LiteralPath $sumFile).Trim()
-        if ($text -notmatch '^(?<hash>[A-Fa-f0-9]{64})\b') { throw 'Checksum file is malformed.' }
-        $expected = $Matches['hash'].ToLowerInvariant()
-        $actual = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
-        if ($actual -ne $expected) {
-          throw "SHA-256 mismatch -- expected $expected, got $actual. The download was not used."
-        }
-        Write-Ok "  Verified $actual"
-      } else {
-        Write-Warn '  No checksum published for this release; skipping verification.'
+      Write-Step 'Verifying SHA-256...'
+      $sumFile = Join-Path $staging 'waxframe.sha256'
+      Invoke-WebRequest -Uri $sum.browser_download_url -OutFile $sumFile -UseBasicParsing
+      $text = (Get-Content -Raw -LiteralPath $sumFile).Trim()
+      if ($text -notmatch '^(?<hash>[A-Fa-f0-9]{64})\b') { throw 'Checksum file is malformed.' }
+      $expected = $Matches['hash'].ToLowerInvariant()
+      $actual = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+      if ($actual -ne $expected) {
+        throw "SHA-256 mismatch -- expected $expected, got $actual. The download was not used."
       }
+      Write-Ok "  Verified $actual"
 
       Write-Step 'Extracting...'
       $extract = Join-Path $staging 'extracted'

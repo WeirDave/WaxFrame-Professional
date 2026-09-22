@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v323
-2026-09-21
+WaxFrame Backlog Master v324
+2026-09-22
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,33 @@ ships.
 
 
 
+
+v324 — THE INSTALLERS CATCH UP WITH THE UPDATERS (v3.63.547).
+
+Both INSTALL scripts skipped checksum verification when a release
+published none, warning and installing anyway. Both UPDATE scripts
+refused correctly and always had. The gate could not see the
+difference because Check 18 iterates UPDATER_SCRIPTS only — half
+the family checked, half never looked at.
+
+That shape is the item worth keeping, not the individual bug. New
+Check 20 asserts the property over all four scripts.
+
+Install-WaxFrame.command carried a second form of it: the checksum
+fetch WAS the `if` condition, so a dropped connection and a
+genuinely absent checksum took the same branch.
+
+The three security checks from the v308 review are wired into CI
+at last — as steps in the browser smoke job, NOT as gate stages.
+v309 recorded the reason and it still holds: the gate is
+browser-free by design, pure Node stdlib, and CI runs it on a
+runner with no browser. Each check file's own header says the same.
+The flow harness sits in that job for exactly this reason and was
+the precedent followed. Measured: 9s for all three.
+
+So the v308 line "only then should either become a gate stage"
+is answered, and the answer is no — they become CI steps. Nothing
+is left hand-run.
 
 v323 — A PROCESS FAILURE, NAMED (v3.63.546).
 
