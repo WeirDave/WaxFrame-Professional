@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260922-002
+// Build: 20260922-003
 // check-ocr-handoff.mjs — what happens AFTER a page is found to have no text.
 //
 // tools/check-pdf-shapes.mjs proves an image-only PDF extracts zero characters
@@ -424,19 +424,38 @@ function driveImageViewer() {
     });
     const fitted = read();
 
-    // Zoom in on the centre.
+    // Zoom in on the centre. Repeatedly, so the image ends up LARGER than
+    // the pane — at fit it is smaller, and the clamp then legitimately
+    // restricts a drag, which is the behaviour being relied on rather than
+    // a bug. Panning only matters once the image overflows anyway.
     const rect = wrap.getBoundingClientRect();
-    wrap.dispatchEvent(new WheelEvent('wheel', {
-      deltaY: -100, clientX: rect.left + rect.width / 2,
-      clientY: rect.top + rect.height / 2, bubbles: true, cancelable: true
-    }));
+    for (let i = 0; i < 14; i++) {
+      wrap.dispatchEvent(new WheelEvent('wheel', {
+        deltaY: -100, clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2, bubbles: true, cancelable: true
+      }));
+    }
     const zoomed = read();
+    const overflows = (img.naturalWidth  * parseFloat(zoomed.z)) > wrap.clientWidth &&
+                      (img.naturalHeight * parseFloat(zoomed.z)) > wrap.clientHeight;
 
     // Drag to pan.
     wrap.dispatchEvent(new PointerEvent('pointerdown', { clientX: 200, clientY: 200, bubbles: true, pointerId: 1 }));
     wrap.dispatchEvent(new PointerEvent('pointermove', { clientX: 320, clientY: 260, bubbles: true, pointerId: 1 }));
     const panned = read();
     wrap.dispatchEvent(new PointerEvent('pointerup', { clientX: 320, clientY: 260, bubbles: true, pointerId: 1 }));
+
+    // Now drag far past any sane limit and confirm the image is still there.
+    wrap.dispatchEvent(new PointerEvent('pointerdown', { clientX: 400, clientY: 400, bubbles: true, pointerId: 2 }));
+    wrap.dispatchEvent(new PointerEvent('pointermove', { clientX: -4000, clientY: -4000, bubbles: true, pointerId: 2 }));
+    wrap.dispatchEvent(new PointerEvent('pointerup',   { clientX: -4000, clientY: -4000, bubbles: true, pointerId: 2 }));
+    const hugeDrag = read();
+    const hx = parseFloat(hugeDrag.x), hy = parseFloat(hugeDrag.y);
+    const hw = img.naturalWidth * parseFloat(hugeDrag.z);
+    const hh = img.naturalHeight * parseFloat(hugeDrag.z);
+    // Still overlapping the pane on both axes?
+    const clamped = (hx + hw) > 0 && hx < wrap.clientWidth &&
+                    (hy + hh) > 0 && hy < wrap.clientHeight;
 
     // Double-click resets to fit.
     wrap.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
@@ -447,7 +466,7 @@ function driveImageViewer() {
       imgVisible: wrap.style.display !== 'none',
       frameHidden: !frame || frame.style.display === 'none',
       hasSrc: !!img.getAttribute('src'),
-      fitted, zoomed, panned, reset,
+      fitted, zoomed, panned, reset, overflows, hugeDrag, clamped,
       zoomedIn: parseFloat(zoomed.z || '1') > parseFloat(fitted.z || '1'),
       pannedX: parseFloat(panned.x) - parseFloat(zoomed.x),
       pannedY: parseFloat(panned.y) - parseFloat(zoomed.y),
@@ -659,9 +678,16 @@ try {
   check('the PDF iframe is NOT used for an image', viewer.frameHidden === true, viewer);
   check('it fits the image to the pane on open', !!viewer.fitted.z, viewer.fitted);
   check('scrolling zooms in', viewer.zoomedIn === true, { fitted: viewer.fitted, zoomed: viewer.zoomed });
+  check('the image overflows the pane before panning is judged (liveness)',
+    viewer.overflows === true,
+    'not zoomed past the pane, so the clamp would mask the result');
   check('dragging pans — the whole point of the fix',
     viewer.pannedX === 120 && viewer.pannedY === 60,
     { dx: viewer.pannedX, dy: viewer.pannedY, expected: '120 / 60' });
+  // v3.63.546 — and it cannot be dragged into the void.
+  check('the image stays inside the pane however far it is dragged',
+    viewer.clamped === true,
+    { afterHugeDrag: viewer.hugeDrag, note: 'image left entirely outside the pane' });
   check('double-click resets back to fit', viewer.resetMatchesFit === true,
     { reset: viewer.reset, fitted: viewer.fitted });
 

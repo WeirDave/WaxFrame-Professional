@@ -1,5 +1,39 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.546 — The original image can no longer be dragged out of view
+
+**Released:** 2026-09-22
+**Build:** 20260922-003
+
+### What changed
+
+**Panning now stops at the edges of the image.** Dragging far enough could push the page entirely
+out of the pane, leaving an empty box. Double-clicking always brought it back, but needing to know
+that is not a design.
+
+The rule is the usual one for image viewers: when the image is larger than the pane you can pan to
+its edges and no further; when it is smaller it stays within the pane.
+
+### Verification
+- The import check now drags far past any sane limit and confirms the image still overlaps the pane
+  on both axes. It also zooms past the pane size before judging a drag, because at fit the image is
+  smaller than the pane and the new limit correctly restricts movement.
+- Verified interactively in **Chrome and Edge**, both driving the real panel: 49 assertions each,
+  all passing.
+- **Firefox is not verified.** Headless Firefox fails to capture on this machine with a graphics
+  error, so the viewer has not been exercised in Gecko.
+- Gate: all 19 stages. Flow harness: 23. Injection checks: 14. Debug redaction: 45. Export
+  redaction: 20. Import bounds: green. PDF shapes: both engines. Portable `file://` path: 9.
+
+### Files touched
+`js/app.js`, `tools/check-ocr-handoff.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v323.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The change is one bounding function applied wherever the image position is
+written; no other behaviour and no stored data format changed.
+
+
 ## v3.63.545 — The original image can be panned, and a silent vision provider no longer hangs the import
 
 **Released:** 2026-09-22

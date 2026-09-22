@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260922-002
+// Build: 20260922-003
 // check-import-bounds.mjs — is there a ceiling anywhere on an imported file?
 //
 // Two questions, both answered against the real app rather than by reading it.

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260922-002
+// Build: 20260922-003
 // audit-dead-code.mjs — dead-code and dynamic-execution audit for js/ and the
 // HTML pages. Run it; it prints findings and exits non-zero only on a hard
 // failure, never on a finding, because several of its passes are judgement

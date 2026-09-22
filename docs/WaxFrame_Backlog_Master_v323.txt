@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v322
+WaxFrame Backlog Master v323
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,54 @@ ships.
 
 
 
+
+v323 — A PROCESS FAILURE, NAMED (v3.63.546).
+
+David, after the fifth defect he had found by hand: "technically
+you're supposed to open up the browser and check these things out
+for yourself and you're supposed to use Firefox edge and chrome to
+check it out."
+
+He is right, and it is a written rule — the browser-verification
+section of the global handover says in terms: do not silently fall
+back to DOM-only checks or skip visual verification. Every check
+written for photo import was CDP assertions in headless Chrome.
+The app was never LOOKED at.
+
+That is precisely why .542, .543 and .545 reached him: a success
+styled as a failure, a missing button, and a zoom that could not
+pan are all things you SEE. A DOM assertion only catches them if
+you already suspected them, which is the same as not catching
+them.
+
+WHAT LOOKING FOUND IMMEDIATELY. Opening the panel in the browser
+pane and dragging the image showed it could be dragged entirely
+out of view, leaving an empty box. Double-click recovered it, but
+only if you knew. Fixed here, and no assertion had suggested it —
+the existing tests all passed.
+
+STANDING PRACTICE, added because this cost five releases:
+  • A change to anything a person SEES or INTERACTS WITH gets
+    opened in the browser pane and looked at, before it is called
+    done. .claude/launch.json already has waxframe-test on 8421
+    for exactly this, separate from the 8420 instance David runs.
+  • Chrome AND Edge can both be driven by the existing harnesses:
+    WF_CHROME=<msedge path> node tools/<check>.mjs. Edge was run
+    this release and matched Chrome at 49 assertions.
+  • FIREFOX IS THE GAP, and it is the browser David actually uses.
+    Headless Firefox fails to capture on this machine:
+    "RenderCompositorSWGL failed mapping default framebuffer".
+    Gecko is therefore UNVERIFIED for the image viewer. The
+    features it relies on are all long-supported there, and the
+    one real Gecko-specific risk was checked by reading: Firefox
+    can report wheel deltaMode in LINES rather than pixels, and
+    the handler only uses the SIGN of deltaY, so it is unaffected.
+    That is reasoning, not verification, and should not be
+    recorded as the latter.
+
+OPEN: get a working Firefox verification path. Options not yet
+tried: geckodriver/WebDriver BiDi, or a non-headless window when
+David is at the machine and can see it.
 
 v322 — PAN, AND A VISION TIMEOUT (v3.63.545). Both reported from
 real use on the day photo import shipped.

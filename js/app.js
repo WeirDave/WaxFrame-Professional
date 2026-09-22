@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260922-002
+// Build: 20260922-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260922-002';         // build stamp — update each session
+const BUILD = '20260922-003';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13611,8 +13611,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.545'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.545';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.546'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.546';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -14188,9 +14188,32 @@ let _verifyOriginalText = '';
 let _vzScale = 1, _vzX = 0, _vzY = 0, _vzBound = false;
 const VERIFY_ZOOM_MIN = 0.1, VERIFY_ZOOM_MAX = 8;
 
+// v3.63.546 — keep the image inside the pane. Found by opening the panel and
+// dragging it, which is the only way this shows: with no bound, a drag can
+// put the page entirely off into the dark and leave someone staring at an
+// empty box with no obvious way back. Double-click always recovered it, but
+// having to know that is not a design.
+//
+// The rule is the usual one for image viewers: when the image is larger than
+// the pane you may pan to its edges but no further; when it is smaller it
+// stays within the pane.
+function _verifyClampPan() {
+  const wrap = document.getElementById('verifyImgWrap');
+  const img  = document.getElementById('verifyImg');
+  if (!wrap || !img || !img.naturalWidth) return;
+  const w = img.naturalWidth  * _vzScale;
+  const h = img.naturalHeight * _vzScale;
+  const cw = wrap.clientWidth, ch = wrap.clientHeight;
+  const lo = (size, container) => (size >= container) ? container - size : 0;
+  const hi = (size, container) => (size >= container) ? 0 : container - size;
+  _vzX = Math.min(hi(w, cw), Math.max(lo(w, cw), _vzX));
+  _vzY = Math.min(hi(h, ch), Math.max(lo(h, ch), _vzY));
+}
+
 function _verifyApplyTransform() {
   const img = document.getElementById('verifyImg');
   if (!img) return;
+  _verifyClampPan();
   img.style.setProperty('--vx', _vzX + 'px');
   img.style.setProperty('--vy', _vzY + 'px');
   img.style.setProperty('--vz', String(_vzScale));
