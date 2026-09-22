@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260921-006
+// Build: 20260921-007
 // check-ocr-handoff.mjs — what happens AFTER a page is found to have no text.
 //
 // tools/check-pdf-shapes.mjs proves an image-only PDF extracts zero characters
@@ -318,8 +318,12 @@ function whichSurfaceOpens() {
   let verify = null, card = null;
   const oV = window.openVerifyModalForImport;
   const oC = WF_DEBUG.showCard;
+  const oCon = window.wfConfirm;
   window.openVerifyModalForImport = (ctx) => { verify = { sourceType: ctx && ctx.sourceType }; };
   WF_DEBUG.showCard = (entry) => { card = { code: entry && entry.code }; };
+  // See the note in isThereAWayBack: an unanswered replace-document confirm
+  // hangs the run rather than failing it.
+  window.wfConfirm = () => Promise.resolve(true);
   return (async () => {
     try {
       const r = await fetch('/__photo.png');
@@ -330,8 +334,42 @@ function whichSurfaceOpens() {
     } finally {
       window.openVerifyModalForImport = oV;
       WF_DEBUG.showCard = oC;
+      window.wfConfirm = oCon;
     }
     return JSON.stringify({ verify, card });
+  })();
+}
+
+// Imports a photo, then asks whether the extracted text is reachable again
+// once the verify panel has been dismissed.
+function isThereAWayBack() {
+  const oV = window.openVerifyModalForImport;
+  const oCon = window.wfConfirm;
+  window.openVerifyModalForImport = () => {};   // swallow the auto-open
+  // processFile asks for confirmation when a document is ALREADY loaded, and
+  // an unanswered modal hangs the run forever rather than failing. Auto-accept
+  // so this block does not depend on whether an earlier one left a document
+  // behind.
+  window.wfConfirm = () => Promise.resolve(true);
+  return (async () => {
+    let err = null;
+    try {
+      const r = await fetch('/__photo.png');
+      const b = await r.blob();
+      await processFile(new File([b], 'page-photo.png', { type: 'image/png' }));
+    } catch (e) { err = String((e && e.message) || e); }
+    finally { window.openVerifyModalForImport = oV; window.wfConfirm = oCon; }
+    const btn = document.getElementById('fileReviewBtn');
+    const ctx = window._lastImportVerify || null;
+    return JSON.stringify({
+      err,
+      reviewBtnExists: !!btn,
+      reviewBtnVisible: !!btn && !btn.classList.contains('is-hidden'),
+      // The button is only useful if the context it reads is still there.
+      verifyContextKept: !!ctx,
+      contextIsRenderable: !!(ctx && ctx.isRenderable),
+      contextSourceType: ctx && ctx.sourceType
+    });
   })();
 }
 
@@ -493,6 +531,21 @@ try {
     routed.verify !== null && routed.verify.sourceType === 'image-vision', routed);
   check('it does NOT raise the parse-failure card — nothing failed to parse',
     routed.card === null, routed.card);
+
+  // ── 2c-iii. After dismissing, is there a way back? ──────────────────
+  // The panel opening is not the whole story. It can be dismissed, and if
+  // nothing reveals it again the only route back to the extracted text is
+  // deleting the file and importing it a second time. That shipped: the
+  // Review button was revealed for .pdf only, so a photo had no way back.
+  console.log('\n  > 2c-iii. Dismissing the panel must not be a dead end');
+  await fetch(`${MOCK}/__mock/reset`);
+  const back = JSON.parse(await ev(`(${isThereAWayBack.toString()})()`));
+  check('the import ran (liveness)', back.err === null, back.err);
+  check('the Review button is VISIBLE after a photo import', back.reviewBtnVisible === true, back);
+  check('the verify context survives, so the button has something to open',
+    back.verifyContextKept === true && back.contextSourceType === 'image-vision', back);
+  check('the photo is marked renderable, so it shows beside the text on reopen',
+    back.contextIsRenderable === true, back);
 
   // ── 2d. The same photo with NO vision provider configured ───────────
   console.log('\n  > 2d. A photo with no vision AI set up');

@@ -1,5 +1,40 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.543 — Dismissing the verification panel is no longer a dead end
+
+**Released:** 2026-09-21
+**Build:** 20260921-007
+
+### What changed
+
+**After importing a photo, the 🔍 Review button now appears beside the file.** Dismissing the
+verification panel previously left no way back to the extracted text: the only route was deleting
+the file and importing it again.
+
+The button was being shown for PDFs only. A photo is read *entirely* by AI vision, so re-opening it
+to check the transcription — or to re-scan with a different AI — matters more there than for a PDF,
+not less.
+
+**Bitmap files (`.bmp`) now display in the verification panel.** They could already be imported, but
+the list of formats the panel knows how to show had not been updated to match, so the text appeared
+without the image beside it. The two lists are now one list, which is why they had drifted.
+
+### Verification
+- `tools/check-ocr-handoff.mjs` now checks that after a photo import the Review button is visible,
+  the verification context survives so the button has something to open, and the image is marked as
+  displayable. Confirmed the new assertions fail against the previous release.
+- Gate: all 19 stages. Flow harness: 23. Injection checks: 14. Debug redaction: 44. Export
+  redaction: 20. Import bounds: green. PDF shapes: both engines. Portable `file://` path: 9.
+
+### Files touched
+`js/app.js`, `tools/check-ocr-handoff.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v320.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The change is one visibility condition and the merging of three duplicate format
+lists into one; no extraction behaviour and no stored data format changed.
+
+
 ## v3.63.542 — A photo that imports correctly no longer reports a failure
 
 **Released:** 2026-09-21

@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v319
+WaxFrame Backlog Master v320
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,46 @@ ships.
 
 
 
+
+v320 — DISMISSING THE VERIFY PANEL STOPPED BEING A DEAD END
+(v3.63.543). Reported from a real run: after importing a photo,
+dismissing the verify panel left no route back to the extracted
+text short of deleting the file and importing it again.
+
+Cause: the Review button was revealed for .pdf only (v3.63.393),
+on the reasoning that vision re-scan is meaningful for PDFs and
+inline editing is enough for DOCX and text. A photo is read
+ENTIRELY by vision, so that reasoning argues for showing it MORE
+strongly, not less. Everything behind the button already worked —
+_lastImportVerify was set, the context was renderable, the panel
+would have opened. Only the button was hidden.
+
+THIS IS THE THIRD TIME IN THREE RELEASES that a PDF-only
+condition failed to admit images:
+  v3.63.541  extractFromFile did not accept image extensions
+  v3.63.542  the Verify-panel routing tested pdf-vision only
+  v3.63.543  the Review button tested ext === pdf only
+Each was a separate line, each written before images existed,
+each invisible to a search for the word "image". Adding a format
+is not one change; it is every place the old format was named.
+Anything touching import should be grepped for pdf-only
+conditions before it is called done.
+
+Also merged: three copies of the "which formats can be displayed"
+list, none of which included .bmp although import accepted it, so
+a .bmp showed its text with no image beside it. Now one list,
+IMAGE_EXTENSIONS, which is why they could drift.
+
+Test: check-ocr-handoff asserts the Review button is VISIBLE after
+a photo import, that the verify context survives so the button has
+something to open, and that the image is renderable. Verified RED
+against v3.63.542 first.
+
+Harness note: that test hung on first run rather than failing.
+processFile awaits wfConfirm when a document is already loaded,
+and an earlier block had loaded one — an unanswered modal waits
+forever. Both in-page helpers now stub wfConfirm, so neither
+depends on what ran before it.
 
 v319 — A SUCCESSFUL PHOTO IMPORT STOPPED LOOKING LIKE A
 FAILURE (v3.63.542). Reported from a real run of v3.63.541: a

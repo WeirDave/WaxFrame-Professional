@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260921-006
+// Build: 20260921-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260921-006';         // build stamp — update each session
+const BUILD = '20260921-007';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13211,10 +13211,16 @@ async function processFile(file) {
     // v3.63.393 — Reveal the 🔍 Review button only for PDFs (where vision
     // re-scan via the verify modal is meaningful). DOCX/XLSX/text starting
     // docs hide it — their inline editing is enough.
+    //
+    // v3.63.543 — images too, and this was a dead end without it. A photo is
+    // read ONLY by vision, so re-scanning is more meaningful here than for a
+    // PDF, not less. With the button hidden, dismissing the verify panel left
+    // no way back to the extracted text short of deleting the file and
+    // importing it again. Reported from a real run of v3.63.542.
     const reviewBtn = document.getElementById('fileReviewBtn');
     if (reviewBtn) {
       const ext = (file.name || '').split('.').pop().toLowerCase();
-      reviewBtn.classList.toggle('is-hidden', ext !== 'pdf');
+      reviewBtn.classList.toggle('is-hidden', ext !== 'pdf' && !IMAGE_EXTENSIONS.includes(ext));
     }
     updateLaunchRequirements();
     // v3.52.0 — Run source size check after the file is loaded. docText
@@ -13268,7 +13274,7 @@ async function processRefFile(file, batchLabel = '', verifyCollector = null) {
     // in-memory on the doc object (not serialized); used by the card 🔍
     // verify panel to render the original beside the extracted text.
     const ext = file.name.split('.').pop().toLowerCase();
-    const isRenderable = ext === 'pdf' || ['png','jpg','jpeg','gif','webp'].includes(ext);
+    const isRenderable = ext === 'pdf' || IMAGE_EXTENSIONS.includes(ext);
     const sharedBlobUrl = isRenderable ? URL.createObjectURL(file) : null;
     let firstNewId = null;
     for (const docResult of docs) {
@@ -13583,8 +13589,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.542'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.542';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.543'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.543';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -14114,7 +14120,7 @@ async function storePDFPageImages(pdf) {
 function setVerifyContext({ target, docId, file, sourceType }) {
   try { if (window._verifyBlobUrl) URL.revokeObjectURL(window._verifyBlobUrl); } catch(e) {}
   const ext = (file?.name || '').split('.').pop().toLowerCase();
-  const isRenderable = ext === 'pdf' || ['png','jpg','jpeg','gif','webp'].includes(ext);
+  const isRenderable = ext === 'pdf' || IMAGE_EXTENSIONS.includes(ext);
   window._verifyBlobUrl = (file && isRenderable) ? URL.createObjectURL(file) : null;
   window._lastImportVerify = {
     target: target || 'starting',
@@ -14301,7 +14307,7 @@ function openVerifyModalForImport(opts) {
   let ownsUrl = false;
   if (opts.file) {
     const ext = (opts.file.name || '').split('.').pop().toLowerCase();
-    isRenderable = ext === 'pdf' || ['png','jpg','jpeg','gif','webp'].includes(ext);
+    isRenderable = ext === 'pdf' || IMAGE_EXTENSIONS.includes(ext);
     if (isRenderable) {
       blobUrl = URL.createObjectURL(opts.file);
       ownsUrl = true;
