@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260921-005
+// Build: 20260921-006
 // check-ocr-handoff.mjs — what happens AFTER a page is found to have no text.
 //
 // tools/check-pdf-shapes.mjs proves an image-only PDF extracts zero characters
@@ -312,6 +312,29 @@ function aimAtMock(base) {
   });
 }
 
+// Stubs the two surfaces an import can open, runs the REAL processFile,
+// and reports which one was called.
+function whichSurfaceOpens() {
+  let verify = null, card = null;
+  const oV = window.openVerifyModalForImport;
+  const oC = WF_DEBUG.showCard;
+  window.openVerifyModalForImport = (ctx) => { verify = { sourceType: ctx && ctx.sourceType }; };
+  WF_DEBUG.showCard = (entry) => { card = { code: entry && entry.code }; };
+  return (async () => {
+    try {
+      const r = await fetch('/__photo.png');
+      const b = await r.blob();
+      await processFile(new File([b], 'page-photo.png', { type: 'image/png' }));
+    } catch (e) {
+      return JSON.stringify({ err: String((e && e.message) || e) });
+    } finally {
+      window.openVerifyModalForImport = oV;
+      WF_DEBUG.showCard = oC;
+    }
+    return JSON.stringify({ verify, card });
+  })();
+}
+
 async function importScan(which) {
   const t0 = performance.now();
   const r = await fetch(which || '/__scan.pdf');
@@ -454,6 +477,22 @@ try {
     (rImg.warn || []).some(w => /image via AI vision/i.test(w) && /check it/i.test(w)), rImg.warn);
   check('an oversized photo is scaled before being sent, and the user is told',
     (rImg.warn || []).some(w => /scaled to \d+x\d+/i.test(w)), rImg.warn);
+
+  // ── 2c-ii. WHICH surface does the user actually see? ────────────────
+  // 2c proves extractFromFile returns the right data. It says nothing about
+  // presentation, and that gap shipped: 'image-vision' did not match the
+  // 'pdf-vision' routing test, so a photo that imported PERFECTLY was
+  // announced as "Imported with warnings — some parts of the file could not
+  // be fully parsed". Nothing had failed to parse. Testing a return value is
+  // not testing what the person is told.
+  console.log('\n  > 2c-ii. A successful photo import must not look like a failure');
+  await fetch(`${MOCK}/__mock/reset`);
+  const routed = JSON.parse(await ev(`(${whichSurfaceOpens.toString()})()`));
+  check('the real import handler ran (liveness)', routed.err === undefined, routed.err);
+  check('a photo opens the Verify panel, where it can be checked against the original',
+    routed.verify !== null && routed.verify.sourceType === 'image-vision', routed);
+  check('it does NOT raise the parse-failure card — nothing failed to parse',
+    routed.card === null, routed.card);
 
   // ── 2d. The same photo with NO vision provider configured ───────────
   console.log('\n  > 2d. A photo with no vision AI set up');

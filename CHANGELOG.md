@@ -1,5 +1,42 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.542 — A photo that imports correctly no longer reports a failure
+
+**Released:** 2026-09-21
+**Build:** 20260921-006
+
+### What changed
+
+**Importing a photo or scan announced itself as a problem when nothing had gone wrong.** The
+previous release added photo import, and a successful one opened a card headed *"Imported with
+warnings"* saying *"some parts of the file could not be fully parsed"* and suggesting the file be
+re-uploaded or saved in a different format. None of that was true: the image had been read
+completely and correctly.
+
+The two notes that card was showing — that the text came from AI vision and should be checked, and
+that a large image was scaled before being sent — are worth saying. They were simply being said in
+the wrong place, in the wording of a parse failure.
+
+A photo now opens the **verification panel** instead, with the image beside its transcription, which
+is where "check this against the original" belongs and is already what a scanned PDF does. The
+parse-failure card is reserved for files that genuinely failed to parse.
+
+### Verification
+- `tools/check-ocr-handoff.mjs` now drives the real import handler and asserts which surface opens:
+  the verification panel for a photo, and never the parse-failure card. Confirmed the new assertions
+  fail against the previous release, so they would have caught this.
+- Gate: all 19 stages. Flow harness: 23. Injection checks: 14. Debug redaction: 44. Export
+  redaction: 20. Import bounds: green. PDF shapes: both engines. Portable `file://` path: 9.
+
+### Files touched
+`js/app.js`, `tools/check-ocr-handoff.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v319.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The change is which of two existing surfaces a vision-sourced import opens; no
+extraction behaviour and no stored data format changed.
+
+
 ## v3.63.541 — Photos and scans of a page can be imported directly
 
 **Released:** 2026-09-21

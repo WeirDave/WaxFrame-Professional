@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260921-005
+// Build: 20260921-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260921-005';         // build stamp — update each session
+const BUILD = '20260921-006';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13174,7 +13174,11 @@ async function processFile(file) {
       // Verify modal directly. Non-OCR warnings (DOCX skipped elements,
       // PDFs where vision failed entirely, etc.) keep the original
       // Troubleshooting Card path so they're not missed.
-      if (doc.sourceType === 'pdf-vision') {
+      // v3.63.542 — 'image-vision' joins it. A photo import is a SUCCESS
+      // that needs checking, not a partial parse failure, and routing it to
+      // the IMPORT_WARNINGS card said 'some parts of the file could not be
+      // fully parsed' about a file that parsed completely.
+      if (doc.sourceType === 'pdf-vision' || doc.sourceType === 'image-vision') {
         openVerifyModalForImport({
           target: 'starting',
           docId: null,
@@ -13313,9 +13317,10 @@ async function processRefFile(file, batchLabel = '', verifyCollector = null) {
     // OCR'd doc. Non-OCR warnings keep the original Troubleshooting Card
     // path so they're not missed.
     if (allWarnings.length > 0) {
-      const newlyAdded = referenceDocs.filter(d => d._sourceType === 'pdf-vision' && d.id === firstNewId);
+      const VISION_TYPES = ['pdf-vision', 'image-vision'];
+      const newlyAdded = referenceDocs.filter(d => VISION_TYPES.includes(d._sourceType) && d.id === firstNewId);
       const ocrDoc = newlyAdded[0] ||
-        (firstNewId !== null && referenceDocs.find(d => d.id === firstNewId && d._sourceType === 'pdf-vision'));
+        (firstNewId !== null && referenceDocs.find(d => d.id === firstNewId && VISION_TYPES.includes(d._sourceType)));
       if (ocrDoc) {
         const verifyDesc = {
           target: 'reference',
@@ -13578,8 +13583,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.541'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.541';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.542'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.542';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 

@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v318
+WaxFrame Backlog Master v319
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,32 @@ ships.
 
 
 
+
+v319 — A SUCCESSFUL PHOTO IMPORT STOPPED LOOKING LIKE A
+FAILURE (v3.63.542). Reported from a real run of v3.63.541: a
+paperback page photographed and imported perfectly, and the app
+announced "Imported with warnings ... some parts of the file
+could not be fully parsed", offering to re-upload or convert.
+Nothing had failed.
+
+Cause: v3.61.0 routes sourceType pdf-vision to the Verify panel
+rather than the IMPORT_WARNINGS card, precisely because OCR
+output needs checking rather than reporting as breakage. The new
+image-vision sourceType did not match that test, so it fell
+through to the failure card. Three routing sites now accept
+both.
+
+THE LESSON, and it is the one worth carrying. The v3.63.541
+tests PASSED. 27 assertions, all green, including that the
+import returns image-vision and carries the two warnings. Every
+one of them checked what extractFromFile RETURNED. Not one
+checked what the person is shown. A return value is not a user
+interface, and the gap between them shipped.
+
+check-ocr-handoff now stubs both surfaces, runs the real
+processFile, and asserts which one opened. Verified to go RED
+against v3.63.541 before being accepted — a test written after
+the fix that has never been seen failing proves nothing.
 
 v318 — PHOTOS AND SCANS IMPORT DIRECTLY (v3.63.541).
 
