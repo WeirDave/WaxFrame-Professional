@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v320
+WaxFrame Backlog Master v321
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,50 @@ ships.
 
 
 
+
+v321 — TWO DEFECTS FROM THE FIRST REAL PHOTO TEST (v3.63.544).
+Both found by David running a photographed paperback page through
+v3.63.543 — neither reachable by any mock, because both are about
+what a REAL provider returns and what the screen then says.
+
+1. HYPHENATION. The vision prompt said "transcribe exactly as it
+appears", and the model obeyed: a justified print column breaks
+words at the right margin, so uni-verse, in-teract and pro-duce
+came back broken. That text becomes the Working Document, so the
+hive then spends rounds on damage the IMPORT caused — a Builder
+either "corrects" the fragments into something else or reports
+them as typos. The prompt now asks for line-break hyphens to be
+rejoined, for the page wrapping not to be reproduced, and for
+genuine compound hyphens to be kept. Fixed in the prompt rather
+than by regex afterwards: the model can tell uni-verse from
+well-known and a regex cannot.
+
+The kitchen drawing tested earlier never showed this. A letterhead
+has no line-broken words. Two real files, two different defects,
+and the second only appeared because the first was not
+representative.
+
+2. THE STATUS LINE. A photo that imported perfectly reported
+itself with the warning triangle and warning colour, because the
+presentation keyed off "are there warnings" rather than "did this
+fail". The two notes it carries — came from vision, check it; was
+scaled, retake closer — are advice about a success.
+
+FOURTH INSTANCE of the same root cause, and the reason a shared
+predicate now exists:
+  v3.63.541  extractFromFile did not accept image extensions
+  v3.63.542  Verify-panel routing tested pdf-vision only
+  v3.63.543  the Review button tested ext === pdf only
+  v3.63.544  the status line keyed off warnings.length
+js/app.js now has _isVisionSourced() and VISION_SOURCE_TYPES, and
+the routing added in v3.63.542 was moved onto it. The next surface
+that needs the question answered has somewhere to ask instead of
+inventing a fifth copy.
+
+Both fixes are pinned, and both guards were verified RED against
+v3.63.543 before being accepted. The prompt guard lives in
+test-debug-redaction (source-level, gate-run) because the prompt
+is a string inside a browser-only function.
 
 v320 — DISMISSING THE VERIFY PANEL STOPPED BEING A DEAD END
 (v3.63.543). Reported from a real run: after importing a photo,

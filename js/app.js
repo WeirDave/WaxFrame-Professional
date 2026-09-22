@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260921-007
+// Build: 20260922-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260921-007';         // build stamp — update each session
+const BUILD = '20260922-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13159,8 +13159,12 @@ async function processFile(file) {
       ? formatDocStatsLine(_ssStats)
       : `${_ssStats.chars.toLocaleString()} chars`;
     if (warnings.length > 0) {
-      status.textContent = `⚠️ ${_ssStatLine} from ${file.name} — ${warnings[0]}`;
-      setFileStatusState(status, 'warn');
+      // v3.63.544 — a vision read that worked is a SUCCESS carrying advice.
+      // It was showing the warning triangle and the warning colour, which
+      // reads as "something went wrong with your file" when nothing did.
+      const _ok = _isVisionSourced(doc.sourceType);
+      status.textContent = `${_ok ? '✅' : '⚠️'} ${_ssStatLine} from ${file.name} — ${warnings[0]}`;
+      setFileStatusState(status, _ok ? 'success' : 'warn');
       if (warnings.length > 1) {
         warnings.slice(1).forEach(w => {
           const line = document.createElement('div');
@@ -13178,7 +13182,7 @@ async function processFile(file) {
       // that needs checking, not a partial parse failure, and routing it to
       // the IMPORT_WARNINGS card said 'some parts of the file could not be
       // fully parsed' about a file that parsed completely.
-      if (doc.sourceType === 'pdf-vision' || doc.sourceType === 'image-vision') {
+      if (_isVisionSourced(doc.sourceType)) {
         openVerifyModalForImport({
           target: 'starting',
           docId: null,
@@ -13310,11 +13314,14 @@ async function processRefFile(file, batchLabel = '', verifyCollector = null) {
     if (status) {
       const docCount = docs.length;
       const docNoun = docCount === 1 ? 'doc' : 'docs';
+      // v3.63.544 — same distinction as the Starting Document line: a
+      // vision read that worked is not a partial failure.
+      const _refOk = docs.some(d => _isVisionSourced(d.sourceType));
       const msg = allWarnings.length
-        ? `⚠️ Added ${docCount} ${docNoun} from "${file.name}" (${totalChars.toLocaleString()} chars) — ${allWarnings[0]}`
+        ? `${_refOk ? '✅' : '⚠️'} Added ${docCount} ${docNoun} from "${file.name}" (${totalChars.toLocaleString()} chars) — ${allWarnings[0]}`
         : `📚 Added ${docCount} ${docNoun} from "${file.name}" (${totalChars.toLocaleString()} chars) as reference material`;
       status.textContent = batchLabel + msg;
-      setFileStatusState(status, allWarnings.length ? 'warn' : 'ok');
+      setFileStatusState(status, allWarnings.length ? (_refOk ? 'success' : 'warn') : 'ok');
       setTimeout(() => { if (status) { status.classList.add('is-hidden'); status.textContent = ''; } }, 6000);
     }
     // v3.61.0 — OCR'd uploads (any newly-added ref doc with sourceType
@@ -13408,6 +13415,16 @@ const MAX_ZIP_TEXT_PART_BYTES  = 32 * 1024 * 1024;   // 32 MB per XML part
 const MAX_EXTRACTED_CHARS      = 8000000;            // ~8 MB of text
 
 const _fmtMB = (b) => (b / 1048576).toFixed(1) + ' MB';
+
+// v3.63.544 — Did this import SUCCEED, with notes, or did it partly fail?
+// A vision read is the former: the notes say where the text came from and
+// that it should be checked, which is advice about a success, not a report
+// of a failure. Presenting it as a warning has now been wrong in three
+// separate places, so the question gets one answer rather than three.
+const VISION_SOURCE_TYPES = ['pdf-vision', 'image-vision'];
+function _isVisionSourced(sourceType) {
+  return VISION_SOURCE_TYPES.includes(sourceType);
+}
 
 // Sum the DECLARED uncompressed size of the parts an extractor will parse.
 // Media is skipped on purpose (see above). Never throws on a non-zip or an
@@ -13589,8 +13606,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.543'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.543';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.544'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.544';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -15327,7 +15344,23 @@ async function visionErrorDetail(label, model, resp) {
 }
 
 async function runVisionTranscription(pageImages, visionCfg, visionKey) {
-  const prompt = 'Transcribe all text from these document pages exactly as it appears. Preserve paragraph breaks and section structure. Return only the plain text — no commentary, no formatting symbols.';
+  // v3.63.544 — "exactly as it appears" was taken literally, and correctly:
+  // a photographed book page came back with the PRINT layout preserved, so
+  // words hyphenated across a line break arrived broken — "uni-verse",
+  // "in-teract", "pro-duce". That text becomes the Working Document, where a
+  // hive then spends rounds on damage the import caused: a Builder either
+  // "corrects" the broken words into something else or flags them as typos.
+  // Any justified print column does this; the letterhead that was tested
+  // first had no line-broken words, so it never showed.
+  //
+  // Fixed in the prompt rather than with a regex afterwards, because the
+  // model can tell a layout hyphen from a real one and a regex cannot —
+  // "well-known" and "twenty-one" must survive.
+  const prompt = 'Transcribe all text from these document pages. Preserve paragraph breaks and ' +
+    'section structure, but do NOT reproduce the page line wrapping — run each paragraph as ' +
+    'continuous text. Where a word is split across a line break with a hyphen, rejoin it into ' +
+    'one word and drop that hyphen; keep hyphens that belong to the word itself, as in compound ' +
+    'words. Return only the plain text — no commentary, no formatting symbols.';
 
   // v3.63.393 — Dispatch by FORMAT not PROVIDER, and respect visionCfg.endpoint
   // for the URL. Pre-v3.63.393 this matched on hardcoded provider names

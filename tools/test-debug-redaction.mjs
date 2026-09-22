@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-debug-redaction.mjs
-// Build: 20260921-007
+// Build: 20260922-001
 // ============================================================
 // Fixture-based regression test for WF_DEBUG.scrubFailureRecord, the
 // redaction pass applied to the failure record before it is written into a
@@ -337,6 +337,25 @@ check('the checkpoint envelope routes BOTH session copies through the scrub', ()
   const fn = storage.slice(storage.indexOf('function _scrubSessionBlob'), storage.indexOf('function _scrubSessionJSON'));
   assert.ok(/lastFailure:\s*null/.test(fn) && /ringBuffer:\s*\[\]/.test(fn),
     '_scrubSessionBlob no longer fails closed when WF_DEBUG is unavailable');
+});
+
+console.log('▶ The vision transcription prompt');
+
+// Source-level, because the prompt is a string inside a function that needs
+// a browser to reach. v3.63.544 fixed a real defect there: "transcribe
+// exactly as it appears" was obeyed literally, so a photographed book page
+// came back with print-layout hyphenation intact — uni-verse, in-teract —
+// and that broken text became the Working Document for a whole hive run.
+check('the prompt tells the model to rejoin words split across line breaks', () => {
+  const app = fs.readFileSync(path.join(ROOT, 'js', 'app.js'), 'utf8');
+  const i = app.indexOf('Transcribe all text from these document pages');
+  assert.notEqual(i, -1, 'the vision prompt is gone — re-point this guard');
+  const region = app.slice(i, i + 900);
+  assert.match(region, /rejoin it into/i, 'the rejoin instruction is missing');
+  assert.match(region, /do NOT reproduce the page line wrapping/i, 'the line-wrap instruction is missing');
+  assert.match(region, /keep hyphens that belong to the word/i, 'nothing protects genuine compound hyphens');
+  assert.ok(!/exactly as it appears/i.test(region),
+    '"exactly as it appears" is back, which is what caused the hyphenation defect');
 });
 
 console.log('▶ WF_DEBUG.classify — a rejected API key must reach the AUTH_FAILED card');

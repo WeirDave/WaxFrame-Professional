@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260921-007
+// Build: 20260922-001
 // check-ocr-handoff.mjs — what happens AFTER a page is found to have no text.
 //
 // tools/check-pdf-shapes.mjs proves an image-only PDF extracts zero characters
@@ -373,6 +373,31 @@ function isThereAWayBack() {
   })();
 }
 
+// Imports a photo and reports the status line the user is left with.
+function readStatusLine() {
+  const oV = window.openVerifyModalForImport;
+  const oCon = window.wfConfirm;
+  window.openVerifyModalForImport = () => {};
+  window.wfConfirm = () => Promise.resolve(true);
+  return (async () => {
+    let err = null;
+    try {
+      const r = await fetch('/__photo.png');
+      const b = await r.blob();
+      await processFile(new File([b], 'page-photo.png', { type: 'image/png' }));
+    } catch (e) { err = String((e && e.message) || e); }
+    finally { window.openVerifyModalForImport = oV; window.wfConfirm = oCon; }
+    const el = document.getElementById('fileStatus');
+    const cls = el ? Array.from(el.classList) : [];
+    return JSON.stringify({
+      err,
+      text: el ? String(el.textContent || '').slice(0, 200) : null,
+      warnState: cls.includes('file-status--warn'),
+      successState: cls.includes('file-status--success')
+    });
+  })();
+}
+
 async function importScan(which) {
   const t0 = performance.now();
   const r = await fetch(which || '/__scan.pdf');
@@ -546,6 +571,22 @@ try {
     back.verifyContextKept === true && back.contextSourceType === 'image-vision', back);
   check('the photo is marked renderable, so it shows beside the text on reopen',
     back.contextIsRenderable === true, back);
+
+  // ── 2c-iv. The status line must not call a success a warning ────────
+  // The card was fixed in v3.63.542 and the Review button in v3.63.543, but
+  // the STATUS LINE still rendered the warning triangle and the warning
+  // colour for a vision read that worked perfectly. Three surfaces, one
+  // question — "did this fail?" — answered separately each time.
+  console.log('\n  > 2c-iv. A vision read that worked reads as success, not warning');
+  await fetch(`${MOCK}/__mock/reset`);
+  const line = JSON.parse(await ev(`(${readStatusLine.toString()})()`));
+  check('the import ran and wrote a status line (liveness)',
+    line.err === null && !!line.text, line);
+  check('it does NOT carry the warning triangle', !/\u26A0/.test(line.text || ''), line.text);
+  check('it is NOT styled as a warning', line.warnState === false, line);
+  check('it IS styled as a success', line.successState === true, line);
+  check('it still says the text came from vision and should be checked',
+    /AI vision/i.test(line.text || '') && /check it/i.test(line.text || ''), line.text);
 
   // ── 2d. The same photo with NO vision provider configured ───────────
   console.log('\n  > 2d. A photo with no vision AI set up');

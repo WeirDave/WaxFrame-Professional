@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260921-007
+// Build: 20260922-001
 // audit-html-sinks.mjs — every place WaxFrame writes HTML into the DOM, and
 // whether the values it interpolates are escaped.
 //

@@ -1,5 +1,56 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.544 — Photographed pages read cleanly, and a successful import stops looking like a problem
+
+**Released:** 2026-09-22
+**Build:** 20260922-001
+
+### Reading a photo
+
+**Words split across a line break are put back together.** A photographed book, journal or
+newspaper page hyphenates constantly — justified print columns break words at the right margin. The
+transcription instruction asked for the text "exactly as it appears", and that is exactly what came
+back: `uni-verse`, `in-teract`, `pro-duce`, broken across the page's line endings.
+
+That text becomes the Working Document, so the hive then spent rounds on damage the import had
+caused — a Builder either "corrects" the broken words into something else, or reports them as typos.
+
+The instruction now asks for words split at a line break to be rejoined, for the page's line
+wrapping not to be reproduced, and for genuine hyphens in compound words to be kept. It is handled
+in the instruction rather than by editing the text afterwards, because the AI can tell a layout
+hyphen from a real one.
+
+### The upload line
+
+**A photo that imported perfectly no longer reports itself with a warning symbol.** The upload line
+showed ⚠️ in warning colours, followed by notes saying the text came from AI vision and should be
+checked, and that a large image had been scaled before being sent.
+
+Both notes are worth having. Neither is a warning: they describe a success. The line now reads as a
+success, keeps both notes, and the warning styling is reserved for imports that genuinely lost
+something.
+
+This applies to both **Starting Document** and **Reference Material**, and to scanned PDFs as well
+as photos.
+
+### Verification
+- The import check now reads the upload line the user is left with and confirms it carries no
+  warning symbol, is styled as a success, and still says where the text came from.
+- The transcription instruction is pinned by a test, so the wording that caused the hyphenation
+  cannot quietly return.
+- Both new checks were confirmed to fail against the previous release.
+- Gate: all 19 stages. Flow harness: 23. Injection checks: 14. Debug redaction: 45. Export
+  redaction: 20. Import bounds: green. PDF shapes: both engines. Portable `file://` path: 9.
+
+### Files touched
+`js/app.js`, `tools/check-ocr-handoff.mjs`, `tools/test-debug-redaction.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v321.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The changes are one instruction string, one shared predicate replacing three
+copies of the same test, and the styling of two status lines. No stored data format changed.
+
+
 ## v3.63.543 — Dismissing the verification panel is no longer a dead end
 
 **Released:** 2026-09-21
