@@ -1,5 +1,81 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.548 — The gate that guards the download checks stops trusting the wording
+
+**Released:** 2026-09-22
+**Build:** 20260922-005
+
+### What changed
+
+**Check 20 could not see the bug it was written for.** Added one release earlier, it decided
+whether a download script refuses an unverifiable download by looking for phrasing — a
+"skipping verification" branch, a `.sha256` mention, something that computes a hash. Proved
+insufficient by reintroducing the exact macOS fault with no give-away wording:
+
+```sh
+if curl -fsSL -o "$STAGING/waxframe.sha256" "$BASE/$ASSET.sha256"; then
+  ...verify...
+fi
+```
+
+A failed fetch falls straight through the empty else and installs. The gate printed
+`Install-WaxFrame.command: an unverifiable download is refused` and exited 0. A check that
+cannot fail is worse than no check, because it is believed.
+
+The shape is asserted structurally now, per language. For the shell scripts the checksum fetch
+must make failure exit — `if ! curl …` or `curl … || { exit }` — and a bare `if curl …; then` is
+rejected by name. For PowerShell either the absent-checksum test throws, or the sidecar is
+fetched by direct URL under `$ErrorActionPreference = 'Stop'` without an `-ErrorAction` that
+would swallow the 404. Both routes are in use and both are correct; pinning one shape failed
+`Update-WaxFrame.ps1`, which is right by the second route, and a guard that fails the correct
+case is how guards get deleted. The wording checks are kept as the cheap first pass.
+
+**SECURITY.md named a pdf.js version that has not shipped since v3.63.528.** That release moved
+the hosted ESM build 4.10.38 → 6.3.289 and updated the inventory, the CVE floor and the gate —
+but not the prose. For nineteen releases the public security document told a researcher the
+hosted copy ran a library two majors behind what it actually ran. Everything machine-readable was
+checked; the sentence a person reads was the one part with nothing behind it, which is the same
+blind spot as half a family of scripts being verified.
+
+Corrected, and now gated: every pdf.js version stated in SECURITY.md must be one of the versions
+recorded in `docs/vendored-dependencies.json`. Deliberately narrowed to pdf.js — SECURITY.md also
+cites SheetJS 0.18.5 as the stale npm version it is explicitly *not* shipping, and a blanket rule
+would fail on a sentence that is correct.
+
+The accepted risk itself is unchanged and still disclosed: the portable `file://` copy is
+permanently pinned at pdf.js 3.11.174, below the CVE-2024-4367 fix and unupgradable because
+pdfjs-dist has shipped ESM only since 4.x and browsers refuse module imports across `file://`.
+The mitigation remains `isEvalSupported: false` at every `getDocument()` call site, still enforced
+by the gate.
+
+### Verification
+- Gate: all 20 stages green. Three mutants, each watched failing with the file, line and reason
+  named, then restored: the macOS fetch-as-condition shape with no give-away wording; the Windows
+  installer warning instead of throwing; the updater softening its fetch with
+  `-ErrorAction SilentlyContinue`. All three pass silently under the previous wording-only check.
+- The pdf.js cross-check was mutation-tested the same way — SECURITY.md reverted to `4.10.38`,
+  gate failed at `SECURITY.md:39` naming both shipped versions, then restored.
+- The CVE-2024-4367 mitigation check was confirmed still live by dropping `isEvalSupported` from
+  one of the two `getDocument()` call sites: gate exit 1, `js/app.js:13635` named.
+- **Install path driven end to end against the live release.** `Install-WaxFrame.ps1 -Method zip`
+  into a scratch folder fetched v3.63.547, verified SHA-256
+  `b4d2501…f4`, extracted and installed. The refusal path was driven too, with the asset lookup
+  forced to null: the install stopped before downloading, named the missing sidecar and the
+  releases page, and created no folder at all.
+- Security checks, run locally against this tree: export redaction, import bounds and hostile
+  provider all pass. CI run 35745061665 shows the same three green as steps in the smoke job.
+- `bash -n` on both `.command` scripts; PowerShell AST parse on both `.ps1` scripts.
+
+### Files touched
+`tools/release-check.mjs`, `SECURITY.md`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v325.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. Check 20 returns to its wording-only form and the SECURITY.md cross-check
+disappears; the install and update scripts themselves are untouched by this release and keep
+refusing unverifiable downloads either way. No application code, stored data format or
+user-visible behaviour is involved.
+
 ## v3.63.547 — A first install refuses a download it cannot verify
 
 **Released:** 2026-09-22

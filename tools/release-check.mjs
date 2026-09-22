@@ -684,6 +684,58 @@ for (const lib of LIB_FLOORS) {
   }
 }
 
+// SECURITY.md states the pdf.js versions by number, and it is the document a
+// security researcher reads before deciding whether a finding is already
+// known. It went stale: v3.63.528 moved the ESM build 4.10.38 -> 6.3.289 and
+// updated the inventory, the floor and the gate, but not the prose. The
+// public statement named a version two majors behind what actually shipped
+// for nineteen releases, so anyone assessing the hosted build was assessing
+// the wrong library.
+//
+// Nothing caught it because everything that is checked here is
+// machine-readable — docs/vendored-dependencies.json is hash-verified at
+// check 17, the floor is compared at check 7 — and the sentence a human
+// reads was the one part with no check behind it. Same shape as the install
+// scripts: half a family verified, half never looked at.
+//
+// Narrowed to pdf.js deliberately. SECURITY.md also cites SheetJS 0.18.5 as
+// the *stale npm* version it is explicitly not shipping, so a blanket "every
+// version token must be in the inventory" rule would fail on a sentence that
+// is correct.
+{
+  const security = read(join(ROOT, 'SECURITY.md'));
+  const inventory = JSON.parse(read(join(ROOT, 'docs/vendored-dependencies.json')));
+  const shipped = new Set(
+    inventory.dependencies
+      .filter(d => d.name.startsWith('pdfjs-dist'))
+      .map(d => d.version)
+  );
+
+  if (!shipped.size) {
+    fail('docs/vendored-dependencies.json',
+      'no pdfjs-dist entry found — the SECURITY.md version cross-check can no longer see what is shipped');
+  } else {
+    // Any version number stated within a sentence that mentions pdf.js.
+    const claimed = new Set();
+    for (const line of security.split('\n')) {
+      if (!/pdf\.?js/i.test(line)) continue;
+      for (const m of line.matchAll(/\b(\d+\.\d+\.\d+)\b/g)) claimed.add(m[1]);
+    }
+
+    const wrong = [...claimed].filter(v => !shipped.has(v));
+    if (wrong.length) {
+      fail('SECURITY.md',
+        `states pdf.js version(s) ${wrong.join(', ')} that are not what is shipped (${[...shipped].sort().join(', ')}) — SECURITY.md is the public record of an accepted risk and naming the wrong version makes it wrong about what users are running`,
+        findLine(security, wrong[0]));
+    } else if (!claimed.size) {
+      fail('SECURITY.md',
+        'names no pdf.js version — the accepted risk on the portable build is disclosed by version number, and this check has nothing left to verify');
+    } else {
+      ok(`SECURITY.md pdf.js versions match what is shipped (${[...claimed].sort().join(', ')})`);
+    }
+  }
+}
+
 // ── Check 8: Inline-handler budget (strict-CSP migration ratchet) ──
 
 section('Inline event-handler budget (strict-CSP migration ratchet)');
@@ -1080,6 +1132,84 @@ const DOWNLOAD_SCRIPTS = [
   'Install-WaxFrame.ps1', 'Install-WaxFrame.command',
 ];
 
+// The wording checks below are kept and are not sufficient on their own.
+// Proved on 2026-09-22 by reintroducing the exact macOS bug with no
+// give-away phrasing - `if curl ... .sha256; then verify; fi` wrapping the
+// whole verification, so a failed fetch falls straight through to the
+// install. The gate printed "an unverifiable download is refused" and
+// exited 0. A check that cannot fail is worse than no check, because it is
+// believed - so the shape is asserted structurally as well.
+//
+// The structural rule per language:
+//
+//   sh   - the checksum fetch must make failure exit. `if ! curl ...` or
+//          `curl ... || { exit }`. A bare `if curl ...; then` is the bug:
+//          the failure path is the empty else, which continues.
+//   ps1  - the absent-checksum branch must `throw`. Anything softer is a
+//          warning, and a warning installs.
+
+function checksumFetchIsFatal(scriptName, content) {
+  const lines = content.split('\n');
+
+  if (scriptName.endsWith('.command')) {
+    const idx = lines.findIndex(l =>
+      /\.sha256/.test(l) && /\bcurl\b/.test(l) && !/^\s*#/.test(l));
+    if (idx < 0) return 'has no curl fetch of the .sha256 sidecar';
+    const line = lines[idx];
+    if (/^\s*if\s+curl\b/.test(line)) {
+      return 'fetches the checksum as a positive `if` condition, so a failed '
+        + 'fetch falls through to the install - the exact shape that let a '
+        + 'dropped connection skip verification';
+    }
+    const fatal = /^\s*if\s+!\s*curl\b/.test(line)
+      || /\|\|/.test(line)
+      || /\|\|/.test(lines[idx + 1] || '');
+    if (!fatal) {
+      return 'fetches the checksum without making a failed fetch exit';
+    }
+    return null;
+  }
+
+  // PowerShell. The two scripts reach the same guarantee by different routes
+  // and both are correct, so this accepts either rather than pinning one
+  // shape - a rule that fired on the updater's route was the first draft of
+  // this check, and a guard that fails the correct case is how guards get
+  // deleted.
+  //
+  //   installer - looks the asset up in the release listing, so an absent
+  //               checksum is a null it must `throw` on.
+  //   updater   - fetches the sidecar by direct URL. With
+  //               $ErrorActionPreference = 'Stop' a 404 throws by itself,
+  //               so there is no branch to test and nothing to get wrong -
+  //               unless the call is softened with -ErrorAction.
+  const explicitTest = lines.findIndex(l => /-not\s+\$sum\b/.test(l));
+  if (explicitTest >= 0) {
+    const branch = lines.slice(explicitTest, explicitTest + 4).join('\n');
+    if (!/\bthrow\b/.test(branch)) {
+      return 'tests for an absent checksum but does not throw - a warning '
+        + 'here installs the download anyway';
+    }
+    return null;
+  }
+
+  if (!/\$ErrorActionPreference\s*=\s*'Stop'/.test(content)) {
+    return 'neither tests for an absent checksum nor sets '
+      + "$ErrorActionPreference = 'Stop', so a missing sidecar does not stop "
+      + 'the install';
+  }
+  const fetchLine = lines.find(l =>
+    /Invoke-WebRequest/.test(l) && /checksum/i.test(l) && !/^\s*#/.test(l));
+  if (!fetchLine) {
+    return 'has no checksum fetch this check can find - if the shape changed, '
+      + 'this rule has to change with it rather than be deleted';
+  }
+  if (/-ErrorAction\s+(SilentlyContinue|Ignore)|-EA\s+(SilentlyContinue|Ignore|0)/i.test(fetchLine)) {
+    return 'softens the checksum fetch with -ErrorAction, so a missing '
+      + 'sidecar is swallowed and the install continues unverified';
+  }
+  return null;
+}
+
 for (const scriptName of DOWNLOAD_SCRIPTS) {
   let content = null;
   try {
@@ -1090,6 +1220,8 @@ for (const scriptName of DOWNLOAD_SCRIPTS) {
   }
 
   const skips = /skipping verification|skip(ping)? the checksum|no checksum published/i.exec(content);
+  const structural = checksumFetchIsFatal(scriptName, content);
+
   if (skips) {
     fail(scriptName,
       'contains a skip-verification branch ("' + skips[0] + '") - an absent checksum must refuse the download, not warn and continue');
@@ -1097,6 +1229,8 @@ for (const scriptName of DOWNLOAD_SCRIPTS) {
     fail(scriptName, 'never references the .sha256 sidecar, so nothing is verified');
   } else if (!/(Get-FileHash|sha256sum|shasum)/i.test(content)) {
     fail(scriptName, 'references a checksum but never computes one to compare against');
+  } else if (structural) {
+    fail(scriptName, structural, findLine(content, '.sha256'));
   } else {
     ok(scriptName + ': an unverifiable download is refused');
   }

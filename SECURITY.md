@@ -36,7 +36,7 @@ One vendored dependency is pinned below a published fix and cannot be upgraded. 
 
 The mitigation is `isEvalSupported: false`, passed wherever a PDF is opened. The release check asserts it at every such call site and fails the build if one is missing, so it cannot be dropped silently during an unrelated edit.
 
-The copy served over the web is unaffected - it runs a current PDF.js and is past every published advisory, including GHSA-hq66-cqwq-w95j, which covers several releases in the same major version.
+The copy served over the web is unaffected - it runs PDF.js **6.3.289**, which is past the fix for CVE-2024-4367 and past GHSA-hq66-cqwq-w95j.
 
 If you can demonstrate script execution through the portable PDF path despite that mitigation, that is a genuine finding and very much worth reporting.
 
@@ -52,5 +52,5 @@ WaxFrame self-hosts its front-end libraries as minified files in `lib/` (for air
 
 ## Known mitigations in place
 
-- **PDF parsing** runs with `isEvalSupported: false` as defense-in-depth on the eval code path that CVE-2024-4367 targeted. Hosted users (`http(s)://`) load pdf.js **4.10.38** (CVE fixed at library level); portable users (`file://`) load the classic-script pdf.js **3.11.174** build and rely on the runtime `isEvalSupported: false` mitigation. The runtime split is dispatched at page load by [`js/pdf-loader-bootstrap.js`](js/pdf-loader-bootstrap.js).
+- **PDF parsing** runs with `isEvalSupported: false` as defense-in-depth on the eval code path that CVE-2024-4367 targeted. Hosted users (`http(s)://`) load pdf.js **6.3.289** (CVE fixed at library level); portable users (`file://`) load the classic-script pdf.js **3.11.174** build and rely on the runtime `isEvalSupported: false` mitigation. The runtime split is dispatched at page load by [`js/pdf-loader-bootstrap.js`](js/pdf-loader-bootstrap.js).
 - **Imported data** (custom AIs, reference material, backups) passes through import-time validation before it reaches any render path.

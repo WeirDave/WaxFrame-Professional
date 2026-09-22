@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v324
+WaxFrame Backlog Master v325
 2026-09-22
 
 ABOUT THIS DOCUMENT
@@ -24,6 +24,46 @@ ships.
 
 
 
+
+
+v325 — A CHECK THAT COULD NOT FAIL (v3.63.548).
+
+Check 20, added last release to guard the four download scripts,
+decided by WORDING: a "skipping verification" phrase, a .sha256
+mention, something that computes a hash. It was fed the exact
+macOS bug again with none of that phrasing —
+
+    if curl -fsSL -o "$STAGING/waxframe.sha256" "$BASE/..."; then
+      ...verify...
+    fi
+
+— a failed fetch falling through the empty else into the install.
+The gate printed "an unverifiable download is refused" and exited 0.
+
+The item worth keeping: a check written to guard a fix, in the
+same release as the fix, is written while the bug is not there to
+test it against. Feed it the bug before believing it. Check 20 is
+structural now and was proved against three mutants.
+
+Second finding, same shape one layer out. SECURITY.md named pdf.js
+4.10.38 as the hosted build. v3.63.528 moved it to 6.3.289 and
+updated the inventory, the CVE floor and the gate — not the prose.
+Nineteen releases of a public security document naming a library
+two majors behind what shipped. Everything machine-readable was
+checked; the sentence a person reads had nothing behind it.
+
+Now gated: pdf.js versions stated in SECURITY.md must match
+docs/vendored-dependencies.json. Narrowed to pdf.js on purpose —
+SECURITY.md also cites SheetJS 0.18.5 as the stale npm version it
+is explicitly NOT shipping, and a blanket rule fails that correct
+sentence.
+
+The pdf.js accepted risk itself is unchanged and still disclosed.
+Portable file:// stays pinned at 3.11.174, below CVE-2024-4367,
+unupgradable (pdfjs-dist is ESM-only since 4.x; browsers refuse
+module imports across file://). Mitigation is isEvalSupported:false
+at every getDocument() call site, still gate-enforced — confirmed
+by dropping it from one site and watching the gate fail.
 
 
 v324 — THE INSTALLERS CATCH UP WITH THE UPDATERS (v3.63.547).
