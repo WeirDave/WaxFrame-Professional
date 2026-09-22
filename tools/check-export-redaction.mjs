@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260922-001
+// Build: 20260922-002
 // check-export-redaction.mjs — do the files WaxFrame hands out actually
 // carry what the redaction code says they carry?
 //

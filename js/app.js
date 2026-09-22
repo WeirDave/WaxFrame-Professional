@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260922-001
+// Build: 20260922-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260922-001';         // build stamp — update each session
+const BUILD = '20260922-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13093,8 +13093,13 @@ async function runVisionWithFallback(images, statusEl = null) {
       errors.push(m);
       if (typeof consoleLog === 'function') consoleLog(`⚠️ vision ${m} — falling through to next provider`);
     } catch (e) {
-      errors.push(`${ai.cfg.label}: ${e.message}`);
-      if (typeof consoleLog === 'function') consoleLog(`⚠️ vision ${ai.cfg.label} failed: ${e.message} — falling through to next provider`);
+      // v3.63.545 — an abort here is OUR timeout firing, not anything the
+      // user did, and the browser's own wording says the opposite.
+      const _msg = (e && e.name === 'AbortError')
+        ? `no response within ${Math.round(VISION_TIMEOUT_MS / 60000)} minutes — the provider may be overloaded`
+        : e.message;
+      errors.push(`${ai.cfg.label}: ${_msg}`);
+      if (typeof consoleLog === 'function') consoleLog(`⚠️ vision ${ai.cfg.label} failed: ${_msg} — falling through to next provider`);
     }
   }
   return { text: '', used: '', usedProvider: '', errors };
@@ -13606,8 +13611,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.544'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.544';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.545'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.545';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -14173,6 +14178,84 @@ function setVerifyContext({ target, docId, file, sourceType }) {
 // Module-level state for the active modal session. Cleared on close.
 let _verifyImportCtx   = null;
 let _verifyOriginalText = '';
+
+// ── Verify-panel image viewer (v3.63.545) ─────────────────────────────
+//
+// Scroll to zoom about the pointer, drag to pan, double-click to reset.
+// Position and scale are written as CSS custom properties rather than a
+// transform string, so the transform itself lives in style.css — the same
+// arrangement the snowflake seeds already use.
+let _vzScale = 1, _vzX = 0, _vzY = 0, _vzBound = false;
+const VERIFY_ZOOM_MIN = 0.1, VERIFY_ZOOM_MAX = 8;
+
+function _verifyApplyTransform() {
+  const img = document.getElementById('verifyImg');
+  if (!img) return;
+  img.style.setProperty('--vx', _vzX + 'px');
+  img.style.setProperty('--vy', _vzY + 'px');
+  img.style.setProperty('--vz', String(_vzScale));
+}
+
+// Fit the whole image in the pane, centred. Also the double-click reset.
+function _verifyFitImage() {
+  const wrap = document.getElementById('verifyImgWrap');
+  const img  = document.getElementById('verifyImg');
+  if (!wrap || !img || !img.naturalWidth) return;
+  const fit = Math.min(wrap.clientWidth / img.naturalWidth, wrap.clientHeight / img.naturalHeight);
+  _vzScale = fit > 0 ? fit : 1;
+  _vzX = (wrap.clientWidth  - img.naturalWidth  * _vzScale) / 2;
+  _vzY = (wrap.clientHeight - img.naturalHeight * _vzScale) / 2;
+  _verifyApplyTransform();
+}
+
+function _verifyMountImageViewer(blobUrl) {
+  const wrap = document.getElementById('verifyImgWrap');
+  const img  = document.getElementById('verifyImg');
+  if (!wrap || !img) return;
+  img.onload = () => _verifyFitImage();
+  img.src = blobUrl;
+  if (img.complete && img.naturalWidth) _verifyFitImage();
+  if (_vzBound) return;   // listeners are attached once, not per open
+  _vzBound = true;
+
+  wrap.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const r = wrap.getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+    const next = Math.min(VERIFY_ZOOM_MAX, Math.max(VERIFY_ZOOM_MIN, _vzScale * factor));
+    if (next === _vzScale) return;
+    // Keep the point under the cursor fixed, so zooming goes where the
+    // user is looking rather than to a corner.
+    _vzX = px - ((px - _vzX) * (next / _vzScale));
+    _vzY = py - ((py - _vzY) * (next / _vzScale));
+    _vzScale = next;
+    _verifyApplyTransform();
+  }, { passive: false });
+
+  let dragging = false, lastX = 0, lastY = 0;
+  wrap.addEventListener('pointerdown', (e) => {
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    wrap.classList.add('is-panning');
+    try { wrap.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  wrap.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    _vzX += e.clientX - lastX;
+    _vzY += e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    _verifyApplyTransform();
+  });
+  const endDrag = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    wrap.classList.remove('is-panning');
+    try { wrap.releasePointerCapture(e.pointerId); } catch (err) {}
+  };
+  wrap.addEventListener('pointerup', endDrag);
+  wrap.addEventListener('pointercancel', endDrag);
+  wrap.addEventListener('dblclick', () => _verifyFitImage());
+}
 let _verifyOwnsBlobUrl  = false;  // true when we created the blob URL (must revoke on close)
 
 // Entry point from the IMPORT_WARNINGS troubleshooting card. The card itself
@@ -14399,11 +14482,27 @@ function openVerifyModalForImport(opts) {
   // ── Left pane (original preview or no-render notice) ──
   const frame    = document.getElementById('verifyPdfFrame');
   const noRender = document.getElementById('verifyNoRender');
-  if (_verifyImportCtx.blobUrl && _verifyImportCtx.isRenderable && frame && noRender) {
+  const imgWrap  = document.getElementById('verifyImgWrap');
+  // v3.63.545 — an IMAGE goes to the pannable viewer, not the iframe. The
+  // browser's built-in image view zooms on click and offers no way to pan,
+  // so magnifying a photographed page put most of it out of reach — which
+  // made zoom useless for the one job this panel exists to do.
+  const _ext = String(_verifyImportCtx.name || '').split('.').pop().toLowerCase();
+  const _isImg = IMAGE_EXTENSIONS.includes(_ext);
+  const _canRender = _verifyImportCtx.blobUrl && _verifyImportCtx.isRenderable;
+  if (_canRender && _isImg && imgWrap && frame && noRender) {
+    frame.removeAttribute('src');
+    frame.style.display = 'none';
+    noRender.style.display = 'none';
+    imgWrap.style.display = 'block';
+    _verifyMountImageViewer(_verifyImportCtx.blobUrl);
+  } else if (_canRender && frame && noRender) {
+    if (imgWrap) imgWrap.style.display = 'none';
     frame.src = _verifyImportCtx.blobUrl;
     frame.style.display = 'block';
     noRender.style.display = 'none';
   } else if (frame && noRender) {
+    if (imgWrap) imgWrap.style.display = 'none';
     frame.removeAttribute('src');
     frame.style.display = 'none';
     noRender.style.display = 'flex';
@@ -15382,6 +15481,13 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
   // or 'anthropic' or 'gemini', and visionCfg.endpoint points at the right
   // server. cfg.format and cfg.endpoint are existing fields set at import
   // time by the catalog or the Import Server modal — no schema change.
+  // v3.63.545 — bound every branch below. Only one of the three fetches
+  // runs per call, so a single controller covers them all.
+  const _visionCtrl = new AbortController();
+  const _visionTimer = setTimeout(() => _visionCtrl.abort(), VISION_TIMEOUT_MS);
+  void _visionTimer;   // see the note above: intentionally not cleared
+  const _visionSignal = _visionCtrl.signal;
+
   const format    = visionCfg.format || '';
   const endpoint  = visionCfg.endpoint || '';
   // Auth header is optional — local servers (Ollama, LM Studio)
@@ -15410,7 +15516,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     });
     const headers = { 'Content-Type': 'application/json' };
     if (hasKey) headers['Authorization'] = `Bearer ${visionKey}`;
-    const resp = await fetch(url, { method: 'POST', headers, body });
+    const resp = await fetch(url, { method: 'POST', headers, body, signal: _visionSignal });
     if (!resp.ok) throw new Error(await visionErrorDetail(visionCfg.label || 'OpenAI-format', model, resp));
     const data = await resp.json();
     const transcribed = WFProviderCatalog.extractOpenAIText(data);
@@ -15432,7 +15538,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     const headers = { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' };
     if (hasKey) headers['x-api-key'] = visionKey;
     const url = endpoint || 'https://waxframe-claude-proxy.weirdave.workers.dev';
-    const resp = await fetch(url, { method: 'POST', headers, body });
+    const resp = await fetch(url, { method: 'POST', headers, body, signal: _visionSignal });
     if (!resp.ok) throw new Error(await visionErrorDetail(visionCfg.label || 'Claude', model, resp));
     const data = await resp.json();
     const transcribed = WFProviderCatalog.extractAnthropicText(data);
@@ -15456,7 +15562,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     const url = `${base.replace(/\/$/, '')}/models/${model}:generateContent`;
     const headers = { 'Content-Type': 'application/json' };
     if (hasKey) headers['x-goog-api-key'] = visionKey;
-    const resp = await fetch(url, { method: 'POST', headers, body });
+    const resp = await fetch(url, { method: 'POST', headers, body, signal: _visionSignal });
     if (!resp.ok) throw new Error(await visionErrorDetail(visionCfg.label || 'Gemini', model, resp));
     const data = await resp.json();
     const transcribed = WFProviderCatalog.extractGeminiText(data);
@@ -20458,6 +20564,18 @@ async function runRound(opts) {
 // but it spikes hard), which is exactly why a blunt cap has to sit this high.
 // The backlogged streaming stall-watchdog is what will let us detect a real
 // hang in seconds instead of minutes. Both values are tunable.
+// v3.63.545 — the vision path had NO timeout at all. Every other provider
+// call has been wrapped in an AbortController for exactly the reason below,
+// but runVisionTranscription was three bare fetches: a provider that
+// accepted the request and then went quiet hung the import forever. The
+// heartbeat counted past two minutes with no error and no advance to the
+// next provider, leaving a page reload as the only way out. Reported at
+// 142s on a real photo import.
+//
+// 3 minutes: a large image legitimately takes 60-120s, and the fallback
+// tries each keyed provider in turn, so a generous figure multiplies before
+// anything is shown.
+const VISION_TIMEOUT_MS   = 180000; // 3 min  — one vision call, per provider
 const REVIEWER_TIMEOUT_MS = 360000; // 6 min  — reviewers / unknown (obs max 235s)
 const BUILDER_TIMEOUT_MS  = 900000; // 15 min — Builder writes (obs max 540s)
 

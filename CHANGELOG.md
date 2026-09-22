@@ -1,5 +1,53 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.545 — The original image can be panned, and a silent vision provider no longer hangs the import
+
+**Released:** 2026-09-22
+**Build:** 20260922-002
+
+### Checking a photo against its transcription
+
+**The original image can now be zoomed AND panned.** Photos were being shown in the same frame used
+for PDFs, which hands the job to the browser's built-in image view — that magnifies on a click and
+offers no way to move around. Zooming into a photographed page put most of the page out of reach,
+which defeats the only thing the Verify panel exists for.
+
+Images now get a proper viewer:
+
+- **Scroll** to zoom, centred on the pointer, so magnification goes where you are looking
+- **Drag** to pan
+- **Double-click** to fit the whole page back in the pane
+
+PDFs are unchanged — the frame they use already scrolls.
+
+### Reading a photo
+
+**A vision provider that goes quiet no longer hangs the import.** Every other AI request has had a
+timeout for some time; the vision path had none. A provider that accepted the request and then
+stopped responding left the progress line counting upward indefinitely, with no error, no attempt at
+the next provider, and a page reload as the only way out.
+
+A vision request now gives up after three minutes and moves to the next configured provider, saying
+which one timed out. Three minutes because a large image legitimately takes one to two, and because
+each provider is tried in turn.
+
+### Verification
+- The import check drives the real viewer: it confirms the image is mounted rather than the PDF
+  frame, that it fits on open, that scrolling zooms, that dragging pans by exactly the distance
+  dragged, and that double-click restores the fit.
+- Gate: all 19 stages. Flow harness: 23. Injection checks: 14. Debug redaction: 45. Export
+  redaction: 20. Import bounds: green. PDF shapes: both engines. Portable `file://` path: 9.
+
+### Files touched
+`js/app.js`, `index.html`, `style.css`, `tools/check-ocr-handoff.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v322.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert the commit. The viewer is additive — a new element used only for images, with PDFs taking the
+path they always did — and the timeout is an abort controller around three existing requests. No
+stored data format changed.
+
+
 ## v3.63.544 — Photographed pages read cleanly, and a successful import stops looking like a problem
 
 **Released:** 2026-09-22

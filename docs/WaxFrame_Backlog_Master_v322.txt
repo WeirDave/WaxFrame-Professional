@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v321
+WaxFrame Backlog Master v322
 2026-09-21
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,56 @@ ships.
 
 
 
+
+v322 — PAN, AND A VISION TIMEOUT (v3.63.545). Both reported from
+real use on the day photo import shipped.
+
+1. NO PANNING. Images were handed to the PDF iframe, so the
+browser's built-in image view took over — it magnifies on a click
+and cannot pan. Zooming into a photographed page therefore
+stranded most of the page off-screen, which defeats the ONLY job
+the Verify panel has: comparing the original against the
+transcription. David: "we can zoom in but can't pan, lol so zoom
+is worthless for comparing the text to the ocr output."
+
+Images now get a real viewer — wheel to zoom about the pointer,
+drag to pan, double-click to fit. PDFs keep the iframe, whose
+viewer already scrolls. Position and scale are written as CSS
+custom properties so the transform itself stays in style.css,
+which is the same arrangement the snowflake seeds use and keeps
+the no-inline-CSS rule intact.
+
+2. NO TIMEOUT ON VISION. Observed live at 142 seconds and still
+counting: a provider accepted the request and went quiet, and the
+import had no way out. Every other provider call has been wrapped
+in an AbortController for a while; runVisionTranscription was
+three bare fetches, so there was no timeout, no advance to the
+next provider, and a page reload was the only escape.
+
+Now 3 minutes per provider, then on to the next one with wording
+that names which timed out. Three minutes because a large image
+legitimately takes one to two, and each keyed provider is tried in
+turn, so a generous figure multiplies before anything is shown.
+
+NOTE ON THE TIMER. It is deliberately not cleared on success. It
+fires at most once, calling abort() on a request that has already
+settled, which is a no-op. Restructuring three return paths by
+string patching to clear it was the alternative, and a fragile
+edit there is a worse trade than one stray timer. Written down so
+it is not "fixed" later as an oversight.
+
+WHAT THIS RUN OF REAL TESTING HAS COST, and it is worth seeing in
+one place. Photo import shipped in v3.63.541. Since then:
+  .542  a success reported itself as a parse failure
+  .543  dismissing the panel was a dead end
+  .544  print hyphenation came through broken; the status line
+        still said warning
+  .545  zoom without pan; no vision timeout
+Every one found by a person using it, none by any test written
+beforehand. The tests now cover all of them and were each verified
+RED first — but the pattern is that a new INPUT TYPE needs someone
+to actually use it, because the defects were in presentation and
+interaction, not in extraction.
 
 v321 — TWO DEFECTS FROM THE FIRST REAL PHOTO TEST (v3.63.544).
 Both found by David running a photographed paperback page through

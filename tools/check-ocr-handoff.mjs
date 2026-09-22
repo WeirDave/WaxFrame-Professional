@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260922-001
+// Build: 20260922-002
 // check-ocr-handoff.mjs — what happens AFTER a page is found to have no text.
 //
 // tools/check-pdf-shapes.mjs proves an image-only PDF extracts zero characters
@@ -398,6 +398,64 @@ function readStatusLine() {
   })();
 }
 
+// Opens the Verify panel for a photo and drives zoom, pan and reset.
+function driveImageViewer() {
+  const oCon = window.wfConfirm;
+  window.wfConfirm = () => Promise.resolve(true);
+  return (async () => {
+    let err = null;
+    try {
+      const r = await fetch('/__photo.png');
+      const b = await r.blob();
+      await processFile(new File([b], 'page-photo.png', { type: 'image/png' }));
+    } catch (e) { err = String((e && e.message) || e); }
+    finally { window.wfConfirm = oCon; }
+
+    const wrap = document.getElementById('verifyImgWrap');
+    const img  = document.getElementById('verifyImg');
+    const frame = document.getElementById('verifyPdfFrame');
+    if (!wrap || !img) return JSON.stringify({ err, mounted: false });
+
+    await new Promise(r => setTimeout(r, 300));
+    const read = () => ({
+      x: img.style.getPropertyValue('--vx'),
+      y: img.style.getPropertyValue('--vy'),
+      z: img.style.getPropertyValue('--vz')
+    });
+    const fitted = read();
+
+    // Zoom in on the centre.
+    const rect = wrap.getBoundingClientRect();
+    wrap.dispatchEvent(new WheelEvent('wheel', {
+      deltaY: -100, clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2, bubbles: true, cancelable: true
+    }));
+    const zoomed = read();
+
+    // Drag to pan.
+    wrap.dispatchEvent(new PointerEvent('pointerdown', { clientX: 200, clientY: 200, bubbles: true, pointerId: 1 }));
+    wrap.dispatchEvent(new PointerEvent('pointermove', { clientX: 320, clientY: 260, bubbles: true, pointerId: 1 }));
+    const panned = read();
+    wrap.dispatchEvent(new PointerEvent('pointerup', { clientX: 320, clientY: 260, bubbles: true, pointerId: 1 }));
+
+    // Double-click resets to fit.
+    wrap.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    const reset = read();
+
+    return JSON.stringify({
+      err, mounted: true,
+      imgVisible: wrap.style.display !== 'none',
+      frameHidden: !frame || frame.style.display === 'none',
+      hasSrc: !!img.getAttribute('src'),
+      fitted, zoomed, panned, reset,
+      zoomedIn: parseFloat(zoomed.z || '1') > parseFloat(fitted.z || '1'),
+      pannedX: parseFloat(panned.x) - parseFloat(zoomed.x),
+      pannedY: parseFloat(panned.y) - parseFloat(zoomed.y),
+      resetMatchesFit: reset.z === fitted.z && reset.x === fitted.x && reset.y === fitted.y
+    });
+  })();
+}
+
 async function importScan(which) {
   const t0 = performance.now();
   const r = await fetch(which || '/__scan.pdf');
@@ -587,6 +645,25 @@ try {
   check('it IS styled as a success', line.successState === true, line);
   check('it still says the text came from vision and should be checked',
     /AI vision/i.test(line.text || '') && /check it/i.test(line.text || ''), line.text);
+
+  // ── 2c-v. Zoom without pan is useless for comparing text ────────────
+  // The Verify panel put images in the PDF iframe, and the browser's built-in
+  // image view zooms on click with no way to pan — so magnifying a
+  // photographed page stranded most of it off-screen, which defeats the one
+  // job this panel has. Images now get a real viewer.
+  console.log('\n  > 2c-v. The image viewer zooms AND pans');
+  await fetch(`${MOCK}/__mock/reset`);
+  const viewer = JSON.parse(await ev(`(${driveImageViewer.toString()})()`));
+  check('the image viewer mounted for a photo (liveness)',
+    viewer.mounted === true && viewer.imgVisible === true && viewer.hasSrc === true, viewer);
+  check('the PDF iframe is NOT used for an image', viewer.frameHidden === true, viewer);
+  check('it fits the image to the pane on open', !!viewer.fitted.z, viewer.fitted);
+  check('scrolling zooms in', viewer.zoomedIn === true, { fitted: viewer.fitted, zoomed: viewer.zoomed });
+  check('dragging pans — the whole point of the fix',
+    viewer.pannedX === 120 && viewer.pannedY === 60,
+    { dx: viewer.pannedX, dy: viewer.pannedY, expected: '120 / 60' });
+  check('double-click resets back to fit', viewer.resetMatchesFit === true,
+    { reset: viewer.reset, fitted: viewer.fitted });
 
   // ── 2d. The same photo with NO vision provider configured ───────────
   console.log('\n  > 2d. A photo with no vision AI set up');

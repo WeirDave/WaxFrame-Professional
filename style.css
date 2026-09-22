@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260922-001
+   Build: 20260922-002
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12263,7 +12263,7 @@ button.link-accent {
   color: var(--accent);
 }
 .nav-buy-cta-sub {
-  font-size: var(--fs-xs, 11px);
+  font-size: var(--fs-xs);
   color: var(--text-dim);
 }
 .nav-buy-cta:hover .nav-buy-cta-title,
@@ -15644,6 +15644,42 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
 }
 .verify-pane-hint { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--accent); }
 
+/* v3.63.545 — pannable image viewer for the Verify panel.
+   Position and scale ride CSS custom properties set from JS, the same
+   pattern the snowflake seeds use, so the transform itself stays here in
+   the stylesheet rather than becoming inline CSS. */
+.verify-img-wrap {
+  flex: 1 1 auto;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+  background: var(--bg);
+  cursor: grab;
+  touch-action: none;
+}
+.verify-img-wrap.is-panning { cursor: grabbing; }
+.verify-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  transform: translate(var(--vx, 0px), var(--vy, 0px)) scale(var(--vz, 1));
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+}
+.verify-img-hint {
+  position: absolute;
+  left: var(--space-10);
+  bottom: var(--space-10);
+  padding: var(--space-4) var(--space-10);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  pointer-events: none;
+}
 .verify-pdf-frame {
   flex: 1 1 auto;
   width: 100%;
