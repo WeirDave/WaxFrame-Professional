@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v329
+WaxFrame Backlog Master v330
 2026-09-22
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,69 @@ ships.
 
 
 
+
+v330 — A CHECK NOBODY RUNS (v3.63.553).
+
+Seven browser-driven checks existed. Three ran in CI. The
+other four ran nowhere: check-html-injection, check-pdf-shapes,
+check-ocr-handoff and check-file-protocol.
+
+This is not v325's "a check that could not fail". These four
+can fail, and do. They were simply never executed. The
+distinction matters because the mitigations are different: a
+check that cannot fail is fixed by feeding it the bug, and a
+check that nothing runs is fixed by something that notices.
+
+The CI workflow's own comment is the whole story. It says "the
+three security checks from the 2026-09-21 review" and wires
+exactly those three. It was accurate the day it was written
+and became the reason nobody looked again — the section reads
+as though it covers the security checks, and it covers the
+three that existed then.
+
+check-html-injection is the one that cost something. v329
+added twelve assertions to it covering what an imported
+provider configuration may do, and shipped them believing they
+were gated. They were not. That is the second time in four
+releases that a guard was believed to be running: v327's CVE
+floors covered two of six libraries while reading as though
+they covered all six.
+
+NOW GATED, at stage 22. Every tools/check-*.mjs and
+tools/test-*.mjs must be executed by one of exactly two
+things: release-check.mjs via execFileSync, or a `run:` step
+in .github/workflows/release-check.yml. Anything else is named
+in the failure and the message says which of the two places to
+add it to, which is the judgement the person will otherwise
+have to rediscover — browser-free goes in the validator,
+browser-driven goes in the smoke job.
+
+BOTH FILES ARE PARSED, NOT SEARCHED, and that is the part that
+makes it work rather than the part that makes it tidy. Both
+are full of prose naming these scripts; the stage's own
+comment names four of them. A substring search would be
+satisfied by a comment describing a step that had been
+deleted, which is exactly the first mutant: the html-injection
+step removed with its comment left in place. It was caught.
+
+Cost: about forty seconds on the runner for all four,
+measured rather than estimated — 8s, 25s, 3s, 4s. There was no
+trade to weigh, which is worth recording because the reason
+these went unwired was never cost.
+
+FOUND WHILE DOING IT, and it would have turned the gate red on
+the first run. check-file-protocol built its file:// address
+as `'file:///' + path.resolve(p)`. On Windows that is right;
+on Linux path.resolve already begins with the slash, so the
+result is `file:////home/...`. The check had only ever run on
+a Windows machine, and this release is the one that puts it on
+a Linux runner. pathToFileURL now, which is the platform's own
+answer and also percent-encodes a space or a hash that the
+hand-rolled version passed through raw.
+
+The general shape: a helper that is correct on the only
+platform it has ever run on is not known to be correct. Moving
+a check to CI is exactly the moment that stops being true.
 
 v329 — ESCAPING A URL IS NOT CHECKING IT (v3.63.552).
 

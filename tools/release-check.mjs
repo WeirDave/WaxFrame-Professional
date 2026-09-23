@@ -259,10 +259,10 @@ if (buildStamp) {
   }
 }
 
-// v3.63.552 — The changelog's own history must not move. A release sweep
+// v3.63.553 — The changelog's own history must not move. A release sweep
 // replaces the version it is superseding across every tracked file, and a
 // blanket replacement will happily rewrite a version number that is a
-// STATEMENT ABOUT THE PAST rather than a stamp. The v3.63.552 sweep rewrote
+// STATEMENT ABOUT THE PAST rather than a stamp. The v3.63.553 sweep rewrote
 // two: the previous release's own CHANGELOG heading, and a note in the
 // vendored inventory recording which release upgraded mammoth. Nothing in the
 // gate noticed, because every stamp it checks was correct.
@@ -1036,7 +1036,7 @@ try {
 
 section('URL sanitiser agreement (tools/test-url-sanitisers.mjs)');
 
-// v3.63.552 — three files decide whether a URL is safe to put in an href, and
+// v3.63.553 — three files decide whether a URL is safe to put in an href, and
 // they do it with three copies of the same five lines: safeUrl() in app.js,
 // _safeImportUrl() in storage.js and safeUrl() in pricing-renderer.js. The
 // copies exist because those files share no module and the pricing page loads
@@ -1120,7 +1120,7 @@ if (inventory) {
     ok(`${inventoried.size} vendored files match their recorded SHA-256 hashes`);
   }
 
-  // v3.63.552 — the recorded version has to clear its own CVE floor, and
+  // v3.63.553 — the recorded version has to clear its own CVE floor, and
   // package.json has to agree with it.
   //
   // Three separate things were watching mammoth and all three were blind.
@@ -1419,12 +1419,86 @@ for (const scriptName of DOWNLOAD_SCRIPTS) {
   }
 }
 
-// Checks 21-23 deliberately do NOT live here. The three security checks from
-// the 2026-09-21 review each drive a real browser, and this gate is browser-free
-// by design -- CI runs it on a runner with no browser setup and no npm install.
-// Each check file says the same thing in its own header. They run as steps in
-// the `smoke` job of .github/workflows/release-check.yml, which already locates
-// Chrome, and they are hand-runnable the same way locally.
+// The browser-driven checks deliberately do NOT live here. Each drives a real
+// browser, and this gate is browser-free by design -- CI runs it on a runner
+// with no browser setup and no npm install. Each check file says the same thing
+// in its own header. They run as steps in the `smoke` job of
+// .github/workflows/release-check.yml, which already locates Chrome, and they
+// are hand-runnable the same way locally. v3.63.553 added the four that were
+// running in neither place; the stage below is what makes that a fact rather
+// than a habit.
+
+// ── Check 22: every check has a runner ──────────────────────
+
+section('Every check has a runner (nothing rests on a manual run)');
+
+// v3.63.553 — the failure this exists for is not a bug in any check. It is a
+// check that exists, passes, and is run by nothing.
+//
+// Four browser-driven checks were in that state until this release:
+// html-injection, pdf-shapes, ocr-handoff and file-protocol. The CI workflow's
+// own comment named "the three security checks from the 2026-09-21 review" and
+// wired exactly those three; the four written since were wired nowhere.
+// html-injection was the one that mattered — v3.63.551 added twelve assertions
+// to it guarding what an imported provider configuration may do, and nothing
+// ran them except a person remembering to.
+//
+// So: every tools/check-*.mjs and tools/test-*.mjs must be executed by
+// something. Two places count, and they are the only two that exist:
+//
+//   • this validator, via execFileSync — the browser-free path
+//   • a `run:` step in .github/workflows/release-check.yml — the browser path
+//
+// Both are read as STRUCTURE rather than searched as text, because both files
+// are full of prose naming these scripts. The comment three paragraphs up names
+// four of them, and a substring search would be satisfied by this very comment
+// while every step it describes was deleted.
+{
+  const toolFileNames = readdirSync(join(ROOT, 'tools'))
+    .filter(f => /^(check|test)-.*\.mjs$/.test(f))
+    .sort();
+
+  // Runners in this validator: the first argument of every execFileSync call.
+  const selfSrc = read(join(ROOT, 'tools/release-check.mjs'));
+  const ranHere = new Set(
+    [...selfSrc.matchAll(/execFileSync\([^)]*?join\(ROOT,\s*'tools\/([A-Za-z0-9._-]+)'\)/gs)]
+      .map(m => m[1]));
+
+  // Runners in CI: the `run:` line of a step, never a comment. A `#` line is
+  // dropped before anything is matched, which is the distinction that makes
+  // this a parser rather than a grep.
+  const wfPath = join(ROOT, '.github/workflows/release-check.yml');
+  const ranInCI = new Set();
+  for (const raw of read(wfPath).split('\n')) {
+    if (raw.trim().startsWith('#')) continue;
+    const m = raw.match(/^\s*run:\s*(.+)$/);
+    if (!m) continue;
+    for (const hit of m[1].matchAll(/tools\/([A-Za-z0-9._-]+\.mjs)/g)) ranInCI.add(hit[1]);
+  }
+
+  // Liveness before the assertion. Each set being empty would make every check
+  // below fail for the wrong reason, and an empty toolFileNames would make them
+  // all pass on nothing.
+  if (!toolFileNames.length) {
+    fail('tools/', 'no check-*.mjs or test-*.mjs found — this stage is blind');
+  } else {
+    ok(`${toolFileNames.length} check/test scripts found`);
+  }
+  if (!ranHere.size) fail('tools/release-check.mjs', 'no execFileSync runner was parsed out of this file — the reader has stopped working');
+  else ok(`${ranHere.size} run by this validator`);
+  if (!ranInCI.size) fail('.github/workflows/release-check.yml', 'no `run:` step naming a tools/ script was parsed — the reader has stopped working');
+  else ok(`${ranInCI.size} run by a CI step`);
+
+  const orphans = toolFileNames.filter(f => !ranHere.has(f) && !ranInCI.has(f));
+  if (orphans.length) {
+    fail('tools/', 'these are run by nothing — add them to this validator if they '
+      + 'are browser-free, or to the smoke job in release-check.yml if they need a '
+      + 'browser: ' + orphans.join(', '));
+  } else {
+    ok('every check is run by this validator or by a CI step');
+  }
+}
+
 
 // ── Report ──────────────────────────────────────────────────
 

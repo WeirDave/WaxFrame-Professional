@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260923-001
+// Build: 20260923-002
 // check-file-protocol.mjs — verify the portable install still works.
 //
 // WaxFrame ships two ways: served over http(s), and as a folder someone
@@ -26,14 +26,17 @@
 // Exit 0 = both the loader branch and a real extraction are correct.
 //
 // Not wired into release-check.mjs, which is pure Node stdlib by design and
-// would start requiring a browser. Run it when touching the pdf.js loader,
-// the vendored pdf.js builds, or anything about how the portable copy boots.
+// would start requiring a browser. It runs as a step in the `smoke` job of
+// .github/workflows/release-check.yml, which already locates Chrome — added in
+// v3.63.553, and before that this file ran only when somebody remembered.
+// Worth running by hand too when touching the pdf.js loader, the vendored
+// pdf.js builds, or anything about how the portable copy boots.
 
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { spawn, execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 // fileURLToPath, not URL.pathname: the latter keeps percent-encoding, so a
 // path containing spaces comes back with %20 in it and every file operation
@@ -104,7 +107,14 @@ const pdfName = `.wf-file-protocol-check-${process.pid}.pdf`;
 const pdfPath = path.join(ROOT, pdfName);
 fs.writeFileSync(pdfPath, buildPdf());
 
-const fileUrl = (p) => 'file:///' + path.resolve(p).replace(/\\/g, '/');
+// v3.63.553 — was `'file:///' + path.resolve(p).replace(/\\/g, '/')`, which is
+// correct on Windows and produces `file:////home/...` on Linux, because an
+// absolute POSIX path already starts with the slash the literal supplies. That
+// never showed up while this ran only on a developer's Windows machine, and
+// this release is the one that puts it on a Linux runner. pathToFileURL is the
+// platform's own answer and also encodes a space or a hash in the path, which
+// the hand-rolled version silently did not.
+const fileUrl = (p) => pathToFileURL(path.resolve(p)).href;
 const INDEX = fileUrl(path.join(ROOT, 'index.html'));
 const PORT = 9227 + (process.pid % 200);
 const profile = path.join(os.tmpdir(), `wf-fileproto-${process.pid}`);

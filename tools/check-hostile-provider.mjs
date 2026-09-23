@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260923-001
+// Build: 20260923-002
 // check-hostile-provider.mjs — pins the defences that stop a hostile or
 // compromised provider (or model server) from reshaping WaxFrame's requests.
 //

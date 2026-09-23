@@ -172,3 +172,38 @@ jobs:
         env:
           WF_CHROME: ${{ steps.chrome.outputs.path }}
         run: node tools/check-hostile-provider.mjs
+
+      # v3.63.553 - the other four browser-driven checks. The comment above
+      # names "the three security checks from the 2026-09-21 review" and wired
+      # exactly those three; four more had been written since and none of them
+      # ran anywhere but by hand.
+      #
+      # check-html-injection is the one that mattered. It is the check that
+      # seeds hostile values into saved state, boots the app and asks the DOM
+      # whether any of it became an element - and v3.63.551 added twelve
+      # assertions to it guarding what an imported provider configuration may
+      # do. Those assertions guarded a fix that nothing ran, which is the exact
+      # shape this repository keeps writing down: a check believed to be
+      # running because it exists.
+      #
+      # All four together cost about forty seconds on this runner, measured
+      # rather than guessed: 8s, 25s, 3s and 4s. There was no trade to weigh.
+      - name: Security check - HTML injection
+        env:
+          WF_CHROME: ${{ steps.chrome.outputs.path }}
+        run: node tools/check-html-injection.mjs
+
+      - name: Security check - PDF shapes on both engines
+        env:
+          WF_CHROME: ${{ steps.chrome.outputs.path }}
+        run: node tools/check-pdf-shapes.mjs
+
+      - name: Security check - OCR hand-off
+        env:
+          WF_CHROME: ${{ steps.chrome.outputs.path }}
+        run: node tools/check-ocr-handoff.mjs
+
+      - name: Security check - portable file:// path
+        env:
+          WF_CHROME: ${{ steps.chrome.outputs.path }}
+        run: node tools/check-file-protocol.mjs

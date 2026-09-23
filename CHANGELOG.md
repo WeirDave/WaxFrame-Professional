@@ -1,5 +1,67 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.553 — Four security checks existed, passed, and were run by nothing
+
+**Released:** 2026-09-23
+**Build:** 20260923-002
+
+### What changed
+
+**Four browser-driven checks now run on every push.** They were written, they
+passed, and nothing executed them except a person remembering to.
+
+CI already ran three of them — export redaction, import bounds and hostile
+provider — wired in at v3.63.547. Four more had been written since and were
+wired nowhere:
+
+| Check | What it covers |
+| --- | --- |
+| HTML injection | seeds hostile values into saved state, boots the app, and asks the DOM whether any of it became an element |
+| PDF shapes | eight adversarial PDFs against both vendored PDF engines |
+| OCR hand-off | the vision plumbing, against a local mock provider |
+| Portable `file://` path | the branch the unzipped copy takes, which no other check can see |
+
+The first of those is the one that mattered. The previous release added twelve
+assertions to it covering what an imported provider configuration is allowed to
+do — assertions guarding a fix that nothing ran.
+
+All four together cost about forty seconds on the runner, measured rather than
+estimated. There was no trade to weigh.
+
+**The release gate now refuses to pass while any check is unwired.** Every
+`check-*` and `test-*` script has to be executed by one of exactly two things:
+the gate itself, or a step in the CI workflow. A new one that is added and not
+wired in fails the gate and is named in the failure.
+
+That check reads both files as structure rather than searching their text,
+which matters more than it sounds: both are full of prose naming these scripts,
+so a text search would have been satisfied by a comment describing a step that
+had been deleted. Removing a step while leaving its comment is one of the cases
+it was tested against.
+
+### Also fixed on the way
+
+**The portable-path check built a `file://` address in a way that only worked
+on Windows.** It prefixed an already-absolute path with a slash, which is
+correct where paths begin with a drive letter and produces a malformed address
+where they begin with `/`. It never showed because the check had only ever run
+on Windows — and this release is the one that puts it on a Linux runner. It now
+uses the platform's own conversion, which also handles a space or a `#` in the
+path that the hand-built version silently mangled.
+
+### Verification
+- Mutation-tested three ways, each watched failing and restored: a CI step
+  deleted while its comment still named the script, a brand-new check added and
+  wired to nothing, and a gate runner changed so it no longer names the script
+  it runs.
+- All four newly-wired checks were run locally and timed: 8s, 25s, 3s and 4s.
+- Gate: 22 of 22 stages.
+
+### Files changed
+`.github/workflows/release-check.yml`, `tools/release-check.mjs`,
+`tools/check-file-protocol.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v330.txt`, plus the routine stamp sweep.
+
 ## v3.63.552 — Two pricing-page links escaped a URL without checking it
 
 **Released:** 2026-09-23
