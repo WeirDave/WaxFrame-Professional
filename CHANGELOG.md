@@ -1,5 +1,77 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.554 — A test that could not report a value, a flag that could leak, and a classification that could be cut short
+
+**Released:** 2026-09-23
+**Build:** 20260923-003
+
+### What changed
+
+**A request that fails while assembling itself no longer leaves a flag set for
+the rest of the session.** WaxFrame sets two internal switches around the point
+where a request's body is built — one saying "ask this provider to stream", one
+carrying a replacement output budget after a provider has rejected the first.
+Both were switched back on the line after the body was built, which is not
+reached if building the body fails.
+
+If that ever happened, every later request in that browser tab would have gone
+out asking for a streamed response nobody was going to read, or carrying the
+failed request's budget. Nothing would have said so. Both switches are now
+restored whether the request succeeds or fails.
+
+**The model-classification call now states how long an answer it wants.** That
+call asks a provider to sort its own models into tiers, and a few hundred
+tokens is all it needs. It said so when the provider spoke Anthropic's format
+and said nothing when it spoke OpenAI's — the same call, the same expected
+answer, two behaviours depending on which provider happened to be asked.
+
+An unstated budget lets whatever sits between WaxFrame and the provider cut the
+answer short, and a classification that comes back truncated reads as a
+provider answering badly rather than one that was cut off. Both now state it,
+using the parameter name that provider's model actually accepts.
+
+### Also in this release
+
+**The end-to-end test harness could not report a value, and nobody had
+noticed.** Its helper for running asynchronous code in the page returned the
+instant that code *started*, not when it finished — so anything it was asked to
+report came back empty, and every existing caller had been written around that
+without the cause being visible.
+
+It also meant the harness did not wait for a refinement round to finish. It
+moved on as soon as the round counter advanced, which happens before the last
+request has landed, so on a slow machine the next round could begin with
+requests from the previous one still in flight. That is the most likely
+explanation for a build reporting ten requests where a developer's machine
+reports eight.
+
+**Two of its assertions were about the wrong requests.** They required every
+request the app made to ask for streaming and to state a budget — but the app
+also makes small auxiliary calls, built by their own code, that legitimately do
+neither. Whether one landed inside the window the harness reads was a matter of
+timing, so the same code passed or failed depending on the machine. Those
+assertions now cover refinement-round requests, and the auxiliary calls have
+their own assertion, which is what caught the classification gap above.
+
+The harness also prints every request it recorded when one of those assertions
+fails — what each carried, and how long its prompt was. The failure that
+started this printed three lists of values with no way to tell which request
+each came from.
+
+### Verification
+- Driven in a browser, end to end: 32 assertions, up from 23.
+- The leaked flag is tested by making a request fail *while building its body*
+  and reading the flag back afterwards, then running a real refinement round to
+  prove the app still works.
+- Mutation-tested: the restore removed again (the flag is left set), and the
+  classification budget removed again (the auxiliary assertion fails). Both
+  watched failing and restored.
+- Gate: 22 of 22 stages.
+
+### Files changed
+`js/app.js`, `tools/flow-check.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v331.txt`, plus the routine stamp sweep.
+
 ## v3.63.553 — Four security checks existed, passed, and were run by nothing
 
 **Released:** 2026-09-23

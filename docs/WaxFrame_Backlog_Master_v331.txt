@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v330
+WaxFrame Backlog Master v331
 2026-09-22
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,96 @@ ships.
 
 
 
+
+v331 — THE FLAKE WAS THE HARNESS, AND IT HID TWO REAL BUGS
+       (v3.63.554).
+
+flow-check had failed intermittently for weeks and was written
+off as browser contention. v330 put four more checks into CI
+and the next run failed it outright: ten requests recorded
+where this machine records eight, the two extra carrying
+neither a stream flag nor an output budget. The three
+assertions printed three lists of values with no way to tell
+which request each came from, which cost a round trip before
+anything could be reasoned about.
+
+THE ROOT CAUSE WAS IN evaluate(). It wrapped the expression in
+JSON.stringify inside a PLAIN function, so an async expression
+returned the string "{}" the moment the promise was created.
+awaitPromise could not help — what the wrapper returned was
+already a string. Two consequences, both silent for as long as
+the harness has existed:
+
+  • evalAsync could never return a value. Every caller had
+    been written around that, so nothing looked wrong.
+  • `await evalAsync('await runRound(); return true;')` did
+    not wait for the round. Only the until() poll after it
+    kept the harness roughly in step, and that poll watches
+    the round COUNTER, which advances before the last request
+    has landed. On a slow runner the next round could begin
+    with requests from the previous one still in flight.
+
+The assertions were also about the wrong set. "Every request
+streamed" and "every request stated an output budget" were
+applied to every request the mock ever saw, and the app also
+makes small AUXILIARY calls — tier classification is the one
+that showed up — built by their own code with a single user
+message and neither flag. Whether one landed inside the window
+the harness reads was a timing question. The same code passed
+or failed depending on the machine, which is the definition of
+the flake that was being written off.
+
+Scoped now: a round request is one carrying a system message,
+because that is where the WaxFrame envelope goes. A liveness
+assertion fails if that discriminator stops matching, since
+scoping is only safe while there is something in scope.
+
+TWO REAL BUGS CAME OUT OF LOOKING.
+
+1. callAPI sets two GLOBALS around the one synchronous call to
+   cfg.bodyFn — WF_STREAM_THIS_REQUEST, which tells every body
+   builder to add `stream: true`, and WF_OUTPUT_BUDGET_OVERRIDE
+   on a budget retry — and restored both on the line AFTER
+   bodyFn returned, inside the try. A bodyFn that throws
+   skipped both, and the flag stayed set for the whole session:
+   every later request in that tab asking for a stream nobody
+   would read, or carrying the failed call's budget. Restored
+   in the finally now, and the hook is declared outside the try
+   with a no-op default so a throw before it is installed
+   cannot turn a provider failure into a TypeError.
+
+   Proved by driving it: one AI's bodyFn is replaced with one
+   that throws, callAPI is called and allowed to fail, the flag
+   is read back, and a real round is then run to show the app
+   still works. Without the fix, flagAfter is true.
+
+2. The tier-classification call stated max_tokens 400 on the
+   Anthropic shape and nothing at all on the OpenAI shape. Same
+   call, same expected answer, two behaviours depending on
+   which provider was picked. v3.63.494's point was that an
+   unstated budget hands every gateway in front of us the right
+   to cap the answer silently — and a classification that comes
+   back truncated reads as a provider answering badly rather
+   than one that was cut off. Both state it now, through
+   budgetKeyFor() rather than a hardcoded key, because OpenAI's
+   newer models reject max_tokens.
+
+   The auxiliary call is now DRIVEN by the harness rather than
+   waited for, because whether one fires during a round is the
+   same timing question that caused the flake.
+
+THE LESSON, and it is the one this document keeps writing down
+in different clothes: an intermittent failure that is written
+off as environmental is an unread bug report. This one was
+three — a harness that could not report, a global that could
+leak, and a call that could be truncated — and none of them
+would have been found by looking harder at the three failing
+assertions, because none of the three was about what it said.
+
+Failure output now prints every recorded request in order:
+role, stream flag, budget and key, prompt length, and the
+body's top-level keys. The keys are what identified the
+auxiliary calls in one glance.
 
 v330 — A CHECK NOBODY RUNS (v3.63.553).
 

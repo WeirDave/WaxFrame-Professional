@@ -259,10 +259,10 @@ if (buildStamp) {
   }
 }
 
-// v3.63.553 — The changelog's own history must not move. A release sweep
+// v3.63.554 — The changelog's own history must not move. A release sweep
 // replaces the version it is superseding across every tracked file, and a
 // blanket replacement will happily rewrite a version number that is a
-// STATEMENT ABOUT THE PAST rather than a stamp. The v3.63.553 sweep rewrote
+// STATEMENT ABOUT THE PAST rather than a stamp. The v3.63.554 sweep rewrote
 // two: the previous release's own CHANGELOG heading, and a note in the
 // vendored inventory recording which release upgraded mammoth. Nothing in the
 // gate noticed, because every stamp it checks was correct.
@@ -1036,7 +1036,7 @@ try {
 
 section('URL sanitiser agreement (tools/test-url-sanitisers.mjs)');
 
-// v3.63.553 — three files decide whether a URL is safe to put in an href, and
+// v3.63.554 — three files decide whether a URL is safe to put in an href, and
 // they do it with three copies of the same five lines: safeUrl() in app.js,
 // _safeImportUrl() in storage.js and safeUrl() in pricing-renderer.js. The
 // copies exist because those files share no module and the pricing page loads
@@ -1120,7 +1120,7 @@ if (inventory) {
     ok(`${inventoried.size} vendored files match their recorded SHA-256 hashes`);
   }
 
-  // v3.63.553 — the recorded version has to clear its own CVE floor, and
+  // v3.63.554 — the recorded version has to clear its own CVE floor, and
   // package.json has to agree with it.
   //
   // Three separate things were watching mammoth and all three were blind.
@@ -1424,7 +1424,7 @@ for (const scriptName of DOWNLOAD_SCRIPTS) {
 // with no browser setup and no npm install. Each check file says the same thing
 // in its own header. They run as steps in the `smoke` job of
 // .github/workflows/release-check.yml, which already locates Chrome, and they
-// are hand-runnable the same way locally. v3.63.553 added the four that were
+// are hand-runnable the same way locally. v3.63.554 added the four that were
 // running in neither place; the stage below is what makes that a fact rather
 // than a habit.
 
@@ -1432,7 +1432,7 @@ for (const scriptName of DOWNLOAD_SCRIPTS) {
 
 section('Every check has a runner (nothing rests on a manual run)');
 
-// v3.63.553 — the failure this exists for is not a bug in any check. It is a
+// v3.63.554 — the failure this exists for is not a bug in any check. It is a
 // check that exists, passes, and is run by nothing.
 //
 // Four browser-driven checks were in that state until this release:

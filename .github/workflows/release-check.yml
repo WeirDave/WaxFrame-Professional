@@ -173,7 +173,7 @@ jobs:
           WF_CHROME: ${{ steps.chrome.outputs.path }}
         run: node tools/check-hostile-provider.mjs
 
-      # v3.63.553 - the other four browser-driven checks. The comment above
+      # v3.63.554 - the other four browser-driven checks. The comment above
       # names "the three security checks from the 2026-09-21 review" and wired
       # exactly those three; four more had been written since and none of them
       # ran anywhere but by hand.

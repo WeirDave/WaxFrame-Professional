@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260923-002
+// Build: 20260923-003
 // check-file-protocol.mjs — verify the portable install still works.
 //
 // WaxFrame ships two ways: served over http(s), and as a folder someone
@@ -28,7 +28,7 @@
 // Not wired into release-check.mjs, which is pure Node stdlib by design and
 // would start requiring a browser. It runs as a step in the `smoke` job of
 // .github/workflows/release-check.yml, which already locates Chrome — added in
-// v3.63.553, and before that this file ran only when somebody remembered.
+// v3.63.554, and before that this file ran only when somebody remembered.
 // Worth running by hand too when touching the pdf.js loader, the vendored
 // pdf.js builds, or anything about how the portable copy boots.
 
@@ -107,7 +107,7 @@ const pdfName = `.wf-file-protocol-check-${process.pid}.pdf`;
 const pdfPath = path.join(ROOT, pdfName);
 fs.writeFileSync(pdfPath, buildPdf());
 
-// v3.63.553 — was `'file:///' + path.resolve(p).replace(/\\/g, '/')`, which is
+// v3.63.554 — was `'file:///' + path.resolve(p).replace(/\\/g, '/')`, which is
 // correct on Windows and produces `file:////home/...` on Linux, because an
 // absolute POSIX path already starts with the slash the literal supplies. That
 // never showed up while this ran only on a developer's Windows machine, and

@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260923-002
+// Build: 20260923-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260923-002';         // build stamp — update each session
+const BUILD = '20260923-003';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -10189,7 +10189,18 @@ async function classifyTiersForProvider(provider, opts) {
       url = askerCfg.endpoint;
       headers = { 'Content-Type': 'application/json' };
       if (askerCfg._key) headers['Authorization'] = `Bearer ${askerCfg._key}`;
-      body = JSON.stringify({ model: askerModel, messages: [{ role: 'user', content: askerPrompt }] });
+      // v3.63.554 — states its output budget, which the anthropic branch
+      // above has always done and this one never did. Same call, same expected
+      // answer length, two different behaviours depending on which provider
+      // happened to be picked. v3.63.494's point was that an unstated budget
+      // hands every gateway in front of us the right to cap the answer
+      // silently, and a classification that comes back cut off is read as a
+      // provider that answered badly rather than one that was truncated.
+      // The KEY is asked for rather than assumed, because OpenAI's newer
+      // models reject max_tokens and require max_completion_tokens.
+      body = JSON.stringify(Object.assign(
+        { model: askerModel, messages: [{ role: 'user', content: askerPrompt }] },
+        { [window.WFProviderCatalog.budgetKeyFor(askerModel)]: 400 }));
     }
     // v3.63.333 — Single backoff retry on 429. classifyTiersForAllKeyed
     // fans out to every keyed provider in parallel; per-minute quotas
@@ -10369,7 +10380,18 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
       if (key) headers['Authorization'] = `Bearer ${key}`;
       // v3.58.1 — no `temperature`: current ChatGPT models 400 with
       // "temperature does not support 0 ... only the default (1) is supported".
-      body = JSON.stringify({ model: askingModel, messages: [{ role: 'user', content: prompt }] });
+      // v3.63.554 — states its output budget, which the anthropic branch
+      // above has always done and this one never did. Same call, same expected
+      // answer length, two different behaviours depending on which provider
+      // happened to be picked. v3.63.494's point was that an unstated budget
+      // hands every gateway in front of us the right to cap the answer
+      // silently, and a classification that comes back cut off is read as a
+      // provider that answered badly rather than one that was truncated.
+      // The KEY is asked for rather than assumed, because OpenAI's newer
+      // models reject max_tokens and require max_completion_tokens.
+      body = JSON.stringify(Object.assign(
+        { model: askingModel, messages: [{ role: 'user', content: prompt }] },
+        { [window.WFProviderCatalog.budgetKeyFor(askingModel)]: 300 }));
     }
 
     const resp = await fetch(url, { method: 'POST', headers, body });
@@ -13611,8 +13633,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.553'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.553';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.554'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.554';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -20862,6 +20884,11 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   const _timeoutMs = (role === 'builder') ? BUILDER_TIMEOUT_MS : REVIEWER_TIMEOUT_MS;
   const _timeoutCtrl = new AbortController();
   const _timeoutId = setTimeout(() => _timeoutCtrl.abort(), _timeoutMs);
+  // v3.63.554 — declared out here so the finally can call it, and defaulted to
+  // a no-op so a throw BEFORE the real one is installed does not turn a
+  // provider failure into a TypeError inside the finally, which would replace
+  // the real error with a useless one.
+  let _restoreGlobals = () => {};
   try {
     // v3.63.307 — Resolve per-AI model so variants (ai.parentId set) get
     // their own model id into the request body / endpoint URL while sharing
@@ -20892,9 +20919,20 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
                  wfStreamingEnabled() &&
                  window.WFProviderCatalog.supportsStreaming(cfg.format);
     window.WF_STREAM_THIS_REQUEST = _streaming;
+    // v3.63.554 — restored in the finally now, not here. Both of these are
+    // GLOBALS that change how every body builder behaves, set for the width of
+    // one cfg.bodyFn() call. That call is inside this try, and if it throws —
+    // a custom provider whose bodyFn is broken, a prompt that will not
+    // stringify — neither line ran, and the override stayed set for the rest
+    // of the session. Every later request in that tab would then have gone out
+    // with the failed call's budget, or with none at all when the override was
+    // the reject-and-learn zero, and nothing anywhere would have said so.
+    _restoreGlobals = function () {
+      window.WF_STREAM_THIS_REQUEST = false;
+      if (_budgetRetry) window.WF_OUTPUT_BUDGET_OVERRIDE = _prevBudget;
+    };
     const _sentBody = cfg.bodyFn(_model, prompt);
-    window.WF_STREAM_THIS_REQUEST = false;
-    if (_budgetRetry) window.WF_OUTPUT_BUDGET_OVERRIDE = _prevBudget;
+    _restoreGlobals();
     _requestedBudget = window.WFProviderCatalog.requestedOutputBudget(_sentBody);
     // v3.63.513 — Gemini streams from a different METHOD, not a body flag:
     // :generateContent becomes :streamGenerateContent?alt=sse. Every other
@@ -20949,6 +20987,10 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     throw new Error('NETWORK_FAILED: ' + fetchErr.message);
   } finally {
     clearTimeout(_timeoutId);
+    // Idempotent: the happy path already ran it, and running it twice restores
+    // the same captured value. What matters is the path where cfg.bodyFn threw
+    // before the happy-path call was ever reached.
+    _restoreGlobals();
   }
 
   // v3.63.138 — Mistral proactive rate-limit warning. Surface a soft warning

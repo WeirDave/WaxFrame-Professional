@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260923-002
+// Build: 20260923-003
 // check-html-injection.mjs — does hostile text in saved state become markup?
 //
 // WaxFrame builds its UI by assigning template literals to .innerHTML. That is
@@ -85,7 +85,7 @@ const HIVE_SEED = {
   customAIs: [
     { id: 'custom-inject-1', name: PAYLOADS.customName, provider: 'custom-inject-1',
       label: PAYLOADS.customName, model: 'mock-model' },
-    // v3.63.553 - endpoint-trust probe rows; see ENDPOINT_PROBE below.
+    // v3.63.554 - endpoint-trust probe rows; see ENDPOINT_PROBE below.
     { id: 'custom-ep-bad', name: 'scheme probe',   provider: 'custom-ep-bad',   model: 'mock-model' },
     { id: 'custom-ep-rel', name: 'relative probe', provider: 'custom-ep-rel',   model: 'mock-model' },
     { id: 'custom-ep-ok',  name: 'good probe',     provider: 'custom-ep-ok',    model: 'mock-model' },
@@ -97,7 +97,7 @@ const HIVE_SEED = {
       endpoint: 'http://127.0.0.1:1/v1/chat/completions',
       model: 'mock-model', _key: 'sk-INJECT'
     },
-    // v3.63.553 - Import trust is not only about markup. The customAIConfigs
+    // v3.63.554 - Import trust is not only about markup. The customAIConfigs
     // entry beside each custom AI is what the app makes its REQUESTS with,
     // and its endpoint is the URL every round posts to, carrying whatever key
     // the user has entered for that row. A checkpoint is meant to be shared,

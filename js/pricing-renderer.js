@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing-renderer.js
-// Build: 20260923-002
+// Build: 20260923-003
 //  Dynamic pricing renderer for ai-api-pricing.html. Fetches
 //  live data from the waxframe-pricing Cloudflare Worker;
 //  falls back to the embedded snapshot if the Worker is
@@ -53,7 +53,7 @@
       .replace(/'/g, '&#39;');
   }
 
-  // v3.63.553 — Escaping a URL is not checking it. Every link below ran the
+  // v3.63.554 — Escaping a URL is not checking it. Every link below ran the
   // value through escapeHtml, which stops it breaking out of the attribute and
   // does nothing at all about `javascript:` — that survives escaping intact
   // and is still a script URL when the attribute is parsed.

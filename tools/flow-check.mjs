@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ============================================================
 //  WaxFrame — tools/flow-check.mjs
-// Build: 20260923-002
+// Build: 20260923-003
 // ============================================================
 // End-to-end flow harness. Asserts DOM and app state instead of capturing
 // screenshots, and drives a full hive against a same-origin mock provider so a
@@ -159,7 +159,23 @@ const server = http.createServer(async (req, res) => {
       budgetKey: parsed.max_tokens !== undefined ? 'max_tokens'
                : parsed.max_completion_tokens !== undefined ? 'max_completion_tokens' : null,
       budget: parsed.max_tokens ?? parsed.max_completion_tokens ?? null,
-      promptChars: (sys + usr).length
+      promptChars: (sys + usr).length,
+      // v3.63.554 - the shape of the body names the code path that built
+      // it. A CI run failed the three assertions below with two requests
+      // that carried neither `stream` nor a budget key, and nothing in the
+      // output said which call they were or what they did carry. One
+      // unreproducible failure is a puzzle; one that prints its own
+      // evidence is a bug report.
+      bodyKeys: Object.keys(parsed).sort(),
+      // v3.63.554 - a ROUND request is one the catalog's body builder made:
+      // it carries a system message, because that is where the WaxFrame
+      // envelope goes. The app also makes small auxiliary calls - tier
+      // classification is the one seen here - which are built by their own
+      // code with a single user message. Those are not what the streaming
+      // and budget assertions below are about, and a CI run failed all
+      // three because two of them happened to land inside the window this
+      // harness reads. Timing decided whether the check passed.
+      isRound: !!sys
     });
     const text = isBuilder ? builderBody(mockCalls.filter(c => c.isBuilder).length) : reviewerBody(mockCalls.length);
 
@@ -260,7 +276,26 @@ await cdp('Runtime.enable');
 // undefined is a test that passes for the wrong reason.
 async function evaluate(expression) {
   const r = await cdp('Runtime.evaluate', {
-    expression: `(function(){ try { return JSON.stringify(${expression}); } catch (e) { return JSON.stringify({ __error: String(e && e.message || e) }); } })()`,
+    // v3.63.554 - `await` added, and it is not cosmetic. This wrapper was a
+    // plain function, so for an ASYNC expression it returned
+    // JSON.stringify(Promise) - the string "{}" - the instant the promise was
+    // created. awaitPromise could not help: what the wrapper returned was
+    // already a string, so there was nothing left to await.
+    //
+    // Two consequences, both silent. evalAsync could never return a value, and
+    // every caller had been written around that without anyone noticing. And
+    // `await evalAsync('await runRound(); return true;')` did not wait for the
+    // round - it returned while the round was still running, and only the
+    // until() poll after it kept the harness roughly in step. That poll watches
+    // the round COUNTER, which advances before the last request has landed, so
+    // the next round could begin with requests from the previous one still in
+    // flight. That is the likeliest explanation for a CI run recording ten
+    // requests where this machine records eight, two of them carrying neither
+    // a stream flag nor a budget.
+    //
+    // await on a non-promise is a no-op, so the synchronous callers are
+    // unaffected.
+    expression: `(async function(){ try { return JSON.stringify(await (${expression})); } catch (e) { return JSON.stringify({ __error: String(e && e.message || e) }); } })()`,
     awaitPromise: true, returnByValue: true
   });
   if (r.exceptionDetails) throw new Error(r.exceptionDetails.text || 'evaluate threw');
@@ -394,10 +429,54 @@ try {
   const builders = calls.filter(c => c.isBuilder);
   check('the mock was actually called', calls.length > 0, { calls: calls.length });
   check('a Builder call was made in each round', builders.length >= 2, { builders: builders.length });
-  check('every request streamed', calls.every(c => c.stream === true), calls.map(c => c.stream));
-  check('every request stated an output budget', calls.every(c => c.budget != null), calls.map(c => c.budget));
+  // Print the full record when any of the three below fails. Each one's own
+  // detail is a list of values with no way back to the request it came from,
+  // which is exactly what made a CI failure cost a round trip to understand.
+  const roundCalls = calls.filter(c => c.isRound);
+  const _requestsOk = roundCalls.every(c => c.stream === true)
+                   && roundCalls.every(c => c.budget != null)
+                   && roundCalls.every(c => c.budgetKey === 'max_tokens');
+  if (!_requestsOk) {
+    console.log('    \u2500 every recorded request, in order:');
+    calls.forEach((c, i) => console.log('      ' + String(i + 1).padStart(2) + '. '
+      + (c.isBuilder ? 'builder ' : 'reviewer')
+      + '  stream=' + c.stream
+      + '  budget=' + c.budget + ' (' + c.budgetKey + ')'
+      + '  promptChars=' + c.promptChars
+      + '  keys=' + JSON.stringify(c.bodyKeys)));
+  }
+  // Liveness: scoping to round requests is only safe while there ARE round
+  // requests. A discriminator that stopped matching would empty this list and
+  // make all three assertions below pass on nothing.
+  check('the round requests are still recognisable as round requests',
+    roundCalls.length >= 8, { round: roundCalls.length, total: calls.length });
+  check('every round request streamed', roundCalls.every(c => c.stream === true), roundCalls.map(c => c.stream));
+  check('every round request stated an output budget', roundCalls.every(c => c.budget != null), roundCalls.map(c => c.budget));
   check('the budget rode the max_tokens key for this shape',
-    calls.every(c => c.budgetKey === 'max_tokens'), calls.map(c => c.budgetKey));
+    roundCalls.every(c => c.budgetKey === 'max_tokens'), roundCalls.map(c => c.budgetKey));
+  // v3.63.554 - the AUXILIARY calls state one too. The tier-classification
+  // call stated 400 tokens on the Anthropic shape and nothing at all on the
+  // OpenAI shape: the same call, the same expected answer, two behaviours
+  // depending on which provider was picked. An unstated budget hands the
+  // gateway in front of us the right to cut the answer short, and a
+  // classification that comes back truncated reads as a provider answering
+  // badly rather than one that was cut off. Asserted only when such a call
+  // happened, because whether one does is a timing question - which is the
+  // whole reason the assertions above are scoped.
+  // Driven rather than waited for. Whether one of these fires during a round
+  // is a timing question - which is exactly what made the CI failure look
+  // random - so it is called directly instead.
+  const auxBefore = calls.length;
+  await evalAsync(`
+    try { await classifyTiersForProvider('chatgpt', {}); } catch (e) {}
+    return true;
+  `);
+  const afterAux = await (await fetch(`${MOCK_BASE}/__mock/calls`)).json();
+  const auxCalls = afterAux.slice(auxBefore).filter(c => !c.isRound);
+  check('the auxiliary classification call was actually made (test is live)',
+    auxCalls.length > 0, { made: afterAux.length - auxBefore });
+  check('an auxiliary request states a budget too',
+    auxCalls.every(c => c.budget != null), auxCalls.map(c => c.budget));
 
   // ── Flow 3: the Change Builder pill refreshes ───────────────────────
   // Regression guard for v3.63.405. The bug: setBuilder() refreshed the
@@ -448,6 +527,54 @@ try {
   section('Flow 5 — No uncaught page errors during any of the above');
   const pageErrors = await evaluate(`(window.__wfFlowErrors || []).length`);
   check('zero uncaught page errors', !pageErrors, { pageErrors });
+
+  // ── Flow 6: a request that dies mid-build leaves no state behind ────
+  // v3.63.554 — callAPI sets two GLOBALS around the one synchronous call to
+  // cfg.bodyFn: WF_STREAM_THIS_REQUEST, which tells every body builder to add
+  // `stream: true`, and WF_OUTPUT_BUDGET_OVERRIDE on a budget retry. Both were
+  // restored on the line after bodyFn returned — inside the try. A bodyFn that
+  // throws skipped both, and the flag stayed set for the whole session: every
+  // later request in that tab would ask for a stream it was not going to read.
+  //
+  // Driven rather than reasoned about. One AI's bodyFn is replaced with one
+  // that throws, callAPI is called and allowed to fail, and the flag is read
+  // back. Then the real bodyFn is restored and a real round is run, so the
+  // check also proves the app still works afterwards rather than only that a
+  // variable is false.
+  section('Flow 6 — A request that dies while building its body leaves no flag set');
+  const leak = await evalAsync(`
+    const cfg = API_CONFIGS['chatgpt'];
+    const realBody = cfg.bodyFn;
+    const ai = (typeof activeAIs !== 'undefined' ? activeAIs : []).find(a => a.provider === 'chatgpt')
+            || { id: 'chatgpt', provider: 'chatgpt', name: 'ChatGPT' };
+    window.WF_STREAM_THIS_REQUEST = false;
+    cfg.bodyFn = function () { throw new Error('flow-check: body builder failed on purpose'); };
+    let threw = false;
+    try { await callAPI(ai, 'leak probe', '', 'reviewer', {}); }
+    catch (e) { threw = true; }
+    const flagAfter = window.WF_STREAM_THIS_REQUEST;
+    const overrideAfter = window.WF_OUTPUT_BUDGET_OVERRIDE;
+    cfg.bodyFn = realBody;
+    return JSON.stringify({ threw: threw, flagAfter: flagAfter === true,
+                            overrideAfter: overrideAfter === undefined ? 'undefined' : overrideAfter });
+  `).then(s => JSON.parse(s));
+  check('the failing request did fail (test is live)', leak.threw === true, leak);
+  check('the streaming flag is not left set behind it', leak.flagAfter === false, leak);
+
+  const afterLeak = await evalAsync(`
+    await runRound();
+    return true;
+  `).then(() => fetch(`${MOCK_BASE}/__mock/calls`).then(r => r.json()));
+  const since = afterLeak.slice(calls.length);
+  check('a real round still runs after that failure', since.length > 0,
+        { newCalls: since.length });
+  const sinceRound = since.filter(c => c.isRound);
+  check('and that round is a real one (test is live)', sinceRound.length >= 4,
+        { round: sinceRound.length, total: since.length });
+  check('and every one of its round requests still states a budget',
+        sinceRound.every(c => c.budget != null), sinceRound.map(c => c.budget));
+  check('and every one still asks to stream',
+        sinceRound.every(c => c.stream === true), sinceRound.map(c => c.stream));
 
 } catch (e) {
   fail++;
