@@ -259,6 +259,79 @@ if (buildStamp) {
   }
 }
 
+// v3.63.551 — The changelog's own history must not move. A release sweep
+// replaces the version it is superseding across every tracked file, and a
+// blanket replacement will happily rewrite a version number that is a
+// STATEMENT ABOUT THE PAST rather than a stamp. The v3.63.551 sweep rewrote
+// two: the previous release's own CHANGELOG heading, and a note in the
+// vendored inventory recording which release upgraded mammoth. Nothing in the
+// gate noticed, because every stamp it checks was correct.
+//
+// Deliberately narrow, and the narrowness is the point. The first draft
+// asserted that every heading in the file is strictly older than the one above
+// it, and it failed on real history: v3.39.8 and v3.19.0 each legitimately
+// have two entries, one release re-issued under one version. A check that
+// fails the correct case is how checks get deleted. So this asserts only the
+// three things a rewritten-past-version looks like and nothing about the rest
+// of the file:
+//
+//   • the newest heading is the version being released
+//   • that version appears exactly once as a heading
+//   • the heading below it is strictly older
+//
+// The sweep's mistake trips all three at once: it turns the previous heading
+// into this one, so the newest version appears twice and the second is no
+// longer older.
+const changelog = read(join(ROOT, 'CHANGELOG.md'));
+const clHeads = [...changelog.matchAll(/^##\s+v(\d+)\.(\d+)\.(\d+)/gm)]
+  .map(m => ({ raw: `${m[1]}.${m[2]}.${m[3]}`, n: [+m[1], +m[2], +m[3]] }));
+if (!clHeads.length) {
+  fail('CHANGELOG.md', 'no "## vX.Y.Z" headings found — the format changed, so this check is now blind');
+} else if (appVersion) {
+  if (clHeads[0].raw !== appVersion) {
+    fail('CHANGELOG.md', `newest heading is v${clHeads[0].raw} but APP_VERSION is ${appVersion} — this release has no entry, or the sweep rewrote the previous one`,
+      findLine(changelog, `## v${clHeads[0].raw}`));
+  } else {
+    ok(`CHANGELOG.md newest heading = v${clHeads[0].raw}`);
+  }
+  const sameAsCurrent = clHeads.filter(h => h.raw === appVersion).length;
+  if (sameAsCurrent > 1) {
+    fail('CHANGELOG.md', `v${appVersion} appears as ${sameAsCurrent} headings — a release sweep rewriting a past version looks exactly like this`);
+  } else if (sameAsCurrent === 1) {
+    ok(`CHANGELOG.md: v${appVersion} appears once`);
+  }
+  // Zero is reported by the newest-heading check above, not here. Saying
+  // "appears once" for a version that appears no times is the kind of true-
+  // looking line that makes a gate's output stop being read.
+  if (clHeads.length > 1) {
+    const cmp = (a, b) => (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2]);
+    if (cmp(clHeads[1].n, clHeads[0].n) >= 0) {
+      fail('CHANGELOG.md', `the heading below the newest is v${clHeads[1].raw}, which is not older than v${clHeads[0].raw}`,
+        findLine(changelog, `## v${clHeads[1].raw}`));
+    } else {
+      ok(`CHANGELOG.md: previous heading v${clHeads[1].raw} is older`);
+    }
+  }
+}
+
+// The same sweep rewrites the build stamp, and the changelog records one per
+// release. If the current stamp appears against more than one entry, a past
+// entry was overwritten — the identical mistake one line down from the
+// version heading, and it happened in the same sweep the check above exists
+// for. Asserting "exactly one" rather than "the newest one matches" is what
+// makes it catch the overwrite instead of just the omission.
+if (buildStamp) {
+  const clBuilds = [...changelog.matchAll(/^\*\*Build:\*\*\s*(\d{8}-\d{3})/gm)].map(m => m[1]);
+  const hits = clBuilds.filter(s => s === buildStamp).length;
+  if (hits === 0) {
+    fail('CHANGELOG.md', `no entry records build ${buildStamp} — this release has no changelog entry`);
+  } else if (hits > 1) {
+    fail('CHANGELOG.md', `build ${buildStamp} is recorded against ${hits} entries — a release sweep overwrote a past entry's stamp`);
+  } else {
+    ok(`CHANGELOG.md: build ${buildStamp} recorded once`);
+  }
+}
+
 // ── Check 3: CSS token references ───────────────────────────
 
 section('CSS token references (var(--TOKEN) must be defined)');
@@ -1022,7 +1095,7 @@ if (inventory) {
     ok(`${inventoried.size} vendored files match their recorded SHA-256 hashes`);
   }
 
-  // v3.63.550 — the recorded version has to clear its own CVE floor, and
+  // v3.63.551 — the recorded version has to clear its own CVE floor, and
   // package.json has to agree with it.
   //
   // Three separate things were watching mammoth and all three were blind.

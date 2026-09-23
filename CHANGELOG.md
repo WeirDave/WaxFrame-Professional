@@ -1,5 +1,92 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.551 — An imported provider configuration can no longer choose where a key is sent
+
+**Released:** 2026-09-22
+**Build:** 20260922-008
+
+### What changed
+
+**A custom AI's saved configuration is now checked on the way in, not trusted.**
+Every custom AI in the hive has a matching configuration object holding the URL
+the app posts to. That object was installed exactly as found in saved state.
+
+Saved state is not always the user's own. A checkpoint file is meant to be
+shared — that is what "share an exact-model recipe" means — and a hive profile
+can be imported the same way. So the URL a round posts to, carrying whatever
+key is entered for that row, could arrive from a file written by someone else.
+A shared checkpoint could name a provider "OpenAI (fast)", point its endpoint
+at a host of the file author's choosing, and receive the prompt and the key on
+the first round after the key was entered.
+
+The rows themselves were already sanitised on import — that landed in
+v3.56.38 — but the configuration beside each row was not, and the
+configuration is the half that holds the endpoint.
+
+**What the check does.** An imported configuration keeps six fields and
+nothing else: the display label, the model, the endpoint, the note, the format
+and the model-list URL. Both URLs must be absolute `http` or `https`; the
+format must be one WaxFrame actually implements, and an unrecognised one falls
+back to OpenAI-compatible rather than being trusted. A configuration whose
+endpoint is not a usable URL is dropped rather than blanked, because a
+provider with no endpoint is not a provider, and leaving it in the grid would
+show a row that looks configured and is not.
+
+`http` is still allowed on purpose. A local model server on `http://localhost`
+is a supported setup — Ollama, LM Studio, Open WebUI — and refusing plain HTTP
+would break it.
+
+**Everything a legitimate provider needs still survives**, including the
+model-list URL that marks a provider as imported from a model server. That
+field is what Server mode, the connectivity pill on the Worker Bees screen and
+the live model fetch all key off, and it is now asserted by name so a future
+tightening cannot quietly demote every server-imported provider to an ordinary
+custom on the next reload.
+
+### Also in this release
+
+**The release gate now checks the changelog's own version headings.** A release
+sweep replaces the version it supersedes across every tracked file, which will
+rewrite a version number that is a *statement about the past* rather than a
+stamp — the previous release's own changelog heading is one, and a note in the
+vendored-library inventory recording which release upgraded a library is
+another. Every stamp the gate checked could be correct while those two were
+wrong.
+
+The gate now asserts three things about the heading list: the newest heading is
+the version being released, that version appears exactly once, and the heading
+below it is older. A sweep that rewrites the previous heading trips all three.
+
+The rule is deliberately narrow and does not police the rest of the file.
+Two versions in the history legitimately carry two entries each, one release
+re-issued under one version, and a check that fails a correct case is a check
+that gets removed.
+
+### Verification
+- Driven in a browser, not asserted against source. `check-html-injection.mjs`
+  seeds four hostile provider configurations into saved state, boots the app,
+  and reads back what actually landed in the live configuration table: a
+  `javascript:` endpoint, a relative endpoint, a legitimate one carrying an
+  unknown format and an unexpected field, and one with a good endpoint and an
+  unusable model-list URL.
+- The legitimate configuration is asserted to install and its endpoint to
+  survive intact, so the check is testing a filter rather than a deletion.
+- Mutation-tested six ways, each watched failing and restored: the
+  configuration installed as found; the endpoint protocol check removed; the
+  field allowlist replaced by a copy of the imported object; the format
+  trusted as imported; the model-list URL dropped; and the model-list URL
+  trusted as imported.
+- Twelve new assertions, 33 in that harness in total, all green.
+- Export redaction, hostile-provider and the end-to-end flow harness re-run,
+  since the changed file is on the boot path. 23 of 23 flow assertions green.
+- Gate: 20 of 20 stages, with the two new changelog checks inside the
+  version-stamp stage.
+
+### Files changed
+`js/storage.js`, `tools/check-html-injection.mjs`, `tools/release-check.mjs`,
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v328.txt`, plus the routine stamp
+sweep.
+
 ## v3.63.550 — The .docx parser was six versions behind a CVE, and three things were watching the wrong number
 
 **Released:** 2026-09-22

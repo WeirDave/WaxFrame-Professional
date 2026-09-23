@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v325
+WaxFrame Backlog Master v328
 2026-09-22
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,144 @@ ships.
 
 
 
+
+v328 — THE SWEEP THAT FOUND NOTHING, WRITTEN DOWN ANYWAY
+       (v3.63.551).
+
+A full security sweep of this repository across six areas.
+Two produced releases and are logged below as v326 and v327.
+The other four produced nothing, and that is the part worth
+recording, because a clean area with no record of being
+looked at gets swept again from scratch next time — or worse,
+is assumed clean without ever having been looked at.
+
+CI workflow permissions — CLEAN. Every action is pinned to a
+commit SHA rather than a tag, the release trigger matches a
+tag regex, checkouts set persist-credentials: false, the
+release attaches a provenance attestation, and the ZIP is
+built with git archive from the tag rather than from a
+working tree. Nothing to change.
+
+The Cloudflare relay — CLEAN, and its SECURITY.md claim now
+verified rather than believed. Zero console. calls, no KV, D1
+or R2 binding, no waitUntil, one ratelimits binding and
+nothing else. The caller's API key is SHA-256 hashed to make
+a rate-limit key and is never logged, stored or echoed. The
+document said so; the code now confirms it.
+
+Injection surfaces — 126 innerHTML sinks, 103 static or
+fully escaped, 23 read by hand. All 23 interpolate numbers
+that have been through parseInt or Number, comparisons
+against literal enums, id strings already slugged at the
+import chokepoint, values already through esc(), or HTML
+fragments this code built itself. Nothing to fix. See the
+SETTLED DECISIONS entry for the two that took real work to
+clear, so the next reader does not repeat it.
+
+Path handling — NOT APPLICABLE in the product, which is a
+browser app with no filesystem. The tools and the release
+script do touch paths; those read from the repo and from a
+tag, never from user input.
+
+Secrets — the confidentiality gate scans every tracked text
+file against 14 structural rules on every release, and the
+redaction work in v326 below was the one real finding.
+
+METHOD NOTE, and the reason this entry exists at all: the
+audit tool over-reports. Two of its 23 flagged interpolations
+at js/app.js:1906 are escaped through esc() in the emitted
+string — the classifier attributed backtick interpolations
+from elsewhere in the block to that sink. That is the right
+direction for a tool to be wrong in, and it is not being
+changed; a reviewer reading three benign lines costs less
+than a classifier that quietly drops one. It is written here
+so the next person does not spend the time deciding whether
+they have found a bug in the app or a bug in the auditor.
+
+SECOND METHOD NOTE, about the release ceremony itself. The
+stamp sweep replaces the superseded version across every
+tracked file, and it will rewrite a version number that is a
+STATEMENT ABOUT THE PAST rather than a stamp. This sweep
+rewrote two: the previous release's own CHANGELOG heading and
+its build line, and a note in the vendored inventory recording
+which release upgraded mammoth. Every stamp the gate checked
+was correct while those were wrong, which is the same shape as
+v325's finding one layer further out — the machine-readable
+fields were all verified and the sentences were not.
+
+Now gated, narrowly: the newest CHANGELOG heading must be the
+version being released, that version must appear exactly once,
+the heading below it must be older, and the build stamp must be
+recorded against exactly one entry. Not "every heading
+descends" — that first draft failed on real history, where
+v3.39.8 and v3.19.0 each legitimately carry two entries. The
+inventory note is not gated, because a note legitimately naming
+the release being made is indistinguishable from one that was
+rewritten into it.
+
+v327 — A PARSER SIX VERSIONS BEHIND A CVE, AND THREE THINGS
+       WATCHING THE WRONG NUMBER (v3.63.550).
+
+lib/mammoth.browser.min.js was mammoth 1.6.0, inside the
+affected range of CVE-2025-11849 — a .docx carrying an
+externally-linked image makes the converter resolve that URI
+and fold what it reads into the output. Now 1.12.3.
+
+The upgrade is the smaller half. Three mechanisms exist to
+catch precisely this and all three were blind at once: the
+gate's CVE floors covered two of six libraries and not this
+one; the inventory recorded mammoth as "1.13.1", which is the
+version of the underscore.js bundled INSIDE mammoth and a
+version mammoth has never published; and package.json
+declared that same unresolvable number, so Dependabot — whose
+only purpose in this repository is to watch these libraries —
+was watching nothing for the one library that parses
+untrusted documents.
+
+The inventory already carried a note warning about this exact
+trap for docx.min.js. The same mistake was made one entry
+below it and went unseen, because the check that would have
+caught it did not cover that entry.
+
+The durable lesson: three independent defences, each sound in
+isolation, agreed on a wrong answer because two of them read
+the same wrong field and the third did not run. Count what a
+check COVERS, not that it exists. Every vendored library now
+states a minimum safe version, the gate fails below it, and
+it fails if package.json disagrees with what is vendored —
+compared against the inventory rather than a version read out
+of a bundle, because reading the bundle is what produced the
+wrong answer.
+
+v326 — SIX OF THE TEN PROVIDERS' KEYS SURVIVED REDACTION
+       (v3.63.549).
+
+WF_DEBUG.scrubText is the single definition of what a secret
+looks like, and both export surfaces reach it. It matched on
+SHAPE: sk- covered three providers and AIza a fourth. The
+other six came through a redaction pass intact — three whose
+prefixes were simply never listed, and three whose keys are a
+bare run of letters and digits with no shape to match at all.
+
+The prefixes are listed now, but the part that matters is
+that shape was the wrong question for half the catalog. There
+is no rule for "32 alphanumeric characters" that is not also
+a rule for a checksum, and this repository is full of those.
+The reliable pass is by VALUE: the app knows which keys the
+user configured, so anything equal to one is removed whatever
+its format. That covers all ten and covers the next provider
+added without anyone remembering to extend a pattern.
+
+Two method notes:
+  • The tests walk the REAL provider catalog rather than a
+    hand-written list, and one fails outright if a catalog
+    entry has no test fixture. A provider added later is
+    covered the day it is added.
+  • The ordering test could not fail on its first draft. It
+    asserted the shorter key was absent, and the shorter key
+    is absent either way, because once replaced the literal
+    is gone. Asserting the exact output does fail on the
+    reversed sort.
 
 v325 — A CHECK THAT COULD NOT FAIL (v3.63.548).
 
@@ -1329,6 +1467,47 @@ back into OPEN FEATURES with that trigger named.
            cannot re-export. That is a real case and would
            change the balance. Not on a schedule, and not
            because the gap looks untidy.
+
+4. Two innerHTML sinks that read as findings and are not
+   (decided 2026-09-22)
+   ─────────────────────────────────────────────────────────
+   WHAT:   tools/audit-html-sinks.mjs reports 23 sinks with
+           unescaped interpolations, and says in its own output
+           that it cannot know which are reachable. Two of the
+           23 cost real time to clear and will cost it again.
+   DECIDED: Neither is changed. Recorded here so the next
+           reader spends the time once.
+   WHY:    • The provider label in the concurrency-caps rows of
+             Settings. It reaches innerHTML, and API_CONFIGS can
+             be EXTENDED from an imported hive, so the label
+             looks attacker-reachable. It is not, for two
+             independent reasons: the row is emitted with
+             esc(label), and a row only exists for a base
+             provider that is a key of the PROVIDER_CONCURRENCY_
+             CAPS literal, whose label is read from the static
+             catalog rather than from the import. The import
+             also cannot overwrite an existing catalog entry.
+           • The Source Size Check message. It interpolates
+             three values the user typed into the length fields,
+             which is what makes it look reachable. All three go
+             through parseInt before they reach the string, and
+             the unit is compared against literal enums, so only
+             numbers and hardcoded words survive.
+   NOTE:   The audit tool also OVER-reports: two of the
+           interpolations it attributes to js/app.js:1906 are
+           escaped in the emitted string, because its classifier
+           picked up backtick interpolations from elsewhere in
+           the same block. That is the right direction for a
+           classifier to be wrong in and it is not being
+           tightened — a reviewer reading three benign lines
+           costs less than a classifier that drops one.
+   REVISIT IF: PROVIDER_CONCURRENCY_CAPS stops being a literal
+           and becomes data — loaded, imported, or derived from
+           saved state. The label's safety rests on that map's
+           keys being fixed, and that is one refactor away from
+           not being true. The esc() call would still hold, but
+           the second reason would be gone and nothing would
+           say so.
 
 NOTES ON FORMAT
 ════════════════════════════════════════════════════════════

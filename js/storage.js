@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260922-007
+// Build: 20260922-008
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1056,6 +1056,55 @@ function _normalizeImportedAI(ai) {
   return ai;
 }
 
+// v3.63.551 — The other half of import-trust hardening. _normalizeImportedAI
+// above sanitizes the customAIs ROWS, but the matching customAIConfigs entry
+// is what the app actually makes requests with, and it was installed into
+// API_CONFIGS verbatim (see the install site in loadSettings below). That
+// object's `endpoint` is the URL every round posts to, carrying whatever key
+// the user has entered for that row — so an imported hive or checkpoint could
+// name a custom provider "OpenAI (fast)", point its endpoint at a host of the
+// author's choosing, and receive the prompt and the key on the next round.
+// Nothing in the file said "this is trusted", and nothing checked it.
+//
+// Allowlist rather than blocklist, and the allowlist is exactly the six data
+// fields saveHive can emit: label, model, endpoint, note, format and
+// _modelsEndpoint. The three function fields never survive JSON and are
+// rebuilt from `format` at the install site; `_key` is stripped on save and
+// restored from hive.keys; the model is restored from hive.models. So nothing
+// legitimate is lost, and a field nobody expects cannot ride in.
+//
+// _modelsEndpoint has to be on that list, not off it. It is set by the Model
+// Server import flow (app.js, addImportServerModels) and it is the STRUCTURAL
+// marker for Server mode — isServerSetup(), the connectivity pill and the
+// live model fetch all key off its presence. Dropping it would have silently
+// demoted every server-imported provider to an ordinary custom on the next
+// reload. It is a URL, so it gets the same protocol check as endpoint; unlike
+// endpoint it is optional, and a bad one clears it rather than dropping the
+// whole provider, because a chat endpoint with no model list is still a
+// working provider.
+//
+// An endpoint that is not absolute http/https drops the WHOLE config rather
+// than being blanked, because a config with no endpoint is not a usable
+// provider — leaving it installed would put a dead row in the grid that looks
+// configured. http is deliberately still allowed: a local model server on
+// http://localhost is a supported setup and refusing it would break it.
+const _IMPORTED_CONFIG_FORMATS = ['openai', 'anthropic', 'google'];
+function _normalizeImportedConfig(cfg) {
+  if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) return null;
+  const endpoint = _safeImportUrl(cfg.endpoint).replace(/\/+$/, '');
+  if (!endpoint) return null;                       // unusable as a provider
+  const out = { endpoint };
+  out.label  = String(cfg.label ?? '').slice(0, 200);
+  out.model  = String(cfg.model ?? '').slice(0, 200);
+  out.note   = String(cfg.note  ?? '').slice(0, 500);
+  out.format = _IMPORTED_CONFIG_FORMATS.includes(cfg.format) ? cfg.format : 'openai';
+  if (cfg._modelsEndpoint != null) {
+    const me = _safeImportUrl(cfg._modelsEndpoint);
+    if (me) out._modelsEndpoint = me.replace(/\/+$/, '');
+  }
+  return out;
+}
+
 function loadSettings() {
   try {
     // ── Try new split storage first ──
@@ -1126,7 +1175,9 @@ function loadSettings() {
         if (!_normalizeImportedAI(ai)) return;   // sanitize in place; drop if unusable
         if (!aiList.find(a => a.id === ai.id)) aiList.push(ai);
         if (!API_CONFIGS[ai.provider] && h.customAIConfigs?.[ai.provider]) {
-          API_CONFIGS[ai.provider] = h.customAIConfigs[ai.provider];
+          // v3.63.551 — was installed verbatim; see _normalizeImportedConfig.
+          const safeCfg = _normalizeImportedConfig(h.customAIConfigs[ai.provider]);
+          if (safeCfg) API_CONFIGS[ai.provider] = safeCfg;
         }
         // Functions don't survive JSON — rebuild them if missing.
         // v3.63.422 — this rebuild ignored cfg.format entirely and always

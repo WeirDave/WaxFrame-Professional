@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260922-007
+// Build: 20260922-008
 // check-html-injection.mjs — does hostile text in saved state become markup?
 //
 // WaxFrame builds its UI by assigning template literals to .innerHTML. That is
@@ -84,13 +84,56 @@ const HIVE_SEED = {
   // server": it is free text carried in saved state.
   customAIs: [
     { id: 'custom-inject-1', name: PAYLOADS.customName, provider: 'custom-inject-1',
-      label: PAYLOADS.customName, model: 'mock-model' }
+      label: PAYLOADS.customName, model: 'mock-model' },
+    // v3.63.551 - endpoint-trust probe rows; see ENDPOINT_PROBE below.
+    { id: 'custom-ep-bad', name: 'scheme probe',   provider: 'custom-ep-bad',   model: 'mock-model' },
+    { id: 'custom-ep-rel', name: 'relative probe', provider: 'custom-ep-rel',   model: 'mock-model' },
+    { id: 'custom-ep-ok',  name: 'good probe',     provider: 'custom-ep-ok',    model: 'mock-model' },
+    { id: 'custom-ep-badmodels', name: 'models probe', provider: 'custom-ep-badmodels', model: 'mock-model' }
   ],
   customAIConfigs: {
     'custom-inject-1': {
       label: PAYLOADS.customName, name: PAYLOADS.customName,
       endpoint: 'http://127.0.0.1:1/v1/chat/completions',
       model: 'mock-model', _key: 'sk-INJECT'
+    },
+    // v3.63.551 - Import trust is not only about markup. The customAIConfigs
+    // entry beside each custom AI is what the app makes its REQUESTS with,
+    // and its endpoint is the URL every round posts to, carrying whatever key
+    // the user has entered for that row. A checkpoint is meant to be shared,
+    // so that URL can arrive from a file. These three rows exercise that
+    // field rather than a display name.
+    'custom-ep-bad': {
+      label: 'scheme probe', model: 'mock-model', format: 'openai',
+      endpoint: 'javascript:window.__wfPwned=9'
+    },
+    'custom-ep-rel': {
+      label: 'relative probe', model: 'mock-model', format: 'openai',
+      // Relative, so it would resolve against whatever origin the app is on.
+      endpoint: '/v1/chat/completions'
+    },
+    'custom-ep-ok': {
+      label: 'good probe', model: 'mock-model',
+      // Must survive - otherwise the guard is deleting everything and proves
+      // nothing about filtering. Trailing slash on purpose: addCustomAI
+      // strips one, so the normalizer has to as well or a round-trip through
+      // a checkpoint quietly changes the URL.
+      endpoint: 'http://127.0.0.1:1/v1/chat/completions/',
+      // Must ALSO survive. This one is the structural marker for Server mode -
+      // drop it and every server-imported provider silently demotes to an
+      // ordinary custom on the next reload, which is a regression a safety
+      // guard would otherwise have caused and nothing would have caught.
+      _modelsEndpoint: 'http://127.0.0.1:1/v1/models',
+      // Not a real format, and a field that only a crafted file would carry.
+      format: 'evil', headersFn: 'not a function', ohNo: 'rogue field'
+    },
+    'custom-ep-badmodels': {
+      label: 'models-url probe', model: 'mock-model', format: 'openai',
+      // A usable chat endpoint with an unusable model-list URL. The provider
+      // must survive with the bad URL cleared, rather than being dropped -
+      // a chat endpoint with no model list is still a working provider.
+      endpoint: 'http://127.0.0.1:1/v1/chat/completions',
+      _modelsEndpoint: 'javascript:window.__wfPwned=10'
     }
   },
   // Also rename a built-in, which is the path a restored checkpoint takes.
@@ -250,6 +293,55 @@ try {
     r.injectedNodes + ' node(s); markers: ' + JSON.stringify(r.byMarker));
   check('no injected marker id is reachable', r.byMarker.length === 0, r.byMarker);
   check('the page actually rendered (sanity — not an empty DOM)', r.bodyLen > 5000, r.bodyLen);
+
+  console.log('\n  \u25b6 An imported provider config cannot redirect where a key is sent');
+  const ep = JSON.parse(await evaluate(`(() => {
+    const g = id => (typeof API_CONFIGS !== 'undefined' && API_CONFIGS) ? API_CONFIGS[id] : undefined;
+    const ok = g('custom-ep-ok');
+    return JSON.stringify({
+      badInstalled: !!g('custom-ep-bad'),
+      badEndpoint:  g('custom-ep-bad') ? String(g('custom-ep-bad').endpoint || '') : '',
+      relInstalled: !!g('custom-ep-rel'),
+      relEndpoint:  g('custom-ep-rel') ? String(g('custom-ep-rel').endpoint || '') : '',
+      okInstalled:  !!ok,
+      okEndpoint:   ok ? String(ok.endpoint || '') : '',
+      okFormat:     ok ? String(ok.format || '') : '',
+      okKeys:       ok ? Object.keys(ok).sort() : [],
+      okHeadersFnType: ok ? typeof ok.headersFn : 'absent',
+      okHasKey:     ok ? Object.prototype.hasOwnProperty.call(ok, '_key') : false,
+      okModelsEndpoint: ok ? String(ok._modelsEndpoint || '') : '',
+      bmInstalled:  !!g('custom-ep-badmodels'),
+      bmEndpoint:   g('custom-ep-badmodels') ? String(g('custom-ep-badmodels').endpoint || '') : '',
+      bmModels:     g('custom-ep-badmodels') ? String(g('custom-ep-badmodels')._modelsEndpoint || '') : '',
+      pwned: typeof window.__wfPwned !== 'undefined' ? window.__wfPwned : null
+    });
+  })()`));
+
+  // Liveness before safety: if the legitimate row did not install, every
+  // assertion below passes for the wrong reason.
+  check('the legitimate imported config DID install (test is live)', ep.okInstalled === true, ep);
+  check('its endpoint survived intact, minus the trailing slash',
+    ep.okEndpoint === 'http://127.0.0.1:1/v1/chat/completions', ep);
+  check('a javascript: endpoint did not install a provider',
+    ep.badInstalled === false || ep.badEndpoint === '', ep);
+  check('a relative endpoint did not install a provider',
+    ep.relInstalled === false || ep.relEndpoint === '', ep);
+  check('no endpoint payload executed', ep.pwned === null, ep);
+  check('an unrecognised format was coerced to openai rather than trusted',
+    ep.okFormat === 'openai', ep);
+  check('a rogue field in the imported config did not ride in',
+    !ep.okKeys.includes('ohNo'), ep.okKeys);
+  check('headersFn is a rebuilt function, not the imported string',
+    ep.okHeadersFnType === 'function', ep);
+  check('no _key came from the imported config itself',
+    ep.okHasKey === false, ep);
+  check('the Server-mode marker _modelsEndpoint survived the guard',
+    ep.okModelsEndpoint === 'http://127.0.0.1:1/v1/models',
+    'dropping this demotes every server-imported provider to an ordinary custom: ' + JSON.stringify(ep));
+  check('a provider with a bad model-list URL survived',
+    ep.bmInstalled === true && ep.bmEndpoint === 'http://127.0.0.1:1/v1/chat/completions', ep);
+  check('...with that URL cleared rather than trusted',
+    ep.bmModels === '', ep);
 
   console.log('\n  ▶ Restored console HTML — the one place saved data becomes markup again');
   await evaluate('window.HOSTILE = ' + JSON.stringify(HOSTILE_CONSOLE) + '; 1');
