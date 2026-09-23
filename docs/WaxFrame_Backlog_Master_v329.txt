@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v328
+WaxFrame Backlog Master v329
 2026-09-22
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,69 @@ ships.
 
 
 
+
+v329 — ESCAPING A URL IS NOT CHECKING IT (v3.63.552).
+
+Two links on the AI API Pricing page put a value from the
+pricing worker into an href through escapeHtml and nothing
+else. escapeHtml stops a value breaking out of the attribute
+and does nothing whatever about `javascript:`, which survives
+it intact and is still a script URL when the attribute is
+parsed. The provider's billing link and the "source" link on
+each row of the all-models table were the two.
+
+Both values come off the network, and one of them is worse
+than it looks: `sourceUrl` is a URL the worker was TOLD about
+by a model reading a provider's pricing page. The worker does
+check it — a per-provider domain allowlist plus a path
+denylist — but the allowlist function returns true for a
+provider that has none configured, and
+`new URL('javascript:...')` parses happily with an empty
+hostname.
+
+NOT REACHABLE TODAY, and the entry says so rather than
+implying otherwise: every page carries a CSP with no
+'unsafe-inline' in script-src, and that is what blocks a
+javascript: navigation. This is the escaper that should have
+been on the link anyway, so the link is safe on its own terms
+rather than because a header somewhere else is right.
+
+THE PART WORTH KEEPING is what was found on the way, which is
+not the bug. safeUrl() already existed in app.js and was
+already used at two other href sites, and storage.js has an
+identical _safeImportUrl(). The helper had been written twice
+and the third file did not use either. Three copies, because
+those files share no module: the pricing page loads neither
+app.js nor storage.js, and the alternative is a script tag on
+seventeen pages to host five lines.
+
+So the count is not the problem and consolidating is not the
+fix. The problem is one of them DRIFTING — which is a failure
+this project has already had in another form, four files with
+their own escaping function and one of them disagreeing with
+the shared one. tools/test-url-sanitisers.mjs extracts all
+three and runs them against one table of 23 inputs, failing on
+any disagreement AND on any agreed answer that is wrong. The
+second half matters as much: three copies agreeing on a wrong
+answer is exactly what v327 found one layer out, where three
+watchdogs agreed on a version mammoth had never published.
+
+Gated at stage 14b. Four mutants watched failing: one copy's
+protocol check removed, one copy widened to accept data:, all
+three widened to accept data: (which the disagreement check
+cannot catch and the correctness check does), and one copy
+renamed so the reader would have gone blind.
+
+Method note: the reader's first draft anchored on ^function
+and reported pricing-renderer's copy as missing, because that
+file wraps its module in an IIFE and the copy is indented. The
+right direction for a reader to be wrong in, and still a
+reader that was wrong — hence the liveness check that fails
+loudly when a copy cannot be found, rather than skipping it.
+
+API_USAGE_URLS is deliberately left alone. It is a hardcoded
+literal in js/api-links.js, so wrapping it in a sanitiser adds
+a line and proves nothing.
 
 v328 — THE SWEEP THAT FOUND NOTHING, WRITTEN DOWN ANYWAY
        (v3.63.551).

@@ -259,10 +259,10 @@ if (buildStamp) {
   }
 }
 
-// v3.63.551 — The changelog's own history must not move. A release sweep
+// v3.63.552 — The changelog's own history must not move. A release sweep
 // replaces the version it is superseding across every tracked file, and a
 // blanket replacement will happily rewrite a version number that is a
-// STATEMENT ABOUT THE PAST rather than a stamp. The v3.63.551 sweep rewrote
+// STATEMENT ABOUT THE PAST rather than a stamp. The v3.63.552 sweep rewrote
 // two: the previous release's own CHANGELOG heading, and a note in the
 // vendored inventory recording which release upgraded mammoth. Nothing in the
 // gate noticed, because every stamp it checks was correct.
@@ -1032,6 +1032,31 @@ try {
   fail('tools/test-debug-redaction.mjs', `redaction fixture failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
+// ── Check 14b: URL sanitiser agreement (tools/test-url-sanitisers.mjs) ──
+
+section('URL sanitiser agreement (tools/test-url-sanitisers.mjs)');
+
+// v3.63.552 — three files decide whether a URL is safe to put in an href, and
+// they do it with three copies of the same five lines: safeUrl() in app.js,
+// _safeImportUrl() in storage.js and safeUrl() in pricing-renderer.js. The
+// copies exist because those files share no module and the pricing page loads
+// neither of the other two.
+//
+// The count is not the problem. The problem is one of them drifting, which is a
+// failure this project has already had in another form — four files with their
+// own escaping function, one of which disagreed. So the test runs all three
+// against one table and fails on any disagreement, and on any agreed answer
+// that is wrong, because three copies agreeing on a wrong answer is exactly
+// what the vendored-library pass found one layer out.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/test-url-sanitisers.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/test-url-sanitisers.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.trim().startsWith('✗'));
+  fail('tools/test-url-sanitisers.mjs', `a URL sanitiser drifted — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
 // ── Check 15: Server AI eligibility (tools/test-server-ai-eligibility.mjs) ──
 
 section('Server AI eligibility (tools/test-server-ai-eligibility.mjs)');
@@ -1095,7 +1120,7 @@ if (inventory) {
     ok(`${inventoried.size} vendored files match their recorded SHA-256 hashes`);
   }
 
-  // v3.63.551 — the recorded version has to clear its own CVE floor, and
+  // v3.63.552 — the recorded version has to clear its own CVE floor, and
   // package.json has to agree with it.
   //
   // Three separate things were watching mammoth and all three were blind.

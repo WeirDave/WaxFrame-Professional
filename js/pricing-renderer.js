@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing-renderer.js
-// Build: 20260922-008
+// Build: 20260923-001
 //  Dynamic pricing renderer for ai-api-pricing.html. Fetches
 //  live data from the waxframe-pricing Cloudflare Worker;
 //  falls back to the embedded snapshot if the Worker is
@@ -51,6 +51,36 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  // v3.63.552 — Escaping a URL is not checking it. Every link below ran the
+  // value through escapeHtml, which stops it breaking out of the attribute and
+  // does nothing at all about `javascript:` — that survives escaping intact
+  // and is still a script URL when the attribute is parsed.
+  //
+  // These values come off the network. The pricing worker builds them from
+  // provider pages, and `sourceUrl` in particular is a URL the worker was
+  // TOLD about by a model reading one. The worker checks it against a
+  // per-provider domain allowlist, but returns true for a provider that has
+  // no allowlist configured, and `new URL('javascript:...')` parses happily
+  // with an empty hostname.
+  //
+  // Not reachable today, and worth saying why rather than implying it was:
+  // every page carries a CSP with no 'unsafe-inline' in script-src, which is
+  // what blocks a javascript: navigation. This is the escaper that should have
+  // been here anyway, so that the link is safe on its own terms rather than
+  // because a header elsewhere is correct.
+  //
+  // Same five lines as safeUrl() in app.js and _safeImportUrl() in storage.js.
+  // Three copies is deliberate for now - these files share no module and the
+  // pricing page loads neither of the others - and the release gate asserts
+  // that all three still agree, because the failure that matters is one of
+  // them drifting rather than there being three.
+  function safeUrl(u) {
+    try {
+      var parsed = new URL(String(u == null ? '' : u));
+      return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.href : '';
+    } catch (e) { return ''; }
   }
 
   // "1M" -> 1000000, "256K" -> 256000, "8K" -> 8000, "—" / "varies" / "n/a" -> NaN
@@ -143,7 +173,7 @@
         '<td data-label="Context">' + escapeHtml(p.contextWindow) + '</td>' +
         '<td data-label="Max output">' + escapeHtml(p.maxOutput) + '</td>' +
         '<td data-label="Est. $/round">' + est + '</td>' +
-        '<td data-label="Billing"><a href="' + escapeHtml(p.billingUrl) + '" target="_blank" rel="noopener noreferrer" class="token-billing-link external-link">Check rates<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td>' +
+        '<td data-label="Billing"><a href="' + escapeHtml(safeUrl(p.billingUrl)) + '" target="_blank" rel="noopener noreferrer" class="token-billing-link external-link">Check rates<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td>' +
       '</tr>';
     }).join('');
     tbody.innerHTML = html;
@@ -367,7 +397,7 @@
       var statusLabel = STATUS_LABELS[r.status] || r.status;
       var pillClass = 'status-pill status-pill-' + r.status;
       var sourceCell = r.sourceUrl
-        ? '<a href="' + escapeHtml(r.sourceUrl) + '" target="_blank" rel="noopener noreferrer" class="link-accent external-link">source<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>'
+        ? '<a href="' + escapeHtml(safeUrl(r.sourceUrl)) + '" target="_blank" rel="noopener noreferrer" class="link-accent external-link">source<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>'
         : '—';
       return '<tr>' +
         '<td data-label="Provider">' + escapeHtml(r.providerName) + '</td>' +

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260922-008
+// Build: 20260923-001
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1056,7 +1056,7 @@ function _normalizeImportedAI(ai) {
   return ai;
 }
 
-// v3.63.551 — The other half of import-trust hardening. _normalizeImportedAI
+// v3.63.552 — The other half of import-trust hardening. _normalizeImportedAI
 // above sanitizes the customAIs ROWS, but the matching customAIConfigs entry
 // is what the app actually makes requests with, and it was installed into
 // API_CONFIGS verbatim (see the install site in loadSettings below). That
@@ -1175,7 +1175,7 @@ function loadSettings() {
         if (!_normalizeImportedAI(ai)) return;   // sanitize in place; drop if unusable
         if (!aiList.find(a => a.id === ai.id)) aiList.push(ai);
         if (!API_CONFIGS[ai.provider] && h.customAIConfigs?.[ai.provider]) {
-          // v3.63.551 — was installed verbatim; see _normalizeImportedConfig.
+          // v3.63.552 — was installed verbatim; see _normalizeImportedConfig.
           const safeCfg = _normalizeImportedConfig(h.customAIConfigs[ai.provider]);
           if (safeCfg) API_CONFIGS[ai.provider] = safeCfg;
         }

@@ -1,5 +1,64 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.552 — Two pricing-page links escaped a URL without checking it
+
+**Released:** 2026-09-23
+**Build:** 20260923-001
+
+### What changed
+
+**The provider billing link and the per-row "source" link on the AI API
+Pricing page put a value from the network into an `href` through an HTML
+escaper and nothing else.** Both go through a URL check now.
+
+An HTML escaper stops a value breaking out of the attribute it sits in. It does
+nothing whatever about `javascript:` — that survives escaping intact and is
+still a script URL when the attribute is parsed.
+
+Both values arrive from the pricing service, and one of them is a URL that
+service was *told* about rather than one it chose: the per-row source link cites
+the page a price was read from. The service does check that citation against a
+per-provider list of allowed domains, but that check passes a provider with no
+list configured, and a `javascript:` value parses as a URL with an empty
+hostname.
+
+**It was not reachable, and that is worth stating plainly rather than leaving
+implied.** Every page carries a Content-Security-Policy with no
+`'unsafe-inline'` in `script-src`, which is what blocks a `javascript:`
+navigation. This is the check the link should have carried anyway, so that it is
+safe on its own terms rather than because a header elsewhere is correct.
+
+**The helper already existed twice.** The same five-line URL check was already
+in two other files and already used on two other links. The pricing page shares
+no code with either of them — it loads neither — so it now has its own copy, and
+the release gate checks that all three still behave identically. Three copies
+that agree are fine; one of them drifting is the failure worth catching, and
+this project has had that exact failure before with an HTML escaper.
+
+The gate also checks the answers themselves, not only the agreement, because
+three copies agreeing on a wrong answer is what the previous release found one
+layer out.
+
+### Verification
+- The three copies are extracted and *run*, not compared as text, against 23
+  inputs: the accepted `http` and `https` forms, `javascript:` in five
+  spellings, `data:`, `vbscript:`, `file:`, `blob:`, three relative forms and
+  six non-strings.
+- Mutation-tested four ways, each watched failing and restored: one copy's
+  protocol check removed, one copy widened to accept `data:`, *all three*
+  widened to accept `data:` — which the agreement check cannot catch and the
+  correctness check does — and one copy renamed, so the reader would have gone
+  blind.
+- The pricing page was driven in a browser: the table renders, every billing
+  and source link carries its real `https:` address, and the page reports no
+  console errors.
+- Gate: 21 of 21 stages.
+
+### Files changed
+`js/pricing-renderer.js`, `tools/test-url-sanitisers.mjs` (new),
+`tools/release-check.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v329.txt`, plus the routine stamp sweep.
+
 ## v3.63.551 — An imported provider configuration can no longer choose where a key is sent
 
 **Released:** 2026-09-22
