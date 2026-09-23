@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-debug-redaction.mjs
-// Build: 20260922-005
+// Build: 20260922-006
 // ============================================================
 // Fixture-based regression test for WF_DEBUG.scrubFailureRecord, the
 // redaction pass applied to the failure record before it is written into a
@@ -453,6 +453,116 @@ check('every placeholder the catalog uses is substituted, with an empty ctx', ()
     if (m) leaked.push(m.join(',') + '  in: ' + out.slice(0, 60));
   }
   assert.deepEqual(leaked, [], 'placeholders survived substitution: ' + leaked.join(' | '));
+});
+
+// ── Every provider's key shape, not just the two with a prefix we listed ──
+//
+// v3.63.549. The shape rules in scrubText covered four of the ten providers
+// in the catalog and missed six. Measured against the real method rather than
+// reasoned about: `sk-` covers Claude, ChatGPT and DeepSeek; `AIza` covers
+// Gemini. Copilot, Grok and Perplexity have distinctive prefixes that were
+// simply never listed. Mistral, Together and Cohere have NO distinctive
+// prefix — a bare 32-char alphanumeric, 64 hex, a bare 40 — and no shape rule
+// for those is not also a rule for a SHA-256, of which this repo is full.
+//
+// So the value pass is the one that matters, and this is the test that would
+// have caught the gap: it walks the real catalog rather than a hand-written
+// list, so a provider added later is covered the day it is added.
+//
+// Every fixture is assembled at runtime, so this file's source carries no
+// string matching the confidentiality gate's secret patterns.
+
+console.log('');
+console.log('▶ WF_DEBUG.scrubText — every configured key, whatever its shape');
+
+const HIVE_LS_KEY = 'waxframe_v2_hive';
+
+// Invented keys in each provider's real format.
+const PROVIDER_KEYS = {
+  claude:     'sk-' + 'ant-api03-' + 'A'.repeat(40),
+  chatgpt:    'sk-' + 'proj-' + 'B'.repeat(40),
+  copilot:    'ghp' + '_' + 'C'.repeat(36),
+  gemini:     'AIza' + 'D'.repeat(35),
+  grok:       'xai' + '-' + 'E'.repeat(40),
+  perplexity: 'pplx' + '-' + 'F'.repeat(40),
+  mistral:    'G'.repeat(32),
+  deepseek:   'sk-' + 'H'.repeat(32),
+  together:   'abcdef0123'.repeat(6) + '0123',
+  cohere:     'J'.repeat(40)
+};
+
+check('every provider in the catalog has a fixture here', () => {
+  const ids = Object.keys(sandbox.window.WFProviderCatalog
+    ? sandbox.window.WFProviderCatalog.CATALOG : PROVIDER_KEYS);
+  const missing = ids.filter((id) => !(id in PROVIDER_KEYS));
+  assert.deepEqual(missing, [],
+    'a provider was added to the catalog with no key fixture here, so nothing '
+    + 'checks that its key shape is redacted: ' + missing.join(', '));
+});
+
+check('no configured key survives scrubText, whatever its format', () => {
+  lsStore[HIVE_LS_KEY] = JSON.stringify({ keys: PROVIDER_KEYS });
+  const leaked = [];
+  for (const [id, key] of Object.entries(PROVIDER_KEYS)) {
+    const out = WF_DEBUG.scrubText('provider rejected the request: key ' + key);
+    if (out.includes(key)) leaked.push(id);
+  }
+  assert.deepEqual(leaked, [],
+    'these providers\u2019 keys came through a redaction pass intact: '
+    + leaked.join(', '));
+});
+
+check('the three prefixes added in v3.63.549 work with NO hive configured', () => {
+  // The value pass needs a hive; the shape pass must stand on its own, which
+  // is what covers a key pasted into a field but not yet saved.
+  delete lsStore[HIVE_LS_KEY];
+  for (const id of ['copilot', 'grok', 'perplexity']) {
+    const key = PROVIDER_KEYS[id];
+    const out = WF_DEBUG.scrubText('key ' + key);
+    assert.ok(!out.includes(key), id + ' relies on the hive being present');
+  }
+});
+
+check('a blank or absurd key never eats the surrounding text', () => {
+  // The value pass replaces by string match, so a degenerate key would match
+  // every position. Each of these is a real state: a provider row created and
+  // not yet filled in, a paste that went wrong.
+  const SAMPLE = 'the quick brown fox jumps over the lazy dog';
+  for (const bad of ['', ' ', 'x', 'abcdefghijk', '   ']) {
+    lsStore[HIVE_LS_KEY] = JSON.stringify({ keys: { chatgpt: bad } });
+    assert.equal(WF_DEBUG.scrubText(SAMPLE), SAMPLE,
+      'a key of ' + JSON.stringify(bad) + ' altered unrelated text');
+  }
+  lsStore[HIVE_LS_KEY] = '{not valid json';
+  assert.equal(WF_DEBUG.scrubText(SAMPLE), SAMPLE,
+    'an unparseable hive altered unrelated text');
+  delete lsStore[HIVE_LS_KEY];
+  assert.equal(WF_DEBUG.scrubText(SAMPLE), SAMPLE,
+    'no hive at all altered unrelated text');
+});
+
+check('a key is redacted whole when another key is a prefix of it', () => {
+  // The keys are replaced by literal string match, so order decides the
+  // result. Replacing the SHORTER one first turns the longer key into
+  // `[REDACTED]LLLL…` and leaves twenty characters of a live credential in
+  // the text. Asserting the shorter string is absent does not catch that -
+  // it is absent either way, which is why this asserts the exact output.
+  const shortKey = 'K'.repeat(20);
+  const longKey = shortKey + 'L'.repeat(20);
+  lsStore[HIVE_LS_KEY] = JSON.stringify({ keys: { a: shortKey, b: longKey } });
+  const out = WF_DEBUG.scrubText('sent ' + longKey + ' upstream');
+  assert.equal(out, 'sent [REDACTED] upstream',
+    'the shorter key was replaced first and left a fragment of the longer '
+    + 'one behind: ' + JSON.stringify(out));
+  delete lsStore[HIVE_LS_KEY];
+});
+
+check('a regex metacharacter in a key does not break the pass', () => {
+  const weird = 'aaa' + '.*+?[](){}|^$' + 'bbb';
+  lsStore[HIVE_LS_KEY] = JSON.stringify({ keys: { custom: weird } });
+  const out = WF_DEBUG.scrubText('token ' + weird + ' end');
+  assert.ok(!out.includes(weird), 'an unescaped key pattern failed to match');
+  delete lsStore[HIVE_LS_KEY];
 });
 
 console.log('');

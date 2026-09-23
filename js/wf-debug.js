@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260922-005
+// Build: 20260922-006
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -176,14 +176,74 @@ window.WF_DEBUG = {
   // definition of "what a secret looks like" either did without one or
   // would have grown a second copy. There is one definition and everything
   // calls it. See scrubSessionDebug directly below for what that bought.
+  // Every key the user has actually configured, longest first.
+  //
+  // v3.63.549 — the shape patterns below cover four of the ten providers in
+  // the catalog and miss six. Measured against the real method rather than
+  // reasoned about: `sk-` covers Claude, ChatGPT and DeepSeek, `AIza` covers
+  // Gemini. Copilot (`ghp_`), Grok (`xai-`) and Perplexity (`pplx-`) have
+  // distinctive prefixes that were simply not listed, and those are added
+  // below. Mistral, Together and Cohere issue keys with **no distinctive
+  // prefix at all** — a bare 32-char alphanumeric, 64 hex, and a bare 40 —
+  // and there is no shape rule for those that is not also a rule for a
+  // SHA-256 or a build id, of which this repository is full.
+  //
+  // So shape is the wrong question for half the catalog. The app knows its
+  // own keys, so the reliable pass is by VALUE: replace anything that equals
+  // a key the user has configured. That covers all ten, and covers the next
+  // provider added without anybody remembering to extend a regex.
+  //
+  // Guards, each earned: a minimum length so a blank or one-character key
+  // cannot match every position in the text; longest-first so a key that
+  // contains another is replaced before its substring; a regex escape
+  // because a key is user-supplied text; and a try/catch because redaction
+  // failing must never be the reason a diagnostic is lost.
+  _configuredKeys() {
+    try {
+      const raw = localStorage.getItem(
+        (typeof LS_HIVE === 'string') ? LS_HIVE : 'waxframe_v2_hive');
+      if (!raw) return [];
+      const hive = JSON.parse(raw);
+      const out = [];
+      if (hive && hive.keys && typeof hive.keys === 'object') {
+        for (const v of Object.values(hive.keys)) {
+          if (typeof v === 'string' && v.trim().length >= 12) out.push(v.trim());
+        }
+      }
+      return out.sort((a, b) => b.length - a.length);
+    } catch (e) {
+      return [];
+    }
+  },
+
+  _scrubKnownKeys(text) {
+    try {
+      let out = text;
+      for (const key of this._configuredKeys()) {
+        const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        out = out.replace(new RegExp(escaped, 'g'), '[REDACTED]');
+      }
+      return out;
+    } catch (e) {
+      return text;
+    }
+  },
+
   scrubText(v) {
     if (typeof v !== 'string') return v;
-    return v
+    const byShape = v
       .replace(/sk-[A-Za-z0-9_\-]{12,}/g, 'sk-[REDACTED]')
       .replace(/AIza[0-9A-Za-z_\-]{30,}/g, 'AIza[REDACTED]')
+      // v3.63.549 — the three distinctive prefixes that were missing.
+      .replace(/xai-[A-Za-z0-9_\-]{12,}/g, 'xai-[REDACTED]')
+      .replace(/pplx-[A-Za-z0-9_\-]{12,}/g, 'pplx-[REDACTED]')
+      .replace(/gh[pousr]_[A-Za-z0-9_]{12,}/g, 'gh_[REDACTED]')
       .replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._\-~+\/=]{12,}/gi, '$1 [REDACTED]')
       .replace(/([?&](?:key|api[_-]?key|access[_-]?token)=)[^&\s"']+/gi, '$1[REDACTED]')
       .replace(/("(?:x-api-key|authorization|api[_-]?key)"\s*:\s*")[^"]*(")/gi, '$1[REDACTED]$2');
+    // Shape first, then value: a key that matched a prefix rule is already
+    // gone, and the value pass catches the six formats no prefix describes.
+    return this._scrubKnownKeys(byShape);
   },
 
   scrubFailureRecord(rec) {

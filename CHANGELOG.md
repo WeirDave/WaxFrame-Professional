@@ -1,5 +1,77 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.549 — Six of the ten providers' API keys survived a redaction pass
+
+**Released:** 2026-09-22
+**Build:** 20260922-006
+
+### What changed
+
+**`WF_DEBUG.scrubText` redacted four of the ten providers in the catalog and
+missed six.** It is the one definition of "what a secret looks like" — the
+Scout bundle and the checkpoint both reach it — and it matched on key *shape*:
+`sk-` and `AIza`, plus `Bearer`/`Basic`, URL parameters and JSON header
+fields. Measured against the real method rather than read:
+
+| Provider | Key shape | Before |
+| --- | --- | --- |
+| Claude, ChatGPT, DeepSeek | `sk-…` | redacted |
+| Gemini | `AIza…` | redacted |
+| Copilot | `ghp_…` | **leaked** |
+| Grok | `xai-…` | **leaked** |
+| Perplexity | `pplx-…` | **leaked** |
+| Mistral | bare 32 alphanumeric | **leaked** |
+| Together | 64 hex | **leaked** |
+| Cohere | bare 40 alphanumeric | **leaked** |
+
+Three of those were prefixes nobody had listed, and they are listed now. The
+other three have **no distinctive prefix at all**, and there is no shape rule
+for a bare 32-character string or 64 hex digits that is not also a rule for a
+SHA-256 or a build id — of which this repository is full. Shape is the wrong
+question for half the catalog.
+
+**So the pass that matters is by value.** The app knows its own keys, so
+anything matching a key the user has configured is replaced regardless of
+format. That covers all ten, and covers the next provider added without
+anybody remembering to extend a regex. Shape runs first and still stands on
+its own, which is what covers a key pasted into a field but not yet saved.
+
+Four guards, each for a real state: a minimum key length, so a provider row
+created and not yet filled in cannot match every position in the text;
+longest-first ordering, so a key that is a prefix of another does not leave
+twenty characters of the longer one behind; a regex escape, because a key is
+user-supplied text; and a `try`/`catch`, because redaction failing must never
+be the reason a diagnostic is lost.
+
+Nothing about what is exported changed, and neither export surface needed
+editing — `storage.js` already delegates to this method, which is what the
+single-definition note in the file was for.
+
+### Verification
+- `tools/test-debug-redaction.mjs` — 51 checks, six of them new. It walks the
+  **real catalog** rather than a hand-written list, so a provider added later
+  is covered the day it is added; one check fails if a catalog entry has no
+  key fixture.
+- Mutation-tested three ways, each watched failing and then restored:
+  the value pass removed, the minimum-length guard removed, and the
+  longest-first ordering reversed.
+- **The ordering check could not fail on its first draft.** It asserted the
+  shorter key was absent from the output, and it is absent either way — once
+  replaced, the literal is gone. It asserts the exact output now, and that
+  version does fail on the reversed sort.
+- Both real export surfaces confirmed against prefixless keys:
+  `scrubFailureRecord` (Scout bundle) and `scrubSessionDebug` (checkpoint).
+- Gate: 20 of 20 stages. Stage 14 runs this test, so the fix is gated.
+
+### Files touched
+`js/wf-debug.js`, `tools/test-debug-redaction.mjs`, `CHANGELOG.md`, plus the
+routine stamp sweep.
+
+### Rollback
+Revert the commit. `scrubText` returns to shape-only matching and the six
+provider formats above stop being redacted in free text. No stored data
+format, export format or user-visible behaviour is involved.
+
 ## v3.63.548 — The gate that guards the download checks stops trusting the wording
 
 **Released:** 2026-09-22
