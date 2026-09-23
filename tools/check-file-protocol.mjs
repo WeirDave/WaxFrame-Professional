@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260923-003
+// Build: 20260923-004
 // check-file-protocol.mjs — verify the portable install still works.
 //
 // WaxFrame ships two ways: served over http(s), and as a folder someone
@@ -37,6 +37,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { disposeChrome } from './lib/chrome-profile.mjs';
 
 // fileURLToPath, not URL.pathname: the latter keeps percent-encoding, so a
 // path containing spaces comes back with %20 in it and every file operation
@@ -211,10 +212,8 @@ try {
   console.log(`    ✗ harness error: ${err.message}`);
 } finally {
   try { ws && ws.close(); } catch {}
-  try { chrome.kill(); } catch {}
-  await sleep(400);
+  await disposeChrome(chrome, profile, 'check-file-protocol');
   try { fs.rmSync(pdfPath, { force: true }); } catch {}
-  try { fs.rmSync(profile, { recursive: true, force: true }); } catch {}
 }
 
 console.log(bad

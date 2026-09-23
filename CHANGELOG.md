@@ -1,5 +1,67 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.555 — The test harnesses left their browser profiles behind, and picked ports that were not theirs to pick
+
+**Released:** 2026-09-23
+**Build:** 20260923-004
+
+### What changed
+
+Nothing in the application itself changed in this release. Every change is to
+the browser-driven test harnesses in `tools/`, which are developer tooling and
+ship in the source archive but are never loaded by the app.
+
+**The test harnesses now clean up the browser profiles they create.** Each of
+the eight browser-driven checks starts a headless browser with a throwaway
+profile directory under the system temp directory and removes it when the check
+ends. The removal ran a few hundred milliseconds after the browser was asked to
+quit, which on Windows is before the process has finished exiting — the
+profile's files were still locked, the removal failed, and the failure was
+discarded. One evening of running these checks left 774 MB across 23
+directories with nothing reporting it.
+
+Each harness now waits for the browser process to actually exit before removing
+its profile, retries while the files are still held, and prints a warning
+naming the directory if it still cannot remove it. A profile that was already
+gone continues to be treated as success, which is what the original code was
+right about.
+
+**A reserved port no longer takes a check down.** The five harnesses that serve
+the app over HTTP chose a port from a fixed window and bound it with no error
+handling. Windows reserves blocks of TCP ports for its own use, and one
+reserved port fell inside that window — a check that happened to pick it died
+with a raw stack trace rather than a result. They now try the next port until
+one binds, and report the port actually used.
+
+### Also in this release
+
+**`--keep-open` no longer deletes the profile of the browser it just left
+running.** The end-to-end flow harness removes its profile unconditionally,
+including on the path that deliberately leaves the browser open for inspection.
+It now keeps the profile in that case and prints where it is.
+
+### Verification
+- All eight browser-driven checks run twice end to end, each green, with no
+  profile directory left in the system temp directory afterwards — the stated
+  acceptance test for this work.
+- The port walk proven against the real reserved port: asked for the reserved
+  port, bound the next one, no error.
+- The warning path proven by holding a profile directory open so it could not
+  be removed. The warning appeared and named the directory; the removal
+  reported failure instead of returning success.
+- Gate: 22 of 22 stages.
+
+### Files changed
+`tools/lib/chrome-profile.mjs` (new), `tools/check-html-injection.mjs`,
+`tools/check-export-redaction.mjs`, `tools/check-import-bounds.mjs`,
+`tools/check-hostile-provider.mjs`, `tools/check-pdf-shapes.mjs`,
+`tools/check-ocr-handoff.mjs`, `tools/check-file-protocol.mjs`,
+`tools/flow-check.mjs`, `CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+Revert the release commit. The harnesses are not loaded by the application, so
+reverting cannot affect anything a user runs.
+
 ## v3.63.554 — A test that could not report a value, a flag that could leak, and a classification that could be cut short
 
 **Released:** 2026-09-23

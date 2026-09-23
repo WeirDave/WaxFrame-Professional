@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v331
-2026-09-22
+WaxFrame Backlog Master v332
+2026-09-23
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,29 @@ ships.
 
 
 
+
+v332 — THE HARNESSES CLEAN UP AFTER THEMSELVES, AND STOPPED
+       PICKING PORTS THAT WERE NOT THEIRS (v3.63.555).
+
+Open feature 2 closed. All eight browser-driven harnesses now
+wait for the browser process to exit before removing its
+profile, retry while the files are still locked, and WARN
+naming the directory when they cannot. Shared in one place at
+tools/lib/chrome-profile.mjs rather than eight times.
+
+Verifying it turned up a second fault in the same files, and
+this one was not cosmetic. The five harnesses that serve the
+app over HTTP drew a port from 8790-8939 and bound it with no
+error handling. Windows reserves TCP 8884 on this machine,
+inside that window, so about one run in a hundred and fifty
+died with a raw EACCES stack trace instead of a result. That
+is exactly the shape v331 spent a release chasing: an
+intermittent harness failure that looks like contention and is
+not. They now walk to the next free port and report the one
+they used.
+
+Also closed on the way: --keep-open deleted the profile of the
+browser it had deliberately left running.
 
 v331 — THE FLAKE WAS THE HARNESS, AND IT HID TWO REAL BUGS
        (v3.63.554).
@@ -1449,7 +1472,7 @@ None currently open.
 ════════════════════════════════════════════════════════════
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
-Ordered by value.
+Ordered by value. One open feature, blocked on David.
 
 1. Exercise PDF import against REAL-WORLD PDFs
    ─────────────────────────────────────────────────────────
@@ -1561,52 +1584,6 @@ Ordered by value.
            property of the provider rather than of this code,
            and it is the only part of the OCR story still
            needing David and a funded key.
-
-2. The browser harnesses leave their Chrome profiles behind
-   ─────────────────────────────────────────────────────────
-   WHAT:   Each of the seven browser-driven checks spawns
-           headless Chrome with its own --user-data-dir under
-           the system temp directory, and removes it in a
-           finally. On Windows it usually does not go: the
-           removal runs a few hundred milliseconds after
-           chrome.kill(), and the process has not finished
-           exiting, so the files are still locked and rmSync
-           with force:true swallows the failure silently.
-   WHY:    Measured on 2026-09-23, after one evening of running
-           these checks while shipping six releases: 774 MB
-           across 23 leftover directories, all from that
-           evening. Nothing reports it and nothing cleans it up
-           later. The same shape is a known problem in the WD
-           Wireless Tools suite, which has its own housekeeping
-           tool for it — this repository has none.
-           Now that all seven run in CI on every push
-           (v3.63.553), the runner is disposable and the cost
-           lands entirely on a developer's own machine.
-   STATE:  OPEN. Not urgent, and deliberately not done on the
-           night it was found: it touches seven harnesses at
-           once, they are the things that prove this app is
-           safe, and changing all of them at the end of a long
-           unattended run is where a quiet breakage would land
-           with nobody looking. It is a short job in daylight.
-   WHERE:  The `profile` constant and the cleanup in the
-           finally block of tools/check-html-injection.mjs,
-           check-export-redaction.mjs, check-import-bounds.mjs,
-           check-hostile-provider.mjs, check-pdf-shapes.mjs,
-           check-ocr-handoff.mjs, check-file-protocol.mjs and
-           tools/flow-check.mjs.
-   DONE:   Each harness waits for the browser process to
-           actually exit before removing its profile — Chrome's
-           'exit' event, or a bounded retry — and REPORTS a
-           removal it could not complete rather than swallowing
-           it. A silent failure is what let this reach 774 MB.
-           Acceptance: run the full set twice and confirm the
-           temp directory holds no wf-* directory afterwards,
-           and that a deliberately locked profile produces a
-           visible warning rather than silence.
-   NOTE:   The harnesses are not wrong to use force:true — a
-           profile that is already gone must not fail a check
-           that otherwise passed. The fault is that the same
-           flag also hides a profile that is still there.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

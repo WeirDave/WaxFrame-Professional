@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260923-003
+// Build: 20260923-004
 // check-ocr-handoff.mjs — what happens AFTER a page is found to have no text.
 //
 // tools/check-pdf-shapes.mjs proves an image-only PDF extracts zero characters
@@ -32,6 +32,7 @@ import http from 'node:http';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
+import { disposeChrome, listenOnFreePort } from './lib/chrome-profile.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -209,7 +210,7 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml',
   '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.webp': 'image/webp', '.mp3': 'audio/mpeg',
   '.wav': 'audio/wav', '.pdf': 'application/pdf' };
-const PORT = 8790 + (process.pid % 150);
+let PORT = 8790 + (process.pid % 150);   // reassigned by listenOnFreePort
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://127.0.0.1');
@@ -271,7 +272,7 @@ const server = http.createServer(async (req, res) => {
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(f).toLowerCase()] || 'application/octet-stream' });
   fs.createReadStream(f).pipe(res);
 });
-await new Promise(r => server.listen(PORT, '127.0.0.1', r));
+PORT = await listenOnFreePort(server, PORT);
 
 const MOCK = `http://127.0.0.1:${PORT}`;
 // Two vision-capable providers so the fallback has a second to reach for.
@@ -727,10 +728,8 @@ try {
   console.log(`      XX  harness error: ${err.message}`);
 } finally {
   try { ws && ws.close(); } catch {}
-  try { chrome.kill(); } catch {}
+  await disposeChrome(chrome, profile, 'check-ocr-handoff');
   await new Promise(r => server.close(r));
-  await sleep(200);
-  try { fs.rmSync(profile, { recursive: true, force: true }); } catch {}
 }
 
 console.log(bad

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ============================================================
 //  WaxFrame — tools/flow-check.mjs
-// Build: 20260923-003
+// Build: 20260923-004
 // ============================================================
 // End-to-end flow harness. Asserts DOM and app state instead of capturing
 // screenshots, and drives a full hive against a same-origin mock provider so a
@@ -37,9 +37,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { disposeChrome, disposeChromeSync, listenOnFreePort } from './lib/chrome-profile.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SERVER_PORT = 8732;
+let SERVER_PORT = 8732;   // reassigned by listenOnFreePort
 const DEBUG_PORT  = 9223;
 const KEEP_OPEN   = process.argv.includes('--keep-open');
 
@@ -201,7 +202,7 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-await new Promise((res, rej) => { server.once('error', rej); server.listen(SERVER_PORT, '127.0.0.1', res); });
+SERVER_PORT = await listenOnFreePort(server, SERVER_PORT);
 
 const BROWSER = findChrome();
 if (!BROWSER) {
@@ -218,11 +219,30 @@ const chrome = spawn(BROWSER, [
 ], { stdio: 'ignore' });
 
 let cleaned = false;
+
+// --keep-open deliberately leaves the browser running, so its profile has to
+// stay too — removing the profile out from under a live Chrome is what the old
+// unconditional rmSync did. Say where it is instead of leaving it silently.
+function keepOpenNotice() {
+  console.log(`  (--keep-open: browser still running, profile kept at ${profileDir})`);
+}
+
+// The signal path. No turn of the event loop is left here, so the wait for
+// Chrome to exit is a bounded blocking poll.
 function cleanup(code) {
   if (cleaned) return; cleaned = true;
-  if (!KEEP_OPEN) { try { chrome.kill(); } catch {} }
   try { server.close(); } catch {}
-  try { fs.rmSync(profileDir, { recursive: true, force: true }); } catch {}
+  if (KEEP_OPEN) keepOpenNotice();
+  else disposeChromeSync(chrome, profileDir, 'flow-check');
+  if (typeof code === 'number') process.exit(code);
+}
+
+// The normal path, which can afford to wait for the browser process properly.
+async function cleanupAsync(code) {
+  if (cleaned) return; cleaned = true;
+  try { server.close(); } catch {}
+  if (KEEP_OPEN) keepOpenNotice();
+  else await disposeChrome(chrome, profileDir, 'flow-check');
   if (typeof code === 'number') process.exit(code);
 }
 process.on('SIGINT', () => cleanup(130));
@@ -585,9 +605,9 @@ try {
 console.log('');
 if (fail === 0) {
   console.log(`✅ flow-check: all ${pass} assertions passed.`);
-  cleanup(0);
+  await cleanupAsync(0);
 } else {
   console.log(`❌ flow-check: ${fail} of ${pass + fail} assertions failed:`);
   failures.forEach(f => console.log(`  • ${f}`));
-  cleanup(1);
+  await cleanupAsync(1);
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260923-003
+// Build: 20260923-004
 // check-pdf-shapes.mjs — the PDF shapes that break PDF engines, against BOTH
 // engines WaxFrame ships.
 //
@@ -42,6 +42,7 @@ import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { disposeChrome, listenOnFreePort } from './lib/chrome-profile.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -445,14 +446,12 @@ async function drive({ engine, startUrl, serve, extraArgs = [] }) {
     return version;
   } finally {
     try { ws && ws.close(); } catch {}
-    try { chrome.kill(); } catch {}
-    await sleep(200);
-    try { fs.rmSync(profile, { recursive: true, force: true }); } catch {}
+    await disposeChrome(chrome, profile, `check-pdf-shapes (${engine})`);
   }
 }
 
 // ── http:// — the hosted engine ───────────────────────────────────────
-const PORT = 8790 + (process.pid % 150);
+let PORT = 8790 + (process.pid % 150);   // reassigned by listenOnFreePort
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',
   '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml',
   '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.webp': 'image/webp', '.mp3': 'audio/mpeg',
@@ -466,7 +465,7 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(f).toLowerCase()] || 'application/octet-stream' });
   fs.createReadStream(f).pipe(res);
 });
-await new Promise(r => server.listen(PORT, '127.0.0.1', r));
+PORT = await listenOnFreePort(server, PORT);
 
 // ── file:// — the portable engine. Fixtures are written BESIDE index.html
 // so the page can fetch them as siblings, then removed. Same approach as

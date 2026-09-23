@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260923-003
+// Build: 20260923-004
 // check-html-injection.mjs — does hostile text in saved state become markup?
 //
 // WaxFrame builds its UI by assigning template literals to .innerHTML. That is
@@ -41,6 +41,7 @@ import os from 'node:os';
 import http from 'node:http';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { disposeChrome, listenOnFreePort } from './lib/chrome-profile.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -186,7 +187,7 @@ if (!BROWSER) { console.error('No Chrome or Chromium found. Set WF_CHROME to a b
 
 // Serve the repo. file:// would work but the app takes a different pdf.js
 // branch there, and this check is about the hosted path most users see.
-const PORT = 8790 + (process.pid % 150);
+let PORT = 8790 + (process.pid % 150);   // reassigned by listenOnFreePort
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',
   '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml',
   '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.webp': 'image/webp', '.mp3': 'audio/mpeg' };
@@ -197,7 +198,7 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(f).toLowerCase()] || 'application/octet-stream' });
   fs.createReadStream(f).pipe(res);
 });
-await new Promise(r => server.listen(PORT, '127.0.0.1', r));
+PORT = await listenOnFreePort(server, PORT);
 
 const DEBUG_PORT = 9330 + (process.pid % 150);
 const profile = path.join(os.tmpdir(), `wf-inject-${process.pid}`);
@@ -402,10 +403,8 @@ try {
   console.log(`    ✗ harness error: ${err.message}`);
 } finally {
   try { ws && ws.close(); } catch {}
-  try { chrome.kill(); } catch {}
+  await disposeChrome(chrome, profile, 'check-html-injection');
   await new Promise(r => server.close(r));
-  await sleep(300);
-  try { fs.rmSync(profile, { recursive: true, force: true }); } catch {}
 }
 
 console.log(bad
