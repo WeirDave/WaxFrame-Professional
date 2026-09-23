@@ -11,7 +11,8 @@
         "lib/docx.min.js": "d5ec4f5a8b99740845974f5f6f020d6e5b1b6c27026195befc67eb37035c84c7"
       },
       "note": "Identified by matching, not by reading a version string: the bundle carries none of its own, and the 0.132.0 inside it belongs to @oxc-project/runtime, a build-toolchain dependency. Every docx release in the plausible window had its dist/index.umd.cjs hashed; 9.7.1 differed by 267 bytes and a full diff placed the entire difference in three lines at the top and one at the bottom. The published UMD wrapper has been replaced locally with a plain IIFE assigning 'var docx', so the file is not byte-identical to any published artifact and its hash above will not match upstream. All 33,170 body lines are. When upgrading, take dist/index.umd.cjs from the new release and re-apply the same wrapper swap.",
-      "localModification": "UMD wrapper replaced with an IIFE exposing the global 'docx'"
+      "localModification": "UMD wrapper replaced with an IIFE exposing the global 'docx'",
+      "cveFloor": "0.0.0"
     },
     {
       "name": "jszip",
@@ -19,15 +20,18 @@
       "license": "MIT OR GPL-3.0-only",
       "files": {
         "lib/jszip.min.js": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e"
-      }
+      },
+      "cveFloor": "3.8.0"
     },
     {
       "name": "mammoth",
-      "version": "1.13.1",
+      "version": "1.12.3",
       "license": "BSD-2-Clause",
       "files": {
-        "lib/mammoth.browser.min.js": "596ef52239e52d8ee3cee10b2ee4a72596abf900d0e4f468593f956e9f1809b0"
-      }
+        "lib/mammoth.browser.min.js": "f9465c0e4b91c6ab5fe03db285aa3c5bd33a1d20da781b8dffc5676bc9689a95"
+      },
+      "note": "Version established by hashing, not by reading a version string, and the string in this bundle is a trap. lib/mammoth.browser.min.js contains var VERSION=\"1.13.1\", which belongs to the underscore.js it bundles - mammoth has never published a 1.13.x at all, its newest is 1.12.3. That string was recorded here as mammoth's version and declared in package.json, where it cannot resolve, so Dependabot silently watched nothing for this package. The bundle byte-matched mammoth 1.6.0, which is inside the affected range of CVE-2025-11849 (GHSA-rmjr-87wv-gf87, directory traversal via an image with an external r:link, patched in 1.11.0). Upgraded to 1.12.3 in v3.63.550, verified by hashing the published dist/mammoth.browser.min.js. Confirm the same way on any future bump: the version inside the file is not mammoth's.",
+      "cveFloor": "1.11.0"
     },
     {
       "name": "pdfjs-dist-classic",
@@ -37,7 +41,8 @@
         "lib/pdf.min.js": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
         "lib/pdf.worker.min.js": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b"
       },
-      "note": "Pinned at 3.11.174 because that is the last pdfjs-dist major to publish a classic (non-module) build, and browsers refuse ESM imports across file:// origins. It loads ONLY on file://, and the runtime mitigation for CVE-2024-4367 is isEvalSupported:false, passed at every getDocument() call site. Upgrading this is not a matter of picking a newer version: no newer version exists in a form that can load here without adding a build step."
+      "note": "Pinned at 3.11.174 because that is the last pdfjs-dist major to publish a classic (non-module) build, and browsers refuse ESM imports across file:// origins. It loads ONLY on file://, and the runtime mitigation for CVE-2024-4367 is isEvalSupported:false, passed at every getDocument() call site. Upgrading this is not a matter of picking a newer version: no newer version exists in a form that can load here without adding a build step. cveFloor is null deliberately: this build is permanently pinned below the fix for GHSA-wgrm-67xf-hhpq (CVE-2024-4367) because pdfjs-dist has published ESM only since 4.x and browsers refuse module imports across file:// origins. The mitigation is isEvalSupported:false at every getDocument() call site, asserted separately by the gate. A floor here would fail every build.",
+      "cveFloor": null
     },
     {
       "name": "pdfjs-dist-esm",
@@ -47,7 +52,8 @@
         "lib/pdf.min.mjs": "f80490490320511e5df18c580b9edd6b5db8058dceebaf6f161992e0a964b9e2",
         "lib/pdf.worker.min.mjs": "8ab0e5e30031b4a06ecfddd5ae9562f0227f830ee7ec9ed1a968b134243d2386"
       },
-      "note": "The build served over http(s). pdfjs-dist ships ESM only from 4.x onward — there is no classic build in any 4.x, 5.x or 6.x release, which is why the file:// fallback below is pinned to the last major that had one."
+      "note": "The build served over http(s). pdfjs-dist ships ESM only from 4.x onward \u2014 there is no classic build in any 4.x, 5.x or 6.x release, which is why the file:// fallback below is pinned to the last major that had one.",
+      "cveFloor": "6.2.108"
     },
     {
       "name": "sheetjs",
@@ -55,7 +61,8 @@
       "license": "Apache-2.0",
       "files": {
         "lib/xlsx.full.min.js": "cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41"
-      }
+      },
+      "cveFloor": "0.20.2"
     }
   ]
 }

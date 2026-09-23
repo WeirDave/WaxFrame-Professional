@@ -1021,6 +1021,91 @@ if (inventory) {
   if (!errors.some(e => e.file === 'docs/vendored-dependencies.json' || e.msg.includes('dependency inventory') || e.msg.includes('inventoried'))) {
     ok(`${inventoried.size} vendored files match their recorded SHA-256 hashes`);
   }
+
+  // v3.63.550 — the recorded version has to clear its own CVE floor, and
+  // package.json has to agree with it.
+  //
+  // Three separate things were watching mammoth and all three were blind.
+  // Check 7's LIB_FLOORS covered pdf.js and SheetJS only, so mammoth, jszip
+  // and docx had no floor at all. The inventory recorded mammoth as 1.13.1 —
+  // which is the version of the **underscore.js bundled inside it**, a
+  // version mammoth has never published. And package.json declared that same
+  // 1.13.1, where it cannot resolve, so Dependabot silently watched nothing
+  // for the one library that parses untrusted .docx files. It was sitting on
+  // 1.6.0, inside the affected range of CVE-2025-11849.
+  //
+  // Why the floor is compared against the INVENTORY rather than against a
+  // version read out of the bundle: reading the bundle is what produced the
+  // wrong answer. mammoth and docx carry no trustworthy version string of
+  // their own, and the strings they do carry belong to their dependencies.
+  // The inventory is safe to trust because the hash check directly above
+  // pins each file to the version recorded beside it — so file-to-version is
+  // proven there, and version-to-minimum is proven here. Neither half is
+  // sufficient alone.
+  //
+  // A null floor is a deliberate "no floor", not a missing one. Only the
+  // classic pdf.js build has it, and its entry says why.
+  const cmpVer = (a, b) => {
+    const pa = String(a).split('.').map(Number);
+    const pb = String(b).split('.').map(Number);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+      const x = pa[i] || 0, y = pb[i] || 0;
+      if (x !== y) return x < y ? -1 : 1;
+    }
+    return 0;
+  };
+
+  let pkg = null;
+  try { pkg = JSON.parse(read(join(ROOT, 'package.json'))); } catch (e) { /* reported below */ }
+
+  const floored = [];
+  for (const dependency of inventory.dependencies || []) {
+    const { name, version } = dependency;
+    if (!('cveFloor' in dependency)) {
+      fail('docs/vendored-dependencies.json',
+        `${name} has no cveFloor — every vendored library states its minimum `
+        + `safe version or states null with a reason, so a downgrade cannot `
+        + `pass unnoticed the way mammoth's did`);
+      continue;
+    }
+    const floor = dependency.cveFloor;
+    if (floor === null) continue;          // documented no-floor
+    if (!/^\d+(\.\d+)*$/.test(String(version || ''))) {
+      fail('docs/vendored-dependencies.json',
+        `${name} records version ${JSON.stringify(version)}, which is not a version`);
+      continue;
+    }
+    if (cmpVer(version, floor) < 0) {
+      fail('docs/vendored-dependencies.json',
+        `${name} ${version} is below its CVE floor ${floor} — a published `
+        + `advisory affects it`);
+      continue;
+    }
+    floored.push(`${name} ${version} >= ${floor}`);
+  }
+
+  // package.json exists only so Dependabot watches these. A version there
+  // that disagrees with what is vendored means Dependabot is watching
+  // something this repository does not ship.
+  if (pkg && pkg.dependencies) {
+    const byNpmName = { mammoth: 'mammoth', jszip: 'jszip', docx: 'docx',
+                        'pdfjs-dist': 'pdfjs-dist-esm' };
+    for (const [npmName, inventoryName] of Object.entries(byNpmName)) {
+      const declared = pkg.dependencies[npmName];
+      if (!declared) continue;
+      const entry = (inventory.dependencies || []).find(d => d.name === inventoryName);
+      if (!entry) continue;
+      if (String(declared) !== String(entry.version)) {
+        fail('package.json',
+          `declares ${npmName} ${declared} but ${entry.version} is vendored — `
+          + `this manifest exists so Dependabot watches what ships, and a `
+          + `version that disagrees (or does not exist upstream) means it is `
+          + `watching the wrong thing or nothing at all`);
+      }
+    }
+  }
+
+  if (floored.length) ok(`${floored.length} vendored libraries clear their CVE floors`);
 }
 
 // ── Check 18: companion updater scripts presence + repo reference ────

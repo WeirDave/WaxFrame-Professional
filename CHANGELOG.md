@@ -1,5 +1,88 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.550 — The .docx parser was six versions behind a CVE, and three things were watching the wrong number
+
+**Released:** 2026-09-22
+**Build:** 20260922-007
+
+### What changed
+
+**`lib/mammoth.browser.min.js` was mammoth 1.6.0, inside the affected range of
+CVE-2025-11849.** Upgraded to 1.12.3, the current release.
+
+GHSA-rmjr-87wv-gf87 (medium) is a directory traversal: a `.docx` containing an
+image with an **external link** — `r:link` rather than an embedded `r:embed` —
+makes mammoth resolve that URI, read what it points at, and base64 it into the
+converted output as a data URI. Affected `>= 0.3.25, < 1.11.0`; patched in
+1.11.0. WaxFrame calls `convertToMarkdown` on every imported `.docx`, which is
+that path.
+
+**Nothing was watching it, and the reason is worth more than the upgrade.**
+Three separate mechanisms exist to catch exactly this, and all three were
+blind at once:
+
+1. **The gate's CVE floors covered pdf.js and SheetJS only.** mammoth, jszip
+   and docx had no floor at all — three of six vendored libraries.
+2. **The inventory recorded mammoth as 1.13.1.** That is the version of the
+   **underscore.js bundled inside mammoth**, not mammoth's own — mammoth has
+   never published a 1.13.x, its newest is 1.12.3. The bundle byte-matched
+   1.6.0 against the published artifact.
+3. **`package.json` declared that same 1.13.1**, where it cannot resolve. That
+   manifest exists for one reason — so Dependabot watches these libraries for
+   advisories — and for an unresolvable version it watches nothing. The one
+   library that parses untrusted `.docx` files was the one Dependabot could
+   not see.
+
+The inventory already warns about this exact trap for `docx.min.js`, whose
+note explains that the `0.132.0` inside it belongs to a build-toolchain
+dependency. The same mistake was made for mammoth and went unnoticed, because
+the thing that would have caught it was the floor check that did not cover it.
+
+**Now gated.** Every vendored library states a `cveFloor` in the inventory,
+the gate fails if a recorded version is below its floor, and it fails if
+`package.json` disagrees with what is actually vendored. The floor is compared
+against the **inventory**, not against a version read out of the bundle,
+because reading the bundle is what produced the wrong answer — mammoth and
+docx carry no trustworthy version string of their own. The hash check directly
+above it pins each file to the version recorded beside it, so file-to-version
+is proven there and version-to-minimum here. Neither half is sufficient alone.
+
+A `null` floor is a deliberate "no floor" rather than a missing one. Only the
+classic pdf.js build has one, and its entry says why.
+
+**The other four were checked and are clear.** jszip 3.10.1 is past
+GHSA-36fh-84j7-cv5h and GHSA-jg8v-48h5-wgxg; SheetJS 0.20.3 is past
+GHSA-5pgg-2g8v-p4x9; pdf.js ESM 6.3.289 is past GHSA-hq66-cqwq-w95j; docx
+9.7.1 has no advisory on record. The classic pdf.js build remains the one
+documented accepted risk.
+
+### Verification
+- **`.docx` import still works.** `check-import-bounds.mjs` drives real
+  documents through the real parser in a browser; "an ordinary .docx still
+  imports" and "a .docx with 40 MB of embedded media still imports" were green
+  before the swap and are green after it.
+- 1.12.3 was verified before installing: byte length, SHA-256 against the
+  published `dist/mammoth.browser.min.js`, and the presence of all three APIs
+  the app calls. Its bundled underscore is also 1.13.1, which is the proof
+  that string never belonged to mammoth.
+- Every browser check re-run after the swap, since mammoth loads on every
+  page: html-injection, export-redaction, import-bounds, hostile-provider,
+  pdf-shapes, ocr-handoff, file-protocol, and the flow harness.
+- The new gate check mutation-tested three ways, each watched failing and
+  restored: the version put back to 1.6.0, `package.json` put back to the
+  unresolvable 1.13.1, and a library's floor removed entirely.
+- Gate: 20 of 20 stages.
+
+### Files changed
+`lib/mammoth.browser.min.js`, `docs/vendored-dependencies.json`,
+`package.json`, `tools/release-check.mjs`, `CHANGELOG.md`, plus the routine
+stamp sweep.
+
+### Rollback
+Revert the commit and restore the previous `lib/mammoth.browser.min.js`. That
+returns the `.docx` parser to a version a published advisory affects, so it is
+not a rollback to take for convenience.
+
 ## v3.63.549 — Six of the ten providers' API keys survived a redaction pass
 
 **Released:** 2026-09-22
