@@ -14,9 +14,15 @@
 #
 # What this does: checks GitHub for a newer release, downloads it, checks
 # the download is structurally sound, and swaps it in -- keeping your
-# current install as a dated backup folder next to this one (never
-# deleted). If anything goes wrong partway through, it rolls back
-# automatically so you're never left without a working copy.
+# current install as a dated backup folder next to this one. If anything
+# goes wrong partway through, it rolls back automatically so you're never
+# left without a working copy.
+#
+# Backups: once two or more backup folders exist, the script asks how many
+# of the most recent to keep (Enter keeps all of them, which is the
+# default). Older backups hold exactly what those older versions shipped.
+# To answer without the prompt, set the environment variable
+# WAXFRAME_KEEP_BACKUPS=N. N=0 removes every backup.
 #
 # Deliberate scope decisions (not gaps -- stated up front, same as the
 # Windows script):
@@ -289,6 +295,52 @@ else
   fi
   log_err "Update failed -- nothing was left half-installed, your previous copy is intact."
   pause; exit 1
+fi
+
+# ---- 8b. Optional backup pruning ---------------------------------------------
+# Runs only after a successful swap. Only sibling folders named
+# "<this folder>.previous-<version>-<YYYYmmdd-HHMMSS>" that contain
+# js/version.js are candidates -- nothing else in the parent is ever touched.
+# Any failure here is reported as a warning; the update itself already
+# succeeded.
+prune_backups() {
+  local keep="-1" dir name answer count i=0
+  local backups=()
+  if [[ "${WAXFRAME_KEEP_BACKUPS:-}" =~ ^[0-9]+$ ]]; then keep="$WAXFRAME_KEEP_BACKUPS"; fi
+  # Newest first: the timestamp suffix sorts correctly as text.
+  while IFS= read -r name; do
+    [ -n "$name" ] && backups+=("$PARENT_DIR/$name")
+  done < <(
+    for dir in "$PARENT_DIR/${FOLDER_NAME}.previous-"*; do
+      [ -d "$dir" ] || continue
+      name="$(basename "$dir")"
+      [[ "$name" =~ -([0-9]{8}-[0-9]{6})$ ]] || continue
+      [ -f "$dir/js/version.js" ] || continue
+      printf '%s %s\n' "${BASH_REMATCH[1]}" "$name"
+    done | sort -r | cut -d' ' -f2-
+  )
+  count="${#backups[@]}"
+  # macOS ships bash 3.2, where expanding an empty array under set -u is fatal.
+  [ "$count" -eq 0 ] && return 0
+  if [ "$count" -ge 2 ] && [ "$keep" = "-1" ]; then
+    echo
+    log_step "There are $count backup folders from earlier updates ($(du -sch "${backups[@]}" 2>/dev/null | tail -1 | cut -f1)), newest first:"
+    for dir in "${backups[@]}"; do echo "  $(basename "$dir")"; done
+    echo "Each one holds exactly what that older version shipped."
+    read -r -p "Keep how many of the most recent? (Enter = keep all) " answer || answer=""
+    answer="$(printf '%s' "$answer" | tr -d '[:space:]')"
+    if [[ "$answer" =~ ^[0-9]+$ ]]; then keep="$answer"; fi
+  fi
+  [ "$keep" = "-1" ] && return 0
+  for dir in "${backups[@]}"; do
+    i=$((i + 1))
+    [ "$i" -le "$keep" ] && continue
+    rm -rf -- "$dir"
+    log_ok "Removed backup: $(basename "$dir")"
+  done
+}
+if ! prune_backups; then
+  log_err "Backup cleanup did not finish. The update itself succeeded; any remaining backup folders can be deleted by hand."
 fi
 
 # ---- 9. Relaunch ---------------------------------------------------------------

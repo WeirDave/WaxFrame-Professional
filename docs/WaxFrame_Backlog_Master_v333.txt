@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v332
+WaxFrame Backlog Master v333
 2026-09-23
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,21 @@ ships.
 
 
 
+
+v333 — OLD UPDATER BACKUPS AND A REMOVED ICON PATH (v3.63.556).
+
+Both from GitHub issue #14. The portable updaters kept every
+backup folder forever, and each one holds exactly what that
+older version shipped, including material since removed from
+the repository. They now offer to keep only the N most recent.
+Separately, a custom AI row or saved Import Server defaults that
+used the icon removed in v3.63.502 kept that icon's path in
+browser storage indefinitely; it is now replaced with the
+Generic icon at startup and written back.
+
+Two items opened while doing it: bug 1 (browser confirm() in
+the prompt editor, found while auditing what reaches storage)
+and feature 2 (pruning when no update is available).
 
 v332 — THE HARNESSES CLEAN UP AFTER THEMSELVES, AND STOPPED
        PICKING PORTS THAT WERE NOT THEIRS (v3.63.555).
@@ -1467,12 +1482,31 @@ that actually times out. Anthropic (CF Worker proxy) and Gemini (needs
 OPEN BUGS
 ════════════════════════════════════════════════════════════
 
-None currently open.
+1. Prompt editor uses the browser's native confirm()
+   ─────────────────────────────────────────────────────────
+   WHAT:   js/prompt-editor.js calls window.confirm() for
+           "Reset ALL prompts to defaults?" and "Reset this
+           prompt to default?". Standing rule: never confirm(),
+           always the styled wfConfirm() modal.
+   WHY:    Inconsistent with every other destructive prompt in
+           the app, unstyled, and suppressible by the browser
+           ("prevent this page from creating dialogs"), after
+           which confirm() returns false and both Reset buttons
+           silently do nothing.
+   STATE:  OPEN. Found 2026-09-23 while auditing which shipped
+           text can reach localStorage (saveAll writes every
+           prompt, defaults included, to LS_PROMPTS).
+   WHERE:  js/prompt-editor.js resetAll() and resetOne();
+           prompt-editor.html does not currently load the script
+           that defines wfConfirm, so this is not a one-line swap.
+   DONE:   Both resets use a styled confirm on the helper page;
+           no confirm( call remains in js/; a gate check or grep
+           in release-check stops it returning.
 
 ════════════════════════════════════════════════════════════
 OPEN FEATURES
 ════════════════════════════════════════════════════════════
-Ordered by value. One open feature, blocked on David.
+Ordered by value. Item 1 is blocked on David.
 
 1. Exercise PDF import against REAL-WORLD PDFs
    ─────────────────────────────────────────────────────────
@@ -1584,6 +1618,22 @@ Ordered by value. One open feature, blocked on David.
            property of the provider rather than of this code,
            and it is the only part of the OCR story still
            needing David and a funded key.
+
+2. Updater: offer backup pruning when no update is available
+   ─────────────────────────────────────────────────────────
+   WHAT:   The backup-retention prompt added in v3.63.556 runs
+           only after a successful download-and-swap. When the
+           install is already current, or when the git path is
+           used, the scripts exit before reaching it.
+   WHY:    Someone who wants old backups gone has to wait for
+           the next release or delete folders by hand.
+   STATE:  OPEN, small.
+   WHERE:  Update-WaxFrame.ps1 "Already up to date" early exit
+           and step 10; Update-WaxFrame.command early exit and
+           prune_backups().
+   DONE:   An up-to-date run with two or more backups offers the
+           same prompt; -KeepBackups / WAXFRAME_KEEP_BACKUPS are
+           honoured there too.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

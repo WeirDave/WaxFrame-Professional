@@ -8,9 +8,15 @@
 #
 # What this does: checks GitHub for a newer release, downloads it, checks
 # the download is structurally sound, and swaps it in -- keeping your
-# current install as a dated backup folder next to this one (never
-# deleted). If anything goes wrong partway through, it rolls back
-# automatically so you're never left without a working copy.
+# current install as a dated backup folder next to this one. If anything
+# goes wrong partway through, it rolls back automatically so you're never
+# left without a working copy.
+#
+# Backups: once two or more backup folders exist, the script asks how many
+# of the most recent to keep (Enter keeps all of them, which is the
+# default). Older backups hold exactly what those older versions shipped.
+# To answer without the prompt, run with -KeepBackups N, or set the
+# environment variable WAXFRAME_KEEP_BACKUPS=N. N=0 removes every backup.
 #
 # Deliberate scope decisions (not gaps -- stated up front):
 #   - This script targets Windows/PowerShell. Mac/Linux portable installs
@@ -30,7 +36,11 @@
 # Build: 20260915-003
 
 [CmdletBinding()]
-param()
+param(
+  # -1 = ask (the default). 0 or more = keep that many of the most recent
+  # backup folders and remove the rest, without prompting.
+  [int]$KeepBackups = -1
+)
 
 $ErrorActionPreference = 'Stop'
 $Repo = 'WeirDave/WaxFrame-Professional'
@@ -285,6 +295,47 @@ try {
   exit 1
 } finally {
   Remove-Staging
+}
+
+# ---- 10. Optional backup pruning -------------------------------------------------
+# Runs only after a successful swap, outside the install try/catch so a
+# problem here can never be reported as a failed update. Only sibling folders
+# named "<this folder>.previous-<version>-<yyyyMMdd-HHmmss>" that contain
+# js\version.js are candidates -- nothing else in the parent is ever touched.
+try {
+  $prefix = "$folderName.previous-"
+  $backups = @(Get-ChildItem -LiteralPath $parent -Directory |
+    Where-Object {
+      $_.Name.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -and
+      $_.Name -match '-(\d{8}-\d{6})$' -and
+      (Test-Path -LiteralPath (Join-Path $_.FullName 'js\version.js'))
+    } |
+    Sort-Object { ($_.Name -replace '^.*-(\d{8}-\d{6})$', '$1') } -Descending)
+
+  $keep = $KeepBackups
+  if ($keep -lt 0 -and $env:WAXFRAME_KEEP_BACKUPS -match '^\d+$') { $keep = [int]$env:WAXFRAME_KEEP_BACKUPS }
+
+  if ($backups.Count -ge 2 -and $keep -lt 0) {
+    $bytes = ($backups | ForEach-Object {
+      (Get-ChildItem -LiteralPath $_.FullName -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
+    } | Measure-Object -Sum).Sum
+    Write-Host ''
+    Write-Step ("There are {0} backup folders from earlier updates ({1:N0} MB), newest first:" -f $backups.Count, ($bytes / 1MB))
+    $backups | ForEach-Object { Write-Host "  $($_.Name)" }
+    Write-Host 'Each one holds exactly what that older version shipped.'
+    $answer = Read-Host 'Keep how many of the most recent? (Enter = keep all)'
+    if ($answer -match '^\s*(\d+)\s*$') { $keep = [int]$Matches[1] }
+  }
+
+  if ($keep -ge 0 -and $backups.Count -gt $keep) {
+    foreach ($old in ($backups | Select-Object -Skip $keep)) {
+      Remove-Item -LiteralPath $old.FullName -Recurse -Force -ErrorAction Stop
+      Write-Ok "Removed backup: $($old.Name)"
+    }
+  }
+} catch {
+  Write-Warn "Backup cleanup did not finish: $($_.Exception.Message)"
+  Write-Warn 'The update itself succeeded. Any remaining backup folders can be deleted by hand.'
 }
 
 Read-Host "Press Enter to close"

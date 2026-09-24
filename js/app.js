@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260923-004
+// Build: 20260923-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20260923-004';         // build stamp — update each session
+const BUILD = '20260923-005';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13633,8 +13633,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.555'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.555';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.556'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.556';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -17480,6 +17480,46 @@ const ICON_PICKER_BUNDLED = [
     { id: 'waxmaker',     name: 'Waxmaker',     src: 'images/WaxFrame_Waxmaker_v1.png' },
   ]},
 ];
+
+// v3.63.556 — Retire bundled-icon paths that no longer ship. A custom AI
+// row stores its icon as a plain path, and so does the saved Import Server
+// defaults blob, so an icon removed from the app (v3.63.502 deleted one
+// whose filename carried a product name that should never have shipped)
+// stayed in a returning browser's saved settings indefinitely, rendering
+// as a dimmed broken image. Any "images/..." path outside the current
+// catalog becomes the Generic icon, and the change is written back so the
+// old path does not linger in storage. Uploaded icons (data: URLs), emoji
+// and empty values are never touched. Only runs after a successful
+// loadSettings, so a hive blob that failed to parse is never overwritten.
+function retireStaleBundledIcons() {
+  const known = new Set([
+    ...ICON_PICKER_BUNDLED.flatMap(s => s.items.map(it => it.src)),
+    ...WF_AI_ICON_KEYWORD_CATALOG.map(e => e.src),
+    ...DEFAULT_AIS.map(d => d.icon)
+  ]);
+  const isStale = v => typeof v === 'string' && v.startsWith('images/') && !known.has(v);
+
+  let hiveChanged = 0;
+  aiList.forEach(ai => {
+    if (isStale(ai.icon)) { ai.icon = GENERIC_ICON_PATH; hiveChanged++; }
+  });
+  if (hiveChanged) saveHive();
+
+  let serverChanged = false;
+  try {
+    const raw = localStorage.getItem(IMPORT_SERVER_LS_KEY);
+    const saved = raw ? JSON.parse(raw) : null;
+    if (saved && isStale(saved.icon)) {
+      saved.icon = GENERIC_ICON_PATH;
+      localStorage.setItem(IMPORT_SERVER_LS_KEY, JSON.stringify(saved));
+      serverChanged = true;
+    }
+  } catch (e) { /* unreadable blob: leave it for the Import Server modal's own handling */ }
+
+  if (hiveChanged || serverChanged) {
+    consoleLog(`🧹 Replaced ${hiveChanged + (serverChanged ? 1 : 0)} saved icon${hiveChanged + (serverChanged ? 1 : 0) === 1 ? '' : 's'} that no longer ship with the Generic icon.`, 'info');
+  }
+}
 
 // Caller's onSelect callback, stashed while the modal is open. Cleared on
 // close so a stale callback can never fire against a later picker session.
@@ -24094,7 +24134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (_navDetails) _navDetails.addEventListener('toggle', () => { if (!_navDetails.open) _navDetails.open = true; });
 
   // v3.41.0 — initTheme() removed. theme.js auto-inits on load.
-  loadSettings(); // always load hive (AI keys) silently
+  if (loadSettings()) retireStaleBundledIcons(); // always load hive (AI keys) silently
   // v3.63.284 — ensureOriginalModelBaseline() call removed alongside the
   // _originalModel scaffold itself. Saved one saveHive() write per cold
   // start that was firing for a field no UI consumed.

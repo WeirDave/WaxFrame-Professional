@@ -1,5 +1,68 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.556 — The updaters can prune old backups, and a removed icon no longer lingers in saved settings
+
+**Released:** 2026-09-23
+**Build:** 20260923-005
+
+### What changed
+
+**The portable updaters can now remove older backup folders.** Both
+`Update-WaxFrame.ps1` (Windows) and `Update-WaxFrame.command` (macOS/Linux)
+rename the current install to `<folder>.previous-<version>-<timestamp>` before
+swapping in a new release, and previously kept every one of those folders
+indefinitely. Each backup holds exactly what that older version shipped, which
+includes material that later releases removed from the repository. After a
+successful update, when two or more backup folders exist, the updater now lists
+them newest first with their combined size and asks "Keep how many of the most
+recent? (Enter = keep all)". The default, pressing Enter, keeps all of them, so
+existing behaviour is unchanged unless a number is entered. `0` removes every
+backup.
+
+To answer without the prompt, run the Windows updater with `-KeepBackups N`, or
+set the environment variable `WAXFRAME_KEEP_BACKUPS=N` for either script. Only
+sibling folders that match the backup naming pattern and contain
+`js/version.js` are ever considered; nothing else next to the install is
+touched. A failure while removing a backup is reported as a warning and does
+not affect the update, which has already completed by that point.
+
+**An icon removed in v3.63.502 is cleared from saved settings.** That release
+deleted a bundled icon along with its Import Server preset button. A custom AI
+that had been given that icon, or saved Import Server defaults that used it,
+kept the old image path in browser storage, where it rendered as a dimmed
+broken image and stayed indefinitely. At startup, any saved icon path under
+`images/` that no longer ships with the app is now replaced with the Generic
+icon and written back to storage. Icons uploaded by the user, bundled icons
+that still ship, and emoji are left unchanged. The pass runs only after saved
+settings load successfully, so settings that fail to parse are never
+overwritten.
+
+Browser storage otherwise holds only what the user entered or chose, data
+fetched from providers (model lists, the update check), and the prompt text
+saved from the Prompt Editor. The **"Advanced reset: wipe local data"** section
+of the Help page remains the way to clear all of it.
+
+### Verification
+- Updater pruning exercised against fabricated backup folders on both
+  platforms: keep-N by parameter and by environment variable, keep-all on
+  Enter, keep-2 from the prompt, a count above the number present, and no
+  backups at all. Folders with a non-matching name, a different base name, or
+  no `js/version.js` survived every case. PowerShell parse check clean;
+  `bash -n` clean.
+- Icon pass verified in the running app against seeded storage: a retired path
+  became `images/icon-generic.png` in both the hive and the Import Server
+  defaults and no longer appeared in storage; a shipped icon and an uploaded
+  data-URL icon were unchanged; all rows still loaded and rendered.
+- Gate: 22 of 22 stages.
+
+### Files changed
+`Update-WaxFrame.ps1`, `Update-WaxFrame.command`, `js/app.js`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v333.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert this commit. The updaters return to keeping every backup; the icon pass
+stops running, and any paths it already replaced stay as the Generic icon.
+
 ## v3.63.555 — The test harnesses left their browser profiles behind, and picked ports that were not theirs to pick
 
 **Released:** 2026-09-23

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20260923-004
+// Build: 20260923-005
 // test-url-sanitisers.mjs — three copies of one five-line function, and the
 // only thing that matters is whether they still agree.
 //
