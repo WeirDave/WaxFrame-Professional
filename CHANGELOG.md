@@ -1,5 +1,65 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.558 — Pricing page context windows and output limits filled in and corrected
+
+**Released:** 2026-09-27
+**Build:** 20260927-002
+
+### What changed
+
+**The "AI API pricing" page now shows a context window and maximum output for
+every model that publishes one.** Eighteen rows showed "—" in one or both
+columns. Each figure now comes from the provider's own model documentation:
+
+- **OpenAI:** `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` and `gpt-5.4` are
+  1.05M / 128K; `gpt-5.4-mini` and `gpt-5.4-nano` are 400K / 128K.
+- **Anthropic:** `claude-opus-4-8`, `claude-opus-4-7` and `claude-opus-4-6`
+  are 1M / 128K; `claude-haiku-4-5` is 200K / 64K.
+- **Google:** `gemini-3.1-pro-preview` and `gemini-3.1-flash-lite` are
+  1M / 64K on both the free and paid rows.
+- **Mistral:** `mistral-small-latest` and `ministral-8b-latest` are 256K.
+- **Perplexity:** `sonar`, `sonar-reasoning-pro` and `sonar-deep-research`
+  are 128K.
+
+**Four existing figures were wrong and are corrected:**
+
+| Model | Was | Now |
+|---|---|---|
+| `claude-sonnet-4-6` max output | 8K | 128K |
+| `gpt-5.5` context / max output | 1M / 32K | 1.05M / 128K |
+| `gemini-3.5-flash` max output (free and paid) | 8K | 64K |
+| `mistral-large-latest` context | 128K | 256K |
+
+Mistral publishes no separate output limit for its current models, so
+`mistral-large-latest` now shows "—" for max output in place of an unsourced
+8K. xAI and Perplexity likewise publish no output limit, and those cells stay
+empty. `sonar-reasoning` has no figure because the model no longer appears in
+Perplexity's documentation.
+
+**Empty cells in the Defaults table now read "—"**, matching the per-model
+table, instead of rendering blank.
+
+Prices are unchanged. Each row's "verified" date carries forward the most
+recent date the weekly refresh confirmed its price.
+
+### Verification
+- Figures read from each provider's per-model documentation pages on
+  2026-09-27.
+- `tools/check-pricing-coverage.mjs` passes, including the `estPerRound`
+  recomputation; `FALLBACK_DATA` regenerated from the seed.
+- Live endpoint confirmed after the KV push (row count and `lastUpdated`).
+- Gate: 22 of 22 stages.
+
+### Files changed
+`tools/pricing-worker/data/pricing-seed.json`, `js/pricing-renderer.js`
+(fallback data and the Defaults table), `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v334.txt`, plus the routine stamp sweep.
+
+### Rollback
+Revert this commit, then push the previous seed to KV:
+`wrangler kv key put --binding=PRICING_DATA latest --path=data/pricing-seed.json --remote`
+from `tools/pricing-worker/`.
+
 ## v3.63.557 — Pricing refresh flags a price read from a neighbouring model's column
 
 **Released:** 2026-09-27
