@@ -1,5 +1,52 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.557 — Pricing refresh flags a price read from a neighbouring model's column
+
+**Released:** 2026-09-27
+**Build:** 20260927-001
+
+### What changed
+
+**The weekly pricing refresh now recognises a price taken from the wrong column
+of a side-by-side pricing table.** Some providers publish one table with a
+column per model and a row per price. The refresh already checked that a
+proposed price appears somewhere on the cited source page, and a figure from a
+sibling model's column satisfies that check. The 2026-09-27 run proposed
+$0.60 / $1.20 per million tokens for `deepseek-v4-pro`; both figures belong to
+`deepseek-flash` (its off-peak and peak output prices), and the proposal was
+reported as an ordinary "NEEDS REVIEW" item. The listed `deepseek-v4-pro` price
+of $0.66 / $1.98 is correct and was not changed.
+
+The refresh now reads such tables by column. When two or more of a provider's
+tracked model ids appear together as a header, each following row of prices
+with one cell per model is attributed column by column. If a proposed price
+appears only under another tracked model's column, the item is reported as
+"MODEL MISMATCH" in the alert email and on the Worker's status page, naming the
+column it came from. Pages that list one model per row are not affected, and a
+page whose layout does not fit this shape produces no warning. As before, no
+proposal changes a live price; every one is held for manual review.
+
+### Verification
+- `tools/pricing-worker/test-refresh-logic.mjs`: new cases for a sibling-column
+  price, the model's own column, one price from each column, a row-per-model
+  layout, a model id that contains a sibling's id, and short or absent text.
+  All pass.
+- Against DeepSeek's live pricing page: $0.60 / $1.20 for `deepseek-v4-pro` is
+  attributed to `deepseek-flash`; the correct $0.66 / $1.98 produces no
+  warning.
+- False-positive sweep: every priced row in `data/pricing-seed.json` checked
+  against its own live source page with its current price. 34 rows checked,
+  0 flagged; 2 pages returned too little text to judge.
+- Gate: 22 of 22 stages.
+
+### Files changed
+`tools/pricing-worker/src/index.js`, `tools/pricing-worker/test-refresh-logic.mjs`,
+`CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+Revert this commit and redeploy the Worker from `tools/pricing-worker/`, or
+`npx wrangler rollback` to the previous Worker version.
+
 ## v3.63.556 — The updaters can prune old backups, and a removed icon no longer lingers in saved settings
 
 **Released:** 2026-09-23

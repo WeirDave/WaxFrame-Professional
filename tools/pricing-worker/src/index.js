@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20260920-002
+//  Build: 20260927-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -526,9 +526,98 @@ async function fetchSourcePageText(sourceUrl) {
 // corroboratesSource. Network-touching, so deliberately kept separate
 // from the pure decideModelUpdate() path; only called for needs-review
 // proposals in refreshPricing() below, never for confirmed/retained rows.
-async function corroborateProposal(sourceUrl, inputPerM, outputPerM) {
+async function corroborateProposal(sourceUrl, inputPerM, outputPerM, modelId, siblingIds) {
   const text = await fetchSourcePageText(sourceUrl);
-  return corroboratesSource(text, inputPerM, outputPerM);
+  return {
+    corroborated: corroboratesSource(text, inputPerM, outputPerM),
+    siblingColumn: siblingColumnAttribution(text, modelId, siblingIds, inputPerM, outputPerM)
+  };
+}
+
+// ── siblingColumnAttribution (Build 20260927-001) ────────────────────
+// corroboratesSource asks whether the proposed numbers are ANYWHERE on
+// the page. A pricing table that puts two models side by side as columns
+// satisfies that with the wrong column. DeepSeek's page is laid out that
+// way: a header row "deepseek-flash | deepseek-v4-pro", then one row per
+// price, one cell per model. The 2026-09-27 run proposed $0.6/$1.2 for
+// deepseek-v4-pro — Flash's off-peak and peak output prices, both read
+// out of Flash's column — and it corroborated, because both numbers are
+// on the page.
+//
+// This reads the table the way a person would. A header is two or more
+// of the provider's tracked model ids close together with no price
+// between them (that last condition keeps a row-per-model layout, where
+// prices sit between the names, from being mistaken for a header). Each
+// run of exactly as many "$" prices as the header has columns, after
+// the header, is a table row, and cell i belongs to the model in column
+// i. If a proposed price appears in those rows only under a sibling's
+// column and never under the requested model's, the sibling id is
+// returned. Anything the shape does not fit returns null: this can only
+// add a warning, never clear one, and never touches a live price.
+const COLUMN_HEADER_MAX_GAP = 80;
+const COLUMN_TABLE_SPAN = 4000;
+const PRICE_RE = /\$\s*\d/;
+
+function findModelIdPositions(lowerText, id) {
+  const needle = id.toLowerCase();
+  const out = [];
+  let i = 0;
+  while ((i = lowerText.indexOf(needle, i)) !== -1) {
+    const before = lowerText[i - 1] || '';
+    const after = lowerText[i + needle.length] || '';
+    const afterNext = lowerText[i + needle.length + 1] || '';
+    const boundedBefore = !/[a-z0-9._\-/]/.test(before);
+    const boundedAfter = !/[a-z0-9_\-]/.test(after) && !(after === '.' && /[0-9]/.test(afterNext));
+    if (boundedBefore && boundedAfter) out.push({ pos: i, end: i + needle.length, id });
+    i += needle.length;
+  }
+  return out;
+}
+
+function siblingColumnAttribution(pageText, modelId, siblingIds, inputPerM, outputPerM) {
+  if (typeof pageText !== 'string' || pageText.length < MIN_CORROBORATION_TEXT_LEN) return null;
+  const ids = Array.from(new Set([modelId, ...(siblingIds || [])]));
+  if (ids.length < 2) return null;
+  const lower = pageText.toLowerCase();
+  const hits = ids.flatMap(id => findModelIdPositions(lower, id)).sort((a, b) => a.pos - b.pos);
+
+  const headers = [];
+  let group = [];
+  const closeGroup = () => {
+    const distinct = new Set(group.map(g => g.id));
+    if (group.length >= 2 && distinct.size === group.length && distinct.has(modelId)) headers.push(group);
+    group = [];
+  };
+  hits.forEach(h => {
+    const prev = group[group.length - 1];
+    if (prev && (h.pos < prev.end || h.pos - prev.end > COLUMN_HEADER_MAX_GAP || PRICE_RE.test(pageText.slice(prev.end, h.pos)))) closeGroup();
+    group.push(h);
+  });
+  closeGroup();
+
+  const same = (a, b) => Math.abs(a - b) < 1e-9;
+  const seen = { input: { own: false, siblings: new Set() }, output: { own: false, siblings: new Set() } };
+  headers.forEach(header => {
+    const columns = header.map(h => h.id);
+    const start = header[header.length - 1].end;
+    const table = pageText.slice(start, start + COLUMN_TABLE_SPAN);
+    const runs = table.match(/(?:\$\s*\d+(?:\.\d+)?\s*){2,}/g) || [];
+    runs.forEach(run => {
+      const cells = (run.match(/\d+(?:\.\d+)?/g) || []).map(Number);
+      if (cells.length !== columns.length) return;
+      cells.forEach((value, col) => {
+        [['input', inputPerM], ['output', outputPerM]].forEach(([key, price]) => {
+          if (!same(value, price)) return;
+          if (columns[col] === modelId) seen[key].own = true;
+          else seen[key].siblings.add(columns[col]);
+        });
+      });
+    });
+  });
+
+  const wrong = ['input', 'output'].filter(k => !seen[k].own && seen[k].siblings.size);
+  if (!wrong.length) return null;
+  return Array.from(new Set(wrong.flatMap(k => [...seen[k].siblings]))).join(', ');
 }
 
 // ── decideModelUpdate ────────────────────────────────────────────────
@@ -794,8 +883,15 @@ async function refreshPricing(env) {
       // row — so a fetch would come back corroborated and read as
       // reassurance about the one thing already known to be wrong.
       if (c.status !== 'needs-review' || !c.sourceUrl) return;
-      const corroborated = await corroborateProposal(c.sourceUrl, c.proposedInputPerM, c.proposedOutputPerM);
-      if (corroborated === false) {
+      const siblingIds = (d.task.provider.models || []).map(m => m.id).filter(id => id !== d.task.model.id);
+      const { corroborated, siblingColumn } = await corroborateProposal(c.sourceUrl, c.proposedInputPerM, c.proposedOutputPerM, d.task.model.id, siblingIds);
+      if (siblingColumn) {
+        // Checked first: a sibling-column read DOES corroborate — the
+        // number is on the page — so it must not be reported as a pass.
+        c.status = 'model-mismatch';
+        c.reason = `${c.reason} — WARNING: on the cited page the proposed price sits in the ${siblingColumn} column of the pricing table, not ${d.task.model.id}'s; verify this is not a sibling model's price before applying`;
+        if (d.decision.alertLine) d.decision.alertLine = d.decision.alertLine.replace('NEEDS REVIEW ', 'MODEL MISMATCH');
+      } else if (corroborated === false) {
         c.status = 'unverified-source';
         c.reason = `${c.reason} — WARNING: proposed price not found on the cited source page text, verify manually before applying`;
         if (d.decision.alertLine) d.decision.alertLine = d.decision.alertLine.replace('NEEDS REVIEW', 'UNVERIFIED SOURCE');
@@ -922,4 +1018,4 @@ export default {
 // Named exports alongside the default Worker export — consumed only by
 // tools/pricing-worker/test-refresh-logic.mjs (pure-function unit tests,
 // no KV/network). Cloudflare's runtime ignores exports it doesn't call.
-export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath };
+export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, siblingColumnAttribution, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath };

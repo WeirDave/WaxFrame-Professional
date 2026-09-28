@@ -18,7 +18,7 @@
 // Exit 0 if every assertion passes; exit 1 with FAIL lines otherwise.
 // ============================================================
 
-import { decideModelUpdate, mapWithConcurrency, isTrustedSource, isValidSizeString, corroboratesSource, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath } from './src/index.js';
+import { decideModelUpdate, mapWithConcurrency, isTrustedSource, isValidSizeString, corroboratesSource, siblingColumnAttribution, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath } from './src/index.js';
 
 let failures = 0;
 function assertEqual(actual, expected, label) {
@@ -164,6 +164,39 @@ console.log('\ncorroboratesSource — checks a proposed price actually appears o
 
   const dollarFormatted = ('Command R+ costs $2.50 per million input tokens and $10.00 per million output tokens. ').repeat(4);
   assert(corroboratesSource(dollarFormatted, 2.5, 10) === true, '$-prefixed, comma-free decimal formatting still matches');
+}
+
+// ── siblingColumnAttribution (Build 20260927-001) ────────────────────
+// Invented figures in the shape of a side-by-side pricing table: one
+// header row naming two models, then one row per price with one cell per
+// model. The 2026-09-27 run read deepseek-v4-pro's price out of the
+// Flash column of a table built exactly like this.
+console.log('\nsiblingColumnAttribution — a price read out of a sibling model\'s column is caught');
+{
+  const intro = 'The prices listed below are in units of per 1M tokens and are billed on total input and output tokens. '.repeat(3);
+  const table = intro + 'MODEL alpha-flash (1) alpha-pro BASE URL https://api.example.com CONTEXT LENGTH 1M ' +
+    'PRICING 1M INPUT TOKENS (CACHE HIT) OFF-PEAK $0.004 $0.030 PEAK $0.008 $0.060 ' +
+    '1M INPUT TOKENS (CACHE MISS) OFF-PEAK $0.20 $0.70 PEAK $0.40 $1.40 ' +
+    '1M OUTPUT TOKENS OFF-PEAK $0.8 $2.10 PEAK $1.6 $4.20 Concurrency Limit 2500 500';
+  const siblings = ['alpha-flash'];
+
+  assertEqual(siblingColumnAttribution(table, 'alpha-pro', siblings, 0.8, 1.6), 'alpha-flash', 'both proposed prices from the sibling column -> sibling named (the incident shape)');
+  assertEqual(siblingColumnAttribution(table, 'alpha-pro', siblings, 0.7, 2.1), null, 'the model\'s own column -> no warning');
+  assertEqual(siblingColumnAttribution(table, 'alpha-pro', siblings, 0.7, 0.8), 'alpha-flash', 'one price from each column -> still flagged');
+  assertEqual(siblingColumnAttribution(table, 'alpha-flash', ['alpha-pro'], 0.2, 0.8), null, 'the sibling asking for its own column -> no warning');
+  assertEqual(siblingColumnAttribution(table, 'alpha-pro', siblings, 9.99, 19.99), null, 'numbers not in the table at all -> null, left to corroboratesSource');
+  assertEqual(corroboratesSource(table, 0.8, 1.6), true, 'and the old check alone passes the sibling price — which is why this exists');
+
+  // One model per row, prices between the names. The names sit close
+  // together but a price separates them, so no header is inferred and a
+  // price from a neighbouring row is not misread as a column.
+  const rows = intro + 'Model Input Cached Output beta-mini $0.75 $0.075 $4.50 beta-nano $0.20 $0.02 $1.25 beta $2.50 $0.25 $15.00';
+  assertEqual(siblingColumnAttribution(rows, 'beta-nano', ['beta-mini', 'beta'], 0.2, 1.25), null, 'row-per-model layout, correct price -> no warning');
+  assertEqual(siblingColumnAttribution(rows, 'beta-nano', ['beta-mini', 'beta'], 0.75, 4.5), null, 'row-per-model layout is out of scope -> null, never a false column read');
+
+  assertEqual(siblingColumnAttribution(table, 'alpha-pro', [], 0.8, 1.6), null, 'no tracked siblings -> nothing to attribute to');
+  assertEqual(siblingColumnAttribution('short', 'alpha-pro', siblings, 0.8, 1.6), null, 'text too short -> null');
+  assertEqual(siblingColumnAttribution(table.replace('alpha-flash', 'alpha-flash-v2'), 'alpha-pro', siblings, 0.8, 1.6), null, 'a longer id containing the sibling id is not the sibling');
 }
 
 // ── isTransientError (Build 20260816-001) ──────────────────────────
