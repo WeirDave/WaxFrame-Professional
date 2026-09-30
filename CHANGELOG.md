@@ -1,5 +1,41 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.559 — Edit Hive no longer says keyless AIs are skipped
+
+**Released:** 2026-09-29
+**Build:** 20260929-001
+
+### What changed
+
+**The "Edit Hive" panel on the work screen now describes which AIs it lists.**
+Its description read "AIs without a saved API key are skipped automatically",
+which has been inaccurate since v3.63.459: server-imported AIs (Ollama,
+LM Studio, Open WebUI, enterprise gateways) run without a key when the server
+does not require one, and internet AIs without a key never appear in the panel
+at all. The description now reads: "Only AIs that can run are listed: internet
+AIs with a saved API key, and server-imported AIs, which need no key when the
+server does not require one." This matches the "AIs without keys" row of the
+"Your Worker Bees" information panel, which was corrected earlier.
+
+The development-tool scripts `tools/flow-check.mjs`,
+`tools/check-html-injection.mjs` and `tools/audit-dead-code.mjs` also escape
+the values they insert into generated code and regular expressions. These
+scripts do not ship with the app.
+
+### Verification
+- The panel's list comes from `activeAIs`, which setup builds from
+  `getConfiguredAIsForMode()`: keyed internet AIs, or server-imported AIs.
+  The new wording describes that filter.
+- Gate: 22 of 22 stages. The browser smoke checks pass locally and in CI.
+
+### Files changed
+`index.html` (Edit Hive description), `CHANGELOG.md`, `tools/flow-check.mjs`,
+`tools/check-html-injection.mjs`, `tools/audit-dead-code.mjs`, plus the
+routine stamp sweep.
+
+### Rollback
+Revert this commit.
+
 ## v3.63.558 — Pricing page context windows and output limits filled in and corrected
 
 **Released:** 2026-09-27
