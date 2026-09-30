@@ -57,7 +57,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           # Match a modern LTS; WaxFrame is plain-script vanilla JS so any
           # current Node will parse it the same way. No npm install — the
@@ -94,7 +94,7 @@ jobs:
           fetch-depth: 1
 
       - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           # 22+ required — tools/capture.mjs uses the built-in WebSocket
           # constructor (no `ws` package, matches project's no-deps stance).
