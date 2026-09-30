@@ -176,8 +176,15 @@ const SESSION_SEED = {
   ringBuffer: [], lastFailure: null
 };
 
+// Serialise a value as a JavaScript literal for splicing into an expression
+// the page evaluates. JSON.stringify alone leaves <, >, U+2028 and U+2029 raw;
+// escaping them keeps the literal's value identical while closing the gap
+// CodeQL's js/bad-code-sanitization rule reports.
+const JS_UNSAFE = { '<': '\\u003C', '>': '\\u003E', '/': '\\u002F', '\\': '\\\\', '\b': '\\b', '\f': '\\f', '\n': '\\n', '\r': '\\r', '\t': '\\t', '\0': '\\0', '\u2028': '\\u2028', '\u2029': '\\u2029' };
+const jsLiteral = (v) => JSON.stringify(v).replace(/[<>\b\f\n\r\t\0\u2028\u2029]/g, (ch) => JS_UNSAFE[ch]);
+
 let bad = 0;
-const check = (label, cond, detail) => {
+const check =(label, cond, detail) => {
   if (cond) console.log(`    ✓ ${label}`);
   else { bad++; console.log(`    ✗ ${label}`); if (detail !== undefined) console.log(`        ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`); }
 };
@@ -247,9 +254,9 @@ try {
   await cdp('Page.enable');
   await cdp('Page.addScriptToEvaluateOnNewDocument', {
     source: `try {
-      localStorage.setItem('waxframe_v2_hive', ${JSON.stringify(JSON.stringify(HIVE_SEED))});
-      localStorage.setItem('waxframe_v2_project', ${JSON.stringify(JSON.stringify(PROJECT_SEED))});
-      localStorage.setItem('waxframe_v2_session', ${JSON.stringify(JSON.stringify(SESSION_SEED))});
+      localStorage.setItem('waxframe_v2_hive', ${jsLiteral(JSON.stringify(HIVE_SEED))});
+      localStorage.setItem('waxframe_v2_project', ${jsLiteral(JSON.stringify(PROJECT_SEED))});
+      localStorage.setItem('waxframe_v2_session', ${jsLiteral(JSON.stringify(SESSION_SEED))});
     } catch (e) {}`
   });
   await cdp('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html` });
@@ -259,7 +266,7 @@ try {
   console.log('  ▶ Rendering every screen that shows a name');
   const screens = ['screen-bees', 'screen-project', 'screen-reference', 'screen-document', 'screen-work'];
   for (const s of screens) {
-    await evaluate(`(() => { try { if (typeof goToScreen === 'function') goToScreen(${JSON.stringify(s)}); } catch (e) {} return 1; })()`);
+    await evaluate(`(() => { try { if (typeof goToScreen === 'function') goToScreen(${jsLiteral(s)}); } catch (e) {} return 1; })()`);
     await sleep(500);
   }
   // Settings renders provider labels; the hive editor renders AI names.
@@ -345,7 +352,7 @@ try {
     ep.bmModels === '', ep);
 
   console.log('\n  ▶ Restored console HTML — the one place saved data becomes markup again');
-  await evaluate('window.HOSTILE = ' + JSON.stringify(HOSTILE_CONSOLE) + '; 1');
+  await evaluate('window.HOSTILE = ' + jsLiteral(HOSTILE_CONSOLE) + '; 1');
   const c = JSON.parse(await evaluate(`(() => {
     const HOSTILE = window.HOSTILE;
     // Drive the restore function DIRECTLY rather than loadSession(), which

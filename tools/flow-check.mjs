@@ -280,6 +280,13 @@ ws.onmessage = (ev) => {
     m.error ? rej(new Error(m.error.message)) : res(m.result);
   }
 };
+// Serialise a value as a JavaScript literal for splicing into an expression
+// the page evaluates. JSON.stringify alone leaves <, >, U+2028 and U+2029 raw;
+// escaping them keeps the literal's value identical while closing the gap
+// CodeQL's js/bad-code-sanitization rule reports.
+const JS_UNSAFE = { '<': '\\u003C', '>': '\\u003E', '/': '\\u002F', '\\': '\\\\', '\b': '\\b', '\f': '\\f', '\n': '\\n', '\r': '\\r', '\t': '\\t', '\0': '\\0', '\u2028': '\\u2028', '\u2029': '\\u2029' };
+const jsLiteral = (v) => JSON.stringify(v).replace(/[<>\b\f\n\r\t\0\u2028\u2029]/g, (ch) => JS_UNSAFE[ch]);
+
 function cdp(method, params = {}) {
   const id = ++cdpId;
   return new Promise((res, rej) => {
@@ -360,8 +367,8 @@ async function bootWithSeed() {
   await cdp('Runtime.evaluate', { expression: 'try{localStorage.clear()}catch(e){}' }).catch(() => {});
   await cdp('Page.addScriptToEvaluateOnNewDocument', {
     source: `try {
-      localStorage.setItem('waxframe_v2_hive', ${JSON.stringify(JSON.stringify(HIVE_SEED))});
-      localStorage.setItem('waxframe_v2_project', ${JSON.stringify(JSON.stringify(PROJECT_SEED))});
+      localStorage.setItem('waxframe_v2_hive', ${jsLiteral(JSON.stringify(HIVE_SEED))});
+      localStorage.setItem('waxframe_v2_project', ${jsLiteral(JSON.stringify(PROJECT_SEED))});
       localStorage.setItem('waxframe_streaming', 'true');
     } catch (e) {}`
   });
@@ -409,16 +416,16 @@ try {
 
   const SCREENS = ['screen-bees', 'screen-project', 'screen-reference', 'screen-document'];
   for (const id of SCREENS) {
-    await evaluate(`(goToScreen(${JSON.stringify(id)}), true)`);
-    await until(`${id} visible`, `document.querySelector('.screen.active') && document.querySelector('.screen.active').id === ${JSON.stringify(id)}`);
+    await evaluate(`(goToScreen(${jsLiteral(id)}), true)`);
+    await until(`${id} visible`, `document.querySelector('.screen.active') && document.querySelector('.screen.active').id === ${jsLiteral(id)}`);
     check(`${id} reachable`, true);
   }
   // Walk backwards and confirm the project fields survive every hop — the
   // specific failure this is guarding: a Back that quietly resets state.
   const nameBefore = await evaluate(`document.getElementById('projectName') ? document.getElementById('projectName').value : null`);
   for (const id of [...SCREENS].reverse()) {
-    await evaluate(`(goToScreen(${JSON.stringify(id)}), true)`);
-    await until(`${id} visible on the way back`, `document.querySelector('.screen.active').id === ${JSON.stringify(id)}`);
+    await evaluate(`(goToScreen(${jsLiteral(id)}), true)`);
+    await until(`${id} visible on the way back`, `document.querySelector('.screen.active').id === ${jsLiteral(id)}`);
   }
   const nameAfter = await evaluate(`document.getElementById('projectName') ? document.getElementById('projectName').value : null`);
   check('project name survives a full backward walk', nameBefore === nameAfter, { nameBefore, nameAfter });

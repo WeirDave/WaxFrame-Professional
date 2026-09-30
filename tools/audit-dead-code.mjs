@@ -126,10 +126,13 @@ console.log(`declared top-level functions in js/: ${declared.size}`);
 
 const orphans = [], exportOnly = [];
 for (const [name, file] of declared) {
-  const re = new RegExp('\\b' + name.replace(/\$/g, '\\$') + '\\b', 'g');
+  // Escape every regex metacharacter, not only `$`: an identifier can only
+  // carry `$`, but escaping the full set is what makes that safe to rely on.
+  const safe = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('\\b' + safe + '\\b', 'g');
   const total = (codeText.match(re) || []).length;
   if (total <= 1) orphans.push({ name, file, total });
-  else if (total === 2 && new RegExp('window\\.' + name + '\\s*=').test(codeText))
+  else if (total === 2 && new RegExp('window\\.' + safe + '\\s*=').test(codeText))
     exportOnly.push({ name, file });
 }
 
