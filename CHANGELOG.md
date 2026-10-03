@@ -1,5 +1,44 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.560 — "Email me this link" on the phone screen
+
+**Released:** 2026-10-02
+**Build:** 20261002-001
+
+### What changed
+
+**The screen WaxFrame shows on phones now has an "Email me this link"
+button.** WaxFrame needs a desktop or laptop, so on a phone `waxframe.com`
+shows a "Thanks for finding us" screen instead of the app. The new button sits
+in the box below the pricing line, above "Save or share this page". It opens
+the phone's mail app with a message already written: the subject "WaxFrame —
+open this on your computer" and a body containing the `https://waxframe.com/`
+link and a note that the free 3-round trial runs on a laptop or desktop. The
+recipient field is left empty for the visitor to fill in. The link is a
+standard `mailto:` link: WaxFrame sends nothing and receives nothing, and the
+message goes nowhere unless the visitor sends it.
+
+**"Save or share this page" is now an outlined secondary button below it.**
+Bookmarking and the system share sheet do not work reliably inside the
+Facebook and Instagram in-app browsers, while a `mailto:` link does, so the
+email button takes the primary position. The box's text now reads "Email
+yourself waxframe.com or bookmark it, then open it from your laptop when
+you're ready."
+
+### Verification
+- At 375 × 812 the box shows the orange "Email me this link" button above an
+  outlined "Save or share this page" button, with no horizontal scroll, in
+  both light and dark themes.
+- The button's address decodes to the intended subject, body and link.
+- Gate: all stages pass.
+
+### Files changed
+`index.html` (phone screen), `style.css` (secondary button style),
+`CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+Revert this commit.
+
 ## v3.63.559 — Edit Hive no longer says keyless AIs are skipped
 
 **Released:** 2026-09-29

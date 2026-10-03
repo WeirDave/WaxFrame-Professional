@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260929-001
+   Build: 20261002-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10477,6 +10477,14 @@ button.link-accent {
 }
 .mobile-overlay-share-btn:active {
   transform: translateY(1px);
+}
+/* v3.63.560 — the share button steps down to an outline when the
+   "Email me this link" anchor takes the primary slot above it. */
+a.mobile-overlay-share-btn { text-decoration: none; }
+.mobile-overlay-share-btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border2);
 }
 .mobile-overlay-link-inline {
   color: var(--accent, #f5a623);
