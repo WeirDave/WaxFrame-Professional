@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261002-002
+// Build: 20261003-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261002-002';         // build stamp — update each session
+const BUILD = '20261003-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2558,6 +2558,36 @@ function _attentionClear() {
     _attentionOriginalTitle = '';
   }
 }
+
+// ── Background-tab round notice (v3.63.562) ──
+// A real round takes one to several minutes, and the natural thing to do
+// while it runs is switch tabs. The only signal that it had finished was a
+// sound, which is muted for many people and inaudible in a meeting, so the
+// usual experience was clicking back to check. When a round ends while the
+// tab is hidden, the tab title now says how it ended — "✅ Round 3 done",
+// "⚡ Round 3 needs a decision", "❌ Round 3 failed" — and goes back to
+// normal the moment the tab is visible again. No permission prompt and no
+// OS notification: the browser tab strip is already where people look.
+const _WF_TAB_NOTICE_MARK = '\u200b';   // zero-width tag identifying our titles
+function _wfBaseTitle() { return 'WaxFrame ' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : ''); }
+function _wfTabNotice(text) {
+  try {
+    if (!document.hidden) return;
+    // The 5-minute attention flasher owns the title while it runs; it is the
+    // more urgent signal and restores its own saved title when it stops.
+    if (_attentionTitleFlasher) return;
+    document.title = _WF_TAB_NOTICE_MARK + text + ' · WaxFrame';
+  } catch (e) { /* cosmetic — never let a title break a round */ }
+}
+function _wfTabNoticeClear() {
+  if (document.title.indexOf(_WF_TAB_NOTICE_MARK) === 0) document.title = _wfBaseTitle();
+  // If the attention flasher captured one of our titles as its "original",
+  // it would put the notice back when it stops. Point it at the real title.
+  if (_attentionOriginalTitle && _attentionOriginalTitle.indexOf(_WF_TAB_NOTICE_MARK) === 0) _attentionOriginalTitle = _wfBaseTitle();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') _wfTabNoticeClear();
+});
 
 function consoleLog(msg, type = 'info', rawData = null, link = null) {
   const el = document.getElementById('liveConsole');
@@ -4739,6 +4769,9 @@ function resetSessionState() {
   window._lengthGuardOverride    = false;
   window._finishExported         = false;
 
+  // v3.63.562 — the spend meter is per session, like the round counter.
+  if (window.WFSpend) window.WFSpend.reset();
+
   // Drop the persisted copy too, so a reload cannot resurrect the old run
   // between here and the next saveSession().
   try { localStorage.removeItem(LS_SESSION); } catch (e) { /* non-critical */ }
@@ -4883,7 +4916,7 @@ async function clearProject() {
   // Reset Finish modal export buttons to their pristine innerHTML captured on
   // DOMContentLoaded. Without this, a prior session's "✅ Exported!" / done
   // state carries over to the next session's Finish modal.
-  ['finishBtnDoc', 'finishBtnTranscript'].forEach(id => {
+  ['finishBtnDoc', 'finishBtnDocx', 'finishBtnTranscript'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn || !btn.dataset.originalHtml) return;
     btn.innerHTML = btn.dataset.originalHtml;
@@ -13633,8 +13666,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.561'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.561';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.562'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.562';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -16911,9 +16944,11 @@ function showFinishModal() {
   const hasHistory = history.length > 0;
 
   const btnDoc      = document.getElementById('finishBtnDoc');
+  const btnDocx     = document.getElementById('finishBtnDocx');
   const btnTranscript = document.getElementById('finishBtnTranscript');
 
   if (btnDoc)       btnDoc.classList.toggle('finish-modal-btn-disabled', !hasDoc);
+  if (btnDocx)      btnDocx.classList.toggle('finish-modal-btn-disabled', !hasDoc);
   if (btnTranscript) btnTranscript.classList.toggle('finish-modal-btn-disabled', !hasHistory);
 
   // v3.35.1 — Re-enable an "exported" button when MORE rounds have run
@@ -16925,7 +16960,7 @@ function showFinishModal() {
   // Without this fix the button stayed disabled for the rest of the
   // session even after dozens of additional rounds, making it impossible
   // to capture an updated transcript without reloading the page.
-  [btnDoc, btnTranscript].forEach(btn => {
+  [btnDoc, btnDocx, btnTranscript].forEach(btn => {
     if (!btn) return;
     const stampStr = btn.dataset.exportedHistoryLen;
     if (stampStr === undefined || stampStr === '') return;
@@ -18966,6 +19001,7 @@ async function runBuilderOnly() {
         const _overrideNote = _userKept ? ' · length-guard override' : '';
         consoleLog(`✅ Round ${round} complete — Builder only (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})${_overrideNote}`, 'success');
         playRosieSound();
+        _wfTabNotice(`✅ Round ${round} done`);
       }
     } else if (!builderHadError) {
       builderHadError = true;
@@ -19079,6 +19115,7 @@ async function runBuilderOnly() {
       ? (_failedRoundDetails.length > 200 ? _failedRoundDetails.slice(0, 200) + '…' : _failedRoundDetails)
       : '';
     consoleLog(`❌ Round ${round} (Builder Only) failed — ${_failedRoundReason || 'unknown'}${_failDetailsPreviewBO ? ': ' + _failDetailsPreviewBO : ''}`, 'error');
+    _wfTabNotice(`❌ Round ${round} failed`);
     // Save failed round to history for accurate records and export transcript
     history.push({
       round, phase,
@@ -19759,6 +19796,7 @@ async function runRound(opts) {
     const _failedNoun = _failedCount === 1 ? 'a bee' : `${_failedCount} bees`;
     consoleLog(`🛑 Round ${round} halted — ${_failedNoun} failed mid-round. Builder phase skipped to save the call. Fix the flagged bee${_failedCount === 1 ? '' : 's'} on the troubleshooting card, then click Re-send (or Smoke) to finalize — surgical retry, not a full re-bill.`, 'warn');
     setStatus(`⏸ Round ${round} paused — fix the flagged bee${_failedCount === 1 ? '' : 's'} on the card, then re-send or smoke`);
+    _wfTabNotice(`⏸ Round ${round} paused — a bee failed`);
     if (btn) {
       btn.classList.remove('running');
       const lbl = btn.querySelector('.shake-wide-label');
@@ -20393,8 +20431,12 @@ async function runRound(opts) {
           setStatus(`✅ Round ${round} complete — document updated`);
           const _overrideNote = _userKept ? ' · length-guard override' : '';
           consoleLog(`✅ Round ${round} complete — document updated (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})${_overrideNote}`, 'success');
+          if (window.WFSpend && window.WFSpend.total() > 0) {
+            consoleLog(`💲 Round ${round} est. cost ${window.WFSpend.format(window.WFSpend.roundCost(round))} · session so far ~${window.WFSpend.format(window.WFSpend.total())}`, 'info');
+          }
           const hasUserConflicts = window._lastConflicts?.userDecisions?.length > 0;
           if (hasUserConflicts) { playRoundCompleteSound(); } else { playRosieSound(); }
+          _wfTabNotice(hasUserConflicts ? `⚡ Round ${round} needs a decision` : `✅ Round ${round} done`);
         }
       } else if (!builderHadError) {
         // Extraction failed — keep existing working document unchanged
@@ -20559,6 +20601,7 @@ async function runRound(opts) {
       ? (_failedRoundDetails.length > 200 ? _failedRoundDetails.slice(0, 200) + '…' : _failedRoundDetails)
       : '';
     consoleLog(`❌ Round ${round} failed — ${_failedRoundReason || 'unknown'}${_failDetailsPreview ? ': ' + _failDetailsPreview : ''}`, 'error');
+    _wfTabNotice(`❌ Round ${round} failed`);
     // Save failed round to history for accurate records and export transcript
     const _failedEntry = {
       round, phase,
@@ -21202,6 +21245,10 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   } else {
     data = await response.json();
   }
+  // v3.63.562 — Session spend meter. Recorded here, before the content-filter
+  // and empty-response checks below, because a response the app then rejects
+  // was still billed by the provider. Never throws (see session-spend.js).
+  if (window.WFSpend) window.WFSpend.record(ai, getModelForAI(ai) || cfg.model, data, round);
   // v3.63.489 — _finishReason is the provider's stop reason via the shared
   // coalescer; `finishReason` below keeps the blockReason fallback that
   // only the content-filter check wants.
@@ -23375,6 +23422,7 @@ function renderRoundHistory() {
         </div>
         <div class="round-hist-hdr-right">
           <button class="round-hist-view-btn" data-action="call" data-fn="viewRoundDoc" data-arg="${idx}">View Doc</button>
+          ${safeRound === 0 ? '' : `<button class="round-hist-view-btn" data-action="call" data-fn="viewRoundChanges" data-arg="${idx}" title="See exactly what changed in this round: removed text struck through, added text highlighted">🔀 Changes</button>`}
           <button class="round-hist-restore-btn" data-action="call" data-fn="restoreRound" data-arg="${idx}" title="Restore this version of the document">↩ Restore</button>
         </div>
       </div>
@@ -23636,12 +23684,14 @@ function viewRoundDoc(idx) {
       </div>
       <div class="view-round-tab-bar">
         <button class="work-phase-pill hist-resp-tab active" data-tab-id="__doc__">📄 Document</button>
+        <button class="work-phase-pill hist-resp-tab" data-tab-id="__changes__">🔀 Changes</button>
         <button class="work-phase-pill hist-resp-tab" data-tab-id="__notes__">📝 Notes</button>
         ${tabButtons}
       </div>
       <div class="hist-resp-panel active" data-panel-id="__doc__">
         <textarea id="histDocText" class="hist-doc-modal-ta" readonly>${esc(h.doc)}</textarea>
       </div>
+      <div class="hist-resp-panel" data-panel-id="__changes__">${_roundChangesPanelHtml(idx, 'previous')}</div>
       <div class="hist-resp-panel" data-panel-id="__notes__"><textarea class="hist-doc-modal-ta" readonly>${esc(h.notes || '(no notes saved for this round)')}</textarea></div>
       ${tabPanels}
     </div>
@@ -23652,8 +23702,190 @@ function viewRoundDoc(idx) {
   modal.addEventListener('click', (e) => {
     const btn = e.target.closest('.hist-resp-tab[data-tab-id]');
     if (btn) switchHistTab(btn.dataset.tabId, btn);
+    // v3.63.562 — "Compare with" toggle inside the Changes panel. The base is
+    // read from a fixed two-value attribute, never from history content.
+    const base = e.target.closest('.wf-docdiff-base[data-base]');
+    if (base) {
+      const panel = Array.from(modal.querySelectorAll('.hist-resp-panel')).find(p => p.dataset.panelId === '__changes__');
+      if (panel) panel.innerHTML = _roundChangesPanelHtml(idx, base.dataset.base === 'original' ? 'original' : 'previous');
+    }
   });
   document.body.appendChild(modal);
+}
+
+// v3.63.562 — Round History "Changes" view. Before this, the only way to see
+// what a round did was to open two rounds' documents side by side and read
+// them line by line; the Applied Changes card covers only the latest round
+// and only the edits the Builder chose to declare. This diffs the stored
+// documents themselves, so it shows every change whether or not it was
+// declared, for any round, against the previous round or the original.
+function viewRoundChanges(idx) {
+  viewRoundDoc(idx);
+  const modal = document.getElementById('histDocModal');
+  if (!modal) return;
+  const tab = Array.from(modal.querySelectorAll('.hist-resp-tab')).find(b => b.dataset.tabId === '__changes__');
+  if (tab) switchHistTab('__changes__', tab);
+}
+
+// The document a round's changes are measured against: the nearest earlier
+// round that actually produced one (failed rounds keep the document
+// unchanged, so they are skipped), or the earliest saved document.
+function _roundCompareBase(idx, mode) {
+  const i0 = Number(idx);
+  if (!Number.isInteger(i0) || i0 < 0 || i0 >= history.length) return null;
+  if (mode === 'original') {
+    for (let i = 0; i < i0; i++) {
+      const e = history[i];
+      if (e && !e.failed && typeof e.doc === 'string') return { entry: e, idx: i };
+    }
+    return null;
+  }
+  for (let i = i0 - 1; i >= 0; i--) {
+    const e = history[i];
+    if (e && !e.failed && typeof e.doc === 'string') return { entry: e, idx: i };
+  }
+  return null;
+}
+
+function _roundChangesPanelHtml(idx, mode) {
+  const h = history[Number(idx)];
+  if (!h || typeof h.doc !== 'string') return '<div class="wf-docdiff-empty">No document saved for this round.</div>';
+  const base = _roundCompareBase(idx, mode);
+  const btn = (m, label) => `<button class="work-phase-pill wf-docdiff-base${m === mode ? ' active' : ''}" data-base="${m}">${label}</button>`;
+  const toolbar = `<div class="wf-docdiff-bar"><span class="wf-docdiff-bar-label">Compare with:</span>${btn('previous', 'Previous round')}${btn('original', 'First version')}`;
+  if (!base) {
+    return toolbar + '</div><div class="wf-docdiff-empty">This is the first version of the document, so there is nothing earlier to compare it with.</div>';
+  }
+  const baseLabel = base.entry.round === 0 ? 'the original' : `Round ${Number.isFinite(base.entry.round) ? base.entry.round : '?'}`;
+  const d = wfDocDiff(base.entry.doc, h.doc);
+  const summary = d.identical
+    ? `No changes from ${esc(baseLabel)}.`
+    : `Against ${esc(baseLabel)}: ` + [
+        d.wordsAdded   ? `<span class="wf-docdiff-stat-add">+${d.wordsAdded.toLocaleString()} word${d.wordsAdded === 1 ? '' : 's'}</span>` : '',
+        d.wordsRemoved ? `<span class="wf-docdiff-stat-del">−${d.wordsRemoved.toLocaleString()} word${d.wordsRemoved === 1 ? '' : 's'}</span>` : '',
+        `${d.linesChanged.toLocaleString()} line${d.linesChanged === 1 ? '' : 's'} touched`
+      ].filter(Boolean).join(' · ');
+  return toolbar + `<span class="wf-docdiff-summary">${summary}</span></div><div class="wf-docdiff">${d.html}</div>`;
+}
+
+// Line-level LCS, then a word-level LCS inside each modified line pair, so a
+// one-word edit in a long paragraph reads as one word, not a replaced
+// paragraph. Long unchanged stretches collapse to a marker with two lines of
+// context either side. Every string from the documents is escaped; nothing
+// from history reaches the DOM unescaped.
+function wfDocDiff(oldText, newText) {
+  const e = (s) => esc(String(s == null ? '' : s));
+  const a = String(oldText == null ? '' : oldText).replace(/\r\n?/g, '\n').split('\n');
+  const b = String(newText == null ? '' : newText).replace(/\r\n?/g, '\n').split('\n');
+  const words = (s) => (s.match(/[\p{L}\p{N}'’-]+/gu) || []).length;
+  const n = a.length, m = b.length;
+
+  // Line ops. Above ~4M cells (2,000 x 2,000 lines) the table is too big to
+  // build in a click handler, so the whole document is shown as replaced.
+  let ops = [];
+  if (n * m <= 4000000) {
+    const dp = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+    for (let i = n - 1; i >= 0; i--)
+      for (let j = m - 1; j >= 0; j--)
+        dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    let i = 0, j = 0;
+    while (i < n || j < m) {
+      if (i < n && j < m && a[i] === b[j]) { ops.push({ t: 'eq', s: a[i] }); i++; j++; }
+      // Deletions first, so a changed line comes out as del-then-ins and the
+      // pairing below can show it as one modified line.
+      else if (i < n && (j >= m || dp[i + 1][j] >= dp[i][j + 1])) { ops.push({ t: 'del', s: a[i] }); i++; }
+      else { ops.push({ t: 'ins', s: b[j] }); j++; }
+    }
+  } else {
+    ops = a.map(s => ({ t: 'del', s })).concat(b.map(s => ({ t: 'ins', s })));
+  }
+
+  // Word diff for one old/new line pair: removed words struck, added words
+  // highlighted, shared words plain.
+  // Punctuation is its own token, so "fluffy." → "fluffy and pale." reads
+  // as two added words rather than one word replaced by three.
+  const tok = (str) => str.match(/\s+|[\p{L}\p{N}'’-]+|[^\s\p{L}\p{N}]/gu) || [];
+  const wordsOf = (str) => str.match(/[\p{L}\p{N}'’-]+/gu) || [];
+  const wordDiff = (x, y) => {
+    const p = tok(x), q = tok(y);
+    if (p.length * q.length > 250000) return `<del class="wf-dw-del">${e(x)}</del> <ins class="wf-dw-ins">${e(y)}</ins>`;
+    const t = Array.from({ length: p.length + 1 }, () => new Int32Array(q.length + 1));
+    for (let i = p.length - 1; i >= 0; i--)
+      for (let j = q.length - 1; j >= 0; j--)
+        t[i][j] = p[i] === q[j] ? t[i + 1][j + 1] + 1 : Math.max(t[i + 1][j], t[i][j + 1]);
+    // Walk the table, then emit each run of differences as one struck old
+    // span followed by one highlighted new span ("~~375 degrees F~~ 190 C"),
+    // which reads far better than interleaving them token by token.
+    let i = 0, j = 0, out = '', oldRun = '', newRun = '';
+    const flushRun = () => {
+      const o = oldRun.trim(), nw = newRun.trim();
+      if (o || nw) {
+        // Keep the run's outer whitespace so neighbouring words do not fuse.
+        const src = newRun || oldRun;
+        out += (/^\s/.test(src) ? ' ' : '') +
+               (o ? `<del class="wf-dw-del">${e(o)}</del>` : '') +
+               (nw ? `<ins class="wf-dw-ins">${e(nw)}</ins>` : '') +
+               (/\s$/.test(src) ? ' ' : '');
+      } else {
+        out += e(newRun);   // whitespace-only change: show the new spacing
+      }
+      oldRun = ''; newRun = '';
+    };
+    while (i < p.length || j < q.length) {
+      if (i < p.length && j < q.length && p[i] === q[j]) { flushRun(); out += e(p[i]); i++; j++; }
+      else if (i < p.length && (j >= q.length || t[i + 1][j] >= t[i][j + 1])) { oldRun += p[i]; i++; }
+      else { newRun += q[j]; j++; }
+    }
+    flushRun();
+    return out;
+  };
+
+  // Pair each run of deletions with the run of insertions that follows it.
+  const rows = [];
+  let wordsAdded = 0, wordsRemoved = 0, linesChanged = 0;
+  for (let k = 0; k < ops.length;) {
+    if (ops[k].t === 'eq') { rows.push({ cls: 'eq', html: e(ops[k].s) || '&nbsp;' }); k++; continue; }
+    const dels = [], inss = [];
+    while (k < ops.length && ops[k].t !== 'eq') (ops[k].t === 'del' ? dels : inss).push(ops[k++].s);
+    const pairs = Math.min(dels.length, inss.length);
+    for (let x = 0; x < Math.max(dels.length, inss.length); x++) {
+      linesChanged++;
+      if (x < pairs) {
+        const before = wordsOf(dels[x]), after = wordsOf(inss[x]);
+        // Count words by multiset difference so a moved word is not counted twice.
+        const bag = new Map();
+        before.forEach(w => bag.set(w, (bag.get(w) || 0) + 1));
+        let kept = 0;
+        after.forEach(w => { const c = bag.get(w) || 0; if (c > 0) { bag.set(w, c - 1); kept++; } });
+        wordsAdded += after.length - kept; wordsRemoved += before.length - kept;
+        rows.push({ cls: 'mod', html: wordDiff(dels[x], inss[x]) || '&nbsp;' });
+      } else if (x < dels.length) {
+        wordsRemoved += words(dels[x]);
+        rows.push({ cls: 'del', html: `<del class="wf-dw-del">${e(dels[x]) || '&nbsp;'}</del>` });
+      } else {
+        wordsAdded += words(inss[x]);
+        rows.push({ cls: 'ins', html: `<ins class="wf-dw-ins">${e(inss[x]) || '&nbsp;'}</ins>` });
+      }
+    }
+  }
+
+  // Collapse unchanged stretches, keeping two lines of context.
+  const CONTEXT = 2;
+  const keep = rows.map(() => false);
+  rows.forEach((r, i) => {
+    if (r.cls === 'eq') return;
+    for (let k = Math.max(0, i - CONTEXT); k <= Math.min(rows.length - 1, i + CONTEXT); k++) keep[k] = true;
+  });
+  let html = '', hidden = 0;
+  const flush = () => { if (hidden) { html += `<div class="wf-dl wf-dl-skip">··· ${hidden.toLocaleString()} unchanged line${hidden === 1 ? '' : 's'} ···</div>`; hidden = 0; } };
+  rows.forEach((r, i) => {
+    if (!keep[i]) { hidden++; return; }
+    flush();
+    html += `<div class="wf-dl wf-dl-${r.cls}">${r.html}</div>`;
+  });
+  flush();
+  const identical = linesChanged === 0;
+  return { html: identical ? '<div class="wf-docdiff-empty">The document is identical.</div>' : html, wordsAdded, wordsRemoved, linesChanged, identical };
 }
 
 function switchHistTab(id, btn) {
@@ -23825,9 +24057,12 @@ function buildExportName() {
   return safeVer ? `${safeName}-${safeVer}` : safeName;
 }
 
-function exportDocument() {
+// v3.63.562 — Shared by both document exports (.txt and .docx) so the two
+// cannot drift on footer stripping, the byline, or the filename. Returns null
+// when there is nothing to export (and has already said so).
+function _exportDocumentParts() {
   const docRaw = document.getElementById('workDocument')?.value?.trim();
-  if (!docRaw) { toast('⚠️ Nothing to export yet'); return; }
+  if (!docRaw) { toast('⚠️ Nothing to export yet'); return null; }
 
   // v3.50.0 — Strip any pre-existing WaxFrame footer before appending the
   // new one. Scenario: user takes an exported document (with footer) and
@@ -23850,7 +24085,11 @@ function exportDocument() {
   // for safety) followed by "(Produced|Crafted|Refined) by WaxFrame ..."
   // and the URL line. The regex tolerates leading whitespace, optional
   // separator forms (---, ━━, em-dashes), and version-string variations.
-  const FOOTER_RE = /\n*(?:[-–—━]{2,}\s*\n)?(?:Produced|Crafted|Refined) by WaxFrame v?[\d.]+(?: Pro)? in \d+ rounds? and (?:\d+ minutes?|less than a minute)\.\s*\nweirdave\.github\.io\/WaxFrame-Professional\s*$/i;
+  const FOOTER_RE = /\n*(?:[-–—━]{2,}\s*\n)?(?:Produced|Crafted|Refined) by WaxFrame v?[\d.]+(?: Pro)? in \d+ rounds? and (?:\d+ minutes?|less than a minute)\.\s*\n(?:weirdave\.github\.io\/WaxFrame-Professional|waxframe\.com)\s*$/i;
+  // v3.63.562 — the byline's URL line became waxframe.com but this pattern
+  // still only accepted the old github.io address, so re-exporting a document
+  // that already carried a current footer stacked a second one under it.
+  // Both URLs are accepted now.
   const doc = docRaw.replace(FOOTER_RE, '').trimEnd();
 
   const totalRounds = round - 1;
@@ -23859,8 +24098,14 @@ function exportDocument() {
   const verb        = (docTab === 'scratch') ? 'Crafted' : 'Refined';
   const byline      = `\n\n---\n${verb} by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nwaxframe.com`;
 
+  return { doc, byline, filename: buildExportName() };
+}
+
+function exportDocument() {
+  const parts = _exportDocumentParts();
+  if (!parts) return;
+  const { doc, byline, filename } = parts;
   const out      = doc + byline;
-  const filename = buildExportName();
   const blob     = new Blob([out], { type: 'text/plain' });
   const url      = URL.createObjectURL(blob);
   const a        = document.createElement('a');
@@ -23883,6 +24128,63 @@ function exportDocument() {
   document.dispatchEvent(new CustomEvent('waxframe:exported', { detail: { kind: 'document' } }));
 }
 
+
+// v3.63.562 — Word export. The hive's output is plain text by design (the
+// Builder prompt forbids markdown), and the people refining a cover letter,
+// a proposal or a résumé almost always hand it on as a Word file — so until
+// now every one of them pasted the .txt into Word by hand. This writes a real
+// .docx through the vendored `docx` library the help pages already use: one
+// Word paragraph per line, blank lines kept, the WaxFrame byline as a small
+// grey footer paragraph. No formatting is invented — headings stay whatever
+// plain line the hive wrote, because guessing which line is a heading would
+// get a cover letter's address block wrong.
+async function exportDocumentDocx() {
+  const parts = _exportDocumentParts();
+  if (!parts) return;
+  const D = window.docx;
+  if (!D || !D.Document || !D.Packer) {
+    toast('⚠️ Word export is unavailable in this copy — exported as .txt instead', 5000);
+    exportDocument();
+    return;
+  }
+  const { doc, byline, filename } = parts;
+  try {
+    const body = doc.split(/\r?\n/).map(line => new D.Paragraph({
+      children: line ? [new D.TextRun(line)] : [],
+      spacing: { after: 0 }
+    }));
+    const foot = byline.trim().split('\n').filter(l => l && !/^-+$/.test(l)).map((line, i) => new D.Paragraph({
+      children: [new D.TextRun({ text: line, italics: true, size: 16, color: '777777' })],
+      spacing: { before: i === 0 ? 480 : 0, after: 0 }
+    }));
+    const projectTitle = document.getElementById('workProjectName')?.textContent?.trim() || 'WaxFrame document';
+    const wordDoc = new D.Document({
+      creator: 'WaxFrame',
+      title: projectTitle,
+      description: (byline.match(/(?:Crafted|Refined) by WaxFrame[^\n]*/) || [''])[0],
+      styles: { default: { document: { run: { font: 'Calibri', size: 22 }, paragraph: { spacing: { line: 276 } } } } },
+      sections: [{ children: body.concat(foot) }]
+    });
+    const blob = await D.Packer.toBlob(wordDoc);
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${filename}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Same deferred revoke as exportDocument — see the v3.32.9 note there.
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    toast('📝 Word document exported');
+    window._finishExported = true;
+    document.dispatchEvent(new CustomEvent('waxframe:exported', { detail: { kind: 'docx' } }));
+  } catch (e) {
+    consoleLog(`⚠️ Word export failed (${e && e.message ? e.message : e}) — exported as .txt instead`, 'warn');
+    toast('⚠️ Word export failed — exported as .txt instead', 5000);
+    exportDocument();
+  }
+}
+
 function exportTranscript() {
   const name    = document.getElementById('projectName')?.value.trim()    || 'AI-Hive';
   const version = document.getElementById('projectVersion')?.value.trim() || '';
@@ -23899,6 +24201,12 @@ function exportTranscript() {
 
   // ── HEADER ──
   let out = `${eq}\nWAXFRAME — SESSION TRANSCRIPT\nVersion: ${APP_VERSION}\nBuild: ${BUILD}\nProject: ${name}${version ? ` (${version})` : ''}\nRounds completed: ${totalRounds}\nSession duration: ${timeStr}\nExported: ${new Date().toLocaleString()}\n${eq}\n\n`;
+
+  // v3.63.562 — what the session cost, from the spend meter. Omitted when
+  // nothing has been sent; AIs whose endpoint reported no usage are listed
+  // as "not priced" rather than as a $0.00 nobody measured.
+  const _spendSummary = window.WFSpend ? window.WFSpend.summaryText() : '';
+  if (_spendSummary) out += `SESSION SPEND\n${sep}\n${_spendSummary}\n\n`;
 
   // ── PROJECT SETUP — read live values from Project screen fields ──
   const projDocType  = document.getElementById('goalDocType')?.value.trim()  || '(blank)';
@@ -24219,7 +24527,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // session because exportDocument and exportTranscript dispatch a
   // waxframe:exported event that overwrites button innerHTML when the Finish
   // modal is active.
-  ['finishBtnDoc', 'finishBtnTranscript'].forEach(id => {
+  ['finishBtnDoc', 'finishBtnDocx', 'finishBtnTranscript'].forEach(id => {
     const btn = document.getElementById(id);
     if (btn && !btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
   });
@@ -24233,8 +24541,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modal = document.getElementById('finishModal');
     if (!modal || !modal.classList.contains('active')) return;
     const kind = e.detail?.kind;
-    if (kind === 'document') {
-      const btn = document.getElementById('finishBtnDoc');
+    if (kind === 'document' || kind === 'docx') {
+      // v3.63.562 — .txt and .docx share this path; each marks its own button.
+      const btn = document.getElementById(kind === 'docx' ? 'finishBtnDocx' : 'finishBtnDoc');
       if (btn) {
         btn.textContent = '✅ Exported!';
         btn.disabled = true;

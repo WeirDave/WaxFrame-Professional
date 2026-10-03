@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing-renderer.js
-// Build: 20261002-002
+// Build: 20261003-001
 //  Dynamic pricing renderer for ai-api-pricing.html. Fetches
 //  live data from the waxframe-pricing Cloudflare Worker;
 //  falls back to the embedded snapshot if the Worker is
@@ -502,7 +502,17 @@
       });
   }
 
+  // v3.63.562 — The work screen's session spend meter (js/session-spend.js)
+  // prices each call from this same snapshot, so there is exactly one copy of
+  // the price table in the app. It reads FALLBACK_DATA only and never calls
+  // loadPricing(): the main app makes no request to the pricing Worker, so
+  // running a round adds no outbound call beyond the providers themselves.
+  window.WFPricing = { snapshot: FALLBACK_DATA };
+
   function init() {
+    // Loaded on index.html too, for WFPricing above. Only the pricing page
+    // has the tables, and only it should fetch the live payload.
+    if (!document.getElementById('pricingBody')) return;
     attachSortHandlers();
     attachAllModelsFilterHandlers();
     loadPricing().then(function(result) {
