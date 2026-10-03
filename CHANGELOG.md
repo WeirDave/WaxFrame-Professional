@@ -1,5 +1,110 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.562 — What a session cost, Word export, what each round changed, and a tab that says when it's done
+
+**Released:** 2026-10-03
+**Build:** 20261003-001
+
+### What changed
+
+Four improvements chosen from a paying customer's point of view: someone
+running real documents on their own API keys, who switches tabs while a round
+runs and hands the result on as a Word file.
+
+**A session spend meter in the work-screen footer.** A new blue pill reads
+"Spend: ~$0.02" and updates after every call. It adds up the input and output
+tokens each provider reported and prices them against the pricing snapshot
+already shipped with the build (the same data as the AI API Pricing page).
+Clicking it opens a per-AI breakdown: model, calls, input tokens, output
+tokens and estimated cost, with a session total. The Live Console also logs
+"💲 Round N est. cost $X · session so far ~$Y" when a round completes, and the
+session transcript gains a SESSION SPEND section. Until now the only cost
+figure in the app was the welcome screen's forecast; finding out what a
+session actually cost meant opening every provider's billing page.
+
+The figure is labelled an estimate everywhere. It uses list prices; cached-
+input discounts, batch and priority tiers, reasoning surcharges and per-search
+fees are not modelled. Gemini is priced at paid-tier rates because a free-tier
+key cannot be detected from a response, and the breakdown says so. Local and
+custom models show "not priced"; endpoints that report no usage show "no usage
+reported" instead of a $0.00 nobody measured. A call is counted as soon as
+its response arrives, before the app decides whether to accept it, because the
+provider bills a rejected response too. The total survives a reload and resets
+when a new project starts. The main app reads only the bundled snapshot and
+makes no request to the pricing service.
+
+**Export the working document as Word (.docx).** A "📝 Word" button sits
+next to "💾 Export" on the Working Document panel, and the Finish modal has
+"📝 Export as Word (.docx)" under "💾 Export Document". It writes a real .docx
+through the vendored `docx` library the help pages already use: one paragraph
+per line, blank lines kept, Calibri 11, the WaxFrame byline as a small grey
+footer, and the project name as the document title. No headings or styling are
+invented, since guessing which plain line is a heading would get a cover
+letter's address block wrong. If the library is missing or the build fails,
+it says so and falls back to the .txt export.
+
+**Round History shows what each round changed.** Every completed round in
+Round History has a "🔀 Changes" button, and the round viewer has a matching
+"🔀 Changes" tab. Removed text is struck through in red, added text is
+highlighted in green, and a changed line shows only the words that changed
+("~~375 degrees F~~ 190 C"). Unchanged stretches collapse to "··· N unchanged
+lines ···" with two lines of context. A summary reads "Against Round 1: +5
+words · −8 words · 3 lines touched", and "Compare with: Previous round /
+First version" switches the baseline. Failed rounds are skipped when finding
+the previous version. This diffs the saved documents themselves, so it shows
+every change, including ones the Builder did not list in Applied Changes,
+which only ever covered the latest round.
+
+**The browser tab says when a round ends.** If the tab is in the background
+when a round finishes, its title changes to "✅ Round 3 done · WaxFrame",
+"⚡ Round 3 needs a decision · WaxFrame", "❌ Round 3 failed · WaxFrame" or
+"⏸ Round 3 paused — a bee failed · WaxFrame", and returns to normal the
+moment the tab is visible. There is no permission prompt and no OS
+notification. The existing five-minute "🚨 WaxFrame Needs You!" flasher takes
+precedence while it runs.
+
+**Fixed: re-exporting a document stacked a second byline.** The export
+footer's URL line is `waxframe.com`, but the pattern that strips an old footer
+before adding a new one only accepted the former `weirdave.github.io`
+address. Exporting a document that already carried a current footer, for
+example one pasted back in as a Starting Document, produced two footers. Both
+addresses are accepted now.
+
+### Verification
+- A customer-view browser run against a mock provider with priced models
+  (gpt-5.4-mini, claude-sonnet-4-6, gemini-3.5-flash): 35 checks pass. They
+  cover the spend total against a hand-priced recomputation, per-round
+  attribution, the breakdown modal, survival across a reload and the reset on
+  a new session; the Changes view on real rounds (pure addition, replacement,
+  the "First version" toggle, the first-round message), escaping of hostile
+  document text, and a 3,000-line document; the .docx unzipped and read back
+  (paragraph count, edited line, byline, metadata title); a single byline
+  after re-export; the SESSION SPEND transcript section; the background-tab
+  title set while hidden and cleared on return; and the spend pill fully on
+  screen at 1366×768.
+- `tools/flow-check.mjs`: all 32 assertions pass.
+- `tools/check-html-injection.mjs`, `check-export-redaction.mjs`,
+  `check-import-bounds.mjs`, `check-hostile-provider.mjs`,
+  `check-file-protocol.mjs`: all pass.
+- `node tools/release-check.mjs`: all stages pass.
+- The Working Document column width is unchanged at 1366×768 (compared
+  against a screenshot taken before the change).
+
+### Files changed
+`js/session-spend.js` (new), `js/app.js` (spend hook in callAPI, round cost
+line, transcript section, reset in resetSessionState; .docx export and the
+shared `_exportDocumentParts`; footer pattern fix; `viewRoundChanges`,
+`wfDocDiff` and the Changes tab; background-tab title notice),
+`js/pricing-renderer.js` (exposes `window.WFPricing.snapshot`; renders only on
+the pricing page), `index.html` (spend pill, Word buttons, three script tags),
+`style.css` (spend pill and modal, diff view),
+`docs/WaxFrame_Rules_Reference.txt`, `docs/WaxFrame_Storage_Schema_v1.txt`,
+`CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+Revert this commit. The `waxframe_session_spend` localStorage key is then
+unused and harmless.
+
 ## v3.63.561 — No storage permission prompt on page load
 
 **Released:** 2026-10-02

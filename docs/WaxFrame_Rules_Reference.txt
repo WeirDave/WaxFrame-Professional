@@ -115,8 +115,8 @@ RELEASE CEREMONY (every release)
    - "X.Y.Z"             — package.json + JSON-LD softwareVersion
    - 'vX.Y.Z Pro'        — APP_VERSION in js/version.js
    - Build: 20260920-NNN — build-stamp header lines in every js/ file
-   The narrow patterns sweep all 17 HTML pages and all 29 js/ files
-   (28 .js + pdf-loader.mjs — glob BOTH extensions; the .mjs evaded the
+   The narrow patterns sweep all 17 HTML pages and all 30 js/ files
+   (29 .js + pdf-loader.mjs — glob BOTH extensions; the .mjs evaded the
    sweep for weeks), plus style.css, package.json and the tools/ scripts
    that carry a build header. Every one of those files carries a
    "// Build: YYYYMMDD-NNN" line so an audit reads ONE identical build
@@ -322,14 +322,19 @@ TEMPLATES (built-in + custom)
 ARCHITECTURE NOTES (load-bearing)
 ====================================================================
 
-- JS lives in js/ (29 files): app.js, app-bootstrap.js, version.js,
+- JS lives in js/ (30 files): app.js, app-bootstrap.js, version.js,
   templates.js, templates-page.js, storage.js, prompts.js, prompt-editor.js,
   provider-catalog.js, provider-models.js, api.js, api-links.js,
   api-details-page.js, audio.js, scenes.js, theme.js, nav-helper.js,
   helper-handlers.js, help-page.js, license-helper.js, wf-debug.js,
   docs-scrollspy.js, docx-export.js, mobile-share.js, min-screen-viewport.js,
-  pricing-renderer.js, update-check.js, pdf-loader.mjs,
+  pricing-renderer.js, session-spend.js, update-check.js, pdf-loader.mjs,
   pdf-loader-bootstrap.js.
+  Since v3.63.562 index.html also loads pricing-renderer.js (for
+  window.WFPricing.snapshot, which session-spend.js prices calls
+  against; init() returns early off the pricing page, and the main app
+  never fetches the live Worker payload) and lib/docx.min.js (Word
+  export of the working document).
   8 vendor libs in lib/ (self-hosted for air-gap): docx.min.js, jszip.min.js,
   mammoth.browser.min.js, pdf.min.mjs, pdf.worker.min.mjs, pdf.min.js,
   pdf.worker.min.js, xlsx.full.min.js. The pdf.min.js + pdf.worker.min.js

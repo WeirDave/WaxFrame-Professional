@@ -439,6 +439,19 @@ waxframe_import_server_defaults  remembered Import Server
                                  form defaults.
 waxframe_vision_provider         which provider runs vision
                                  (per-user fallback ranking).
+waxframe_session_spend           (v3.63.562) session spend
+                                 meter: JSON {rows:{aiId|model:
+                                 {name, model, calls, inTok,
+                                 outTok, usd, priced, noUsage}},
+                                 rounds:{n: usd}}. Token counts
+                                 and dollars only, never text or
+                                 keys. Session-scoped despite
+                                 living here: removed by
+                                 resetSessionState(). Read back
+                                 through a sanitiser that keeps
+                                 only non-negative numbers and
+                                 caps rows at 200. js/session-
+                                 spend.js.
 
 
 ════════════════════════════════════════════════════════════
