@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20261002-001
+// Build: 20261002-002
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -513,9 +513,16 @@ function saveSession(opts = {}) {
       // no-op from the user's perspective).
       _broadcastSessionWrite(session.round);
 
-      // Persistent-storage retry every 3 rounds if not yet granted.
-      if (history.length > 0 && history.length % 3 === 0 &&
+      // Persistent-storage request after the first completed round, then a
+      // retry every 3 rounds if not yet granted. v3.63.561 — round 1 is now
+      // the FIRST request; page load no longer asks (see app.js).
+      // saveSession runs several times per round, so _storagePersistAskedAt
+      // limits it to one ask per qualifying round count — a dismissed
+      // Firefox prompt must not reappear on every save.
+      if ((history.length === 1 || (history.length > 0 && history.length % 3 === 0)) &&
+          window._storagePersistAskedAt !== history.length &&
           !window._storagePersistent && navigator.storage?.persist) {
+        window._storagePersistAskedAt = history.length;
         try {
           window._storagePersistent = await navigator.storage.persist();
         } catch(e) { /* ignore */ }

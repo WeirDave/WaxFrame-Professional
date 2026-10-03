@@ -1,5 +1,44 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.561 — No storage permission prompt on page load
+
+**Released:** 2026-10-02
+**Build:** 20261002-002
+
+### What changed
+
+**Opening `waxframe.com` no longer triggers a browser prompt asking to store
+data in persistent storage.** The app requested persistent storage as soon as
+the page loaded. Chrome and Edge decide that request silently, but Firefox
+(desktop and Android) shows a permission prompt, so every first-time Firefox
+visitor was asked before doing anything, including phone visitors who only
+see the "use a computer" screen and cannot use the app at all.
+
+Page load now only checks whether storage is already persistent, which never
+prompts. The first request is made after the first round of a session
+completes, when there is work to protect, and is retried every three rounds
+if it has not been granted, as before. Each of those points asks at most once,
+so a dismissed prompt does not reappear on every save within the same round.
+
+Persistent storage protects saved sessions from being cleared by the browser
+when disk space runs low. Sessions are saved the same way whether or not it is
+granted.
+
+### Verification
+- On a fresh page load, `window._storagePersistent` is set from the read-only
+  check and no request is made.
+- `tools/flow-check.mjs`: all 32 assertions pass, including multi-round runs
+  and a checkpoint round trip.
+- Gate: all stages pass.
+
+### Files changed
+`js/app.js` (page-load check), `js/storage.js` (first request after round 1,
+one ask per qualifying round), `docs/WaxFrame_Rules_Reference.txt`,
+`CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+Revert this commit.
+
 ## v3.63.560 — "Email me this link" on the phone screen
 
 **Released:** 2026-10-02

@@ -337,7 +337,10 @@ ARCHITECTURE NOTES (load-bearing)
   portable fallback path; pdf-loader-bootstrap.js dispatches between the
   two builds at page load based on location.protocol.
 - Session storage: IndexedDB (waxframe_v2_db / session store, key 'current').
-  navigator.storage.persist() at DOMContentLoaded. localStorage LS_SESSION
+  navigator.storage.persisted() (read-only, never prompts) at
+  DOMContentLoaded; the first persist() request is in saveSession() after
+  round 1, retried every 3 rounds (since v3.63.561 — persist() at load put a
+  Firefox permission prompt in front of every visitor). localStorage LS_SESSION
   kept as defense-in-depth fallback only. LS_PROJECT holds the project recipe.
 - Typography: DM Sans self-hosted (fonts/, @font-face in style.css, no Google
   Fonts CDN). Monospace = system Courier New.

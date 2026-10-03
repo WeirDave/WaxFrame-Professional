@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261002-001
+// Build: 20261002-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261002-001';         // build stamp — update each session
+const BUILD = '20261002-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13633,8 +13633,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.560'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.560';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.561'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.561';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -24199,10 +24199,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   // visited, PWA-installed); other browsers vary. The call is idempotent
   // and harmless if denied — we still operate normally on best-effort
   // storage. The result is stashed on window for diagnostics.
-  if (navigator.storage?.persist) {
+  // v3.63.561 — Page load only READS the status. persisted() never prompts;
+  // persist() does in Firefox (desktop and Android), which put a "store data
+  // in persistent storage" prompt in front of every first-time visitor —
+  // including phone visitors who only ever see the mobile overlay. The first
+  // request now happens in saveSession() after round 1 completes, when the
+  // visitor has work worth keeping.
+  if (navigator.storage?.persisted) {
     try {
-      const isPersisted = await navigator.storage.persisted();
-      window._storagePersistent = isPersisted ? true : await navigator.storage.persist();
+      window._storagePersistent = await navigator.storage.persisted();
     } catch(e) {
       window._storagePersistent = null;
     }
