@@ -1499,6 +1499,42 @@ section('Every check has a runner (nothing rests on a manual run)');
   }
 }
 
+// ── Check 23: no native confirm() in js/ ────────────────────
+
+section('No native confirm() in js/ (styled modals only)');
+
+// v3.63.563 - the prompt editor's two Reset buttons called the browser's
+// confirm(), which a browser can suppress ("prevent this page from creating
+// dialogs"); confirm() then returns false and both buttons silently did
+// nothing. The standing rule is a styled modal everywhere (wfConfirm in the
+// app, lhConfirm on helper pages), and the rule was only ever kept by habit.
+//
+// One native call is allowed and is counted rather than waved through: the
+// fallback inside wfConfirm itself in js/app.js, reached only when the modal
+// markup is missing from the page. Any other native confirm( - a new one, or
+// a second copy of that fallback - fails here.
+{
+  const NATIVE_CONFIRM = /(?<![\w$.])(?:window\.)?confirm\(/;
+  const ALLOWED = { 'js/app.js': 1 };
+  const found = {};
+  for (const file of walk(join(ROOT, 'js'), p => /\.(js|mjs)$/.test(p))) {
+    const r = rel(file);
+    read(file).split('\n').forEach((line, i) => {
+      const t = line.trim();
+      if (t.startsWith('//') || t.startsWith('*') || t.startsWith('/*')) return;
+      if (NATIVE_CONFIRM.test(line.replace(/\/\/.*$/, ''))) (found[r] ||= []).push(i + 1);
+    });
+  }
+  let bad = 0;
+  for (const [r, lines] of Object.entries(found)) {
+    if (lines.length > (ALLOWED[r] || 0)) {
+      bad++;
+      fail(r, `native confirm() at line ${lines.join(', ')} - use wfConfirm() (app) or lhConfirm() (helper pages); a browser can suppress the native dialog and the action then silently does nothing`, lines[0]);
+    }
+  }
+  if (!bad) ok('no native confirm() in js/ beyond the one counted wfConfirm fallback');
+}
+
 
 // ── Report ──────────────────────────────────────────────────
 

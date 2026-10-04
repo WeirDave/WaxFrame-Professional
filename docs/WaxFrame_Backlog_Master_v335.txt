@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v334
-2026-09-27
+WaxFrame Backlog Master v335
+2026-10-03
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,21 @@ ships.
 
 
 
+
+v335 — OPEN BUGS EMPTY AGAIN (v3.63.563).
+
+Bug 1 closed: the prompt editor Reset buttons ask through
+lhConfirm() (js/license-helper.js, already loaded by the page)
+rather than the browser confirm(). The entry assumed wfConfirm()
+and said the page did not load the script that defines it; that
+is true of wfConfirm, which lives in app.js, but the helper pages
+already carry their own styled confirm, so it was a swap after all.
+
+The entry also asked for a gate check so the call cannot return.
+release-check.mjs now has a stage that fails on any native
+confirm( in js/ beyond the one counted fallback inside wfConfirm.
+Mutation-tested both ways: it goes red for a reintroduced call in
+the prompt editor and for a second copy of the fallback in app.js.
 
 v333 — OLD UPDATER BACKUPS AND A REMOVED ICON PATH (v3.63.556).
 
@@ -1482,26 +1497,7 @@ that actually times out. Anthropic (CF Worker proxy) and Gemini (needs
 OPEN BUGS
 ════════════════════════════════════════════════════════════
 
-1. Prompt editor uses the browser's native confirm()
-   ─────────────────────────────────────────────────────────
-   WHAT:   js/prompt-editor.js calls window.confirm() for
-           "Reset ALL prompts to defaults?" and "Reset this
-           prompt to default?". Standing rule: never confirm(),
-           always the styled wfConfirm() modal.
-   WHY:    Inconsistent with every other destructive prompt in
-           the app, unstyled, and suppressible by the browser
-           ("prevent this page from creating dialogs"), after
-           which confirm() returns false and both Reset buttons
-           silently do nothing.
-   STATE:  OPEN. Found 2026-09-23 while auditing which shipped
-           text can reach localStorage (saveAll writes every
-           prompt, defaults included, to LS_PROMPTS).
-   WHERE:  js/prompt-editor.js resetAll() and resetOne();
-           prompt-editor.html does not currently load the script
-           that defines wfConfirm, so this is not a one-line swap.
-   DONE:   Both resets use a styled confirm on the helper page;
-           no confirm( call remains in js/; a gate check or grep
-           in release-check stops it returning.
+None open.
 
 ════════════════════════════════════════════════════════════
 OPEN FEATURES

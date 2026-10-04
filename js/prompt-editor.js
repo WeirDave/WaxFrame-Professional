@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — prompt-editor.js
-// Build: 20261003-001
+// Build: 20261003-002
 //  Page-specific behavior for prompt-editor.html. Extracted from
 //  the formerly-inline <script> block at the bottom of that page
 //  in v3.63.350 so the page can drop 'unsafe-inline' from CSP.
@@ -89,8 +89,18 @@
     showToast('✓ All prompts saved', 'saved');
   }
 
-  function resetAll() {
-    if (!confirm('Reset ALL prompts to defaults? Your custom prompts will be lost.')) return;
+  // v3.63.563 — Both resets ask through lhConfirm() (js/license-helper.js,
+  // loaded ahead of this file) instead of the browser's native confirm().
+  // A browser that suppresses dialogs ("prevent this page from creating
+  // dialogs") makes confirm() return false, which turned both Reset buttons
+  // into silent no-ops. The styled modal cannot be suppressed and matches
+  // every other destructive prompt in the app.
+  async function resetAll() {
+    if (!await lhConfirm(
+      'Reset all prompts?',
+      'Every prompt returns to its default. Your custom prompts will be lost.',
+      { okText: 'Reset all', danger: true }
+    )) return;
     localStorage.removeItem(LS_PROMPTS);
     Object.keys(DEFAULTS).forEach(key => {
       const ta = document.getElementById('ta-' + key);
@@ -103,10 +113,14 @@
     showToast('↺ All prompts reset to defaults', 'reset');
   }
 
-  function resetOne(key) {
+  async function resetOne(key) {
     const ta = document.getElementById('ta-' + key);
     if (!ta) return;
-    if (!confirm('Reset this prompt to default?')) return;
+    if (!await lhConfirm(
+      'Reset this prompt?',
+      'This prompt returns to its default. Your edits to it will be lost.',
+      { okText: 'Reset', danger: true }
+    )) return;
     ta.value = DEFAULTS[key];
     ta.classList.remove('modified');
     document.getElementById('badge-' + key)?.classList.remove('show');

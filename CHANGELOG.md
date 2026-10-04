@@ -1,5 +1,48 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.563 — Prompt Editor resets use WaxFrame's own confirmation dialog
+
+**Released:** 2026-10-03
+**Build:** 20261003-002
+
+### What changed
+
+**The Prompt Editor's "↺ Reset All to Defaults" button and each prompt's "Reset"
+button now ask for confirmation in a WaxFrame dialog instead of the browser's
+built-in one.** The Prompt Editor is the page opened from the menu's "✏️ Prompt
+Editor" entry. The two buttons used the browser's own confirm box, which a
+browser can switch off ("prevent this page from creating dialogs"). Once that
+happened the box was never shown and the buttons did nothing at all.
+
+The new dialog cannot be suppressed and matches the rest of the app. "Reset All
+to Defaults" asks "Reset all prompts?" with a red "Reset all" button; a single
+prompt's "Reset" asks "Reset this prompt?" with a red "Reset" button. Cancelling,
+or clicking outside the dialog, leaves every prompt and every saved edit exactly
+as it was. Confirming restores the default text and removes the saved edit.
+
+**The release check now fails if a native `confirm()` is added to `js/`.** The
+single fallback inside the app's own confirm dialog, used only when that
+dialog's markup is missing from the page, is allowed and counted; a second
+native call anywhere fails the check with the file and line.
+
+### Verification
+- In a browser with the native confirm box stubbed to always answer "no" (the
+  suppressed-dialog case): both Reset buttons still open the dialog; Cancel
+  keeps the edited text and the saved edit; confirming a single reset removes
+  only that prompt's saved edit; confirming Reset All clears the saved edits.
+- The new release-check stage passes on the tree, and fails when a native
+  `confirm()` is added to the prompt editor or a second one to `js/app.js`.
+- `tools/flow-check.mjs` and the other browser checks: all pass.
+- Gate: all stages pass.
+
+### Files changed
+`js/prompt-editor.js` (both resets), `tools/release-check.mjs` (new stage),
+`docs/WaxFrame_Backlog_Master_v335.txt` (renamed from v334, entry removed),
+`CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+Revert this commit.
+
 ## v3.63.562 — What a session cost, Word export, what each round changed, and a tab that says when it's done
 
 **Released:** 2026-10-03
