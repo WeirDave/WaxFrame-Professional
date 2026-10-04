@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-09-28T03:32:43Z",
+  "lastUpdated": "2026-10-04T18:00:00Z",
   "schemaVersion": 3,
   "tokensPerRound": {
     "input": 5000,
@@ -559,18 +559,6 @@
           "estPerRound": 0.045,
           "estNote": null,
           "sourceUrl": "https://console.perplexity.ai",
-          "verifiedAt": "2026-09-27T12:01:47.989Z",
-          "status": "verified"
-        },
-        {
-          "id": "sonar-reasoning",
-          "inputPerM": 1,
-          "outputPerM": 5,
-          "contextWindow": null,
-          "maxOutput": null,
-          "estPerRound": 0.015,
-          "estNote": null,
-          "sourceUrl": "https://docs.perplexity.ai/getting-started/pricing",
           "verifiedAt": "2026-09-27T12:01:47.989Z",
           "status": "verified"
         },

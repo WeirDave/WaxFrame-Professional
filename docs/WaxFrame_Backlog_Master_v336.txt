@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v335
-2026-10-03
+WaxFrame Backlog Master v336
+2026-10-04
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,19 @@ ships.
 
 
 
+
+v336 — SONAR-REASONING RETIRED FROM THE CATALOG (v3.63.564).
+
+Feature 3 is half done. Part (a), sonar-reasoning, is closed:
+Perplexity's own changelog says the model "has been deprecated and
+removed from the API" as of 2025-12-15 (read from the raw page,
+not a summary), so it is gone from the picker fallback, from the
+example list in the Perplexity model-discovery prompt (which could
+have echoed the dead id straight back into the picker), and from
+the pricing seed. The weekly refresh had stopped being able to
+price it, which is the whole reason it surfaced.
+
+Part (b), the xAI default, is untouched and still open.
 
 v335 — OPEN BUGS EMPTY AGAIN (v3.63.563).
 
@@ -1631,35 +1644,21 @@ Ordered by value. Item 1 is blocked on David.
            same prompt; -KeepBackups / WAXFRAME_KEEP_BACKUPS are
            honoured there too.
 
-3. Model roster drift: Perplexity and xAI
+3. Model roster drift: xAI default
    ─────────────────────────────────────────────────────────
-   WHAT:   Two providers have moved on from models the catalog
-           tracks. (a) sonar-reasoning (not -pro) no longer
-           appears on Perplexity's pricing page or in its model
-           docs (/docs/sonar/models/sonar-reasoning is a 404);
-           only Sonar, Sonar Pro, Sonar Reasoning Pro and Sonar
-           Deep Research remain. (b) xAI's models page now leads
-           with grok-4.7 as its flagship; the catalog default is
-           still grok-4.5.
-   WHY:    A retired model id stays in the picker fallback and
-           on the pricing page with a price nobody publishes any
-           more, and the weekly refresh keeps researching it —
-           it filled a context window of 64K for sonar-reasoning
-           that has no source. The xAI default may simply be a
-           generation behind.
+   WHAT:   xAI's models page now leads with grok-4.7 as its
+           flagship; the catalog default is still grok-4.5.
+           (The Perplexity half of this entry, sonar-reasoning,
+           shipped in v3.63.564.)
+   WHY:    The xAI default may simply be a generation behind.
    STATE:  OPEN. Found 2026-09-27 while verifying context-window
-           figures for v3.63.558. Not yet checked: whether the
-           sonar-reasoning id still answers API calls (a retired
-           alias may still be accepted, as deepseek-v4-flash
-           is), and grok-4.7 pricing beyond the headline $2/$6.
-   WHERE:  js/provider-catalog.js Perplexity and Grok fallback
-           arrays and Grok default; tools/pricing-worker/data/
-           pricing-seed.json; FALLBACK_DATA regen; KV push.
-   DONE:   Either sonar-reasoning is removed from catalog and
-           seed together (the coverage check fails if only one
-           moves) or it is kept with a note saying why; the Grok
-           default is a deliberate choice against a live
-           models call; KV pushed and row count confirmed.
+           figures for v3.63.558. Not yet checked: grok-4.7
+           pricing beyond the headline $2/$6.
+   WHERE:  js/provider-catalog.js Grok fallback array and Grok
+           default; tools/pricing-worker/data/pricing-seed.json;
+           FALLBACK_DATA regen; KV push.
+   DONE:   The Grok default is a deliberate choice against a
+           live models call; KV pushed and row count confirmed.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

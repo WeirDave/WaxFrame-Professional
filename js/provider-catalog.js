@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261003-002
+// Build: 20261004-001
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -612,7 +612,9 @@
       format: 'openai',
       discovery: 'perplexity-self',
       filterRequire: /^sonar/i,
-      fallback: ['sonar', 'sonar-pro', 'sonar-reasoning', 'sonar-reasoning-pro', 'sonar-deep-research']
+      // v3.63.564 — sonar-reasoning removed: Perplexity retired it from the
+      // API on 2025-12-15 (its changelog); sonar-reasoning-pro replaces it.
+      fallback: ['sonar', 'sonar-pro', 'sonar-reasoning-pro', 'sonar-deep-research']
     },
     {
       id: 'mistral', label: 'Mistral',
@@ -1647,7 +1649,7 @@
           model: 'sonar',
           messages: [{
             role: 'user',
-            content: 'Search api-docs.perplexity.ai/models for the current list of Perplexity API chat-completion model ids. Reply with ONLY the model ids, one per line. No markdown, no commentary, no numbering. Only ids that begin with "sonar".\n\nExample of the EXACT format expected:\nsonar\nsonar-pro\nsonar-reasoning\nsonar-reasoning-pro\nsonar-deep-research'
+            content: 'Search api-docs.perplexity.ai/models for the current list of Perplexity API chat-completion model ids. Reply with ONLY the model ids, one per line. No markdown, no commentary, no numbering. Only ids that begin with "sonar".\n\nExample of the EXACT format expected:\nsonar\nsonar-pro\nsonar-reasoning-pro\nsonar-deep-research'
           }]
         })
       });

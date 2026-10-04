@@ -1,5 +1,55 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.564 — Retired Perplexity model removed from the model list and pricing page
+
+**Released:** 2026-10-04
+**Build:** 20261004-001
+
+### What changed
+
+**`sonar-reasoning` is no longer offered for Perplexity.** Perplexity removed
+this model from its API on December 15, 2025 and points to
+`sonar-reasoning-pro` as the replacement. Until now WaxFrame still listed it
+in the Perplexity model picker's fallback list and on the AI API Pricing page,
+with a price that Perplexity no longer publishes. A key choosing it would
+receive a "model deprecated" error from Perplexity.
+
+- **Perplexity model picker:** the fallback list is now `sonar`, `sonar-pro`,
+  `sonar-reasoning-pro` and `sonar-deep-research`.
+- **Perplexity model discovery:** the request that asks Perplexity for its
+  current model list included `sonar-reasoning` in its example answer, which
+  could be returned verbatim and re-add the retired id. The example no longer
+  lists it.
+- **AI API Pricing page:** the `sonar-reasoning` row is gone from the
+  "all models" table and the embedded offline copy of the pricing data.
+- **Weekly pricing refresh:** the Worker no longer researches `sonar-reasoning`,
+  so it no longer reports that row as a new failure each week.
+
+Perplexity's default model (`sonar-pro`) and every other provider are
+unchanged.
+
+### Verification
+- Perplexity's changelog page, read from the raw HTML, states that
+  `sonar-reasoning` was deprecated and removed from the API as of 2025-12-15;
+  the models and pricing pages list only `sonar`, `sonar-pro`,
+  `sonar-reasoning-pro` and `sonar-deep-research`.
+- Live Worker data and `data/pricing-seed.json` agree on every other row
+  before the push.
+- `tools/check-pricing-coverage.mjs`: passes with the model removed from the
+  catalog and the seed together.
+- Gate: all stages pass.
+
+### Files changed
+`js/provider-catalog.js`, `tools/pricing-worker/data/pricing-seed.json`,
+`js/pricing-renderer.js` (regenerated offline copy),
+`docs/WaxFrame_Backlog_Master_v336.txt` (renamed from v335, feature 3 narrowed
+to the xAI default), `CHANGELOG.md`, plus the routine stamp sweep.
+
+### Rollback
+Revert this commit, then push the previous seed to KV:
+`wrangler kv key put --binding=PRICING_DATA latest --path=data/pricing-seed.json --remote`
+from `tools/pricing-worker/`.
+
 ## v3.63.563 — Prompt Editor resets use WaxFrame's own confirmation dialog
 
 **Released:** 2026-10-03
