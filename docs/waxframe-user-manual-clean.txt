@@ -738,7 +738,7 @@ Default provider/model list (with pricing page and billing page for each):
 - ChatGPT: gpt-5.6-sol — pricing: developers.openai.com/api/docs/pricing — billing: platform.openai.com
 - Claude: claude-sonnet-4-6 — pricing: platform.claude.com/docs/en/about-claude/pricing — billing: platform.claude.com/settings/billing
 - Gemini: gemini-3.5-flash — pricing: ai.google.dev/gemini-api/docs/pricing — billing: aistudio.google.com
-- Grok: grok-4.5 — pricing: docs.x.ai/developers/pricing — billing: console.x.ai
+- Grok: grok-4.7 — pricing: docs.x.ai/developers/pricing — billing: console.x.ai
 - Perplexity: sonar-pro — pricing: docs.perplexity.ai/getting-started/pricing — billing: console.perplexity.ai
 - Mistral: mistral-large-latest — pricing: mistral.ai/pricing/api/ — billing: admin.mistral.ai
 - DeepSeek: deepseek-flash — pricing: api-docs.deepseek.com/quick_start/pricing/ — billing: platform.deepseek.com

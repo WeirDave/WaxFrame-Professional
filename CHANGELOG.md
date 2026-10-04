@@ -1,5 +1,52 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.566 — xAI (Grok) default moves to grok-4.7
+
+**Released:** 2026-10-04
+**Build:** 20261004-003
+
+### What changed
+
+**The default model for xAI (Grok) is now `grok-4.7`**, replacing `grok-4.5`.
+xAI lists `grok-4.7` as its flagship model: text and image input, 500K context,
+$2.00 / $6.00 per million tokens ($4.00 / $12.00 once a prompt passes 200K
+tokens), the same price as `grok-4.5`. `grok-4.5`, `grok-4.3` and
+`grok-4.20-0309-reasoning` remain in the model picker.
+
+- **Model picker and defaults:** a new Grok key now starts on `grok-4.7`; the
+  picker's fallback list is `grok-4.7`, `grok-4.5`, `grok-4.3`,
+  `grok-4.20-0309-reasoning`. A saved model choice is not changed.
+- **AI API Pricing page:** a `grok-4.7` row is added and is the Grok entry in
+  the Defaults table. The session spend meter prices it.
+- **Image and PDF text recognition:** the model used for Grok when no vision
+  model is configured was `grok-4.1-fast`, a model xAI no longer lists. It
+  now uses `grok-4.7`, which accepts image input.
+- **Documentation:** the API Details page, the user manual (HTML and text),
+  the README default table and the screenshot tool's sample hive name
+  `grok-4.7`.
+
+### Verification
+- xAI's published model list (embedded in its models page): `grok-4.7` is
+  present with text and image input, 500,000 context and $2.00 / $6.00 per
+  million tokens; `grok-4.1-fast` is absent. The pricing page lists `grok-4.7`
+  and `grok-4.5` at the same price.
+- `tools/check-pricing-coverage.mjs`: passes with the catalog and seed moved
+  together.
+- Not run: a live round on `grok-4.7` (no xAI key available for this check).
+- Gate: 23 of 23 stages.
+
+### Files changed
+`js/provider-catalog.js`, `js/app.js`, `tools/pricing-worker/data/pricing-seed.json`,
+`js/pricing-renderer.js` (regenerated offline copy), `api-details.html`,
+`waxframe-user-manual.html`, `docs/waxframe-user-manual-clean.txt`, `README.md`,
+`tools/capture.mjs`, `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v338.txt`
+(renamed from v337, feature 3 removed), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit, then push the previous seed to KV:
+`wrangler kv key put --binding=PRICING_DATA latest --path=data/pricing-seed.json --remote`
+from `tools/pricing-worker/`.
+
 ## v3.63.565 — Weekly pricing refresh keeps stored context windows and output limits
 
 **Released:** 2026-10-04

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261004-002
+// Build: 20261004-003
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -589,7 +589,7 @@
     },
     {
       id: 'grok', label: 'xAI (Grok)',
-      model: 'grok-4.5',
+      model: 'grok-4.7',
       endpoint: 'https://api.x.ai/v1/chat/completions',
       format: 'openai',
       discovery: 'openai-models',
@@ -603,7 +603,10 @@
       // his own xAI console: no listing for it anywhere in the current
       // model catalog. Same treatment as Together AI's retired models in
       // v3.63.446 — removed from the catalog, not just deprioritized.
-      fallback: ['grok-4.5', 'grok-4.3', 'grok-4.20-0309-reasoning']
+      // v3.63.566 — default moved grok-4.5 -> grok-4.7. xAI's models page now
+      // leads with grok-4.7 as its flagship (same $2.00/$6.00 and 500K context
+      // as grok-4.5, text + image input); grok-4.5 stays listed beside it.
+      fallback: ['grok-4.7', 'grok-4.5', 'grok-4.3', 'grok-4.20-0309-reasoning']
     },
     {
       id: 'perplexity', label: 'Perplexity',

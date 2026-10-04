@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v337
+WaxFrame Backlog Master v338
 2026-10-04
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,22 @@ ships.
 
 
 
+
+v338 — XAI DEFAULT MOVED TO GROK-4.7 (v3.63.566).
+
+Feature 3 is closed. xAI's own published model data (read from the
+docs page's embedded model list, not a summary) names grok-4.7 as
+the flagship: text and image input, 500K context, $2.00 / $6.00 per
+million tokens, $4.00 / $12.00 past 200K. grok-4.5 is unchanged at
+the same price and stays in the picker beside it. The OCR fallback
+for Grok was still grok-4.1-fast, which xAI no longer lists at all;
+it is grok-4.7 now, as is the Capture tool's seed.
+
+Not done, and worth knowing: this was checked against xAI's published
+model list, not an authenticated /v1/models call (no xAI key on this
+machine), and no real round has been run on grok-4.7. A model that
+rejects WaxFrame's instruction shape is quarantined by the app on
+first failure, so the cost of being wrong is one failed call.
 
 v337 — THE WEEKLY REFRESH NO LONGER OVERWRITES CONTEXT WINDOWS
        (v3.63.565).
@@ -1658,22 +1674,6 @@ Ordered by value. Item 1 is blocked on David.
    DONE:   An up-to-date run with two or more backups offers the
            same prompt; -KeepBackups / WAXFRAME_KEEP_BACKUPS are
            honoured there too.
-
-3. Model roster drift: xAI default
-   ─────────────────────────────────────────────────────────
-   WHAT:   xAI's models page now leads with grok-4.7 as its
-           flagship; the catalog default is still grok-4.5.
-           (The Perplexity half of this entry, sonar-reasoning,
-           shipped in v3.63.564.)
-   WHY:    The xAI default may simply be a generation behind.
-   STATE:  OPEN. Found 2026-09-27 while verifying context-window
-           figures for v3.63.558. Not yet checked: grok-4.7
-           pricing beyond the headline $2/$6.
-   WHERE:  js/provider-catalog.js Grok fallback array and Grok
-           default; tools/pricing-worker/data/pricing-seed.json;
-           FALLBACK_DATA regen; KV push.
-   DONE:   The Grok default is a deliberate choice against a
-           live models call; KV pushed and row count confirmed.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.
