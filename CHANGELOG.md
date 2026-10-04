@@ -24,6 +24,10 @@ receive a "model deprecated" error from Perplexity.
   "all models" table and the embedded offline copy of the pricing data.
 - **Weekly pricing refresh:** the Worker no longer researches `sonar-reasoning`,
   so it no longer reports that row as a new failure each week.
+- **Live pricing data:** three context-window figures on the live pricing
+  service had drifted from the values published in v3.63.558 and are restored:
+  `gpt-5.5` context 1.05M (was 1M), `gemini-3.5-flash` max output 64K on the
+  free tier row (was 65K), and `grok-4.20-0309-reasoning` context 1M (was 200K).
 
 Perplexity's default model (`sonar-pro`) and every other provider are
 unchanged.
@@ -33,11 +37,14 @@ unchanged.
   `sonar-reasoning` was deprecated and removed from the API as of 2025-12-15;
   the models and pricing pages list only `sonar`, `sonar-pro`,
   `sonar-reasoning-pro` and `sonar-deep-research`.
-- Live Worker data and `data/pricing-seed.json` agree on every other row
-  before the push.
+- Live Worker data compared with `data/pricing-seed.json` before the push:
+  every price and status agrees; the only differences are the removed row and
+  the three context-window figures listed above.
+- After the push the live endpoint reports 37 rows, the new `lastUpdated`, and
+  four Perplexity models.
 - `tools/check-pricing-coverage.mjs`: passes with the model removed from the
   catalog and the seed together.
-- Gate: all stages pass.
+- Gate: 23 of 23 stages.
 
 ### Files changed
 `js/provider-catalog.js`, `tools/pricing-worker/data/pricing-seed.json`,
