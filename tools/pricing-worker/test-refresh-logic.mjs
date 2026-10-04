@@ -51,6 +51,35 @@ console.log('decideModelUpdate — unchanged verified price stays live, silently
   assert(d.alertLine === null, 'no alert line for a routine confirm');
 }
 
+// ── decideModelUpdate: curated context window / max output are kept ─
+// The weekly run used to write whatever Sonar returned for contextWindow
+// and maxOutput over the stored value whenever the price was unchanged.
+// Those two figures are hand-checked against provider documentation
+// (v3.63.558), and Sonar's answers are lower quality: the 2026-10-04 run
+// replaced gpt-5.5 1.05M with 1M, gemini-3.5-flash 64K with 65K and
+// grok-4.20-0309-reasoning 1M with 200K. A stored value is now never
+// replaced by the refresh; an empty one is still filled in.
+console.log('\ndecideModelUpdate — a stored context window / max output is never overwritten');
+{
+  const model = { id: 'gpt-5.5', inputPerM: 5.00, outputPerM: 30.00, contextWindow: '1.05M', maxOutput: '128K', status: 'verified', verifiedAt: '2026-07-01T00:00:00Z' };
+  const result = { ok: true, inputPerM: 5.00, outputPerM: 30.00, contextWindow: '1M', maxOutput: '64K', source: 'https://openai.com/api/pricing', confirmedModel: 'gpt-5.5' };
+  const d = decideModelUpdate({ id: 'chatgpt', name: 'ChatGPT (OpenAI)' }, model, result, true, NOW);
+  assertEqual(d.nextModel.contextWindow, '1.05M', 'stored contextWindow survives a differing Sonar answer');
+  assertEqual(d.nextModel.maxOutput, '128K', 'stored maxOutput survives a differing Sonar answer');
+  assertEqual(d.nextModel.verifiedAt, NOW, 'verifiedAt still refreshes');
+  assertEqual(d.change.status, 'confirmed', 'still reported as confirmed');
+}
+console.log('\ndecideModelUpdate — an empty context window / max output is still filled in');
+{
+  const model = { id: 'mistral-large-latest', inputPerM: 2.00, outputPerM: 6.00, contextWindow: null, maxOutput: '8K', status: 'verified', verifiedAt: '2026-07-01T00:00:00Z' };
+  const result = { ok: true, inputPerM: 2.00, outputPerM: 6.00, contextWindow: '256K', maxOutput: '16K', source: 'https://mistral.ai/pricing', confirmedModel: 'mistral-large-latest' };
+  const d = decideModelUpdate(PROVIDER, model, result, true, NOW);
+  assertEqual(d.nextModel.contextWindow, '256K', 'null contextWindow takes the confirmed value');
+  assertEqual(d.nextModel.maxOutput, '8K', 'existing maxOutput is kept while contextWindow fills');
+  const none = decideModelUpdate(PROVIDER, { ...model, contextWindow: null, maxOutput: null }, { ...result, contextWindow: null, maxOutput: null }, true, NOW);
+  assertEqual([none.nextModel.contextWindow, none.nextModel.maxOutput], [null, null], 'both stay null when Sonar returns neither');
+}
+
 // ── decideModelUpdate: changed price is HELD, not applied ───────────
 console.log('\ndecideModelUpdate — any changed price holds the old value for review');
 {

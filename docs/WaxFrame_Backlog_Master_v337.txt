@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v336
+WaxFrame Backlog Master v337
 2026-10-04
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,21 @@ ships.
 
 
 
+
+v337 — THE WEEKLY REFRESH NO LONGER OVERWRITES CONTEXT WINDOWS
+       (v3.63.565).
+
+decideModelUpdate() wrote Sonar's contextWindow and maxOutput over
+the stored ones whenever a price was unchanged. The v3.63.558
+figures were checked against provider documentation by hand, and
+one run turned gpt-5.5 1.05M into 1M, gemini-3.5-flash 64K into
+65K and grok-4.20-0309-reasoning 1M into 200K. A stored value is
+now kept; only an empty one is filled. Pinned by two new groups in
+pricing-worker/test-refresh-logic.mjs, written red first.
+
+Not done, and worth knowing: a provider that really does change a
+context window is no longer picked up automatically. That is now
+a seed edit and a KV push, the same as a price change.
 
 v336 — SONAR-REASONING RETIRED FROM THE CATALOG (v3.63.564).
 

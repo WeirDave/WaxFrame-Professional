@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261004-001
+// Build: 20261004-002
 // check-ocr-handoff.mjs — what happens AFTER a page is found to have no text.
 //
 // tools/check-pdf-shapes.mjs proves an image-only PDF extracts zero characters

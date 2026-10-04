@@ -1,5 +1,45 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.565 — Weekly pricing refresh keeps stored context windows and output limits
+
+**Released:** 2026-10-04
+**Build:** 20261004-002
+
+### What changed
+
+**The weekly pricing refresh no longer replaces a context window or maximum
+output that is already stored.** When a model's price was unchanged, the
+refresh wrote the context window and maximum output returned by its web search
+over the stored values. Those figures are checked against each provider's
+documentation, and the search answer was less reliable: a run changed
+`gpt-5.5` from 1.05M to 1M, `gemini-3.5-flash` (free tier) maximum output from
+64K to 65K, and `grok-4.20-0309-reasoning` from 1M to 200K on the AI API
+Pricing page.
+
+The refresh now keeps a stored value and only fills one that is empty. Prices
+are unaffected: a changed price is still held for manual review and a
+confirmed price still refreshes only its "verified" date. A provider that
+changes a context window is now picked up by editing
+`data/pricing-seed.json` and pushing it, the same as a price change.
+
+### Verification
+- `tools/pricing-worker/test-refresh-logic.mjs`: two new groups, run against
+  the old code first. A differing context window and maximum output are
+  overwritten (3 failures); after the change a stored value survives, an empty
+  one is filled, and a row where the search returns neither stays empty. All
+  pass.
+- Gate: 23 of 23 stages.
+
+### Files changed
+`tools/pricing-worker/src/index.js`, `tools/pricing-worker/test-refresh-logic.mjs`,
+`tools/pricing-worker/README.md`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v337.txt` (renamed from v336), plus the routine
+stamp sweep.
+
+### Rollback
+Revert this commit and redeploy the Worker from `tools/pricing-worker/`, or
+`npx wrangler rollback` to the previous Worker version.
+
 ## v3.63.564 — Retired Perplexity model removed from the model list and pricing page
 
 **Released:** 2026-10-04

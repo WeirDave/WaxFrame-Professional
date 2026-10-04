@@ -628,7 +628,8 @@ function siblingColumnAttribution(pageText, modelId, siblingIds, inputPerM, outp
 // review-gate: a changed or first-time price NEVER lands in nextModel —
 // it only appears in `change` (the structured run-log/proposal record).
 // Only a genuinely-unchanged confirmed price refreshes the live model
-// (and only its verifiedAt/contextWindow/maxOutput, never its price).
+// (and only its verifiedAt, plus contextWindow/maxOutput when those are
+// still empty — never its price, and never a value already stored).
 function decideModelUpdate(provider, model, result, wasHealthyLastRun, nowIso) {
   const label = `${provider.id}/${model.id}`;
 
@@ -656,8 +657,13 @@ function decideModelUpdate(provider, model, result, wasHealthyLastRun, nowIso) {
     return {
       nextModel: {
         ...model,
-        contextWindow: contextWindow || model.contextWindow, // Perplexity often can't confirm this even when price+source are solid — keep old rather than lose it
-        maxOutput: maxOutput || model.maxOutput,
+        // A stored value is never replaced, only an empty one is filled.
+        // These two figures are hand-checked against provider docs, and
+        // Sonar's answer is the weaker source: the 2026-10-04 run turned
+        // gpt-5.5 1.05M into 1M, gemini-3.5-flash 64K into 65K and
+        // grok-4.20-0309-reasoning 1M into 200K. Changing one is a seed edit.
+        contextWindow: model.contextWindow || contextWindow || null,
+        maxOutput: model.maxOutput || maxOutput || null,
         verifiedAt: nowIso
       },
       change: { providerId: provider.id, modelId: model.id, requestedModel: model.id, status: 'confirmed', ts: nowIso },
