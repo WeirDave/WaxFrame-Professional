@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20261004-003
+// Build: 20261009-001
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -927,6 +927,47 @@ window.WF_ERROR_CATALOG = [
       { label: 'Pick a different model', kind: 'fix-bee' },
       // v3.63.252 — see comment on MODEL_NEEDS_DIFFERENT_ENDPOINT above.
       { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    // v3.63.567 — The prompt is bigger than the model's context window, so the
+    // provider refuses it outright (HTTP 400, sometimes 413). Issue #19: Groq
+    // answered "Please reduce the length of the messages or completion." with
+    // code context_length_exceeded after many rounds on a growing document, and
+    // it fell through to UNKNOWN_ERROR. The wording differs per provider
+    // (OpenAI "maximum context length", Anthropic "prompt is too long", Mistral
+    // "too large for model", Gemini "input token count … exceeds"), so match the
+    // phrases and also the provider's error code, which lives in ctx.raw rather
+    // than the message. Placed BEFORE RATE_LIMITED because that matcher claims
+    // anything containing "too many" or "quota". Tokens-per-minute rejections
+    // are the opposite case — a rate limit that a retry clears — so they are
+    // excluded here and stay with RATE_LIMITED.
+    code: 'CONTEXT_TOO_LONG',
+    matches: (err, ctx, msg, status) => {
+      if (status === '429' || ctx.status === 429) return false;
+      const raw = typeof ctx.raw === 'string' ? ctx.raw.toLowerCase() : '';
+      const hay = msg + ' ' + raw;
+      if (hay.includes('tokens per minute') || hay.includes('rate_limit_exceeded') ||
+          hay.includes('requests per minute')) return false;
+      return hay.includes('context_length_exceeded') ||
+        hay.includes('context length') ||
+        hay.includes('context window') ||
+        hay.includes('maximum context') ||
+        hay.includes('reduce the length of the messages') ||
+        hay.includes('prompt is too long') ||
+        hay.includes('input is too long') ||
+        hay.includes('too large for model') ||
+        hay.includes('input token count') ||
+        /exceeds? the (?:maximum|max)(?: number of)? (?:input )?tokens/.test(hay);
+    },
+    title: '{ai} — Prompt is too long for this model',
+    meaning: '{ai} refused the request because the prompt (your document, the reviewer notes and WaxFrame\'s instructions together) is larger than this model\'s context window. Retrying the same model will fail the same way, and the prompt grows each round as the document does. Pick a model with a larger context window — on the same provider if it has one, or switch {ai} to another provider — or shorten the document. Re-send {ai}\'s prompt only once the model is changed; the other bees\' answers from this round are kept.',
+    actions: [
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' },
+      { label: 'Open provider docs', kind: 'docs-link' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
