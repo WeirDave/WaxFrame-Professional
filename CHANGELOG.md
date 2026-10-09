@@ -1,5 +1,47 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.567 — "Prompt too long" gets its own error card
+
+**Released:** 2026-10-09
+**Build:** 20261009-001
+
+### What changed
+
+**A provider refusing a prompt for exceeding the model's context window is now
+recognised**, instead of falling through to the generic "Something went wrong"
+(`UNKNOWN_ERROR`) card. Reported in issue #19: after many rounds on a growing
+document, Groq answered HTTP 400 `context_length_exceeded` ("Please reduce the
+length of the messages or completion.") and WaxFrame had no specific diagnosis.
+
+- **New `CONTEXT_TOO_LONG` card:** "{ai} — Prompt is too long for this model".
+  It explains that retrying the same model will fail the same way, and offers
+  Pick a different model, Re-send {ai}'s prompt only, Disable this AI for the
+  session, Open provider docs and Retry round.
+- **Matched on the wording and the error code:** `context_length_exceeded`
+  (read from the provider's raw error body), "maximum context length",
+  "prompt is too long", "reduce the length of the messages", "too large for
+  model", "input token count … exceeds", and similar.
+- **Rate limits are left alone:** tokens-per-minute and requests-per-minute
+  rejections (Groq's "Request too large … on tokens per minute") and any HTTP
+  429 still get the Rate limited card, since waiting clears those.
+
+### Verification
+- The new matcher was run against the issue's exact Groq error (400 +
+  `context_length_exceeded`): matches. Anthropic's "prompt is too long: N tokens
+  > M maximum": matches. A Groq tokens-per-minute 429 and a 413 with
+  `rate_limit_exceeded`, and an invalid-API-key 401: do not match.
+- `node tools/release-check.mjs`: run after the version stamps and this entry
+  were in place.
+- Not run: a live round against a provider returning a real context-length
+  error (no Groq key available for this check). The reporter's diagnostic
+  bundle was not available.
+
+### Files changed
+`js/wf-debug.js`, version stamps (`js/version.js`, `package.json`, page
+cache-busts and build stamps), `CHANGELOG.md`.
+
+---
+
 ## v3.63.566 — xAI (Grok) default moves to grok-4.7
 
 **Released:** 2026-10-04
