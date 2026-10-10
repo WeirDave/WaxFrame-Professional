@@ -1,5 +1,56 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.571 — Short laptop windows no longer blocked
+
+**Released:** 2026-10-10
+**Build:** 20261010-004
+
+### What changed
+
+**The minimum window height is now 600 px, down from 768 px.** The width
+minimum stays at 1366 px. A 1366 × 768 laptop screen leaves roughly 575–650 px
+of browser window once the tab strip, address bar and taskbar are counted, and
+a 1920 × 1080 laptop at the default 125% Windows scaling leaves about 700 px.
+Both were shown the "A little more room, please" screen instead of the app,
+although every screen of the app fits and scrolls at 600 px.
+
+- **Welcome screen:** it now scrolls when the window is shorter than its
+  content, so the top of the page and the "Let's get started" button can always
+  be reached. Before, the screen was clipped with no scrolling.
+- **Welcome screen at 760 px tall or less:** the logo, title, paragraph and
+  price box are smaller so the "Let's get started" button is on screen without
+  scrolling. Nothing is removed, and the animated bee follows a shorter path.
+  Windows taller than 760 px look as before.
+- **"A little more room" screen:** the required size reads 1366 × 600, and the
+  text now suggests F11 (full screen) or zooming the page out with Ctrl and −
+  (⌘ and − on a Mac) for a small laptop screen.
+- **Documentation:** the minimum size is updated in the Help page, the README,
+  the three template guide pages and the page's structured data.
+
+### Verification
+- On a local test server: at 1366 × 600 the app loads instead of the overlay,
+  the welcome screen's button is on screen, and Setup 1, Setup 2 and the
+  Working Console are usable (their content areas scroll). Setup 3 was checked
+  at 1366 × 650. At 1366 × 590
+  the overlay appears and reads "Needs 10 px taller"; at 1365 × 768 it appears
+  and reads "Needs 1 px wider". At 1536 × 730 the welcome screen fits.
+- The information pop-ups at 1366 × 600 stay inside the window and scroll
+  within it.
+- At 1280 × 620 the Working Console clips some button labels, which is why the
+  width minimum is unchanged.
+- `node tools/release-check.mjs`: run after the version stamps and this entry
+  were in place.
+- Not run: light theme, Firefox and Safari, and every pop-up window.
+
+### Files changed
+`style.css`, `index.html`, `js/min-screen-viewport.js`, `help.html`, `README.md`,
+`ai-business-proposal.html`, `ai-cover-letter-editor.html`,
+`ai-resume-review.html`, `docs/WaxFrame_Rules_Reference.txt`, version stamps
+(`js/version.js`, `package.json`, page cache-busts and build stamps),
+`CHANGELOG.md`.
+
+---
+
 ## v3.63.570 — Trial and price shown on the "A little more room" screen
 
 **Released:** 2026-10-10

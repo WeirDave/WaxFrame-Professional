@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-debug-redaction.mjs
-// Build: 20261010-003
+// Build: 20261010-004
 // ============================================================
 // Fixture-based regression test for WF_DEBUG.scrubFailureRecord, the
 // redaction pass applied to the failure record before it is written into a

@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20261010-003
+   Build: 20261010-004
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -211,7 +211,7 @@ input, textarea, select { font-family: inherit; }
 /* ══════════════════════════════════════════════════════════════
    CANONICAL VIEWPORT TIERS — DO NOT INVENT NEW BREAKPOINTS
    ══════════════════════════════════════════════════════════════
-   Floor:    <1366 wide OR <768 tall  → min-screen-overlay shown
+   Floor:    <1366 wide OR <600 tall  → min-screen-overlay shown
    Laptop:   1366–1600 wide           → @media (max-width: 1600px)
    Desktop:  1601+ wide               → base rules (no media query)
    Short:    ≤900 tall                → @media (max-height: 900px)
@@ -610,8 +610,12 @@ body.helper-body .page-main {
 .screen#screen-welcome {
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  /* v3.63.571 — Scrolls when the window is shorter than the welcome content.
+     Centring is done with the auto margin on .welcome-inner instead of
+     justify-content:center, because a centred flex column that overflows
+     pushes its top out of reach of the scrollbar. */
+  overflow-y: auto;
 }
 
 .welcome-bg {
@@ -626,6 +630,7 @@ body.helper-body .page-main {
   z-index: 1;
   width: 100%;
   max-width: 620px;
+  margin-block: auto;
   padding: var(--space-48) var(--space-32);
   display: flex;
   flex-direction: column;
@@ -1592,6 +1597,39 @@ body.helper-body .page-main {
   margin: 0 0 var(--space-16) 0;
   opacity: 0.8;
 }
+
+/* v3.63.571 — Short windows (a 1366×768 laptop leaves about 600–650px of
+   browser viewport; a 1080p laptop at 125% scaling about 730px). Tightens
+   the brand block and the paragraph so the "Let's get started" button is on
+   screen without scrolling. Nothing is removed; the screen scrolls for
+   anything shorter still. Windows 761px and taller are unchanged. */
+@media (max-height: 760px) {
+  .welcome-inner {
+    padding: var(--space-10) var(--space-32);
+    gap: var(--space-10);
+  }
+  .welcome-logo-anim { width: 72px; height: 72px; }
+  .welcome-logo-static { width: 72px; height: 72px; }
+  .welcome-bee-fly { width: 48px; height: 48px; }
+  .screen#screen-welcome.active .welcome-bee-fly { animation-name: beeExitShort; }
+  .welcome-brand h1 { font-size: 40px /* out-of-scale */; }
+  .welcome-pitch { font-size: var(--fs-13); line-height: 1.5; }
+  .welcome-offer { font-size: var(--fs-13); }
+  .welcome-cost-callout { padding: var(--space-8) var(--space-12); margin: 0; }
+  .welcome-menu-hint { font-size: var(--fs-12); }
+}
+/* Same flight as beeExit, shortened for the smaller brand block. */
+@keyframes beeExitShort {
+  0%   { transform: translate(-50%, -50%) scale(0) scaleX(1);     opacity: 0; }
+  8%   { transform: translate(-50%, -50%) scale(1) scaleX(1);     opacity: 1; }
+  38%  { transform: translate(346px, -50%) scale(1) scaleX(1);    opacity: 1; }
+  40%  { transform: translate(356px, -50%) scale(1) scaleX(1);    opacity: 1; }
+  60%  { transform: translate(356px, -50%) scale(1) scaleX(1);    opacity: 1; }
+  63%  { transform: translate(356px, -50%) scale(1) scaleX(-1);   opacity: 1; }
+  85%  { transform: translate(70px, -600px) scale(1) scaleX(-1);  opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(0) scaleX(1);     opacity: 0; }
+}
+
 
 /* Backdrop */
 .nav-backdrop {
@@ -12976,7 +13014,13 @@ a.mobile-overlay-share-btn { text-decoration: none; }
 /* v3.27.7: removed .goal-counter-bar — element eliminated in the
    project-screen restructure. */
 
-/* ── Minimum screen overlay (< 1366px wide or < 768px tall) ── */
+/* ── Minimum screen overlay (< 1366px wide or < 600px tall) ──
+   v3.63.571 — The height floor was 768. A 1366×768 laptop screen leaves
+   roughly 575–650px of browser viewport once the tab strip, address bar and
+   taskbar are counted, and a 1920×1080 laptop at the default 125% Windows
+   scaling leaves about 700px, so both were shown this overlay although every
+   screen fits and scrolls at 600. The width floor stays at 1366: the three-
+   column work screen starts clipping buttons and labels below it. */
 .min-screen-overlay {
   display: none;
   position: fixed;
@@ -12988,7 +13032,7 @@ a.mobile-overlay-share-btn { text-decoration: none; }
   text-align: center;
   padding: var(--space-32);
 }
-@media (max-width: 1365px), (max-height: 767px) {
+@media (max-width: 1365px), (max-height: 599px) {
   .min-screen-overlay { display: flex; }
 }
 .min-screen-card {

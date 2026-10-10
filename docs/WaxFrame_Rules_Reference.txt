@@ -32,7 +32,8 @@ CORE CODE CONSTRAINTS
 - WORKING DOCUMENT 80ch COLUMN WIDTH IS SACRED AND LOAD-BEARING.
   min-width: calc(80ch + 8px + 12px). Never alter. Fire-the-AI-level mistake.
   Audit any work-screen CSS diff for this before shipping.
-- Desktop-only. Minimum viewport 1366x768 (enforced via min-screen-overlay).
+- Desktop-only. Minimum viewport 1366x600 (enforced via min-screen-overlay; height floor
+  lowered from 768 in v3.63.571 — see the note at the overlay rule in style.css).
   Modal max-widths stay inside 1366 - 48px overlay padding = 1318px usable.
 - STRICT CSP IS LIVE AND ENFORCED (since v3.63.366). script-src is 'self'
   plus 'unsafe-eval' (required by the vendored SheetJS / mammoth / pdf.js

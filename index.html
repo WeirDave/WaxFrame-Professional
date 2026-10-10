@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20261010-003
+     Build: 20261010-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="v3.63.570 Pro | Build: 20261010-003">
+  <meta name="waxframe-build" content="v3.63.571 Pro | Build: 20261010-004">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A local-first multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No account database, no install, air-gap capable.">
   <meta name="keywords" content="AI document refinement, multi-AI writing tool, browser-based AI editor, self-hosted AI writing tool, no subscription AI writer">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="A local-first multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No account database, no install, air-gap capable.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.570">
+  <link rel="stylesheet" href="style.css?v=3.63.571">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -118,8 +118,8 @@
     "applicationCategory": "BusinessApplication",
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
-    "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.570",
+    "browserRequirements": "Desktop browser, 1366x600 minimum window size",
+    "softwareVersion": "3.63.571",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -3440,7 +3440,7 @@
   <div class="min-screen-card">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="min-screen-logo">
     <h1 class="min-screen-title">A little more room, please</h1>
-    <p class="min-screen-msg">Thanks for stopping by! WaxFrame's work screen shows several AI Worker Bees, your document, and the Builder's synthesis side by side — so it needs a window at least <strong>1366 × 768 px</strong> to lay everything out (<strong>1600+ wide is best</strong>).</p>
+    <p class="min-screen-msg">Thanks for stopping by! WaxFrame's work screen shows several AI Worker Bees, your document, and the Builder's synthesis side by side — so it needs a window at least <strong>1366 × 600 px</strong> to lay everything out (<strong>1600+ wide is best</strong>).</p>
     <!-- v3.63.164 — Live viewport readout. The overlay was previously
          showing only the required minimum, which left users guessing whether
          their actual browser viewport (which is what gates them, not their
@@ -3458,11 +3458,11 @@
       </div>
       <div class="min-screen-viewport-row">
         <span class="min-screen-viewport-label">Required minimum:</span>
-        <span class="min-screen-viewport-value">1366 × 768</span>
+        <span class="min-screen-viewport-value">1366 × 600</span>
       </div>
       <div class="min-screen-viewport-hint" id="minScreenViewportHint"></div>
     </div>
-    <p class="min-screen-sub">If you're on a desktop or laptop: resize this browser window or dock dev tools to the bottom and you'll be in. <strong>Important:</strong> if your screen resolution looks fine but you're still blocked, check your browser zoom level (Ctrl+0 to reset) and Windows DPI scaling (Settings → Display → Scale; 200% halves your effective viewport). If you're on a tablet, please switch to your computer.</p>
+    <p class="min-screen-sub">If you're on a desktop or laptop: resize this browser window or dock dev tools to the bottom and you'll be in. <strong>Quick fix for a small laptop screen:</strong> press <strong>F11</strong> for full screen, or zoom the page out with <strong>Ctrl</strong> and <strong>−</strong> (<strong>⌘</strong> and <strong>−</strong> on a Mac). <strong>Important:</strong> if your screen resolution looks fine but you're still blocked, check your browser zoom level (Ctrl+0 to reset) and Windows DPI scaling (Settings → Display → Scale; 200% halves your effective viewport). If you're on a tablet, please switch to your computer.</p>
     <p class="min-screen-pricing"><strong>Free 3-round trial</strong>, no signup. Then a <strong>$19 lifetime license</strong> — no subscription.</p>
     <div class="min-screen-links">
       <a href="templates.html" class="min-screen-link">⭐ Browse the Template Catalog</a>
@@ -3490,7 +3490,7 @@
      above the minimum" (green) and "✗ Below minimum by N px wide" /
      "✗ Below minimum by M px tall" (red) so the user sees exactly
      which dimension is the problem. -->
-<script src="js/min-screen-viewport.js?v=3.63.570"></script>
+<script src="js/min-screen-viewport.js?v=3.63.571"></script>
 
 <!-- Mobile not supported overlay — but a funnel landing, not a wall.
      Mobile visitors landing on index.html from search results get a
@@ -3582,36 +3582,36 @@
      (and the only Add-Bookmark JS API was killed by browsers years
      ago for security reasons). Falls back to clipboard copy + a
      short instruction toast if navigator.share isn't available. -->
-<script src="js/mobile-share.js?v=3.63.570"></script>
+<script src="js/mobile-share.js?v=3.63.571"></script>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.4MB total. -->
 <!-- v3.63.393 — Hybrid pdf.js loader. Runtime-detects http(s):// vs file:// and dispatches
      to either the ESM 4.10.38 build (hosted, library-level CVE-2024-4367 fix) or the UMD
      3.11.174 build (portable file://, runtime mitigation via isEvalSupported:false). See
      js/pdf-loader-bootstrap.js for the full reasoning. -->
-<script src="js/pdf-loader-bootstrap.js?v=3.63.570"></script>
-<script src="lib/mammoth.browser.min.js?v=3.63.570"></script>
-<script src="lib/jszip.min.js?v=3.63.570"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.570"></script>
-<script src="lib/docx.min.js?v=3.63.570"></script>
-<script src="js/version.js?v=3.63.570"></script>
-<script src="js/update-check.js?v=3.63.570"></script>
-<script src="js/storage.js?v=3.63.570"></script>
-<script src="js/theme.js?v=3.63.570"></script>
-<script src="js/audio.js?v=3.63.570"></script>
-<script src="js/scenes.js?v=3.63.570"></script>
-<script src="js/wf-debug.js?v=3.63.570"></script>
-<script src="js/provider-models.js?v=3.63.570"></script>
-<script src="js/provider-catalog.js?v=3.63.570"></script>
-<script src="js/api.js?v=3.63.570"></script>
-<script src="js/templates.js?v=3.63.570"></script>
-<script src="js/api-links.js?v=3.63.570"></script>
-<script src="js/prompts.js?v=3.63.570"></script>
-<script src="js/pricing-renderer.js?v=3.63.570"></script>
-<script src="js/session-spend.js?v=3.63.570"></script>
-<script src="js/app.js?v=3.63.570"></script>
-<script src="js/helper-handlers.js?v=3.63.570"></script>
-<script src="js/app-bootstrap.js?v=3.63.570"></script>
+<script src="js/pdf-loader-bootstrap.js?v=3.63.571"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.571"></script>
+<script src="lib/jszip.min.js?v=3.63.571"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.571"></script>
+<script src="lib/docx.min.js?v=3.63.571"></script>
+<script src="js/version.js?v=3.63.571"></script>
+<script src="js/update-check.js?v=3.63.571"></script>
+<script src="js/storage.js?v=3.63.571"></script>
+<script src="js/theme.js?v=3.63.571"></script>
+<script src="js/audio.js?v=3.63.571"></script>
+<script src="js/scenes.js?v=3.63.571"></script>
+<script src="js/wf-debug.js?v=3.63.571"></script>
+<script src="js/provider-models.js?v=3.63.571"></script>
+<script src="js/provider-catalog.js?v=3.63.571"></script>
+<script src="js/api.js?v=3.63.571"></script>
+<script src="js/templates.js?v=3.63.571"></script>
+<script src="js/api-links.js?v=3.63.571"></script>
+<script src="js/prompts.js?v=3.63.571"></script>
+<script src="js/pricing-renderer.js?v=3.63.571"></script>
+<script src="js/session-spend.js?v=3.63.571"></script>
+<script src="js/app.js?v=3.63.571"></script>
+<script src="js/helper-handlers.js?v=3.63.571"></script>
+<script src="js/app-bootstrap.js?v=3.63.571"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

@@ -243,7 +243,7 @@ Air-gapped and on-prem deployments are first-class. Self-hosted libraries ship i
 
 ## Run Locally
 
-WaxFrame is desktop-only. Minimum viewport is **1366 × 768 px**; **1600+ wide is recommended** for the multi-panel work screen.
+WaxFrame is desktop-only. Minimum viewport is **1366 × 600 px**; **1600+ wide is recommended** for the multi-panel work screen.
 
 ### Hosted (easiest — just open the URL)
 

@@ -1,8 +1,8 @@
 // ============================================================
 //  WaxFrame — min-screen-viewport.js
-// Build: 20261010-003
+// Build: 20261010-004
 //  Live viewport-size hint for the index.html minimum-screen
-//  surface. If the user is below the 1366×768 minimum we show
+//  surface. If the user is below the 1366×600 minimum we show
 //  exactly how many pixels short on each axis; if they're
 //  above it we tell them to refresh to load WaxFrame.
 //  Extracted from the formerly-inline <script> at the bottom
@@ -17,7 +17,7 @@
   var hintEl = document.getElementById('minScreenViewportHint');
   if (!nowEl || !hintEl) return;
   var MIN_W = 1366;
-  var MIN_H = 768;
+  var MIN_H = 600;
   function update() {
     var w = window.innerWidth;
     var h = window.innerHeight;
