@@ -1,5 +1,37 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.568 — Welcome screen states the free trial and the price
+
+**Released:** 2026-10-10
+**Build:** 20261010-001
+
+### What changed
+
+**The welcome screen now states the offer under the tagline:** "Free 3-round
+trial, no signup. Then $19 once. No subscription." Previously the $19 license
+price was not shown on the welcome screen at all; it appeared only on the
+mobile-width menu overlay and in the page's structured data.
+
+- **Where:** the first line below "Many minds, one refined result.", above the
+  paragraph describing how the hive works. The "$19 once" is highlighted in the
+  accent colour. The line fits on one row at 1366×768.
+- **Unchanged:** the 3-round trial, the $19 lifetime license, and the
+  estimate of about $0.30 of provider cost per full hive review shown further
+  down the same screen.
+
+### Verification
+- The welcome screen was loaded on a local test server at 1366×768: the new
+  line renders on a single row below the tagline.
+- `node tools/release-check.mjs`: run after the version stamps and this entry
+  were in place.
+- Not run: a check on a phone-width viewport or in light theme.
+
+### Files changed
+`index.html`, `style.css`, version stamps (`js/version.js`, `package.json`,
+page cache-busts and build stamps), `CHANGELOG.md`.
+
+---
+
 ## v3.63.567 — "Prompt too long" gets its own error card
 
 **Released:** 2026-10-09

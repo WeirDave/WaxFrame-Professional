@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20261009-001
+   Build: 20261010-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -759,6 +759,16 @@ body.helper-body .page-main {
   text-transform: uppercase;
   font-weight: 600;
 }
+
+.welcome-offer {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: var(--fs-15);
+  line-height: 1.5;
+  max-width: 560px;
+  margin: 0;
+}
+.welcome-offer strong { color: var(--accent); }
 
 .welcome-pitch {
   text-align: center;
