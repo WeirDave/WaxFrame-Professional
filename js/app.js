@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261010-004
+// Build: 20261010-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261010-004';         // build stamp — update each session
+const BUILD = '20261010-005';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13668,8 +13668,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.571'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.571';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.572'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.572';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -21092,7 +21092,14 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    const msg = err?.error?.message || `HTTP ${response.status}`;
+    // v3.63.572 — Cohere's compatibility endpoint answers errors as a bare
+    // {"id", "message"} object with no "error" wrapper, so reading only
+    // err.error.message left the real text unread ("HTTP 400") and the budget
+    // rejection below could never see the limit the provider named. Fall back
+    // to a top-level message, then to a string-valued "error" field.
+    const msg = err?.error?.message || err?.message ||
+              (typeof err?.error === 'string' ? err.error : null) ||
+              `HTTP ${response.status}`;
     const rawErr = JSON.stringify(err, null, 2);
     const rawData = {
       aiName:     ai.name,
@@ -21111,8 +21118,14 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
       message:      msg,
       raw:          rawData.rawJson
     };
-    if (response.status === 429 || msg.toLowerCase().includes('rate limit') ||
-        msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('too many')) {
+    // v3.63.572 — A rejected output budget ("too many tokens: max tokens must
+    // be less than or equal to 8192") contains the substring "too many" but is
+    // not a rate limit, and waiting does not clear it. Keep it out of this
+    // branch so the budget-rejection retry further down can learn the ceiling.
+    const _isBudgetRejection = response.status !== 429 &&
+      window.WFProviderCatalog.parseBudgetRejection(msg) !== null;
+    if (response.status === 429 || (!_isBudgetRejection && (msg.toLowerCase().includes('rate limit') ||
+        msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('too many')))) {
       consoleLog(`⏳ ${ai.name} — Rate limited / quota exceeded: ${msg}`, 'warn', rawData);
       const entry = WF_DEBUG.classify(new Error('RATE_LIMITED:' + msg), ctx);
       WF_DEBUG.showCard(entry, ctx);

@@ -1,5 +1,50 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.572 — Cohere output-limit errors are recovered instead of shown
+
+**Released:** 2026-10-10
+**Build:** 20261010-005
+
+### What changed
+
+**A Cohere model that allows fewer output tokens than WaxFrame asked for no
+longer ends in an error card.** WaxFrame asks for up to 32,768 output tokens
+when it does not yet know a model's limit, and is built to read the real limit
+from the provider's rejection, retry once and remember it. For Cohere that
+never happened: `command-a-03-2025` (8,192 maximum) answered HTTP 400 and the
+round stopped on a "Something went wrong" card showing only "HTTP 400". The
+same applies to Cohere's default `command-r-plus` (4,096 maximum).
+
+- **Cohere's error format is read.** Cohere's compatibility endpoint answers
+  errors as `{"id", "message"}` with no `"error"` wrapper. The message is now
+  taken from a top-level `message`, or a string-valued `error`, when the usual
+  `error.message` is absent. This also gives other providers that use that
+  shape a readable message in place of "HTTP <status>".
+- **A rejected output budget is not a rate limit.** The wording "too many
+  tokens: max tokens must be less than or equal to 8192" contains "too many",
+  which the rate-limit check matched first. Messages that name a token ceiling
+  now skip the rate-limit branch so the retry can learn the limit. HTTP 429 is
+  still always treated as a rate limit.
+
+### Verification
+- A mock Cohere endpoint on a local test server returned the exact 400 above on
+  the first request and success on the next: the first request asked for
+  32,768 tokens, the retry asked for 8,192, the call returned its answer, and
+  no error card appeared.
+- `tools/test-provider-extractors.mjs`: 213 checks pass, including three new
+  ones for the Cohere wording, the OpenAI wording and a genuine rate-limit
+  message.
+- `node tools/release-check.mjs`: run after the version stamps and this entry
+  were in place.
+- Not run: a round against the real Cohere service.
+
+### Files changed
+`js/app.js`, `tools/test-provider-extractors.mjs`, version stamps
+(`js/version.js`, `package.json`, page cache-busts and build stamps),
+`CHANGELOG.md`.
+
+---
+
 ## v3.63.571 — Short laptop windows no longer blocked
 
 **Released:** 2026-10-10

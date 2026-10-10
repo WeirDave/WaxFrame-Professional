@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20261010-004
+// Build: 20261010-005
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -865,6 +865,23 @@ check('null input is handled', WFProviderCatalog.parseParamRename(null), null);
 check('a message naming the same parameter twice is not a rename',
   WFProviderCatalog.parseParamRename(
     "Unsupported parameter: 'max_tokens'. Use 'max_tokens' instead."), null);
+
+console.log('\u25b6 Budget rejection wording (parseBudgetRejection)');
+
+// v3.63.572 \u2014 live failure on Cohere command-a-03-2025: the compatibility
+// endpoint answers {"id", "message"} with no "error" wrapper, and the message
+// itself names the ceiling. callAPI now reads that top-level message, so this
+// is the exact text parseBudgetRejection receives and must turn into 8192.
+check('Cohere wording names its ceiling',
+  WFProviderCatalog.parseBudgetRejection(
+    'too many tokens: max tokens must be less than or equal to 8192, the maximum output length for this model - received 32768.'),
+  8192);
+check('OpenAI wording still names its ceiling',
+  WFProviderCatalog.parseBudgetRejection(
+    'max_tokens is too large: 32768. This model supports at most 4096 completion tokens.'),
+  4096);
+check('a genuine rate-limit message is not a budget rejection',
+  WFProviderCatalog.parseBudgetRejection('Too many requests. Please slow down.'), null);
 
 console.log('\u25b6 Output budget: a null budget means OMIT, not a default');
 
