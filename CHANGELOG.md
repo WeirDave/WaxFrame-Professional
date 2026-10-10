@@ -1,5 +1,40 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.570 — Trial and price shown on the "A little more room" screen
+
+**Released:** 2026-10-10
+**Build:** 20261010-003
+
+### What changed
+
+**The screen shown to browser windows smaller than 1366 × 768 now states the
+free trial and the price.** The screen titled "A little more room, please" gave
+the required window size and links to the Template Catalog, AI API Pricing,
+User Manual and other pages, but did not mention the free trial or the $19
+license. The phone and tablet screen already did.
+
+- **Where:** a line below the explanation of the window size and above the
+  list of links: "Free 3-round trial, no signup. Then a $19 lifetime license —
+  no subscription."
+- **Unchanged:** the "Buy WaxFrame Pro" link in that screen's footer, the
+  phone and tablet screen, and the full app at 1366 × 768 and above.
+
+### Verification
+- At a 1280 × 720 viewport on a local test server: the line renders between
+  the explanation and the links, fits the card width, and sits 10 px below the
+  paragraph above it.
+- The phone (375 × 812) and tablet (768 × 1024) screens were loaded and already
+  show the trial and price line and the "Buy WaxFrame Pro" link.
+- `node tools/release-check.mjs`: run after the version stamps and this entry
+  were in place.
+- Not run: light-theme appearance of the new line.
+
+### Files changed
+`index.html`, `style.css`, version stamps (`js/version.js`, `package.json`,
+page cache-busts and build stamps), `CHANGELOG.md`.
+
+---
+
 ## v3.63.569 — Buy link returns to the desktop app
 
 **Released:** 2026-10-10

@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20261010-002
+   Build: 20261010-003
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10585,7 +10585,8 @@ button.link-accent {
 /* Pricing transparency snippet — short, scannable price label between
    the value-prop paragraph and the bookmark callout. Gives a mobile
    visitor researching cost an immediate signal without burying it. */
-.mobile-overlay-pricing {
+.mobile-overlay-pricing,
+.min-screen-pricing {
   font-family: var(--font, sans-serif);
   font-size: 13.5px;
   color: var(--text);
@@ -10596,7 +10597,9 @@ button.link-accent {
   border-radius: var(--radius-md);
   line-height: 1.5;
 }
-.mobile-overlay-pricing strong { color: var(--accent); }
+.mobile-overlay-pricing strong,
+.min-screen-pricing strong { color: var(--accent); }
+.min-screen-pricing { text-align: center; margin-top: var(--space-10); }
 
 /* Bookmark callout — now also hosts the Web Share API button so
    visitors can save the link to bookmarks via the native share sheet

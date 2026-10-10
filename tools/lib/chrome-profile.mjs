@@ -1,4 +1,4 @@
-// Build: 20261010-002
+// Build: 20261010-003
 // chrome-profile.mjs — dispose of a headless Chrome and its --user-data-dir.
 //
 // Every browser-driven harness in tools/ spawns Chrome with a throwaway profile
