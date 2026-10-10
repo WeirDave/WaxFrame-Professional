@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261010-005
+// Build: 20261010-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261010-005';         // build stamp — update each session
+const BUILD = '20261010-006';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -9238,7 +9238,7 @@ const QUICK_ADD_PROVIDERS = {
     format: 'openai',
     keyLink: 'https://dashboard.cohere.com/api-keys',
     keyLinkLabel: 'Get your Cohere API key →',
-    defaultModel: 'command-r-plus',
+    defaultModel: 'command-a-plus-05-2026',
     chooseModelLink: 'https://docs.cohere.com/docs/models'
   },
   ollama: {
@@ -13668,8 +13668,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.572'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.572';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.573'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.573';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 

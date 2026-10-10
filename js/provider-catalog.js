@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261010-005
+// Build: 20261010-006
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -662,12 +662,17 @@
       // Cohere's OpenAI-compat endpoint — same body, same extract, same auth.
       // Discovery null for the same reason as Together (rides the custom-AI
       // path in app.js).
+      // v3.63.573 — Default moved command-r-plus -> command-a-plus-05-2026.
+      // Cohere lists Command A+ as free on trial keys, which makes a Gemini +
+      // Cohere hive possible at no cost, and its 64K output ceiling sits above
+      // the 32,768 default request where command-r-plus (4,096) and
+      // command-a-03-2025 (8,192) sit below it.
       id: 'cohere', label: 'Cohere',
-      model: 'command-r-plus',
+      model: 'command-a-plus-05-2026',
       endpoint: 'https://api.cohere.ai/compatibility/v1/chat/completions',
       format: 'openai',
       discovery: null,
-      fallback: ['command-r-plus', 'command-a-plus-05-2026', 'command-r', 'command-r7b-12-2024', 'command-a-03-2025']
+      fallback: ['command-a-plus-05-2026', 'command-r-plus', 'command-r', 'command-r7b-12-2024', 'command-a-03-2025']
     }
   ];
 

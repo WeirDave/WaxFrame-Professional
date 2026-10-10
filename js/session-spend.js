@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — session-spend.js
-// Build: 20261010-005
+// Build: 20261010-006
 //  Session spend meter (v3.63.562). Every provider response that
 //  reports token usage is priced against the embedded pricing
 //  snapshot (window.WFPricing, from pricing-renderer.js) and added

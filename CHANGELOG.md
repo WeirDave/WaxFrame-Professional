@@ -1,5 +1,56 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.573 — Free start with Gemini and Cohere keys
+
+**Released:** 2026-10-10
+**Build:** 20261010-006
+
+### What changed
+
+**First-run guidance now covers a no-cost start.** A hive needs two AIs. Google
+AI Studio gives a free Gemini key, and Cohere gives free trial keys, so those two
+are enough to run a full hive without paying a provider. Before this release the
+welcome screen and guides said the second AI needed about $5 of credit.
+
+- **API Key Guide, "Start Free: Two Free Keys":** a new section at the top of the
+  guide with numbered steps for the Gemini key (billing left off), the Cohere
+  trial key (not a production key), and adding both in WaxFrame. Cohere is added
+  with Add Custom AI, Quick Add, Cohere, then pasting the key and pressing Enter.
+  It states Cohere's trial limits (20 requests a minute, 1,000 API calls a month)
+  and notes that Gemini's free tier has daily quotas.
+- **Free tiers and text:** the same section states that Google says content sent
+  on Gemini's free tier may be used to improve its products, that Cohere calls
+  trial keys evaluation keys, and recommends keeping confidential documents off
+  free keys.
+- **Cohere in the guide:** the Cohere card is badged "Free trial key" and lists
+  the trial-key steps.
+- **Welcome screen:** the cost box reads "Start free · or ~$0.30 per full hive
+  review on paid keys", with links to the free setup steps and the pricing page.
+- **Start Here page and Real-world cost help:** both lead with the free start.
+- **Cohere default model:** the default is now `command-a-plus-05-2026`, which
+  Cohere lists as free on trial keys, in place of `command-r-plus`. The user
+  manual's default-models table is updated to match.
+
+### Verification
+- On a local test server: the guide's new section renders with steps numbered 1
+  to 9, the Cohere card shows the new badge and model, the welcome screen fits at
+  1366 × 650 with the button on screen, and Quick Add for Cohere fills in the
+  address and name.
+- A Gemini and Cohere hive was run to "Hive converged unanimously" on free keys
+  on the live site before this change.
+- `node tools/release-check.mjs`: run after the version stamps and this entry
+  were in place.
+- Not run: the AI API Pricing page's defaults table still lists `command-r-plus`
+  for Cohere until the next scheduled pricing refresh.
+
+### Files changed
+`api-details.html`, `start-here.html`, `index.html`,
+`waxframe-user-manual.html`, `js/provider-catalog.js`, `js/app.js`, version
+stamps (`js/version.js`, `package.json`, page cache-busts and build stamps),
+`CHANGELOG.md`.
+
+---
+
 ## v3.63.572 — Cohere output-limit errors are recovered instead of shown
 
 **Released:** 2026-10-10

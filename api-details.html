@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20261010-005
+     Build: 20261010-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20261010-005">
+  <meta name="waxframe-build" content="20261010-006">
   <title>API Key Guide for AI Providers — WaxFrame</title>
   <meta name="description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <meta name="keywords" content="AI API key setup, ChatGPT API key, Claude API key, Gemini API key, connect AI provider API">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.572">
+  <link rel="stylesheet" href="style.css?v=3.63.573">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -292,6 +292,7 @@
     <div class="doc-sidebar-inner">
       <div class="doc-sidebar-title">API Key Guide</div>
       <div class="doc-sidebar-category">Start Here</div>
+      <a href="#free-start" class="doc-sidebar-link">🆓 Start Free: Two Free Keys</a>
       <a href="#first-key" class="doc-sidebar-link">🚀 Get Your First Key</a>
       <div class="doc-sidebar-category">The Default Six</div>
       <a href="#prov-chatgpt" class="doc-sidebar-link">ChatGPT (OpenAI)</a>
@@ -316,8 +317,39 @@
 <div class="hp-section">
   <div class="hp-section-body">
 
+<div class="wf-card is-green" id="free-start">
+  <h2 class="wf-card-title">🆓 Start Free: Two Free Keys (Gemini + Cohere)</h2>
+  <p>You can run a complete hive without spending anything. Google’s <strong>Gemini</strong> and <strong>Cohere</strong> both give out free API keys, and together they are the two AIs WaxFrame needs. A hive with these two has been run all the way to “Hive converged unanimously.” Add a paid AI later if you want more speed or more headroom.</p>
+  <h3 class="wf-card-title">Key 1: Gemini (free, no credit card)</h3>
+  <ol class="steps">
+    <li>Go to <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noopener noreferrer" class="external-link">aistudio.google.com/api-keys<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> and sign in with your Google account.</li>
+    <li>Click <strong>Create API Key</strong>, name it <strong>WaxFrame</strong>, and copy the key. If AI Studio already shows a key for an existing project, make a fresh one instead.</li>
+    <li><strong>Do not add a credit card or turn on billing.</strong> Gemini is free only while billing is off on your Google AI Studio account.</li>
+  </ol>
+  <h3 class="wf-card-title">Key 2: Cohere (free trial key)</h3>
+  <ol class="steps" start="4">
+    <li>Go to <a href="https://dashboard.cohere.com" target="_blank" rel="noopener noreferrer" class="external-link">dashboard.cohere.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> and sign up with email, Google, or GitHub.</li>
+    <li>Open <a href="https://dashboard.cohere.com/api-keys" target="_blank" rel="noopener noreferrer" class="external-link">dashboard.cohere.com/api-keys<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> and copy the key listed under <strong>Trial</strong> keys. If there isn’t one, click <strong>Create API Key</strong> and choose a trial key.</li>
+    <li><strong>Do not click “New Production Key”.</strong> Production keys ask for billing details and are paid. A trial key is all you need.</li>
+  </ol>
+  <h3 class="wf-card-title">Put them in WaxFrame</h3>
+  <ol class="steps" start="7">
+    <li>On the <strong>Set up your hive</strong> screen, paste the Gemini key into the <strong>Gemini</strong> card and press <strong>Enter</strong>. Click <strong>Recommend Models</strong>, then choose the option marked <strong>🔨 Builder</strong> and set Gemini as your Builder.</li>
+    <li>Click <strong>Add Custom AI</strong>. In <strong>Quick Add</strong>, pick <strong>Cohere</strong>; the address and name fill in for you. Paste the Cohere key into <strong>API Key</strong> and press <strong>Enter</strong> to load Cohere’s models. Make sure the model is <code>command-a-plus-05-2026</code> (Cohere’s free model; WaxFrame picks it for you when it’s in the list), then click <strong>Add to Hive</strong>.</li>
+    <li>Continue to <strong>Your Project</strong> and try a template, such as <strong>Chocolate Chip Cookies</strong> from <strong>Menu → Template - Use</strong>, to watch a full hive run.</li>
+  </ol>
+  <div class="wf-tip wf-tip-warn">
+    <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+    <div class="wf-tip-body">
+      <p><strong>Free keys have limits.</strong> Cohere’s <a href="https://docs.cohere.com/docs/rate-limits" target="_blank" rel="noopener noreferrer" class="external-link">rate-limit page<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> lists trial keys at 20 requests a minute and 1,000 API calls a month. Gemini’s free tier has daily request quotas. A few rounds on a short document fit easily. Long documents and many rounds can reach a limit; if one does, wait and retry, or add a paid AI.</p>
+      <p><strong>Free keys and your text.</strong> Google states that content sent on Gemini’s free tier may be used to improve its products, and Cohere describes trial keys as evaluation keys, so check its terms before using one for client or paid work. Keep confidential documents off free keys. For those, use a paid key or a local model.</p>
+    </div>
+  </div>
+</div>
+
 <div class="wf-card is-accent" id="first-key">
   <h2 class="wf-card-title">🚀 Start Here: Get Your First Key (Step by Step)</h2>
+  <p><strong>Want to begin at no cost?</strong> The <a href="#free-start" class="link-accent">Start Free</a> section above covers two free keys. This section walks through a paid provider (Claude), which is the better choice when you want more speed and room.</p>
   <p>New to API keys? This is the part where most first-timers get stuck — so here’s the whole thing, start to finish, with nothing skipped. We’ll use <strong>Claude (Anthropic)</strong> as the example because the console is clean and easy to follow. Every other provider on this page works the same way: once you’ve done one, you’ve done them all.</p>
   <ol class="steps">
     <li>Go to <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener noreferrer" class="external-link">platform.claude.com/settings/keys<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> and sign in. If you don’t have an account yet, create one — it’s free, and you only pay for what you actually use later.</li>
@@ -523,21 +555,21 @@
       <div class="ai-card-header">
         <img src="images/icon-cohere.png" data-hide-on-error>
         <div class="ai-card-name" id="prov-cohere">Cohere</div>
-        <span class="badge badge-paid">Pay-as-you-go</span>
+        <span class="badge badge-free">Free trial key</span>
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code data-seed-model="cohere">command-r-plus</code>
-          <span class="model-note">Cohere's flagship Command model</span>
+          <span class="model-label">Model:</span><code data-seed-model="cohere">command-a-plus-05-2026</code>
+          <span class="model-note">Cohere's newest Command model; free on trial keys</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://dashboard.cohere.com/api-keys" target="_blank" rel="noopener noreferrer" class="external-link">dashboard.cohere.com/api-keys<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> and sign in.</li>
-          <li>Create an API key and copy it.</li>
-          <li>Paste it into the Cohere field in WaxFrame and press Enter.</li>
+          <li>Go to <a href="https://dashboard.cohere.com/api-keys" target="_blank" rel="noopener noreferrer" class="external-link">dashboard.cohere.com/api-keys<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a> and sign in (or sign up; a trial account is free).</li>
+          <li>Copy the key listed under <strong>Trial</strong> keys, or click <strong>Create API Key</strong> and choose a trial key. Skip <strong>New Production Key</strong>; that one needs billing.</li>
+          <li>In WaxFrame, click <strong>Add Custom AI</strong>, pick <strong>Cohere</strong> in <strong>Quick Add</strong>, paste the key into <strong>API Key</strong>, press <strong>Enter</strong> so the models load, check the model reads <code>command-a-plus-05-2026</code>, and click <strong>Add to Hive</strong>.</li>
         </ol>
         <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Supported and ready to use, but not yet hive-tested in production — treat the profile notes as provisional until we have run it.</p></div>
+          <div class="wf-tip-body"><p>Trial keys are free but limited: 20 requests a minute and 1,000 API calls a month. A hive with Gemini and Cohere on free keys has been run to convergence. The full walk-through, with the limits and the note about your text on free tiers, is under <a href="#free-start" class="link-accent">Start Free</a> at the top of this page.</p></div>
         </div>
       </div>
     </div>
@@ -914,7 +946,7 @@
       <img src="images/icon-cohere.png" class="kyh-card-icon" data-hide-on-error>
       <div>
         <div class="kyh-card-name">Cohere</div>
-        <div class="kyh-card-model" data-seed-model="cohere">command-r-plus</div>
+        <div class="kyh-card-model" data-seed-model="cohere">command-a-plus-05-2026</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
@@ -1132,20 +1164,20 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.572"></script>
-<script src="lib/docx.min.js?v=3.63.572"></script>
-<script src="js/docx-export.js?v=3.63.572"></script>
-<script src="js/nav-helper.js?v=3.63.572"></script>
-<script src="js/license-helper.js?v=3.63.572"></script>
-<script src="js/update-check.js?v=3.63.572"></script>
-<script src="js/helper-handlers.js?v=3.63.572"></script>
-<script src="js/api-links.js?v=3.63.572"></script>
-<script src="js/version.js?v=3.63.572"></script>
-<script src="js/docs-scrollspy.js?v=3.63.572"></script>
+<script src="js/theme.js?v=3.63.573"></script>
+<script src="lib/docx.min.js?v=3.63.573"></script>
+<script src="js/docx-export.js?v=3.63.573"></script>
+<script src="js/nav-helper.js?v=3.63.573"></script>
+<script src="js/license-helper.js?v=3.63.573"></script>
+<script src="js/update-check.js?v=3.63.573"></script>
+<script src="js/helper-handlers.js?v=3.63.573"></script>
+<script src="js/api-links.js?v=3.63.573"></script>
+<script src="js/version.js?v=3.63.573"></script>
+<script src="js/docs-scrollspy.js?v=3.63.573"></script>
 <!-- v3.63.286 — api.js calls WFProviderCatalog.buildApiConfigs() at module eval; provider-models.js + provider-catalog.js must load first. -->
-<script src="js/provider-models.js?v=3.63.572"></script>
-<script src="js/provider-catalog.js?v=3.63.572"></script>
-<script src="js/api.js?v=3.63.572"></script>
-<script src="js/api-details-page.js?v=3.63.572"></script>
+<script src="js/provider-models.js?v=3.63.573"></script>
+<script src="js/provider-catalog.js?v=3.63.573"></script>
+<script src="js/api.js?v=3.63.573"></script>
+<script src="js/api-details-page.js?v=3.63.573"></script>
 </body>
 </html>
