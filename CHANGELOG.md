@@ -1,5 +1,45 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.569 — Buy link returns to the desktop app
+
+**Released:** 2026-10-10
+**Build:** 20261010-002
+
+### What changed
+
+**The desktop app now has a way to buy a license.** Since v3.63.473 the pinned
+menu button read "Enter License Key" and opened the key box, and nothing in the
+desktop app linked to the Gumroad listing; the only "Buy WaxFrame Pro" links
+were in the small-screen footer and the mobile menu. A user whose trial ended
+was told to enter a license key with no way to get one.
+
+- **Menu:** while no license is active, a "Buy WaxFrame Pro — $19 once" link
+  sits under the "Enter License Key" button at the bottom of the menu. It opens
+  the Gumroad listing in a new tab. The link is hidden once a license is active.
+- **Settings → Account & License:** a new "Buy a license" row, above the
+  "License key" box, with a "Buy WaxFrame Pro" button. It is hidden once a
+  license is active.
+- **Wording:** the status line and the trial-expired message in that section
+  now offer buying a license as well as entering a key.
+- **Help:** the "Buy a License" entry in the menu help describes the link under
+  the button rather than a button that was replaced in v3.63.473.
+
+### Verification
+- On a local test server at desktop width: the menu link and the Settings row
+  appear with no license, with the Gumroad listing URL and a new-tab target;
+  with a test license value stored both are hidden, and removing it brings
+  them back. The trial-expired message appears in Settings.
+- `node tools/release-check.mjs`: run after the version stamps and this entry
+  were in place.
+- Not run: phone-width and light-theme checks, and a purchase through the
+  Gumroad page.
+
+### Files changed
+`index.html`, `style.css`, `js/app.js`, version stamps (`js/version.js`,
+`package.json`, page cache-busts and build stamps), `CHANGELOG.md`.
+
+---
+
 ## v3.63.568 — Welcome screen states the free trial and the price
 
 **Released:** 2026-10-10

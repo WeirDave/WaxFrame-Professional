@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20261010-001
+     Build: 20261010-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="v3.63.568 Pro | Build: 20261010-001">
+  <meta name="waxframe-build" content="v3.63.569 Pro | Build: 20261010-002">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A local-first multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No account database, no install, air-gap capable.">
   <meta name="keywords" content="AI document refinement, multi-AI writing tool, browser-based AI editor, self-hosted AI writing tool, no subscription AI writer">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="A local-first multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No account database, no install, air-gap capable.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.568">
+  <link rel="stylesheet" href="style.css?v=3.63.569">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -119,7 +119,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.568",
+    "softwareVersion": "3.63.569",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -991,6 +991,14 @@
                 <span class="settings-row-help" id="setLicenseStatusHelp">WaxFrame will show your current license status here.</span>
               </div>
               <button class="btn settings-reset-btn btn-danger" id="setLicenseRemoveBtn" data-action="license-remove-confirm" title="Remove the saved license key from this browser">Remove Key</button>
+            </div>
+
+            <div class="settings-row settings-row-actions" id="setLicenseBuyRow">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Buy a license</span>
+                <span class="settings-row-help">$19, one time, no subscription. Opens Gumroad in a new tab. Your license key is on the Gumroad receipt; paste it into the box below.</span>
+              </div>
+              <a class="btn btn-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Buy WaxFrame Pro<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>
             </div>
 
             <div class="settings-row settings-row-actions">
@@ -2991,7 +2999,7 @@
 
       <div class="goal-info-row">
         <span class="info-label">🛒 Buy a License</span>
-        <span class="goal-info-desc">A pinned button at the bottom of the menu, shown while you're on the free trial. Buys a WaxFrame license key via Gumroad — every installation includes three free trial rounds, and a one-time license unlocks unlimited rounds. Once your license is active, this button disappears. Opens in a new tab.</span>
+        <span class="goal-info-desc">A link pinned at the bottom of the menu, under the "Enter License Key" button, shown while you're on the free trial. It opens Gumroad in a new tab, where a one-time $19 license key is sold — every installation includes three free trial rounds, and a license unlocks unlimited rounds. The same link sits at the top of the License section in Settings. Once your license is active, both disappear.</span>
       </div>
 
       <p><strong>Navigation</strong></p>
@@ -3481,7 +3489,7 @@
      above the minimum" (green) and "✗ Below minimum by N px wide" /
      "✗ Below minimum by M px tall" (red) so the user sees exactly
      which dimension is the problem. -->
-<script src="js/min-screen-viewport.js?v=3.63.568"></script>
+<script src="js/min-screen-viewport.js?v=3.63.569"></script>
 
 <!-- Mobile not supported overlay — but a funnel landing, not a wall.
      Mobile visitors landing on index.html from search results get a
@@ -3573,36 +3581,36 @@
      (and the only Add-Bookmark JS API was killed by browsers years
      ago for security reasons). Falls back to clipboard copy + a
      short instruction toast if navigator.share isn't available. -->
-<script src="js/mobile-share.js?v=3.63.568"></script>
+<script src="js/mobile-share.js?v=3.63.569"></script>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.4MB total. -->
 <!-- v3.63.393 — Hybrid pdf.js loader. Runtime-detects http(s):// vs file:// and dispatches
      to either the ESM 4.10.38 build (hosted, library-level CVE-2024-4367 fix) or the UMD
      3.11.174 build (portable file://, runtime mitigation via isEvalSupported:false). See
      js/pdf-loader-bootstrap.js for the full reasoning. -->
-<script src="js/pdf-loader-bootstrap.js?v=3.63.568"></script>
-<script src="lib/mammoth.browser.min.js?v=3.63.568"></script>
-<script src="lib/jszip.min.js?v=3.63.568"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.568"></script>
-<script src="lib/docx.min.js?v=3.63.568"></script>
-<script src="js/version.js?v=3.63.568"></script>
-<script src="js/update-check.js?v=3.63.568"></script>
-<script src="js/storage.js?v=3.63.568"></script>
-<script src="js/theme.js?v=3.63.568"></script>
-<script src="js/audio.js?v=3.63.568"></script>
-<script src="js/scenes.js?v=3.63.568"></script>
-<script src="js/wf-debug.js?v=3.63.568"></script>
-<script src="js/provider-models.js?v=3.63.568"></script>
-<script src="js/provider-catalog.js?v=3.63.568"></script>
-<script src="js/api.js?v=3.63.568"></script>
-<script src="js/templates.js?v=3.63.568"></script>
-<script src="js/api-links.js?v=3.63.568"></script>
-<script src="js/prompts.js?v=3.63.568"></script>
-<script src="js/pricing-renderer.js?v=3.63.568"></script>
-<script src="js/session-spend.js?v=3.63.568"></script>
-<script src="js/app.js?v=3.63.568"></script>
-<script src="js/helper-handlers.js?v=3.63.568"></script>
-<script src="js/app-bootstrap.js?v=3.63.568"></script>
+<script src="js/pdf-loader-bootstrap.js?v=3.63.569"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.569"></script>
+<script src="lib/jszip.min.js?v=3.63.569"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.569"></script>
+<script src="lib/docx.min.js?v=3.63.569"></script>
+<script src="js/version.js?v=3.63.569"></script>
+<script src="js/update-check.js?v=3.63.569"></script>
+<script src="js/storage.js?v=3.63.569"></script>
+<script src="js/theme.js?v=3.63.569"></script>
+<script src="js/audio.js?v=3.63.569"></script>
+<script src="js/scenes.js?v=3.63.569"></script>
+<script src="js/wf-debug.js?v=3.63.569"></script>
+<script src="js/provider-models.js?v=3.63.569"></script>
+<script src="js/provider-catalog.js?v=3.63.569"></script>
+<script src="js/api.js?v=3.63.569"></script>
+<script src="js/templates.js?v=3.63.569"></script>
+<script src="js/api-links.js?v=3.63.569"></script>
+<script src="js/prompts.js?v=3.63.569"></script>
+<script src="js/pricing-renderer.js?v=3.63.569"></script>
+<script src="js/session-spend.js?v=3.63.569"></script>
+<script src="js/app.js?v=3.63.569"></script>
+<script src="js/helper-handlers.js?v=3.63.569"></script>
+<script src="js/app-bootstrap.js?v=3.63.569"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -3746,6 +3754,7 @@
         <span class="nav-buy-cta-sub" id="navBuySub">Unlock unlimited rounds</span>
       </span>
     </button>
+    <a class="nav-buy-link" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Buy WaxFrame Pro — $19 once<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>
   </div>
 </div>
 
