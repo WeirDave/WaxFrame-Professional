@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v342
+WaxFrame Backlog Master v343
 2026-10-11
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,21 @@ ships.
 
 
 
+
+v343 — GPT-6 ADDED TO THE OPENAI PICKER, DEFAULT UNCHANGED (v3.63.579).
+
+The roster check's second run showed OpenAI's key listing gpt-6.1-sol,
+gpt-6-sol, gpt-6-luna and gpt-6-astra, and OpenAI's pricing page leading
+with gpt-6-astra ($10/$50), gpt-6.1-sol ($2/$10) and gpt-6-luna
+($0.10/$0.50), each 1.05M context and 128K output. They are in the
+picker and on the pricing page now. The default is still gpt-5.6-sol.
+
+Why not the default: OpenAI defaults here are chosen by a Builder smoke
+test (see the comment in provider-catalog.js), and none has been run on
+GPT-6. WaxFrame also calls Chat Completions; gpt-6-luna's page confirms
+that endpoint, the pages for sol and astra did not say either way. Feature
+4 is the test and the switch. gpt-6-sol appears in the key's list but not
+on the pricing page, so it is not tracked.
 
 v342 — CLAUDE MOVED TO THE 5.5 LINEUP (v3.63.578).
 
@@ -1800,6 +1815,25 @@ Ordered by value. Item 1 is blocked on David.
            fallback. A page that stops parsing is reported as an
            error, not guessed. Tests replay the real pages that
            fooled Sonar.
+
+4. OpenAI default: gpt-5.6-sol -> gpt-6.1-sol (needs David, at home)
+   ─────────────────────────────────────────────────────────
+   WHAT:   Run one real Builder round on gpt-6.1-sol, then make it the
+           default if it holds.
+   WHY:    It is newer and half the price of gpt-5.6-sol ($2/$10 vs
+           $4/$20). Defaults are smoke-tested first because a model can
+           break WaxFrame's marker format or Chat Completions use even
+           when it is listed and priced.
+   STATE:  OPEN, blocked on David and his own machine (never a work
+           system or network). Small.
+   WHERE:  js/provider-catalog.js chatgpt entry (model, comment);
+           VISION_DEFAULTS.chatgpt in js/app.js; pricing seed
+           defaultModel; api-details.html, user manual (html + txt),
+           README default table; FALLBACK_DATA regen; KV push.
+   DONE:   One round with gpt-6.1-sol selected completes without a
+           marker-format error or an endpoint error; the default is
+           changed everywhere above; the live pricing page shows it as
+           the ChatGPT default.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

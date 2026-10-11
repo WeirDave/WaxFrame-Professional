@@ -1,5 +1,49 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.579 — GPT-6 models added to the OpenAI model list
+
+**Released:** 2026-10-11
+**Build:** 20261011-005
+
+### What changed
+
+**`gpt-6.1-sol`, `gpt-6-astra` and `gpt-6-luna` are added to the OpenAI (ChatGPT)
+model list and the AI API Pricing page.** OpenAI's pricing page leads with these
+three. Each has a 1.05M-token context window and a 128K-token output limit.
+
+| Model | Input / output per million tokens | Above 272K prompt tokens |
+|---|---|---|
+| `gpt-6-astra` | $10.00 / $50.00 | $20.00 / $75.00 |
+| `gpt-6.1-sol` | $2.00 / $10.00 | $4.00 / $15.00 |
+| `gpt-6-luna` | $0.10 / $0.50 | $0.20 / $0.75 |
+
+- **Model picker:** the three appear in the OpenAI model list after the default.
+- **AI API Pricing page and spend meter:** a row for each; the long-context rate
+  is in the note.
+- **The default is unchanged:** a new ChatGPT key still starts on `gpt-5.6-sol`.
+  The default is changed only after a Builder round has been run on the new
+  model.
+
+### Verification
+- OpenAI's pricing page and the model pages for all three, read from the raw
+  HTML: ids, prices, the 272K long-context threshold, 1.05M context and 128K
+  output. The live model list for an OpenAI key returned all three ids.
+- `tools/check-pricing-coverage.mjs`: passes with the catalog and seed moved
+  together, including the per-round estimate for each new price.
+- Not run: a request to any GPT-6 model.
+- Gate: 24 of 24 stages.
+
+### Files changed
+`js/provider-catalog.js`, `tools/pricing-worker/data/pricing-seed.json`,
+`js/pricing-renderer.js` (regenerated offline copy), `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v343.txt` (renamed from v342, one item added),
+plus the routine stamp sweep.
+
+### Rollback
+Revert this commit, then push the previous seed to KV:
+`wrangler kv key put --binding=PRICING_DATA latest --path=data/pricing-seed.json --remote`
+from `tools/pricing-worker/`.
+
 ## v3.63.578 — Claude default moves to claude-sonnet-5-5
 
 **Released:** 2026-10-11

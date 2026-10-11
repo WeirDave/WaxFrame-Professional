@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261011-004
+// Build: 20261011-005
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -563,7 +563,11 @@
       // instead of silently drifting or converging around an error, as
       // terra/luna did in the same test). Terra/luna stay fallback-only —
       // cheaper but each showed a correctness miss under test.
-      fallback: ['gpt-5.6-sol', 'gpt-5.5', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']
+      // v3.63.579 - GPT-6 models added to the picker (OpenAI's pricing page leads with
+      // gpt-6-astra, gpt-6.1-sol and gpt-6-luna). The DEFAULT stays gpt-5.6-sol on purpose:
+      // defaults here are chosen by a Builder smoke test, and none has been run on GPT-6.
+      // gpt-6.1-sol is the candidate (half the price of gpt-5.6-sol) - backlog feature 4.
+      fallback: ['gpt-5.6-sol', 'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna', 'gpt-5.5', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']
     },
     {
       id: 'copilot', label: 'Microsoft (Copilot)',
