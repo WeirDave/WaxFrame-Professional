@@ -35,6 +35,7 @@ debugging one:
 | `verify-prompts-equivalence.mjs` | The shipped prompts still match their reference text |
 | `check-pricing-coverage.mjs` | Every provider in the catalog has pricing data |
 | `pricing-worker/test-refresh-logic.mjs` | The weekly pricing refresh cannot corrupt KV |
+| `pricing-worker/test-roster.mjs` | The model roster check reports retired and new models, and never leaks a key |
 | `test-provider-extractors.mjs` | 210+ fixtures pinning every provider response shape |
 | `test-debug-redaction.mjs` | The redaction helpers behave, and both export paths still call them; catalog placeholders always substitute |
 | `test-server-ai-eligibility.mjs` | Which model-server entries may join a hive |

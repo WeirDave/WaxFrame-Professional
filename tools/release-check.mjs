@@ -991,6 +991,23 @@ try {
   fail('tools/pricing-worker/test-refresh-logic.mjs', `review-gate behavior test failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
+// ── Check 12b: Pricing Worker model roster check (tools/pricing-worker/test-roster.mjs) ──
+
+section('Pricing Worker model roster check (tools/pricing-worker/test-roster.mjs)');
+
+// v3.63.576 — the roster check asks each provider's model-list endpoint which
+// models exist and reports drift against the seed. Offline like Check 12:
+// fetch and state are injected. Pins the parsers, the baseline / NEW / MISSING
+// / ERROR reporting rules, and that no key reaches an error string or the page.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/pricing-worker/test-roster.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/pricing-worker/test-roster.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.includes('FAIL'));
+  fail('tools/pricing-worker/test-roster.mjs', `model roster check test failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
 // ── Check 13: Provider extractor fixtures (tools/test-provider-extractors.mjs) ──
 
 section('Provider extractor fixtures (tools/test-provider-extractors.mjs)');

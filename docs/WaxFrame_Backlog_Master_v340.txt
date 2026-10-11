@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v339
+WaxFrame Backlog Master v340
 2026-10-11
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,24 @@ ships.
 
 
 
+
+v340 — MODEL ROSTER CHECK IN THE PRICING WORKER (v3.63.576).
+
+The Worker now asks each provider's own model-list endpoint which
+models exist and emails drift against the seed (ROSTER MISSING / NEW /
+BASELINE / ERROR). It reports only; it edits nothing. Offline tests
+cover the parsers, the reporting rules and key handling, and were
+mutation-checked (five injected bugs, all caught; the gate stage was
+shown to go red too).
+
+Not done, and worth knowing: it is UNPROVEN against live providers.
+The response shapes are each provider's documented format; no key was
+available to capture a real response. Feature 4 is that proof. An
+unreadable response is reported as ROSTER ERROR, never read as an empty
+roster, so a wrong shape costs one email rather than false MISSING
+lines. It also cannot see a model that is retired but still listed or
+routed (Google keeps answering for gemini-3.5-flash), and it does not
+cover Perplexity (no usable list endpoint) or prices.
 
 v339 — GEMINI MOVED TO 3.8 FLASH (v3.63.575).
 
@@ -1711,6 +1729,48 @@ Ordered by value. Item 1 is blocked on David.
            The weekly refresh will also propose it as a
            needs-review item that week; check it against Google's
            page rather than applying it blindly.
+
+4. Prove the roster check against live providers (needs David)
+   ─────────────────────────────────────────────────────────
+   WHAT:   Add the ROSTER_KEY_* Worker secrets and run the check once.
+   WHY:    The check was written and tested against documented
+           response shapes only. Until a real list has been read
+           for each provider, a parser could be wrong in a way the
+           tests cannot show.
+   STATE:  OPEN, blocked on David (provider keys). Small.
+   WHERE:  tools/pricing-worker/README.md "Model roster check" has
+           the exact commands. One secret per provider:
+           ROSTER_KEY_CLAUDE / CHATGPT / GEMINI / GROK / MISTRAL /
+           DEEPSEEK / COHERE / TOGETHER. Then
+           POST /api/roster with the REFRESH_TOKEN bearer.
+   DONE:   Each provider with a key shows a ROSTER BASELINE line
+           whose model count is plausible, or a ROSTER ERROR that
+           names a real problem (a bad key is fine; "not in the
+           documented shape" means the parser needs fixing). The
+           status page shows each as "N models listed". Anything the
+           baseline lists as untracked has been looked at once.
+
+5. Read prices with code instead of a language model
+   ─────────────────────────────────────────────────────────
+   WHAT:   Replace the Sonar price lookup with per-provider
+           parsers where the provider's page is structured: xAI
+           (the docs page embeds its full price list as JSON),
+           DeepSeek (a plain table) and Google (a regular page).
+   WHY:    Every bad proposal in 2026-09/10 was a language model
+           misreading a correct page: DeepSeek columns mixed up
+           twice, another Gemini model's price attributed to 3.5
+           Flash, a Perplexity price off the wrong row. The pages
+           were right each time.
+   STATE:  OPEN, medium. Do after feature 4, so the roster check
+           has proven which models exist before prices are read
+           for them.
+   WHERE:  tools/pricing-worker/src/index.js researchModel() and
+           friends; new per-provider parsers beside roster.js.
+   DONE:   For each covered provider the weekly run proposes from
+           the parser, with Sonar kept only as a cross-check or a
+           fallback. A page that stops parsing is reported as an
+           error, not guessed. Tests replay the real pages that
+           fooled Sonar.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

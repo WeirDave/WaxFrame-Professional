@@ -171,6 +171,52 @@ The token lists are checked in `test-refresh-logic.mjs` against every model id c
 
 **One consequence worth knowing:** if a provider ever publishes pricing *only* in a blog post, that model will retain its old value indefinitely and quietly. The run log shows it as retained every week, so it is visible rather than silent — but the fix then is to widen `SOURCE_DOMAINS`/`SOURCE_PATH_DENY` deliberately for that provider, not to assume the check is broken.
 
+### Model roster check (v3.63.576)
+
+The pricing refresh above only ever refreshes rows it already has — it never adds, renames or removes one. Three drifts in 2026-09/10 were therefore found by hand: Perplexity's `sonar-reasoning` (retired 2025-12-15, failing quietly for months), xAI's `grok-4.7` (a new flagship while the default was a generation behind) and Google's `gemini-3.8-flash` (3.5 Flash dropped from the pricing page). `src/roster.js` closes that gap by asking each provider's own **model-list endpoint** which models exist, using an API key held as a Worker secret, and comparing the answer with the seed. No language model reads a web page anywhere in it.
+
+It runs in the same Sunday cron as the pricing refresh (independently — neither can take the other down) and on demand. It **only reports**; it never edits the seed, KV pricing data or the app's catalog.
+
+| Line in the email / status page | Meaning | Repeats? |
+|---|---|---|
+| `ROSTER MISSING` | A tracked model is not in the provider's current list — retired or renamed | Every run, until the seed is fixed |
+| `ROSTER NEW` | A chat-style model appeared since the last run and is not tracked | Once |
+| `ROSTER BASELINE` | First successful run for a provider: how many models it lists, and a sample of the untracked ones | Once |
+| `ROSTER ERROR` | The list request failed or the response was not the documented shape | When it starts, not weekly |
+
+**Setup — one secret per provider, all optional.** A provider with no key is skipped silently, and the status page shows it as "not checked". Run from `tools/pricing-worker/`:
+
+```sh
+npx wrangler secret put ROSTER_KEY_CLAUDE     # Anthropic
+npx wrangler secret put ROSTER_KEY_CHATGPT    # OpenAI
+npx wrangler secret put ROSTER_KEY_GEMINI     # Google AI Studio
+npx wrangler secret put ROSTER_KEY_GROK       # xAI
+npx wrangler secret put ROSTER_KEY_MISTRAL
+npx wrangler secret put ROSTER_KEY_DEEPSEEK
+npx wrangler secret put ROSTER_KEY_COHERE
+npx wrangler secret put ROSTER_KEY_TOGETHER
+```
+
+Use a key made for this and, where the provider offers one, with a spending limit: the Worker only calls the free model-list endpoints, but a Worker secret is still a stored credential. Keys are sent in request headers only (never in a URL), and no error message, email or status-page line ever contains one.
+
+**Prove a new key without waiting for Sunday:**
+
+```sh
+curl -s -X POST https://waxframe-pricing.weirdave.workers.dev/api/roster -H "Authorization: Bearer <REFRESH_TOKEN>"
+```
+
+That is the same token as `/api/refresh`. The first run per provider emails a `ROSTER BASELINE` line listing the models the seed does not track; read it once to confirm the provider's response parsed sensibly, then act on anything it names.
+
+**What it cannot see.**
+- **A retired model that is still listed or routed.** Google keeps answering for `gemini-3.5-flash` by routing it to `gemini-3.6-flash`, so it is not reported MISSING; the successor shows up as NEW instead.
+- **Perplexity.** It has no model-list endpoint the app can rely on (see `js/provider-catalog.js`, `perplexity-self`), so it is not covered.
+- **Prices.** Most list endpoints (OpenAI, Anthropic, Gemini) carry none. This checks which models exist, not what they cost.
+- **Together AI** is checked for MISSING and ERROR only; its list is mostly third-party open models, so NEW would be weekly noise.
+
+**Response shapes are the providers' documented ones, not captured from live calls** — the author had no provider keys when this was written. The first real run is the proof for each provider. An unreadable response is reported as `ROSTER ERROR` and is never read as an empty roster, so a wrong guess about a shape costs one email, not a flood of false MISSING lines.
+
+Tests: `node tools/pricing-worker/test-roster.mjs` (offline; part of `tools/release-check.mjs`).
+
 ### Email alerts (v3.63.413, widened v3.63.421 and v3.63.437)
 
 The run log is pull — you have to remember to check `https://waxframe-pricing.weirdave.workers.dev/`. An email alert (via Cloudflare Email Routing's `send_email` binding) pushes instead, but only when something's actually worth a look:

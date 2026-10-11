@@ -1,5 +1,78 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.576 — Pricing service checks each provider's model list for retired and new models
+
+**Released:** 2026-10-11
+**Build:** 20261011-002
+
+### What changed
+
+**The pricing service now checks which models each provider actually offers.**
+The weekly pricing refresh only updated prices for models already on the
+AI API Pricing page; it could not notice that a provider had retired a model or
+released a new one. A retired Perplexity model, a new xAI flagship and a
+replaced Google model were each found by hand. The service now asks each
+provider's own model-list endpoint, using an API key stored as a secret on the
+pricing service, and compares the answer with the models the page tracks.
+Nothing on the AI API Pricing page or in the app changes: the check only
+reports.
+
+- **Where it shows:** a "Model roster check" section on the pricing service's
+  status page, and an email alert when something needs a look. It runs in the
+  same Sunday job as the price refresh, independently of it.
+- **What it reports:** `ROSTER MISSING` (a tracked model is not in the
+  provider's list; repeats until fixed), `ROSTER NEW` (a chat model appeared
+  since the last check; reported once), `ROSTER BASELINE` (the first check per
+  provider: how many models it lists and a sample of untracked ones) and
+  `ROSTER ERROR` (the request failed or the response was unreadable; reported
+  when it starts).
+- **Providers:** Anthropic, OpenAI, Google, xAI, Mistral, DeepSeek, Cohere and
+  Together AI, each enabled by its own secret (`ROSTER_KEY_CLAUDE`,
+  `ROSTER_KEY_CHATGPT`, `ROSTER_KEY_GEMINI`, `ROSTER_KEY_GROK`,
+  `ROSTER_KEY_MISTRAL`, `ROSTER_KEY_DEEPSEEK`, `ROSTER_KEY_COHERE`,
+  `ROSTER_KEY_TOGETHER`). A provider without a key is skipped. Perplexity is not
+  covered, because it has no usable model-list endpoint. Together AI is checked
+  for missing models and errors only.
+- **On demand:** `POST /api/roster` with the same bearer token as
+  `/api/refresh` runs the check immediately, so a new key can be tried without
+  waiting for Sunday.
+- **Keys:** sent in request headers only. No error message, email or status-page
+  line contains a key.
+
+Known limits: a model that is retired but still listed or routed to a
+successor is not reported missing (Google still answers for `gemini-3.5-flash`;
+its successor is reported as new instead), and the check covers which models
+exist, not what they cost.
+
+### Verification
+- `tools/pricing-worker/test-roster.mjs` (new, offline): response parsing for
+  each provider's shape, including a wrong shape being an error rather than an
+  empty list; dated-snapshot handling; the baseline, new, missing and error
+  reporting rules, including that an error is reported once and recovery is
+  silent; that no key appears in a URL, error or the status page; and replays of
+  the xAI, Google and retired-model cases. All pass.
+- Mutation check: with the missing-model detection removed, the error message
+  allowed to carry a network error, errors repeated weekly, HTML escaping
+  removed, or the non-chat filter disabled, the tests fail in each case. The new
+  release-check stage was also shown to fail the gate.
+- `tools/pricing-worker/test-refresh-logic.mjs`: unchanged, passes.
+- Not run: any request to a real provider. The response shapes are each
+  provider's documented format, not captured responses, and no provider keys
+  were available. Each provider is proven by its first real check.
+- Gate: 24 of 24 stages.
+
+### Files changed
+`tools/pricing-worker/src/roster.js` (new), `tools/pricing-worker/src/index.js`,
+`tools/pricing-worker/test-roster.mjs` (new), `tools/pricing-worker/README.md`,
+`tools/release-check.mjs`, `tools/README.md`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v340.txt` (renamed from v339, two items added),
+plus the routine stamp sweep.
+
+### Rollback
+Revert this commit and redeploy the Worker from `tools/pricing-worker/`, or
+`npx wrangler rollback` to the previous Worker version. Stored roster state
+(KV key `roster-state`) is harmless if left in place.
+
 ## v3.63.575 — Gemini default moves to gemini-3.8-flash
 
 **Released:** 2026-10-11

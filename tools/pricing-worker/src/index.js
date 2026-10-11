@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20260927-001
+//  Build: 20261011-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -157,6 +157,8 @@
 //  other needs-review row, this only changes what the human sees before
 //  deciding whether to trust it.
 // ============================================================
+
+import { runRoster, ROSTER_SOURCES } from './roster.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -366,7 +368,25 @@ function modelAttributionMismatch(requestedId, confirmedModel) {
   return null;
 }
 
-function buildStatusHtml(log) {
+function buildRosterHtml(roster) {
+  const entries = ROSTER_SOURCES.map(src => {
+    const st = roster && roster[src.id];
+    const name = escapeHtml(src.label);
+    if (!st || st.skipped) return `<li>${name}: not checked (no key configured)</li>`;
+    if (st.ok === false) return `<li><strong style="color:#b3261e">${name}: model list unavailable</strong> — ${escapeHtml(st.error || 'unknown error')}</li>`;
+    const missing = (st.missing || []).map(escapeHtml);
+    const added = (st.added || []).map(escapeHtml);
+    const bits = [`${st.count} models listed`];
+    if (missing.length) bits.push(`<strong style="color:#b3261e">tracked but missing: ${missing.join(', ')}</strong>`);
+    if (added.length) bits.push(`<strong style="color:#a15c00">new since last check: ${added.join(', ')}</strong>`);
+    if (!missing.length && !added.length) bits.push('tracked models all present');
+    return `<li>${name}: ${bits.join(' — ')}</li>`;
+  }).join('');
+  const ts = roster && Object.values(roster).map(v => v && v.ts).filter(Boolean).sort().pop();
+  return `<h2>Model roster check</h2><p>${ts ? 'Last check: ' + escapeHtml(ts) : 'No roster check has run yet.'}</p><ul>${entries}</ul>`;
+}
+
+function buildStatusHtml(log, roster) {
   const rows = (log || []).map(entry => {
     const items = (entry.changes || []).map(c => {
       const label = `${escapeHtml(c.providerId)}/${escapeHtml(c.modelId)}`;
@@ -381,7 +401,7 @@ function buildStatusHtml(log) {
     return `<details><summary>${escapeHtml(entry.ts)}</summary><ul>${items}</ul></details>`;
   }).join('') || '<p>No scheduled refresh has run yet.</p>';
 
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>WaxFrame Pricing Worker</title><style>body{font-family:system-ui,sans-serif;max-width:640px;margin:2rem auto;padding:0 1rem;color:#222;background:#fafafa}code{background:#eee;padding:.1rem .3rem;border-radius:3px}a{color:#0366d6}details{margin-bottom:.5rem}summary{cursor:pointer;font-weight:600}</style></head><body><h1>WaxFrame Pricing Worker</h1><p>Live data endpoint: <code><a href="/api/pricing">/api/pricing</a></code></p><p>Source: <a href="https://github.com/WeirDave/WaxFrame-Professional/tree/main/tools/pricing-worker">github.com/WeirDave/WaxFrame-Professional</a></p><h2>Scheduled refresh log</h2>${rows}</body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>WaxFrame Pricing Worker</title><style>body{font-family:system-ui,sans-serif;max-width:640px;margin:2rem auto;padding:0 1rem;color:#222;background:#fafafa}code{background:#eee;padding:.1rem .3rem;border-radius:3px}a{color:#0366d6}details{margin-bottom:.5rem}summary{cursor:pointer;font-weight:600}</style></head><body><h1>WaxFrame Pricing Worker</h1><p>Live data endpoint: <code><a href="/api/pricing">/api/pricing</a></code></p><p>Source: <a href="https://github.com/WeirDave/WaxFrame-Professional/tree/main/tools/pricing-worker">github.com/WeirDave/WaxFrame-Professional</a></p><h2>Scheduled refresh log</h2>${rows}${buildRosterHtml(roster)}</body></html>`;
 }
 
 function buildResearchPrompt(provider, model) {
@@ -948,6 +968,52 @@ async function refreshPricing(env) {
   }
 }
 
+const ROSTER_STATE_KEY = 'roster-state';
+
+// Weekly model-roster check (src/roster.js). Independent of refreshPricing:
+// it needs no Perplexity key, writes nothing but its own KV state key, and
+// never throws — a failure here must not take the pricing refresh with it.
+async function refreshRoster(env) {
+  try {
+    const currentRaw = await env.PRICING_DATA.get('latest');
+    if (!currentRaw) return { ok: false };
+    const seed = JSON.parse(currentRaw);
+    let previousState = {};
+    const stateRaw = await env.PRICING_DATA.get(ROSTER_STATE_KEY);
+    if (stateRaw) { try { previousState = JSON.parse(stateRaw) || {}; } catch (e) { previousState = {}; } }
+
+    const nowIso = new Date().toISOString();
+    const { state, alertLines } = await runRoster({ env, seed, previousState, fetchImpl: fetch, nowIso });
+    await env.PRICING_DATA.put(ROSTER_STATE_KEY, JSON.stringify(state));
+
+    if (alertLines.length) {
+      await sendAlertEmail(env, `WaxFrame model roster — ${alertLines.length} item(s) need a look`, [
+        `Run at ${nowIso}:`,
+        '',
+        ...alertLines,
+        '',
+        'Full status: https://waxframe-pricing.weirdave.workers.dev/'
+      ]);
+    }
+    return { ok: true, alerts: alertLines.length };
+  } catch (e) {
+    await sendAlertEmail(env, 'WaxFrame model roster check FAILED', [
+      `The scheduled roster check threw an unhandled error at ${new Date().toISOString()}:`,
+      '',
+      String(e && e.message || e)
+    ]);
+    return { ok: false };
+  }
+}
+
+function checkRefreshToken(request, env) {
+  const token = env.REFRESH_TOKEN;
+  if (!token) return { status: 501, error: 'REFRESH_TOKEN secret not configured' };
+  const auth = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!auth || auth !== token) return { status: 403, error: 'Invalid or missing token' };
+  return null;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -968,14 +1034,8 @@ export default {
     }
 
     if (url.pathname === '/api/refresh' && request.method === 'POST') {
-      const token = env.REFRESH_TOKEN;
-      if (!token) {
-        return new Response(JSON.stringify({ error: 'REFRESH_TOKEN secret not configured' }), { status: 501, headers: JSON_HEADERS });
-      }
-      const auth = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
-      if (!auth || auth !== token) {
-        return new Response(JSON.stringify({ error: 'Invalid or missing token' }), { status: 403, headers: JSON_HEADERS });
-      }
+      const denied = checkRefreshToken(request, env);
+      if (denied) return new Response(JSON.stringify({ error: denied.error }), { status: denied.status, headers: JSON_HEADERS });
       try {
         await refreshPricing(env);
         return new Response(JSON.stringify({ ok: true, ts: new Date().toISOString() }), { status: 200, headers: JSON_HEADERS });
@@ -984,11 +1044,23 @@ export default {
       }
     }
 
+    // On-demand roster check, same token as /api/refresh. Lets a newly added
+    // ROSTER_KEY_* secret be proven out without waiting for Sunday.
+    if (url.pathname === '/api/roster' && request.method === 'POST') {
+      const denied = checkRefreshToken(request, env);
+      if (denied) return new Response(JSON.stringify({ error: denied.error }), { status: denied.status, headers: JSON_HEADERS });
+      const result = await refreshRoster(env);
+      return new Response(JSON.stringify({ ts: new Date().toISOString(), ...result }), { status: result.ok ? 200 : 500, headers: JSON_HEADERS });
+    }
+
     if (url.pathname === '/' && request.method === 'GET') {
       let log = [];
       const logRaw = await env.PRICING_DATA.get(RUN_LOG_KEY);
       if (logRaw) { try { log = JSON.parse(logRaw) || []; } catch (e) { log = []; } }
-      return new Response(buildStatusHtml(log), {
+      let roster = null;
+      const rosterRaw = await env.PRICING_DATA.get(ROSTER_STATE_KEY);
+      if (rosterRaw) { try { roster = JSON.parse(rosterRaw); } catch (e) { roster = null; } }
+      return new Response(buildStatusHtml(log, roster), {
         status: 200,
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
@@ -1016,6 +1088,7 @@ export default {
     if (event.cron === '0 13 * * *') {
       ctx.waitUntil(checkCronLiveness(env));
     } else {
+      ctx.waitUntil(refreshRoster(env));
       ctx.waitUntil(refreshPricing(env));
     }
   }
@@ -1024,4 +1097,4 @@ export default {
 // Named exports alongside the default Worker export — consumed only by
 // tools/pricing-worker/test-refresh-logic.mjs (pure-function unit tests,
 // no KV/network). Cloudflare's runtime ignores exports it doesn't call.
-export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, siblingColumnAttribution, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath };
+export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, siblingColumnAttribution, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath, refreshRoster };
