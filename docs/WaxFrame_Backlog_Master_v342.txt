@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v341
+WaxFrame Backlog Master v342
 2026-10-11
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,30 @@ ships.
 
 
 
+
+v342 — CLAUDE MOVED TO THE 5.5 LINEUP (v3.63.578).
+
+Found by the roster check's first live run: Anthropic's key lists
+claude-fable-5-1, claude-opus-5-5, claude-sonnet-5-5 and
+claude-haiku-5-5, and its models and pricing pages name exactly those
+four as the current lineup. WaxFrame tracked only up to claude-opus-4-8.
+Default is now claude-sonnet-5-5 (the Sonnet tier, as before; newer and
+cheaper than sonnet-4-6). The fallback list keeps one older model per
+tier (sonnet-4-6, opus-4-8, haiku-4-5) and drops opus-4-7 and 4-6.
+
+Checked before changing a default: the Anthropic request body sends only
+model, max_tokens, system, messages and an optional stream flag, so
+there is no temperature or thinking parameter for the new models to
+reject, and thinking blocks in responses were already handled
+(v3.63.410).
+
+Not done, and worth knowing: no round was run on any 5.5 model (the key
+is held by the Worker, not available here). The ids and prices come
+from Anthropic's pages and the key's own model list. Haiku 5.5 is tiered
+by prompt size ($0.10/$0.50 up to 100K tokens, $0.50/$2.50 above) and
+the seed and the spend meter carry the lower rate, with the tier in the
+note. Mythos 5 and 5.1 appear on the pricing page but not in the key's
+list; they are not tracked.
 
 v341 — ROSTER CHECK: FIRST LIVE RUN, AND THE LIST YOU CAN ACTUALLY READ
        (v3.63.577).

@@ -1,5 +1,60 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.578 — Claude default moves to claude-sonnet-5-5
+
+**Released:** 2026-10-11
+**Build:** 20261011-004
+
+### What changed
+
+**The default model for Anthropic (Claude) is now `claude-sonnet-5-5`**,
+replacing `claude-sonnet-4-6`. Anthropic's current lineup is Claude Fable 5.1,
+Claude Opus 5.5, Claude Sonnet 5.5 and Claude Haiku 5.5, all with a 1M-token
+context window, a 128K-token output limit and image input. WaxFrame still
+offered the previous generation. Sonnet 5.5 is the same tier as the old
+default and costs less ($2 / $10 per million tokens against $3 / $15).
+
+- **Model picker and defaults:** a new Claude key starts on `claude-sonnet-5-5`.
+  The picker's fallback list is `claude-sonnet-5-5`, `claude-opus-5-5`,
+  `claude-fable-5-1`, `claude-haiku-5-5`, `claude-sonnet-4-6`, `claude-opus-4-8`
+  and `claude-haiku-4-5`. `claude-opus-4-7` and `claude-opus-4-6` are no longer in
+  the fallback list; the list fetched with a key still offers every model the
+  key can use, and a saved model choice is not changed.
+- **AI API Pricing page and spend meter:** rows added for the four new models.
+  Sonnet 5.5 is $2 / $10, Opus 5.5 is $4 / $20, Fable 5.1 is $10 / $50 and
+  Haiku 5.5 is $0.10 / $0.50 per million tokens for prompts up to 100,000
+  tokens ($0.50 / $2.50 above that; the page and the spend meter use the lower
+  rate and the page notes the tier).
+- **Image and PDF text recognition:** the model used for Claude when no vision
+  model is configured is now `claude-sonnet-5-5`.
+- **Documentation:** the API Details page, the user manual (HTML and text) and
+  the README default table name `claude-sonnet-5-5`.
+
+### Verification
+- Anthropic's models page and pricing page, read from the raw HTML: the four
+  models above, their ids, prices, 1M context and 128K output, and image input.
+  The live model list for a Claude key returned all four ids.
+- The request WaxFrame sends to Anthropic contains only `model`, `max_tokens`,
+  `system`, `messages` and an optional `stream` flag, so no parameter that a
+  newer model could reject is sent.
+- `tools/check-pricing-coverage.mjs`: passes with the catalog and seed moved
+  together, including the per-round estimate for each new price.
+- Provider extractor fixtures and the Worker tests: pass.
+- Not run: a round on any 5.5 model.
+- Gate: 24 of 24 stages.
+
+### Files changed
+`js/provider-catalog.js`, `js/app.js`, `tools/pricing-worker/data/pricing-seed.json`,
+`js/pricing-renderer.js` (regenerated offline copy), `api-details.html`,
+`waxframe-user-manual.html`, `docs/waxframe-user-manual-clean.txt`, `README.md`,
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v342.txt` (renamed from v341), plus
+the routine stamp sweep.
+
+### Rollback
+Revert this commit, then push the previous seed to KV:
+`wrangler kv key put --binding=PRICING_DATA latest --path=data/pricing-seed.json --remote`
+from `tools/pricing-worker/`.
+
 ## v3.63.577 — Model roster check lists untracked models newest first, in full on the status page
 
 **Released:** 2026-10-11

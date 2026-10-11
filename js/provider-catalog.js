@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261011-003
+// Build: 20261011-004
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -535,12 +535,17 @@
   var CATALOG = [
     {
       id: 'claude', label: 'Anthropic (Claude)',
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-5-5',
       endpoint: 'https://waxframe-claude-proxy.weirdave.workers.dev',
       format: 'anthropic',
       discovery: 'anthropic-via-proxy',
       vision: true, // v3.63.279 — supports image input via the vision fallback path
-      fallback: ['claude-sonnet-4-6', 'claude-opus-4-8', 'claude-opus-4-7', 'claude-opus-4-6', 'claude-haiku-4-5']
+      // v3.63.578 - Anthropic's current lineup is Fable 5.1, Opus 5.5, Sonnet 5.5 and
+      // Haiku 5.5 (its models page and pricing page). Default moved to the Sonnet tier
+      // as before: sonnet-4-6 -> sonnet-5-5, which is newer and cheaper ($2/$10 vs $3/$15).
+      // One older model per tier stays listed; Opus 4.7 and 4.6 dropped from this fallback
+      // (the live model list, fetched with a key, still offers every model the key can use).
+      fallback: ['claude-sonnet-5-5', 'claude-opus-5-5', 'claude-fable-5-1', 'claude-haiku-5-5', 'claude-sonnet-4-6', 'claude-opus-4-8', 'claude-haiku-4-5']
     },
     {
       id: 'chatgpt', label: 'OpenAI (ChatGPT)',

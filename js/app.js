@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261011-003
+// Build: 20261011-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261011-003';         // build stamp — update each session
+const BUILD = '20261011-004';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -3687,7 +3687,7 @@ const REFINE_GOAL_MAX_CHARS = 800;
 // `visionCfg.model || VISION_DEFAULTS[provider]` so a user-set model always wins.
 const VISION_DEFAULTS = {
   chatgpt: 'gpt-5.5',
-  claude:  'claude-sonnet-4-6',
+  claude:  'claude-sonnet-5-5',
   gemini:  'gemini-3.8-flash',
   grok:    'grok-4.7',
 };
@@ -13668,8 +13668,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.577'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.577';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.578'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.578';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 

@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20261011-003
+     Build: 20261011-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20261011-003">
+  <meta name="waxframe-build" content="20261011-004">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="keywords" content="WaxFrame user manual, multi-AI document refinement guide, hive setup guide">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.577">
+  <link rel="stylesheet" href="style.css?v=3.63.578">
 </head>
 <body class="helper-body">
 
@@ -549,7 +549,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">Model selector <em>(appears only when a key is saved)</em></span>
-        <span class="goal-info-desc">Shows the model currently selected for that AI — for example, <code>gpt-5.5</code> for ChatGPT or <code>claude-sonnet-4-6</code> for Claude. Click the dropdown to see available models fetched directly from that provider. If you've run <strong>Recommend Models for All</strong>, two picks in the dropdown are labeled <strong>✨ Reviewer</strong> and <strong>🔨 Builder</strong> — look for the words, not just the icons. The explanation lines below the dropdown are color-coded to match: gold for the Reviewer pick, blue for the Builder pick. WaxFrame uses sensible defaults; you don't need to change this unless you have a specific reason.</span>
+        <span class="goal-info-desc">Shows the model currently selected for that AI — for example, <code>gpt-5.5</code> for ChatGPT or <code>claude-sonnet-5-5</code> for Claude. Click the dropdown to see available models fetched directly from that provider. If you've run <strong>Recommend Models for All</strong>, two picks in the dropdown are labeled <strong>✨ Reviewer</strong> and <strong>🔨 Builder</strong> — look for the words, not just the icons. The explanation lines below the dropdown are color-coded to match: gold for the Reviewer pick, blue for the Builder pick. WaxFrame uses sensible defaults; you don't need to change this unless you have a specific reason.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Recommend a Model <em>(Internet mode only, when a key is saved)</em></span>
@@ -2134,7 +2134,7 @@
         <thead><tr><th>AI</th><th>Default model</th><th>Pricing page</th><th>Billing page</th></tr></thead>
         <tbody>
           <tr><td><strong>ChatGPT</strong></td><td><code>gpt-5.6-sol</code></td><td><a href="https://developers.openai.com/api/docs/pricing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">developers.openai.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td><td><a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.openai.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
-          <tr><td><strong>Claude</strong></td><td><code>claude-sonnet-4-6</code></td><td><a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.claude.com/pricing<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td><td><a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.claude.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
+          <tr><td><strong>Claude</strong></td><td><code>claude-sonnet-5-5</code></td><td><a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.claude.com/pricing<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td><td><a href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">platform.claude.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
           <tr><td><strong>Gemini</strong></td><td><code>gemini-3.8-flash</code></td><td><a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">ai.google.dev/pricing<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td><td><a href="https://aistudio.google.com/api-keys" target="_blank" rel="noopener noreferrer" class="link-accent external-link">aistudio.google.com<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
           <tr><td><strong>Grok</strong></td><td><code>grok-4.7</code></td><td><a href="https://docs.x.ai/developers/pricing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">docs.x.ai/pricing<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td><td><a href="https://console.x.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.x.ai<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
           <tr><td><strong>Perplexity</strong></td><td><code>sonar-pro</code></td><td><a href="https://docs.perplexity.ai/getting-started/pricing" target="_blank" rel="noopener noreferrer" class="link-accent external-link">docs.perplexity.ai/pricing<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td><td><a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="link-accent external-link">console.perplexity.ai<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a></td></tr>
@@ -2265,14 +2265,14 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.577"></script>
-<script src="lib/docx.min.js?v=3.63.577"></script>
-<script src="js/docx-export.js?v=3.63.577"></script>
-<script src="js/nav-helper.js?v=3.63.577"></script>
-<script src="js/license-helper.js?v=3.63.577"></script>
-<script src="js/update-check.js?v=3.63.577"></script>
-<script src="js/helper-handlers.js?v=3.63.577"></script>
-<script src="js/version.js?v=3.63.577"></script>
-<script src="js/docs-scrollspy.js?v=3.63.577"></script>
+<script src="js/theme.js?v=3.63.578"></script>
+<script src="lib/docx.min.js?v=3.63.578"></script>
+<script src="js/docx-export.js?v=3.63.578"></script>
+<script src="js/nav-helper.js?v=3.63.578"></script>
+<script src="js/license-helper.js?v=3.63.578"></script>
+<script src="js/update-check.js?v=3.63.578"></script>
+<script src="js/helper-handlers.js?v=3.63.578"></script>
+<script src="js/version.js?v=3.63.578"></script>
+<script src="js/docs-scrollspy.js?v=3.63.578"></script>
 </body>
 </html>

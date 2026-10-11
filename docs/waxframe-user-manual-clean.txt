@@ -736,7 +736,7 @@ Perplexity may require auto-billing to be enabled before API calls succeed.
 
 Default provider/model list (with pricing page and billing page for each):
 - ChatGPT: gpt-5.6-sol — pricing: developers.openai.com/api/docs/pricing — billing: platform.openai.com
-- Claude: claude-sonnet-4-6 — pricing: platform.claude.com/docs/en/about-claude/pricing — billing: platform.claude.com/settings/billing
+- Claude: claude-sonnet-5-5 — pricing: platform.claude.com/docs/en/about-claude/pricing — billing: platform.claude.com/settings/billing
 - Gemini: gemini-3.8-flash — pricing: ai.google.dev/gemini-api/docs/pricing — billing: aistudio.google.com
 - Grok: grok-4.7 — pricing: docs.x.ai/developers/pricing — billing: console.x.ai
 - Perplexity: sonar-pro — pricing: docs.perplexity.ai/getting-started/pricing — billing: console.perplexity.ai
