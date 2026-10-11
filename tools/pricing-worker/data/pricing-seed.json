@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-04T19:00:00Z",
+  "lastUpdated": "2026-10-11T18:00:00Z",
   "schemaVersion": 3,
   "tokensPerRound": {
     "input": 5000,
@@ -10,7 +10,7 @@
       "id": "gemini-free",
       "name": "Gemini (Google) — free tier",
       "shortName": "Gemini Flash (free tier)",
-      "defaultModel": "gemini-3.5-flash",
+      "defaultModel": "gemini-3.8-flash",
       "billingUrl": "https://aistudio.google.com/api-keys",
       "tier1Rpm": "15",
       "tier1Tpm": "—",
@@ -20,15 +20,27 @@
       "recommendationNote": "Free while AI Studio billing is disabled. 1M-token context window, 1500 requests/day quota, synthesizes Builder output reliably. Catch: enable billing on AI Studio and routing can quietly flip to paid tier on the same model name.",
       "models": [
         {
-          "id": "gemini-3.5-flash",
+          "id": "gemini-3.8-flash",
           "inputPerM": 0,
           "outputPerM": 0,
           "contextWindow": "1M",
           "maxOutput": "64K",
           "estPerRound": 0,
           "estNote": "free while AI Studio billing is disabled",
-          "sourceUrl": "https://aistudio.google.com/api-keys",
-          "verifiedAt": "2026-09-27T12:01:47.989Z",
+          "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+          "verifiedAt": "2026-10-11T18:00:00Z",
+          "status": "verified"
+        },
+        {
+          "id": "gemini-3.6-flash",
+          "inputPerM": 0,
+          "outputPerM": 0,
+          "contextWindow": "1M",
+          "maxOutput": "64K",
+          "estPerRound": 0,
+          "estNote": "free while AI Studio billing is disabled",
+          "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+          "verifiedAt": "2026-10-11T18:00:00Z",
           "status": "verified"
         },
         {
@@ -61,7 +73,7 @@
       "id": "gemini-paid",
       "name": "Gemini (Google) — paid",
       "shortName": "Gemini Flash (paid)",
-      "defaultModel": "gemini-3.5-flash",
+      "defaultModel": "gemini-3.8-flash",
       "billingUrl": "https://aistudio.google.com/api-keys",
       "tier1Rpm": "1K",
       "tier1Tpm": "2M",
@@ -71,15 +83,27 @@
       "recommendationNote": null,
       "models": [
         {
-          "id": "gemini-3.5-flash",
-          "inputPerM": 1.5,
-          "outputPerM": 9,
+          "id": "gemini-3.8-flash",
+          "inputPerM": 0.75,
+          "outputPerM": 3.75,
           "contextWindow": "1M",
           "maxOutput": "64K",
-          "estPerRound": 0.026,
-          "estNote": "Standard tier. The same page also lists Batch and Flex at $0.75/$4.50 and Priority at $2.70/$16.20 for this model",
+          "estPerRound": 0.011,
+          "estNote": "Standard tier. $0.75/$3.75 per M through Dec 31, 2026; becomes $1.50/$7.50 per M from Jan 1, 2027. Batch and Flex are half the Standard rate",
           "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
-          "verifiedAt": "2026-09-27T12:01:47.989Z",
+          "verifiedAt": "2026-10-11T18:00:00Z",
+          "status": "verified"
+        },
+        {
+          "id": "gemini-3.6-flash",
+          "inputPerM": 0.75,
+          "outputPerM": 3.75,
+          "contextWindow": "1M",
+          "maxOutput": "64K",
+          "estPerRound": 0.011,
+          "estNote": "Standard tier. $0.75/$3.75 per M through Dec 31, 2026; becomes $1.50/$7.50 per M from Jan 1, 2027. Batch and Flex are half the Standard rate",
+          "sourceUrl": "https://ai.google.dev/gemini-api/docs/pricing",
+          "verifiedAt": "2026-10-11T18:00:00Z",
           "status": "verified"
         },
         {
@@ -187,7 +211,7 @@
         {
           "id": "deepseek-flash",
           "inputPerM": 0.15,
-          "outputPerM": 0.60,
+          "outputPerM": 0.6,
           "contextWindow": "1M",
           "maxOutput": "384K",
           "estPerRound": 0.002,

@@ -1,5 +1,60 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.575 — Gemini default moves to gemini-3.8-flash
+
+**Released:** 2026-10-11
+**Build:** 20261011-001
+
+### What changed
+
+**The default model for Google (Gemini) is now `gemini-3.8-flash`**, replacing
+`gemini-3.5-flash`. Google's pricing page no longer lists `gemini-3.5-flash`,
+and its deprecations page shows requests to it being routed to
+`gemini-3.6-flash`. `gemini-3.8-flash` is Google's current flagship Flash model
+and `gemini-3.6-flash` the previous generation. Both take text, image, video,
+audio and PDF input and have a 1M-token context window and a 64K-token output
+limit.
+
+- **Model picker and defaults:** a new Gemini key starts on `gemini-3.8-flash`.
+  The picker's fallback list is `gemini-3.8-flash`, `gemini-3.6-flash`,
+  `gemini-3.1-pro-preview`, `gemini-3.1-flash-lite`. A saved model choice is not
+  changed; Google routes a request for `gemini-3.5-flash` to `gemini-3.6-flash`.
+- **AI API Pricing page:** `gemini-3.8-flash` and `gemini-3.6-flash` replace
+  `gemini-3.5-flash` in both the free-tier and paid Gemini rows. Paid pricing is
+  $0.75 input / $3.75 output per million tokens through December 31, 2026, and
+  $1.50 / $7.50 from January 1, 2027; the page shows the current figure and
+  states the change. Free-tier rows read $0 while Google AI Studio billing is
+  disabled, as before. The session spend meter prices the new models.
+- **Image and PDF text recognition:** the model used for Gemini when no vision
+  model is configured is now `gemini-3.8-flash`.
+- **Weekly pricing refresh:** the Gemini rows now track current models, so the
+  refresh no longer proposes another model's price for a retired id.
+- **Documentation:** the API Details page, the user manual (HTML and text), the
+  README default table and the screenshot tool name `gemini-3.8-flash`.
+
+### Verification
+- Google's pricing page, read from the raw HTML: `gemini-3.8-flash` and
+  `gemini-3.6-flash` are listed with the prices above and a free tier;
+  `gemini-3.5-flash` is not listed. Their model pages state an input limit of
+  1,048,576 and an output limit of 65,536 tokens.
+- `tools/check-pricing-coverage.mjs`: passes with the catalog and seed moved
+  together, including the per-round estimate for the new price.
+- Not run: a live round on `gemini-3.8-flash` (no Google key available for this
+  check).
+- Gate: 23 of 23 stages.
+
+### Files changed
+`js/provider-catalog.js`, `js/app.js`, `tools/pricing-worker/data/pricing-seed.json`,
+`js/pricing-renderer.js` (regenerated offline copy), `api-details.html`,
+`waxframe-user-manual.html`, `docs/waxframe-user-manual-clean.txt`, `README.md`,
+`tools/capture.mjs`, `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v339.txt`
+(renamed from v338, one follow-up added), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit, then push the previous seed to KV:
+`wrangler kv key put --binding=PRICING_DATA latest --path=data/pricing-seed.json --remote`
+from `tools/pricing-worker/`.
+
 ## v3.63.574 — Update dialog lists what changed since the installed version
 
 **Released:** 2026-10-10

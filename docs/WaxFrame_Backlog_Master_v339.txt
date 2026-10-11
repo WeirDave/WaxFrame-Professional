@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v338
-2026-10-04
+WaxFrame Backlog Master v339
+2026-10-11
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,24 @@ ships.
 
 
 
+
+v339 — GEMINI MOVED TO 3.8 FLASH (v3.63.575).
+
+Google's pricing page no longer lists gemini-3.5-flash and its
+deprecations page routes requests for it to gemini-3.6-flash (the
+column headings of that table were read through a text dump, so the
+exact wording of "deprecated" versus "legacy" is unconfirmed). The
+default is now gemini-3.8-flash, with gemini-3.6-flash beside it;
+both are 1M context, 64K output, image input, and show a free tier
+on Google's page. gemini-3.5-flash is gone from the picker, the
+seed (free and paid) and the docs.
+
+Not done, and worth knowing: no key was available, so the model ids
+were checked against Google's published pages and not against a
+models.list call, and no round was run on 3.8 Flash. The free tier
+is as Google's page states it; whether a given account's free quota
+covers these two models was not tested. Feature 3 is the follow-up
+that cannot be done before 2027-01-01.
 
 v338 — XAI DEFAULT MOVED TO GROK-4.7 (v3.63.566).
 
@@ -1674,6 +1692,25 @@ Ordered by value. Item 1 is blocked on David.
    DONE:   An up-to-date run with two or more backups offers the
            same prompt; -KeepBackups / WAXFRAME_KEEP_BACKUPS are
            honoured there too.
+
+3. Gemini Flash price change on 2027-01-01
+   ─────────────────────────────────────────────────────────
+   WHAT:   Google lists gemini-3.8-flash and gemini-3.6-flash at
+           $0.75 / $3.75 per M through 2026-12-31, then
+           $1.50 / $7.50 from 2027-01-01. The seed carries the
+           current figure and says so in estNote.
+   WHY:    From 2027-01-01 the pricing page, the Defaults table
+           and the session spend meter all understate Gemini Flash
+           by half unless the seed is updated.
+   STATE:  OPEN, date-triggered. Do not start before 2027-01-01.
+   WHERE:  tools/pricing-worker/data/pricing-seed.json, both
+           gemini-paid Flash rows (inputPerM, outputPerM,
+           estPerRound, estNote); FALLBACK_DATA regen; KV push.
+   DONE:   Both rows read $1.50 / $7.50 with estPerRound 0.022 and
+           the estNote reworded; the live endpoint confirms it.
+           The weekly refresh will also propose it as a
+           needs-review item that week; check it against Google's
+           page rather than applying it blindly.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

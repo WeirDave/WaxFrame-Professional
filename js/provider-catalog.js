@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261010-007
+// Build: 20261011-001
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -571,8 +571,8 @@
     },
     {
       id: 'gemini', label: 'Google (Gemini)',
-      model: 'gemini-3.5-flash',
-      endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
+      model: 'gemini-3.8-flash',
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent',
       endpointFn: function (model) {
         return 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent';
       },
@@ -585,7 +585,11 @@
       // Keep this provider-specific: Perplexity's sonar-deep-research really
       // does use its normal chat-completions endpoint.
       filterExtras: [/^deep-research(?:-|$)/i],
-      fallback: ['gemini-3.5-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite']
+      // v3.63.575 — default moved gemini-3.5-flash -> gemini-3.8-flash. Google's
+      // pricing page no longer lists 3.5 Flash and its deprecations page routes
+      // requests for it to gemini-3.6-flash; 3.8 Flash is the current flagship
+      // Flash (1M context, 64K output, image input). 3.6 Flash stays listed.
+      fallback: ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite']
     },
     {
       id: 'grok', label: 'xAI (Grok)',
