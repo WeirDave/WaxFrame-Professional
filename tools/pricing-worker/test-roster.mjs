@@ -20,7 +20,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { normalizeId, isChatLike, parseModelList, idPresent, trackedIdsFor, diffRoster, fetchRoster, runRoster, ROSTER_SOURCES } from './src/roster.js';
+import { normalizeId, isChatLike, parseModelList, idPresent, trackedIdsFor, diffRoster, fetchRoster, runRoster, newestFirst, ROSTER_SOURCES } from './src/roster.js';
 import { buildStatusHtml } from './src/index.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -38,7 +38,7 @@ function assert(cond, label) {
 
 const src = id => ROSTER_SOURCES.find(s => s.id === id);
 const NOW = '2026-10-11T12:00:00Z';
-const KEY = 'sk-test-SECRET-1234567890';
+const KEY = 'FAKE-roster-test-credential-not-real-0001';
 
 // A fake fetch that serves one JSON body (or status) per URL prefix.
 function fakeFetch(routes) {
@@ -102,6 +102,37 @@ console.log('\ndiffRoster');
   assertEqual(d2.baselineUntracked, null, 'later run has no baseline');
   const d3 = diffRoster({ tracked: ['a-1'], current: ['a-1', 'd-4'], previous: ['a-1'], addedAlerts: false });
   assertEqual(d3.added, [], 'addedAlerts:false suppresses NEW');
+}
+
+// ── newest first / full untracked list ───────────────────────────────
+console.log('\nnewestFirst and the stored untracked list');
+{
+  assertEqual(newestFirst(['gpt-4', 'gpt-5.6-sol', 'gpt-4o', 'gpt-5.5', 'gpt-3.5-turbo']), ['gpt-5.6-sol', 'gpt-5.5', 'gpt-4o', 'gpt-4', 'gpt-3.5-turbo'], 'numeric-aware, newest-looking first (not plain alphabetical)');
+  assertEqual(newestFirst(['claude-sonnet-4-5', 'claude-sonnet-5-5', 'claude-opus-5']), ['claude-sonnet-5-5', 'claude-sonnet-4-5', 'claude-opus-5'], 'claude ids order by version within a family');
+  assertEqual(newestFirst(['gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-3.10-flash']), ['gemini-3.10-flash', 'gemini-3.8-flash', 'gemini-2.5-flash'], '3.10 sorts after 3.8, not before it');
+
+  // 30 old models then one newer one: the newer one must be named in the capped baseline sample.
+  const old = Array.from({ length: 30 }, (_, i) => 'gpt-3.5-v' + String(i).padStart(2, '0'));
+  const list = [...old, 'gpt-9-new'];
+  const f2 = fakeFetch({ 'https://api.openai.com': { body: { data: list.map(id => ({ id })) } } });
+  const r = await runRoster({ env: { ROSTER_KEY_CHATGPT: KEY }, seed: { providers: [{ id: 'chatgpt', models: [] }] }, previousState: {}, fetchImpl: f2, nowIso: NOW });
+  assert(r.alertLines[0].includes('gpt-9-new'), 'the newest model is inside the 12 named in the baseline line, not hidden behind "+N more"');
+  assert(r.alertLines[0].includes('full list is on the status page'), 'the baseline line points at the status page');
+  assertEqual(r.state.chatgpt.untracked.length, 31, 'the FULL untracked list is stored, not the capped sample');
+  assertEqual(r.state.chatgpt.untracked[0], 'gpt-9-new', 'stored list is newest first');
+  assertEqual(r.state.chatgpt.untrackedCount, 31, 'count stored');
+
+  // the list is recomputed every run, so it stays current after the baseline.
+  const r2 = await runRoster({ env: { ROSTER_KEY_CHATGPT: KEY }, seed: { providers: [{ id: 'chatgpt', models: [] }] }, previousState: r.state, fetchImpl: f2, nowIso: NOW });
+  assertEqual(r2.alertLines, [], 'second run is silent');
+  assertEqual(r2.state.chatgpt.untracked.length, 31, 'untracked list is still present on a later run');
+
+  // Together: no names in the email, nothing stored.
+  const t = fakeFetch({ 'https://api.together.xyz': { body: Array.from({ length: 50 }, (_, i) => ({ id: 'vendor/model-' + i, type: 'chat' })) } });
+  const tr = await runRoster({ env: { ROSTER_KEY_TOGETHER: KEY }, seed: { providers: [{ id: 'together', models: [] }] }, previousState: {}, fetchImpl: t, nowIso: NOW });
+  assert(!tr.alertLines[0].includes('vendor/model-'), 'Together: the baseline names no third-party models');
+  assert(/50 others are not tracked/.test(tr.alertLines[0]), 'Together: the baseline still gives the count');
+  assertEqual(tr.state.together.untracked, [], 'Together: no list is stored');
 }
 
 // ── network ──────────────────────────────────────────────────────────
@@ -238,7 +269,10 @@ console.log('\nbuildStatusHtml — roster section');
   assert(html.includes('40 models listed') && html.includes('gemini-4.0-flash'), 'shows counts and new models');
   assert(!html.includes('<img src=x'), 'model ids are HTML-escaped');
   assert(html.includes('model list unavailable') && html.includes('HTTP 401'), 'shows a failing provider');
-  assert(!html.includes('sk-'), 'no key material on the page');
+  assert(!html.includes(KEY) && !html.includes('FAKE-roster'), 'no key material on the page');
+  const withList = buildStatusHtml([], { chatgpt: { ok: true, ts: NOW, count: 86, missing: [], added: [], untracked: ['gpt-9-new', '<script>x</script>'], untrackedCount: 2 } });
+  assert(withList.includes('2 chat-style models not tracked') && withList.includes('gpt-9-new'), 'status page lists the untracked models');
+  assert(!withList.includes('<script>x</script>') && withList.includes('&lt;script&gt;'), 'untracked model ids are HTML-escaped');
 }
 
 console.log('');

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ── Confidentiality gate ────────────────────────────────────────────────
-// Build: 20261011-002
+// Build: 20261011-003
 //
 // WHY THIS EXISTS
 // This repository is public, and on 2026-09-15 David escalated to an
@@ -137,6 +137,13 @@ const EXEMPT = /confidentiality-allow/i;
 // ── Gather tracked text files ───────────────────────────────────────────
 const git = (args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
 const tracked = git(['ls-files']).split('\n').filter(Boolean).filter(f => !SKIP_PATH.test(f));
+// v3.63.577 - also scan files that are new and not yet added. CI scans the commit, so a
+// new file holding a key-shaped value passed the gate locally (untracked, so not listed)
+// and failed on the push - v3.63.576 shipped without its download package that way.
+// Ignored files stay out (TERMS_FILE is one), and the TERMS_FILE check below still
+// asks the tracked list only.
+const untrackedNew = git(['ls-files', '--others', '--exclude-standard']).split('\n').filter(Boolean).filter(f => !SKIP_PATH.test(f));
+const toScan = Array.from(new Set([...tracked, ...untrackedNew]));
 
 // ── The local term list must never be committed ─────────────────────────
 if (tracked.includes(TERMS_FILE)) {
@@ -157,7 +164,7 @@ if (existsSync(termsPath)) {
 
 // ── Scan ────────────────────────────────────────────────────────────────
 let scanned = 0;
-for (const file of tracked) {
+for (const file of toScan) {
   let body;
   try { body = readFileSync(join(ROOT, file), 'utf8'); } catch { continue; }
   scanned++;

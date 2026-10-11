@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20261011-002
+//  Build: 20261011-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -380,7 +380,9 @@ function buildRosterHtml(roster) {
     if (missing.length) bits.push(`<strong style="color:#b3261e">tracked but missing: ${missing.join(', ')}</strong>`);
     if (added.length) bits.push(`<strong style="color:#a15c00">new since last check: ${added.join(', ')}</strong>`);
     if (!missing.length && !added.length) bits.push('tracked models all present');
-    return `<li>${name}: ${bits.join(' — ')}</li>`;
+    const un = (st.untracked || []).map(escapeHtml);
+    const more = un.length ? `<details><summary>${st.untrackedCount || un.length} chat-style models not tracked (newest first)</summary><div style="font-family:ui-monospace,monospace;font-size:.85em;line-height:1.5">${un.join(' &middot; ')}</div></details>` : '';
+    return `<li>${name}: ${bits.join(' — ')}${more}</li>`;
   }).join('');
   const ts = roster && Object.values(roster).map(v => v && v.ts).filter(Boolean).sort().pop();
   return `<h2>Model roster check</h2><p>${ts ? 'Last check: ' + escapeHtml(ts) : 'No roster check has run yet.'}</p><ul>${entries}</ul>`;

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker: model roster check
-//  Build: 20261011-002
+//  Build: 20261011-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -143,17 +143,25 @@ export function trackedIdsFor(source, seed) {
 }
 
 // ── Comparison ───────────────────────────────────────────────────────
+// Newest-looking first: a numeric-aware descending sort puts gpt-5.6 before
+// gpt-4, claude-sonnet-5-5 before claude-sonnet-4-5 and gemini-3.8 before
+// gemini-2.5. The first BASELINE run named the first 12 in plain alphabetical
+// order, which hid exactly the models worth seeing behind "+30 more".
+export function newestFirst(ids) {
+  return ids.slice().sort((a, b) => b.localeCompare(a, 'en', { numeric: true }));
+}
+
 // `current` and `previous` are arrays of normalized ids; previous is null
 // the first time (the baseline run).
 export function diffRoster({ tracked, current, previous, addedAlerts = true }) {
   const currentSet = new Set(current);
   const trackedNorm = new Set(tracked.map(normalizeId).concat(tracked));
   const missing = tracked.filter(id => !idPresent(id, currentSet));
-  const untracked = current.filter(id => !trackedNorm.has(id) && isChatLike(id));
-  if (!previous) return { missing, added: [], baselineUntracked: untracked };
+  const untracked = newestFirst(current.filter(id => !trackedNorm.has(id) && isChatLike(id)));
+  if (!previous) return { missing, added: [], untracked, baselineUntracked: untracked };
   const previousSet = new Set(previous);
   const added = addedAlerts ? untracked.filter(id => !previousSet.has(id)) : [];
-  return { missing, added, baselineUntracked: null };
+  return { missing, added, untracked, baselineUntracked: null };
 }
 
 // ── Network ──────────────────────────────────────────────────────────
@@ -212,16 +220,23 @@ export async function runRoster({ env, seed, previousState, fetchImpl, nowIso, s
 
     const tracked = trackedIdsFor(source, seed);
     const previous = prev && Array.isArray(prev.ids) ? prev.ids : null;
-    const { missing, added, baselineUntracked } = diffRoster({ tracked, current: res.ids, previous, addedAlerts: source.addedAlerts !== false });
+    const quiet = source.addedAlerts === false;
+    const { missing, added, untracked, baselineUntracked } = diffRoster({ tracked, current: res.ids, previous, addedAlerts: !quiet });
 
-    state[source.id] = { ok: true, ts: nowIso, ids: res.ids, count: res.ids.length, missing, added };
+    // The full untracked list is kept (and shown on the status page) so it can
+    // be read in one place instead of being truncated into an email. Not kept
+    // for a source whose list is mostly third-party models (Together): naming
+    // 180 of them helps nobody.
+    state[source.id] = { ok: true, ts: nowIso, ids: res.ids, count: res.ids.length, missing, added, untracked: quiet ? [] : untracked, untrackedCount: untracked.length };
 
     missing.forEach(id => alertLines.push(`ROSTER MISSING ${source.id}/${id} (${source.label}): tracked, but not in the provider's current model list — retired or renamed; confirm in the provider's docs, then fix the catalog and seed together`));
     added.forEach(id => alertLines.push(`ROSTER NEW     ${source.id}/${id} (${source.label}): appeared in the provider's model list since the last check and is not tracked`));
-    if (baselineUntracked) {
+    if (baselineUntracked && quiet) {
+      alertLines.push(`ROSTER BASELINE ${source.id} (${source.label}): first check recorded ${res.ids.length} models, ${tracked.length - missing.length} of ${tracked.length} tracked ones found; ${baselineUntracked.length} others are not tracked and are not listed (this provider's list is mostly third-party models)`);
+    } else if (baselineUntracked) {
       const shown = baselineUntracked.slice(0, MAX_SAMPLE_IDS).join(', ');
       const more = baselineUntracked.length > MAX_SAMPLE_IDS ? ` (+${baselineUntracked.length - MAX_SAMPLE_IDS} more)` : '';
-      alertLines.push(`ROSTER BASELINE ${source.id} (${source.label}): first check recorded ${res.ids.length} models, ${tracked.length - missing.length} of ${tracked.length} tracked ones found; ${baselineUntracked.length} chat-style models are not tracked${baselineUntracked.length ? ': ' + shown + more : ''}`);
+      alertLines.push(`ROSTER BASELINE ${source.id} (${source.label}): first check recorded ${res.ids.length} models, ${tracked.length - missing.length} of ${tracked.length} tracked ones found; ${baselineUntracked.length} chat-style models are not tracked${baselineUntracked.length ? ', newest first: ' + shown + more + '; the full list is on the status page' : ''}`);
     }
   }
 

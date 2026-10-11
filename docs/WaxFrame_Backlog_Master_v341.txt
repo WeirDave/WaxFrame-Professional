@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v340
+WaxFrame Backlog Master v341
 2026-10-11
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,32 @@ ships.
 
 
 
+
+v341 — ROSTER CHECK: FIRST LIVE RUN, AND THE LIST YOU CAN ACTUALLY READ
+       (v3.63.577).
+
+Feature 4 is done for the eight providers that were given keys. The
+first live run read every provider's list in the documented shape
+(Anthropic 14 models, OpenAI 86, Google 44, xAI 14, Mistral 52,
+DeepSeek 2, Cohere 17, Together 186), found every tracked model, and
+the alert email arrived. Perplexity and Jamba were not given keys:
+Perplexity has no usable list endpoint here, and Jamba is not a
+catalog provider.
+
+What the first run exposed in the check itself: the BASELINE line
+named the first 12 untracked models in plain alphabetical order, so
+the newest ones sat behind "+30 more" (OpenAI, Google). It now names
+the 12 newest-looking, and every run stores the full untracked list,
+newest first, shown on the status page. Together AI names nothing.
+
+What it exposed in the catalog: Anthropic now lists claude-fable-5-1,
+claude-opus-5-5, claude-sonnet-5-5 and claude-haiku-5-5 as its current
+lineup. WaxFrame still tracks only up to claude-opus-4-8. That is the
+next release.
+
+Still unproven on live data: a real ROSTER NEW or ROSTER MISSING line
+(covered by offline tests only), and the Sunday cron path itself
+(first expected 2026-10-18; the status page "Last check" will move).
 
 v340 — MODEL ROSTER CHECK IN THE PRICING WORKER (v3.63.576).
 
@@ -1730,27 +1756,7 @@ Ordered by value. Item 1 is blocked on David.
            needs-review item that week; check it against Google's
            page rather than applying it blindly.
 
-4. Prove the roster check against live providers (needs David)
-   ─────────────────────────────────────────────────────────
-   WHAT:   Add the ROSTER_KEY_* Worker secrets and run the check once.
-   WHY:    The check was written and tested against documented
-           response shapes only. Until a real list has been read
-           for each provider, a parser could be wrong in a way the
-           tests cannot show.
-   STATE:  OPEN, blocked on David (provider keys). Small.
-   WHERE:  tools/pricing-worker/README.md "Model roster check" has
-           the exact commands. One secret per provider:
-           ROSTER_KEY_CLAUDE / CHATGPT / GEMINI / GROK / MISTRAL /
-           DEEPSEEK / COHERE / TOGETHER. Then
-           POST /api/roster with the REFRESH_TOKEN bearer.
-   DONE:   Each provider with a key shows a ROSTER BASELINE line
-           whose model count is plausible, or a ROSTER ERROR that
-           names a real problem (a bad key is fine; "not in the
-           documented shape" means the parser needs fixing). The
-           status page shows each as "N models listed". Anything the
-           baseline lists as untracked has been looked at once.
-
-5. Read prices with code instead of a language model
+4. Read prices with code instead of a language model
    ─────────────────────────────────────────────────────────
    WHAT:   Replace the Sonar price lookup with per-provider
            parsers where the provider's page is structured: xAI
@@ -1761,9 +1767,8 @@ Ordered by value. Item 1 is blocked on David.
            twice, another Gemini model's price attributed to 3.5
            Flash, a Perplexity price off the wrong row. The pages
            were right each time.
-   STATE:  OPEN, medium. Do after feature 4, so the roster check
-           has proven which models exist before prices are read
-           for them.
+   STATE:  OPEN, medium. The roster check has now proven which
+           models exist, so this can start.
    WHERE:  tools/pricing-worker/src/index.js researchModel() and
            friends; new per-provider parsers beside roster.js.
    DONE:   For each covered provider the weekly run proposes from

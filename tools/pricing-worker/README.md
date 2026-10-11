@@ -181,7 +181,7 @@ It runs in the same Sunday cron as the pricing refresh (independently — neithe
 |---|---|---|
 | `ROSTER MISSING` | A tracked model is not in the provider's current list — retired or renamed | Every run, until the seed is fixed |
 | `ROSTER NEW` | A chat-style model appeared since the last run and is not tracked | Once |
-| `ROSTER BASELINE` | First successful run for a provider: how many models it lists, and a sample of the untracked ones | Once |
+| `ROSTER BASELINE` | First successful run for a provider: how many models it lists, and the 12 newest-looking untracked ones (the full list is on the status page) | Once |
 | `ROSTER ERROR` | The list request failed or the response was not the documented shape | When it starts, not weekly |
 
 **Setup — one secret per provider, all optional.** A provider with no key is skipped silently, and the status page shows it as "not checked". Run from `tools/pricing-worker/`:
@@ -205,7 +205,7 @@ Use a key made for this and, where the provider offers one, with a spending limi
 curl -s -X POST https://waxframe-pricing.weirdave.workers.dev/api/roster -H "Authorization: Bearer <REFRESH_TOKEN>"
 ```
 
-That is the same token as `/api/refresh`. The first run per provider emails a `ROSTER BASELINE` line listing the models the seed does not track; read it once to confirm the provider's response parsed sensibly, then act on anything it names.
+That is the same token as `/api/refresh`. Every run stores each provider's full list of untracked chat-style models, newest first, and the status page shows it under a "chat-style models not tracked" fold-out per provider (Together AI is the exception: its list is mostly third-party models, so none is kept). The first run per provider emails a `ROSTER BASELINE` line listing the models the seed does not track; read it once to confirm the provider's response parsed sensibly, then act on anything it names.
 
 **What it cannot see.**
 - **A retired model that is still listed or routed.** Google keeps answering for `gemini-3.5-flash` by routing it to `gemini-3.6-flash`, so it is not reported MISSING; the successor shows up as NEW instead.

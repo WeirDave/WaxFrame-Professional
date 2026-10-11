@@ -1,5 +1,70 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.577 — Model roster check lists untracked models newest first, in full on the status page
+
+**Released:** 2026-10-11
+**Build:** 20261011-003
+
+### What changed
+
+**The pricing service's model roster check now shows which models it does not
+track, newest first, in full.** The check previously named only the first 12
+untracked models per provider, in plain alphabetical order, so for a provider
+with many models the newest ones were hidden behind "+30 more".
+
+- **Status page:** under "Model roster check", each provider has a fold-out
+  "N chat-style models not tracked (newest first)" listing all of them. It is
+  recomputed on every run, so it stays current.
+- **First-check email:** the `ROSTER BASELINE` line now names the 12
+  newest-looking untracked models (version numbers compare numerically, so
+  `gpt-5.6` comes before `gpt-4`, and `gemini-3.10` before `gemini-3.8`) and says
+  the full list is on the status page.
+- **Together AI:** its list is mostly third-party open models, so its baseline
+  line gives a count and names none, and no list is kept.
+
+The check still only reports; it changes nothing on the AI API Pricing page or
+in the app.
+
+**Fixed: v3.63.576 has no download package.** A placeholder test key in
+`tools/pricing-worker/test-roster.mjs` was shaped like an OpenAI key, so the
+repository's confidentiality check rejected the commit and the download zip for
+v3.63.576 was not built. The value was invented and no real key was involved.
+It is replaced with an obviously fake string. This release contains everything
+in v3.63.576 and is the first after v3.63.575 with a verified download package;
+the portable updaters and the "Update available" notice should use it.
+
+**The confidentiality check now also scans new files that are not yet added to
+git.** It listed only tracked files, so a new file passed locally and failed
+once pushed, which is how the problem above reached a release. A new untracked
+file containing a key-shaped value now fails the check, as it does in CI. Files
+ignored by git, including the local term list, are still not scanned.
+
+### Verification
+- Live check with a key for each of eight providers: all eight lists were read
+  in the documented shape (14, 86, 44, 14, 52, 2, 17 and 186 models), every
+  tracked model was found, and the alert email was delivered.
+- `tools/pricing-worker/test-roster.mjs`: new cases for newest-first ordering
+  (a newer model among 30 older ones is named in the capped sample), the full
+  list being stored and kept on later runs, Together AI naming nothing, and
+  the status page listing and escaping the untracked models. All pass.
+- Mutation check: with plain alphabetical sorting, the list not stored, Together
+  AI naming models, or the list left unescaped on the page, the tests fail in
+  each case.
+- Confidentiality check: a new untracked file containing a key-shaped value now
+  fails it, and passes again once removed (probe file, then deleted).
+- Gate: 24 of 24 stages, run with the roster test file added to git, as CI sees it.
+
+### Files changed
+`tools/pricing-worker/src/roster.js`, `tools/pricing-worker/src/index.js`,
+`tools/pricing-worker/test-roster.mjs`, `tools/pricing-worker/README.md`,
+`tools/check-confidentiality.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v341.txt` (renamed from v340, feature 4 closed),
+plus the routine stamp sweep.
+
+### Rollback
+Revert this commit and redeploy the Worker from `tools/pricing-worker/`, or
+`npx wrangler rollback` to the previous Worker version.
+
 ## v3.63.576 — Pricing service checks each provider's model list for retired and new models
 
 **Released:** 2026-10-11
