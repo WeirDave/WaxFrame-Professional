@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v344
+WaxFrame Backlog Master v345
 2026-10-11
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,29 @@ ships.
 
 
 
+
+v345 — OPENAI DEFAULT MOVED TO GPT-6.1-SOL (v3.63.581).
+
+Feature 4 is done. A real six-AI round (ChatGPT as Builder) ran on
+gpt-6.1-sol: draft call 200 after the learned max_completion_tokens retry,
+Builder call 200 on the first attempt (16,949 chars in, 1,264 tokens out,
+finish_reason stop), document rewritten coherently with no marker residue,
+round advanced. The same round ran claude-sonnet-5-5 and grok-4.7 cleanly,
+so those two defaults are now proven live as well. About $0.06 for the round.
+
+Not done, and worth knowing: gemini-3.8-flash was NOT in that round (the
+saved Gemini model was gemini-3.1-pro-preview), so it is still unproven.
+gpt-6-astra and gpt-6-luna have had no round. VISION_DEFAULTS.chatgpt is
+still gpt-5.5: gpt-6.1-sol takes image input, but nothing in this work
+exercised the OCR path, so it was left alone. The hand-kept limits table
+had 400000 context for gpt-5.6-sol and gpt-5.5; OpenAI's pages say 1,050,000.
+
+Perplexity's model-list refresh failed in the same session with a browser
+NetworkError (twice). It is not CORS (Perplexity answers preflight and 401
+with access-control-allow-origin *), and the stale api-docs.perplexity.ai
+hostname in the discovery prompt cannot explain a transport failure, so
+neither theory holds. The picker falls back to its built-in list; harmless
+but unexplained. Watch whether it recurs.
 
 v343 — GPT-6 ADDED TO THE OPENAI PICKER, DEFAULT UNCHANGED (v3.63.579).
 
@@ -1815,25 +1838,6 @@ Ordered by value. Item 1 is blocked on David.
            fallback. A page that stops parsing is reported as an
            error, not guessed. Tests replay the real pages that
            fooled Sonar.
-
-4. OpenAI default: gpt-5.6-sol -> gpt-6.1-sol (needs David, at home)
-   ─────────────────────────────────────────────────────────
-   WHAT:   Run one real Builder round on gpt-6.1-sol, then make it the
-           default if it holds.
-   WHY:    It is newer and half the price of gpt-5.6-sol ($2/$10 vs
-           $4/$20). Defaults are smoke-tested first because a model can
-           break WaxFrame's marker format or Chat Completions use even
-           when it is listed and priced.
-   STATE:  OPEN, blocked on David and his own machine (never a work
-           system or network). Small.
-   WHERE:  js/provider-catalog.js chatgpt entry (model, comment);
-           VISION_DEFAULTS.chatgpt in js/app.js; pricing seed
-           defaultModel; api-details.html, user manual (html + txt),
-           README default table; FALLBACK_DATA regen; KV push.
-   DONE:   One round with gpt-6.1-sol selected completes without a
-           marker-format error or an endpoint error; the default is
-           changed everywhere above; the live pricing page shows it as
-           the ChatGPT default.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

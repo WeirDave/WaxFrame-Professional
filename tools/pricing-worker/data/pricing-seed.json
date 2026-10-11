@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-11T20:00:00Z",
+  "lastUpdated": "2026-10-11T23:30:00Z",
   "schemaVersion": 3,
   "tokensPerRound": {
     "input": 5000,
@@ -316,7 +316,7 @@
       "id": "chatgpt",
       "name": "ChatGPT (OpenAI)",
       "shortName": "ChatGPT",
-      "defaultModel": "gpt-5.6-sol",
+      "defaultModel": "gpt-6.1-sol",
       "billingUrl": "https://platform.openai.com/settings/organization/billing/overview",
       "tier1Rpm": "500",
       "tier1Tpm": "30K",

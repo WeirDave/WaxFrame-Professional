@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261011-006
+// Build: 20261011-007
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -549,7 +549,7 @@
     },
     {
       id: 'chatgpt', label: 'OpenAI (ChatGPT)',
-      model: 'gpt-5.6-sol',
+      model: 'gpt-6.1-sol',
       endpoint: 'https://api.openai.com/v1/chat/completions',
       format: 'openai',
       discovery: 'openai-models',
@@ -563,11 +563,15 @@
       // instead of silently drifting or converging around an error, as
       // terra/luna did in the same test). Terra/luna stay fallback-only —
       // cheaper but each showed a correctness miss under test.
-      // v3.63.579 - GPT-6 models added to the picker (OpenAI's pricing page leads with
-      // gpt-6-astra, gpt-6.1-sol and gpt-6-luna). The DEFAULT stays gpt-5.6-sol on purpose:
-      // defaults here are chosen by a Builder smoke test, and none has been run on GPT-6.
-      // gpt-6.1-sol is the candidate (half the price of gpt-5.6-sol) - backlog feature 4.
-      fallback: ['gpt-5.6-sol', 'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-luna', 'gpt-5.5', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']
+      // v3.63.581 - default moved gpt-5.6-sol -> gpt-6.1-sol after a real Builder round on
+      // it (2026-10-11): HTTP 200, finish_reason stop, 1,264 output tokens, the rewritten
+      // document came back with no marker residue and the round advanced. Chat Completions
+      // works; the first request is rejected for max_tokens and the learned
+      // max_completion_tokens retry (v3.63.516) recovers it once per model. $2/$10 per M
+      // against gpt-5.6-sol's $4/$20, 1.05M context, 128K output, image input.
+      // gpt-5.6-sol stays listed. gpt-6-astra ($10/$50) and gpt-6-luna ($0.10/$0.50) were
+      // added in v3.63.579 and have not had a Builder round.
+      fallback: ['gpt-6.1-sol', 'gpt-5.6-sol', 'gpt-6-astra', 'gpt-6-luna', 'gpt-5.5', 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano']
     },
     {
       id: 'copilot', label: 'Microsoft (Copilot)',
@@ -1318,11 +1322,14 @@
   // models WaxFrame ships as defaults/fallbacks, where a wrong number would
   // mislead on the common path. Everything else shows "unknown" rather than
   // a guess. Review date is displayed in the UI verbatim.
-  var LIMITS_TABLE_REVIEWED = '2026-09-11';
+  var LIMITS_TABLE_REVIEWED = '2026-10-11';
   var LIMITS_TABLE = {
     // OpenAI publishes nothing via API (confirmed against the live spec).
-    'gpt-5.6-sol':        { context: 400000, output: 128000 },
-    'gpt-5.5':            { context: 400000, output: 128000 },
+    // 1,050,000 / 128,000 read from each model's page on developers.openai.com
+    // 2026-10-11; the first two were 400000 here, which OpenAI does not publish.
+    'gpt-6.1-sol':        { context: 1050000, output: 128000 },
+    'gpt-5.6-sol':        { context: 1050000, output: 128000 },
+    'gpt-5.5':            { context: 1050000, output: 128000 },
     // xAI publishes no model-listing limits.
     'grok-4':             { context: 256000, output:  32000 },
     // DeepSeek publishes nothing via API.

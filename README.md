@@ -203,7 +203,7 @@ WaxFrame ships with default configurations for these providers:
 | Provider | Default Model |
 |---|---|
 | Anthropic (Claude) | `claude-sonnet-5-5` |
-| OpenAI (ChatGPT) | `gpt-5.6-sol` |
+| OpenAI (ChatGPT) | `gpt-6.1-sol` |
 | Google (Gemini) | `gemini-3.8-flash` |
 | xAI (Grok) | `grok-4.7` |
 | Mistral | `mistral-large-latest` |

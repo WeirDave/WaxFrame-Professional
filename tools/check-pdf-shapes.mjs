@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261011-006
+// Build: 20261011-007
 // check-pdf-shapes.mjs — the PDF shapes that break PDF engines, against BOTH
 // engines WaxFrame ships.
 //

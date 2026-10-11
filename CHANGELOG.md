@@ -1,5 +1,56 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.581 — OpenAI (ChatGPT) default moves to gpt-6.1-sol
+
+**Released:** 2026-10-11
+**Build:** 20261011-007
+
+### What changed
+
+**The default model for OpenAI (ChatGPT) is now `gpt-6.1-sol`**, replacing
+`gpt-5.6-sol`. It costs half as much ($2 / $10 per million tokens against
+$4 / $20) and has a 1.05M-token context window, a 128K-token output limit and
+image input. `gpt-5.6-sol` stays in the model list, as do `gpt-6-astra` and
+`gpt-6-luna` (added in v3.63.579).
+
+- **Model picker and defaults:** a new ChatGPT key starts on `gpt-6.1-sol`; a
+  saved model choice is not changed.
+- **First request on this model:** OpenAI rejects `max_tokens` for `gpt-6.1-sol`
+  and asks for `max_completion_tokens`. WaxFrame already learns that from the
+  rejection, retries and remembers it for the model, so the first call shows one
+  "rejected max_tokens … retrying" line in the Live Console and then succeeds.
+- **Context limits:** the built-in fallback table now lists `gpt-6.1-sol`, and its
+  entries for `gpt-5.6-sol` and `gpt-5.5` read 1,050,000 tokens of context
+  (they said 400,000, which OpenAI does not publish for these models).
+- **Documentation:** the API Details page, the user manual (HTML and text) and
+  the README default table name `gpt-6.1-sol`.
+
+### Verification
+- A full six-AI round with ChatGPT as Builder on `gpt-6.1-sol`: the draft call
+  returned after the parameter retry; the Builder call (16,949 characters in,
+  1,264 tokens out) returned HTTP 200 on the first attempt with a normal stop,
+  the rewritten document had no leftover markers, and the round advanced. The
+  same round ran `claude-sonnet-5-5` and `grok-4.7` without error.
+- OpenAI's model pages: `gpt-6.1-sol`, `gpt-5.6-sol` and `gpt-5.5` each list
+  1,050,000 context and 128,000 maximum output.
+- `tools/check-pricing-coverage.mjs`: passes with the catalog and seed moved
+  together.
+- Not run: a round on `gpt-6-astra` or `gpt-6-luna`, or the image-text-recognition
+  path on `gpt-6.1-sol` (its fallback model is unchanged).
+- Gate: 24 of 24 stages.
+
+### Files changed
+`js/provider-catalog.js`, `tools/pricing-worker/data/pricing-seed.json`,
+`js/pricing-renderer.js` (regenerated offline copy), `api-details.html`,
+`waxframe-user-manual.html`, `docs/waxframe-user-manual-clean.txt`, `README.md`,
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v345.txt` (renamed from v344),
+plus the routine stamp sweep.
+
+### Rollback
+Revert this commit, then push the previous seed to KV:
+`wrangler kv key put --binding=PRICING_DATA latest --path=data/pricing-seed.json --remote`
+from `tools/pricing-worker/`.
+
 ## v3.63.580 — Windows updates start with a double-click, and no longer stop at the folder swap
 
 **Released:** 2026-10-11
