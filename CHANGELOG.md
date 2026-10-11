@@ -1,5 +1,62 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.574 — Update dialog lists what changed since the installed version
+
+**Released:** 2026-10-10
+**Build:** 20261010-007
+
+### What changed
+
+**The "A new version is available" dialog now lists every release newer than the
+installed one.** The list sits directly above the dialog's buttons ("Copy
+Release Link", "Open Release Page", "Got it"), so the changes can be read before
+updating. Before this release the dialog named the new version and gave the
+update steps, with no indication of what had changed. This applies to portable
+installs, the only ones that show the dialog. Open it from the footer's "Update
+available" pill, or from the "Update" row in the About window ("View
+instructions").
+
+- **Heading and entries:** "What's new since your version (N releases)", or
+  "What's new in this update" when there is one. Entries run newest first; each
+  shows the version and the release's subtitle, expands to its notes, and the
+  newest starts open.
+- **Source:** the GitHub release notes. Sections headed "Files changed",
+  "Verified" or "Verification" are left out. The 30 most recent releases are
+  checked; when all 30 are newer than the installed version, the box ends with
+  "Older changes are listed on the release page."
+- **Network use:** unchanged at one request per day. The saved result holds only
+  the releases newer than the installed version. If the release list cannot be
+  read, the dialog appears as before without the box.
+- **Short windows:** the dialog scrolls inside the window when it is taller than
+  the window, so its buttons stay reachable.
+- **Text only:** release notes are drawn as plain text, with bold and code
+  formatting. Nothing in them is interpreted as markup.
+- **New files:** `js/release-changelog.js` and `js/release-changelog.css`, loaded
+  only when the update check runs. The parsing and drawing live there, in a
+  single file also used by other WeirDave products.
+
+### Verification
+- `node tools/release-check.mjs`: passes with the version stamps and this entry
+  in place.
+- On a local test page with the portable-install check removed and a stand-in
+  installed version of v3.63.570, using the release data GitHub returns for this
+  repository: the pill read "Update available — v3.63.573", the box listed 3
+  releases with the newest open, the stylesheet loaded from beside the script,
+  and the dialog scrolled at a 1366 × 650 window.
+- Release-note parsing was run directly on a set containing a draft, a
+  prerelease, a version 1.10.0 beside 1.2.0, a "Verified" section, a "Files
+  changed" section and a heading in the middle of the notes: ordering, filtering
+  and trimming were as described above.
+- Not run: the dialog against a newer release on a real portable install; a
+  newer release can only be published by shipping one.
+
+### Files changed
+`js/update-check.js`, `js/release-changelog.js`, `js/release-changelog.css`,
+`style.css`, version stamps (`js/version.js`, `package.json`, page cache-busts
+and build stamps), `CHANGELOG.md`.
+
+---
+
 ## v3.63.573 — Free start with Gemini and Cohere keys
 
 **Released:** 2026-10-10

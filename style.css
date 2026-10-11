@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20261010-006
+   Build: 20261010-007
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -9175,6 +9175,10 @@ button.link-accent {
   opacity: 0.8;
 }
 .wf-update-modal .license-modal-actions { flex-wrap: wrap; }
+/* The shared changelog box (js/release-changelog.js) makes this dialog taller
+   than a short laptop window, so the dialog scrolls instead of losing its buttons. */
+.wf-update-modal { max-height: calc(100vh - 32px); overflow-y: auto; }
+.wf-update-changelog:empty { display: none; }
 
 /* ── DOC STATS ── */
 .doc-stats {

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — update-check.js
-// Build: 20261010-006
+// Build: 20261010-007
 //  Portable-install ("file://") update notifier. Checks GitHub's
 //  Releases API for a newer tag than the running APP_VERSION and,
 //  if one exists, shows a footer pill + an About-modal row pointing
@@ -25,7 +25,8 @@
   if (location.protocol !== 'file:') return;
 
   const REPO = 'WeirDave/WaxFrame-Professional';
-  const API_LATEST = 'https://api.github.com/repos/' + REPO + '/releases/latest';
+  const PER_PAGE = 30;
+  const API_RELEASES = 'https://api.github.com/repos/' + REPO + '/releases?per_page=' + PER_PAGE;
   const CACHE_KEY = 'waxframe_update_check';
   const DISMISS_KEY = 'waxframe_update_dismissed';
   const TTL_MS = 24 * 60 * 60 * 1000;
@@ -77,6 +78,30 @@
 
   function dismiss(version) {
     try { localStorage.setItem(DISMISS_KEY, version); } catch (e) {}
+  }
+
+  // ── Mini changelog ──
+  // Parsing and drawing live in js/release-changelog.js, the one copy shared by
+  // every product. It is loaded from beside this script, only when needed.
+  const LIB_URL = (function () {
+    const src = document.currentScript && document.currentScript.src;
+    const parts = src && src.match(/^([^?#]*\/)[^/?#]*(\?[^#]*)?/);
+    return parts ? parts[1] + 'release-changelog.js' + (parts[2] || '') : 'js/release-changelog.js';
+  })();
+  let libPromise = null;
+
+  function loadLib() {
+    if (window.ReleaseChangelog) return Promise.resolve(window.ReleaseChangelog);
+    if (!libPromise) {
+      libPromise = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = LIB_URL;
+        s.onload = () => (window.ReleaseChangelog ? resolve(window.ReleaseChangelog) : reject(new Error('no lib')));
+        s.onerror = () => reject(new Error('load failed'));
+        document.head.appendChild(s);
+      });
+    }
+    return libPromise;
   }
 
   function render(info) {
@@ -193,6 +218,7 @@
         '<p class="license-modal-msg" id="wfUpdateDialogMsg"></p>' +
         '<ol class="wf-update-steps">' + platform.steps + '</ol>' +
         '<p class="wf-update-platform-note">' + platform.note + '</p>' +
+        '<div class="wf-update-changelog" id="wfUpdateChangelog"></div>' +
         '<div class="license-modal-actions" id="wfUpdateDialogActions"></div>' +
       '</div>';
     document.body.appendChild(overlay);
@@ -210,6 +236,8 @@
     document.getElementById('wfUpdateDialogMsg').textContent =
       'WaxFrame v' + info.latestVersion + ' is out — you’re running v' + current +
       '. WaxFrame can’t install this automatically from inside the browser (portable installs don’t run background services by design). To update:';
+
+    loadLib().then(lib => lib.render(document.getElementById('wfUpdateChangelog'), info)).catch(() => {});
 
     const actions = document.getElementById('wfUpdateDialogActions');
     actions.innerHTML = '';
@@ -259,7 +287,7 @@
       return;
     }
 
-    fetch(API_LATEST, { headers: { Accept: 'application/vnd.github+json' } })
+    fetch(API_RELEASES, { headers: { Accept: 'application/vnd.github+json' } })
       .then(resp => {
         if (!resp.ok) {
           const kind = resp.status === 403 ? 'ratelimit' : 'http';
@@ -273,21 +301,23 @@
         }
         return resp.json();
       })
-      .then(data => {
-        if (!data) return;
-        const tag = String(data.tag_name || '');
-        const latestVersion = tag.replace(/^v/i, '');
+      .then(data => data && loadLib().then(lib => {
+        const all = lib.parseApiList(data);
+        if (!all.length) return;
+        const newer = lib.newerThan(all, current);
         const info = {
           checkedAt: Date.now(),
-          latestTag: tag,
-          latestVersion,
-          htmlUrl: data.html_url || '',
+          latestTag: 'v' + all[0].version,
+          latestVersion: all[0].version,
+          htmlUrl: all[0].url,
+          releases: newer,
+          truncated: Array.isArray(data) && data.length >= PER_PAGE && newer.length === all.length,
           error: false,
           kind: null
         };
         writeCache(info);
         render(info);
-      })
+      }))
       .catch(() => {
         writeCache({ checkedAt: Date.now(), error: true, kind: 'network' });
       });
