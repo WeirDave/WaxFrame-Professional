@@ -1,11 +1,12 @@
 // ============================================================
 //  WaxFrame — update-check.js
-// Build: 20261011-005
+// Build: 20261011-006
 //  Portable-install ("file://") update notifier. Checks GitHub's
 //  Releases API for a newer tag than the running APP_VERSION and,
 //  if one exists, shows a footer pill + an About-modal row pointing
-//  at Update-WaxFrame.ps1 (the companion updater shipped alongside
-//  every release — see repo root). Self-contained, no app.js
+//  at the companion updater shipped alongside every release (see repo
+//  root): Update-WaxFrame.cmd on Windows, a double-click launcher for
+//  Update-WaxFrame.ps1; Update-WaxFrame.command on Mac/Linux. Self-contained, no app.js
 //  dependency, same pattern as license-helper.js / nav-helper.js.
 //
 //  Hosted (https://waxframe.com) pages are always current by
@@ -180,7 +181,7 @@
           '<li>Double-click it. macOS may ask you to confirm running it the first time &mdash; that&rsquo;s expected for an unsigned script (right-click &rarr; Open if Gatekeeper blocks the double-click).</li>' +
           '<li>It downloads the new version, checks it, and swaps it in &mdash; your old version is kept as a backup, nothing is deleted.</li>' +
           '<li>WaxFrame reopens automatically when it&rsquo;s done.</li>',
-        note: 'On Linux, run the same file from a terminal instead: <code>bash Update-WaxFrame.command</code>.'
+        note: 'No git or command line needed &mdash; this works for any copy downloaded from the Releases page. On Linux, run the same file from a terminal instead: <code>bash Update-WaxFrame.command</code>.'
       };
     }
     if (/linux/i.test(ua)) {
@@ -190,17 +191,35 @@
           '<li>Run <code>bash Update-WaxFrame.command</code>.</li>' +
           '<li>It downloads the new version, checks it, and swaps it in &mdash; your old version is kept as a backup, nothing is deleted.</li>' +
           '<li>WaxFrame reopens automatically when it&rsquo;s done.</li>',
-        note: 'On Mac, double-click the same file in Finder instead.'
+        note: 'No git needed &mdash; this works for any copy downloaded from the Releases page. On Mac, double-click the same file in Finder instead.'
       };
     }
+    const folder = installFolder();
     return {
       steps:
-        '<li>Find <code>Update-WaxFrame.ps1</code> in this WaxFrame folder.</li>' +
-        '<li>Right-click it &rarr; &ldquo;Run with PowerShell&rdquo;.</li>' +
+        '<li>Open this WaxFrame folder' + (folder ? ': <code>' + escapeHtml(folder) + '</code>' : '') + '.</li>' +
+        '<li>Double-click <code>Update-WaxFrame.cmd</code>. If Windows says it &ldquo;protected your PC&rdquo;, choose <em>More info</em> &rarr; <em>Run anyway</em> &mdash; that appears for any script that isn&rsquo;t code-signed.</li>' +
         '<li>It downloads the new version, checks it, and swaps it in &mdash; your old version is kept as a backup, nothing is deleted.</li>' +
         '<li>WaxFrame reopens automatically when it&rsquo;s done.</li>',
-      note: 'On Mac or Linux, use <code>Update-WaxFrame.command</code> instead (double-click on Mac, or <code>bash Update-WaxFrame.command</code> in a terminal on Linux).'
+      note: 'No git or command line needed &mdash; this works for any copy downloaded from the Releases page. On Mac or Linux, use <code>Update-WaxFrame.command</code> instead (double-click on Mac, or <code>bash Update-WaxFrame.command</code> in a terminal on Linux).'
     };
+  }
+
+  // The folder this page was opened from, in the form the file manager shows
+  // it, so the steps can say where to look. Empty if it cannot be worked out.
+  function installFolder() {
+    try {
+      const path = decodeURIComponent(location.pathname || '');
+      const dir = path.replace(/[^/]*$/, '').replace(/\/$/, '');
+      if (!dir) return '';
+      if (/^\/[A-Za-z]:/.test(dir)) return dir.slice(1).replace(/\//g, '\\');
+      if (location.host) return '\\\\' + location.host + dir.replace(/\//g, '\\');
+      return dir;
+    } catch (e) { return ''; }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   // ── Instructional modal — lazily created, reuses .license-modal-* chrome ──

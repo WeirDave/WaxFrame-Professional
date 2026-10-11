@@ -1,5 +1,70 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.580 — Windows updates start with a double-click, and no longer stop at the folder swap
+
+**Released:** 2026-10-11
+**Build:** 20261011-006
+
+### What changed
+
+**A copy of WaxFrame downloaded from the Releases page can now be kept up to
+date without git or a command line.** On Windows the update starts by
+double-clicking one file, and a Windows update that previously stopped part-way
+now completes.
+
+- **`Update-WaxFrame.cmd` (new, Windows):** double-click it in the WaxFrame
+  folder to update. It starts `Update-WaxFrame.ps1`, which does the work and
+  explains each step. Before this, the Windows updater was only the `.ps1`,
+  which opens in a text editor on double-click and is listed only under "Show
+  more options" in the Windows 11 right-click menu.
+- **Updates from inside the WaxFrame folder no longer stop with "in use":** the
+  updater swaps the folder by renaming it, and Windows refuses to rename a
+  folder that a running program, including the updater itself, has as its
+  working directory. That is the situation when the updater is started from
+  inside the folder, which is how the update steps tell people to start it. The
+  updater now moves out of the folder first. Installs made with git were not
+  affected. When another program is holding the folder (a File Explorer window,
+  a terminal or an editor open inside it), the updater now says so and what to
+  close.
+- **The "A new version is available" dialog (the "Update available" pill in the
+  footer, and the Update row in the About window):** on Windows the steps now
+  name `Update-WaxFrame.cmd`, show the full path of the folder it is in, and
+  explain the Windows "protected your PC" screen (More info, then Run anyway),
+  which appears for any script that is not code-signed. The Mac and Linux steps
+  state that git is not needed.
+- **Install message and README:** the end of `Install-WaxFrame.ps1` and the
+  README's install section name the new launcher.
+- **Release check:** the companion-updater stage also checks the launcher: it
+  starts `Update-WaxFrame.ps1`, leaves the install folder before the swap, ends
+  on the updater's own line, and keeps Windows line endings. `.gitattributes`
+  (new) pins `*.cmd` to Windows line endings so the release ZIP ships it intact.
+
+### Verification
+- A copy of the app made to look like v3.63.570 was updated to the published
+  v3.63.578 release, started from inside its own folder as a double-click does:
+  the download passed its SHA-256 check, the new version was installed and the
+  previous one kept as a dated backup folder next to it. The same run before
+  this change stopped at the folder swap with "in use".
+- The release check fails when the launcher's folder change is removed, and
+  passes with it restored.
+- The folder path shown in the dialog was checked for a local Windows path with
+  spaces, a network share, a macOS path and a folder name containing HTML,
+  which is shown as plain text.
+- Not run: the updater on macOS or Linux, and the dialog on a live `file://`
+  page in a browser.
+- Gate: 24 of 24 stages.
+
+### Files changed
+`Update-WaxFrame.cmd` (new), `.gitattributes` (new), `Update-WaxFrame.ps1`,
+`js/update-check.js`, `Install-WaxFrame.ps1`, `README.md`,
+`tools/release-check.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v344.txt` (renamed from v343), plus the routine
+stamp sweep.
+
+### Rollback
+Revert this commit. Folders already updated keep working; the launcher is the
+only file a revert removes.
+
 ## v3.63.579 — GPT-6 models added to the OpenAI model list
 
 **Released:** 2026-10-11

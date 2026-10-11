@@ -17,8 +17,9 @@
 #   ZIP  - no dependencies. Updating re-downloads the whole app and verifies
 #          its SHA-256.
 #
-# Either way, Update-WaxFrame.ps1 in the installed folder handles updates from
-# then on and picks the right mechanism automatically. Nothing here is
+# Either way, Update-WaxFrame.cmd (which runs Update-WaxFrame.ps1) in the
+# installed folder handles updates from then on and picks the right mechanism
+# automatically. Nothing here is
 # WaxFrame-version-specific: the newest release is resolved at runtime.
 
 [CmdletBinding()]
@@ -128,7 +129,7 @@ $existing = Test-Path (Join-Path $target 'index.html')
 if ($existing) {
   Write-Warn "WaxFrame is already installed at:"
   Write-Warn "  $target"
-  Write-Warn 'Run Update-WaxFrame.ps1 inside that folder to update it.'
+  Write-Warn 'Double-click Update-WaxFrame.cmd inside that folder to update it.'
   if ($Host.Name -eq 'ConsoleHost') { Read-Host 'Press Enter to close' | Out-Null }
   exit 0
 }
@@ -230,7 +231,7 @@ try {
   if ($installed) { Write-Ok "Installed WaxFrame v$installed" } else { Write-Ok 'Installed WaxFrame' }
   Write-Host "  $target"
   Write-Host ''
-  Write-Host '  Open index.html to start. Update later with Update-WaxFrame.ps1'
+  Write-Host '  Open index.html to start. Update later by double-clicking Update-WaxFrame.cmd'
   Write-Host '  in that folder. Enter your licence key in the app itself.'
   Write-Host ''
 

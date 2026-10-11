@@ -1285,6 +1285,52 @@ for (const scriptName of UPDATER_SCRIPTS) {
   }
 }
 
+// The Windows double-click launcher is not a download script (it carries no
+// repo slug or checksum logic - it only starts Update-WaxFrame.ps1), so Check 18's
+// loop above would fail it for the wrong reasons. Its own properties:
+//  - it exists and points at the .ps1 beside it;
+//  - it moves out of the install folder first, because the updater swaps that
+//    folder by renaming it and Windows refuses to rename a folder that is any
+//    process's working directory (reproduced 2026-10-11: "in use");
+//  - it leaves cmd on the same line as the updater, because cmd reads a batch
+//    file as it runs and the folder holding it is gone by the time PowerShell
+//    returns;
+//  - it ships with CRLF endings (.gitattributes), which cmd needs.
+{
+  let cmdText = null;
+  try { cmdText = read(join(ROOT, 'Update-WaxFrame.cmd')); } catch (e) { fail('Update-WaxFrame.cmd', 'file missing at repo root'); }
+  if (cmdText !== null) {
+    if (!/Update-WaxFrame\.ps1/.test(cmdText)) fail('Update-WaxFrame.cmd', 'does not launch Update-WaxFrame.ps1');
+    else ok('Update-WaxFrame.cmd: launches Update-WaxFrame.ps1');
+
+    const lines = cmdText.split(/\r?\n/).filter(l => !/^\s*rem\b/i.test(l));
+    const cdIdx = lines.findIndex(l => /^\s*cd\s+\/d\s+"?%TEMP%"?\s*$/i.test(l));
+    const psIdx = lines.findIndex(l => /powershell(\.exe)?\b.*-File\b/i.test(l));
+    if (cdIdx === -1 || psIdx === -1 || cdIdx > psIdx) {
+      fail('Update-WaxFrame.cmd', 'must `cd /d "%TEMP%"` before starting PowerShell - a launcher left inside the install folder blocks the folder swap the updater performs');
+    } else {
+      ok('Update-WaxFrame.cmd: leaves the install folder before the updater swaps it');
+    }
+    if (psIdx !== -1 && !/&\s*exit\b/i.test(lines[psIdx])) {
+      fail('Update-WaxFrame.cmd', 'the PowerShell line must end with `& exit` - cmd would otherwise read the next line from a folder that has been swapped away');
+    } else if (psIdx !== -1) {
+      ok('Update-WaxFrame.cmd: exits on the same line as the updater');
+    }
+    if (!/\r\n/.test(cmdText) || /[^\r]\n/.test(cmdText)) {
+      fail('Update-WaxFrame.cmd', 'must use CRLF line endings throughout');
+    } else {
+      ok('Update-WaxFrame.cmd: CRLF line endings');
+    }
+  }
+  let attrs = '';
+  try { attrs = read(join(ROOT, '.gitattributes')); } catch (e) { /* reported below */ }
+  if (!/^\*\.cmd\s+.*eol=crlf/m.test(attrs)) {
+    fail('.gitattributes', 'must pin *.cmd to eol=crlf so the release ZIP ships the launcher with CRLF');
+  } else {
+    ok('.gitattributes: *.cmd pinned to CRLF');
+  }
+}
+
 // ── Check 19: Confidentiality gate (tools/check-confidentiality.mjs) ──
 
 section('Confidentiality — no real workplace data in tracked files');

@@ -272,7 +272,7 @@ It asks how you want it installed:
 | **Git** | A tracked checkout. Updating later fetches a few KB and checks out the new tag, so it takes seconds. If git isn't installed, Windows offers to install it first with `winget` — usually under a minute. |
 | **ZIP** | No dependencies. Each update re-downloads the app and verifies its SHA-256. |
 
-Either way you land on the newest tagged release, and `Update-WaxFrame.ps1` (or `.command`) in that folder handles updates from then on — it detects which kind of install it is and uses the right mechanism automatically.
+Either way you land on the newest tagged release, and `Update-WaxFrame.cmd` (Windows — double-click it) or `Update-WaxFrame.command` (Mac/Linux) in that folder handles updates from then on. No git or command line is needed: it detects which kind of install it is and uses the right mechanism automatically, and a copy downloaded by hand from the Releases page updates the same way. WaxFrame also shows an "Update available" notice with these steps when a newer release is out.
 
 **Or do it by hand:**
 

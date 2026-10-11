@@ -1,0 +1,2 @@
+# The Windows launcher must keep CRLF line endings in the release ZIP.
+*.cmd text eol=crlf

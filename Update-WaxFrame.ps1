@@ -1,8 +1,9 @@
 # Update-WaxFrame.ps1
 #
 # Companion updater for the WaxFrame Professional portable (file://) install.
-# Run manually (right-click -> "Run with PowerShell") from inside this
-# WaxFrame folder. Cannot be launched automatically from the browser tab --
+# Start it by double-clicking Update-WaxFrame.cmd in this WaxFrame folder (a
+# plain launcher for this script), or right-click this file -> "Run with
+# PowerShell". Cannot be launched automatically from the browser tab --
 # a file:// page has no way to execute a local script, by design (see
 # js/update-check.js, which only ever shows instructions pointing here).
 #
@@ -33,7 +34,7 @@
 #   - No running-process coordination. A file:// page isn't a process to
 #     wait on or restart -- "relaunch" just means reopening index.html.
 #
-# Build: 20260915-003
+# Build: 20261011-006
 
 [CmdletBinding()]
 param(
@@ -109,6 +110,13 @@ if (-not $currentVersion) {
   exit 1
 }
 Write-Step "WaxFrame Professional updater -- currently v$currentVersion"
+
+# Step out of the install folder before anything else. Explorer (and any
+# terminal opened here) starts this script with the install folder as its
+# working directory, and Windows will not rename a folder that is some
+# process's working directory -- step 8's swap would stop with "in use".
+Set-Location -LiteralPath $env:TEMP
+[Environment]::CurrentDirectory = $env:TEMP
 
 # ---- 2. Check latest release --------------------------------------------------
 Write-Step "Checking for updates..."
@@ -269,7 +277,11 @@ try {
   $backupLeaf = "$folderName.previous-$currentVersion-$timestamp"
   $backupPath = Join-Path $parent $backupLeaf
 
-  Rename-Item -LiteralPath $scriptDir -NewName $backupLeaf -ErrorAction Stop
+  try {
+    Rename-Item -LiteralPath $scriptDir -NewName $backupLeaf -ErrorAction Stop
+  } catch {
+    throw "The WaxFrame folder is in use by another program. Close any File Explorer windows, terminals or editors open inside it, then run this again. ($($_.Exception.Message))"
+  }
   try {
     Move-Item -LiteralPath $extractedRoot -Destination $scriptDir -ErrorAction Stop
   } catch {
