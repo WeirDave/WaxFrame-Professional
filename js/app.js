@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261012-002
+// Build: 20261012-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261012-002';         // build stamp — update each session
+const BUILD = '20261012-003';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13744,8 +13744,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.584'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.584';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.585'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.585';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -17308,6 +17308,7 @@ const WF_AI_ICON_KEYWORD_CATALOG = [
   { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
   { keys: ['together', 'togetherai'],         src: 'images/icon-together.png' },
   { keys: ['jamba', 'ai21'],                  src: 'images/icon-jamba.png' },
+  { keys: ['subq'],                           src: 'images/icon-subq.png' },
 ];
 
 const wfIconUpload = (() => {
@@ -17575,6 +17576,7 @@ const ICON_PICKER_BUNDLED = [
     { id: 'llama',      name: 'Llama',       src: 'images/icon-llama.png' },
     { id: 'mistral',    name: 'Mistral',     src: 'images/icon-mistral.png' },
     { id: 'perplexity', name: 'Perplexity',  src: 'images/icon-perplexity.png' },
+    { id: 'subq',       name: 'SubQ',        src: 'images/icon-subq.png' },
   ]},
   { section: 'Tools & Servers', items: [
     { id: 'lmstudio',  name: 'LM Studio',   src: 'images/icon-lmstudio.png' },

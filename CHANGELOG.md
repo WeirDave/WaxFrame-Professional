@@ -1,5 +1,33 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.585 — SubQ has its own icon
+
+**Released:** 2026-10-12
+**Build:** 20261012-003
+
+### What changed
+
+**SubQ now shows its own icon instead of the generic one.** The icon is the
+five-square SubQ mark, without the wordmark, on a transparent background.
+
+- **Where it shows:** on a SubQ bee after it is added from **Add Custom AI** →
+  **Quick Add** → **SubQ**. The icon is picked automatically from the name or
+  model (`subq-preview`, `subq-snap-preview`).
+- **Icon picker:** **Browse Icons** on the Add Custom AI screen lists **SubQ**
+  under Providers.
+
+### Verification
+- In the browser, selecting SubQ in Quick Add loaded `images/icon-subq.png`
+  (256×256) as the icon preview.
+
+### Files changed
+`js/app.js`, `images/icon-subq.png` (new), `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v349.txt` (renamed from v348), plus the routine
+stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
 ## v3.63.584 — SubQ added to the Add Custom AI Quick Add list
 
 **Released:** 2026-10-12

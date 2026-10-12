@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v348
+WaxFrame Backlog Master v349
 2026-10-12
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,13 @@ ships.
 
 
 
+
+v349 — SUBQ ICON ADDED (v3.63.585).
+
+images/icon-subq.png (the five-square mark, no wordmark) is wired into the
+icon matcher and the icon picker. The remaining SubQ gaps are unchanged: no
+run with a key that includes subq-preview, no SubQ concurrency cap or
+token-limit entry.
 
 v348 — SUBQ ADDED AS A QUICK ADD PRESET (v3.63.584).
 
