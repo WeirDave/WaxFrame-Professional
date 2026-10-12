@@ -1,5 +1,53 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.583 — A model can be swapped on the Import from Model Server screen
+
+**Released:** 2026-10-12
+**Build:** 20261012-001
+
+### What changed
+
+**On the Import from Model Server screen, a model that is already in the hive can
+now be removed in place, so another model can be chosen instead without leaving
+the screen.** Previously a row marked "✓ Already in your hive" was locked, and
+replacing that model meant closing the import, removing the bee from the hive
+screen, and opening the import again.
+
+- **Where it is:** Setup screen → **Import from Model Server** → the green
+  "✓ Already in your hive" pill on a row. Hovering the pill (or focusing it with
+  the keyboard) changes it to a red "✕ Remove from hive". The pill keeps the same
+  width, so the row does not shift.
+- **What happens on click:** a confirmation asks to remove the AI; confirming
+  deletes its bee, API config and cached recommendations. The row becomes
+  selectable straight away, and the replacement is ticked and added with
+  **Add to Hive** as usual.
+- **Selections are kept:** models already ticked in the list, and any nicknames
+  that were edited, stay as they were when the list refreshes.
+- **Limits:** only AIs imported from a model server are removed this way. A
+  default AI, or a variant of one, that shares the same endpoint and model shows
+  a message pointing to the hive screen instead.
+- **Row styling:** only the checkbox and model name are dimmed on an in-hive row;
+  the pill is full strength so it reads as clickable.
+
+### Verification
+- Against a stand-in model server in the browser: two models imported, then a
+  third ticked with an edited nickname. Removing one of the two kept the third's
+  tick and nickname, the removed model became selectable, and **Add to Hive** left
+  the hive with the other imported model plus the new one.
+- Hover on the pill showed the red "✕ Remove from hive" label with no change in
+  width.
+- Not run: removal of a model that has been used in a round, a dark/light theme
+  comparison of the red state, and a touch device (there is no hover there; the
+  pill's tooltip and the confirmation carry the meaning).
+
+### Files changed
+`js/app.js`, `style.css`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v347.txt` (renamed from v346), plus the routine stamp
+sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
 ## v3.63.582 — Prices for five providers are read from their pricing pages by code
 
 **Released:** 2026-10-11

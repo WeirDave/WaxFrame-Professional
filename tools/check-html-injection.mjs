@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261011-008
+// Build: 20261012-001
 // check-html-injection.mjs — does hostile text in saved state become markup?
 //
 // WaxFrame builds its UI by assigning template literals to .innerHTML. That is

@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261011-008
+// Build: 20261012-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261011-008';         // build stamp — update each session
+const BUILD = '20261012-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -12467,7 +12467,7 @@ function renderImportServerChecklist() {
     <div class="import-server-item import-server-item--in-hive">
       <input type="checkbox" class="import-server-check" id="isc-${i}" value="${escapeHtml(modelId)}" disabled>
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
-      <span class="import-server-in-hive-badge">✓ Already in your hive</span>
+      <button type="button" class="import-server-in-hive-badge" data-action="call" data-fn="removeImportServerHiveModel" data-arg="${i}" title="Click to remove ${escapeHtml(modelName)} from your hive so another model can be picked in its place"><span class="in-hive-label-rest">✓ Already in your hive</span><span class="in-hive-label-hover">✕ Remove from hive</span></button>
     </div>`;
     }
 
@@ -12495,6 +12495,70 @@ function renderImportServerChecklist() {
   startImportTimestampTicker();
 
   updateChecklistCount();
+}
+
+// Swap support: a row marked "Already in your hive" can be removed from this
+// screen so a different model can be ticked in its place, without closing the
+// import and hunting for the bee on the hive screen. Only imported (custom)
+// AIs are removed here; a default AI or a variant that happens to share the
+// endpoint is left alone and the user is pointed at the hive screen instead.
+async function removeImportServerHiveModel(rowIdx) {
+  const model = _importServerModels[parseInt(rowIdx, 10)];
+  if (!model) return;
+  const modelId   = typeof model === 'object' ? model.id   : model;
+  const modelName = typeof model === 'object' ? model.name : model;
+  const norm = u => (u || '').replace(/\/+$/, '').trim();
+  const chatUrl = norm(document.getElementById('importServerChatUrl').value);
+  const matches = aiList.filter(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    return cfg && norm(cfg.endpoint) === chatUrl && cfg.model === modelId;
+  });
+  const removable = matches.filter(ai => !DEFAULT_AIS.find(d => d.id === ai.id) && !ai.parentId);
+  if (!removable.length) {
+    toast('This AI cannot be removed from here — remove it from the hive screen.', 4000);
+    return;
+  }
+  const ok = await wfConfirm(
+    'Remove from hive',
+    `Remove ${modelName} from your hive? This deletes its bee, API config, and cached recommendations. It stays in this list so another model can be picked in its place.`,
+    { okText: 'Remove', destructive: true }
+  );
+  if (!ok) return;
+
+  // Carry the user's in-progress ticks and nickname edits across the re-render
+  const keep = {};
+  document.querySelectorAll('.import-server-check:checked').forEach(cb => {
+    const n = document.getElementById(`isn-${cb.id.replace('isc-', '')}`);
+    keep[cb.value] = { name: n ? n.value : '', edited: n ? !n.classList.contains('is-default') : false };
+  });
+
+  removable.forEach(ai => {
+    const id = ai.id;
+    aiList    = aiList.filter(a => a.id !== id);
+    activeAIs = activeAIs.filter(a => a.id !== id);
+    if (builder === id) builder = null;
+    if (API_CONFIGS[id]) delete API_CONFIGS[id];
+    ['', '-reviewer', '-builder'].forEach(sfx => {
+      try { localStorage.removeItem(`waxframe_recommend_default-${id}${sfx}`); } catch(e) { /* ignore */ }
+      try { localStorage.removeItem(`waxframe_recommend_custom-${id}${sfx}`);  } catch(e) { /* ignore */ }
+    });
+    try { localStorage.removeItem(`waxframe_models_${id}`); } catch(e) { /* ignore */ }
+  });
+  if (typeof _selectedCustomIds !== 'undefined') removable.forEach(ai => _selectedCustomIds.delete(ai.id));
+
+  saveHive();
+  renderAISetupGrid();
+  renderImportServerChecklist();
+
+  document.querySelectorAll('.import-server-check:not(:disabled)').forEach(cb => {
+    const saved = keep[cb.value];
+    if (!saved) return;
+    cb.checked = true;
+    const n = document.getElementById(`isn-${cb.id.replace('isc-', '')}`);
+    if (n && saved.edited) { n.value = saved.name; n.classList.remove('is-default'); }
+  });
+  updateChecklistCount();
+  toast(`🗑 ${modelName} removed — pick a replacement from the list`, 3500);
 }
 
 function importServerSelectAll() {
@@ -13668,8 +13732,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.582'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.582';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.583'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.583';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 

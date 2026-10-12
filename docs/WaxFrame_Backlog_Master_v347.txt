@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v346
-2026-10-11
+WaxFrame Backlog Master v347
+2026-10-12
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,12 @@ ships.
 
 
 
+
+v347 — IMPORT FROM MODEL SERVER: SWAP A MODEL IN PLACE (v3.63.583).
+
+The "✓ Already in your hive" pill on an import row is now a button that
+removes that AI so another model can be picked on the same screen. No open
+work was added or closed by it.
 
 v346 — PRICES ARE READ BY CODE FOR FIVE PROVIDERS (v3.63.582).
 

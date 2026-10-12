@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20261011-008
+   Build: 20261012-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4691,14 +4691,19 @@ body.helper-body .page-main {
 .import-server-item:last-child { border-bottom: none; }
 .import-server-item:hover { background: var(--surface2); }
 
-/* In-hive row variant — dimmed, non-interactive, replaces the nickname input
-   with a green "Already in your hive" badge. Disabled checkbox visually but
-   stays in the markup so :not(:disabled) selectors target it correctly. */
-.import-server-item--in-hive { opacity: 0.55; cursor: default; }
-.import-server-item--in-hive:hover { background: transparent; }
+/* In-hive row variant — checkbox and label dimmed and non-interactive. The
+   green "Already in your hive" pill is a button: hover/focus swaps it to a red
+   "Remove from hive" so a model can be swapped without leaving this screen.
+   Both labels share one grid cell so the pill never changes width. Disabled
+   checkbox stays in the markup so :not(:disabled) selectors target it
+   correctly. */
+.import-server-item--in-hive { cursor: default; }
 .import-server-item--in-hive .import-server-check,
-.import-server-item--in-hive .import-server-item-label { cursor: default; }
+.import-server-item--in-hive .import-server-item-label { opacity: 0.55; cursor: default; }
+.import-server-item--in-hive:hover { background: transparent; }
 .import-server-in-hive-badge {
+  display: inline-grid;
+  font-family: inherit;
   font-size: var(--fs-11);
   font-weight: 700;
   letter-spacing: 0.3px;
@@ -4710,6 +4715,19 @@ body.helper-body .page-main {
   flex-shrink: 0;
   white-space: nowrap;
 }
+button.import-server-in-hive-badge { cursor: pointer; }
+.import-server-in-hive-badge > span { grid-area: 1 / 1; text-align: center; }
+.import-server-in-hive-badge .in-hive-label-hover { visibility: hidden; }
+button.import-server-in-hive-badge:hover,
+button.import-server-in-hive-badge:focus-visible {
+  color: var(--red);
+  background: var(--red-dim);
+  border-color: var(--red);
+}
+button.import-server-in-hive-badge:hover .in-hive-label-rest,
+button.import-server-in-hive-badge:focus-visible .in-hive-label-rest { visibility: hidden; }
+button.import-server-in-hive-badge:hover .in-hive-label-hover,
+button.import-server-in-hive-badge:focus-visible .in-hive-label-hover { visibility: visible; }
 .import-server-check {
   flex-shrink: 0;
   accent-color: var(--accent);
