@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v351
+WaxFrame Backlog Master v352
 2026-10-12
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,17 @@ ships.
 
 
 
+
+v352 — SUBQ SNAP HIDDEN; REVISIT ABOUT 2026-11-12 (v3.63.588).
+
+subq-snap-preview is filtered out by ^subq-snap in STRUCTURAL_NON_CHAT_RE
+(provider-models.js). It is a Decisions-API model (POST /v1/systemone). Check
+around 2026-11-12: (1) does the account now list subq-preview; if so run a real
+round (store:false accepted? max_tokens and reasoning behaviour, empty content
+with finish_reason length?); (2) did SubQ answer the output-limit, rate-limit
+and training questions; (3) is Snap offered on chat, in which case drop the
+filter token. Related and still open: Perplexity browser calls fail on a missing
+Access-Control-Allow-Origin header; a relay needs a decision.
 
 v351 — SUBQ STORAGE OPT-OUT (v3.63.587).
 

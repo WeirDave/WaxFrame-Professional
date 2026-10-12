@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — shared provider/model logic
-// Build: 20261012-005
+// Build: 20261012-006
 // ============================================================
 // provider-models.js — regex + parse primitives shared between api.js and
 // help.html. v3.63.82 introduced this file as the single source of truth;
@@ -62,11 +62,15 @@
   //     not the generateContent path WaxFrame uses.
   //   • ^aqa$ — Gemini Attributed-QA specialized retrieval model (exact-match
   //     only; the token is too short for a loose match).
+  //   • ^subq-snap — SubQ's Snap models answer yes/no, choice and score questions
+  //     on the Decisions API (POST /v1/systemone), not Chat Completions, and
+  //     reject chat requests with "does not support completions requests".
+  //     Hidden for now (v3.63.588); revisit if SubQ exposes Snap on chat.
   // Specialized-but-chat-capable models (search-preview, robotics-er, deep-
   // research, vibe-cli, codestral/devstral/Coder, tiny-*) are deliberately NOT
   // hard-filtered — they run on the chat endpoint and belong to a future soft-
   // rank/warn pass, not this structural filter.
-  var STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity|flux|seedream|seedance|happyhorse|pixverse|vidu|wan2|sonic|kokoro|sora|hailuo|video-0|kling|qwen-image|hidream|juggernaut|ideogram|dreamshaper|voxtral|orpheus|parakeet|pixtral|ocr|-image\b|\bimage-|flash-image|-i2v|-t2v|-r2v|e5-|babbage|davinci|turbo-instruct|flash-live|-live-preview|^aqa$/i;
+  var STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity|flux|seedream|seedance|happyhorse|pixverse|vidu|wan2|sonic|kokoro|sora|hailuo|video-0|kling|qwen-image|hidream|juggernaut|ideogram|dreamshaper|voxtral|orpheus|parakeet|pixtral|ocr|-image\b|\bimage-|flash-image|-i2v|-t2v|-r2v|e5-|babbage|davinci|turbo-instruct|flash-live|-live-preview|^aqa$|^subq-snap/i;
 
   // ChatGPT extras: -pro / -codex are Responses-API-only; dated snapshots clutter.
   var CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;

@@ -1,5 +1,42 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.588 — SubQ Snap is hidden from the model picker
+
+**Released:** 2026-10-12
+**Build:** 20261012-006
+
+### What changed
+
+**`subq-snap-preview` no longer appears in model lists.** It answers yes/no,
+choice and score questions on SubQ's Decisions API, not chat, and every chat
+request to it is rejected with "does not support completions requests".
+
+- **Where it applies:** every place a model list is read from a server, including
+  **Add Custom AI** → **Fetch Models** and the Import from Model Server screen.
+  Any model id starting `subq-snap` is hidden.
+- **What shows instead:** `subq-preview`, SubQ's chat model, is listed once the
+  account has access to it. While the account lists only the Snap model, **Fetch
+  Models** reports "Server returned no usable models" and the key shows
+  "✗ Failed".
+- **Temporary:** the hiding is a stopgap until SubQ offers Snap on chat.
+
+### Verification
+- Against SubQ's live model list: the raw response held only `subq-snap-preview`,
+  and the model list WaxFrame builds from it was empty. The Add Custom AI modal
+  ended with an empty dropdown and the "✗ Failed" pill.
+- 4 new fixture checks cover the Snap id, a future `subq-snap-*` id, `subq-preview`
+  and an unrelated id containing "snap". Two of them fail with the filter removed.
+- Not run: a key that has `subq-preview`, so the chat model's appearance in the
+  list is expected from SubQ's documentation, not observed.
+
+### Files changed
+`js/provider-models.js`, `tools/test-provider-extractors.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v352.txt` (renamed from v351), plus the routine
+stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
 ## v3.63.587 — Requests to SubQ ask it not to store prompts or responses
 
 **Released:** 2026-10-12

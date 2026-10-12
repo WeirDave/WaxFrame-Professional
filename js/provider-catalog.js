@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261012-005
+// Build: 20261012-006
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -858,7 +858,7 @@
     return n;
   }
 
-  // ── Per-endpoint storage opt-out (v3.63.587) ──────────────────────
+  // ── Per-endpoint storage opt-out (v3.63.588) ──────────────────────
   // SubQ stores prompts and completions indefinitely by default and honours
   // `store: false` per request on Chat Completions (docs.subq.ai, data
   // retention). WaxFrame sends whole documents, so for hosts that offer the

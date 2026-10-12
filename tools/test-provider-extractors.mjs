@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20261012-005
+// Build: 20261012-006
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -982,6 +982,20 @@ const subqStreamOut = JSON.parse(WFProviderCatalog.withStorageOptOut(
   'https://api.subq.ai/v1/chat/completions', subqStreamPlain));
 check('a streamed SubQ body keeps stream:true and gains store:false',
   subqStreamOut.stream === true && subqStreamOut.store === false, true);
+
+console.log('\u25b6 SubQ Snap is hidden from the model picker (structural filter)');
+
+// subq-snap-preview answers on the Decisions API, not Chat Completions, and
+// rejects chat requests. It is hidden for now; the chat model must stay visible.
+const WFPM_FOR_FILTER = require(path.join(__dirname, '..', 'js', 'provider-models.js')).WFProviderModels;
+check('subq-snap-preview is filtered out',
+  WFPM_FOR_FILTER.filterModelForProvider('subq', 'subq-snap-preview'), false);
+check('a future subq-snap-* id is filtered out too',
+  WFPM_FOR_FILTER.filterModelForProvider('subq', 'subq-snap-2'), false);
+check('subq-preview (the chat model) is kept',
+  WFPM_FOR_FILTER.filterModelForProvider('subq', 'subq-preview'), true);
+check('a model that merely contains "snap" elsewhere is kept',
+  WFPM_FOR_FILTER.filterModelForProvider('custom', 'mistral-snap-chat'), true);
 
 console.log('');
 if (fail === 0) {
