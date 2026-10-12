@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261012-004
+// Build: 20261012-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261012-004';         // build stamp — update each session
+const BUILD = '20261012-005';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13744,8 +13744,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.586'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.586';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.587'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.587';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -19585,7 +19585,7 @@ async function runRound(opts) {
       Array.isArray(window._partialRound.failedAIIds) &&
       window._partialRound.failedAIIds.length > 0 &&
       typeof retrySingleAIInPartialRound === 'function') {
-    // v3.63.586 — A failed bee that has since been switched off for the session
+    // v3.63.587 — A failed bee that has since been switched off for the session
     // ("Disable this AI for the session" / its card checkbox) is not a bee to
     // resume. It stays in activeAIs, so the lookup below used to find it and
     // re-send it, which put the same error card back every time Smoke the Hive
@@ -21104,7 +21104,10 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
       window.WF_STREAM_THIS_REQUEST = false;
       if (_budgetRetry) window.WF_OUTPUT_BUDGET_OVERRIDE = _prevBudget;
     };
-    const _sentBody = cfg.bodyFn(_model, prompt);
+    // v3.63.587 — hosts that offer a per-request storage opt-out (SubQ) get it
+    // here, on the one call that carries document text. The connection tests
+    // send a fixed one-word prompt and are left alone.
+    const _sentBody = window.WFProviderCatalog.withStorageOptOut(endpoint, cfg.bodyFn(_model, prompt));
     _restoreGlobals();
     _requestedBudget = window.WFProviderCatalog.requestedOutputBudget(_sentBody);
     // v3.63.513 — Gemini streams from a different METHOD, not a body flag:

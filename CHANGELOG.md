@@ -1,5 +1,48 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.587 — Requests to SubQ ask it not to store prompts or responses
+
+**Released:** 2026-10-12
+**Build:** 20261012-005
+
+### What changed
+
+**Every round request sent to SubQ now includes SubQ's per-request opt-out from
+storage (`store: false`).** SubQ keeps prompts and responses indefinitely by
+default, and a round sends the whole document.
+
+- **Where it applies:** any AI whose endpoint is `api.subq.ai`, including the one
+  added from **Add Custom AI** → **Quick Add** → **SubQ**. Requests to every other
+  provider are unchanged.
+- **What it does not cover:** SubQ's organization-level retention setting and its
+  zero-data-retention option are set with SubQ. SubQ also records the model, token
+  counts and timing for billing. Its documentation does not say whether data is
+  used for training.
+- **Connection tests** send a fixed one-word prompt and do not carry the flag.
+- **Privacy page:** SubQ is now in the list of providers that receive prompts and
+  document text, with a note about its default retention and this opt-out.
+  **README:** the SubQ row says the same.
+
+### Verification
+- Through the real request path in the browser against a stand-in server: the
+  request to `api.subq.ai` carried `store: false`, `max_tokens` and the chosen
+  model, and no `max_completion_tokens`; a request to another provider's host
+  carried only `model`, `messages` and `max_tokens`.
+- 13 new fixture checks cover the SubQ host, other hosts, a look-alike hostname,
+  non-chat bodies, unparseable bodies and streamed bodies. Two of them fail with
+  the feature switched off.
+- Not run: a request to the live SubQ API, so SubQ's acceptance of the flag is
+  taken from its documentation.
+
+### Files changed
+`js/provider-catalog.js`, `js/app.js`, `privacy.html`, `README.md`,
+`tools/test-provider-extractors.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v351.txt` (renamed from v350), plus the routine
+stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
 ## v3.63.586 — An AI switched off for the session is no longer re-sent when a halted round resumes
 
 **Released:** 2026-10-12

@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v350
+WaxFrame Backlog Master v351
 2026-10-12
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,16 @@ ships.
 
 
 
+
+v351 — SUBQ STORAGE OPT-OUT (v3.63.587).
+
+store:false is added to chat requests for api.subq.ai (withStorageOptOut in
+provider-catalog.js, applied in callAPI). Not verified against the live API: the
+account only lists subq-snap-preview, so subq-preview access is still pending
+(early access; access has to be requested from SubQ). If SubQ rejects the field, remove
+'api.subq.ai' from STORE_OPT_OUT_HOSTS. privacy.html "Effective" date was left
+at May 25, 2026 because the change is an added disclosure plus a reduction in
+what a provider keeps, not a new data flow; revisit if that reading is wrong.
 
 v350 — SESSION-DISABLED AI NO LONGER RESUMED (v3.63.586).
 

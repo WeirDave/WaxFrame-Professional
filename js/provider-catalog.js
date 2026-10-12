@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261012-004
+// Build: 20261012-005
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -856,6 +856,27 @@
     // Ollama uses -1 for "unbounded", which is not a budget.
     if (!isFinite(n) || n <= 0) return null;
     return n;
+  }
+
+  // ── Per-endpoint storage opt-out (v3.63.587) ──────────────────────
+  // SubQ stores prompts and completions indefinitely by default and honours
+  // `store: false` per request on Chat Completions (docs.subq.ai, data
+  // retention). WaxFrame sends whole documents, so for hosts that offer the
+  // opt-out the flag is added to the serialised body. Keyed by hostname, so it
+  // covers the SubQ preset and any custom AI pointed at the same API, and
+  // touches nothing else: other providers reject unknown fields, and a body
+  // without a `messages` array is not a Chat Completions request.
+  var STORE_OPT_OUT_HOSTS = { 'api.subq.ai': true };
+  function withStorageOptOut(endpoint, bodyString) {
+    if (!bodyString || typeof bodyString !== 'string') return bodyString;
+    var host;
+    try { host = new URL(endpoint).hostname.toLowerCase(); } catch (e) { return bodyString; }
+    if (!STORE_OPT_OUT_HOSTS[host]) return bodyString;
+    var b;
+    try { b = JSON.parse(bodyString); } catch (e) { return bodyString; }
+    if (!b || typeof b !== 'object' || !Array.isArray(b.messages)) return bodyString;
+    b.store = false;
+    return JSON.stringify(b);
   }
 
   // ── Budget-rejection parsing (v3.63.494) ──────────────────────────
@@ -1951,6 +1972,7 @@
     mergeModelLimits: mergeModelLimits,
     // v3.63.491 — empirical cap discovery.
     requestedOutputBudget: requestedOutputBudget,
+    withStorageOptOut: withStorageOptOut,
     analyzeObservations: analyzeObservations,
     describeObservations: describeObservations,
     formatTokenLimit: formatTokenLimit,

@@ -224,7 +224,7 @@ WaxFrame also works with any OpenAI-compatible endpoint via **Add Custom AI** (s
 | **DeepSeek** | Hosted | First-party DeepSeek API. OpenAI-compatible; the most cost-effective Builder option. Quick Add preset. |
 | **Together AI** | Hosted | OpenAI-compatible inference cloud. Quick Add preset. |
 | **Cohere** | Hosted | First-party Cohere API. Quick Add preset. |
-| **SubQ** | Hosted | First-party SubQ API. Long-context (12M) chat model, OpenAI-compatible; early-access key required. Quick Add preset. |
+| **SubQ** | Hosted | First-party SubQ API. Long-context (12M) chat model, OpenAI-compatible; early-access key required. Stores prompts and responses by default, so WaxFrame sends `store: false` with every round request. Quick Add preset. |
 
 Anything else that speaks the OpenAI chat-completions shape will work too — point WaxFrame at the endpoint and it'll fetch the model list.
 

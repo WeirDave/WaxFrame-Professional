@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20261012-004
+// Build: 20261012-005
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -937,6 +937,51 @@ check('the OpenAI body still asks for usage on the stream',
 
 const antBodyAfter = JSON.parse(CONFIGS.claude.bodyFn('claude-sonnet-4-6', ENVELOPE));
 check('the flag does not leak into the next request', antBodyAfter.stream, undefined);
+
+console.log('\u25b6 Per-request storage opt-out (withStorageOptOut)');
+
+// SubQ keeps prompts and completions indefinitely unless a request carries
+// store:false. WaxFrame sends whole documents, so the flag goes on the SubQ
+// host and nowhere else \u2014 every other provider rejects unknown fields.
+const subqPlain = CONFIGS.chatgpt.bodyFn('subq-preview', ENVELOPE);
+const subqOut = JSON.parse(WFProviderCatalog.withStorageOptOut(
+  'https://api.subq.ai/v1/chat/completions', subqPlain));
+check('SubQ chat body gains store:false', subqOut.store, false);
+check('SubQ body keeps its model', subqOut.model, JSON.parse(subqPlain).model);
+check('SubQ body keeps its messages',
+  JSON.stringify(subqOut.messages), JSON.stringify(JSON.parse(subqPlain).messages));
+check('SubQ body keeps its token budget key',
+  subqOut.max_tokens, JSON.parse(subqPlain).max_tokens);
+check('the SubQ body never carries max_completion_tokens',
+  subqOut.max_completion_tokens, undefined);
+
+check('another provider\u2019s body is returned byte-for-byte',
+  WFProviderCatalog.withStorageOptOut('https://api.openai.com/v1/chat/completions', subqPlain),
+  subqPlain);
+check('a local server\u2019s body is returned byte-for-byte',
+  WFProviderCatalog.withStorageOptOut('http://localhost:11434/v1/chat/completions', subqPlain),
+  subqPlain);
+check('a look-alike host does not get the flag',
+  WFProviderCatalog.withStorageOptOut('https://api.subq.ai.example.com/v1/chat/completions', subqPlain),
+  subqPlain);
+check('a body without messages is left alone on the SubQ host',
+  WFProviderCatalog.withStorageOptOut('https://api.subq.ai/v1/systemone', '{"model":"x","state":"y"}'),
+  '{"model":"x","state":"y"}');
+check('an unparseable body is left alone',
+  WFProviderCatalog.withStorageOptOut('https://api.subq.ai/v1/chat/completions', 'not json'),
+  'not json');
+check('a bad endpoint URL leaves the body alone',
+  WFProviderCatalog.withStorageOptOut('not a url', subqPlain), subqPlain);
+check('an empty body passes through',
+  WFProviderCatalog.withStorageOptOut('https://api.subq.ai/v1/chat/completions', ''), '');
+
+CATALOG_ROOT.WF_STREAM_THIS_REQUEST = true;
+const subqStreamPlain = CONFIGS.chatgpt.bodyFn('subq-preview', ENVELOPE);
+CATALOG_ROOT.WF_STREAM_THIS_REQUEST = false;
+const subqStreamOut = JSON.parse(WFProviderCatalog.withStorageOptOut(
+  'https://api.subq.ai/v1/chat/completions', subqStreamPlain));
+check('a streamed SubQ body keeps stream:true and gains store:false',
+  subqStreamOut.stream === true && subqStreamOut.store === false, true);
 
 console.log('');
 if (fail === 0) {

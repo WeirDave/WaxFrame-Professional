@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — privacy.html
-     Build: 20261012-004
+     Build: 20261012-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -65,7 +65,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20261012-004">
+  <meta name="waxframe-build" content="20261012-005">
   <title>Privacy Policy — WaxFrame</title>
   <meta name="description" content="WaxFrame's privacy policy. Local-first storage, no account database, and no tracking, with a disclosed relay for Claude requests.">
   <meta name="keywords" content="WaxFrame privacy policy, no tracking AI tool, air-gap safe AI writing, self-hosted document tool">
@@ -80,7 +80,7 @@
   <meta name="twitter:description" content="WaxFrame's privacy policy. Local-first storage, no account database, and no tracking, with a disclosed relay for Claude requests.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.586">
+  <link rel="stylesheet" href="style.css?v=3.63.587">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -256,8 +256,9 @@
 
     <div class="wf-card is-accent">
       <h3 class="wf-card-title">To the AI providers you choose</h3>
-      <p>When you run a round, WaxFrame sends your prompt and document text from your browser straight to the AI providers you have configured — OpenAI, Google, xAI, Mistral, Perplexity, Cohere, Together AI, DeepSeek, and any custom or server-based endpoints you add. Your API keys are sent only with those requests, only to those providers.</p>
+      <p>When you run a round, WaxFrame sends your prompt and document text from your browser straight to the AI providers you have configured — OpenAI, Google, xAI, Mistral, Perplexity, Cohere, Together AI, DeepSeek, SubQ, and any custom or server-based endpoints you add. Your API keys are sent only with those requests, only to those providers.</p>
       <p>Each provider receives, processes, and handles that data under <strong>its own privacy policy and terms</strong> — not WaxFrame's. What a provider does with your prompts and documents (including whether it retains them or uses them for training) is governed by your agreement with that provider. Review each provider's policy before sending sensitive content.</p>
+      <p><strong>SubQ keeps prompts and responses by default.</strong> For requests to SubQ's API, WaxFrame includes SubQ's per-request opt-out (<code>store: false</code>), which asks SubQ not to store that request or its response. SubQ's organization-level retention settings, zero-data-retention option, and any use of data for training are set by SubQ, not by WaxFrame; check SubQ's own data-retention documentation.</p>
     </div>
 
     <div class="wf-card is-amber">
@@ -405,13 +406,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.586"></script>
-<script src="lib/docx.min.js?v=3.63.586"></script>
-<script src="js/docx-export.js?v=3.63.586"></script>
-<script src="js/nav-helper.js?v=3.63.586"></script>
-<script src="js/license-helper.js?v=3.63.586"></script>
-<script src="js/update-check.js?v=3.63.586"></script>
-<script src="js/helper-handlers.js?v=3.63.586"></script>
-<script src="js/version.js?v=3.63.586"></script>
+<script src="js/theme.js?v=3.63.587"></script>
+<script src="lib/docx.min.js?v=3.63.587"></script>
+<script src="js/docx-export.js?v=3.63.587"></script>
+<script src="js/nav-helper.js?v=3.63.587"></script>
+<script src="js/license-helper.js?v=3.63.587"></script>
+<script src="js/update-check.js?v=3.63.587"></script>
+<script src="js/helper-handlers.js?v=3.63.587"></script>
+<script src="js/version.js?v=3.63.587"></script>
 </body>
 </html>
