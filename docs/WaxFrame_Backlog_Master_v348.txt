@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v347
+WaxFrame Backlog Master v348
 2026-10-12
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,14 @@ ships.
 
 
 
+
+v348 — SUBQ ADDED AS A QUICK ADD PRESET (v3.63.584).
+
+SubQ (api.subq.ai, OpenAI-shape, default subq-preview) is in the Add Custom AI
+Quick Add list. It was not exercised with a key: model fetch and a real round
+against subq-preview are untested. No icon yet (generic fallback), no
+SubQ-specific concurrency cap or token-limit entry (output cap and rate limits
+are not in SubQ's public docs). Fill those in once a key has been run.
 
 v347 — IMPORT FROM MODEL SERVER: SWAP A MODEL IN PLACE (v3.63.583).
 

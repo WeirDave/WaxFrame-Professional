@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261012-001
+// Build: 20261012-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261012-001';         // build stamp — update each session
+const BUILD = '20261012-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -9241,6 +9241,18 @@ const QUICK_ADD_PROVIDERS = {
     defaultModel: 'command-a-plus-05-2026',
     chooseModelLink: 'https://docs.cohere.com/docs/models'
   },
+  // SubQ — OpenAI-shape Chat Completions at api.subq.ai/v1, Bearer auth, CORS
+  // open (access-control-allow-origin: *). subq-preview is the long-context chat
+  // model (early access); subq-snap-preview is a Decisions-API model, not chat.
+  subq: {
+    name: 'SubQ',
+    url: 'https://api.subq.ai/v1/chat/completions',
+    format: 'openai',
+    keyLink: 'https://console.subq.ai/api-keys',
+    keyLinkLabel: 'Get your SubQ API key →',
+    defaultModel: 'subq-preview',
+    chooseModelLink: 'https://docs.subq.ai/models/'
+  },
   ollama: {
     name: 'Ollama',
     url: 'http://localhost:11434/v1/chat/completions',
@@ -13732,8 +13744,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.583'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.583';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.584'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.584';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 

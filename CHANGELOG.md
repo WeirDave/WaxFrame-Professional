@@ -1,5 +1,45 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.584 — SubQ added to the Add Custom AI Quick Add list
+
+**Released:** 2026-10-12
+**Build:** 20261012-002
+
+### What changed
+
+**SubQ is now a preset in the Quick Add dropdown on the Add Custom AI screen.**
+Selecting it fills in the SubQ chat endpoint and the OpenAI-compatible API
+format, and shows links to the SubQ API-key page and model list.
+
+- **Where it is:** Setup screen → **Add Custom AI** → **Quick Add** → **SubQ**.
+- **What it fills in:** endpoint `https://api.subq.ai/v1/chat/completions`,
+  default model `subq-preview`, and the **Get your SubQ API key →** and
+  **Provider docs →** links. The API key is pasted in as with any other provider.
+- **Fetch Models:** the model list is read from SubQ's `/v1/models` endpoint,
+  which only returns the models the key can use.
+- **Model access:** `subq-preview` (long-context chat) is an early-access model
+  on SubQ's side. `subq-snap-preview` is a decisions model rather than a chat
+  model and is not suited to review or build rounds.
+- **Docs:** the README provider table and the user manual's description of
+  Quick Add list SubQ.
+
+### Verification
+- In the browser, selecting SubQ filled the name, endpoint, key link and docs
+  link as above.
+- SubQ's API answers cross-origin requests from a web page, and its error
+  responses are readable by the page.
+- Not run: a chat request or model fetch with a valid key, so a round against
+  `subq-preview` has not been exercised. No SubQ icon is bundled; the generic
+  icon is used.
+
+### Files changed
+`js/app.js`, `index.html`, `README.md`, `waxframe-user-manual.html`,
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v348.txt` (renamed from v347), plus
+the routine stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
 ## v3.63.583 — A model can be swapped on the Import from Model Server screen
 
 **Released:** 2026-10-12
