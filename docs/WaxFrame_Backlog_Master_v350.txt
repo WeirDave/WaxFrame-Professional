@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v349
+WaxFrame Backlog Master v350
 2026-10-12
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,17 @@ ships.
 
 
 
+
+v350 — SESSION-DISABLED AI NO LONGER RESUMED (v3.63.586).
+
+runRound's halted-round auto-resume skips failed AIs that are switched off for
+the session. Open and not touched: the explicit "Re-send {AI}'s prompt only"
+button still re-sends a switched-off AI (deliberate: it is a direct click).
+Also open from the SubQ work: hide subq-snap-preview from the model picker
+(decisions model, cannot chat); Perplexity answers /chat/completions without an
+Access-Control-Allow-Origin header (observed 2026-10-12, streaming on and off) so
+browser calls to it fail; a relay would fix it but routes users' keys through a
+Worker, so it needs a decision.
 
 v349 — SUBQ ICON ADDED (v3.63.585).
 

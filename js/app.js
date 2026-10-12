@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261012-003
+// Build: 20261012-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261012-003';         // build stamp — update each session
+const BUILD = '20261012-004';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -13744,8 +13744,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.585'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.585';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.586'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.586';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -19585,19 +19585,29 @@ async function runRound(opts) {
       Array.isArray(window._partialRound.failedAIIds) &&
       window._partialRound.failedAIIds.length > 0 &&
       typeof retrySingleAIInPartialRound === 'function') {
-    const _resumeAIId = window._partialRound.failedAIIds[0];
-    const _resumeAI = (Array.isArray(activeAIs) ? activeAIs : []).find(a => a.id === _resumeAIId);
+    // v3.63.586 — A failed bee that has since been switched off for the session
+    // ("Disable this AI for the session" / its card checkbox) is not a bee to
+    // resume. It stays in activeAIs, so the lookup below used to find it and
+    // re-send it, which put the same error card back every time Smoke the Hive
+    // or Retry round was clicked. Pick the first failed bee that is still on;
+    // when none is, the paused state is stale and falls through to a fresh
+    // round, which already fans out only to session-enabled bees.
+    const _stillOn = id => !(window.sessionAIs instanceof Set) || window.sessionAIs.has(id);
+    const _resumeAIId = window._partialRound.failedAIIds.find(_stillOn);
+    const _resumeAI = _resumeAIId
+      ? (Array.isArray(activeAIs) ? activeAIs : []).find(a => a.id === _resumeAIId)
+      : null;
     if (_resumeAI) {
       consoleLog(`🔁 Resuming halted Round ${window._partialRound.round} surgically — re-sending ${_resumeAI.name} (fix-then-Smoke routes here automatically, instead of re-billing every healthy bee).`, 'info');
       await retrySingleAIInPartialRound(_resumeAIId);
       return;
     }
-    // Bee was removed from the hive between halt and retry. Clear the
-    // paused state and fall through to a fresh round — that's the
-    // honest behavior since the cached set's set of reviewers no longer
-    // matches the active hive shape.
+    // Bee was removed from the hive, or switched off for the session, between
+    // halt and retry. Clear the paused state and fall through to a fresh round
+    // — that's the honest behavior since the cached set's set of reviewers no
+    // longer matches the active hive shape.
     window._partialRound = null;
-    consoleLog(`🔁 Halted round's failed bee no longer in the hive — clearing paused state, firing a fresh round.`, 'warn');
+    consoleLog(`🔁 Halted round's failed bee is no longer in the hive or is switched off — clearing paused state, firing a fresh round.`, 'warn');
   }
 
   // v3.56.15 — A round is firing; clear any pending churn hold and re-arm the

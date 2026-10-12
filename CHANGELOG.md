@@ -1,5 +1,41 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.586 — An AI switched off for the session is no longer re-sent when a halted round resumes
+
+**Released:** 2026-10-12
+**Build:** 20261012-004
+
+### What changed
+
+**When a round halts because one AI failed, and that AI is then switched off for
+the session, "Smoke the Hive" and "Retry round" no longer send the request to
+that AI again.** Previously the resume step looked the failed AI up in the whole
+hive and ignored the session switch, so the same error card came back on every
+retry even though the AI showed as off.
+
+- **Where the switch is:** **Disable this AI for the session** on the error card,
+  or the checkbox on the AI's card in the hive.
+- **What happens now:** if other AIs also failed in that round and are still on,
+  the first of those is resumed. If none of the failed AIs is still on, the paused
+  state is cleared and a fresh round starts with only the AIs that are on. The
+  console line reads "Halted round's failed bee is no longer in the hive or is
+  switched off — clearing paused state, firing a fresh round."
+- **Unchanged:** **Re-send {AI}'s prompt only** on an error card still re-sends
+  that AI when clicked.
+
+### Verification
+- In the browser, with a staged halted round: failed AI switched off → no re-send
+  and paused state cleared; failed AI still on → re-sent; first failed AI off and
+  second on → the second re-sent. No requests left the page during the test.
+- Not run: a full multi-AI round against live providers.
+
+### Files changed
+`js/app.js`, `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v350.txt` (renamed from
+v349), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
 ## v3.63.585 — SubQ has its own icon
 
 **Released:** 2026-10-12
