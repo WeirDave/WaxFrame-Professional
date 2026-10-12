@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20261012-006
+// Build: 20261012-007
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -996,6 +996,94 @@ check('subq-preview (the chat model) is kept',
   WFPM_FOR_FILTER.filterModelForProvider('subq', 'subq-preview'), true);
 check('a model that merely contains "snap" elsewhere is kept',
   WFPM_FOR_FILTER.filterModelForProvider('custom', 'mistral-snap-chat'), true);
+
+console.log('▶ Perplexity Agent API (perplexity-agent format)');
+
+// Perplexity ended Sonar chat support on 2026-09-27. Its old /chat/completions
+// and /v1/sonar addresses answer without Access-Control-Allow-Origin, so a
+// browser discards the reply; /v1/agent is the one readable from a page
+// (probed against a live key, 2026-10-12). These pin the request and reply
+// shapes that probe showed.
+const PPX = CONFIGS.perplexity;
+check('the Perplexity endpoint is the Agent API', PPX.endpoint, 'https://api.perplexity.ai/v1/agent');
+check('the Perplexity format is perplexity-agent', PPX.format, 'perplexity-agent');
+check('the Perplexity default model name is unchanged', PPX.model, 'sonar-pro');
+check('the Agent API format is not streamed', WFProviderCatalog.supportsStreaming('perplexity-agent'), false);
+check('Perplexity still authenticates with a Bearer key',
+  PPX.headersFn('pplx-test').Authorization, 'Bearer pplx-test');
+
+const T = (m) => JSON.stringify(WFProviderCatalog.perplexityAgentTarget(m));
+check('sonar is sent as the real Sonar model', T('sonar'), '{"model":"perplexity/sonar"}');
+check('sonar-pro maps to preset fast', T('sonar-pro'), '{"preset":"fast"}');
+check('sonar-reasoning-pro maps to preset low', T('sonar-reasoning-pro'), '{"preset":"low"}');
+check('sonar-reasoning (retired) maps to preset low', T('sonar-reasoning'), '{"preset":"low"}');
+check('sonar-deep-research maps to preset high', T('sonar-deep-research'), '{"preset":"high"}');
+check('the mapping ignores case and spaces', T('  Sonar-Pro '), '{"preset":"fast"}');
+check('a preset name is sent as a preset', T('xhigh'), '{"preset":"xhigh"}');
+check('a provider/model id is sent as a model', T('openai/gpt-6-sol'), '{"model":"openai/gpt-6-sol"}');
+check('an unknown bare name is sent as a preset so Perplexity names it',
+  T('mystery'), '{"preset":"mystery"}');
+check('an empty model falls back to preset fast', T(''), '{"preset":"fast"}');
+
+const pxBody = JSON.parse(PPX.bodyFn('sonar-pro', ENVELOPE));
+check('the Agent body targets a preset', pxBody.preset, 'fast');
+check('the Agent body carries no messages array', pxBody.messages, undefined);
+check('the Agent body carries no chat-style max_tokens', pxBody.max_tokens, undefined);
+check('the Agent body puts the system text in instructions',
+  typeof pxBody.instructions === 'string' && pxBody.instructions.length > 0, true);
+check('the Agent body puts the user text in input',
+  typeof pxBody.input === 'string' && pxBody.input.length > 0, true);
+check('the Agent body states its output budget',
+  typeof pxBody.max_output_tokens === 'number' && pxBody.max_output_tokens > 0, true);
+check('the budget reader sees max_output_tokens',
+  WFProviderCatalog.requestedOutputBudget(PPX.bodyFn('sonar-pro', ENVELOPE)), pxBody.max_output_tokens);
+const pxSonar = JSON.parse(PPX.bodyFn('sonar', ENVELOPE));
+check('plain sonar sends model perplexity/sonar and no preset',
+  pxSonar.model === 'perplexity/sonar' && pxSonar.preset === undefined, true);
+
+// Shape recorded from the live probe: a search_results item, then the message.
+// There is no top-level output_text field.
+const agentLive = {
+  object: 'response', status: 'completed', model: 'openai/gpt-6-luna',
+  output: [
+    { type: 'search_results', results: [{ id: 1, url: 'https://example.com' }] },
+    { type: 'message', role: 'assistant', status: 'completed',
+      content: [{ type: 'output_text', text: 'CONNECTED', annotations: [] }] }
+  ],
+  usage: { input_tokens: 1862, output_tokens: 5, total_tokens: 1867 },
+  incomplete_details: null, error: null
+};
+check('the answer is read from the message item', PPX.extractFn(agentLive), 'CONNECTED');
+check('a message alone is read', PPX.extractFn({ object: 'response', status: 'completed',
+  output: [{ type: 'message', content: [{ type: 'output_text', text: 'hello' }] }] }), 'hello');
+check('several content parts are joined', PPX.extractFn({ output: [{ type: 'message',
+  content: [{ type: 'output_text', text: 'one ' }, { type: 'output_text', text: 'two' }] }] }), 'one two');
+check('the LAST message wins over interim commentary', PPX.extractFn({ output: [
+  { type: 'message', content: [{ type: 'output_text', text: 'Let me search.' }] },
+  { type: 'search_results', results: [] },
+  { type: 'message', content: [{ type: 'output_text', text: 'Final answer.' }] }] }), 'Final answer.');
+check('a top-level output_text is used when present',
+  PPX.extractFn({ output_text: 'direct', output: [] }), 'direct');
+check('no message gives an empty string', PPX.extractFn({ output: [{ type: 'search_results' }] }), '');
+check('a null body gives an empty string', PPX.extractFn(null), '');
+check('the helper extractor matches the config extractor',
+  WFProviderCatalog.extractAgentText(agentLive), PPX.extractFn(agentLive));
+
+check('a completed response reads as stop', WFProviderCatalog.extractFinishReason(agentLive), 'stop');
+const agentCut = { object: 'response', status: 'incomplete', incomplete_details: { reason: 'max_output_tokens' }, output: [] };
+check('an incomplete response reports its reason', WFProviderCatalog.extractFinishReason(agentCut), 'max_output_tokens');
+check('that reason counts as truncation',
+  WFProviderCatalog.isTruncationSignal(WFProviderCatalog.extractFinishReason(agentCut)), true);
+check('a completed response is not truncation',
+  WFProviderCatalog.isTruncationSignal(WFProviderCatalog.extractFinishReason(agentLive)), false);
+check('incomplete without a reason still reads as incomplete',
+  WFProviderCatalog.extractFinishReason({ object: 'response', status: 'incomplete', output: [] }), 'incomplete');
+check('an OpenAI chat reply still reads its own finish_reason',
+  WFProviderCatalog.extractFinishReason({ choices: [{ finish_reason: 'length' }] }), 'length');
+
+const simple = JSON.parse(WFProviderCatalog.agentSimpleBody('sonar-pro', 'pick one', 300));
+check('the one-prompt helper builds an Agent body',
+  simple.preset === 'fast' && simple.input === 'pick one' && simple.max_output_tokens === 300 && simple.messages === undefined, true);
 
 console.log('');
 if (fail === 0) {

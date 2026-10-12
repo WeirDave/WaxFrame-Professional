@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261012-006
+// Build: 20261012-007
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -195,6 +195,14 @@
     if (cand && cand.finishReason != null) return cand.finishReason;
     if (data.stop_reason != null) return data.stop_reason;
     if (c && c.finishReason != null) return c.finishReason;
+    // v3.63.589 - Perplexity Agent API (Responses shape): no per-choice reason,
+    // a top-level `status` plus `incomplete_details.reason` when output was cut.
+    if (data.object === 'response' && typeof data.status === 'string') {
+      if (data.status === 'incomplete') {
+        return (data.incomplete_details && data.incomplete_details.reason) || 'incomplete';
+      }
+      return data.status === 'completed' ? 'stop' : data.status;
+    }
     return null;
   }
 
@@ -342,6 +350,45 @@
     return null;
   }
 
+  // -- Perplexity Agent API model targeting (v3.63.589) --------------
+  // The Agent API takes either `preset` (a named configuration) or `model` (a
+  // `provider/model` id). WaxFrame's saved Perplexity model names are the old
+  // Sonar ids, so they are translated here rather than migrated in storage,
+  // which keeps every saved hive and the pricing table valid.
+  //   sonar                -> model perplexity/sonar   (the real Sonar model;
+  //                           accepted by /v1/agent, checked 2026-10-12)
+  //   sonar-pro            -> preset fast              (Perplexity's own table)
+  //   sonar-reasoning(-pro)-> preset low
+  //   sonar-deep-research  -> preset high
+  // A preset name (fast, low, medium, high, xhigh) is sent as given, a
+  // `provider/model` id is sent as `model`, and anything else is sent as a
+  // preset so Perplexity names the problem in its own error.
+  var PERPLEXITY_LEGACY_TARGETS = {
+    'sonar':               { model: 'perplexity/sonar' },
+    'sonar-pro':           { preset: 'fast' },
+    'sonar-reasoning':     { preset: 'low' },
+    'sonar-reasoning-pro': { preset: 'low' },
+    'sonar-deep-research': { preset: 'high' }
+  };
+  function perplexityAgentTarget(model) {
+    var m = String(model == null ? '' : model).trim();
+    if (!m) return { preset: 'fast' };
+    var legacy = PERPLEXITY_LEGACY_TARGETS[m.toLowerCase()];
+    if (legacy) return JSON.parse(JSON.stringify(legacy));
+    if (m.indexOf('/') !== -1) return { model: m };
+    return { preset: m.toLowerCase() };
+  }
+
+  // A plain one-prompt request body for the Agent API, for the small helper
+  // calls (model recommendation, tier classification) that build their own
+  // bodies instead of going through cfg.bodyFn.
+  function agentSimpleBody(model, prompt, maxOutputTokens) {
+    var body = perplexityAgentTarget(model);
+    body.input = prompt;
+    if (maxOutputTokens != null) body.max_output_tokens = maxOutputTokens;
+    return JSON.stringify(body);
+  }
+
   // Body builders — one per WaxFrame format.
   var BODY_BUILDERS = {
     'openai-chat': function (model, prompt) {
@@ -416,6 +463,20 @@
       };
       if (wantStream) aBody.stream = true;
       return JSON.stringify(aBody);
+    },
+    // v3.63.589 - Perplexity Agent API (POST /v1/agent). Perplexity retired the
+    // Sonar chat endpoints on 2026-09-27; its old /chat/completions and /v1/sonar
+    // addresses now answer successfully but without Access-Control-Allow-Origin,
+    // so a browser discards the reply. Only /v1/agent is readable from a page.
+    // System text goes in `instructions`, the rest in `input`.
+    'perplexity-agent': function (model, prompt) {
+      var p = buildSysUsr(prompt);
+      var body = perplexityAgentTarget(model);
+      if (p.sys) body.instructions = p.sys;
+      body.input = p.usr;
+      var aBudget = resolveOutputBudget(model);
+      if (aBudget != null) body.max_output_tokens = aBudget;
+      return JSON.stringify(body);
     },
     'gemini-generate': function (model, prompt) {
       var s = splitEnvelope(prompt);
@@ -503,11 +564,34 @@
     return '';
   }
 
+  // v3.63.589 - Perplexity Agent API response. The answer is in `output[]`, in
+  // the last `message` item (earlier ones are interim commentary between tool
+  // steps). The docs mention a top-level `output_text`; the live response has
+  // none (checked 2026-10-12), so it is read if present and never required.
+  function firstAgentText(d) {
+    if (!d || typeof d !== 'object') return '';
+    if (typeof d.output_text === 'string' && d.output_text) return d.output_text;
+    var items = Array.isArray(d.output) ? d.output : [];
+    var text = '';
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      if (!it || it.type !== 'message' || !Array.isArray(it.content)) continue;
+      var s = '';
+      for (var j = 0; j < it.content.length; j++) {
+        var part = it.content[j];
+        if (part && typeof part.text === 'string') s += part.text;
+      }
+      if (s) text = s;
+    }
+    return text;
+  }
+
   // Response extractors — one per WaxFrame format.
   var EXTRACTORS = {
     'openai-chat':         firstOpenAIText,
     'anthropic-messages':  firstAnthropicTextBlock,
-    'gemini-generate':     firstGeminiTextPart
+    'gemini-generate':     firstGeminiTextPart,
+    'perplexity-agent':    firstAgentText
   };
 
   // Auth header builders.
@@ -523,7 +607,8 @@
   var FORMATS = {
     'openai':    { body: 'openai-chat',        extract: 'openai-chat',        auth: 'bearer'    },
     'anthropic': { body: 'anthropic-messages', extract: 'anthropic-messages', auth: 'anthropic' },
-    'google':    { body: 'gemini-generate',    extract: 'gemini-generate',    auth: 'google'    }
+    'google':    { body: 'gemini-generate',    extract: 'gemini-generate',    auth: 'google'    },
+    'perplexity-agent': { body: 'perplexity-agent', extract: 'perplexity-agent', auth: 'bearer'   }
   };
 
   // ── The catalog ──────────────────────────────────────────────────
@@ -626,10 +711,19 @@
       fallback: ['grok-4.7', 'grok-4.5', 'grok-4.3', 'grok-4.20-0309-reasoning']
     },
     {
+      // v3.63.589 - moved to the Agent API. Perplexity ended Sonar chat support
+      // on 2026-09-27 (its changelog: "Sonar Chat Completions is now Agent API")
+      // and its old /chat/completions and /v1/sonar addresses now return answers
+      // with no Access-Control-Allow-Origin header, which a browser discards. A
+      // probe against a real key showed /v1/agent readable both streamed and not
+      // while the other two were blocked both ways. Model names are unchanged and
+      // translated to Agent API targets at request time (perplexityAgentTarget).
+      // Not streamed: the Agent API streams Responses-style events, which WaxFrame
+      // has no accumulator for yet.
       id: 'perplexity', label: 'Perplexity',
       model: 'sonar-pro',
-      endpoint: 'https://api.perplexity.ai/chat/completions',
-      format: 'openai',
+      endpoint: 'https://api.perplexity.ai/v1/agent',
+      format: 'perplexity-agent',
       discovery: 'perplexity-self',
       filterRequire: /^sonar/i,
       // v3.63.564 — sonar-reasoning removed: Perplexity retired it from the
@@ -849,16 +943,17 @@
     if (!b || typeof b !== 'object') return null;
     var v = b.max_tokens
          != null ? b.max_tokens
+         : (b.max_output_tokens != null ? b.max_output_tokens
          : (b.max_completion_tokens != null ? b.max_completion_tokens
          : (b.generationConfig && b.generationConfig.maxOutputTokens != null ? b.generationConfig.maxOutputTokens
-         : (b.options && b.options.num_predict != null ? b.options.num_predict : null)));
+         : (b.options && b.options.num_predict != null ? b.options.num_predict : null))));
     var n = Number(v);
     // Ollama uses -1 for "unbounded", which is not a budget.
     if (!isFinite(n) || n <= 0) return null;
     return n;
   }
 
-  // ── Per-endpoint storage opt-out (v3.63.588) ──────────────────────
+  // ── Per-endpoint storage opt-out (v3.63.589) ──────────────────────
   // SubQ stores prompts and completions indefinitely by default and honours
   // `store: false` per request on Chat Completions (docs.subq.ai, data
   // retention). WaxFrame sends whole documents, so for hosts that offer the
@@ -1687,37 +1782,12 @@
     }
 
     if (disc === 'perplexity-self') {
-      // v3.63.143 — Perplexity's /v1/models has been NetworkError-prone from
-      // browser callers, so we use its actual strength (live web search) and
-      // ask Perplexity for its own current Sonar lineup. ~$0.001 / call,
-      // cached for 7 days, stays current automatically.
-      var resp = await fetch(entry.endpoint, {
-        method: 'POST',
-        headers: authFor(entry)(key),
-        body: JSON.stringify({
-          model: 'sonar',
-          messages: [{
-            role: 'user',
-            content: 'Search api-docs.perplexity.ai/models for the current list of Perplexity API chat-completion model ids. Reply with ONLY the model ids, one per line. No markdown, no commentary, no numbering. Only ids that begin with "sonar".\n\nExample of the EXACT format expected:\nsonar\nsonar-pro\nsonar-reasoning-pro\nsonar-deep-research'
-          }]
-        })
-      });
-      if (!resp.ok) return null;
-      var data = await resp.json();
-      var text = firstOpenAIText(data);
-      // Defensive: one id per line, ^sonar only. Strip bullets/numbering
-      // the model may add despite instructions. The catalog's filter (which
-      // requires ^sonar AND blocks structural non-chat) acts as the safety
-      // net.
-      var raw = text.split('\n')
-        .map(function (s) { return s.trim().replace(/^[-*\d.)\s>`]+/, '').replace(/[`'",]/g, ''); })
-        .filter(function (s) { return /^sonar[a-z0-9\-]*$/i.test(s); });
-      var models = Array.from(new Set(raw)).filter(filter);
-      if (!models.length) {
-        console.warn('[provider-catalog:perplexity-self] returned no usable ids; raw:', text.slice(0, 300));
-        return null;
-      }
-      return models;
+      // v3.63.589 - This used to ask Sonar, over the old chat endpoint, for its
+      // own model list. That endpoint can no longer be read from a browser, and
+      // the Agent API's /v1/models lists models from every provider (openai/...,
+      // anthropic/...) rather than the Sonar names this picker is built on. So the
+      // curated list is the list, returned directly with no network call.
+      return (entry.fallback || []).filter(filter);
     }
 
     return null;
@@ -1973,6 +2043,10 @@
     // v3.63.491 — empirical cap discovery.
     requestedOutputBudget: requestedOutputBudget,
     withStorageOptOut: withStorageOptOut,
+    // v3.63.589 - Perplexity Agent API
+    perplexityAgentTarget: perplexityAgentTarget,
+    agentSimpleBody: agentSimpleBody,
+    extractAgentText: firstAgentText,
     analyzeObservations: analyzeObservations,
     describeObservations: describeObservations,
     formatTokenLimit: formatTokenLimit,

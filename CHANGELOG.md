@@ -1,5 +1,64 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.589 — Perplexity works again: moved to Perplexity's Agent API
+
+**Released:** 2026-10-12
+**Build:** 20261012-007
+
+### What changed
+
+**Perplexity requests now go to Perplexity's Agent API (`api.perplexity.ai/v1/agent`),
+so Perplexity bees can run again.** Perplexity ended Sonar chat support on
+2026-09-27. Its old chat address still accepts requests, but its answers now come
+back without the header a browser needs in order to read them, so every Perplexity
+call failed with "Perplexity — Network error" even though the request succeeded.
+
+- **Where it shows:** a Perplexity bee in the hive, its connection test, and the
+  **Test All Keys** panel all use the new address. Nothing needs to be set up again;
+  saved keys and saved model choices carry over.
+- **Model names are unchanged** (`sonar`, `sonar-pro`, `sonar-reasoning-pro`,
+  `sonar-deep-research`). They are translated when a request is sent, using
+  Perplexity's own table: `sonar` is sent as the Sonar model `perplexity/sonar`;
+  `sonar-pro` as the `fast` preset; `sonar-reasoning-pro` as `low`;
+  `sonar-deep-research` as `high`. A preset name (`fast`, `low`, `medium`, `high`,
+  `xhigh`) or a `provider/model` id can also be typed as the model.
+- **Model list:** the Perplexity model list is the built-in list. It no longer makes
+  a request to Perplexity to ask for it.
+- **Streaming:** Perplexity answers arrive in one piece, whatever **Stream responses**
+  is set to. Perplexity's streamed events use a different format that is not read yet.
+- **Cost estimates:** the Perplexity prices shown are still the Sonar-era figures, so
+  they are approximate for the `fast`, `low` and `high` presets, which use other
+  underlying models plus search. Perplexity returns the real cost with each answer;
+  it is not used yet.
+
+### Verification
+- A probe page run with a real Perplexity key, in a browser: requests to the old
+  chat address and to `/v1/sonar` were blocked both streamed and not; `/v1/agent`
+  returned readable answers both ways. A second run showed WaxFrame's request shape
+  (system text in `instructions`, a 32768 output limit) accepted on the `fast`,
+  `low` and `high` presets and with `perplexity/sonar`, each returning a completed
+  answer.
+- That live reply has no top-level `output_text` field, so the answer is read from
+  the last message in `output`.
+- Through the real request path in the browser with a stand-in server and Stream
+  responses on: the request went to `/v1/agent` with a preset, instructions, input
+  and a 32768 limit, with no `stream` flag, and the reply was read correctly. The
+  connection test passed the same way.
+- 38 new fixture checks cover the model translation, the request body, reply
+  reading (including interim messages and a missing field) and the stop reason. The
+  new checks fail against the previous catalog.
+- Not run: a full multi-bee round with Perplexity, a long document, or the
+  `perplexity/sonar-pro` and `perplexity/sonar-reasoning-pro` model ids, which are
+  not used (those names go through presets).
+
+### Files changed
+`js/provider-catalog.js`, `js/app.js`, `tools/test-provider-extractors.mjs`,
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v353.txt` (renamed from v352), plus
+the routine stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
 ## v3.63.588 — SubQ Snap is hidden from the model picker
 
 **Released:** 2026-10-12

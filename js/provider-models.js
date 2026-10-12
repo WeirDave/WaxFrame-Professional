@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — shared provider/model logic
-// Build: 20261012-006
+// Build: 20261012-007
 // ============================================================
 // provider-models.js — regex + parse primitives shared between api.js and
 // help.html. v3.63.82 introduced this file as the single source of truth;
@@ -65,7 +65,7 @@
   //   • ^subq-snap — SubQ's Snap models answer yes/no, choice and score questions
   //     on the Decisions API (POST /v1/systemone), not Chat Completions, and
   //     reject chat requests with "does not support completions requests".
-  //     Hidden for now (v3.63.588); revisit if SubQ exposes Snap on chat.
+  //     Hidden for now (v3.63.589); revisit if SubQ exposes Snap on chat.
   // Specialized-but-chat-capable models (search-preview, robotics-er, deep-
   // research, vibe-cli, codestral/devstral/Coder, tiny-*) are deliberately NOT
   // hard-filtered — they run on the chat endpoint and belong to a future soft-

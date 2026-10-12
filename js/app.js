@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261012-006
+// Build: 20261012-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261012-006';         // build stamp — update each session
+const BUILD = '20261012-007';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -10210,7 +10210,9 @@ async function classifyTiersForProvider(provider, opts) {
     // request explicitly asks for catalog cross-check.
     askerModel  = pFb.find(m => m === 'sonar-pro') || pFb[0] || 'sonar-pro';
     askerCfg    = API_CONFIGS.perplexity;
-    askerFormat = 'openai';
+    // v3.63.589 — Perplexity is no longer OpenAI-shaped (Agent API); follow
+    // its own format so the request body and the reply parse both match.
+    askerFormat = askerCfg.format || 'openai';
     via         = 'perplexity-grounded';
     askerPrompt =
       `IMPORTANT: You are NOT classifying your own (Perplexity's) models. ` +
@@ -10232,6 +10234,12 @@ async function classifyTiersForProvider(provider, opts) {
       url = `https://generativelanguage.googleapis.com/v1beta/models/${askerModel}:generateContent`;
       headers = { 'Content-Type': 'application/json', 'x-goog-api-key': askerCfg._key };
       body = JSON.stringify({ contents: [{ parts: [{ text: askerPrompt }] }] });
+    } else if (askerFormat === 'perplexity-agent') {
+      // v3.63.589 — Perplexity Agent API: `input` and a preset/model target.
+      url = askerCfg.endpoint;
+      headers = { 'Content-Type': 'application/json' };
+      if (askerCfg._key) headers['Authorization'] = `Bearer ${askerCfg._key}`;
+      body = window.WFProviderCatalog.agentSimpleBody(askerModel, askerPrompt, 400);
     } else {
       url = askerCfg.endpoint;
       headers = { 'Content-Type': 'application/json' };
@@ -10272,6 +10280,7 @@ async function classifyTiersForProvider(provider, opts) {
     let text = '';
     if (askerFormat === 'anthropic')   text = WFProviderCatalog.extractAnthropicText(data);
     else if (askerFormat === 'google') text = WFProviderCatalog.extractGeminiText(data);
+    else if (askerFormat === 'perplexity-agent') text = WFProviderCatalog.extractAgentText(data);
     else                               text = WFProviderCatalog.extractOpenAIText(data);
     if (!text) {
       _recordTierError(provider, 'empty-response', `Empty response body from ${askerModel}`);
@@ -10421,6 +10430,12 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
       // v3.58.1 — drop generationConfig.temperature for consistency with the
       // other formats (see anthropic/openai branches).
       body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+    } else if (format === 'perplexity-agent') {
+      // v3.63.589 — Perplexity Agent API: `input` and a preset/model target.
+      url = endpoint;
+      headers = { 'Content-Type': 'application/json' };
+      if (key) headers['Authorization'] = `Bearer ${key}`;
+      body = window.WFProviderCatalog.agentSimpleBody(askingModel, prompt, 300);
     } else {
       url = endpoint;
       headers = { 'Content-Type': 'application/json' };
@@ -10454,6 +10469,7 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
     let text = '';
     if (format === 'anthropic')   text = WFProviderCatalog.extractAnthropicText(data);
     else if (format === 'google') text = WFProviderCatalog.extractGeminiText(data);
+    else if (format === 'perplexity-agent') text = WFProviderCatalog.extractAgentText(data);
     else                          text = WFProviderCatalog.extractOpenAIText(data);
 
     if (!text) {
@@ -13744,8 +13760,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.588'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.588';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.589'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.589';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -19585,7 +19601,7 @@ async function runRound(opts) {
       Array.isArray(window._partialRound.failedAIIds) &&
       window._partialRound.failedAIIds.length > 0 &&
       typeof retrySingleAIInPartialRound === 'function') {
-    // v3.63.588 — A failed bee that has since been switched off for the session
+    // v3.63.589 — A failed bee that has since been switched off for the session
     // ("Disable this AI for the session" / its card checkbox) is not a bee to
     // resume. It stays in activeAIs, so the lookup below used to find it and
     // re-send it, which put the same error card back every time Smoke the Hive
@@ -21104,7 +21120,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
       window.WF_STREAM_THIS_REQUEST = false;
       if (_budgetRetry) window.WF_OUTPUT_BUDGET_OVERRIDE = _prevBudget;
     };
-    // v3.63.588 — hosts that offer a per-request storage opt-out (SubQ) get it
+    // v3.63.589 — hosts that offer a per-request storage opt-out (SubQ) get it
     // here, on the one call that carries document text. The connection tests
     // send a fixed one-word prompt and are left alone.
     const _sentBody = window.WFProviderCatalog.withStorageOptOut(endpoint, cfg.bodyFn(_model, prompt));

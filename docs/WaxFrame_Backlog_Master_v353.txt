@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v352
+WaxFrame Backlog Master v353
 2026-10-12
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,30 @@ ships.
 
 
 
+
+v353 — PERPLEXITY MOVED TO THE AGENT API (v3.63.589).
+
+Closes the Perplexity CORS problem noted under v352: the cause was Perplexity ending
+Sonar chat on 2026-09-27, after which /chat/completions and /v1/sonar answer with no
+Access-Control-Allow-Origin header. /v1/agent is readable (probed with a live key).
+
+Open, in order of importance:
+ 1. Pricing. The Perplexity rows in pricing-seed.json are Sonar-era per-token prices.
+    The Agent API reports the real cost with each answer (usage.cost, USD); read it into
+    the spend display and re-base the pricing rows on the presets actually used.
+ 2. The pricing Worker (tools/pricing-worker/src/index.js, PERPLEXITY_URL) still posts
+    to the retired /chat/completions to read Mistral/Cohere/Together/Perplexity pricing
+    pages. Server-side calls are not blocked by CORS and Perplexity says synchronous Sonar
+    keeps working while being reformulated, but it may change. Watch the 2026-10-18 run.
+ 3. Streaming. Agent API streams Responses-style events (response.output_text.delta,
+    response.completed). No accumulator exists, so Perplexity is non-streamed.
+ 4. Only perplexity/sonar was verified as a direct model id. sonar-pro, sonar-reasoning(-pro)
+    and sonar-deep-research go through presets per Perplexity's migration table. Whether
+    perplexity/sonar-pro and perplexity/sonar-reasoning-pro exist on /v1/agent is untested.
+ 5. The model list is the curated list; the Agent API's /v1/models returns every provider's
+    ids (openai/..., anthropic/..., perplexity/glm-5.3, perplexity/kimi-k3). Offering them
+    is possible: typing a provider/model id already works.
+ 6. A real multi-bee round with Perplexity, and a long document, have not been run.
 
 v352 — SUBQ SNAP HIDDEN; REVISIT ABOUT 2026-11-12 (v3.63.588).
 
