@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20261011-007
+//  Build: 20261011-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -159,6 +159,7 @@
 // ============================================================
 
 import { runRoster, ROSTER_SOURCES } from './roster.js';
+import { readPrices } from './prices.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -828,8 +829,9 @@ async function checkCronLiveness(env) {
 }
 
 async function refreshPricing(env) {
+  // Needed only for providers WITHOUT a page parser (src/prices.js). With no key those rows are
+  // simply not refreshed - manual KV updates keep working unaffected - and the parsed ones still are.
   const apiKey = env.PERPLEXITY_API_KEY;
-  if (!apiKey) return; // not configured yet — manual KV updates keep working unaffected
 
   try {
     const currentRaw = await env.PRICING_DATA.get('latest');
@@ -861,15 +863,35 @@ async function refreshPricing(env) {
     // Flatten to (provider, model) tasks. `unsupported` models (e.g.
     // Copilot's — API unavailable to personal M365 accounts) are never
     // researched; there's nothing to look up.
-    const tasks = [];
+    const allTasks = [];
     current.providers.forEach(p => {
       (p.models || []).forEach(m => {
         if (m.status === 'unsupported') return;
-        tasks.push({ provider: p, model: m });
+        allTasks.push({ provider: p, model: m });
       });
     });
 
-    const results = await mapWithConcurrency(tasks, RESEARCH_CONCURRENCY, t => researchModel(t.provider, t.model, apiKey), INTER_REQUEST_DELAY_MS);
+    // Rows whose provider has a page parser (src/prices.js) are read straight off the provider's
+    // pricing page by code. Sonar is not asked about them at all: every bad proposal of 2026-09/10
+    // was Sonar misreading a correct page. A parser either finds the model and reads its cells or
+    // reports it is not listed; both go through the same review gate below.
+    const parsed = await readPrices({ providers: current.providers, fetchImpl: fetch, now: new Date() });
+    const rowKey = t => `${t.provider.id}::${t.model.id}`;
+    const tasks = allTasks.filter(t => parsed.has(rowKey(t)) || apiKey);
+    if (!tasks.length) return;
+    const viaParser = tasks.map(t => parsed.has(rowKey(t)));
+
+    const results = new Array(tasks.length);
+    tasks.forEach((t, i) => {
+      if (!viaParser[i]) return;
+      const o = parsed.get(rowKey(t));
+      // confirmedModel is the requested id itself: the parser matched on that id, so there is no
+      // sibling to confuse it with (the page's display label travels separately as pageLabel).
+      results[i] = { status: 'fulfilled', value: o.ok ? { ...o, confirmedModel: t.model.id } : o };
+    });
+    const sonarIdx = tasks.map((t, i) => i).filter(i => !viaParser[i]);
+    const sonarResults = await mapWithConcurrency(sonarIdx.map(i => tasks[i]), RESEARCH_CONCURRENCY, t => researchModel(t.provider, t.model, apiKey), INTER_REQUEST_DELAY_MS);
+    sonarIdx.forEach((ti, k) => { results[ti] = sonarResults[k]; });
 
     // Second pass: any model that still failed with a transient error after
     // researchModel's own 3-attempt retry gets one more shot after a longer
@@ -895,7 +917,13 @@ async function refreshPricing(env) {
       const r = results[i];
       const outcome = r.status === 'fulfilled' ? r.value : { ok: false, reason: String((r.reason && r.reason.message) || r.reason) };
       const key = `${t.provider.id}::${t.model.id}`;
-      return { task: t, decision: decideModelUpdate(t.provider, t.model, outcome, wasHealthy(prevStatusByKey[key]), nowIso) };
+      const decision = decideModelUpdate(t.provider, t.model, outcome, wasHealthy(prevStatusByKey[key]), nowIso);
+      decision.change.via = viaParser[i] ? 'page-parser' : 'sonar';
+      // A price that changes on a known date says so, so the reviewer sees what it becomes.
+      if (viaParser[i] && outcome.ok && outcome.note && decision.change.status === 'needs-review') {
+        decision.change.reason = `${decision.change.reason} — ${outcome.note}`;
+      }
+      return { task: t, viaParser: viaParser[i], decision };
     });
 
     // Build 20260809-001 — corroborate every needs-review proposal's cited
@@ -906,6 +934,7 @@ async function refreshPricing(env) {
     // corroborateProposal/corroboratesSource above.
     await mapWithConcurrency(decisions, RESEARCH_CONCURRENCY, async d => {
       const c = d.decision.change;
+      if (d.viaParser) return; // the number came from the page itself; there is nothing to corroborate
       // `model-mismatch` rows are deliberately not corroborated: the
       // proposed number IS on the cited page — on the sibling model's
       // row — so a fetch would come back corroborated and read as
@@ -1046,6 +1075,26 @@ export default {
       }
     }
 
+    // Dry run of the page parsers (src/prices.js): reads every covered row off the live pages and
+    // reports what it found next to what is stored. Writes nothing. Same token as /api/refresh.
+    if (url.pathname === '/api/prices' && request.method === 'POST') {
+      const denied = checkRefreshToken(request, env);
+      if (denied) return new Response(JSON.stringify({ error: denied.error }), { status: denied.status, headers: JSON_HEADERS });
+      const raw = await env.PRICING_DATA.get('latest');
+      if (!raw) return new Response(JSON.stringify({ ok: false, error: 'no pricing data in KV' }), { status: 503, headers: JSON_HEADERS });
+      const seedNow = JSON.parse(raw);
+      const read = await readPrices({ providers: seedNow.providers, fetchImpl: fetch, now: new Date() });
+      const rows = [];
+      seedNow.providers.forEach(p => (p.models || []).forEach(m => {
+        const o = read.get(`${p.id}::${m.id}`);
+        if (!o) return;
+        rows.push(o.ok
+          ? { row: `${p.id}/${m.id}`, ok: true, page: [o.inputPerM, o.outputPerM], stored: [m.inputPerM, m.outputPerM], same: o.inputPerM === m.inputPerM && o.outputPerM === m.outputPerM, note: o.note || null }
+          : { row: `${p.id}/${m.id}`, ok: false, reason: o.reason });
+      }));
+      return new Response(JSON.stringify({ ts: new Date().toISOString(), read: rows.filter(r => r.ok).length, same: rows.filter(r => r.ok && r.same).length, rows }), { status: 200, headers: JSON_HEADERS });
+    }
+
     // On-demand roster check, same token as /api/refresh. Lets a newly added
     // ROSTER_KEY_* secret be proven out without waiting for Sunday.
     if (url.pathname === '/api/roster' && request.method === 'POST') {
@@ -1099,4 +1148,4 @@ export default {
 // Named exports alongside the default Worker export — consumed only by
 // tools/pricing-worker/test-refresh-logic.mjs (pure-function unit tests,
 // no KV/network). Cloudflare's runtime ignores exports it doesn't call.
-export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, siblingColumnAttribution, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath, refreshRoster };
+export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, siblingColumnAttribution, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath, refreshRoster, refreshPricing };

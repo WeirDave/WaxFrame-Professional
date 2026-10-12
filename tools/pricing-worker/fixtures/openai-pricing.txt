@@ -1,0 +1,187 @@
+<!doctype html><html><head><meta charset="utf-8"><title>OpenAI pricing</title></head><body>
+<!-- Fixture: a trimmed capture of https://developers.openai.com/api/docs/pricing taken 2026-10-11, for tools/pricing-worker/test-prices.mjs. -->
+<p>Flagship models</p></h2></div><div>Our latest models</div><small>Prices per 1M tokens.</small></div><div data-content-switcher-root data-astro-cid-65kqsdkt> <div data-astro-cid-65kqsdkt> <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();</script><script>(()=>{var g=Object.defineProperty;var w=(a,s,c)=>s in a?g(a,s,{enumerable:!0,configurable:!0,writable:!0,value:c}):a[s]=c;var l=(a,s,c)=>w(a,typeof s!="symbol"?s+"":s,c);var E=new Set(["__proto__","constructor","prototype"]);{let a={0:t=>y(t),1:t=>c(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(c(t)),5:t=>new Set(c(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>Number.POSITIVE_INFINITY*t},s=t=>{let[p,e]=t;return p in a?a[p](e):void 0},c=t=>t.map(s),y=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([p,e])=>[p,s(e)]));class f extends HTMLElement{constructor(){super(...arguments);l(this,"Component");l(this,"hydrator");l(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let r=this.querySelectorAll("astro-slot"),n={},d=this.querySelectorAll("template[data-astro-template]");for(let o of d){let i=o.closest(this.tagName);i!=null&&i.isSameNode(this)&&(n[o.getAttribute("data-astro-template")||"default"]=o.innerHTML,o.remove())}for(let o of r){let i=o.closest(this.tagName);i!=null&&i.isSameNode(this)&&(n[o.getAttribute("name")||"default"]=o.innerHTML)}let u;try{u=this.hasAttribute("props")?y(JSON.parse(this.getAttribute("props"))):{}}catch(o){let i=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(i+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${i}`,this.getAttribute("props"),o),o}let h;await this.hydrator(this)(this.Component,u,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});l(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),r.disconnect(),this.childrenConnectedCallback()},r=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});r.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}getRetryImportUrl(e){let r=new URL(e,document.baseURI);return r.searchParams.set("astro-retry",Date.now().toString()),r.toString()}async importWithRetry(e){try{return await import(e)}catch(r){return await new Promise(n=>setTimeout(n,1e3)),import(this.getRetryImportUrl(e))}}handleHydrationError(e){let r=this.getAttribute("component-url"),n=new CustomEvent("astro:hydration-error",{cancelable:!0,bubbles:!0,composed:!0,detail:{error:e,componentUrl:r}});this.dispatchEvent(n)&&console.error(`[astro-island] Error hydrating ${r}`,e)}async start(){let e=JSON.parse(this.getAttribute("opts")),r=this.getAttribute("client");if(Astro[r]===void 0){window.addEventListener(`astro:${r}`,()=>this.start(),{once:!0});return}try{await Astro[r](async()=>{let n=this.getAttribute("renderer-url");try{let[d,{default:u}]=await Promise.all([this.importWithRetry(this.getAttribute("component-url")),n?this.importWithRetry(n):Promise.resolve({default:()=>()=>{}})]),h=this.getAttribute("component-export")||"default";if(h.includes(".")){this.Component=d;for(let m of h.split(".")){if(E.has(m)||!this.Component||typeof this.Component!="object"&&typeof this.Component!="function"||!Object.hasOwn(this.Component,m))throw new Error(`Invalid component export path: ${h}`);this.Component=this.Component[m]}}else{if(E.has(h))throw new Error(`Invalid component export path: ${h}`);this.Component=d[h]}return this.hydrator=u,this.hydrate}catch(d){return this.handleHydrationError(d),()=>{}}},e,this)}catch(n){this.handleHydrationError(n)}}attributeChangedCallback(){this.hydrate()}}l(f,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",f)}})();</script><astro-island uid="AWd5e" prefix="r21" component-url="/_astro/SwitcherSelector.react.Cr-L3gTw.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" component-export="default" renderer-url="/_astro/client.CrYBL8V7.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" props="{&quot;rootId&quot;:[0,&quot;content-switcher-latest-pricing&quot;],&quot;id&quot;:[0,&quot;latest-pricing&quot;],&quot;options&quot;:[1,[[0,{&quot;label&quot;:[0,&quot;Standard&quot;],&quot;tooltip&quot;:[0],&quot;value&quot;:[0,&quot;standard&quot;]}],[0,{&quot;label&quot;:[0,&quot;Batch&quot;],&quot;tooltip&quot;:[0,&quot;For large numbers of API requests that are not time-sensitive, use the Batch API for additional savings.&quot;],&quot;value&quot;:[0,&quot;batch&quot;]}],[0,{&quot;label&quot;:[0,&quot;Flex&quot;],&quot;tooltip&quot;:[0,&quot;For lower prices with higher latency, use the Flex processing tier.&quot;],&quot;value&quot;:[0,&quot;flex&quot;]}],[0,{&quot;label&quot;:[0,&quot;Fast&quot;],&quot;tooltip&quot;:[0,&quot;For faster processing, use Fast mode. In Fast mode, GPT-5.6 Sol runs up to 2.5× faster than Standard processing.&quot;],&quot;value&quot;:[0,&quot;fast&quot;]}],[0,{&quot;label&quot;:[0,&quot;Ultrafast&quot;],&quot;tooltip&quot;:[0],&quot;value&quot;:[0,&quot;ultrafast&quot;]}]]],&quot;initialValue&quot;:[0,&quot;standard&quot;],&quot;fallbackQueryParam&quot;:[0],&quot;preserveHash&quot;:[0,true],&quot;selectionHash&quot;:[0],&quot;navigationMode&quot;:[0,&quot;history&quot;],&quot;queryValueAliases&quot;:[0,{&quot;priority&quot;:[0,&quot;fast&quot;]}],&quot;ariaLabel&quot;:[0,&quot;Content switcher&quot;],&quot;data-astro-cid-65kqsdkt&quot;:[0,true]}" ssr client="load" opts="{&quot;name&quot;:&quot;SwitcherSelector&quot;,&quot;value&quot;:true}" await-children><div dir="ltr"><div></div><button type="button"><span>Standard</span></button><button type="button"><span><span>Batch</span></span></button><button type="button"><span><span>Flex</span></span></button><button type="button"><span><span>Fast</span></span></button><button type="button"><span>Ultrafast</span></button></div><!--astro:end--></astro-island> </div> <div data-astro-cid-65kqsdkt> <div><div>Standard</div><astro-island uid="1YOVmO" prefix="r37" component-url="/_astro/pricing.HE3IoJAd.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" component-export="TextTokenPricingTables" renderer-url="/_astro/client.CrYBL8V7.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" props="{&quot;tier&quot;:[0,&quot;standard&quot;],&quot;collapsedLatestRowCount&quot;:[0,3],&quot;latestSectionLabel&quot;:[0,null],&quot;rows&quot;:[1,[[1,[[0,&quot;gpt-6-astra&quot;],[0,10],[0,1],[0,12.5],[0,50]]],[1,[[0,&quot;gpt-6.1-sol&quot;],[0,2],[0,0.1],[0,2.5],[0,10]]],[1,[[0,&quot;gpt-6-luna&quot;],[0,0.1],[0,0.01],[0,0.125],[0,0.5]]],[1,[[0,&quot;gpt-6-sol&quot;],[0,2],[0,0.2],[0,2.5],[0,10]]],[1,[[0,&quot;gpt-5.6-sol&quot;],[0,4],[0,0.4],[0,5],[0,20]]],[1,[[0,&quot;gpt-5.6-terra&quot;],[0,2],[0,0.2],[0,2.5],[0,12]]],[1,[[0,&quot;gpt-5.6-luna&quot;],[0,0.2],[0,0.02],[0,0.25],[0,1.2]]],[1,[[0,&quot;gpt-5.5 (&lt;272K context length)&quot;],[0,5],[0,0.5],[0,&quot;-&quot;],[0,30]]],[1,[[0,&quot;gpt-5.5-pro (&lt;272K context length)&quot;],[0,30],[0,&quot;-&quot;],[0,&quot;-&quot;],[0,180]]],[1,[[0,&quot;gpt-5.4 (&lt;272K context length)&quot;],[0,2.5],[0,0.25],[0,&quot;-&quot;],[0,15]]],[1,[[0,&quot;gpt-5.4-mini&quot;],[0,0.75],[0,0.075],[0,4.5]]],[1,[[0,&quot;gpt-5.4-nano&quot;],[0,0.2],[0,0.02],[0,1.25]]],[1,[[0,&quot;gpt-5.4-pro (&lt;272K context length)&quot;],[0,30],[0,&quot;-&quot;],[0,&quot;-&quot;],[0,180]]],[1,[[0,&quot;gpt-5.2&quot;],[0,1.75],[0,0.175],[0,14]]],[1,[[0,&quot;gpt-5.2-pro&quot;],[0,21],[0,&quot;-&quot;],[0,168]]],[1,[[0,&quot;gpt-5.1&quot;],[0,1.25],[0,0.125],[0,10]]],[1,[[0,&quot;gpt-5&quot;],[0,1.25],[0,0.125],[0,10]]],[1,[[0,&quot;gpt-5-mini&quot;],[0,0.25],[0,0.025],[0,2]]],[1,[[0,&quot;gpt-5-nano&quot;],[0,0.05],[0,0.005],[0,0.4]]],[1,[[0,&quot;gpt-5-pro&quot;],[0,15],[0,null],[0,120]]],[1,[[0,&quot;gpt-4.1&quot;],[0,2],[0,0.5],[0,8]]],[1,[[0,&quot;gpt-4.1-mini&quot;],[0,0.4],[0,0.1],[0,1.6]]],[1,[[0,&quot;gpt-4.1-nano&quot;],[0,0.1],[0,0.025],[0,0.4]]],[1,[[0,&quot;gpt-4o&quot;],[0,2.5],[0,1.25],[0,10]]],[1,[[0,&quot;gpt-4o-2024-05-13&quot;],[0,5],[0,null],[0,15]]],[1,[[0,&quot;gpt-4o-mini&quot;],[0,0.15],[0,0.075],[0,0.6]]],[1,[[0,&quot;o1&quot;],[0,15],[0,7.5],[0,60]]],[1,[[0,&quot;o1-pro&quot;],[0,150],[0,null],[0,600]]],[1,[[0,&quot;o3-pro&quot;],[0,20],[0,null],[0,80]]],[1,[[0,&quot;o3&quot;],[0,2],[0,0.5],[0,8]]],[1,[[0,&quot;o4-mini&quot;],[0,1.1],[0,0.275],[0,4.4]]],[1,[[0,&quot;o3-mini&quot;],[0,1.1],[0,0.55],[0,4.4]]],[1,[[0,&quot;gpt-4-turbo-2024-04-09&quot;],[0,10],[0,null],[0,30]]],[1,[[0,&quot;gpt-4-0613&quot;],[0,30],[0,null],[0,60]]],[1,[[0,&quot;gpt-3.5-turbo&quot;],[0,0.5],[0,null],[0,1.5]]],[1,[[0,&quot;gpt-3.5-turbo-0125&quot;],[0,0.5],[0,null],[0,1.5]]],[1,[[0,&quot;gpt-3.5-turbo-1106&quot;],[0,1],[0,null],[0,2]]],[1,[[0,&quot;gpt-3.5-turbo-instruct&quot;],[0,1.5],[0,null],[0,2]]],[1,[[0,&quot;davinci-002&quot;],[0,2],[0,null],[0,2]]],[1,[[0,&quot;babbage-002&quot;],[0,0.4],[0,null],[0,0.4]]]]]}" ssr client="load" opts="{&quot;name&quot;:&quot;TextTokenPricingTables&quot;,&quot;value&quot;:true}" await-children><div><div><div><table><colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup><thead><tr><th></th><th colSpan="4"><span><span>Short context</span></span></th><th colSpan="4"><span><span>Long context</span></span></th></tr><tr><th>Model</th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th></tr></thead><tbody><tr><td><span>gpt-6-astra</span></td><td><span>$10.00</span></td><td><span>$1.00</span></td><td><span>$12.50</span></td><td><span>$50.00</span></td><td><span>$20.00</span></td><td><span>$2.00</span></td><td><span>$25.00</span></td><td><span>$75.00</span></td></tr><tr><td><span>gpt-6.1-sol</span></td><td><span>$2.00</span></td><td><span>$0.10</span></td><td><span>$2.50</span></td><td><span>$10.00</span></td><td><span>$4.00</span></td><td><span>$0.20</span></td><td><span>$5.00</span></td><td><span>$15.00</span></td></tr><tr><td><span>gpt-6-luna</span></td><td><span>$0.10</span></td><td><span>$0.01</span></td><td><span>$0.125</span></td><td><span>$0.50</span></td><td><span>$0.20</span></td><td><span>$0.02</span></td><td><span>$0.25</span></td><td><span>$0.75</span></td></tr></tbody></table><div></div><div></div></div></div><div><button type="button"><span><span><span>All models</span></span></span></button></div></div><!--astro:end--></astro-island></div><div hidden><div>Batch</div><astro-island uid="15ayFj" prefix="r38" component-url="/_astro/pricing.HE3IoJAd.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" component-export="TextTokenPricingTables" renderer-url="/_astro/client.CrYBL8V7.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" props="{&quot;tier&quot;:[0,&quot;batch&quot;],&quot;collapsedLatestRowCount&quot;:[0,3],&quot;latestSectionLabel&quot;:[0,null],&quot;rows&quot;:[1,[[1,[[0,&quot;gpt-6-astra&quot;],[0,5],[0,0.5],[0,6.25],[0,25]]],[1,[[0,&quot;gpt-6.1-sol&quot;],[0,1],[0,0.05],[0,1.25],[0,5]]],[1,[[0,&quot;gpt-6-luna&quot;],[0,0.05],[0,0.005],[0,0.0625],[0,0.25]]],[1,[[0,&quot;gpt-6-sol&quot;],[0,1],[0,0.1],[0,1.25],[0,5]]],[1,[[0,&quot;gpt-5.6-sol&quot;],[0,2],[0,0.2],[0,2.5],[0,10]]],[1,[[0,&quot;gpt-5.6-terra&quot;],[0,1],[0,0.1],[0,1.25],[0,6]]],[1,[[0,&quot;gpt-5.6-luna&quot;],[0,0.1],[0,0.01],[0,0.125],[0,0.6]]],[1,[[0,&quot;gpt-5.5 (&lt;272K context length)&quot;],[0,2.5],[0,0.25],[0,&quot;-&quot;],[0,15]]],[1,[[0,&quot;gpt-5.5-pro (&lt;272K context length)&quot;],[0,15],[0,&quot;-&quot;],[0,&quot;-&quot;],[0,90]]],[1,[[0,&quot;gpt-5.4 (&lt;272K context length)&quot;],[0,1.25],[0,0.13],[0,&quot;-&quot;],[0,7.5]]],[1,[[0,&quot;gpt-5.4-mini&quot;],[0,0.375],[0,0.0375],[0,2.25]]],[1,[[0,&quot;gpt-5.4-nano&quot;],[0,0.1],[0,0.01],[0,0.625]]],[1,[[0,&quot;gpt-5.4-pro (&lt;272K context length)&quot;],[0,15],[0,&quot;-&quot;],[0,&quot;-&quot;],[0,90]]],[1,[[0,&quot;gpt-5.2&quot;],[0,0.875],[0,0.0875],[0,7]]],[1,[[0,&quot;gpt-5.2-pro&quot;],[0,10.5],[0,&quot;-&quot;],[0,84]]],[1,[[0,&quot;gpt-5.1&quot;],[0,0.625],[0,0.0625],[0,5]]],[1,[[0,&quot;gpt-5&quot;],[0,0.625],[0,0.0625],[0,5]]],[1,[[0,&quot;gpt-5-mini&quot;],[0,0.125],[0,0.0125],[0,1]]],[1,[[0,&quot;gpt-5-nano&quot;],[0,0.025],[0,0.0025],[0,0.2]]],[1,[[0,&quot;gpt-5-pro&quot;],[0,7.5],[0,&quot;-&quot;],[0,60]]],[1,[[0,&quot;gpt-4.1&quot;],[0,1],[0,&quot;-&quot;],[0,4]]],[1,[[0,&quot;gpt-4.1-mini&quot;],[0,0.2],[0,&quot;-&quot;],[0,0.8]]],[1,[[0,&quot;gpt-4.1-nano&quot;],[0,0.05],[0,&quot;-&quot;],[0,0.2]]],[1,[[0,&quot;gpt-4o&quot;],[0,1.25],[0,&quot;-&quot;],[0,5]]],[1,[[0,&quot;gpt-4o-2024-05-13&quot;],[0,2.5],[0,null],[0,7.5]]],[1,[[0,&quot;gpt-4o-mini&quot;],[0,0.075],[0,&quot;-&quot;],[0,0.3]]],[1,[[0,&quot;o1&quot;],[0,7.5],[0,&quot;-&quot;],[0,30]]],[1,[[0,&quot;o1-pro&quot;],[0,75],[0,&quot;-&quot;],[0,300]]],[1,[[0,&quot;o3-pro&quot;],[0,10],[0,&quot;-&quot;],[0,40]]],[1,[[0,&quot;o3&quot;],[0,1],[0,&quot;-&quot;],[0,4]]],[1,[[0,&quot;o4-mini&quot;],[0,0.55],[0,&quot;-&quot;],[0,2.2]]],[1,[[0,&quot;o3-mini&quot;],[0,0.55],[0,&quot;-&quot;],[0,2.2]]],[1,[[0,&quot;gpt-4-turbo-2024-04-09&quot;],[0,5],[0,null],[0,15]]],[1,[[0,&quot;gpt-4-0613&quot;],[0,15],[0,null],[0,30]]],[1,[[0,&quot;gpt-3.5-turbo-0125&quot;],[0,0.25],[0,null],[0,0.75]]],[1,[[0,&quot;gpt-3.5-turbo-1106&quot;],[0,1],[0,null],[0,2]]],[1,[[0,&quot;davinci-002&quot;],[0,1],[0,null],[0,1]]],[1,[[0,&quot;babbage-002&quot;],[0,0.2],[0,null],[0,0.2]]]]]}" ssr client="load" opts="{&quot;name&quot;:&quot;TextTokenPricingTables&quot;,&quot;value&quot;:true}" await-children><div><div><div><table><colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup><thead><tr><th></th><th colSpan="4"><span><span>Short context</span></span></th><th colSpan="4"><span><span>Long context</span></span></th></tr><tr><th>Model</th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th></tr></thead><tbody><tr><td><span>gpt-6-astra</span></td><td><span>$5.00</span></td><td><span>$0.50</span></td><td><span>$6.25</span></td><td><span>$25.00</span></td><td><span>$10.00</span></td><td><span>$1.00</span></td><td><span>$12.50</span></td><td><span>$37.50</span></td></tr><tr><td><span>gpt-6.1-sol</span></td><td><span>$1.00</span></td><td><span>$0.05</span></td><td><span>$1.25</span></td><td><span>$5.00</span></td><td><span>$2.00</span></td><td><span>$0.10</span></td><td><span>$2.50</span></td><td><span>$7.50</span></td></tr><tr><td><span>gpt-6-luna</span></td><td><span>$0.05</span></td><td><span>$0.005</span></td><td><span>$0.0625</span></td><td><span>$0.25</span></td><td><span>$0.10</span></td><td><span>$0.01</span></td><td><span>$0.125</span></td><td><span>$0.375</span></td></tr></tbody></table><div></div><div></div></div></div><div><button type="button"><span><span><span>All models</span></span></span></button></div></div><!--astro:end--></astro-island></div><div hidden><div>Flex</div><astro-island uid="Z1NgA8F" prefix="r39" component-url="/_astro/pricing.HE3IoJAd.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" component-export="TextTokenPricingTables" renderer-url="/_astro/client.CrYBL8V7.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" props="{&quot;tier&quot;:[0,&quot;flex&quot;],&quot;collapsedLatestRowCount&quot;:[0,3],&quot;latestSectionLabel&quot;:[0,null],&quot;rows&quot;:[1,[[1,[[0,&quot;gpt-6-astra&quot;],[0,5],[0,0.5],[0,6.25],[0,25]]],[1,[[0,&quot;gpt-6.1-sol&quot;],[0,1],[0,0.05],[0,1.25],[0,5]]],[1,[[0,&quot;gpt-6-luna&quot;],[0,0.05],[0,0.005],[0,0.0625],[0,0.25]]],[1,[[0,&quot;gpt-6-sol&quot;],[0,1],[0,0.1],[0,1.25],[0,5]]],[1,[[0,&quot;gpt-5.6-sol&quot;],[0,2],[0,0.2],[0,2.5],[0,10]]],[1,[[0,&quot;gpt-5.6-terra&quot;],[0,1],[0,0.1],[0,1.25],[0,6]]],[1,[[0,&quot;gpt-5.6-luna&quot;],[0,0.1],[0,0.01],[0,0.125],[0,0.6]]],[1,[[0,&quot;gpt-5.5 (&lt;272K context length)&quot;],[0,2.5],[0,0.25],[0,&quot;-&quot;],[0,15]]],[1,[[0,&quot;gpt-5.5-pro (&lt;272K context length)&quot;],[0,15],[0,&quot;-&quot;],[0,&quot;-&quot;],[0,90]]],[1,[[0,&quot;gpt-5.4 (&lt;272K context length)&quot;],[0,1.25],[0,0.13],[0,&quot;-&quot;],[0,7.5]]],[1,[[0,&quot;gpt-5.4-mini&quot;],[0,0.375],[0,0.0375],[0,2.25]]],[1,[[0,&quot;gpt-5.4-nano&quot;],[0,0.1],[0,0.01],[0,0.625]]],[1,[[0,&quot;gpt-5.4-pro (&lt;272K context length)&quot;],[0,15],[0,&quot;-&quot;],[0,&quot;-&quot;],[0,90]]],[1,[[0,&quot;gpt-5.2&quot;],[0,0.875],[0,0.0875],[0,7]]],[1,[[0,&quot;gpt-5.1&quot;],[0,0.625],[0,0.0625],[0,5]]],[1,[[0,&quot;gpt-5&quot;],[0,0.625],[0,0.0625],[0,5]]],[1,[[0,&quot;gpt-5-mini&quot;],[0,0.125],[0,0.0125],[0,1]]],[1,[[0,&quot;gpt-5-nano&quot;],[0,0.025],[0,0.0025],[0,0.2]]],[1,[[0,&quot;o3&quot;],[0,1],[0,0.25],[0,4]]],[1,[[0,&quot;o4-mini&quot;],[0,0.55],[0,0.138],[0,2.2]]]]]}" ssr client="load" opts="{&quot;name&quot;:&quot;TextTokenPricingTables&quot;,&quot;value&quot;:true}" await-children><div><div><div><table><colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup><thead><tr><th></th><th colSpan="4"><span><span>Short context</span></span></th><th colSpan="4"><span><span>Long context</span></span></th></tr><tr><th>Model</th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th></tr></thead><tbody><tr><td><span>gpt-6-astra</span></td><td><span>$5.00</span></td><td><span>$0.50</span></td><td><span>$6.25</span></td><td><span>$25.00</span></td><td><span>$10.00</span></td><td><span>$1.00</span></td><td><span>$12.50</span></td><td><span>$37.50</span></td></tr><tr><td><span>gpt-6.1-sol</span></td><td><span>$1.00</span></td><td><span>$0.05</span></td><td><span>$1.25</span></td><td><span>$5.00</span></td><td><span>$2.00</span></td><td><span>$0.10</span></td><td><span>$2.50</span></td><td><span>$7.50</span></td></tr><tr><td><span>gpt-6-luna</span></td><td><span>$0.05</span></td><td><span>$0.005</span></td><td><span>$0.0625</span></td><td><span>$0.25</span></td><td><span>$0.10</span></td><td><span>$0.01</span></td><td><span>$0.125</span></td><td><span>$0.375</span></td></tr></tbody></table><div></div><div></div></div></div><div><button type="button"><span><span><span>All models</span></span></span></button></div></div><!--astro:end--></astro-island></div><div hidden><div>Fast</div><astro-island uid="ZfznD3" prefix="r40" component-url="/_astro/pricing.HE3IoJAd.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" component-export="TextTokenPricingTables" renderer-url="/_astro/client.CrYBL8V7.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" props="{&quot;tier&quot;:[0,&quot;fast&quot;],&quot;collapsedLatestRowCount&quot;:[0,3],&quot;latestSectionLabel&quot;:[0,null],&quot;rows&quot;:[1,[[1,[[0,&quot;gpt-6-astra&quot;],[0,20],[0,2],[0,25],[0,100]]],[1,[[0,&quot;gpt-6.1-sol&quot;],[0,4],[0,0.2],[0,5],[0,20]]],[1,[[0,&quot;gpt-6-luna&quot;],[0,0.2],[0,0.02],[0,0.25],[0,1]]],[1,[[0,&quot;gpt-6-sol&quot;],[0,4],[0,0.4],[0,5],[0,20]]],[1,[[0,&quot;gpt-5.6-sol&quot;],[0,8],[0,0.8],[0,10],[0,40]]],[1,[[0,&quot;gpt-5.6-terra&quot;],[0,4],[0,0.4],[0,5],[0,24]]],[1,[[0,&quot;gpt-5.6-luna&quot;],[0,0.4],[0,0.04],[0,0.5],[0,2.4]]],[1,[[0,&quot;gpt-5.5 (&lt;272K context length)&quot;],[0,12.5],[0,1.25],[0,&quot;-&quot;],[0,75]]],[1,[[0,&quot;gpt-5.4 (&lt;272K context length)&quot;],[0,5],[0,0.5],[0,&quot;-&quot;],[0,30]]],[1,[[0,&quot;gpt-5.4-mini&quot;],[0,1.5],[0,0.15],[0,9]]],[1,[[0,&quot;gpt-5.2&quot;],[0,3.5],[0,0.35],[0,28]]],[1,[[0,&quot;gpt-5.1&quot;],[0,2.5],[0,0.25],[0,20]]],[1,[[0,&quot;gpt-5&quot;],[0,2.5],[0,0.25],[0,20]]],[1,[[0,&quot;gpt-5-mini&quot;],[0,0.45],[0,0.045],[0,3.6]]],[1,[[0,&quot;gpt-4.1&quot;],[0,3.5],[0,0.875],[0,14]]],[1,[[0,&quot;gpt-4.1-mini&quot;],[0,0.7],[0,0.175],[0,2.8]]],[1,[[0,&quot;gpt-4.1-nano&quot;],[0,0.2],[0,0.05],[0,0.8]]],[1,[[0,&quot;gpt-4o&quot;],[0,4.25],[0,2.125],[0,17]]],[1,[[0,&quot;gpt-4o-2024-05-13&quot;],[0,8.75],[0,null],[0,26.25]]],[1,[[0,&quot;gpt-4o-mini&quot;],[0,0.25],[0,0.125],[0,1]]],[1,[[0,&quot;o3&quot;],[0,3.5],[0,0.875],[0,14]]],[1,[[0,&quot;o4-mini&quot;],[0,2],[0,0.5],[0,8]]]]]}" ssr client="load" opts="{&quot;name&quot;:&quot;TextTokenPricingTables&quot;,&quot;value&quot;:true}" await-children><div><div><div><table><colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup><thead><tr><th></th><th colSpan="4"><span><span>Short context</span></span></th><th colSpan="4"><span><span>Long context</span></span></th></tr><tr><th>Model</th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th></tr></thead><tbody><tr><td><span>gpt-6-astra</span></td><td><span>$20.00</span></td><td><span>$2.00</span></td><td><span>$25.00</span></td><td><span>$100.00</span></td><td><span>$40.00</span></td><td><span>$4.00</span></td><td><span>$50.00</span></td><td><span>$150.00</span></td></tr><tr><td><span>gpt-6.1-sol</span></td><td><span>$4.00</span></td><td><span>$0.20</span></td><td><span>$5.00</span></td><td><span>$20.00</span></td><td><span>$8.00</span></td><td><span>$0.40</span></td><td><span>$10.00</span></td><td><span>$30.00</span></td></tr><tr><td><span>gpt-6-luna</span></td><td><span>$0.20</span></td><td><span>$0.02</span></td><td><span>$0.25</span></td><td><span>$1.00</span></td><td><span>$0.40</span></td><td><span>$0.04</span></td><td><span>$0.50</span></td><td><span>$1.50</span></td></tr></tbody></table><div></div><div></div></div></div><div><button type="button"><span><span><span>All models</span></span></span></button></div></div><!--astro:end--></astro-island></div><div hidden><div>Ultrafast</div><astro-island uid="19iTD5" prefix="r41" component-url="/_astro/pricing.HE3IoJAd.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" component-export="TextTokenPricingTables" renderer-url="/_astro/client.CrYBL8V7.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" props="{&quot;tier&quot;:[0,&quot;ultrafast&quot;],&quot;latestSectionLabel&quot;:[0,null],&quot;rows&quot;:[1,[[1,[[0,&quot;gpt-6-astra&quot;],[0,60],[0,6],[0,75],[0,300]]],[1,[[0,&quot;gpt-6.1-sol&quot;],[0,12],[0,0.6],[0,15],[0,60]]]]]}" ssr client="load" opts="{&quot;name&quot;:&quot;TextTokenPricingTables&quot;,&quot;value&quot;:true}" await-children><div><div><div><table><colgroup><col/><col/><col/><col/><col/><col/><col/><col/><col/></colgroup><thead><tr><th></th><th colSpan="4"><span><span>Short context</span></span></th><th colSpan="4"><span><span>Long context</span></span></th></tr><tr><th>Model</th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th></tr></thead><tbody><tr><td><span>gpt-6-astra</span></td><td><span>$60.00</span></td><td><span>$6.00</span></td><td><span>$75.00</span></td><td><span>$300.00</span></td><td><span>$120.00</span></td><td><span>$12.00</span></td><td><span>$150.00</span></td><td><span>$450.00</span></td></tr><tr><td><span>gpt-6.1-sol</span></td><td><span>$12.00</span></td><td><span>$0.60</span></td><td><span>$15.00</span></td><td><span>$60.00</span></td><td><span>$24.00</span></td><td><span>$1.20</span></td><td><span>$30.00</span></td><td><span>$90.00</span></td></tr></tbody></table><div></div><div></div></div></div></div><!--astro:end--></astro-island></div> </div> <script>
+if (!window.__contentSwitcherInit) {
+window.__contentSwitcherInit = true;
+var queryWithinRoot = function (root, selector) {
+if (!root) return [];
+// A guide pane can contain child switchers. Only update elements owned
+// by this root so parent hydration does not reset nested state.
+return Array.from(root.querySelectorAll(selector)).filter(
+function (element) {
+return element.closest("[data-content-switcher-root]") === root;
+}
+);
+};
+var updateButtons = function (root, value) {
+if (!root || !value) return;
+// Avoid mutating React-managed segmented controls before hydration.
+if (!root.hasAttribute("data-react-hydrated")) return;
+var buttons = queryWithinRoot(root, "[data-content-switcher-option]");
+var activeButton = null;
+buttons.forEach(function (button) {
+var isActive = button.dataset.value === value;
+button.setAttribute("data-state", isActive ? "on" : "off");
+button.setAttribute("aria-checked", isActive ? "true" : "false");
+if (isActive) {
+activeButton = button;
+}
+});
+var control = queryWithinRoot(
+root,
+"[data-content-switcher-control]"
+)[0];
+var thumb = control
+? control.querySelector('[class*="SegmentedControlThumb"]')
+: null;
+if (thumb && activeButton && control) {
+var targetWidth = Math.floor(activeButton.clientWidth);
+var targetOffset = activeButton.offsetLeft;
+if (control.clientWidth - (targetWidth + targetOffset) < 2) {
+targetWidth = targetWidth - 1;
+}
+thumb.style.width = targetWidth + "px";
+thumb.style.transform = "translateX(" + targetOffset + "px)";
+}
+};
+var refreshToc = function () {
+requestAnimationFrame(function () {
+document.dispatchEvent(new CustomEvent("toc:refresh"));
+});
+};
+var setValue = function (root, value) {
+if (!root || !value) return;
+root.dataset.contentSwitcherValue = value;
+var panes = queryWithinRoot(root, "[data-content-switcher-pane]");
+panes.forEach(function (pane) {
+if (pane.dataset.value === value) {
+pane.removeAttribute("hidden");
+if (pane.hasAttribute("data-model-guide-pane"))
+pane.removeAttribute("inert");
+} else {
+pane.setAttribute("hidden", "");
+if (pane.hasAttribute("data-model-guide-pane"))
+pane.setAttribute("inert", "");
+}
+});
+updateButtons(root, value);
+refreshToc();
+};
+var getQueryValue = function (root) {
+if (!root) return null;
+var id = root.dataset.contentSwitcherId;
+if (!id) return null;
+var params = new URLSearchParams(window.location.search);
+var fallbackKey = root.dataset.contentSwitcherFallbackQuery;
+var value =
+params.get(id) || (fallbackKey ? params.get(fallbackKey) : null);
+if (!value) return null;
+var panes = queryWithinRoot(root, "[data-content-switcher-pane]");
+var hasMatch = panes.some(function (pane) {
+return pane.dataset.value === value;
+});
+if (hasMatch) return value;
+var aliases = {};
+try {
+aliases = JSON.parse(
+root.dataset.contentSwitcherQueryValueAliases || "{}"
+);
+} catch {
+aliases = {};
+}
+var alias = aliases[value];
+var hasAliasMatch =
+typeof alias === "string" &&
+panes.some(function (pane) {
+return pane.dataset.value === alias;
+});
+return hasAliasMatch ? alias : null;
+};
+var initRoot = function (root) {
+if (!root) return;
+var queryValue = getQueryValue(root);
+var initial = root.dataset.contentSwitcherInitial;
+var nextValue = queryValue || initial;
+if (nextValue) {
+setValue(root, nextValue);
+}
+};
+var navigateBeforeHydration = function (root, value) {
+if (!root || !value || root.hasAttribute("data-react-hydrated")) {
+return false;
+}
+if (root.dataset.contentSwitcherValue === value) return false;
+var id = root.dataset.contentSwitcherId;
+if (!id) return false;
+var url = new URL(window.location.href);
+url.searchParams.set(id, value);
+if (root.dataset.contentSwitcherSelectionHash) {
+url.hash = root.dataset.contentSwitcherSelectionHash;
+} else if (root.dataset.contentSwitcherPreserveHash === "false") {
+url.hash = "";
+}
+if (root.dataset.contentSwitcherNavigationMode === "document") {
+window.location.assign(url.toString());
+return true;
+}
+window.history.pushState({}, "", url);
+window.dispatchEvent(new PopStateEvent("popstate"));
+return false;
+};
+document
+.querySelectorAll("[data-content-switcher-root]")
+.forEach(initRoot);
+document.addEventListener("content-switcher:set", function (event) {
+var detail = event?.detail || {};
+var target = event.target;
+var root =
+target && target.closest
+? target.closest("[data-content-switcher-root]")
+: null;
+if (!root && detail.id) {
+root = document.querySelector(
+'[data-content-switcher-root][data-content-switcher-id="' +
+detail.id +
+'"]'
+);
+}
+if (root && typeof detail.value === "string") {
+setValue(root, detail.value);
+}
+});
+window.addEventListener("popstate", function () {
+document
+.querySelectorAll("[data-content-switcher-root]")
+.forEach(initRoot);
+});
+document.addEventListener("click", function (event) {
+var target = event.target;
+if (!target || !target.closest) return;
+var button = target.closest("[data-content-switcher-option]");
+if (!button) return;
+var root = button.closest("[data-content-switcher-root]");
+if (!root) return;
+if (root.hasAttribute("data-react-hydrated")) return;
+var value = button.dataset.value;
+if (value) {
+var isDocumentNavigation = navigateBeforeHydration(root, value);
+if (!isDocumentNavigation) {
+setValue(root, value);
+}
+}
+});
+document.addEventListener("astro:page-load", function () {
+document
+.querySelectorAll("[data-content-switcher-root]")
+.forEach(initRoot);
+});
+}
+</script></div><div><p>Regional processing (data residency) endpoints are charged a 10% uplift for
+models released on or after March 5, 2026. FedRAMP endpoints are also
+charged a 10% uplift. Priority processing was renamed Fast mode on July 30,
+2026. GPT-5.6 Sol’s promotional pricing is available at least through
+November 21, 2026.</p></div></div>
+<div><div><h2><p>Cyber models</p></h2></div><div>Our latest Daybreak models.</div><small>Prices per 1M tokens.</small></div>
+<astro-island uid="qAPjp" prefix="r42" component-url="/_astro/pricing.HE3IoJAd.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" component-export="GroupedPricingTable" renderer-url="/_astro/client.CrYBL8V7.js?dpl=dpl_GQm2VzS7m6zqTAfywTuy94yrHAnB" props="{&quot;headings&quot;:[1,[[0,&quot;Model&quot;],[0,&quot;Short context input&quot;],[0,&quot;Short context cached input&quot;],[0,&quot;Short context cache writes&quot;],[0,&quot;Short context output&quot;],[0,&quot;Long context input&quot;],[0,&quot;Long context cached input&quot;],[0,&quot;Long context cache writes&quot;],[0,&quot;Long context output&quot;]]],&quot;headingGroups&quot;:[1,[[0,{&quot;label&quot;:[0,&quot;&quot;],&quot;colSpan&quot;:[0,1]}],[0,{&quot;label&quot;:[0,{&quot;__pricingTooltipHeading&quot;:[0,{&quot;label&quot;:[0,&quot;Short context&quot;],&quot;tooltip&quot;:[0,&quot;≤272K input tokens&quot;],&quot;ariaLabel&quot;:[0],&quot;withIcon&quot;:[0,false],&quot;href&quot;:[0]}]}],&quot;colSpan&quot;:[0,4]}],[0,{&quot;label&quot;:[0,{&quot;__pricingTooltipHeading&quot;:[0,{&quot;label&quot;:[0,&quot;Long context&quot;],&quot;tooltip&quot;:[0,&quot;&gt;272K input tokens&quot;],&quot;ariaLabel&quot;:[0],&quot;withIcon&quot;:[0,false],&quot;href&quot;:[0]}]}],&quot;colSpan&quot;:[0,4]}]]],&quot;headingLabels&quot;:[1,[[0,&quot;Model&quot;],[0,&quot;Input&quot;],[0,&quot;Cached input&quot;],[0,{&quot;__pricingTooltipHeading&quot;:[0,{&quot;label&quot;:[0,&quot;Cache writes&quot;],&quot;tooltip&quot;:[0,&quot;Input tokens are either Input, Cached Input, or Cache Write and writes are not an additive fee. You can control which input tokens get written to cache using explicit cache breakpoints.&quot;],&quot;ariaLabel&quot;:[0],&quot;withIcon&quot;:[0,false],&quot;href&quot;:[0]}]}],[0,{&quot;__pricingTooltipHeading&quot;:[0,{&quot;label&quot;:[0,&quot;Output&quot;],&quot;tooltip&quot;:[0,&quot;Output prices include visible output tokens and reasoning tokens, even though reasoning tokens are not visible via the API.&quot;],&quot;ariaLabel&quot;:[0],&quot;withIcon&quot;:[0,false],&quot;href&quot;:[0]}]}],[0,&quot;Input&quot;],[0,&quot;Cached input&quot;],[0,{&quot;__pricingTooltipHeading&quot;:[0,{&quot;label&quot;:[0,&quot;Cache writes&quot;],&quot;tooltip&quot;:[0,&quot;Input tokens are either Input, Cached Input, or Cache Write and writes are not an additive fee. You can control which input tokens get written to cache using explicit cache breakpoints.&quot;],&quot;ariaLabel&quot;:[0],&quot;withIcon&quot;:[0,false],&quot;href&quot;:[0]}]}],[0,{&quot;__pricingTooltipHeading&quot;:[0,{&quot;label&quot;:[0,&quot;Output&quot;],&quot;tooltip&quot;:[0,&quot;Output prices include visible output tokens and reasoning tokens, even though reasoning tokens are not visible via the API.&quot;],&quot;ariaLabel&quot;:[0],&quot;withIcon&quot;:[0,false],&quot;href&quot;:[0]}]}]]],&quot;groupColumnWidth&quot;:[0,&quot;28%&quot;],&quot;rowFirstColumnWidth&quot;:[0,&quot;9%&quot;],&quot;minWidth&quot;:[0,&quot;980px&quot;],&quot;dividerColumnIndexes&quot;:[1,[[0,1],[0,5]]],&quot;hiddenModels&quot;:[1,[[0,&quot;gpt-5.5-cyber&quot;]]],&quot;groups&quot;:[1,[[0,{&quot;model&quot;:[0,&quot;gpt-5.6-sol&quot;],&quot;rows&quot;:[1,[[1,[[0,4],[0,0.4],[0,5],[0,20],[0,8],[0,0.8],[0,10],[0,30]]]]]}],[0,{&quot;model&quot;:[0,&quot;gpt-5.6-cyber&quot;],&quot;rows&quot;:[1,[[1,[[0,12.5],[0,1.25],[0,15.625],[0,75],[0,&quot;-&quot;],[0,&quot;-&quot;],[0,&quot;-&quot;],[0,&quot;-&quot;]]]]]}],[0,{&quot;model&quot;:[0,&quot;gpt-5.5-cyber&quot;],&quot;rows&quot;:[1,[[1,[[0,12.5],[0,1.25],[0,&quot;-&quot;],[0,75],[0,&quot;-&quot;],[0,&quot;-&quot;],[0,&quot;-&quot;],[0,&quot;-&quot;]]]]]}]]]}" ssr client="load" opts="{&quot;name&quot;:&quot;GroupedPricingTable&quot;,&quot;value&quot;:true}" await-children><div><div><table><thead><tr><th colSpan="1"></th><th colSpan="4"><span><span>Short context</span></span></th><th colSpan="4"><span><span>Long context</span></span></th></tr><tr><th>Model</th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th><th>Input</th><th>Cached input</th><th><span><span>Cache writes</span></span></th><th><span><span>Output</span></span></th></tr></thead><tbody><tr><td rowSpan="1">gpt-5.6-sol</td><td>$4.00</td><td>$0.40</td><td>$5.00</td><td>$20.00</td><td>$8.00</td><td>$0.80</td><td>$10.00</td><td>$30.00</td></tr><tr><td rowSpan="1">gpt-5.6-cyber</td><td>$12.50</td><td>$1.25</td><td>$15.625</td><td>$75.00</td><td>-</td><td>-</td><td>-</td><td>-</td></tr></tbody></table></div><div><button type="button"><span><span><span>All models</span></span></span></button></div></div><!--astro:end--></astro-island>
+<div><div><h2><p>
+</body></html>

@@ -111,6 +111,8 @@ Worker returns `Access-Control-Allow-Origin: *` so any origin can fetch the JSON
 
 ## Scheduled auto-refresh (v3.63.412+)
 
+> **Since v3.63.582, prices for DeepSeek, xAI, OpenAI, Anthropic and Google are read off the provider's page by code** (see "Price parsers" below). The Perplexity Sonar lookup described in this section now applies only to the providers without a parser: Perplexity, Mistral, Cohere and Together AI.
+
 The Worker no longer relies purely on someone remembering to run `wrangler kv key put`. A weekly Cloudflare cron trigger calls a `scheduled()` handler in `src/index.js` that asks Perplexity Sonar (web-grounded, so it's anchored to a live search rather than the model's training-data recall) for each tracked model's current `inputPerM` and `outputPerM` — the actual price, which is the entire point of this feature — plus `contextWindow`/`maxOutput` on a best-effort basis.
 
 **v3.63.437 — every curated model, not just each provider's default.** Pre-v3.63.437 this looped over one row per provider (~10 research calls/week). Now it loops over every model in every provider's `models[]` array (~38 calls/week) with a small concurrency cap (`RESEARCH_CONCURRENCY = 4` in `src/index.js`) instead of firing all of them at once.
@@ -216,6 +218,30 @@ That is the same token as `/api/refresh`. Every run stores each provider's full 
 **Response shapes are the providers' documented ones, not captured from live calls** — the author had no provider keys when this was written. The first real run is the proof for each provider. An unreadable response is reported as `ROSTER ERROR` and is never read as an empty roster, so a wrong guess about a shape costs one email, not a flood of false MISSING lines.
 
 Tests: `node tools/pricing-worker/test-roster.mjs` (offline; part of `tools/release-check.mjs`).
+
+### Price parsers (v3.63.582)
+
+**Prices for five providers are now read off the provider's own pricing page by code, not by Perplexity Sonar.** Every bad proposal of 2026-09/10 was Sonar misreading a correct page: DeepSeek's two-column table read from the wrong column (twice), another Gemini model's price attributed to `gemini-3.5-flash`, a price taken off the wrong row. `src/prices.js` addresses a row or column by the model's id, so it either finds the model and reads that model's cells, or reports the model is not on the page.
+
+| Provider | Source page | How it is read |
+|---|---|---|
+| DeepSeek | `api-docs.deepseek.com/quick_start/pricing` | the column is chosen from the `MODEL` header by id; the off-peak row is read for that column; exactly one price per column or nothing is read |
+| xAI | `docs.x.ai/developers/models` | the model list embedded in the page as JSON; prices are in 1/10,000 of a dollar; the same model is listed once per region cluster and a regional cluster can charge more, so the lowest (standard) rate is read and the note says when they differ |
+| OpenAI | `developers.openai.com/api/docs/pricing` | only the Standard tables; the Batch, Flex, Fast and Ultrafast tables repeat every model at other prices and are skipped |
+| Anthropic | `platform.claude.com/docs/en/about-claude/pricing` | rows are keyed by display name (`claude-sonnet-5-5` is "Claude Sonnet 5.5"), with a boundary so "Claude Opus 5" never matches "Claude Opus 5.5"; a model priced in tiers by prompt size (Haiku 5.5) reads the lower tier and says so |
+| Google (free and paid rows) | `ai.google.dev/gemini-api/docs/pricing` | the section for the id, Standard panel only; a dated price ("$0.75 through December 31, 2026. $1.50 starting January 1, 2027.") is resolved against today's date, and the note says what it becomes |
+
+**Rules every parser follows.** It fails closed: a page that is not in the expected shape, or does not list the model, returns a reason and the row keeps its last verified price. It never guesses and never falls back to a neighbouring row. It reads the plain standard-tier input and output price per 1M tokens; context window and output limit are still hand-checked (see "Derived fields" above). A parser-covered row is **never sent to Sonar**, even when a Perplexity key is set.
+
+**What did not change.** A changed price is still held for manual review exactly as before; the parser only replaces where the proposal comes from. Every run-log entry now records `via` (`page-parser` or `sonar`).
+
+**Not covered, still read by Sonar and still held for review:** Perplexity (its price table is drawn by JavaScript and is not in the page HTML, so there is nothing for code to read), Mistral, Cohere and Together AI.
+
+**"Not listed" is a signal, not an error to work around.** When a page stops listing a model, the row is `retained` with the reason "is not listed on ...", and the weekly email reports it the first time. As of 2026-10-11 six OpenAI models (`gpt-5.5`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.4-nano`) are no longer on OpenAI's pricing page although the API still serves them (the roster check shows that); their last verified prices are kept and will not refresh. Compare with the roster check before deciding whether to stop tracking one.
+
+**Proving it.** `node tools/pricing-worker/check-price-parsers-live.mjs` reads every covered row off the live pages from your machine and compares with the seed (not part of the gate: it needs the network). `POST /api/prices` with the same bearer token as `/api/refresh` does the same from the Worker, which is how to check that a provider serves the Worker's requests the way it serves yours. Neither writes anything. The offline tests (`test-prices.mjs`, part of the gate) run the parsers on trimmed captures of the real pages in `fixtures/`. When a provider changes its page, capture a new fixture and fix the parser; a parser that stops matching reports an error, it does not guess.
+
+**The January 2027 Google price change needs no manual step.** The parser resolves the dated price against the date, so on 2027-01-01 the weekly run proposes the new price for the Gemini Flash rows like any other change, held for review.
 
 ### Email alerts (v3.63.413, widened v3.63.421 and v3.63.437)
 

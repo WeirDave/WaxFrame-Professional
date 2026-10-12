@@ -35,6 +35,7 @@ debugging one:
 | `verify-prompts-equivalence.mjs` | The shipped prompts still match their reference text |
 | `check-pricing-coverage.mjs` | Every provider in the catalog has pricing data |
 | `pricing-worker/test-refresh-logic.mjs` | The weekly pricing refresh cannot corrupt KV |
+| `pricing-worker/test-prices.mjs` | The price parsers read each provider's page correctly, and never the wrong column, table or model |
 | `pricing-worker/test-roster.mjs` | The model roster check reports retired and new models, and never leaks a key |
 | `test-provider-extractors.mjs` | 210+ fixtures pinning every provider response shape |
 | `test-debug-redaction.mjs` | The redaction helpers behave, and both export paths still call them; catalog placeholders always substitute |
@@ -51,6 +52,7 @@ person to read the result, and `release-check.mjs` stays dependency-free.
 
 | Script | Run it when | Needs |
 | --- | --- | --- |
+| `pricing-worker/check-price-parsers-live.mjs` | A parser changes, or a pricing email says a model was "not listed" or "could not be read" | Network |
 | `flow-check.mjs` | Touching setup-screen navigation, the round loop, Change Builder, or checkpoints | Chrome |
 | `check-html-injection.mjs` | Touching anything that renders user, AI, or imported text | Chrome |
 | `check-file-protocol.mjs` | Touching the pdf.js loader or the vendored pdf.js builds | Chrome |

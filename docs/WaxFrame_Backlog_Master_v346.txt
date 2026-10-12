@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v345
+WaxFrame Backlog Master v346
 2026-10-11
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,32 @@ ships.
 
 
 
+
+v346 — PRICES ARE READ BY CODE FOR FIVE PROVIDERS (v3.63.582).
+
+Old feature 4 is done for DeepSeek, xAI, OpenAI, Anthropic and Google.
+The weekly run now reads their prices off their own pages with
+tools/pricing-worker/src/prices.js and never asks Sonar about those rows.
+Verified three ways: 17 deliberate bugs injected into the parsers, all
+caught by test-prices.mjs; a live read of the real pages over the network
+(24 rows agree with the seed, 0 differ); and replays of the 2026-09/10 bad
+proposals (DeepSeek columns, Gemini 3.5 Flash given another model's price,
+OpenAI's Batch/Ultrafast tables) which the parsers do not repeat.
+
+Two things the build turned up. xAI lists each model once per region
+cluster and grok-4.7 is $2.20 in us-central-1 against $2.00 elsewhere (a
+10% regional uplift); the parser reads the lowest and says when they
+differ. And Google's Flash prices change on 2027-01-01; the parser resolves
+the dated price against today's date, so the 2027-01-01 change needs no
+manual step any more (old feature 3 is now just a check that the proposal
+arrives that week).
+
+Not done, and worth knowing: it has not been run FROM the Worker. A
+provider can serve a Cloudflare Worker differently from a laptop; features
+4 and 5 are that proof and the follow-up. Perplexity, Mistral, Cohere and
+Together AI are still read by Sonar and still held for review: Perplexity's
+price table is drawn by JavaScript and is not in its page HTML, so there is
+nothing for code to read.
 
 v345 — OPENAI DEFAULT MOVED TO GPT-6.1-SOL (v3.63.581).
 
@@ -1809,6 +1835,9 @@ Ordered by value. Item 1 is blocked on David.
            and the session spend meter all understate Gemini Flash
            by half unless the seed is updated.
    STATE:  OPEN, date-triggered. Do not start before 2027-01-01.
+           (Since v3.63.582 the weekly run proposes this change
+           itself that week, held for review; this item is now
+           "check the proposal arrives, review it, apply it".)
    WHERE:  tools/pricing-worker/data/pricing-seed.json, both
            gemini-paid Flash rows (inputPerM, outputPerM,
            estPerRound, estNote); FALLBACK_DATA regen; KV push.
@@ -1818,26 +1847,35 @@ Ordered by value. Item 1 is blocked on David.
            needs-review item that week; check it against Google's
            page rather than applying it blindly.
 
-4. Read prices with code instead of a language model
+4. Prove the price parsers from Cloudflare's network (needs David)
    ─────────────────────────────────────────────────────────
-   WHAT:   Replace the Sonar price lookup with per-provider
-           parsers where the provider's page is structured: xAI
-           (the docs page embeds its full price list as JSON),
-           DeepSeek (a plain table) and Google (a regular page).
-   WHY:    Every bad proposal in 2026-09/10 was a language model
-           misreading a correct page: DeepSeek columns mixed up
-           twice, another Gemini model's price attributed to 3.5
-           Flash, a Perplexity price off the wrong row. The pages
-           were right each time.
-   STATE:  OPEN, medium. The roster check has now proven which
-           models exist, so this can start.
-   WHERE:  tools/pricing-worker/src/index.js researchModel() and
-           friends; new per-provider parsers beside roster.js.
-   DONE:   For each covered provider the weekly run proposes from
-           the parser, with Sonar kept only as a cross-check or a
-           fallback. A page that stops parsing is reported as an
-           error, not guessed. Tests replay the real pages that
-           fooled Sonar.
+   WHAT:   Run POST /api/prices once with the REFRESH_TOKEN bearer.
+   WHY:    The parsers were proven from a laptop. OpenAI, Anthropic and
+           Google sit behind bot protection that can answer a Cloudflare
+           Worker differently. If one refuses, that provider's rows come
+           back "could not read" and keep their price - safe, but the
+           parser is then doing nothing for that provider.
+   STATE:  OPEN, blocked on David. Small.
+   WHERE:  tools/pricing-worker/README.md "Price parsers" has the command
+           (same shape as the roster check's POST /api/roster).
+   DONE:   The response shows "read" close to the number of covered rows
+           and "same" close to "read"; any provider that shows "could not
+           read ... HTTP 403" is named, and the fix for it is chosen then.
+
+5. Six OpenAI models are off OpenAI's pricing page
+   ─────────────────────────────────────────────────────────
+   WHAT:   gpt-5.5, gpt-5.6-terra, gpt-5.6-luna, gpt-5.4, gpt-5.4-mini and
+           gpt-5.4-nano are no longer on developers.openai.com/api/docs/
+           pricing, though OpenAI's API still lists them (roster check).
+   WHY:    Their rows now report "not listed" every week and their prices
+           will not refresh. Either they are retired in practice or OpenAI
+           moved them to a page the parser does not read.
+   STATE:  OPEN, small decision.
+   WHERE:  js/provider-catalog.js chatgpt fallback list; the pricing seed;
+           FALLBACK_DATA regen; KV push.
+   DONE:   Each is either removed from the picker and the seed together
+           (the coverage check fails if only one moves) or kept with a
+           note saying its price is no longer republished.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

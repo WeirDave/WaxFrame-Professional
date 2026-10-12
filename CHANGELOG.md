@@ -1,5 +1,79 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.582 — Prices for five providers are read from their pricing pages by code
+
+**Released:** 2026-10-11
+**Build:** 20261011-008
+
+### What changed
+
+**The weekly pricing refresh now reads prices for DeepSeek, xAI, OpenAI, Anthropic
+and Google straight off each provider's own pricing page, with code, instead of
+asking Perplexity Sonar to read the page.** Over the past weeks every incorrect
+price proposal was Sonar misreading a correct page: DeepSeek's two-column table
+read from the wrong column, another Gemini model's price given to
+`gemini-3.5-flash`, a price taken from the wrong row. The new reader looks a model
+up by its id, so it either finds that model's cells or reports that the model is
+not on the page. It never substitutes a neighbouring row.
+
+- **What is read:** the standard input and output price per million tokens.
+  DeepSeek's off-peak rate; xAI's standard rate (a regional cluster that charges
+  10% more is ignored and noted); OpenAI's Standard tables only (not Batch, Flex,
+  Fast or Ultrafast); Anthropic's lower tier for a model priced in tiers (Haiku
+  5.5); Google's Standard panel.
+- **Dated prices:** Google's Flash prices change on 2027-01-01. The reader resolves
+  the date, so the weekly run proposes the new price that week without a manual
+  step. The proposal says what it is changing to.
+- **What did not change:** every changed price is still held for manual review, and
+  nothing on the AI API Pricing page changes until a reviewed price is applied.
+  Context windows and output limits are still checked by hand.
+- **Not covered:** Perplexity, Mistral, Cohere and Together AI still go through
+  Sonar and review. Perplexity's price table is drawn by JavaScript and is not in
+  its page.
+- **A model missing from its page is reported, not guessed.** The row keeps its last
+  verified price and the weekly email says "is not listed on ...". Six OpenAI models
+  (`gpt-5.5`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.4`, `gpt-5.4-mini`,
+  `gpt-5.4-nano`) are no longer on OpenAI's pricing page, so they will be reported
+  once and their prices will not refresh.
+- **Check it by hand:** `node tools/pricing-worker/check-price-parsers-live.mjs` reads
+  every covered row from the live pages and compares with the stored price, and
+  `POST /api/prices` (same token as `/api/refresh`) does the same from the pricing
+  service. Neither writes anything.
+
+### Verification
+- `tools/pricing-worker/test-prices.mjs` (new, offline): runs each reader on trimmed
+  captures of the real pages (`tools/pricing-worker/fixtures/`) and replays the
+  earlier mistakes: DeepSeek's columns, Gemini 3.5 Flash given another model's
+  price, OpenAI's repeated Batch and Ultrafast tables, an id that is only the prefix
+  of another, and xAI's regional price listed first. It also runs the weekly refresh
+  end to end with stand-in storage and network: parser rows are not sent to Sonar,
+  a changed price is still held, a model missing from its page is retained, and an
+  unreadable page retains the row. All pass.
+- Mutation check: 17 deliberate bugs (wrong column, peak instead of off-peak,
+  accepting a wrong cell count, the wrong region, Batch tables read as Standard, a
+  wrong cell, an id matched by prefix, the version boundary removed, the price-change
+  date ignored, the Batch panel read, the free tier read as paid, a model matched by
+  substring, Sonar still asked, review skipped, no refresh without a key). All 17
+  fail the tests.
+- A live read of the real pages over the network: 24 rows read and equal to the
+  stored price, 0 differ, 6 OpenAI models no longer listed.
+- Not run: the same read from the pricing service's own network, which a provider
+  can treat differently from a laptop.
+- Gate: 25 of 25 stages.
+
+### Files changed
+`tools/pricing-worker/src/prices.js` (new), `tools/pricing-worker/src/index.js`,
+`tools/pricing-worker/test-prices.mjs` (new), `tools/pricing-worker/fixtures/` (new),
+`tools/pricing-worker/check-price-parsers-live.mjs` (new),
+`tools/pricing-worker/README.md`, `tools/release-check.mjs`, `tools/README.md`,
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v346.txt` (renamed from v345), plus the
+routine stamp sweep.
+
+### Rollback
+Revert this commit and redeploy the Worker from `tools/pricing-worker/`, or
+`npx wrangler rollback` to the previous Worker version. No pricing data changes with
+this release.
+
 ## v3.63.581 — OpenAI (ChatGPT) default moves to gpt-6.1-sol
 
 **Released:** 2026-10-11

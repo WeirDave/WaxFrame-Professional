@@ -1008,6 +1008,23 @@ try {
   fail('tools/pricing-worker/test-roster.mjs', `model roster check test failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
+// ── Check 12c: Pricing Worker price parsers (tools/pricing-worker/test-prices.mjs) ──
+
+section('Pricing Worker price parsers (tools/pricing-worker/test-prices.mjs)');
+
+// v3.63.582 - prices for DeepSeek, xAI, OpenAI, Anthropic and Google are read off the
+// provider's pricing page by code (src/prices.js) instead of by Perplexity Sonar. The
+// test runs the parsers against trimmed captures of the real pages (tools/pricing-worker/
+// fixtures/) and replays the bad proposals of 2026-09/10. Offline, like Checks 12 and 12b.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/pricing-worker/test-prices.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/pricing-worker/test-prices.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.includes('FAIL'));
+  fail('tools/pricing-worker/test-prices.mjs', `price parser test failure — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
 // ── Check 13: Provider extractor fixtures (tools/test-provider-extractors.mjs) ──
 
 section('Provider extractor fixtures (tools/test-provider-extractors.mjs)');
