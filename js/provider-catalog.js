@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261012-007
+// Build: 20261018-001
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -687,7 +687,10 @@
       // pricing page no longer lists 3.5 Flash and its deprecations page routes
       // requests for it to gemini-3.6-flash; 3.8 Flash is the current flagship
       // Flash (1M context, 64K output, image input). 3.6 Flash stays listed.
-      fallback: ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite']
+      // v3.63.590 — gemini-4-argon added to the picker (Google's flagship reasoning
+      // model, paid tier only). The DEFAULT stays gemini-3.8-flash on purpose:
+      // defaults here are chosen by a Builder smoke test, and none has been run on it.
+      fallback: ['gemini-3.8-flash', 'gemini-4-argon', 'gemini-3.6-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite']
     },
     {
       id: 'grok', label: 'xAI (Grok)',

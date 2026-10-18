@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v353
-2026-10-12
+WaxFrame Backlog Master v354
+2026-10-18
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,16 @@ ships.
 
 
 
+
+v354 — GEMINI 4 ARGON ADDED TO THE GEMINI PICKER, DEFAULT UNCHANGED (v3.63.590).
+
+The pricing Worker's roster check reported gemini-4-argon (ROSTER NEW, 2026-10-18).
+Google's pricing page lists it as the flagship reasoning model, paid tier only:
+$2.00 / $10.00 per M through 2026-11-30, then $4.00 / $20.00 from 2026-12-01.
+Google's model page gives a 1M context window and "long decodes up to 1M tokens"
+without a plain output limit, so the seed leaves Max output blank rather than guess.
+It is in the picker and on the pricing page (paid row; the free-tier row is marked
+unsupported). The default is still gemini-3.8-flash. Items 6 and 7 are the follow-ups.
 
 v353 — PERPLEXITY MOVED TO THE AGENT API (v3.63.589).
 
@@ -1953,6 +1963,40 @@ Ordered by value. Item 1 is blocked on David.
    DONE:   Each is either removed from the picker and the seed together
            (the coverage check fails if only one moves) or kept with a
            note saying its price is no longer republished.
+
+6. Gemini default: gemini-3.8-flash -> gemini-4-argon? (needs David, at home)
+   ─────────────────────────────────────────────────────────
+   WHAT:   Run one real Builder round on gemini-4-argon. Decide whether it
+           becomes the paid default, or stays an opt-in model.
+   WHY:    It is the new flagship, but it costs about 2.7x gemini-3.8-flash
+           ($2/$10 vs $0.75/$3.75) and is not on the free tier, which is the
+           tier the Gemini default serves. A default must work on a free key,
+           so the likely answer is "stay opt-in". Smoke-test it anyway:
+           a model can break WaxFrame's marker format even when it is listed.
+   STATE:  OPEN, blocked on David and his own machine (never a work system
+           or network). Small. Not run: any request to gemini-4-argon.
+   WHERE:  js/provider-catalog.js gemini entry (model, endpoint, comment);
+           VISION_DEFAULTS.gemini in js/app.js; pricing seed defaultModel;
+           api-details.html, user manual (html + txt), README default table;
+           FALLBACK_DATA regen; KV push.
+   DONE:   One round with gemini-4-argon selected completes without a
+           marker-format error; the default is either changed everywhere
+           above or left, with the reason written in the catalog comment.
+
+7. Gemini 4 Argon price change on 2026-12-01
+   ─────────────────────────────────────────────────────────
+   WHAT:   Google lists gemini-4-argon at $2.00 / $10.00 per M through
+           2026-11-30, then $4.00 / $20.00 from 2026-12-01.
+   WHY:    From 2026-12-01 the pricing page, the Defaults table and the
+           session spend meter understate Argon by half unless the seed
+           is updated.
+   STATE:  OPEN, date-triggered. Do not start before 2026-12-01. The weekly
+           run proposes the change itself that week, held for review.
+   WHERE:  tools/pricing-worker/data/pricing-seed.json, the gemini-paid
+           gemini-4-argon row (inputPerM, outputPerM, estPerRound, estNote);
+           FALLBACK_DATA regen; KV push.
+   DONE:   The row reads $4.00 / $20.00 with estPerRound 0.06 and the
+           estNote reworded; the live endpoint confirms it.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

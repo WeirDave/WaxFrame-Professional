@@ -1,5 +1,43 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.590 — Gemini 4 Argon added to the Gemini model list
+
+**Released:** 2026-10-18
+**Build:** 20261018-001
+
+### What changed
+
+**`gemini-4-argon`, Google's new flagship reasoning model, can now be picked for a
+Google (Gemini) bee.** It is in the Gemini model list and on the API pricing page.
+
+- **Where it shows:** the model list for a Google (Gemini) bee (Hive setup, and the
+  model list on the API Details page), and the **Gemini (Google) — paid** table on the
+  API pricing page.
+- **Paid tier only.** Google does not offer it on the free tier, so the free-tier
+  table marks it unsupported. A free AI Studio key cannot use it.
+- **Price:** $2.00 per million input tokens and $10.00 per million output tokens
+  through 2026-11-30; $4.00 and $20.00 from 2026-12-01. Estimated cost per round
+  is shown at the current rate ($0.03). Context window 1M; the output limit is
+  shown as blank because Google does not publish a single figure for it.
+- **Default unchanged.** The Gemini default stays `gemini-3.8-flash`, which works on
+  free keys and costs less than half as much. Argon is an opt-in choice.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+- Not run: any request to `gemini-4-argon`.
+
+### Files changed
+`js/provider-catalog.js`, `js/pricing-renderer.js` (regenerated price table),
+`tools/pricing-worker/data/pricing-seed.json`, `tools/pricing-worker/test-roster.mjs`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v354.txt` (renamed from v353), plus the routine
+stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release. The live pricing
+data also needs the seed pushed to KV (see `tools/pricing-worker/README.md`).
+
+---
+
 ## v3.63.589 — Perplexity works again: moved to Perplexity's Agent API
 
 **Released:** 2026-10-12

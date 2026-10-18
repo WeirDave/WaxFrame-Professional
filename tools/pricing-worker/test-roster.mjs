@@ -180,7 +180,7 @@ console.log('\nrunRoster — keys, baseline, drift, errors');
 
   // Baseline, using the real seed: Gemini lists the new model and the retired one is still listed.
   const env = { ROSTER_KEY_GEMINI: KEY };
-  const geminiList = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite', 'gemini-3.9-flash', 'text-embedding-9'];
+  const geminiList = ['gemini-3.8-flash', 'gemini-4-argon', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite', 'gemini-3.9-flash', 'text-embedding-9'];
   const mk = ids => fakeFetch({ 'https://generativelanguage.googleapis.com': { body: { models: ids.map(n => ({ name: 'models/' + n, supportedGenerationMethods: n.startsWith('text-emb') ? ['embedContent'] : ['generateContent'] })) } } });
   const r1 = await runRoster({ env, seed, previousState: {}, fetchImpl: mk(geminiList), nowIso: NOW });
   assertEqual(r1.alertLines.length, 1, 'baseline: exactly one line');
@@ -246,7 +246,7 @@ console.log('\nIncident replays — the three drifts that were found by hand');
   //    (it is routed to 3.6), so it is NOT reported MISSING — the successor is what shows up.
   const oldG = JSON.parse(JSON.stringify(seed));
   oldG.providers.filter(p => p.id.startsWith('gemini-')).forEach(p => { p.models = p.models.filter(m => !['gemini-3.8-flash', 'gemini-3.6-flash'].includes(m.id)); p.models.unshift({ id: 'gemini-3.5-flash', status: 'verified' }); });
-  const gList = fakeFetch({ 'https://generativelanguage.googleapis.com': { body: { models: ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite'].map(n => ({ name: 'models/' + n })) } } });
+  const gList = fakeFetch({ 'https://generativelanguage.googleapis.com': { body: { models: ['gemini-3.8-flash', 'gemini-4-argon', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite'].map(n => ({ name: 'models/' + n })) } } });
   const g = await runRoster({ env: { ROSTER_KEY_GEMINI: KEY }, seed: oldG, previousState: { gemini: { ok: true, ids: ['gemini-3.1-flash-lite', 'gemini-3.1-pro-preview', 'gemini-3.5-flash'] } }, fetchImpl: gList, nowIso: NOW });
   assert(g.alertLines.filter(l => l.startsWith('ROSTER NEW')).length === 2 && !g.alertLines.some(l => l.startsWith('ROSTER MISSING')), 'gemini: 3.8 and 3.6 flagged NEW; the still-listed 3.5 is not MISSING (documented limit)');
 
