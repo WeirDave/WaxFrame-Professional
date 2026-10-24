@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261018-001
+// Build: 20261023-001
 // check-file-protocol.mjs — verify the portable install still works.
 //
 // WaxFrame ships two ways: served over http(s), and as a folder someone

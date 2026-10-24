@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — update-check.js
-// Build: 20261018-001
+// Build: 20261023-001
 //  Portable-install ("file://") update notifier. Checks GitHub's
 //  Releases API for a newer tag than the running APP_VERSION and,
 //  if one exists, shows a footer pill + an About-modal row pointing
@@ -30,7 +30,9 @@
   const API_RELEASES = 'https://api.github.com/repos/' + REPO + '/releases?per_page=' + PER_PAGE;
   const CACHE_KEY = 'waxframe_update_check';
   const DISMISS_KEY = 'waxframe_update_dismissed';
-  const TTL_MS = 24 * 60 * 60 * 1000;
+  // One Releases API call per hour per browser is about 2% of GitHub's 60-an-hour
+  // anonymous limit, and a day left a new release unannounced for most of a day.
+  const TTL_MS = 60 * 60 * 1000;
   const ERROR_TTL_MS = 30 * 60 * 1000;
 
   function cmpVer(a, b) {

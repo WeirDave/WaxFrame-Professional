@@ -5,7 +5,7 @@ release ZIP is built from the repository root by
 `.github/workflows/release-assets.yml`, and nothing here is referenced by any
 page WaxFrame serves.
 
-This file exists because the folder grew to twenty-two scripts and several of
+This file exists because the folder grew to twenty-three scripts and several of
 them were documented nowhere. That is the same failure as an audit nobody can
 re-run in one command: a check that people cannot find does not get run, and a
 check that does not get run is not a check. If you add a script here, add a row
@@ -40,6 +40,7 @@ debugging one:
 | `test-provider-extractors.mjs` | 210+ fixtures pinning every provider response shape |
 | `test-debug-redaction.mjs` | The redaction helpers behave, and both export paths still call them; catalog placeholders always substitute |
 | `test-server-ai-eligibility.mjs` | Which model-server entries may join a hive |
+| `test-update-check-interval.mjs` | The portable update notifier asks GitHub at most hourly, retries a failure after 30 minutes, and never runs on the hosted site |
 | `claude-proxy/test-security.mjs` | The Claude relay's origin, path, method and key guards |
 | `check-confidentiality.mjs` | No real workplace data in tracked files |
 

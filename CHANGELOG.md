@@ -1,5 +1,47 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.591 — A new release is announced within an hour on a portable install
+
+**Released:** 2026-10-23
+**Build:** 20261023-001
+
+### What changed
+
+**A portable (`file://`) install now checks for a newer release at most once an
+hour, down from once a day.** A release is announced the next time a WaxFrame page
+is opened after the hour is up, rather than up to a day later.
+
+- **Where it shows:** the "Update available" pill in the page footer and the Update
+  row in the About window, as before. The hosted site at waxframe.com never runs the
+  check.
+- **A failed check** (no network, GitHub blocking the request) still waits 30 minutes
+  before the next attempt, and a GitHub rate limit still holds until the time GitHub
+  gives for its reset. Neither changed.
+- **Cost:** one Releases API call per hour per browser, about 2% of GitHub's limit of
+  60 anonymous calls an hour.
+- The model-list refresh under Settings → Workflow & Updates is a separate feature
+  with its own interval and is unchanged.
+
+### Verification
+- New `tools/test-update-check-interval.mjs`, run by `node tools/release-check.mjs`.
+  It loads the real `js/update-check.js` against a stand-in `localStorage` and
+  `fetch` and covers an answer 50 minutes, 70 minutes and 5 hours old, a failure 10
+  and 40 minutes old, an active rate limit, no cache, and a hosted page. The 70-minute
+  and 5-hour cases fail when the old 24-hour value is put back.
+- `node tools/release-check.mjs` (all stages).
+
+### Files changed
+`js/update-check.js`, `tools/test-update-check-interval.mjs` (new),
+`tools/release-check.mjs`, `tools/README.md`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v355.txt` (renamed from v354), plus the routine
+stamp sweep.
+
+### Rollback
+Revert this commit. Nothing stored changes with this release; a cached answer from
+before it is simply read against the shorter interval.
+
+---
+
 ## v3.63.590 — Gemini 4 Argon added to the Gemini model list
 
 **Released:** 2026-10-18

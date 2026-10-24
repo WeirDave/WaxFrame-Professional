@@ -1091,6 +1091,23 @@ try {
   fail('tools/test-url-sanitisers.mjs', `a URL sanitiser drifted — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
+// ── Check 14c: Update-check interval (tools/test-update-check-interval.mjs) ──
+
+section('Update-check interval (tools/test-update-check-interval.mjs)');
+
+// v3.63.591 — js/update-check.js trusts its cached answer for TTL_MS and a failed
+// one for ERROR_TTL_MS. Nothing else read either constant, so changing the
+// interval to any value left every other stage green. The test loads the real
+// file into a sandbox, seeds the cache at a chosen age and counts fetch calls.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/test-update-check-interval.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/test-update-check-interval.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.trim().startsWith('✗'));
+  fail('tools/test-update-check-interval.mjs', `the update notifier's cache rules changed — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
 // ── Check 15: Server AI eligibility (tools/test-server-ai-eligibility.mjs) ──
 
 section('Server AI eligibility (tools/test-server-ai-eligibility.mjs)');
