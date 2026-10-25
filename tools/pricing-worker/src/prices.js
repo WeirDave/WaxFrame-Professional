@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker: price parsers
-//  Build: 20261023-001
+//  Build: 20261025-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -29,10 +29,9 @@
 //     and says what it becomes (Gemini Flash: $0.75/$3.75 through
 //     2026-12-31, then $1.50/$7.50).
 //
-//  Covered: DeepSeek, xAI, OpenAI, Anthropic, Google (free and paid rows).
-//  NOT covered, still read by Sonar and still held for review: Perplexity
-//  (its price table is drawn by JavaScript and is not in the page HTML),
-//  Mistral, Cohere, Together.
+//  Covered: DeepSeek, xAI, OpenAI, Anthropic, Google (free and paid rows),
+//  Together AI and Perplexity (both read from the provider's Markdown docs).
+//  NOT covered, still read by Sonar and still held for review: Mistral, Cohere.
 //
 //  Pure and injectable: pages are passed in (or fetched through an injected
 //  fetch), so tools/pricing-worker/test-prices.mjs runs on saved pages.
@@ -168,7 +167,78 @@ export function parseXai(html, modelId) {
 }
 
 // ── OpenAI ───────────────────────────────────────────────────────────
-// Each section is a set of tabs (Standard, Batch, Flex, Fast, Ultrafast), so
+// The pricing page is an Astro page: each table is an <astro-island> whose `props` attribute
+// carries the table as data, and only the first few rows are also drawn as HTML. The islands
+// are the complete, structured source, so they are read first:
+//   <astro-island component-export="TextTokenPricingTables"
+//      props="{&quot;tier&quot;:[0,&quot;standard&quot;],&quot;rows&quot;:[1,[[1,[[0,&quot;gpt-6.1-sol&quot;],[0,2],[0,0.1],[0,2.5],[0,10]]], ...
+// Astro wraps every value as [0, scalar] or [1, array]. A row is: id, input, cached input,
+// (cache write,) output; older models have no cache-write cell, so output is always the last
+// cell. The island's `tier` is standard / batch / fast / ultrafast, and a `modelGroup`
+// ("cyber") marks a side table. Only the standard tier with no model group is read. A long
+// context model is labelled "gpt-5.5 (<272K context length)": the row is the short-context rate.
+//
+// Pages saved before the islands existed drew every table as HTML text. That layout is still
+// understood (readOpenAIText below) so an old capture, or a page that goes back, keeps working.
+function decodeAttr(s) {
+  return String(s)
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;|&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+function unwrapAstro(v) {
+  if (!Array.isArray(v) || v.length !== 2) return v;
+  const [tag, val] = v;
+  if (tag === 1 && Array.isArray(val)) return val.map(unwrapAstro);
+  if (val && typeof val === 'object' && !Array.isArray(val)) {
+    const o = {};
+    for (const k of Object.keys(val)) o[k] = unwrapAstro(val[k]);
+    return o;
+  }
+  return val;
+}
+
+export function astroIslands(html, componentExport) {
+  const out = [];
+  const tagRe = /<astro-island\b((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;
+  for (let m; (m = tagRe.exec(String(html || ''))); ) {
+    const attrs = m[1];
+    const exp = attrs.match(/\bcomponent-export="([^"]*)"/);
+    if (!exp || exp[1] !== componentExport) continue;
+    const raw = attrs.match(/\bprops="([^"]*)"/);
+    if (!raw) continue;
+    try {
+      const props = unwrapAstro([0, JSON.parse(decodeAttr(raw[1]))]);
+      if (props && typeof props === 'object') out.push(props);
+    } catch (e) { /* an unreadable island is skipped; no readable island at all falls back to the text layout */ }
+  }
+  return out;
+}
+
+function readOpenAIIslands(html, modelId) {
+  const islands = astroIslands(html, 'TextTokenPricingTables')
+    .filter(p => p.tier === 'standard' && !p.modelGroup && Array.isArray(p.rows));
+  if (!islands.length) return null;
+  for (const isl of islands) {
+    for (const row of isl.rows) {
+      if (!Array.isArray(row) || typeof row[0] !== 'string') continue;
+      if (row[0].replace(/\s*\([^)]*\)\s*$/, '') !== modelId) continue;
+      const last = row[row.length - 1];
+      // Both cells must be real numbers, and output is never below input for a text model: if it
+      // is, the last cell is not the output price and the columns have moved.
+      if (row.length < 3 || typeof row[1] !== 'number' || typeof last !== 'number' || last < row[1]) {
+        return shapeChanged(`the OpenAI price row for ${modelId}`);
+      }
+      return good(row[1], last, { pageLabel: row[0], note: 'standard rate, short context' });
+    }
+  }
+  return notListed(modelId, 'OpenAI\'s pricing page');
+}
+
+// The text layout. Each section is a set of tabs (Standard, Batch, Flex, Fast, Ultrafast), so
 // a model's id appears in several tables with different prices. The text of
 // the page reads, for a tabbed section:
 //   ... Standard Short context Long context Model Input Cached input Cache writes Output ... gpt-6.1-sol $2.00 $0.10 $2.50 $10.00 $4.00 ...
@@ -180,6 +250,10 @@ export function parseXai(html, modelId) {
 export function parseOpenAI(html, modelId) {
   const t = htmlToText(html);
   if (t.length < MIN_PAGE_TEXT) return shapeChanged('the OpenAI pricing page');
+  return readOpenAIIslands(html, modelId) || readOpenAIText(t, modelId);
+}
+
+function readOpenAIText(t, modelId) {
   const marker = 'Short context Long context Model';
   const starts = [];
   for (let i = t.indexOf(marker); i >= 0; i = t.indexOf(marker, i + 1)) starts.push(i);
@@ -294,6 +368,68 @@ export function parseGemini(html, modelId, tier, now) {
   return good(pi.value, po.value, { pageLabel: modelId, note });
 }
 
+// ── Together AI ──────────────────────────────────────────────────────
+// docs.together.ai serves every docs page as Markdown when ".md" is added. The serverless
+// models page is a set of tables, one row per model, with the id in an "API model string"
+// column and the prices in "Input pricing" / "Output pricing" columns (the set of columns
+// varies by table, so they are located by header name):
+//   | Organization | Model name | API model string | Context length | Input pricing (per 1M tokens) | ... | Output pricing (per 1M tokens) | ...
+//   | Z.ai | GLM-5.3 | zai-org/GLM-5.3 | 1048575 | \$1.40 | \$0.26 | \$4.40 | FP4 | Yes | Yes |
+// A retired model drops out of the table, which is reported as "not listed".
+function mdCells(line) {
+  return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+}
+
+function mdPrice(cell) {
+  const c = String(cell || '').replace(/\\/g, '').trim();
+  if (/^free$/i.test(c)) return 0;
+  const m = c.match(/^\$\s*([0-9]+(?:\.[0-9]+)?)$/);
+  return m ? Number(m[1]) : null;
+}
+
+export function parseTogether(md, modelId) {
+  const text = String(md || '');
+  if (text.length < MIN_PAGE_TEXT) return shapeChanged('the Together AI models page');
+  const lines = text.split(/\r?\n/);
+  let sawTable = false;
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^\s*\|/.test(lines[i])) continue;
+    const head = mdCells(lines[i]);
+    const idCol = head.findIndex(h => /^API model string$/i.test(h));
+    const inCol = head.findIndex(h => /^Input pricing/i.test(h));
+    const outCol = head.findIndex(h => /^Output pricing/i.test(h));
+    if (idCol < 0 || inCol < 0 || outCol < 0) continue;
+    sawTable = true;
+    for (let j = i + 2; j < lines.length && /^\s*\|/.test(lines[j]); j++) {
+      const cells = mdCells(lines[j]);
+      if (cells[idCol] !== modelId) continue;
+      const inp = mdPrice(cells[inCol]), out = mdPrice(cells[outCol]);
+      if (inp === null || out === null) return shapeChanged(`the Together AI price row for ${modelId}`);
+      return good(inp, out, { pageLabel: cells[1] || modelId, note: 'standard serverless rate' });
+    }
+  }
+  return sawTable ? notListed(modelId, 'Together AI\'s serverless models page') : shapeChanged('the Together AI price tables');
+}
+
+// ── Perplexity ───────────────────────────────────────────────────────
+// Perplexity ended Sonar chat support on 2026-09-27 and moved its main pricing page to the Agent
+// API, which does not list Sonar. Each Sonar model keeps a legacy docs page of its own, served as
+// Markdown when ".md" is added, with the token rates as headed blocks:
+//   ### Input Tokens  \$3  Per 1M Tokens  ### Output Tokens  \$15  Per 1M Tokens  ### Price Per 1K Requests ...
+// sonar-deep-research adds citation, reasoning and search-query rates after these two; they are
+// not read (the seed carries the base token rate only, and says so).
+export function parsePerplexity(md, modelId) {
+  const text = String(md || '').replace(/\\/g, '');
+  if (text.length < MIN_PAGE_TEXT) return shapeChanged('the Perplexity model page');
+  const rate = label => {
+    const m = text.match(new RegExp('###\\s*' + label + '\\s+\\$\\s*([0-9]+(?:\\.[0-9]+)?)\\s+Per 1M Tokens'));
+    return m ? m[1] : null;
+  };
+  const inp = rate('Input Tokens'), out = rate('Output Tokens');
+  if (inp === null || out === null) return shapeChanged(`the ${modelId} price blocks`);
+  return good(inp, out, { pageLabel: modelId, note: 'legacy Sonar page; Perplexity ended Sonar chat support on 2026-09-27' });
+}
+
 // ── Registry & reading ───────────────────────────────────────────────
 // Keyed by the seed's provider id. `name` appears in "not listed" reasons.
 export const PRICE_SOURCES = {
@@ -302,7 +438,10 @@ export const PRICE_SOURCES = {
   chatgpt:       { url: 'https://developers.openai.com/api/docs/pricing',    parse: (h, id) => parseOpenAI(h, id) },
   claude:        { url: 'https://platform.claude.com/docs/en/about-claude/pricing', parse: (h, id) => parseAnthropic(h, id) },
   'gemini-paid': { url: 'https://ai.google.dev/gemini-api/docs/pricing',     parse: (h, id, now) => parseGemini(h, id, 'paid', now) },
-  'gemini-free': { url: 'https://ai.google.dev/gemini-api/docs/pricing',     parse: (h, id, now) => parseGemini(h, id, 'free', now) }
+  'gemini-free': { url: 'https://ai.google.dev/gemini-api/docs/pricing',     parse: (h, id, now) => parseGemini(h, id, 'free', now) },
+  together:      { url: 'https://docs.together.ai/docs/serverless/models.md', parse: (h, id) => parseTogether(h, id) },
+  // One page per model, so `url` is a function of the model id (null when the id cannot be a page name).
+  perplexity:    { url: id => /^[a-z0-9][a-z0-9.-]*$/i.test(id) ? `https://docs.perplexity.ai/docs/legacy/sonar/models/${id}.md` : null, parse: (h, id) => parsePerplexity(h, id) }
 };
 
 async function loadPage(url, fetchImpl) {
@@ -332,15 +471,17 @@ export async function readPrices({ providers, fetchImpl, now = new Date() }) {
     if (!src) continue;
     for (const m of p.models || []) {
       if (m.status === 'unsupported') continue;
-      if (!pages.has(src.url)) pages.set(src.url, await loadPage(src.url, fetchImpl));
-      const page = pages.get(src.url);
+      const url = typeof src.url === 'function' ? src.url(m.id) : src.url;
+      if (!url) { out.set(`${p.id}::${m.id}`, { ...shapeChanged(`the page address for ${m.id}`), source: null }); continue; }
+      if (!pages.has(url)) pages.set(url, await loadPage(url, fetchImpl));
+      const page = pages.get(url);
       let outcome;
       if (!page.ok) outcome = { ok: false, reason: page.reason };
       else {
         try { outcome = src.parse(page.html, m.id, now); }
         catch (e) { outcome = shapeChanged('the pricing page'); }
       }
-      out.set(`${p.id}::${m.id}`, { ...outcome, source: src.url });
+      out.set(`${p.id}::${m.id}`, { ...outcome, source: url });
     }
   }
   return out;

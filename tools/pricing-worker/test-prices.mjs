@@ -27,7 +27,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { parseDeepSeek, parseXai, parseOpenAI, parseAnthropic, parseGemini, claudeDisplayName, htmlToText, readPrices, PRICE_SOURCES } from './src/prices.js';
+import { parseDeepSeek, parseXai, parseOpenAI, parseAnthropic, parseGemini, parseTogether, parsePerplexity, claudeDisplayName, htmlToText, readPrices, PRICE_SOURCES } from './src/prices.js';
 import { refreshPricing } from './src/index.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -36,6 +36,10 @@ const PAGES = {
   deepseek: fx('deepseek-pricing.txt'),
   xai: fx('xai-models.txt'),
   openai: fx('openai-pricing.txt'),
+  openaiIslands: fx('openai-pricing-islands.txt'),
+  together: fx('together-models.md'),
+  pplxPro: fx('perplexity-sonar-pro.md'),
+  pplxDeep: fx('perplexity-sonar-deep-research.md'),
   anthropic: fx('anthropic-pricing.txt'),
   gemini: fx('gemini-pricing.txt')
 };
@@ -118,7 +122,7 @@ assertEqual(px(parseOpenAI(PAGES.openai, 'gpt-5.6-sol')), [4, 20], 'gpt-5.6-sol 
   const t = htmlToText(PAGES.openai);
   assert((t.match(/gpt-6\.1-sol \$/g) || []).length >= 4, 'test setup: the fixture really does repeat the model in several tables');
 }
-assert(!parseOpenAI(PAGES.openai, 'gpt-5.5').ok, 'gpt-5.5 is no longer on the page: reported not listed');
+assertEqual(px(parseOpenAI(PAGES.openai, 'gpt-5.5')), [5, 30], 'gpt-5.5 is not drawn in the page text but is in the Standard table data, labelled "(<272K context length)": short-context rate');
 assert(!parseOpenAI(PAGES.openai, 'gpt-6').ok, 'an id that is only a prefix of another (gpt-6 vs gpt-6-astra) is not matched');
 assert(!parseOpenAI(PAGES.openai, 'gpt-6.1').ok, 'gpt-6.1 is not gpt-6.1-sol');
 assert(!parseOpenAI('<p>' + 'x'.repeat(700) + '</p>', 'gpt-6.1-sol').ok, 'a page with no price tables is a shape change');
@@ -133,6 +137,63 @@ assert(!parseOpenAI('<p>' + 'x'.repeat(700) + '</p>', 'gpt-6.1-sol').ok, 'a page
   assert(!parseOpenAI(page, 'gpt-only-in-batch').ok, 'synthetic page: a model that appears only in the Batch table is not listed');
   assert(!parseOpenAI(page, 'gpt-only-in-ultrafast').ok, 'synthetic page: a model that appears only in the Ultrafast table is not listed');
 }
+
+// ── OpenAI, page of 2026-10-25 ───────────────────────────────────────
+// The "Short context Long context Model" header is gone from the page text and the columns are
+// Input, Output, Cached input, 30m write, 12h write. The rows are read from the table data instead.
+console.log('\nOpenAI (2026-10-25 layout) — rows read from the table data, not the page text');
+{
+  const page = PAGES.openaiIslands;
+  assert(!/Short context Long context Model/.test(htmlToText(page)), 'test setup: the page text no longer carries the old table header');
+  assertEqual(px(parseOpenAI(page, 'gpt-6.1-sol')), [2, 10], 'gpt-6.1-sol reads $2 / $10');
+  assertEqual(px(parseOpenAI(page, 'gpt-6-astra')), [10, 50], 'gpt-6-astra reads $10 / $50');
+  assertEqual(px(parseOpenAI(page, 'gpt-6-luna')), [0.1, 0.5], 'gpt-6-luna reads $0.10 / $0.50');
+  assertEqual(px(parseOpenAI(page, 'gpt-5.6-sol')), [4, 20], 'gpt-5.6-sol reads $4 / $20');
+  assertEqual(px(parseOpenAI(page, 'gpt-5.6-terra')), [2, 12], 'a row that is not drawn in the page text is still read (gpt-5.6-terra $2 / $12)');
+  assertEqual(px(parseOpenAI(page, 'gpt-5.5')), [5, 30], 'a long-context label "gpt-5.5 (<272K context length)" is the short-context rate');
+  assertEqual(px(parseOpenAI(page, 'gpt-5.4-mini')), [0.75, 4.5], 'an older row with no cache-write cell reads its last cell as output (gpt-5.4-mini)');
+  assert(parseOpenAI(page, 'gpt-6.1-sol').inputPerM !== 1 && parseOpenAI(page, 'gpt-6.1-sol').inputPerM !== 4, 'not the Batch ($1) or Fast ($4) price of the same model');
+  assert(!parseOpenAI(page, 'gpt-5.6-cyber').ok, 'a model only in the Cyber side table is not listed');
+  assert(!parseOpenAI(page, 'gpt-6').ok && !parseOpenAI(page, 'gpt-9').ok, 'an id that is only a prefix of another, or a model the page does not list, is not matched');
+}
+{
+  // A model that is only in a Batch / Fast island, or only in a side table, must not be read from there.
+  const island = (props) => '<astro-island uid="x" component-export="TextTokenPricingTables" props="' + JSON.stringify(props).replace(/"/g, '&quot;') + '"></astro-island>';
+  const A = v => [0, v], R = (id, ...cells) => [1, [A(id), ...cells.map(A)]];
+  const pad = '<p>' + 'Prices per 1M tokens. '.repeat(40) + '</p>';
+  const page = pad
+    + island({ tier: A('standard'), rows: [1, [R('gpt-std', 2, 0.2, 2.5, 10)]] })
+    + island({ tier: A('batch'), rows: [1, [R('gpt-batch-only', 1, 0.1, 1.25, 5)]] })
+    + island({ tier: A('standard'), modelGroup: A('cyber'), rows: [1, [R('gpt-cyber-only', 12, 1, 15, 75)]] })
+    + island({ tier: A('standard'), rows: [1, [R('gpt-moved', 5, 25, 0.5, 3)]] });
+  assertEqual(px(parseOpenAI(page, 'gpt-std')), [2, 10], 'synthetic islands: the Standard row is read');
+  assert(!parseOpenAI(page, 'gpt-batch-only').ok, 'synthetic islands: a model only in the Batch table is not listed');
+  assert(!parseOpenAI(page, 'gpt-cyber-only').ok, 'synthetic islands: a model only in a model-group table is not listed');
+  const moved = parseOpenAI(page, 'gpt-moved');
+  assert(!moved.ok && /not in the expected shape/.test(moved.reason), 'synthetic islands: a last cell below the input price (output moved to second) is a shape change, not a read');
+}
+
+// ── Together AI ──────────────────────────────────────────────────────
+console.log('\nTogether AI — rows keyed by the API model string, columns by header name');
+assertEqual(px(parseTogether(PAGES.together, 'zai-org/GLM-5.3')), [1.4, 4.4], 'GLM-5.3 reads $1.40 / $4.40 (the cached-input column is skipped)');
+assertEqual(px(parseTogether(PAGES.together, 'openai/gpt-oss-120b')), [0.15, 0.6], 'gpt-oss-120b reads $0.15 / $0.60 (a "-" cached-input cell)');
+assertEqual(px(parseTogether(PAGES.together, 'Prism-ML/Ternary-Bonsai-27B')), [0, 0], 'a "Free" price reads as $0');
+assertEqual(px(parseTogether(PAGES.together, 'zai-org/GLM-5.3-Flash')), [0.15, 0.5], 'GLM-5.3-Flash is not GLM-5.3');
+{
+  const retired = parseTogether(PAGES.together, 'meta-llama/Llama-3.3-70B-Instruct-Turbo');
+  assert(!retired.ok && /is not listed on/.test(retired.reason), 'incident replay: Llama-3.3-70B-Instruct-Turbo (deprecated 2026-10-22) is reported not listed, not re-priced');
+}
+assert(!parseTogether(PAGES.together, 'zai-org/GLM-5').ok, 'an id that is only a prefix of another is not matched');
+assert(!parseTogether('x'.repeat(700), 'zai-org/GLM-5.3').ok, 'a page with no price tables is a shape change');
+assert(!parseTogether(PAGES.together.replace(/Input pricing/g, 'Cost in'), 'zai-org/GLM-5.3').ok, 'a table whose price columns were renamed is a shape change');
+
+// ── Perplexity ───────────────────────────────────────────────────────
+console.log('\nPerplexity — token rates from the model\'s own legacy page');
+assertEqual(px(parsePerplexity(PAGES.pplxPro, 'sonar-pro')), [3, 15], 'sonar-pro reads $3 / $15 (not the per-1K-request prices)');
+assertEqual(px(parsePerplexity(PAGES.pplxDeep, 'sonar-deep-research')), [2, 8], 'sonar-deep-research reads its base $2 / $8, not the citation or reasoning rates');
+assert(!parsePerplexity('x'.repeat(700), 'sonar-pro').ok, 'a page without the token-rate blocks is a shape change');
+assertEqual(PRICE_SOURCES.perplexity.url('sonar-pro'), 'https://docs.perplexity.ai/docs/legacy/sonar/models/sonar-pro.md', 'each model has its own page address');
+assertEqual(PRICE_SOURCES.perplexity.url('../x'), null, 'an id that cannot be a page name has no address');
 
 // ── Anthropic ────────────────────────────────────────────────────────
 console.log('\nAnthropic — rows keyed by display name, with a boundary');
@@ -221,6 +282,21 @@ const seedLike = [
   assert(!out.has('gemini-free::gemini-3.1-pro-preview'), 'an unsupported row is skipped');
   assert(!out.has('mistral::mistral-large-latest') && !out.has('copilot::gpt-4o'), 'providers without a parser are absent, left to the old method');
   assertEqual(out.get('deepseek::deepseek-v4-pro').source, PRICE_SOURCES.deepseek.url, 'each outcome names its source page');
+}
+{
+  // A provider with one page per model (Perplexity) fetches each model's own page; Together shares one.
+  const proSrc = PRICE_SOURCES.perplexity.url('sonar-pro'), deepSrc = PRICE_SOURCES.perplexity.url('sonar-deep-research');
+  const providers = [
+    { id: 'perplexity', models: [{ id: 'sonar-pro', status: 'verified' }, { id: 'sonar-deep-research', status: 'verified' }, { id: 'bad id!', status: 'verified' }] },
+    { id: 'together', models: [{ id: 'zai-org/GLM-5.3', status: 'verified' }, { id: 'zai-org/GLM-5.3-Flash', status: 'verified' }] }
+  ];
+  const calls = [];
+  const out = await readPrices({ providers, fetchImpl: pagesFetch({ [proSrc]: { body: PAGES.pplxPro }, [deepSrc]: { body: PAGES.pplxDeep }, [PRICE_SOURCES.together.url]: { body: PAGES.together } }, calls), now: NOW });
+  assertEqual(calls, [proSrc, deepSrc, PRICE_SOURCES.together.url], 'one fetch per Perplexity model page, one for both Together rows');
+  assertEqual(px(out.get('perplexity::sonar-pro')), [3, 15], 'a Perplexity row is read from its own page');
+  assertEqual(out.get('perplexity::sonar-deep-research').source, deepSrc, 'and names that page as its source');
+  assertEqual(px(out.get('together::zai-org/GLM-5.3-Flash')), [0.15, 0.5], 'a Together row is read from the shared page');
+  assert(!out.get('perplexity::bad id!').ok, 'an id that cannot be a page name is reported, not fetched');
 }
 {
   const out = await readPrices({ providers: seedLike, fetchImpl: pagesFetch({ [PRICE_SOURCES.deepseek.url]: { status: 500 } }), now: NOW });

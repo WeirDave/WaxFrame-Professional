@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v355
-2026-10-23
+WaxFrame Backlog Master v356
+2026-10-25
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,34 @@ ships.
 
 
 
+
+v356 — OPENAI, TOGETHER AND PERPLEXITY PRICES ARE READ BY CODE (v3.63.592).
+
+The 2026-10-25 pricing email reported eight rows newly failing. OpenAI dropped the
+"Short context Long context Model" table header from its page text and now draws only
+the newest rows there (output before cached input); the full tables are the page's
+TextTokenPricingTables data, which the parser reads now. That also revives six rows
+(gpt-5.5, gpt-5.6-terra, gpt-5.6-luna, gpt-5.4 and its mini and nano) the old parser
+had been reporting as not listed since 2026-10-11. Perplexity's Sonar prices are read
+from each model's legacy docs page (Sonar chat support ended 2026-09-27), and
+Together AI from the Markdown form of its serverless models page. Perplexity and
+Together rows are no longer sent to Sonar; only Mistral and Cohere still are.
+
+Open, in order of importance:
+ 1. Together's default meta-llama/Llama-3.3-70B-Instruct-Turbo was deprecated on
+    2026-10-22 (Together redirects it to meta-models/Muse-Glimmer-30B). It is still the
+    Together default and fallback in js/provider-catalog.js, the pricing seed, and the
+    pricing page. Choose the replacement (a default must work on free keys and be
+    smoke-tested as Builder), then change the catalog and seed together.
+ 2. The DeepSeek parser reports "the DeepSeek model header was not in the expected
+    shape" when run from a laptop on 2026-10-25 (check-price-parsers-live.mjs). Not in
+    the 2026-10-25 email, so it has been failing for some time or fails only locally.
+    Read the live page and fix parseDeepSeek.
+ 3. The parsers have still not been run from Cloudflare's network (see the item
+    "Prove the price parsers from Cloudflare's network"); Together's and Perplexity's
+    docs sites are new to that list.
+ 4. v353 item 2 (the Worker posting to the retired /chat/completions) now concerns
+    Mistral and Cohere only.
 
 v354 — GEMINI 4 ARGON ADDED TO THE GEMINI PICKER, DEFAULT UNCHANGED (v3.63.590).
 

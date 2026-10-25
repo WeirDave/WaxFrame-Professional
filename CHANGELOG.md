@@ -1,5 +1,59 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.592 — OpenAI, Together AI and Perplexity prices are read by code again
+
+**Released:** 2026-10-25
+**Build:** 20261025-001
+
+### What changed
+
+**The weekly price refresh (pricing Worker, `tools/pricing-worker`) reads OpenAI,
+Together AI and Perplexity prices from each provider's own pages with code.** Prices
+for these rows stay held for review before they reach the pricing page, as before.
+
+- **OpenAI.** The pricing page no longer prints the table header the parser looked
+  for and draws only the newest rows as text. The parser now reads the complete
+  Standard tables the page embeds as data. Batch, Flex, Fast, Ultrafast and side
+  tables such as Cyber are not read. A model labelled with a context limit, such as
+  `gpt-5.5 (<272K context length)`, reads as its short-context rate. A row whose last
+  cell is below its input price is refused as a layout change. `gpt-5.5`,
+  `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.4`, `gpt-5.4-mini` and `gpt-5.4-nano`, which
+  had been reported as no longer listed since 2026-10-11, are read again.
+- **Perplexity.** Sonar is now read from each model's own page on
+  `docs.perplexity.ai` (`sonar`, `sonar-pro`, `sonar-reasoning-pro`,
+  `sonar-deep-research`), because Perplexity ended Sonar chat support on 2026-09-27
+  and its main pricing page no longer lists Sonar. Perplexity rows are no longer sent
+  to Sonar for lookup.
+- **Together AI.** Rows are read from the Markdown form of Together's serverless
+  models page, keyed by the API model string. A model Together has retired is
+  reported as not listed. `meta-llama/Llama-3.3-70B-Instruct-Turbo` (deprecated
+  2026-10-22) is reported this way and keeps its last verified price. Together rows
+  are no longer sent to Sonar for lookup.
+- Only Mistral and Cohere are still read by Sonar.
+- **Where it shows:** the weekly pricing email and the Worker status page. The app
+  itself is unchanged; the stamp sweep only moves the version.
+
+### Verification
+- `node tools/pricing-worker/test-prices.mjs`: new cases for the OpenAI data layout
+  (Standard only, long-context label, rows without a cache-write cell, a moved
+  output column), Together (prefix ids, `Free`, renamed columns, the retired model),
+  Perplexity, and per-model page addresses in `readPrices`. New fixtures are trimmed
+  captures taken 2026-10-25.
+- `node tools/pricing-worker/check-price-parsers-live.mjs` against the live pages:
+  all ten OpenAI rows and all four Perplexity rows equal the seed.
+- `node tools/release-check.mjs` (all stages).
+
+### Files changed
+`tools/pricing-worker/src/prices.js`, `tools/pricing-worker/test-prices.mjs`,
+`tools/pricing-worker/README.md`, four new files in `tools/pricing-worker/fixtures/`,
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v356.txt` (renamed from v355), plus the
+routine stamp sweep.
+
+### Rollback
+Revert this commit and redeploy the Worker. Nothing stored changes with this release.
+
+---
+
 ## v3.63.591 — A new release is announced within an hour on a portable install
 
 **Released:** 2026-10-23
