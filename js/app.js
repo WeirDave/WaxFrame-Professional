@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261025-002
+// Build: 20261026-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261025-002';         // build stamp — update each session
+const BUILD = '20261026-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2107,7 +2107,7 @@ function settingsToggleAutoUpdateModels(wantOn) {
   if (typeof consoleLog === 'function') {
     consoleLog(wantOn
       ? '🔄 Auto-update model lists enabled.'
-      : '🔄 Auto-update model lists disabled — model dropdowns will persist until you click ↻ Recheck on each AI row.', 'info');
+      : '🔄 Auto-update model lists disabled — model dropdowns will persist until you click Recommend Models on each AI row in Setup → Worker Bees.', 'info');
   }
   const row = document.getElementById('setAutoUpdateIntervalRow');
   if (row) row.classList.toggle('settings-row-disabled', !wantOn);
@@ -2303,7 +2303,7 @@ async function refreshAllModelLists() {
     if (errors.length) bits.push(`${errors.length} errored`);
     if (skipped.length) bits.push(`${skipped.length} skipped`);
     consoleLog(`🔄 Auto-Update: ${bits.join(' · ') || 'no AIs to refresh'}`, retired.length || errors.length ? 'warn' : 'info');
-    retired.forEach(r => consoleLog(`⚠️ ${r.name}: previously-selected model "${r.prevModel}" is no longer in the provider's list. Click ↻ Recheck on the AI row to pick a current model.`, 'warn'));
+    retired.forEach(r => consoleLog(`⚠️ ${r.name}: previously-selected model "${r.prevModel}" is no longer in the provider's list. Open Setup → Worker Bees and click Recommend Models on that AI row to pick a current model.`, 'warn'));
     errors.forEach(e => {
       consoleLog(`⚠️ ${e.name || e.id}: model-list refresh failed — ${e.error}`, 'warn');
       // v3.63.19 — friendly translation of the most common cause. Many
@@ -2321,7 +2321,7 @@ async function refreshAllModelLists() {
   }
   if (retired.length) {
     const names = retired.map(r => r.name).join(', ');
-    toast(`⚠️ Retired model${retired.length === 1 ? '' : 's'} detected on: ${names}. Click ↻ Recheck on those AI rows.`, 6000);
+    toast(`⚠️ Retired model${retired.length === 1 ? '' : 's'} detected on: ${names}. Open Setup → Worker Bees and click Recommend Models on those AI rows.`, 6000);
   }
   // Stamp the last-run time only on a successful pass that actually
   // refreshed something. If nothing refreshed (all skipped/errored),
@@ -2368,6 +2368,20 @@ function startAutoUpdateHeartbeat() {
   _autoUpdateHeartbeat = setInterval(() => {
     maybeRunAutoUpdateModels({ reason: 'heartbeat' });
   }, 15 * 60 * 1000);
+}
+
+// v3.63.594 — Says once, after startup, which saved models loadSettings()
+// replaced because the provider withdrew them (storage.js
+// migrateRetiredModels). Silent when nothing was replaced.
+function announceRetiredModelSwaps() {
+  const swaps = window._retiredModelSwaps;
+  window._retiredModelSwaps = null;
+  if (!Array.isArray(swaps) || !swaps.length) return;
+  swaps.forEach(s => {
+    if (typeof consoleLog === 'function') consoleLog(`🔀 ${s.name}: the saved model ${s.from} was withdrawn by the provider — switched to ${s.to}.`, 'info');
+  });
+  const first = swaps[0];
+  toast(`🔀 ${first.name}: ${first.from} is no longer offered — switched to ${first.to}.${swaps.length > 1 ? ` (+${swaps.length - 1} more)` : ''}`, 8000);
 }
 
 // ── AUDIO ──
@@ -13760,8 +13774,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.593'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.593';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.594'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.594';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -24599,6 +24613,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // and again every time the tab becomes visible. See detectDeprecatedModels
   // for the cost-assumption note about why this is unthrottled.
   setTimeout(() => { detectDeprecatedModels('load'); }, 3000);
+  setTimeout(announceRetiredModelSwaps, 4500);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
       detectDeprecatedModels('visible');

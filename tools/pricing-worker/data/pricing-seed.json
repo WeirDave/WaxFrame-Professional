@@ -266,8 +266,8 @@
       "billingUrl": "https://api.together.ai/settings/organization/~current/billing",
       "tier1Rpm": "~600",
       "tier1Tpm": "varies",
-      "freeTier": "Trial credits",
-      "rateLimitNotes": "Open-weight model gateway; generous limits, not yet hive-tested in production.",
+      "freeTier": "None",
+      "rateLimitNotes": "Prepaid only: no free trial, $15 minimum first purchase. Open-weight model gateway; rate limits are rare. Not yet hive-tested in production.",
       "recommendationTag": null,
       "recommendationNote": null,
       "models": [

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker: price parsers
-//  Build: 20261025-002
+//  Build: 20261026-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -433,7 +433,8 @@ export function parsePerplexity(md, modelId) {
 // ── Registry & reading ───────────────────────────────────────────────
 // Keyed by the seed's provider id. `name` appears in "not listed" reasons.
 export const PRICE_SOURCES = {
-  deepseek:      { url: 'https://api-docs.deepseek.com/quick_start/pricing', parse: (h, id) => parseDeepSeek(h, id) },
+  // Trailing slash on purpose: without it DeepSeek's static host can answer with the Quick Start page, which has no table.
+  deepseek:      { url: 'https://api-docs.deepseek.com/quick_start/pricing/', parse: (h, id) => parseDeepSeek(h, id) },
   grok:          { url: 'https://docs.x.ai/developers/models',               parse: (h, id) => parseXai(h, id) },
   chatgpt:       { url: 'https://developers.openai.com/api/docs/pricing',    parse: (h, id) => parseOpenAI(h, id) },
   claude:        { url: 'https://platform.claude.com/docs/en/about-claude/pricing', parse: (h, id) => parseAnthropic(h, id) },

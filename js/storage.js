@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20261025-002
+// Build: 20261026-001
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1112,6 +1112,62 @@ function _normalizeImportedConfig(cfg) {
   return out;
 }
 
+// v3.63.594 — Models a provider has withdrawn, each with the provider's own
+// named replacement. saveHive() stores cfg.model for EVERY API_CONFIGS entry,
+// so a hive saved before the provider changed its default still carries the
+// old id for that provider, and loadSettings() applies it over the new
+// catalog default. Together removed meta-llama/Llama-3.3-70B-Instruct-Turbo
+// from serverless on 2026-10-22; a request to it answers HTTP 400, so a
+// saved hive kept sending it.
+const RETIRED_MODEL_REPLACEMENTS = [
+  { host: 'api.together.xyz', from: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', to: 'meta-models/Muse-Glimmer-30B' }
+];
+
+function _retiredReplacementFor(endpoint, model) {
+  let host = '';
+  try { host = new URL(endpoint).hostname.toLowerCase(); } catch (e) { return null; }
+  return RETIRED_MODEL_REPLACEMENTS.find(r => r.host === host && r.from === model) || null;
+}
+
+// Swaps a withdrawn saved model for its replacement on every config and on
+// every variant row that carries its own model. Returns the swaps made as
+// [{ name, from, to }] for AI rows the user can see; a provider config with no
+// row (never keyed) is corrected silently. Also drops cached model lists and
+// recommendations that still name the withdrawn model so none re-selects it.
+function migrateRetiredModels() {
+  const swaps = [];
+  const visibleProviders = new Set(aiList.map(a => a.provider));
+  Object.keys(API_CONFIGS).forEach(id => {
+    const cfg = API_CONFIGS[id];
+    const r = cfg && _retiredReplacementFor(cfg.endpoint, cfg.model);
+    if (!r) return;
+    cfg.model = r.to;
+    if (visibleProviders.has(id)) {
+      const row = aiList.find(a => a.provider === id && !a.parentId);
+      swaps.push({ name: (row && row.name) || cfg.label || id, from: r.from, to: r.to });
+    }
+  });
+  aiList.forEach(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    const r = cfg && ai.model && _retiredReplacementFor(cfg.endpoint, ai.model);
+    if (!r) return;
+    ai.model = r.to;
+    swaps.push({ name: ai.name, from: r.from, to: r.to });
+  });
+  try {
+    const gone = RETIRED_MODEL_REPLACEMENTS.map(r => r.from);
+    const stale = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !/^waxframe_(models|recommend|tiers)_/.test(k)) continue;
+      const v = localStorage.getItem(k) || '';
+      if (gone.some(m => v.indexOf(m) !== -1)) stale.push(k);
+    }
+    stale.forEach(k => localStorage.removeItem(k));
+  } catch (e) { /* storage unavailable — the swap above still holds for this session */ }
+  return swaps;
+}
+
 function loadSettings() {
   try {
     // ── Try new split storage first ──
@@ -1317,6 +1373,12 @@ function loadSettings() {
         }
       });
     }
+    // v3.63.594 — a saved model the provider has withdrawn is replaced before
+    // anything can send it. See RETIRED_MODEL_REPLACEMENTS above. The notice is
+    // queued, not shown: the session restore that follows rewrites the console
+    // and the startup toasts replace each other, so announceRetiredModelSwaps()
+    // in app.js says it once startup has settled.
+    window._retiredModelSwaps = migrateRetiredModels();
     // v3.63.427 — was `!== undefined`, which lets h.activeAIIds:null through
     // (null !== undefined is true) straight into null.map(), throwing and
     // silently aborting the rest of loadSettings via the outer catch —

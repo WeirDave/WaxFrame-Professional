@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v357
-2026-10-25
+WaxFrame Backlog Master v358
+2026-10-26
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -26,32 +26,31 @@ ships.
 
 
 
-v357 — TOGETHER AI DEFAULT MOVED TO MUSE GLIMMER 30B (v3.63.593).
+v358 — SAVED TOGETHER MODEL MIGRATED, DEEPSEEK ADDRESS FIXED (v3.63.594).
 
-Together removed meta-llama/Llama-3.3-70B-Instruct-Turbo from serverless on 2026-10-22
-(a scheduled deprecation, not a redirect); a request to it now answers HTTP 400
-"Unable to access non-serverless model". The default and fallback are now
-meta-models/Muse-Glimmer-30B, Together's recommended replacement. Smoke-tested as
-Builder on 2026-10-25 with a paid key: HTTP 200, finish=stop, 1479 characters of
-content (19.7s). Also working on the same test: openai/gpt-oss-120b,
-deepseek-ai/DeepSeek-V4.1-Flash, zai-org/GLM-5.3-Flash. Qwen/Qwen3.8-Flash answers
-HTTP 400 "This model only supports streaming", so it cannot be a default while the
-Builder sends a single non-streaming request.
+A hive saved before v3.63.593 stored the retired Together model for every user, so the new
+default never applied. Loading a hive now replaces the withdrawn model with
+meta-models/Muse-Glimmer-30B (tools/test-retired-model-migration.mjs). Together has no
+free tier (prepaid, $15 minimum first purchase), so a free-key test does not apply. The
+DeepSeek source address needs a trailing slash: without it the host serves the Quick
+Start page, which has no price table.
 
 Open, in order of importance:
- 1. Muse-Glimmer-30B has not been run on a free / trial-credit Together key. A default
-    must work on free keys; repeat the smoke test with one.
- 2. A user who saved the retired Llama model as their Together model keeps that saved
-    value; check what the app does with a saved model that is no longer served.
- 3. The DeepSeek parser reports "the DeepSeek model header was not in the expected
-    shape" when run from a laptop (check-price-parsers-live.mjs) but reads fine from
-    Cloudflare's network (POST /api/prices on 2026-10-25), so it fails only locally.
-    Find what differs in the page served to a laptop before deciding it needs a fix.
- 4. v353 item 2 (the Worker posting to the retired /chat/completions) concerns
+ 1. Confirm the DeepSeek source address with the trailing slash from Cloudflare's network
+    after the Worker deploy (POST /api/prices, expect 36 of 36 rows read).
+ 2. The per-row warning marker for a retired model does not cover Together: the
+    watchdog (detectDeprecatedModels, js/api.js) skips providers with no MODEL_FILTERS,
+    and Together has discovery: null. The load-time migration covers only the one known
+    retired id; the next Together retirement needs another entry in
+    RETIRED_MODEL_REPLACEMENTS (js/storage.js) or a generic check.
+ 3. v353 item 2 (the Worker posting to the retired /chat/completions) concerns
     Mistral and Cohere only.
 
-Done under v356 and no longer open: the parsers were run from Cloudflare's network on
-2026-10-25 (POST /api/prices): 35 of 36 rows read, 35 equal the seed.
+Done under v357 and no longer open: Muse-Glimmer-30B smoke-tested as Builder on
+2026-10-25 with a paid key (HTTP 200, finish=stop); openai/gpt-oss-120b,
+deepseek-ai/DeepSeek-V4.1-Flash and zai-org/GLM-5.3-Flash also work on that test;
+Qwen/Qwen3.8-Flash answers HTTP 400 "This model only supports streaming", so it cannot
+be a default while the Builder sends a single non-streaming request.
 
 v356 — OPENAI, TOGETHER AND PERPLEXITY PRICES ARE READ BY CODE (v3.63.592).
 

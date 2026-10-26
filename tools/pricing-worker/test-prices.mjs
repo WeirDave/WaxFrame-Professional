@@ -194,6 +194,7 @@ assertEqual(px(parsePerplexity(PAGES.pplxDeep, 'sonar-deep-research')), [2, 8], 
 assert(!parsePerplexity('x'.repeat(700), 'sonar-pro').ok, 'a page without the token-rate blocks is a shape change');
 assertEqual(PRICE_SOURCES.perplexity.url('sonar-pro'), 'https://docs.perplexity.ai/docs/legacy/sonar/models/sonar-pro.md', 'each model has its own page address');
 assertEqual(PRICE_SOURCES.perplexity.url('../x'), null, 'an id that cannot be a page name has no address');
+assert(PRICE_SOURCES.deepseek.url.endsWith('/'), 'DeepSeek page address keeps its trailing slash (without it the static host can serve the Quick Start page, which has no table)');
 
 // ── Anthropic ────────────────────────────────────────────────────────
 console.log('\nAnthropic — rows keyed by display name, with a boundary');

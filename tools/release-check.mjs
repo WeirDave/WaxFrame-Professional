@@ -1108,6 +1108,22 @@ try {
   fail('tools/test-update-check-interval.mjs', `the update notifier's cache rules changed — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
+// ── Check 14d: Retired-model migration (tools/test-retired-model-migration.mjs) ──
+
+section('Retired-model migration (tools/test-retired-model-migration.mjs)');
+
+// v3.63.594 — saveHive() stores cfg.model for every provider config, so a hive saved
+// before a provider changed its default keeps sending the withdrawn model. The test
+// loads the real migration from js/storage.js and checks each place the old id lives.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/test-retired-model-migration.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/test-retired-model-migration.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.trim().startsWith('✗'));
+  fail('tools/test-retired-model-migration.mjs', `a withdrawn saved model is no longer replaced on load — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
 // ── Check 15: Server AI eligibility (tools/test-server-ai-eligibility.mjs) ──
 
 section('Server AI eligibility (tools/test-server-ai-eligibility.mjs)');

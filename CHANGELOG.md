@@ -1,5 +1,58 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.594 — A saved Together AI model that Together withdrew is replaced on load
+
+**Released:** 2026-10-26
+**Build:** 20261026-001
+
+### What changed
+
+**A Together AI model saved in an earlier session is replaced when it is no longer served.**
+A saved hive stores a model for every provider, so the default introduced in v3.63.593
+never took effect for existing hives and requests still went to
+`meta-llama/Llama-3.3-70B-Instruct-Turbo`, which Together answers with HTTP 400
+"Unable to access non-serverless model".
+
+- **Where it applies:** the built-in Together AI row, custom AIs and variants that use
+  Together's endpoint, and any cached model list, recommendation or tier choice that
+  still names the withdrawn model. They switch to `meta-models/Muse-Glimmer-30B` when
+  the hive loads. A different Together model chosen by the user, and the same model id
+  on another provider's endpoint, are left as they are.
+- **Notice:** a few seconds after startup the console lists each switched AI and one
+  toast announces the change.
+- **Warning wording:** the retired-model toast and console line now point to
+  Setup → Worker Bees → "Recommend Models" on the AI row. They previously named a
+  "Recheck" button that does not exist.
+
+### Pricing Worker
+- The DeepSeek source address ends in a slash (`/quick_start/pricing/`). Without it
+  DeepSeek's host serves the Quick Start page, which has no price table, and the
+  parser reported the model header as missing. A test keeps the slash.
+- Together AI is shown with no free tier: "None", prepaid only, $15 minimum first
+  purchase. The previous "Trial credits" text was wrong.
+
+### Verification
+- `node tools/test-retired-model-migration.mjs` (new, part of `node tools/release-check.mjs`):
+  built-in row, row-less configuration, custom AI and variant, unchanged cases, and cache
+  scrub.
+- The migration was run in the browser against a saved Together hive: requests went to
+  `meta-models/Muse-Glimmer-30B` and the saved hive was rewritten on the next save.
+- A live read of DeepSeek with the trailing slash returned all rows.
+- `node tools/release-check.mjs` (all stages) and the three tests in `tools/pricing-worker`.
+
+### Files changed
+`js/storage.js`, `js/app.js`, `js/pricing-renderer.js` (regenerated),
+`tools/test-retired-model-migration.mjs` (new), `tools/release-check.mjs`,
+`tools/README.md`, `tools/pricing-worker/src/prices.js`,
+`tools/pricing-worker/test-prices.mjs`, `tools/pricing-worker/README.md`,
+`tools/pricing-worker/data/pricing-seed.json`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v358.txt` (renamed from v357), plus the routine stamp
+sweep.
+
+### Rollback
+Revert to v3.63.593. The Worker deploy and the live Together text are independent of
+the app files.
+
 ## v3.63.593 — Together AI default model changed to Muse Glimmer 30B
 
 **Released:** 2026-10-25

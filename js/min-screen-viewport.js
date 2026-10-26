@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — min-screen-viewport.js
-// Build: 20261025-002
+// Build: 20261026-001
 //  Live viewport-size hint for the index.html minimum-screen
 //  surface. If the user is below the 1366×600 minimum we show
 //  exactly how many pixels short on each axis; if they're
