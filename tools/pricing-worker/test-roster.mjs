@@ -221,8 +221,8 @@ console.log('\nrunRoster — keys, baseline, drift, errors');
   // Together: no NEW lines, but MISSING still works.
   const tEnv = { ROSTER_KEY_TOGETHER: KEY };
   const t = ids => fakeFetch({ 'https://api.together.xyz': { body: ids.map(id => ({ id, type: 'chat' })) } });
-  const tBase = await runRoster({ env: tEnv, seed, previousState: {}, fetchImpl: t(['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'x/old']), nowIso: NOW });
-  const tNew = await runRoster({ env: tEnv, seed, previousState: tBase.state, fetchImpl: t(['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'x/old', 'x/brand-new']), nowIso: NOW });
+  const tBase = await runRoster({ env: tEnv, seed, previousState: {}, fetchImpl: t(['meta-models/Muse-Glimmer-30B', 'x/old']), nowIso: NOW });
+  const tNew = await runRoster({ env: tEnv, seed, previousState: tBase.state, fetchImpl: t(['meta-models/Muse-Glimmer-30B', 'x/old', 'x/brand-new']), nowIso: NOW });
   assertEqual(tNew.alertLines, [], 'Together: a new third-party model is not an alert');
   const tGone = await runRoster({ env: tEnv, seed, previousState: tBase.state, fetchImpl: t(['x/old']), nowIso: NOW });
   assert(tGone.alertLines.some(l => l.startsWith('ROSTER MISSING together/')), 'Together: a vanished tracked model still is');

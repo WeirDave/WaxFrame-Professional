@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261025-001
+// Build: 20261025-002
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -756,7 +756,7 @@
       // Together so the recommender / dropdown fall back to fetchModels
       // FromEndpoint as before.
       id: 'together', label: 'Together AI',
-      model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
+      model: 'meta-models/Muse-Glimmer-30B',
       endpoint: 'https://api.together.xyz/v1/chat/completions',
       format: 'openai',
       discovery: null,
@@ -770,7 +770,7 @@
       // way) but leaving retired/inaccessible models in the fallback list
       // meant WaxFrame could still surface them as selectable options with
       // no working serverless endpoint behind them.
-      fallback: ['meta-llama/Llama-3.3-70B-Instruct-Turbo']
+      fallback: ['meta-models/Muse-Glimmer-30B']
     },
     {
       // Cohere's OpenAI-compat endpoint — same body, same extract, same auth.

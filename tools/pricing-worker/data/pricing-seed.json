@@ -262,7 +262,7 @@
       "id": "together",
       "name": "Together AI",
       "shortName": "Together AI",
-      "defaultModel": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      "defaultModel": "meta-models/Muse-Glimmer-30B",
       "billingUrl": "https://api.together.ai/settings/organization/~current/billing",
       "tier1Rpm": "~600",
       "tier1Tpm": "varies",
@@ -272,15 +272,15 @@
       "recommendationNote": null,
       "models": [
         {
-          "id": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-          "inputPerM": 1.04,
-          "outputPerM": 1.04,
+          "id": "meta-models/Muse-Glimmer-30B",
+          "inputPerM": 0.35,
+          "outputPerM": 1.5,
           "contextWindow": "128K",
-          "maxOutput": "4K",
-          "estPerRound": 0.007,
+          "maxOutput": null,
+          "estPerRound": 0.005,
           "estNote": null,
-          "sourceUrl": "https://www.together.ai/models/llama-3-3-70b",
-          "verifiedAt": "2026-09-27T12:01:47.989Z",
+          "sourceUrl": "https://docs.together.ai/docs/serverless/models",
+          "verifiedAt": "2026-10-25T12:00:00.000Z",
           "status": "verified"
         }
       ]

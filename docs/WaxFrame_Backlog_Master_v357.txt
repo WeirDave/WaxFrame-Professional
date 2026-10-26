@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v356
+WaxFrame Backlog Master v357
 2026-10-25
 
 ABOUT THIS DOCUMENT
@@ -26,6 +26,33 @@ ships.
 
 
 
+v357 — TOGETHER AI DEFAULT MOVED TO MUSE GLIMMER 30B (v3.63.593).
+
+Together removed meta-llama/Llama-3.3-70B-Instruct-Turbo from serverless on 2026-10-22
+(a scheduled deprecation, not a redirect); a request to it now answers HTTP 400
+"Unable to access non-serverless model". The default and fallback are now
+meta-models/Muse-Glimmer-30B, Together's recommended replacement. Smoke-tested as
+Builder on 2026-10-25 with a paid key: HTTP 200, finish=stop, 1479 characters of
+content (19.7s). Also working on the same test: openai/gpt-oss-120b,
+deepseek-ai/DeepSeek-V4.1-Flash, zai-org/GLM-5.3-Flash. Qwen/Qwen3.8-Flash answers
+HTTP 400 "This model only supports streaming", so it cannot be a default while the
+Builder sends a single non-streaming request.
+
+Open, in order of importance:
+ 1. Muse-Glimmer-30B has not been run on a free / trial-credit Together key. A default
+    must work on free keys; repeat the smoke test with one.
+ 2. A user who saved the retired Llama model as their Together model keeps that saved
+    value; check what the app does with a saved model that is no longer served.
+ 3. The DeepSeek parser reports "the DeepSeek model header was not in the expected
+    shape" when run from a laptop (check-price-parsers-live.mjs) but reads fine from
+    Cloudflare's network (POST /api/prices on 2026-10-25), so it fails only locally.
+    Find what differs in the page served to a laptop before deciding it needs a fix.
+ 4. v353 item 2 (the Worker posting to the retired /chat/completions) concerns
+    Mistral and Cohere only.
+
+Done under v356 and no longer open: the parsers were run from Cloudflare's network on
+2026-10-25 (POST /api/prices): 35 of 36 rows read, 35 equal the seed.
+
 v356 — OPENAI, TOGETHER AND PERPLEXITY PRICES ARE READ BY CODE (v3.63.592).
 
 The 2026-10-25 pricing email reported eight rows newly failing. OpenAI dropped the
@@ -37,22 +64,6 @@ had been reporting as not listed since 2026-10-11. Perplexity's Sonar prices are
 from each model's legacy docs page (Sonar chat support ended 2026-09-27), and
 Together AI from the Markdown form of its serverless models page. Perplexity and
 Together rows are no longer sent to Sonar; only Mistral and Cohere still are.
-
-Open, in order of importance:
- 1. Together's default meta-llama/Llama-3.3-70B-Instruct-Turbo was deprecated on
-    2026-10-22 (Together redirects it to meta-models/Muse-Glimmer-30B). It is still the
-    Together default and fallback in js/provider-catalog.js, the pricing seed, and the
-    pricing page. Choose the replacement (a default must work on free keys and be
-    smoke-tested as Builder), then change the catalog and seed together.
- 2. The DeepSeek parser reports "the DeepSeek model header was not in the expected
-    shape" when run from a laptop on 2026-10-25 (check-price-parsers-live.mjs). Not in
-    the 2026-10-25 email, so it has been failing for some time or fails only locally.
-    Read the live page and fix parseDeepSeek.
- 3. The parsers have still not been run from Cloudflare's network (see the item
-    "Prove the price parsers from Cloudflare's network"); Together's and Perplexity's
-    docs sites are new to that list.
- 4. v353 item 2 (the Worker posting to the retired /chat/completions) now concerns
-    Mistral and Cohere only.
 
 v354 — GEMINI 4 ARGON ADDED TO THE GEMINI PICKER, DEFAULT UNCHANGED (v3.63.590).
 

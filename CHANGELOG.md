@@ -1,5 +1,47 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.593 — Together AI default model changed to Muse Glimmer 30B
+
+**Released:** 2026-10-25
+**Build:** 20261025-002
+
+### What changed
+
+**The Together AI default and fallback model is now `meta-models/Muse-Glimmer-30B`.**
+Together removed `meta-llama/Llama-3.3-70B-Instruct-Turbo` from its serverless models
+on 2026-10-22; a request to it now fails with HTTP 400 "Unable to access non-serverless
+model", so a Together key with the default model selected could not run a hive.
+
+- **Where it shows:** the model pre-selected when Together AI is chosen as a provider,
+  the model shown for Together AI on the API details page, and the Together AI row on
+  the AI API pricing page.
+- **Price shown:** $0.35 input / $1.50 output per million tokens, 128K context, about
+  $0.005 per round.
+- **Pricing Worker:** the tracked Together row is the new model, so the weekly price
+  refresh reads its price from Together's models page instead of reporting the removed
+  model as not listed. The README wording about the removal is corrected.
+- A Together model saved in an earlier session is not changed by this release.
+
+### Verification
+- A request to `meta-models/Muse-Glimmer-30B` with the same body the Builder sends
+  returned HTTP 200 and a complete answer. `openai/gpt-oss-120b`,
+  `deepseek-ai/DeepSeek-V4.1-Flash` and `zai-org/GLM-5.3-Flash` also did;
+  `Qwen/Qwen3.8-Flash` requires streaming and was not used.
+- `node tools/check-pricing-coverage.mjs`, the three tests in `tools/pricing-worker`
+  and `node tools/release-check.mjs` (all stages).
+
+### Files changed
+`js/provider-catalog.js`, `js/app.js`, `api-details.html`, `js/pricing-renderer.js`
+(regenerated), `tools/pricing-worker/data/pricing-seed.json`,
+`tools/pricing-worker/test-roster.mjs`, `tools/pricing-worker/README.md`, `CHANGELOG.md`,
+`docs/WaxFrame_Backlog_Master_v357.txt` (renamed from v356), plus the routine stamp
+sweep.
+
+### Rollback
+Revert this commit, redeploy, and restore the previous pricing data to the Worker.
+
+---
+
 ## v3.63.592 — OpenAI, Together AI and Perplexity prices are read by code again
 
 **Released:** 2026-10-25
