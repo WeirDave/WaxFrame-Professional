@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v358
+WaxFrame Backlog Master v359
 2026-10-26
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,48 @@ ships.
 
 
 
+
+v359 — CODE REVIEW: NINE HIGH FINDINGS FIXED, THE REST OPEN (v3.63.595).
+
+A full read of the app found nine high-severity defects; all nine are fixed in this
+version (see CHANGELOG.md). Regression coverage: tools/flow-check.mjs flows 7-14 and the
+new sections of tools/test-provider-extractors.mjs. The medium and low findings that were
+not taken in the same pass are open, in order of importance:
+ 1. A manual model choice is reverted at startup: the migration in js/app.js that resets a
+    keyed default AI to its recommended model checks a legacy cache key that nothing writes.
+ 2. Recommend Models on a variant AI writes the parent's model (cfg.model is shared), and
+    testApiKey / validateKeyOnSave probe the parent's model instead of the variant's.
+ 3. saveCustomTemplates swallows a quota error and callers then toast success; templates
+    store the reference text twice.
+ 4. Retry and Re-send paths change state before they check their guards (js/app.js, the
+    partial-round unwind): a Re-send with a still-unkeyed AI drops the round's history
+    entry and rewinds the counter.
+ 5. callAPI clears its timeout when headers arrive, so a stalled stream body can hang a
+    round. Streaming accumulators ignore mid-stream error frames, and Gemini's
+    promptFeedback.blockReason is lost (provider-catalog.js).
+ 6. A malformed hive or project blob on import can reset saved data to defaults before
+    parsing finishes (js/storage.js loadSettings / importSession); stash the previous
+    blobs first.
+ 7. The Help-page diagnostic bundle (js/help-page.js) exports the raw failure record,
+    ring buffer and console with "Include my document" ticked, and the prefilled issue
+    carries the full file:// path. js/wf-debug.js scrubRingBuffer fails open past depth 12
+    and misses several key shapes.
+ 8. privacy.html and README.md say there are no other automatic outbound requests; the
+    update check (js/update-check.js) calls api.github.com on page load, at most hourly.
+    Disclose it or add an opt-out.
+ 9. About 35 overlays have no role="dialog", focus move or return; several controls have
+    no keyboard path; the toast is the only live region; muted-text contrast is below 4.5
+    in dark and auto-light themes.
+10. The release ZIP ships tools/, docs/, .github/, CNAME and the IndexNow key file;
+    tools/README.md says none of it ships. Add export-ignore entries after checking that
+    nothing in the app reads those paths. Add a check that RELEASE_TAG equals APP_VERSION,
+    and a windows-latest job that runs the installer and updater under Windows PowerShell 5.1.
+11. The Claude relay's rate limit is keyed on a hash of the caller's own x-api-key
+    (tools/claude-proxy/src/index.js); add an IP limiter. The pricing Worker's
+    corroboratesSource matches a bare "2" inside "2026".
+12. Consolidation, only with tests in place first: one escapeHtml (eleven copies), one
+    downloadBlob, one validateHttpEndpoint (three copies), one per-key localStorage
+    writer returning a boolean, and the length gate shared by runBuilderOnly and runRound.
 
 v358 — SAVED TOGETHER MODEL MIGRATED, DEEPSEEK ADDRESS FIXED (v3.63.594).
 

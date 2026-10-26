@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const appSource = fs.readFileSync(path.join(root, 'js', 'app.js'), 'utf8');
@@ -120,6 +121,11 @@ const setupRow = extractFunction('buildAISetupRowHTML');
 assert.match(setupRow, /const isReady\s+=\s+isAIReadyForUse\(ai\)/, 'server rows derive their controls from readiness');
 assert.match(setupRow, /const compactModel = isReady/, 'keyless server rows retain their model picker');
 assert.match(setupRow, /if \(!isReady\)/, 'Builder controls use readiness instead of key presence');
-assert.match(storageSource, /if \(k\) headers\['Authorization'\]/, 'restored keyless configs omit Authorization');
+// Restored (rehydrated) custom AIs take their request functions from the
+// catalog's shared builders; a keyless server must still get no Authorization.
+assert.match(storageSource, /Object\.assign\(cfg, WFProviderCatalog\.fnsForFormat\(cfg\.format\)\)/, 'restored configs use the shared builders');
+const catalogForHeaders = createRequire(import.meta.url)(path.join(root, 'js', 'provider-catalog.js')).WFProviderCatalog;
+assert.equal('Authorization' in catalogForHeaders.fnsForFormat('openai').headersFn(''), false, 'restored keyless configs omit Authorization');
+assert.equal(catalogForHeaders.fnsForFormat('openai').headersFn('k').Authorization, 'Bearer k');
 
 console.log('Server AI eligibility tests passed.');

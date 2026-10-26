@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20261026-001
+// Build: 20261026-002
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -125,7 +125,11 @@ try {
     _wfBroadcastChannel.onmessage = (e) => {
       const m = e && e.data;
       if (!m || m.tabId === _wfTabId || m.type !== 'session-write') return;
-      const myRound = (typeof window.round === 'number') ? window.round : 0;
+      // `round` is a top-level let in app.js, so it is NOT a window property:
+      // read the shared global binding. Pages that load storage.js without
+      // app.js (Help) have no session, so there is nothing to conflict with.
+      if (typeof round !== 'number') return;
+      const myRound = round;
       if (typeof m.round === 'number' && m.round > myRound) {
         // Another tab is ahead. Pin the banner so this tab doesn't clobber.
         _showCrossTabConflictBanner(m.round, myRound);
@@ -290,6 +294,10 @@ async function idbSet(value) {
     tx.objectStore(IDB_STORE).put(value, IDB_KEY);
     tx.oncomplete = () => resolve(true);
     tx.onerror    = e => reject(e.target.error);
+    // A commit-time failure (quota) fires `abort` and not `error`, so without
+    // this handler the promise never settled and the caller's quota handling
+    // never ran.
+    tx.onabort    = e => reject((e.target && e.target.error) || tx.error || new Error('IndexedDB transaction aborted'));
   });
 }
 
@@ -310,6 +318,7 @@ async function idbClear() {
     tx.objectStore(IDB_STORE).delete(IDB_KEY);
     tx.oncomplete = () => resolve(true);
     tx.onerror    = e => reject(e.target.error);
+    tx.onabort    = e => reject((e.target && e.target.error) || tx.error || new Error('IndexedDB transaction aborted'));
   });
 }
 
@@ -1134,6 +1143,14 @@ function _retiredReplacementFor(endpoint, model) {
 // [{ name, from, to }] for AI rows the user can see; a provider config with no
 // row (never keyed) is corrected silently. Also drops cached model lists and
 // recommendations that still name the withdrawn model so none re-selects it.
+// An imported hive names providers by string id. `API_CONFIGS[id]` is truthy
+// for "__proto__" and "constructor" (they resolve to Object.prototype and a
+// built-in), so a crafted hive could pass the existence check and then write
+// _key / model onto Object.prototype. Own properties only.
+function _ownApiConfig(id) {
+  return (typeof id === 'string' && Object.prototype.hasOwnProperty.call(API_CONFIGS, id)) ? API_CONFIGS[id] : null;
+}
+
 function migrateRetiredModels() {
   const swaps = [];
   const visibleProviders = new Set(aiList.map(a => a.provider));
@@ -1256,23 +1273,9 @@ function loadSettings() {
         // for the Add Custom AI modal.
         const cfg = API_CONFIGS[ai.provider];
         if (cfg && typeof cfg.headersFn !== 'function') {
-          if (cfg.format === 'anthropic') {
-            cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' });
-            cfg.bodyFn    = (m, prompt) => JSON.stringify({ model: m, max_tokens: (window.WFProviderCatalog?.resolveOutputBudget?.(m) || 32768), messages: [{ role: 'user', content: prompt }] });
-            cfg.extractFn = d => WFProviderCatalog.extractAnthropicText(d);
-          } else if (cfg.format === 'google') {
-            cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k });
-            cfg.bodyFn    = (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
-            cfg.extractFn = d => WFProviderCatalog.extractGeminiText(d);
-          } else {
-            cfg.headersFn = k => {
-              const headers = { 'Content-Type': 'application/json' };
-              if (k) headers['Authorization'] = `Bearer ${k}`;
-              return headers;
-            };
-            cfg.bodyFn    = (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] });
-            cfg.extractFn = d => WFProviderCatalog.extractOpenAIText(d);
-          }
+          // Same builders as the Add Custom AI modal and a built-in provider of
+          // this format (stream flag, output budget, reviewer guard).
+          Object.assign(cfg, WFProviderCatalog.fnsForFormat(cfg.format));
         }
       });
     }
@@ -1325,7 +1328,7 @@ function loadSettings() {
     const _restoreChatUrls = { deepseek: 'https://chat.deepseek.com', cohere: 'https://coral.cohere.com', together: 'https://api.together.ai', copilot: 'https://copilot.microsoft.com' };
     _referenced.forEach(id => {
       if (aiList.find(a => a.id === id)) return;   // already present
-      if (!API_CONFIGS[id]) return;                // not a known provider — skip
+      if (!_ownApiConfig(id)) return;              // not a known provider — skip
       let icon = 'images/icon-generic.png';
       if (typeof wfIconUpload !== 'undefined' && typeof wfIconUpload.matchCatalog === 'function') {
         icon = wfIconUpload.matchCatalog(id) || icon;
@@ -1359,12 +1362,13 @@ function loadSettings() {
 
     if (h.keys) {
       Object.keys(h.keys).forEach(id => {
-        if (API_CONFIGS[id]) API_CONFIGS[id]._key = h.keys[id];
+        const cfg = _ownApiConfig(id);
+        if (cfg && typeof h.keys[id] === 'string') cfg._key = h.keys[id];
       });
     }
     if (h.models) {
       Object.keys(h.models).forEach(id => {
-        if (API_CONFIGS[id]) {
+        if (_ownApiConfig(id) && typeof h.models[id] === 'string') {
           API_CONFIGS[id].model = h.models[id];
           // Re-sync Gemini endpoint if model was customised
           if (id === 'gemini' && API_CONFIGS[id].endpointFn) {
@@ -2317,7 +2321,10 @@ async function _autoBackupAfterRound() {
   if (!_fsaSupported()) return;
   const freq = getAutoBackupFreq();
   if (!freq || freq < 1) return;
-  const r = (typeof window !== 'undefined' && typeof window.round === 'number') ? window.round : NaN;
+  // The caller fires before the counter is incremented, so `round` is the
+  // round that just completed (read before the first await). It is a
+  // top-level let in app.js, not a window property.
+  const r = (typeof round === 'number') ? round : NaN;
   if (!isFinite(r) || r < 1) return;
   // Frequency math: fire when round is a multiple of freq.
   //   freq=1 → every round (1, 2, 3, 4, …)

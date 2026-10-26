@@ -34,7 +34,7 @@
 #   - No running-process coordination. A file:// page isn't a process to
 #     wait on or restart -- "relaunch" just means reopening index.html.
 #
-# Build: 20261026-001
+# Build: 20261026-002
 
 [CmdletBinding()]
 param(
@@ -156,7 +156,12 @@ function Test-WfGit {
 
 function Invoke-WfGit {
   param([string[]]$Arguments, [switch]$AllowFailure)
-  $output = & git -C $scriptDir @Arguments 2>&1
+  # Windows PowerShell 5.1 raises a terminating error for any native stderr line
+  # under $ErrorActionPreference = 'Stop' (git writes progress and "From ..." lines
+  # there on success). The exit code below is the real signal.
+  $prevEap = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try { $output = & git -C $scriptDir @Arguments 2>&1 } finally { $ErrorActionPreference = $prevEap }
   if ($LASTEXITCODE -ne 0 -and -not $AllowFailure) {
     throw "git $($Arguments -join ' ') failed: $output"
   }

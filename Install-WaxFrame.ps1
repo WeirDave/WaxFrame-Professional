@@ -168,7 +168,15 @@ try {
     if ($tags) {
       $tag = ($tags | Sort-Object { [version]($_ -replace '^v','') } | Select-Object -Last 1)
       Write-Step "Checking out $tag..."
-      & git -C $target -c advice.detachedHead=false checkout --force $tag 2>&1 | Out-Null
+      # Windows PowerShell 5.1 turns any native stderr line into a terminating
+      # error while $ErrorActionPreference is 'Stop', and git reports a normal
+      # checkout ("HEAD is now at ...") on stderr. Relax it for this one call and
+      # judge the result by git's exit code instead.
+      $prevEap = $ErrorActionPreference
+      $ErrorActionPreference = 'Continue'
+      try { & git -C $target -c advice.detachedHead=false checkout --force $tag 2>&1 | Out-Null }
+      finally { $ErrorActionPreference = $prevEap }
+      if ($LASTEXITCODE -ne 0) { Write-Warn "  Could not check out $tag; staying on the default branch." }
     }
   } else {
     Write-Step 'Finding the latest release...'

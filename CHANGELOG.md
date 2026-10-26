@@ -1,5 +1,91 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.595 — Restore, launch, custom AI, scanned-document and storage fixes
+
+**Released:** 2026-10-26
+**Build:** 20261026-002
+
+### What changed
+
+**Custom AIs** (Ollama, LM Studio, Open WebUI, imported model servers and AIs added with "Add custom AI")
+- A request is sent once. A server that answered with one plain JSON document instead of a
+  stream used to receive the same request a second time; that reply is now used as received.
+- Custom AIs build their requests the way a built-in provider of the same type does: the
+  stream flag, a stated output limit, and the separation of review instructions from the
+  document text. This applies to AIs added in the modal, AIs imported from a server, and AIs
+  restored when a saved hive loads.
+- The per-provider concurrency limit is released once per request. Retried requests released
+  it two or three times, which allowed more simultaneous requests to one provider than its
+  limit.
+
+**Round History**
+- "↩ Restore" on a past round discards the rounds after it. Previously the later rounds were
+  kept, the next round repeated a round number, and the "rounds discarded" message was wrong.
+
+**Launching a session** (Setup, Document step)
+- "↩ Return to Work Screen" returns to the work screen without also opening the
+  "Launch over active session?" prompt. "Launch Session →" starts one launch per click.
+- Launching checks everything that can refuse it (empty document, an AI without a key, a
+  declined "Launch anyway") before it clears anything. Refusing leaves the current rounds,
+  round counter and document in place.
+- A launch over an earlier session also clears the previous run's conflict history, per-AI
+  warnings and resolved decisions, including their saved copies, so they no longer return
+  after a reload.
+
+**Scanned documents and photographs**
+- Pages are read by the AI in groups of four rather than all in one request, and each request
+  is allowed 8,192 output tokens (previously 4,096 for the whole document). Long scans are no
+  longer cut off partway.
+- When the AI stops at its output limit, the import warning, the "Re-extract with AI Vision"
+  result and the Verify panel's "Re-scan" note name the pages that may end early.
+- The page images kept for "Re-extract with AI Vision" and "Re-scan" belong to the Starting
+  Document. Importing a Reference Material PDF, or starting a new document from a file that is
+  not a PDF, no longer changes which pages those buttons read. Reference Material imports no
+  longer render page images they never use.
+
+**Saving and multiple tabs**
+- A save that the browser aborts at commit (storage full) is reported as a failed save and the
+  storage-full notice appears. It previously left the save waiting indefinitely, and a
+  checkpoint export could hang.
+- Automatic backup to the chosen folder (Settings → Backup Sync → "Auto-backup frequency")
+  now runs after a round. It had never fired.
+- The "Another tab is editing this session" banner appears only when the other tab is on a
+  later round. It was shown for any other tab, including an open Help page.
+
+**Prompts**
+- Reviewer and Builder prompts are split at the last "SEND TO ALL AIs" or "⚠️ BUILDER:"
+  marker. A document, reference text, notes or reviewer reply containing one of those phrases
+  no longer moves the boundary, which previously dropped the reviewer safeguard or sent
+  document text as instructions.
+
+**Importing a hive or checkpoint**
+- Provider ids in an imported hive are matched against the providers WaxFrame has, and saved
+  keys and models must be text. An id such as `__proto__` is ignored.
+
+**Change Builder**
+- The AI name in the "Pick a new Builder to continue disabling it" message is escaped.
+
+**Installer and updater (Windows PowerShell 5.1)**
+- `Install-WaxFrame.ps1` no longer reports "Install failed: HEAD is now at …" after a
+  successful clone and checkout. `Update-WaxFrame.ps1` no longer treats text that git writes
+  to its error stream (progress and "From …" lines) as a failed command.
+
+**Smaller fixes**
+- `#settings` is removed from the address after the Settings dialog opens from a deep link.
+- The collapsed model drop-down on an AI row no longer carries stray text.
+- Toast messages are announced to screen readers.
+- `.dev.vars` is ignored by git.
+- Two comments and a changelog entry no longer name an imported file.
+
+### Verification
+- `node tools/release-check.mjs` passes.
+- `tools/flow-check.mjs` has eight new flows (custom AI sent once; Restore; launch button;
+  refused launch; aborted save; cross-tab banner; batched vision reads and the truncation
+  note; Starting Document page ownership). Run against the previous code, the first four fail.
+- `tools/test-provider-extractors.mjs` covers the prompt split with markers inside document
+  text, the shared custom-AI request functions, and source guards for the storage fixes.
+- The installer's git step was run under Windows PowerShell 5.1 before and after the change.
+
 ## v3.63.594 — A saved Together AI model that Together withdrew is replaced on load
 
 **Released:** 2026-10-26
@@ -8562,7 +8648,7 @@ Released: `2026-06-15`
 
 v3.63.390 + v3.63.391 added the "🔁 Try vision with X" button inside the verify modal but missed the upstream problem: **the verify modal itself wasn't reachable for most PDFs**. Three connected fixes here, all about making the modal reachable so the vision rotation actually does something.
 
-**1. Single-file uploads auto-open the verify modal again.** David hit this on CandySimmons_Resume2023.pdf in v3.63.391 — even though the PDF was vision-OCR'd (sourceType='pdf-vision', should trigger auto-open), the modal didn't pop. Instead a "Review CandySimmons_Resume2023.pdf" banner button appeared and he had to click that to open the modal.
+**1. Single-file uploads auto-open the verify modal again.** David hit this on a scanned PDF in v3.63.391 — even though the PDF was vision-OCR'd (sourceType='pdf-vision', should trigger auto-open), the modal didn't pop. Instead a "Review <filename>" banner button appeared and he had to click that to open the modal.
 
 Root cause: the v3.63.10 "batch deferred review" wrapper started passing `_refDeferredVerify` (the collector array) on EVERY call to `processRefFile()`, even for single-file uploads. The original v3.63.10 comment promised "a single add (no collector) opens immediately, as before" — but that contract was broken because the batch wrapper unconditionally supplies the collector. So every reference upload, even one file, deferred to the click-to-review banner.
 
@@ -22796,7 +22882,7 @@ sections are on the way."
 
 Cosmetic follow-up to v3.61.0. Three CSS-only fixes for the new
 consolidated Verify Import modal, surfaced during real-PDF testing
-of the CandySimmons_Resume2023.pdf OCR'd import path.
+of the OCR'd PDF import path.
 
 **Issues fixed:**
 

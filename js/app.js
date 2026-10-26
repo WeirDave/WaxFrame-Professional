@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261026-001
+// Build: 20261026-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261026-001';         // build stamp — update each session
+const BUILD = '20261026-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -3619,12 +3619,21 @@ function updateDocRequirements() {
   if (hasActiveSession) {
     btn.classList.add('btn-accent');
     btn.querySelector('.launch-label').textContent = '↩ Return to Work Screen';
-    btn.onclick = () => goToScreen('screen-work');
   } else {
     btn.classList.toggle('btn-accent', hasDoc);
     btn.querySelector('.launch-label').textContent = 'Launch Session →';
-    btn.onclick = () => startSession();
   }
+}
+
+// The one click handler for #launchBtn (index.html data-fn). The label above
+// switches between "Launch Session" and "Return to Work Screen"; this does what
+// the label says. The button used to ALSO carry a direct onclick, and the
+// delegated data-fn handler ran as well, so "Return to Work Screen" took the
+// user back and then opened the "Launch over active session?" prompt.
+function launchOrReturn() {
+  const hasActiveSession = history.length > 0 || !!(docText && round > 1);
+  if (hasActiveSession) { goToScreen('screen-work'); return; }
+  return startSession();
 }
 
 // Legacy alias — kept for any internal calls that haven't been updated
@@ -4778,6 +4787,25 @@ function resetSessionState() {
   window._lastConflicts       = null;
   window._lastAppliedChanges  = [];
   window._autoCapturedConflicts = null;
+
+  // The rest of the per-run conflict state. clearProject wiped these but a
+  // launch over an old session did not, so the previous run's conflict ledger
+  // (whose fingerprints suppress repeat conflicts), per-AI warnings and
+  // resolved decisions were still in localStorage and came back on the next
+  // reload, and the in-memory picks and holdout anchors carried into the new
+  // run.
+  window._conflictLedger      = [];
+  window._aiWarnings          = {};
+  window._decisionChoices     = {};
+  window._conflictCurrentTexts = {};
+  window._lastConflictFP      = null;
+  window._holdoutChoices      = {};
+  window._holdoutAnchors      = {};
+  window._flatHoldoutSuggestions = null;
+  window._lastValidationFailures = null;
+  ['waxframe_resolved_decisions', 'waxframe_conflict_ledger', 'waxframe_ai_warnings'].forEach(k => {
+    try { localStorage.removeItem(k); } catch (e) { /* non-critical */ }
+  });
 
   // Round-counter state machine and per-session flags.
   window._roundUiState           = 'idle';
@@ -6800,8 +6828,6 @@ function _buildCompactModelSelect(ai, currentModel) {
     data-action="noop"
     data-change-action="call-multi" data-fn="swapAIModelFromHiveCard" data-args="data:aiId,value" data-ai-id="${ai.id}" data-stop="1"
     title="${escapeHtml(_compactTitle)}">
-
-' + _limitsTooltip(getModelLimits(ai.provider, currentModel)) : ''))}">
     ${placeholderOpt}${savedOpt}${opts}
   </select>`;
 }
@@ -11526,31 +11552,12 @@ function addCustomAI() {
   if (_apiDocs)    ai.apiDocs    = _apiDocs;
 
   // Build API config based on selected format
-  const baseConfigs = {
-    openai: {
-      // v3.27.5: omit Authorization when key is empty (see addImportServerModels for full rationale)
-      headersFn: k => {
-        const h = { 'Content-Type': 'application/json' };
-        if (k) h['Authorization'] = `Bearer ${k}`;
-        return h;
-      },
-      bodyFn: (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
-      extractFn: d => WFProviderCatalog.extractOpenAIText(d)
-    },
-    anthropic: {
-      headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
-      bodyFn: (m, prompt) => JSON.stringify({ model: m, max_tokens: (window.WFProviderCatalog?.resolveOutputBudget?.(m) || 32768), messages: [{ role: 'user', content: prompt }] }),
-      extractFn: d => WFProviderCatalog.extractAnthropicText(d)
-    },
-    google: {
-      headersFn: k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k }),
-      bodyFn: (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-      extractFn: d => WFProviderCatalog.extractGeminiText(d)
-    }
-  };
-
+  // The catalog's own builders for this format (see fnsForFormat). They honour
+  // the output budget, the reviewer guard and the stream flag; the minimal
+  // functions that used to live here did none of that, so a custom server
+  // answered a streaming request with plain JSON and got the request twice.
   const formatLabels = { openai: 'OpenAI compatible', anthropic: 'Anthropic', google: 'Google' };
-  const base = baseConfigs[format] || baseConfigs.openai;
+  const base = WFProviderCatalog.fnsForFormat(format);
 
   // v3.63.95 — Skeleton-merge. If the id already exists in API_CONFIGS as a
   // pre-registered skeleton (e.g. deepseek/together/cohere from api.js), its
@@ -12690,19 +12697,10 @@ function addImportServerModels() {
       // servers are OpenAI-compatible by definition since this flow assumes
       // an OpenAI-compatible chat completions endpoint.
       format:    'openai',
-      headersFn: k => {
-        // v3.27.5: omit Authorization entirely when no key is set rather than
-        // sending the literal string "Bearer undefined". Ollama, LM Studio,
-        // and unauth'd Open WebUI tolerate the bogus header today, but stricter
-        // implementations (or future auth changes on these servers) could
-        // reject it. Aligns with fetchModelsFromEndpoint and recommendModel,
-        // which already gate Authorization on key presence.
-        const h = { 'Content-Type': 'application/json' };
-        if (k) h['Authorization'] = `Bearer ${k}`;
-        return h;
-      },
-      bodyFn:    (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
-      extractFn: d => WFProviderCatalog.extractOpenAIText(d)
+      // v3.27.5: Authorization is omitted entirely when no key is set rather
+      // than sending the literal string "Bearer undefined" (Ollama, LM Studio
+      // and unauthenticated Open WebUI). fnsForFormat carries that rule.
+      ...WFProviderCatalog.fnsForFormat('openai')
     };
     if (key) API_CONFIGS[id]._key = key;
 
@@ -13235,7 +13233,7 @@ function getVisionCapableAIs() {
 // { text, used, errors }. text is '' only if EVERY keyed provider failed
 // or none are keyed. statusEl (optional) gets a "trying next…" update so a
 // slow first provider doesn't look hung.
-async function runVisionWithFallback(images, statusEl = null) {
+async function runVisionWithFallback(images, statusEl = null, meta = null) {
   const ais = getVisionCapableAIs();
   if (!ais.length) return { text: '', used: '', errors: ['no vision-capable AI key available'] };
   const errors = [];
@@ -13247,7 +13245,7 @@ async function runVisionWithFallback(images, statusEl = null) {
       setFileStatusState(statusEl, 'loading');
     }
     try {
-      const t = await runVisionTranscription(images, ai.cfg, ai.key);
+      const t = await runVisionTranscription(images, ai.cfg, ai.key, meta);
       if (t && t.trim()) return { text: t, used: ai.cfg.label, usedProvider: ai.provider, errors };
       // v3.59.3 — HTTP 200 with an empty body isn't an error, so it never hit
       // visionErrorDetail and left no trace. Log a DEV breadcrumb so a silent
@@ -13294,6 +13292,15 @@ async function processFile(file) {
     const docs = await extractFromFile(file, { xlsxMode: 'single' });
     if (!docs || !docs.length) throw new Error('No content extracted from file');
     const doc = docs[0]; // starting doc takes the first/only result
+
+    // The Starting Document owns window._lastPDFPages. Set (or cleared) here,
+    // from this file's own result, so a non-PDF start does not inherit the
+    // previous PDF's pages and a reference import cannot replace them.
+    window._lastPDFPages = (Array.isArray(doc.pageImages) && doc.pageImages.length) ? doc.pageImages : null;
+    try {
+      if (window._lastPDFPages) localStorage.setItem('waxframe_v2_has_pdf_pages', '1');
+      else localStorage.removeItem('waxframe_v2_has_pdf_pages');
+    } catch (e) { console.warn('[v2-has-pdf-pages] write failed:', e); }
 
     docText = (doc.text || '').trim();
     saveSession();
@@ -13436,7 +13443,7 @@ async function processRefFile(file, batchLabel = '', verifyCollector = null) {
   }
 
   try {
-    const docs = await extractFromFile(file, { xlsxMode: 'multi' });
+    const docs = await extractFromFile(file, { xlsxMode: 'multi', keepPageImages: false });
     if (!docs || !docs.length) throw new Error('No content extracted from file');
 
     let totalChars = 0;
@@ -13648,7 +13655,7 @@ async function extractFromFile(file, options = {}) {
     return _guard([{ text, warnings: [], sourceType: ext, suggestedName: file.name }]);
   }
   if (ext === 'pdf') {
-    const r = await extractPDF(file);
+    const r = await extractPDF(file, options);
     return _guard([{ ...r, suggestedName: file.name }]);
   }
   if (ext === 'docx') {
@@ -13731,7 +13738,15 @@ function wfBtnElapsed(el, labelFn) {
   return () => clearInterval(id);
 }
 
-async function extractPDF(file) {
+// options.keepPageImages (default true): whether a clean text-layer PDF also
+// rasterises its pages for the work screen's "Re-extract with AI Vision". Only
+// the Starting Document uses that, so Reference Material imports pass false.
+// The rendered pages travel on the result as `pageImages`; the caller that owns
+// them decides where they live. They used to be written to a single shared
+// window._lastPDFPages from in here, so importing any later PDF (a reference
+// document, say) silently swapped the pages that Re-extract and the Verify
+// panel would transcribe into the Starting Document.
+async function extractPDF(file, options = {}) {
   const result = { text: '', warnings: [], sourceType: 'pdf' };
 
   // v3.59.1 — narrate the whole pipeline, not just the vision tail. This
@@ -13774,8 +13789,8 @@ async function extractPDF(file) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.594'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.594';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.595'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.595';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -13987,7 +14002,7 @@ async function extractPDF(file) {
           // provider-advance writes.
           window._visionActiveLabel = '';
           const _hbBaseSparse = () => {
-            const who = window._visionActiveLabel ? `${window._visionActiveLabel} vision` : 'AI vision';
+            const who = (window._visionActiveLabel ? `${window._visionActiveLabel} vision` : 'AI vision') + (window._visionBatchLabel || '');
             return `⏳ OCR pass on ${pageOcrCandidates.length} sparse page${pageOcrCandidates.length === 1 ? '' : 's'} with ${who} (can take a minute or two) —`;
           };
           const _stopHbSparse = _startStatusHeartbeat(status, _hbBaseSparse);
@@ -14010,7 +14025,9 @@ async function extractPDF(file) {
       }
     }
 
-    await storePDFPageImages(pdf);
+    if (options.keepPageImages !== false) {
+      try { result.pageImages = await renderPDFToImages(pdf); } catch (e) { /* re-extract is a convenience */ }
+    }
     return result;
   }
 
@@ -14023,8 +14040,7 @@ async function extractPDF(file) {
   }
 
   const pageImages = await renderPDFToImages(pdf);
-  window._lastPDFPages = pageImages;
-  try { localStorage.setItem('waxframe_v2_has_pdf_pages', '1'); } catch(e) { console.warn('[v2-has-pdf-pages] write failed:', e); }
+  result.pageImages = pageImages;
 
   // v3.59.0 — page count is known now; replace the vague "15–30 seconds"
   // with a concrete, honest estimate so a 1–2 min multi-page OCR doesn't
@@ -14057,13 +14073,14 @@ async function extractPDF(file) {
   // the provider outcome is reported in the warnings afterward.
   window._visionActiveLabel = '';
   const _hbBase = () => {
-    const who = window._visionActiveLabel ? `${window._visionActiveLabel} vision` : 'AI vision';
+    const who = (window._visionActiveLabel ? `${window._visionActiveLabel} vision` : 'AI vision') + (window._visionBatchLabel || '');
     return `⏳ Reading ${pageImages.length} page${pageImages.length === 1 ? '' : 's'} with ${who} (can take a minute or two) —`;
   };
   const _stopHb = _startStatusHeartbeat(status, _hbBase);
   let _vr;
+  const _visionMeta = {};
   try {
-    _vr = await runVisionWithFallback(pageImages, null);
+    _vr = await runVisionWithFallback(pageImages, null, _visionMeta);
   } finally {
     _stopHb();
   }
@@ -14073,6 +14090,8 @@ async function extractPDF(file) {
     result.text = (outlineText + transcribed + formText).trim();
     result.sourceType = 'pdf-vision';
     result.warnings.push(`Extracted via AI vision (${used}) — check for accuracy before running rounds`);
+    const _cut = _visionTruncationNote(_visionMeta);
+    if (_cut) result.warnings.push(_cut);
     if (errors.length) result.warnings.push(`Earlier OCR attempts skipped: ${errors.join('; ')}`);
     return result;
   }
@@ -14245,11 +14264,12 @@ async function extractImage(file) {
 
   window._visionActiveLabel = '';
   const _hb = _startStatusHeartbeat(status, () => {
-    const who = window._visionActiveLabel ? `${window._visionActiveLabel} vision` : 'AI vision';
+    const who = (window._visionActiveLabel ? `${window._visionActiveLabel} vision` : 'AI vision') + (window._visionBatchLabel || '');
     return `⏳ Reading the image with ${who} (can take a minute) —`;
   });
   let vr;
-  try { vr = await runVisionWithFallback([prepped.b64], null); }
+  const _imgMeta = {};
+  try { vr = await runVisionWithFallback([prepped.b64], null, _imgMeta); }
   finally { _hb(); }
 
   const { text, used, errors } = vr;
@@ -14266,25 +14286,14 @@ async function extractImage(file) {
     result.warnings.push(`Image was scaled to ${prepped.sentW}x${prepped.sentH} for the AI — retake closer if small text was missed`);
   }
   if (errors && errors.length) result.warnings.push(`Earlier OCR attempts skipped: ${errors.join('; ')}`);
+  const _imgCut = _visionTruncationNote(_imgMeta);
+  if (_imgCut) result.warnings.push(_imgCut);
 
   // Keep the prepared image for the work screen's Re-extract, exactly as the
-  // PDF path keeps its page renders.
-  try {
-    window._lastPDFPages = [prepped.b64];
-    localStorage.setItem('waxframe_v2_has_pdf_pages', '1');
-  } catch (e) { /* re-extract is a convenience, not a requirement */ }
+  // PDF path keeps its page renders (the caller decides where it is stored).
+  result.pageImages = [prepped.b64];
 
   return result;
-}
-
-// Store PDF pages in memory for re-extract on work screen
-async function storePDFPageImages(pdf) {
-  try {
-    window._lastPDFPages = await renderPDFToImages(pdf);
-    localStorage.setItem('waxframe_v2_has_pdf_pages', '1');
-  } catch(e) {
-    window._lastPDFPages = null;
-  }
 }
 
 // ============================================================
@@ -14524,11 +14533,20 @@ function _verifyNextVisionProvider() {
 // can't see. Now the button is always visible when there's a re-scan-able
 // PDF in the modal; when prereqs aren't met it's disabled with a tooltip
 // that explains exactly what's missing (no vision key / no PDF accessible).
+// The page images the Verify panel may re-scan without rendering: only the
+// Starting Document's import keeps any (window._lastPDFPages). A Reference
+// Material import has none and renders from its own blob on demand.
+function _verifyCachedPages() {
+  const ok = _verifyImportCtx && _verifyImportCtx.target === 'starting'
+    && Array.isArray(window._lastPDFPages);
+  return ok ? window._lastPDFPages : [];
+}
+
 function _syncVerifyButtons() {
   const reread = document.getElementById('verifyRereadBtn');
   if (!reread) return;
   const nxt = _verifyNextVisionProvider();
-  const hasPagesCached = Array.isArray(window._lastPDFPages) && window._lastPDFPages.length > 0;
+  const hasPagesCached = _verifyCachedPages().length > 0;
   const canRenderOnDemand = !!(_verifyImportCtx
     && _verifyImportCtx.blobUrl
     && _verifyImportCtx.isRenderable
@@ -14860,7 +14878,8 @@ async function verifyTryDifferentReader() {
   // its bytes, parse with pdf.js, rasterize to JPEG data-URLs. From the user's
   // perspective: clicking "Try vision with X" just works whether vision had
   // already been tried or not.
-  if (!Array.isArray(window._lastPDFPages) || !window._lastPDFPages.length) {
+  let pagesForScan = _verifyCachedPages();
+  if (!pagesForScan.length) {
     if (!_verifyImportCtx || !_verifyImportCtx.blobUrl || !_verifyImportCtx.isRenderable) {
       if (note) note.textContent = 'No page images are cached and the original PDF isn\'t accessible. Re-upload the file and try again.';
       return;
@@ -14875,7 +14894,8 @@ async function verifyTryDifferentReader() {
       const resp = await fetch(_verifyImportCtx.blobUrl);
       const ab = await resp.arrayBuffer();
       const pdf = await window.pdfjsLib.getDocument({ data: ab, isEvalSupported: false }).promise;
-      window._lastPDFPages = await renderPDFToImages(pdf);
+      pagesForScan = await renderPDFToImages(pdf);
+      if (_verifyImportCtx.target === 'starting') window._lastPDFPages = pagesForScan;
     } catch(e) {
       if (note) note.textContent = `Could not render PDF for vision: ${e.message}`;
       if (btn) { btn.disabled = false; }
@@ -14895,7 +14915,8 @@ async function verifyTryDifferentReader() {
   // minute+). Ticks the note line so it doesn't look hung; stopped in finally.
   const _stopHbReread = _startStatusHeartbeat(note, () => `⏳ Re-scanning with ${nxt.label} vision —`);
   try {
-    const t = await runVisionTranscription(window._lastPDFPages, nxt.ai.cfg, nxt.ai.key);
+    const _scanMeta = {};
+    const t = await runVisionTranscription(pagesForScan, nxt.ai.cfg, nxt.ai.key, _scanMeta);
     // v3.63.393 — advance the rotation anchor by AI ID (not provider) so
     // variants are properly cycled through. The provider anchor stays in
     // sync for the tech-details display.
@@ -14903,7 +14924,10 @@ async function verifyTryDifferentReader() {
     window._verifyLastProvider = nxt.provider;
     if (t && t.trim()) {
       if (ta) { ta.value = t.trim(); }
-      if (note) note.textContent = `Re-scanned with ${nxt.label}. Compare against the original — Save if it's better, or re-scan again with the next AI.`;
+      const _cut = _visionTruncationNote(_scanMeta);
+      if (note) note.textContent = _cut
+        ? `Re-scanned with ${nxt.label}. ${_cut}. Save only if it's better, or re-scan again with the next AI.`
+        : `Re-scanned with ${nxt.label}. Compare against the original — Save if it's better, or re-scan again with the next AI.`;
     } else {
       if (note) note.textContent = `${nxt.label} returned no text. Click again to try the next AI, or edit by hand.`;
     }
@@ -15628,7 +15652,62 @@ async function visionErrorDetail(label, model, resp) {
   return detail;
 }
 
-async function runVisionTranscription(pageImages, visionCfg, visionKey) {
+// How many page images go in one request, and the output room each request is
+// given. The whole document used to go in ONE request capped at 4096 output
+// tokens: a scan of more than a few pages was cut off partway, the response
+// looked complete, and the Starting Document silently ended mid-sentence.
+// 8192 is accepted by every vision model WaxFrame defaults to (and the common
+// local ones); four pages of dense print fit well inside it.
+const VISION_PAGES_PER_REQUEST = 4;
+const VISION_MAX_OUTPUT_TOKENS = 8192;
+
+// One-line warning for the pages a vision read stopped short on, or '' when
+// nothing was cut off. `meta` is the object runVisionTranscription fills.
+function _visionTruncationNote(meta) {
+  const pages = (meta && meta.truncatedPages) || [];
+  if (!pages.length) return '';
+  const list = pages.length > 12 ? `${pages[0]}–${pages[pages.length - 1]}` : pages.join(', ');
+  return `The AI stopped at its output limit while reading page${pages.length === 1 ? '' : 's'} ${list}, so the text for ${pages.length === 1 ? 'that page' : 'those pages'} may end early — compare against the original`;
+}
+
+// Transcribe page images in batches. Returns the joined text. When `meta` is
+// passed it is filled with { batches, truncatedPages } — 1-based page numbers
+// from any batch where the provider stopped at its output limit — so a caller
+// can say so instead of presenting a cut-off transcription as complete.
+async function runVisionTranscription(pageImages, visionCfg, visionKey, meta = null) {
+  const batches = [];
+  for (let i = 0; i < pageImages.length; i += VISION_PAGES_PER_REQUEST) {
+    batches.push({ from: i, images: pageImages.slice(i, i + VISION_PAGES_PER_REQUEST) });
+  }
+  if (meta) { meta.batches = batches.length; meta.truncatedPages = []; }
+  const parts = [];
+  try {
+    for (let b = 0; b < batches.length; b++) {
+      const { from, images } = batches[b];
+      const first = from + 1, last = from + images.length;
+      window._visionBatchLabel = batches.length > 1 ? ` (pages ${first}–${last} of ${pageImages.length})` : '';
+      let r;
+      try {
+        r = await runVisionRequest(images, visionCfg, visionKey);
+      } catch (e) {
+        if (batches.length > 1 && e && e.name !== 'AbortError') {
+          e.message = `pages ${first}–${last} of ${pageImages.length}: ${e.message}`;
+        }
+        throw e;
+      }
+      parts.push(r.text.trim());
+      if (r.truncated && meta) {
+        for (let p = first; p <= last; p++) meta.truncatedPages.push(p);
+      }
+    }
+  } finally {
+    window._visionBatchLabel = '';
+  }
+  return parts.join('\n\n');
+}
+
+// One vision request for one batch of page images. Returns { text, truncated }.
+async function runVisionRequest(pageImages, visionCfg, visionKey) {
   // v3.63.544 — "exactly as it appears" was taken literally, and correctly:
   // a photographed book page came back with the PRINT layout preserved, so
   // words hyphenated across a line break arrived broken — "uni-verse",
@@ -15690,8 +15769,8 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     // official OpenAI URL.
     const isOfficialOpenAI = /api\.openai\.com/i.test(url);
     const tokenBody = isOfficialOpenAI
-      ? { max_completion_tokens: 4096 }   // gpt-5.x requires it
-      : { max_tokens: 4096 };              // Grok, local servers, etc.
+      ? { max_completion_tokens: VISION_MAX_OUTPUT_TOKENS }   // gpt-5.x requires it
+      : { max_tokens: VISION_MAX_OUTPUT_TOKENS };              // Grok, local servers, etc.
     const body = JSON.stringify({
       model,
       messages: [{ role: 'user', content: [
@@ -15707,7 +15786,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     const data = await resp.json();
     const transcribed = WFProviderCatalog.extractOpenAIText(data);
     if (!transcribed.trim()) throw new Error(`${visionCfg.label || 'Vision'} returned no text (response was empty)`);
-    return transcribed;
+    return { text: transcribed, truncated: _isTruncationSignal(_extractFinishReason(data)) };
   }
 
   // ── Anthropic-format (Claude, or any Anthropic-compatible server) ──
@@ -15715,7 +15794,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     const model = visionCfg.model || VISION_DEFAULTS.claude;
     const body = JSON.stringify({
       model,
-      max_tokens: 4096,
+      max_tokens: VISION_MAX_OUTPUT_TOKENS,
       messages: [{ role: 'user', content: [
         ...pageImages.map(b64 => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } })),
         { type: 'text', text: prompt }
@@ -15729,7 +15808,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     const data = await resp.json();
     const transcribed = WFProviderCatalog.extractAnthropicText(data);
     if (!transcribed.trim()) throw new Error(`${visionCfg.label || 'Vision'} returned no text (response was empty)`);
-    return transcribed;
+    return { text: transcribed, truncated: _isTruncationSignal(_extractFinishReason(data)) };
   }
 
   // ── Gemini-format (Google Gemini, or any Gemini-compatible server) ──
@@ -15753,7 +15832,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     const data = await resp.json();
     const transcribed = WFProviderCatalog.extractGeminiText(data);
     if (!transcribed.trim()) throw new Error(`${visionCfg.label || 'Vision'} returned no text (response was empty)`);
-    return transcribed;
+    return { text: transcribed, truncated: _isTruncationSignal(_extractFinishReason(data)) };
   }
 
   throw new Error(
@@ -15817,11 +15896,13 @@ async function reExtractWithVision() {
     // take a minute+). Ticks the button text so it doesn't look frozen.
     const _stopHbReExtract = _startStatusHeartbeat(btn, () => `⏳ Re-extracting with ${visionAI.cfg.label} vision —`);
     let transcribed;
+    const _reMeta = {};
     try {
-      transcribed = await runVisionTranscription(pageImages, visionAI.cfg, visionAI.key);
+      transcribed = await runVisionTranscription(pageImages, visionAI.cfg, visionAI.key, _reMeta);
     } finally {
       _stopHbReExtract();
     }
+    const _reCut = _visionTruncationNote(_reMeta);
 
     docText = transcribed;
     const docTa = document.getElementById('workDocument');
@@ -15830,7 +15911,12 @@ async function reExtractWithVision() {
     localStorage.setItem('waxframe_v2_source_type', 'pdf-vision');
 
     consoleLog(`✅ Re-extraction complete — ${transcribed.length.toLocaleString()} characters via ${visionAI.cfg.label}`, 'success');
-    toast(`✅ Document re-extracted successfully via ${visionAI.cfg.label}`);
+    if (_reCut) {
+      consoleLog(`⚠️ ${_reCut}`, 'warn');
+      toast(`⚠️ Re-extracted via ${visionAI.cfg.label}, but ${_reCut.charAt(0).toLowerCase()}${_reCut.slice(1)}`);
+    } else {
+      toast(`✅ Document re-extracted successfully via ${visionAI.cfg.label}`);
+    }
     if (banner) banner.classList.add('is-hidden');
   } catch(e) {
     consoleLog(`❌ Re-extraction failed: ${e.message}`, 'error', {
@@ -16183,7 +16269,7 @@ function removeReferenceDoc(id) {
     saveProject();
     // v3.63.393 — Sweep any stale "Review {filename}" banner buttons for
     // this docId. David hit it on the resume PDF: he X'd the card and the
-    // deferred-review banner still showed "Review CandySimmons_Resume2023.pdf"
+    // deferred-review banner still showed "Review <filename>"
     // even though the underlying doc was gone — clicking it would have
     // opened the verify modal against a missing docId. Buttons carry
     // data-ref-doc-id (set when _finishRefBatch creates them); we sweep
@@ -16472,7 +16558,7 @@ function _finishRefBatch() {
   // — the contract was broken when the batch wrapper started passing the
   // collector array unconditionally on line 14587, so every upload (even
   // a one-file drop) routed through this deferred-review path. David hit
-  // this on CandySimmons_Resume2023.pdf: the resume was vision-OCR'd but
+  // this on a scanned resume PDF: the resume was vision-OCR'd but
   // the modal didn't pop, only the "Review" banner button. For 2+ files
   // we still surface click-to-review buttons so multiple modals don't
   // stack on the user.
@@ -16575,8 +16661,37 @@ async function startSession() {
   if (!name) { toast('⚠️ Enter a project name'); return; }
   if (!goal) { toast('⚠️ Fill in at least one goal field'); return; }
 
+  // Everything below that can refuse the launch runs BEFORE anything is
+  // destroyed. The old order confirmed and then wiped the previous session's
+  // history, round counter and IndexedDB copy up front, so an empty document,
+  // an unconfigured AI or a cancelled "Launch anyway" left the user on Setup
+  // with the session they had just agreed to replace already gone.
+  const hasActiveSession = history.length > 0 || !!(docText && round > 1);
+  let needResetSession = false;
+  let discardStoredSession = false;
+
+  // The document the new session would start from, computed without touching
+  // docText: assigning it early would overwrite the in-memory working document
+  // even if the user then cancels.
+  const launchDoc = docTab === 'paste'
+    ? (document.getElementById('pasteText').value.trim())
+    : (docTab === 'scratch' ? '' : docText);
+  if (docTab !== 'scratch' && !launchDoc) {
+    toast('⚠️ Please upload a file or paste your document text');
+    return;
+  }
+
+  // Pre-launch AI readiness gate — catch unconfigured AIs here instead of
+  // letting the user reach the work screen and dead-end at Smoke the Hive
+  const unconfiguredAtLaunch = activeAIs.filter(ai => !isAIReadyForUse(ai));
+  if (unconfiguredAtLaunch.length > 0) {
+    const names = unconfiguredAtLaunch.map(a => a.name).join(', ');
+    toast(`⚠️ ${unconfiguredAtLaunch.length === 1 ? 'AI not configured' : 'AIs not configured'}: ${names} — set up keys in Setup 1 before launching`);
+    return;
+  }
+
   // Guard #1: if an active session exists in memory, warn before overwriting it
-  if (history.length > 0 || (docText && round > 1)) {
+  if (hasActiveSession) {
     // v3.52.8 — native confirm() → wfConfirm()
     const ok = await wfConfirm(
       'Launch over active session?',
@@ -16588,8 +16703,7 @@ async function startSession() {
     // dialog said it would clear the document and round history and nothing
     // in this function ever assigned either; the previous run's rounds,
     // round counter and resolved decisions carried into the new session.
-    resetSessionState();
-    try { await idbClear(); } catch (e) { /* non-critical */ }
+    needResetSession = true;   // performed below, once nothing can cancel the launch
     // docText is set from the active tab below for paste/scratch. For the
     // upload tab it is the file the user just chose, which is exactly what
     // the new session should start from — so it is deliberately left alone.
@@ -16623,9 +16737,9 @@ async function startSession() {
         (currentProjectName !== storedProjectName || currentProjectVersion !== storedProjectVersion);
 
       if (namesDiffer) {
-        // Different project — user is starting fresh. Clear stored session silently.
-        try { await idbClear(); } catch(e) { /* ignore */ }
-        try { localStorage.removeItem(LS_SESSION); } catch(e) {}
+        // Different project — user is starting fresh. Clear stored session silently
+        // (deferred until the launch can no longer be cancelled).
+        discardStoredSession = true;
       } else {
         // Same project name (or stored name unavailable) — likely a real load failure.
         const sh = storedSession.history?.length || 0;
@@ -16640,30 +16754,9 @@ async function startSession() {
           { okText: 'Discard and start fresh', destructive: true }
         );
         if (!proceed) return;
-        try { await idbClear(); } catch(e) { /* ignore */ }
-        try { localStorage.removeItem(LS_SESSION); } catch(e) {}
+        discardStoredSession = true;
       }
     }
-  }
-
-  if (docTab === 'paste') {
-    docText = document.getElementById('pasteText').value.trim();
-  } else if (docTab === 'scratch') {
-    docText = '';
-  }
-
-  if (docTab !== 'scratch' && !docText) {
-    toast('⚠️ Please upload a file or paste your document text');
-    return;
-  }
-
-  // Pre-launch AI readiness gate — catch unconfigured AIs here instead of
-  // letting the user reach the work screen and dead-end at Smoke the Hive
-  const unconfiguredAtLaunch = activeAIs.filter(ai => !isAIReadyForUse(ai));
-  if (unconfiguredAtLaunch.length > 0) {
-    const names = unconfiguredAtLaunch.map(a => a.name).join(', ');
-    toast(`⚠️ ${unconfiguredAtLaunch.length === 1 ? 'AI not configured' : 'AIs not configured'}: ${names} — set up keys in Setup 1 before launching`);
-    return;
   }
 
   // v3.63.514 — Cap-aware warning. Warning before a long build beats
@@ -16677,6 +16770,23 @@ async function startSession() {
       okText: 'Launch anyway'
     });
     if (!proceed) return;
+  }
+
+  // Point of no return: every check that can refuse the launch has passed.
+  if (needResetSession) {
+    // v3.63.495 — DO the thing the confirm promised (clear the previous run's
+    // rounds, round counter and resolved decisions).
+    resetSessionState();
+    try { await idbClear(); } catch (e) { /* non-critical */ }
+  } else if (discardStoredSession) {
+    try { await idbClear(); } catch (e) { /* non-critical */ }
+    try { localStorage.removeItem(LS_SESSION); } catch (e) {}
+  }
+
+  if (docTab === 'paste') {
+    docText = launchDoc;
+  } else if (docTab === 'scratch') {
+    docText = '';
   }
 
   // Auto-select phase: if a document was provided, start in Refine — no need to Draft
@@ -18395,7 +18505,7 @@ function toggleSessionBee(id, on) {
     _pendingBuilderDisable = id;
     const name = activeAIs.find(a => a.id === id)?.name || 'This AI';
     openChangeBuilder({
-      reason: `${name} is your Builder. Pick a new Builder to continue disabling it. Cancel to keep ${name} as Builder.`,
+      reason: `${escapeHtml(name)} is your Builder. Pick a new Builder to continue disabling it. Cancel to keep ${escapeHtml(name)} as Builder.`,
       excludeId: id
     });
     return false;  // deferred — disable completes inside setBuilderFromModal
@@ -21012,14 +21122,21 @@ function _acquireProviderSlot(provider) {
   const q = _PROVIDER_SLOTS[base] || (_PROVIDER_SLOTS[base] = { inFlight: 0, waiters: [] });
   if (q.inFlight < cap) {
     q.inFlight++;
-    return Promise.resolve(() => _releaseProviderSlot(base));
+    return Promise.resolve(_onceRelease(base));
   }
   return new Promise(resolve => {
     q.waiters.push(() => {
       q.inFlight++;
-      resolve(() => _releaseProviderSlot(base));
+      resolve(_onceRelease(base));
     });
   });
+}
+// callAPI hands its release to the retry paths and also calls it from its
+// finally, so a slot was released two or three times per retried request; each
+// extra release freed a slot some other request still held. Once per grant.
+function _onceRelease(base) {
+  let released = false;
+  return () => { if (released) return; released = true; _releaseProviderSlot(base); };
 }
 function _releaseProviderSlot(base) {
   const q = _PROVIDER_SLOTS[base];
@@ -21335,7 +21452,29 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   // deliberate: streaming should change how bytes arrive, not what the rest
   // of the app reasons about.
   let data;
-  if (_streaming && response.body && typeof response.body.getReader === 'function') {
+  // A server that ignores the stream flag answers with one plain JSON document.
+  // Reading that as SSE finds nothing, and the fallback below then sends the
+  // whole request a second time (a second charge, and twice the wait). When the
+  // reply is declared JSON, parse it as the ordinary response it is. Text that
+  // fails to parse falls through to the existing resend, so nothing regresses.
+  let _plainJsonReply = false;
+  if (_streaming) {
+    const _ct = (response.headers && typeof response.headers.get === 'function' && response.headers.get('content-type')) || '';
+    if (/json/i.test(_ct) && !/event-stream/i.test(_ct)) {
+      const _raw = await response.text();
+      try { data = JSON.parse(_raw); _plainJsonReply = true; } catch (e) { /* not JSON after all */ }
+      if (!_plainJsonReply) {
+        consoleLog(`↩️ ${ai.name} did not return a readable stream — retrying without streaming.`, 'warn');
+        _slotRelease();
+        return callAPI(ai, prompt, notesContext, role, metaOut, {
+          ...(_retryOpts || {}), _streamFallback: true
+        });
+      }
+    }
+  }
+  if (_plainJsonReply) {
+    // data already parsed above
+  } else if (_streaming && response.body && typeof response.body.getReader === 'function') {
     const acc = window.WFProviderCatalog.createStreamAccumulator(cfg.format);
     const reader = response.body.getReader();
     const dec = new TextDecoder('utf-8');
@@ -24122,6 +24261,10 @@ function copyActiveHistTab() {
 //   • Toast: "↩ Restored to Round N — M later rounds discarded"
 // ============================================================
 function restoreRound(idx) {
+  // data-arg delivers a string; `"3" + 1` is "31", which made the slice below
+  // a no-op and left later rounds in place.
+  idx = Number(idx);
+  if (!Number.isInteger(idx)) return;
   const h = history[idx];
   if (!h) return;
 
@@ -24780,7 +24923,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (window.location.hash === '#settings') {
     setTimeout(() => {
       if (typeof openSettings === 'function') openSettings();
-      try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) {}
+      // `history` is the round-history array here (a top-level let), so the History API is reached through window.
+      try { window.history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) {}
     }, 50);
   }
 

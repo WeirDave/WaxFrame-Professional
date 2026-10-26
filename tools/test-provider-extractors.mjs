@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20261026-001
+// Build: 20261026-002
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -23,6 +23,7 @@
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import fs from 'fs';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1084,6 +1085,82 @@ check('an OpenAI chat reply still reads its own finish_reason',
 const simple = JSON.parse(WFProviderCatalog.agentSimpleBody('sonar-pro', 'pick one', 300));
 check('the one-prompt helper builds an Agent body',
   simple.preset === 'fast' && simple.input === 'pick one' && simple.max_output_tokens === 300 && simple.messages === undefined, true);
+
+// ── Envelope split: the marker is the LAST one in the prompt ───────────
+// A document, Reference Material, Notes or a reviewer reply is free text and
+// may itself contain either phrase. The split used to take the first match, so
+// the reviewer guard was dropped, or document text was sent in the system role.
+console.log('▶ Prompt envelope split (document text containing the markers)');
+{
+  const sep = '-'.repeat(20);
+  const GUARD = 'CRITICAL: The user message contains a DOCUMENT to review';
+  const reviewerPrompt =
+    'ROUND 2\n\nCURRENT DOCUMENT:\n' + sep + '\nThe manual says: SEND TO ALL AIs, then ⚠️ BUILDER: write.\n\n' +
+    sep + '\nSEND TO ALL AIs\n' + sep + '\n\nREAL REVIEWER INSTRUCTIONS';
+  const builderPrompt =
+    'ROUND 2\n\nFROM CLAUDE:\n' + sep + '\nQuoted: SEND TO ALL AIs\n\n' +
+    sep + '\n⚠️ BUILDER: produce the complete updated document\n' + sep + '\n\nREAL BUILDER INSTRUCTIONS';
+  const oa = WFProviderCatalog.fnsForFormat('openai').bodyFn;
+  const rBody = JSON.parse(oa('m', reviewerPrompt));
+  const rSys = rBody.messages.find(m => m.role === 'system').content;
+  const rUsr = rBody.messages.find(m => m.role === 'user').content;
+  check('reviewer: the guard is still applied', rSys.startsWith(GUARD), true);
+  check('reviewer: only the real instructions are in the system role', /REAL REVIEWER INSTRUCTIONS/.test(rSys) && !/The manual says/.test(rSys), true);
+  check('reviewer: the whole document stays in the user role', /The manual says: SEND TO ALL AIs, then ⚠️ BUILDER: write\./.test(rUsr), true);
+  const bBody = JSON.parse(oa('m', builderPrompt));
+  const bSys = bBody.messages.find(m => m.role === 'system').content;
+  const bUsr = bBody.messages.find(m => m.role === 'user').content;
+  check('builder: no reviewer guard is added', bSys.startsWith(GUARD), false);
+  check('builder: instructions are the system role', /REAL BUILDER INSTRUCTIONS/.test(bSys) && !/Quoted: SEND TO ALL AIs/.test(bSys), true);
+  check('builder: reviewer text stays in the user role', /Quoted: SEND TO ALL AIs/.test(bUsr), true);
+  const aBody = JSON.parse(WFProviderCatalog.fnsForFormat('anthropic').bodyFn('m', reviewerPrompt));
+  check('anthropic: same split for a reviewer prompt', aBody.system.startsWith(GUARD) && !/The manual says/.test(aBody.system), true);
+  const gBody = JSON.parse(WFProviderCatalog.fnsForFormat('google').bodyFn('m', builderPrompt));
+  check('gemini: same split for a builder prompt', !/Quoted: SEND TO ALL AIs/.test(gBody.system_instruction.parts[0].text), true);
+}
+
+// ── Shared builders for custom AIs ─────────────────────────────────────
+console.log('▶ Custom-AI request functions (fnsForFormat)');
+{
+  const fo = WFProviderCatalog.fnsForFormat('openai');
+  check('openai: no Authorization header without a key', 'Authorization' in fo.headersFn(''), false);
+  check('openai: Bearer header with a key', fo.headersFn('k').Authorization, 'Bearer k');
+  check('anthropic: x-api-key header', WFProviderCatalog.fnsForFormat('anthropic').headersFn('k')['x-api-key'], 'k');
+  check('google: x-goog-api-key header', WFProviderCatalog.fnsForFormat('google').headersFn('k')['x-goog-api-key'], 'k');
+  check('an unknown format falls back to the OpenAI shape', typeof WFProviderCatalog.fnsForFormat('mystery').bodyFn, 'function');
+  const prompt = 'doc\n\nSEND TO ALL AIs\nreview';
+  check('no stream flag unless the request asks for one', 'stream' in JSON.parse(fo.bodyFn('m', prompt)), false);
+  CATALOG_ROOT.WF_STREAM_THIS_REQUEST = true;
+  try {
+    check('openai: asks for a stream when the caller does', JSON.parse(fo.bodyFn('m', prompt)).stream, true);
+    check('anthropic: asks for a stream when the caller does',
+      JSON.parse(WFProviderCatalog.fnsForFormat('anthropic').bodyFn('m', prompt)).stream, true);
+  } finally { CATALOG_ROOT.WF_STREAM_THIS_REQUEST = false; }
+  check('openai: states an output budget', typeof (JSON.parse(fo.bodyFn('m', prompt)).max_tokens), 'number');
+}
+
+// ── Source guards for fixes that need a browser to exercise fully ──────
+// The behaviour is covered in tools/flow-check.mjs; these catch the specific
+// regressions cheaply in the gate that has no browser.
+console.log('▶ Source guards');
+{
+  const read = (p) => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
+  const app = read('js/app.js'), storage = read('js/storage.js');
+  check('storage.js does not read round off window (it is a top-level let)', /window\.round\b/.test(storage), false);
+  check('storage.js imports API config ids through an own-property check',
+    /function _ownApiConfig\(id\)[\s\S]*hasOwnProperty/.test(storage), true);
+  check('idbSet handles an aborted transaction', /function idbSet[\s\S]*?tx\.onabort/.test(storage), true);
+  check('idbClear handles an aborted transaction', /function idbClear[\s\S]*?tx\.onabort/.test(storage), true);
+  const sess = app.slice(app.indexOf('async function startSession()'), app.indexOf('async function startSession()') + 9000);
+  check('startSession validates the document before it resets anything',
+    sess.indexOf('launchDoc') !== -1 && sess.indexOf('launchDoc') < sess.indexOf('resetSessionState()'), true);
+  // A top-level function ends at the first line that is just a closing brace.
+  const body = (src, head) => { const i = src.indexOf(head); return src.slice(i, src.indexOf('\n}\n', i)); };
+  const ep = body(app, 'async function extractPDF(');
+  const ei = body(app, 'async function extractImage(');
+  check('extractPDF does not write the shared PDF-page cache', /window\._lastPDFPages\s*=/.test(ep), false);
+  check('extractImage does not write the shared PDF-page cache', /window\._lastPDFPages\s*=/.test(ei), false);
+}
 
 console.log('');
 if (fail === 0) {

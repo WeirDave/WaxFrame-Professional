@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ============================================================
 //  WaxFrame — tools/flow-check.mjs
-// Build: 20261026-001
+// Build: 20261026-002
 // ============================================================
 // End-to-end flow harness. Asserts DOM and app state instead of capturing
 // screenshots, and drives a full hive against a same-origin mock provider so a
@@ -91,6 +91,11 @@ const MIME = {
 };
 
 const mockCalls = [];
+// A server that ignores the stream flag and always answers one plain JSON
+// document (what a minimal local OpenAI-compatible server does), and a vision
+// endpoint that records how the page images were batched.
+const jsonOnlyCalls = [];
+const visionCalls = [];
 
 // A Builder reply has to satisfy the real parser: the three wrapper blocks,
 // in order, with the literal markers. Anything less and the app is entitled to
@@ -141,7 +146,39 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify(mockCalls));
   }
-  if (p === '/__mock/reset') { mockCalls.length = 0; res.writeHead(200); return res.end('ok'); }
+  if (p === '/__mock/reset') { mockCalls.length = 0; jsonOnlyCalls.length = 0; visionCalls.length = 0; res.writeHead(200); return res.end('ok'); }
+  if (p === '/__mock/json-calls') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(jsonOnlyCalls));
+  }
+  if (p === '/__mock/vision-calls') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(visionCalls));
+  }
+
+  if (p === '/__mock/chat-json' || p === '/__mock/vision') {
+    let body = '';
+    req.on('data', d => { body += d; });
+    await new Promise(r => req.on('end', r));
+    let parsed = {};
+    try { parsed = JSON.parse(body); } catch {}
+    if (p === '/__mock/chat-json') {
+      jsonOnlyCalls.push({ stream: !!parsed.stream, keys: Object.keys(parsed).sort() });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({
+        choices: [{ message: { role: 'assistant', content: 'plain json answer' }, finish_reason: 'stop' }]
+      }));
+    }
+    const parts = (parsed.messages?.[0]?.content || []);
+    const images = parts.filter(c => c.type === 'image_url').length;
+    const n = visionCalls.length + 1;
+    visionCalls.push({ images, maxTokens: parsed.max_tokens ?? parsed.max_completion_tokens ?? null });
+    // The second batch reports it ran out of room.
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({
+      choices: [{ message: { role: 'assistant', content: 'transcript part ' + n }, finish_reason: n === 2 ? 'length' : 'stop' }]
+    }));
+  }
 
   if (p === '/__mock/chat') {
     let body = '';
@@ -602,6 +639,164 @@ try {
         sinceRound.every(c => c.budget != null), sinceRound.map(c => c.budget));
   check('and every one still asks to stream',
         sinceRound.every(c => c.stream === true), sinceRound.map(c => c.stream));
+
+  // ── Flow 7: a server that ignores the stream flag gets ONE request ────
+  // Custom AIs (Ollama, LM Studio, Open WebUI, anything added by hand) used to
+  // carry minimal request functions with no stream flag. The app asked for a
+  // stream anyway, the server answered plain JSON, no SSE was found, and the
+  // whole request was sent a second time.
+  section('Flow 7 — A JSON-only server is asked once, not twice');
+  await fetch(`${MOCK_BASE}/__mock/reset`);
+  const jsonRun = await evalAsync(`
+    const ai = { id: 'flowjson', name: 'Flow JSON', provider: 'flowjson', url: '' };
+    const shared = WFProviderCatalog.fnsForFormat('openai');
+    API_CONFIGS['flowjson'] = Object.assign({}, shared, {
+      label: 'Flow JSON', model: 'm', endpoint: ${jsLiteral(MOCK_BASE + '/__mock/chat-json')}, format: 'openai', _key: '', _isCustom: true
+    });
+    const prompt = 'review this\\n\\nSEND TO ALL AIs\\nplease review';
+    const a = await callAPI(ai, prompt, '', 'reviewer', {});
+    // And the old minimal function, which never asks for a stream: the server
+    // still answers JSON, and that reply must be used, not re-requested.
+    API_CONFIGS['flowjson'].bodyFn = function (m, p) { return JSON.stringify({ model: m, messages: [{ role: 'user', content: p }] }); };
+    const b = await callAPI(ai, prompt, '', 'reviewer', {});
+    delete API_CONFIGS['flowjson'];
+    return JSON.stringify({ a: a, b: b });
+  `).then(s => JSON.parse(s));
+  const jsonCalls = await (await fetch(`${MOCK_BASE}/__mock/json-calls`)).json();
+  check('both calls returned the server answer', jsonRun.a === 'plain json answer' && jsonRun.b === 'plain json answer', jsonRun);
+  check('two calls produced exactly two requests (no silent resend)', jsonCalls.length === 2, jsonCalls);
+  check('the shared builder asks for a stream', jsonCalls[0] && jsonCalls[0].stream === true, jsonCalls);
+
+  // ── Flow 8: Restore on a past round (string index from data-arg) ─────
+  section('Flow 8 — Restore uses the clicked round and discards the later ones');
+  const restored = await evalAsync(`
+    history.length = 0;
+    for (let i = 1; i <= 3; i++) history.push({ round: i, phase: 'refine', doc: 'doc ' + i, resolvedDecisions: [] });
+    round = 4; phase = 'refine'; docText = 'doc 3';
+    const b = document.createElement('button');
+    b.setAttribute('data-action', 'call'); b.setAttribute('data-fn', 'restoreRound'); b.setAttribute('data-arg', '1');
+    document.body.appendChild(b); b.click(); b.remove();
+    return JSON.stringify({ len: history.length, round: round, doc: docText });
+  `).then(s => JSON.parse(s));
+  check('later rounds were discarded', restored.len === 2, restored);
+  check('the counter and document are those of the restored round', restored.round === 2 && restored.doc === 'doc 2', restored);
+
+  // ── Flow 9: the launch button does one thing per click ───────────────
+  section('Flow 9 — Launch button: one handler per click');
+  const launch = await evalAsync(`
+    let launched = 0;
+    const realStart = window.startSession;
+    window.startSession = function () { launched++; };
+    history.length = 0; docText = ''; round = 1;
+    updateDocRequirements();
+    document.getElementById('launchBtn').click();
+    const fresh = launched;
+    history.push({ round: 1, phase: 'refine', doc: 'x', resolvedDecisions: [] }); docText = 'x'; round = 2;
+    updateDocRequirements();
+    document.getElementById('launchBtn').click();
+    const returning = launched - fresh;
+    const label = document.querySelector('#launchBtn .launch-label').textContent;
+    await new Promise(function (r) { setTimeout(r, 500); });
+    const activeScreen = document.querySelector('.screen.active');
+    const screenNow = activeScreen ? activeScreen.id : null;
+    window.startSession = realStart;
+    return JSON.stringify({ fresh: fresh, returning: returning, label: label, screen: screenNow });
+  `).then(s => JSON.parse(s));
+  check('a fresh launch calls startSession exactly once', launch.fresh === 1, launch);
+  check('"Return to Work Screen" does not also start a launch', launch.returning === 0, launch);
+  check('and it does go to the work screen', launch.screen === 'screen-work', launch);
+
+  // ── Flow 10: a refused launch leaves the running session alone ───────
+  section('Flow 10 — A launch that is refused keeps the current session');
+  const refused = await evalAsync(`
+    history.length = 0;
+    history.push({ round: 1, phase: 'refine', doc: 'keep me', resolvedDecisions: [] });
+    round = 2; docText = 'keep me'; phase = 'refine';
+    docTab = 'paste';
+    document.getElementById('pasteText').value = '';
+    await startSession();
+    return JSON.stringify({ len: history.length, round: round, doc: docText });
+  `).then(s => JSON.parse(s));
+  check('the empty-document refusal did not clear the rounds', refused.len === 1, refused);
+  check('nor the round counter', refused.round === 2, refused);
+  check('nor the working document', refused.doc === 'keep me', refused);
+
+  // ── Flow 11: a save that aborts is reported, not left pending ────────
+  section('Flow 11 — An aborted IndexedDB write rejects instead of hanging');
+  const aborted = await evalAsync(`
+    const realOpen = window.idbOpen;
+    window.idbOpen = async function () {
+      return { transaction: function () {
+        const tx = { objectStore: function () { return { put: function () {}, delete: function () {} }; } };
+        setTimeout(function () { if (tx.onabort) tx.onabort({ target: { error: new Error('QuotaExceededError') } }); }, 20);
+        return tx;
+      } };
+    };
+    const outcome = async function (fn) {
+      return Promise.race([
+        fn().then(function () { return 'resolved'; }, function (e) { return 'rejected: ' + e.message; }),
+        new Promise(function (r) { setTimeout(function () { r('hung'); }, 1500); })
+      ]);
+    };
+    const set = await outcome(function () { return idbSet({}); });
+    const clr = await outcome(function () { return idbClear(); });
+    window.idbOpen = realOpen;
+    return JSON.stringify({ set: set, clr: clr });
+  `).then(s => JSON.parse(s));
+  check('idbSet rejects on an aborted transaction', /^rejected/.test(aborted.set), aborted);
+  check('idbClear rejects on an aborted transaction', /^rejected/.test(aborted.clr), aborted);
+
+  // ── Flow 12: the cross-tab banner compares real rounds ───────────────
+  section('Flow 12 — Another tab behind this one does not raise the banner');
+  const banner = await evalAsync(`
+    const wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+    const post = function (r) {
+      const ch = new BroadcastChannel('waxframe-session');
+      ch.postMessage({ type: 'session-write', tabId: 'other-tab', round: r, ts: Date.now() });
+      return wait(150).then(function () { ch.close(); });
+    };
+    const el = function () { return document.getElementById('wfCrossTabBanner'); };
+    const old = el(); if (old) old.remove();
+    round = 5;
+    await post(2);
+    const behind = !!el();
+    await post(9);
+    const ahead = !!el() && el().style.display !== 'none';
+    const b = el(); if (b) b.remove();
+    return JSON.stringify({ behind: behind, ahead: ahead });
+  `).then(s => JSON.parse(s));
+  check('an older tab does not raise the banner', banner.behind === false, banner);
+  check('a newer tab does (test is live)', banner.ahead === true, banner);
+
+  // ── Flow 13: vision reads are batched and truncation is reported ─────
+  section('Flow 13 — Vision transcription batches pages and flags a cut-off batch');
+  await fetch(`${MOCK_BASE}/__mock/reset`);
+  const vision = await evalAsync(`
+    const pages = []; for (let i = 0; i < 9; i++) pages.push('QUFB');
+    const meta = {};
+    const text = await runVisionTranscription(pages,
+      { format: 'openai', endpoint: ${jsLiteral(MOCK_BASE + '/__mock/vision')}, model: 'm', label: 'Mock' }, '', meta);
+    return JSON.stringify({ text: text, meta: meta, note: _visionTruncationNote(meta) });
+  `).then(s => JSON.parse(s));
+  const vCalls = await (await fetch(`${MOCK_BASE}/__mock/vision-calls`)).json();
+  check('nine pages went out as three requests', vCalls.length === 3, vCalls);
+  check('no request carried more than four pages', vCalls.every(c => c.images <= 4), vCalls);
+  check('each request was given room for a full batch', vCalls.every(c => c.maxTokens >= 8192), vCalls);
+  check('the parts were joined in page order', /part 1[\s\S]*part 2[\s\S]*part 3/.test(vision.text), vision);
+  check('the batch that stopped at its limit is identified by page', JSON.stringify(vision.meta.truncatedPages) === '[5,6,7,8]', vision.meta);
+  check('and the user is told which pages', /pages 5, 6, 7, 8/.test(vision.note), vision);
+
+  // ── Flow 14: the Starting Document owns its PDF pages ────────────────
+  section('Flow 14 — A new Starting Document does not inherit the last PDF pages');
+  const owned = await evalAsync(`
+    history.length = 0; docText = ''; round = 1;
+    window._lastPDFPages = ['stale-page'];
+    const f = new File(['plain text start'], 'start.txt', { type: 'text/plain' });
+    await processFile(f);
+    return JSON.stringify({ pages: window._lastPDFPages, doc: docText });
+  `).then(s => JSON.parse(s));
+  check('the text file became the document (test is live)', owned.doc === 'plain text start', owned);
+  check('the earlier PDF pages were dropped', owned.pages === null, owned);
 
 } catch (e) {
   fail++;

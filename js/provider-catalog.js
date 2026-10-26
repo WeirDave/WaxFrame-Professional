@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261026-001
+// Build: 20261026-002
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -74,11 +74,19 @@
   // asked to review or rebuild. EVERY openai-shape body builder and Gemini
   // do the exact same split — pulled out once so the prompt-routing logic
   // lives in one place.
+  //
+  // The envelope marker is always the LAST marker in the prompt: the document,
+  // Reference Material, Notes and reviewer replies all come before it, and they
+  // are free text that may itself contain either phrase. Splitting on the first
+  // match moved the boundary into user text, so the reviewer guard was dropped
+  // or document text landed in the system role. The mode is whichever marker
+  // sits later, because a Builder prompt carries only the Builder marker after
+  // its content and a reviewer prompt only the reviewer marker.
   function splitEnvelope(prompt) {
-    var splitA = prompt.indexOf('SEND TO ALL AIs');
-    var splitB = prompt.indexOf('⚠️ BUILDER:');
-    var isBuilder = splitB !== -1;
-    var split  = splitB !== -1 ? splitB : splitA;
+    var splitA = prompt.lastIndexOf('SEND TO ALL AIs');
+    var splitB = prompt.lastIndexOf('⚠️ BUILDER:');
+    var isBuilder = splitB > splitA;
+    var split  = isBuilder ? splitB : splitA;
     return { split: split, isBuilder: isBuilder };
   }
 
@@ -799,6 +807,30 @@
   function authFor(entry)         { return AUTH_HEADERS[_fmt(entry).auth]; }
   function bodyBuilderFor(entry)  { return BODY_BUILDERS[_fmt(entry).body]; }
   function extractorFor(entry)    { return EXTRACTORS[_fmt(entry).extract]; }
+
+  // The {headersFn, bodyFn, extractFn} triple for a custom / rehydrated AI of
+  // a given WaxFrame format ('openai' | 'anthropic' | 'google'; anything else
+  // is treated as 'openai'). Custom AIs used to carry three private copies of
+  // minimal functions (add modal, server import, hive rehydrate in storage.js)
+  // that ignored the output budget, the reviewer guard and the stream flag, so a
+  // custom server answered a streaming request with plain JSON and the request
+  // was sent a second time. Using the catalog's own builders gives them exactly
+  // what a built-in provider of the same format gets. Authorization is omitted
+  // when no key is set (Ollama, LM Studio and unauthenticated Open WebUI).
+  function fnsForFormat(format) {
+    var f = FORMATS[format] || FORMATS.openai;
+    if (f === FORMATS['perplexity-agent']) f = FORMATS.openai;   // not a custom-AI shape
+    var auth = AUTH_HEADERS[f.auth];
+    return {
+      headersFn: function (key) {
+        var h = auth(key);
+        if (f.auth === 'bearer' && !key) delete h['Authorization'];
+        return h;
+      },
+      bodyFn: BODY_BUILDERS[f.body],
+      extractFn: EXTRACTORS[f.extract]
+    };
+  }
 
   // ── buildApiConfigs ───────────────────────────────────────────────
   // Returns the legacy window.API_CONFIGS shape so the 80+ references in
@@ -2024,6 +2056,7 @@
     DEFAULT_OUTPUT_BUDGET: DEFAULT_OUTPUT_BUDGET,
     resolveOutputBudget: resolveOutputBudget,
     parseBudgetRejection: parseBudgetRejection,
+    fnsForFormat: fnsForFormat,
     // v3.63.499 — streaming
     parseParamRename: parseParamRename,
     budgetKeyFor: budgetKeyFor,

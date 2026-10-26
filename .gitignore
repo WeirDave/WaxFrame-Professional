@@ -30,3 +30,7 @@ Thumbs.db
 # Local build output. The release ZIP is built by GitHub Actions, never
 # committed — a committed archive is what forced the 2026-09 history rewrite.
 dist/
+
+# Cloudflare Workers local secrets (wrangler dev) — never commit
+.dev.vars
+**/.dev.vars
