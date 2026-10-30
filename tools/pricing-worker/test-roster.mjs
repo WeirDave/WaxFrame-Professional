@@ -254,8 +254,8 @@ console.log('\nIncident replays — the three drifts that were found by hand');
   //    has no list endpoint here, so this is shown with a provider that does.)
   const mSeed = JSON.parse(JSON.stringify(seed));
   mSeed.providers.find(p => p.id === 'mistral').models.push({ id: 'retired-model-latest', status: 'verified' });
-  const mList = fakeFetch({ 'https://api.mistral.ai': { body: { data: ['mistral-large-latest', 'mistral-small-latest', 'ministral-8b-latest'].map(id => ({ id })) } } });
-  const m = await runRoster({ env: { ROSTER_KEY_MISTRAL: KEY }, seed: mSeed, previousState: { mistral: { ok: true, ids: ['ministral-8b-latest', 'mistral-large-latest', 'mistral-small-latest', 'retired-model-latest'] } }, fetchImpl: mList, nowIso: NOW });
+  const mList = fakeFetch({ 'https://api.mistral.ai': { body: { data: ['mistral-large-latest', 'mistral-large-4-0', 'mistral-small-latest', 'ministral-8b-latest'].map(id => ({ id })) } } });
+  const m = await runRoster({ env: { ROSTER_KEY_MISTRAL: KEY }, seed: mSeed, previousState: { mistral: { ok: true, ids: ['ministral-8b-latest', 'mistral-large-4-0', 'mistral-large-latest', 'mistral-small-latest', 'retired-model-latest'] } }, fetchImpl: mList, nowIso: NOW });
   assert(m.alertLines.some(l => /^ROSTER MISSING mistral\/retired-model-latest /.test(l)), 'a tracked model the provider no longer lists is MISSING');
 }
 

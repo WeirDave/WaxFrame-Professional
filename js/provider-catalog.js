@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261026-002
+// Build: 20261029-001
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -747,7 +747,11 @@
       endpoint: 'https://api.mistral.ai/v1/chat/completions',
       format: 'openai',
       discovery: 'openai-models',
-      fallback: ['mistral-large-latest', 'mistral-small-latest', 'ministral-8b-latest']
+      // v3.63.596 — mistral-large-4-0 added to the picker. The DEFAULT stays
+      // mistral-large-latest: Mistral moves that alias from Large 3 to Large 4
+      // on 2026-11-12, and a default is only changed after a Builder smoke test,
+      // which has not been run on Large 4.
+      fallback: ['mistral-large-latest', 'mistral-large-4-0', 'mistral-small-latest', 'ministral-8b-latest']
     },
     {
       id: 'deepseek', label: 'DeepSeek',

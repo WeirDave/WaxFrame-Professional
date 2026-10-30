@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v359
-2026-10-26
+WaxFrame Backlog Master v360
+2026-10-29
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,15 @@ ships.
 
 
 
+
+v360 — MISTRAL LARGE 4 ADDED TO THE MISTRAL PICKER, DEFAULT UNCHANGED (v3.63.596).
+
+Mistral released Mistral Large 4 on 2026-10-29 as mistral-large-4-0: $0.70 / $2.10 per M
+(cached input $0.07), 1M context, no published output limit, three reasoning modes. The
+price and id are read off docs.mistral.ai/inference/pricing; the context window off the
+model's own docs page. It is in the picker and on the pricing page. The default is still
+mistral-large-latest, which Mistral moves from Large 3 to Large 4 on 2026-11-12. Items 8
+and 9 are the follow-ups.
 
 v359 — CODE REVIEW: NINE HIGH FINDINGS FIXED, THE REST OPEN (v3.63.595).
 
@@ -2077,6 +2086,45 @@ Ordered by value. Item 1 is blocked on David.
            FALLBACK_DATA regen; KV push.
    DONE:   The row reads $4.00 / $20.00 with estPerRound 0.06 and the
            estNote reworded; the live endpoint confirms it.
+
+8. Mistral default: mistral-large-latest -> mistral-large-4-0? (needs David, at home)
+   ─────────────────────────────────────────────────
+   WHAT:   Run one real Builder round on mistral-large-4-0. Decide whether the
+           Mistral default stays the floating alias or becomes the pinned id.
+   WHY:    From 2026-11-12 the alias already resolves to Large 4, so the choice
+           is between a floating name and a pinned one. Pinning keeps the price
+           and behaviour fixed; the alias follows Mistral's next switch. Large 4
+           has three reasoning modes (low, medium, high; high is the default),
+           and a reasoning model can break WaxFrame's marker format or exceed
+           the output budget even when it is listed. Mistral's free tier could
+           not invoke mistral-large-latest before, so check a free key too.
+   STATE:  OPEN, blocked on David and his own machine (never a work system
+           or network). Small. Not run: any request to mistral-large-4-0.
+   WHERE:  js/provider-catalog.js mistral entry (model, fallback, comment);
+           pricing seed defaultModel; api-details.html, user manual (html +
+           txt), README default table; FALLBACK_DATA regen; KV push.
+   DONE:   One round with mistral-large-4-0 selected completes without a
+           marker-format error; the default is either changed everywhere
+           above or left, with the reason written in the catalog comment.
+
+9. Mistral Large alias switch on 2026-11-12
+   ─────────────────────────────────────────────────
+   WHAT:   Mistral points mistral-large-latest at Mistral Large 4 on
+           2026-11-12. The seed row still carries Large 3's $0.50 / $1.50,
+           256K context and estPerRound 0.006.
+   WHY:    From that date the pricing page, the Defaults table and the session
+           spend meter understate the alias by about 40% unless the row is
+           updated.
+   STATE:  OPEN, date-triggered. Do not start before 2026-11-12. The weekly
+           run may propose the change itself that week, held for review.
+   WHERE:  tools/pricing-worker/data/pricing-seed.json, the mistral
+           mistral-large-latest row (inputPerM 0.7, outputPerM 2.1,
+           contextWindow "1M", estPerRound 0.008, estNote cleared);
+           js/provider-catalog.js LIMITS_TABLE 'mistral-large-latest'
+           (its 128000 context already disagrees with the seed's 256K);
+           FALLBACK_DATA regen; KV push.
+   DONE:   The row reads $0.70 / $2.10 with the estNote removed; the live
+           endpoint confirms it; the alias still answers on a keyed account.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

@@ -1,5 +1,46 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.596 — Mistral Large 4 added to the Mistral model list
+
+**Released:** 2026-10-29
+**Build:** 20261029-001
+
+### What changed
+
+**`mistral-large-4-0`, Mistral's new flagship model, can now be picked for a Mistral bee.**
+It is in the Mistral model list and on the API pricing page.
+
+- **Where it shows:** the model list for a Mistral bee (Hive setup, and the model list on
+  the API Details page), and the **Mistral** table on the API pricing page.
+- **Price:** $0.70 per million input tokens and $2.10 per million output tokens.
+  Cached input is $0.07 per million. Estimated cost per round is shown as $0.008.
+  Context window is 1M; the output limit is shown as blank because Mistral does not
+  publish one.
+- **Reasoning modes:** the model supports low, medium and high reasoning, with high as
+  its default. WaxFrame sends no reasoning setting, so a bee uses that default.
+- **Default unchanged.** The Mistral default stays `mistral-large-latest`.
+- **`mistral-large-latest` changes on 2026-11-12.** Mistral points that name at Mistral
+  Large 4 on that date, so requests to it move from Mistral Large 3 ($0.50 / $1.50 per
+  million tokens) to Mistral Large 4 ($0.70 / $2.10). Until then the API pricing page
+  shows the Large 3 price for that name and carries a note about the change. A bee that
+  should stay at a fixed price can select `mistral-large-4-0` directly.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+- Not run: any request to `mistral-large-4-0`.
+
+### Files changed
+`js/provider-catalog.js`, `js/pricing-renderer.js` (regenerated price table),
+`tools/pricing-worker/data/pricing-seed.json`, `tools/pricing-worker/test-roster.mjs`,
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v360.txt` (renamed from v359), plus the
+routine stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release. The live pricing data also
+needs the seed pushed to KV (see `tools/pricing-worker/README.md`).
+
+---
+
 ## v3.63.595 — Restore, launch, custom AI, scanned-document and storage fixes
 
 **Released:** 2026-10-26
