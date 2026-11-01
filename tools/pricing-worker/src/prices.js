@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker: price parsers
-//  Build: 20261029-001
+//  Build: 20261101-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -30,8 +30,8 @@
 //     2026-12-31, then $1.50/$7.50).
 //
 //  Covered: DeepSeek, xAI, OpenAI, Anthropic, Google (free and paid rows),
-//  Together AI and Perplexity (both read from the provider's Markdown docs).
-//  NOT covered, still read by Sonar and still held for review: Mistral, Cohere.
+//  Together AI, Perplexity and Mistral (all read from the provider's Markdown docs).
+//  NOT covered, still read by Sonar and still held for review: Cohere.
 //
 //  Pure and injectable: pages are passed in (or fetched through an injected
 //  fetch), so tools/pricing-worker/test-prices.mjs runs on saved pages.
@@ -430,6 +430,61 @@ export function parsePerplexity(md, modelId) {
   return good(inp, out, { pageLabel: modelId, note: 'legacy Sonar page; Perplexity ended Sonar chat support on 2026-09-27' });
 }
 
+// ── Mistral ──────────────────────────────────────────────────────────
+// docs.mistral.ai/inference/pricing serves the same page as Markdown when ".md" is added. Each
+// category is a table with one row per model; the id is in the "API name" column and the price
+// cell holds one line per rate:
+//   | [Mistral Small 4](/models/mistral-small-4-0-26-03) | `mistral-small-2603` | Input $0.15 /M Tokens<br>Output $0.6 /M Tokens |
+//   | [Mistral Large 4](/models/mistral-large-4-0) | `mistral-large-4` | Input $0.7 /M Tokens<br>Cached input $0.07 /M Tokens<br>Output $2.1 /M Tokens |
+// Models priced per minute, page or character have no "/M Tokens" line and are not read.
+// The page lists dated API names, but the seed tracks the "-latest" aliases (and one name that
+// differs from the page's), so those are translated here. An alias is only valid while it points
+// at the model named: mistral-large-latest is Mistral Large 3 until 2026-11-12, which the page no
+// longer lists, and Mistral Large 4 from that date.
+const MISTRAL_ALIASES = {
+  'mistral-small-latest': 'mistral-small-2603',
+  'ministral-8b-latest': 'ministral-8b-2512',
+  'mistral-large-4-0': 'mistral-large-4'
+};
+const MISTRAL_LARGE_LATEST_SWITCH = Date.UTC(2026, 10, 12);
+
+export function parseMistral(md, modelId, now) {
+  const text = String(md || '');
+  if (text.length < MIN_PAGE_TEXT) return shapeChanged('the Mistral pricing page');
+  let apiName = MISTRAL_ALIASES[modelId] || modelId;
+  if (modelId === 'mistral-large-latest') {
+    const at = now instanceof Date ? now.getTime() : Date.now();
+    if (at < MISTRAL_LARGE_LATEST_SWITCH) {
+      return { ok: false, reason: 'mistral-large-latest is not listed on Mistral\'s pricing page until 2026-11-12 (it is Mistral Large 3 until then, which the page no longer lists); keeping the last verified price' };
+    }
+    apiName = 'mistral-large-4';
+  }
+  const lines = text.split(/\r?\n/);
+  let sawTable = false;
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^\s*\|/.test(lines[i])) continue;
+    const head = mdCells(lines[i]);
+    const idCol = head.findIndex(h => /^API name$/i.test(h));
+    const priceCol = head.findIndex(h => /^Price$/i.test(h));
+    if (idCol < 0 || priceCol < 0) continue;
+    sawTable = true;
+    for (let j = i + 2; j < lines.length && /^\s*\|/.test(lines[j]); j++) {
+      const cells = mdCells(lines[j]);
+      if ((cells[idCol] || '').replace(/`/g, '').trim() !== apiName) continue;
+      const rates = String(cells[priceCol] || '').split(/<br\s*\/?>/i).map(s => s.trim());
+      const pick = label => {
+        const hits = rates.map(r => r.match(new RegExp('^' + label + '\\s+\\$\\s*([0-9]+(?:\\.[0-9]+)?)\\s*/\\s*M Tokens$', 'i'))).filter(Boolean);
+        return hits.length === 1 ? hits[0][1] : null;
+      };
+      const inp = pick('Input'), out = pick('Output');
+      if (inp === null || out === null) return shapeChanged(`the Mistral price row for ${apiName}`);
+      const label = (cells[0] || '').match(/^\[([^\]]+)\]/);
+      return good(inp, out, { pageLabel: label ? label[1] : apiName, note: apiName === modelId ? 'standard rate' : `read from ${apiName}` });
+    }
+  }
+  return sawTable ? notListed(apiName, 'Mistral\'s pricing page') : shapeChanged('the Mistral price tables');
+}
+
 // ── Registry & reading ───────────────────────────────────────────────
 // Keyed by the seed's provider id. `name` appears in "not listed" reasons.
 export const PRICE_SOURCES = {
@@ -441,6 +496,7 @@ export const PRICE_SOURCES = {
   'gemini-paid': { url: 'https://ai.google.dev/gemini-api/docs/pricing',     parse: (h, id, now) => parseGemini(h, id, 'paid', now) },
   'gemini-free': { url: 'https://ai.google.dev/gemini-api/docs/pricing',     parse: (h, id, now) => parseGemini(h, id, 'free', now) },
   together:      { url: 'https://docs.together.ai/docs/serverless/models.md', parse: (h, id) => parseTogether(h, id) },
+  mistral:       { url: 'https://docs.mistral.ai/inference/pricing.md',      parse: (h, id, now) => parseMistral(h, id, now) },
   // One page per model, so `url` is a function of the model id (null when the id cannot be a page name).
   perplexity:    { url: id => /^[a-z0-9][a-z0-9.-]*$/i.test(id) ? `https://docs.perplexity.ai/docs/legacy/sonar/models/${id}.md` : null, parse: (h, id) => parsePerplexity(h, id) }
 };

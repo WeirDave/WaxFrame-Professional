@@ -27,7 +27,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { parseDeepSeek, parseXai, parseOpenAI, parseAnthropic, parseGemini, parseTogether, parsePerplexity, claudeDisplayName, htmlToText, readPrices, PRICE_SOURCES } from './src/prices.js';
+import { parseDeepSeek, parseXai, parseOpenAI, parseAnthropic, parseGemini, parseTogether, parsePerplexity, parseMistral, claudeDisplayName, htmlToText, readPrices, PRICE_SOURCES } from './src/prices.js';
 import { refreshPricing } from './src/index.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -38,6 +38,7 @@ const PAGES = {
   openai: fx('openai-pricing.txt'),
   openaiIslands: fx('openai-pricing-islands.txt'),
   together: fx('together-models.md'),
+  mistral: fx('mistral-pricing.md'),
   pplxPro: fx('perplexity-sonar-pro.md'),
   pplxDeep: fx('perplexity-sonar-deep-research.md'),
   anthropic: fx('anthropic-pricing.txt'),
@@ -187,6 +188,27 @@ assert(!parseTogether(PAGES.together, 'zai-org/GLM-5').ok, 'an id that is only a
 assert(!parseTogether('x'.repeat(700), 'zai-org/GLM-5.3').ok, 'a page with no price tables is a shape change');
 assert(!parseTogether(PAGES.together.replace(/Input pricing/g, 'Cost in'), 'zai-org/GLM-5.3').ok, 'a table whose price columns were renamed is a shape change');
 
+// ── Mistral ──────────────────────────────────────────────────────────
+console.log('\nMistral — rows keyed by the API name column, "-latest" aliases translated');
+assertEqual(px(parseMistral(PAGES.mistral, 'mistral-small-latest', NOW)), [0.15, 0.6], 'mistral-small-latest reads Mistral Small 4 ($0.15 / $0.60)');
+assertEqual(px(parseMistral(PAGES.mistral, 'ministral-8b-latest', NOW)), [0.15, 0.15], 'ministral-8b-latest reads Ministral 3 8B');
+assertEqual(px(parseMistral(PAGES.mistral, 'mistral-large-4-0', NOW)), [0.7, 2.1], 'mistral-large-4-0 reads Mistral Large 4 (the cached-input line is skipped)');
+assertEqual(px(parseMistral(PAGES.mistral, 'ministral-3b-2512', NOW)), [0.1, 0.1], 'an id that is itself an API name on the page is read directly');
+assertEqual(px(parseMistral(PAGES.mistral, 'mistral-large-latest', new Date('2026-11-12T00:00:00Z'))), [0.7, 2.1], 'mistral-large-latest is Mistral Large 4 from 2026-11-12');
+{
+  const before = parseMistral(PAGES.mistral, 'mistral-large-latest', NOW);
+  assert(!before.ok && /until 2026-11-12/.test(before.reason), 'mistral-large-latest is Mistral Large 3 before 2026-11-12, which the page does not list, so the last verified price is kept');
+}
+assert(!parseMistral(PAGES.mistral, 'codestral-embed-2505', NOW).ok, 'a model with no output rate (an embedding model) is a shape change, not a guess');
+assert(!parseMistral(PAGES.mistral, 'voxtral-small-2507', NOW).ok || parseMistral(PAGES.mistral, 'voxtral-small-2507', NOW).inputPerM === 0.1, 'a model with a per-minute and a per-token input line never reads the per-minute one');
+{
+  const gone = parseMistral(PAGES.mistral, 'mistral-medium-latest', NOW);
+  assert(!gone.ok && /is not listed on/.test(gone.reason), 'a model that is not on the page is reported as not listed');
+}
+assert(!parseMistral('x'.repeat(700), 'mistral-small-latest', NOW).ok, 'a page with no price tables is a shape change');
+assert(!parseMistral(PAGES.mistral.replace(/\| API name \|/g, '| Name |'), 'mistral-small-latest', NOW).ok, 'a table whose id column was renamed is a shape change');
+assert(!parseMistral(PAGES.mistral.replace(/Input \$0\.15 \/M Tokens<br>Output \$0\.6 \/M Tokens/, 'Input $0.15 /M Tokens<br>Output $0.6 /Min'), 'mistral-small-latest', NOW).ok, 'an output rate in a different unit is not read as per-million-tokens');
+
 // ── Perplexity ───────────────────────────────────────────────────────
 console.log('\nPerplexity — token rates from the model\'s own legacy page');
 assertEqual(px(parsePerplexity(PAGES.pplxPro, 'sonar-pro')), [3, 15], 'sonar-pro reads $3 / $15 (not the per-1K-request prices)');
@@ -272,7 +294,7 @@ const seedLike = [
   { id: 'gemini-free', models: [{ id: 'gemini-3.8-flash', status: 'verified' }, { id: 'gemini-3.1-pro-preview', status: 'unsupported' }] },
   { id: 'gemini-paid', models: [{ id: 'gemini-3.8-flash', status: 'verified' }] },
   { id: 'deepseek', models: [{ id: 'deepseek-flash', status: 'verified' }, { id: 'deepseek-v4-pro', status: 'verified' }] },
-  { id: 'mistral', models: [{ id: 'mistral-large-latest', status: 'verified' }] },
+  { id: 'cohere', models: [{ id: 'command-a', status: 'verified' }] },
   { id: 'copilot', models: [{ id: 'gpt-4o', status: 'unsupported' }] }
 ];
 {
@@ -281,7 +303,7 @@ const seedLike = [
   assertEqual(calls.length, 2, 'Gemini free+paid share one fetch; DeepSeek is the other (two fetches for five rows)');
   assert(out.has('gemini-free::gemini-3.8-flash') && out.has('gemini-paid::gemini-3.8-flash') && out.has('deepseek::deepseek-flash'), 'covered rows are read');
   assert(!out.has('gemini-free::gemini-3.1-pro-preview'), 'an unsupported row is skipped');
-  assert(!out.has('mistral::mistral-large-latest') && !out.has('copilot::gpt-4o'), 'providers without a parser are absent, left to the old method');
+  assert(!out.has('cohere::command-a') && !out.has('copilot::gpt-4o'), 'providers without a parser are absent, left to the old method');
   assertEqual(out.get('deepseek::deepseek-v4-pro').source, PRICE_SOURCES.deepseek.url, 'each outcome names its source page');
 }
 {
@@ -322,7 +344,7 @@ const seed = stored => ({
   providers: [
     { id: 'deepseek', name: 'DeepSeek', defaultModel: 'deepseek-flash', models: [row('deepseek-flash', stored.flash[0], stored.flash[1]), row('deepseek-v4-pro', 0.66, 1.98), ...(stored.ghost ? [row('deepseek-ghost', 1, 2)] : [])] },
     { id: 'gemini-paid', name: 'Gemini (Google) — paid', defaultModel: 'gemini-3.5-flash', models: [row('gemini-3.5-flash', 1.5, 9)] },
-    { id: 'mistral', name: 'Mistral', defaultModel: 'mistral-large-latest', models: [row('mistral-large-latest', 2, 6)] }
+    { id: 'cohere', name: 'Cohere', defaultModel: 'command-a', models: [row('command-a', 2, 6)] }
   ]
 });
 async function runRefresh({ stored, key, pageOverrides }) {
@@ -334,7 +356,7 @@ async function runRefresh({ stored, key, pageOverrides }) {
     if (u.startsWith('https://api.perplexity.ai')) {
       const body = JSON.parse(init.body);
       perplexityCalls.push(body.messages[0].content.match(/model "([^"]+)"/)?.[1] || '?');
-      return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: JSON.stringify({ inputPerM: 2, outputPerM: 6, contextWindow: null, maxOutput: null, source: 'https://mistral.ai/pricing', confirmedModel: 'mistral-large-latest' }) } }] }) };
+      return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: JSON.stringify({ inputPerM: 2, outputPerM: 6, contextWindow: null, maxOutput: null, source: 'https://cohere.com/pricing', confirmedModel: 'command-a' }) } }] }) };
     }
     return pagesFetch(pageOverrides)(u, init);
   };
@@ -349,7 +371,7 @@ async function runRefresh({ stored, key, pageOverrides }) {
   const by = id => r.changes.find(c => c.modelId === id);
   assertEqual(by('deepseek-flash').status, 'confirmed', 'no Perplexity key: a parser row still refreshes (unchanged price -> confirmed)');
   assertEqual(by('deepseek-flash').via, 'page-parser', 'and records that it came from the page');
-  assert(!by('mistral-large-latest'), 'no key: a Sonar-only row is left alone, as before');
+  assert(!by('command-a'), 'no key: a Sonar-only row is left alone, as before');
   assertEqual(r.perplexityCalls.length, 0, 'no Perplexity calls');
   assert(r.latest.lastUpdated !== '2026-10-04T00:00:00Z', 'the refresh wrote its result');
 }
@@ -361,9 +383,9 @@ async function runRefresh({ stored, key, pageOverrides }) {
   assertEqual(c.via, 'page-parser', 'attributed to the page parser');
   const stored = r.latest.providers.find(p => p.id === 'deepseek').models.find(m => m.id === 'deepseek-flash');
   assertEqual([stored.inputPerM, stored.outputPerM], [0.22, 0.66], 'and the live price is NOT changed by the run');
-  assert(r.perplexityCalls.every(m => m === 'mistral-large-latest'), 'Sonar was asked only about the row with no parser');
+  assert(r.perplexityCalls.every(m => m === 'command-a'), 'Sonar was asked only about the row with no parser');
   assert(!r.perplexityCalls.includes('deepseek-flash') && !r.perplexityCalls.includes('gemini-3.5-flash'), 'never about a parser-covered row');
-  assertEqual(r.changes.find(x => x.modelId === 'mistral-large-latest').via, 'sonar', 'the Sonar row is marked as such');
+  assertEqual(r.changes.find(x => x.modelId === 'command-a').via, 'sonar', 'the Sonar row is marked as such');
 }
 {
   const r = await runRefresh({ stored: { flash: [0.15, 0.6] }, key: 'test-key-not-real' });

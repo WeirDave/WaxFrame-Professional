@@ -1,0 +1,74 @@
+# API pricing
+
+## Generalist models
+
+Text and multimodal models for broad reasoning, coding, tool use, and agentic tasks.
+
+| Model | API name | Price |
+| --- | --- | --- |
+| [Z.ai GLM 5.3 Flash](/models/zai-glm-5-3-flash) | `zai-glm-5-3-flash` | Input $0.15 /M Tokens<br>Cached input $0.03 /M Tokens<br>Output $0.5 /M Tokens |
+| [DeepSeek V4.1 Flash 1017](/models/deepseek-v4-flash-1017) | `deepseek-v4-1-flash-1017` | Input $0.3 /M Tokens<br>Cached input $0.007 /M Tokens<br>Output $1.2 /M Tokens |
+| [Z.ai GLM 5.3](/models/zai-glm-5-3) | `zai-glm-5-3` | Input $1.4 /M Tokens<br>Cached input $0.14 /M Tokens<br>Output $4.4 /M Tokens |
+| [Mistral Small 4](/models/mistral-small-4-0-26-03) | `mistral-small-2603` | Input $0.15 /M Tokens<br>Output $0.6 /M Tokens |
+| [Mistral Large 4](/models/mistral-large-4-0) | `mistral-large-4` | Input $0.7 /M Tokens<br>Cached input $0.07 /M Tokens<br>Output $2.1 /M Tokens |
+| [Ministral 3 14B](/models/ministral-3-14b-25-12) | `ministral-14b-2512` | Input $0.2 /M Tokens<br>Output $0.2 /M Tokens |
+| [Ministral 3 8B](/models/ministral-3-8b-25-12) | `ministral-8b-2512` | Input $0.15 /M Tokens<br>Output $0.15 /M Tokens |
+| [Ministral 3 3B](/models/ministral-3-3b-25-12) | `ministral-3b-2512` | Input $0.1 /M Tokens<br>Output $0.1 /M Tokens |
+
+## OCR models
+
+Models for document understanding, text extraction, and structured OCR outputs.
+
+| Model | API name | Price |
+| --- | --- | --- |
+| [OCR 4.1](/models/ocr-4-1) | `mistral-ocr-4-1` | Input $4 /1000 Pages<br>Input $5 /1000 Annotated Pages |
+| [OCR 3](/models/ocr-3-25-12) | `mistral-ocr-2512` | Input $2 /1000 Pages<br>Input $3 /1000 Annotated Pages |
+
+## Audio models
+
+Models for speech transcription, realtime transcription, and speech generation.
+
+| Model | API name | Price |
+| --- | --- | --- |
+| [Voxtral Mini Transcribe 3](/models/voxtral-mini-transcribe-3-0) | `voxtral-mini-transcribe-3-0` | Input $0.0035 /Min |
+| [Voxtral Mini Transcribe Realtime 3](/models/voxtral-mini-transcribe-realtime-3-0) | `voxtral-mini-transcribe-realtime-3-0` | Input $0.008 /Min |
+| [Voxtral Small Transcribe 3](/models/voxtral-small-transcribe-3-0) | `voxtral-small-transcribe-3-0` | Input $0.004 /Min |
+| [Voxtral TTS 3](/models/voxtral-mini-tts-3-0) | `voxtral-mini-tts-3-0` | Input $13 /M Chars |
+| [Voxtral Small](/models/voxtral-small-25-07) | `voxtral-small-2507` | Input $0.004 /Min<br>Input $0.1 /M Tokens<br>Output $0.4 /M Tokens |
+
+## Code models
+
+Specialized models for code generation, completion, and software engineering agents.
+
+| Model | API name | Price |
+| --- | --- | --- |
+| [Codestral](/models/codestral-25-08) | `codestral-2508` | Input $0.3 /M Tokens<br>Output $0.9 /M Tokens |
+
+## Embedding models
+
+Models that turn text or code into vectors for retrieval and similarity search.
+
+| Model | API name | Price |
+| --- | --- | --- |
+| [Codestral Embed](/models/codestral-embed-25-05) | `codestral-embed-2505` | Input $0.15 /M Tokens |
+| [Mistral Embed](/models/mistral-embed-23-12) | `mistral-embed-2312` | Input $0.1 /M Tokens |
+
+## Moderation and safety models
+
+Models for safety filtering, moderation, and policy checks.
+
+| Model | API name | Price |
+| --- | --- | --- |
+| [Mistral Moderation 2](/models/mistral-moderation-26-03) | `mistral-moderation-2603` | Free<br>$0 /M Tokens |
+| [Shieldstral 1.0](/models/shieldstral-1-0) |  |  |
+
+## Time series models
+
+Models for zero-shot time series forecasting with covariate support and probabilistic outputs.
+
+| Model | API name | Price |
+| --- | --- | --- |
+| [Timestral 1.0 209M](/models/timestral-1-0-209m) |  |  |
+| [Timestral 1.0 123M](/models/timestral-1-0-123m) |  |  |
+| [Timestral 1.0 28M](/models/timestral-1-0-28m) |  |  |
+| [Timestral 1.0 5M](/models/timestral-1-0-5m) |  |  |

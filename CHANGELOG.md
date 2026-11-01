@@ -1,5 +1,50 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.597 — Mistral prices are read from Mistral's pricing page by code
+
+**Released:** 2026-11-01
+**Build:** 20261101-001
+
+### What changed
+
+**The weekly pricing check now reads Mistral prices directly from Mistral's pricing page.**
+Previously a language-model lookup was asked for each Mistral price, and it could return no
+usable price for a row whose price had not changed, which raised a "newly failing" alert for
+`mistral-small-latest`.
+
+- **Where it applies:** the pricing Worker's weekly refresh (`tools/pricing-worker`), not the
+  app itself. Nothing changes in the app until a price actually changes, and a changed price
+  is still held for review before it is published.
+- **Source:** `docs.mistral.ai/inference/pricing.md`. A row is found by its API name and the
+  `Input` and `Output` per-million-token lines are read. A model priced per minute, page or
+  character is not read.
+- **Names:** `mistral-small-latest` is read as `mistral-small-2603`, `ministral-8b-latest` as
+  `ministral-8b-2512`, and `mistral-large-4-0` as `mistral-large-4`.
+- **`mistral-large-latest`:** it is Mistral Large 3 until 2026-11-12, which the page no
+  longer lists, so the row keeps its last verified price until then and reads Mistral Large 4
+  from that date.
+- **If the page changes shape:** the row keeps its last verified price and the reason is
+  reported, as for the other parser-read providers.
+- Cohere is now the only provider still read by lookup.
+
+### Verification
+- `node tools/release-check.mjs` (all stages), including new Mistral cases in
+  `tools/pricing-worker/test-prices.mjs` run on a saved copy of the page.
+- `node tools/pricing-worker/check-price-parsers-live.mjs`: the three Mistral rows the page
+  lists matched it; `mistral-large-latest` is not listed until 2026-11-12.
+
+### Files changed
+`tools/pricing-worker/src/prices.js`, `tools/pricing-worker/test-prices.mjs`,
+`tools/pricing-worker/fixtures/mistral-pricing.md`, `tools/pricing-worker/README.md`,
+`CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v361.txt` (renamed from v360), plus the
+routine stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release. The Pricing Worker must be
+redeployed (`npx wrangler deploy` from `tools/pricing-worker`) for the change to take effect.
+
+---
+
 ## v3.63.596 — Mistral Large 4 added to the Mistral model list
 
 **Released:** 2026-10-29

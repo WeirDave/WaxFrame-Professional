@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v360
-2026-10-29
+WaxFrame Backlog Master v361
+2026-11-01
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,18 @@ ships.
 
 
 
+
+v361 — MISTRAL PRICES ARE READ BY CODE, NOT BY SONAR (v3.63.597).
+
+The 2026-11-01 pricing email reported mistral-small-latest newly failing ("invalid or
+missing price fields in response"): the Sonar lookup returned no usable price for a row
+whose price had not changed. Mistral now has a page parser (parseMistral in
+tools/pricing-worker/src/prices.js) reading docs.mistral.ai/inference/pricing.md, with
+-latest aliases translated to the page's API names. Only Cohere is still sent to Sonar,
+so v353 item 2 now concerns Cohere only. Open: the Worker must be deployed for this to
+take effect; the same email batch listed three ROSTER NEW models not yet tracked
+(chatgpt/gpt-6.1-terra, mistral/deepseek-v4-1-flash, cohere/north-mini-code-1.0).
+mistral-large-latest keeps its last verified price until 2026-11-12, then reads Large 4.
 
 v360 — MISTRAL LARGE 4 ADDED TO THE MISTRAL PICKER, DEFAULT UNCHANGED (v3.63.596).
 

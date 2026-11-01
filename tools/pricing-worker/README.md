@@ -111,7 +111,7 @@ Worker returns `Access-Control-Allow-Origin: *` so any origin can fetch the JSON
 
 ## Scheduled auto-refresh (v3.63.412+)
 
-> **Since v3.63.582, prices for DeepSeek, xAI, OpenAI, Anthropic and Google are read off the provider's page by code, and since v3.63.592 so are Together AI and Perplexity** (see "Price parsers" below). The Perplexity Sonar lookup described in this section now applies only to the providers without a parser: Mistral and Cohere.
+> **Since v3.63.582, prices for DeepSeek, xAI, OpenAI, Anthropic and Google are read off the provider's page by code, and since v3.63.592 so are Together AI and Perplexity, and since v3.63.597 Mistral** (see "Price parsers" below). The Perplexity Sonar lookup described in this section now applies only to the provider without a parser: Cohere.
 
 The Worker no longer relies purely on someone remembering to run `wrangler kv key put`. A weekly Cloudflare cron trigger calls a `scheduled()` handler in `src/index.js` that asks Perplexity Sonar (web-grounded, so it's anchored to a live search rather than the model's training-data recall) for each tracked model's current `inputPerM` and `outputPerM` — the actual price, which is the entire point of this feature — plus `contextWindow`/`maxOutput` on a best-effort basis.
 
@@ -221,7 +221,7 @@ Tests: `node tools/pricing-worker/test-roster.mjs` (offline; part of `tools/rele
 
 ### Price parsers (v3.63.582)
 
-**Prices for seven providers are now read off the provider's own pricing page by code, not by Perplexity Sonar.** Every bad proposal of 2026-09/10 was Sonar misreading a correct page: DeepSeek's two-column table read from the wrong column (twice), another Gemini model's price attributed to `gemini-3.5-flash`, a price taken off the wrong row. `src/prices.js` addresses a row or column by the model's id, so it either finds the model and reads that model's cells, or reports the model is not on the page.
+**Prices for eight providers are now read off the provider's own pricing page by code, not by Perplexity Sonar.** Every bad proposal of 2026-09/10 was Sonar misreading a correct page: DeepSeek's two-column table read from the wrong column (twice), another Gemini model's price attributed to `gemini-3.5-flash`, a price taken off the wrong row. `src/prices.js` addresses a row or column by the model's id, so it either finds the model and reads that model's cells, or reports the model is not on the page.
 
 | Provider | Source page | How it is read |
 |---|---|---|
@@ -231,13 +231,16 @@ Tests: `node tools/pricing-worker/test-roster.mjs` (offline; part of `tools/rele
 | Anthropic | `platform.claude.com/docs/en/about-claude/pricing` | rows are keyed by display name (`claude-sonnet-5-5` is "Claude Sonnet 5.5"), with a boundary so "Claude Opus 5" never matches "Claude Opus 5.5"; a model priced in tiers by prompt size (Haiku 5.5) reads the lower tier and says so |
 | Together AI | `docs.together.ai/docs/serverless/models.md` | the Markdown version of the docs page; rows are keyed by the `API model string` column and the prices are found by header name (`Input pricing`, `Output pricing`); `Free` reads as $0. A retired model leaves the table and is reported as not listed |
 | Perplexity | `docs.perplexity.ai/docs/legacy/sonar/models/<id>.md` | one legacy page per Sonar model (Perplexity ended Sonar chat support on 2026-09-27 and the main pricing page no longer lists Sonar); the `Input Tokens` and `Output Tokens` blocks are read. `sonar-deep-research`'s citation, reasoning and search-query rates are not read, as before |
+| Mistral | `docs.mistral.ai/inference/pricing.md` | the Markdown version of the docs page; rows are keyed by the `API name` column and the `Input` and `Output` lines of the `Price` cell are read, only when stated per `/M Tokens` (a model priced per minute, page or character is not read). The seed tracks `-latest` aliases, which are translated to the page's dated API names (`mistral-small-latest` is `mistral-small-2603`, `ministral-8b-latest` is `ministral-8b-2512`, `mistral-large-4-0` is `mistral-large-4`). `mistral-large-latest` is Mistral Large 3 until 2026-11-12, which the page no longer lists, so that row keeps its last verified price until then and reads Mistral Large 4 from that date |
 | Google (free and paid rows) | `ai.google.dev/gemini-api/docs/pricing` | the section for the id, Standard panel only; a dated price ("$0.75 through December 31, 2026. $1.50 starting January 1, 2027.") is resolved against today's date, and the note says what it becomes |
 
 **Rules every parser follows.** It fails closed: a page that is not in the expected shape, or does not list the model, returns a reason and the row keeps its last verified price. It never guesses and never falls back to a neighbouring row. It reads the plain standard-tier input and output price per 1M tokens; context window and output limit are still hand-checked (see "Derived fields" above). A parser-covered row is **never sent to Sonar**, even when a Perplexity key is set.
 
 **What did not change.** A changed price is still held for manual review exactly as before; the parser only replaces where the proposal comes from. Every run-log entry now records `via` (`page-parser` or `sonar`).
 
-**Not covered, still read by Sonar and still held for review:** Mistral and Cohere.
+**Not covered, still read by Sonar and still held for review:** Cohere.
+
+**Why Mistral has a parser (2026-11-01).** `mistral-small-latest` went from OK to "invalid or missing price fields in response" between two weekly runs with no change to Mistral's page: Sonar returned a null price for a row whose price had not moved. That is the same failure the other parsers were written to remove, so Mistral was moved off Sonar rather than waiting for the next run to read it again.
 
 **"Not listed" is a signal, not an error to work around.** When a page stops listing a model, the row is `retained` with the reason "is not listed on ...", and the weekly email reports it the first time. Between 2026-10-11 and 2026-10-25 six OpenAI models (`gpt-5.5`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.4-nano`) were reported this way because the page text stopped drawing them; they are still in the page's table data, which is now what is read, so they refresh again. Together AI's `meta-llama/Llama-3.3-70B-Instruct-Turbo` was removed from Together's serverless models on 2026-10-22 and was reported as not listed until the tracked row moved to `meta-models/Muse-Glimmer-30B`; compare with the roster check before deciding whether to stop tracking a model.
 
