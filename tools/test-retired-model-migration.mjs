@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261101-001
+// Build: 20261102-001
 // test-retired-model-migration.mjs — a saved model the provider has withdrawn
 // is replaced on load, everywhere it can be saved.
 //

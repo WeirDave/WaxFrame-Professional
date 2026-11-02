@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v361
-2026-11-01
+WaxFrame Backlog Master v362
+2026-11-02
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -18,7 +18,7 @@ Companion document: docs/WaxFrame_Playbook_Test_Master_vN.txt
 (test runs + measured convergence data).
 
 Changelog content does NOT belong here. Released work goes
-to CHANGELOG.md and is removed from this file the moment it
+to docs/CHANGELOG.md and is removed from this file the moment it
 ships.
 
 

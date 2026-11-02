@@ -1,5 +1,40 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.598 — Repository root reduced to the files a download needs
+
+**Released:** 2026-11-02
+**Build:** 20261102-001
+
+### What changed
+
+**The top level of the repository and of the downloadable ZIP holds fewer files.** Reference
+documents moved into folders; nothing in the app, its pages or its updater changed.
+
+- **Changelog:** `CHANGELOG.md` is now `docs/CHANGELOG.md`.
+- **Security policy:** `SECURITY.md` is now `.github/SECURITY.md`. GitHub continues to show it
+  on the repository's Security tab.
+- **Confidentiality example:** `.confidential-terms.example` is now
+  `tools/.confidential-terms.example`, next to the check that uses it.
+- **Unchanged at the top level:** `README.md`, `WaxFrame-Getting-Started.pdf`,
+  `WaxFrame-README.pdf`, the install and update scripts, the site pages and the files GitHub
+  Pages needs there (`CNAME`, `.nojekyll`, `robots.txt`, `llms.txt`, `sitemap.xml`).
+- **Release check:** `tools/release-check.mjs` reads the changelog and security policy from
+  their new locations.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+
+### Files changed
+`docs/CHANGELOG.md` (moved), `.github/SECURITY.md` (moved),
+`tools/.confidential-terms.example` (moved), `tools/release-check.mjs`,
+`tools/check-confidentiality.mjs`, `docs/DATA_HANDLING_RULES.md`,
+`docs/WaxFrame_Backlog_Master_v362.txt` (renamed from v361), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
+---
+
 ## v3.63.597 — Mistral prices are read from Mistral's pricing page by code
 
 **Released:** 2026-11-01
