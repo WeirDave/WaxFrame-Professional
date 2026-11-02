@@ -22,7 +22,7 @@
 //   2. An optional LOCAL term list at .confidential-terms — one literal
 //      term per line, gitignored, never committed. Present on David's
 //      machine; absent in CI, where the structural rules still run. See
-//      .confidential-terms.example for the format.
+//      tools/.confidential-terms.example for the format.
 //
 // If the term list is ever committed, that is itself a leak, so this gate
 // hard-fails on it.

@@ -282,7 +282,7 @@ if (buildStamp) {
 // The sweep's mistake trips all three at once: it turns the previous heading
 // into this one, so the newest version appears twice and the second is no
 // longer older.
-const changelog = read(join(ROOT, 'CHANGELOG.md'));
+const changelog = read(join(ROOT, 'docs', 'CHANGELOG.md'));
 const clHeads = [...changelog.matchAll(/^##\s+v(\d+)\.(\d+)\.(\d+)/gm)]
   .map(m => ({ raw: `${m[1]}.${m[2]}.${m[3]}`, n: [+m[1], +m[2], +m[3]] }));
 if (!clHeads.length) {
@@ -776,7 +776,7 @@ for (const lib of LIB_FLOORS) {
 // version token must be in the inventory" rule would fail on a sentence that
 // is correct.
 {
-  const security = read(join(ROOT, 'SECURITY.md'));
+  const security = read(join(ROOT, '.github', 'SECURITY.md'));
   const inventory = JSON.parse(read(join(ROOT, 'docs/vendored-dependencies.json')));
   const shipped = new Set(
     inventory.dependencies

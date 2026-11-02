@@ -119,7 +119,7 @@ It works two ways:
   formats, private IP ranges, internal-only hostname suffixes, Slack channel names, street
   addresses. These carry no secret, so they are safe to publish and they run in CI.
 - **A literal term list** at `.confidential-terms` — gitignored, never committed, holding the
-  real forbidden strings. Present on David's machine. See `.confidential-terms.example`.
+  real forbidden strings. Present on David's machine. See `tools/.confidential-terms.example`.
   The gate hard-fails if this file is ever tracked by git, because committing it would
   publish exactly what it exists to protect.
 
