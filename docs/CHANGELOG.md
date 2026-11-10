@@ -1,5 +1,35 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.599 — The weekly model check no longer lists Gemini Omni as a new model
+
+**Released:** 2026-11-09
+**Build:** 20261109-001
+
+### What changed
+
+**The weekly model check in the pricing service no longer reports Gemini Omni models as new
+chat models.** Gemini Omni (`gemini-omni-1.2-flash`, `gemini-omni-1.1-flash`) generates and
+edits video; it cannot take part in a hive round, so it is not added to the Google (Gemini)
+model list and has no pricing row.
+
+- **Where it applies:** the pricing service's weekly model check (`tools/pricing-worker`), not
+  the app. The change takes effect once the service is deployed.
+- **No change in the app:** the Google (Gemini) model list and its default are unchanged.
+- **Test coverage:** the model-check tests now include both Gemini Omni ids among the
+  non-chat models.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+
+### Files changed
+`tools/pricing-worker/src/roster.js`, `tools/pricing-worker/test-roster.mjs`,
+`docs/WaxFrame_Backlog_Master_v363.txt` (renamed from v362), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit and redeploy the pricing service. No stored data changes with this release.
+
+---
+
 ## v3.63.598 — Repository root reduced to the files a download needs
 
 **Released:** 2026-11-02

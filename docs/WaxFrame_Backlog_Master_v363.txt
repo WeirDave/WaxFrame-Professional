@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v362
-2026-11-02
+WaxFrame Backlog Master v363
+2026-11-09
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -24,6 +24,17 @@ ships.
 
 
 
+
+
+v362 — GEMINI OMNI IS NOT A CHAT MODEL; THE ROSTER CHECK NOW SKIPS IT (v3.63.599).
+
+gemini-omni-1.2-flash (and gemini-omni-1.1-flash) is Google's video generation and editing
+model: $1.50 per M input, $9.00 per M text output / $12.00 per M video output, paid tier only,
+no context window published. It cannot run a hive round, so it is not added to the picker or
+the pricing seed. The roster check listed it as a new model only because NON_CHAT_RE in
+tools/pricing-worker/src/roster.js had no pattern for it; "gemini-omni" is added, with both ids
+in test-roster.mjs. Open: the Worker must be deployed for the filter to take effect. Google
+routes requests for gemini-omni-1.1-flash to 1.2 from 2026-12-03.
 
 
 v361 — MISTRAL PRICES ARE READ BY CODE, NOT BY SONAR (v3.63.597).

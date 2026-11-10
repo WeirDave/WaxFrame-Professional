@@ -67,7 +67,7 @@ assertEqual(normalizeId('models/gemini-3.8-flash'), 'gemini-3.8-flash', 'Gemini 
 assertEqual(normalizeId('grok-4.20-0309-reasoning'), 'grok-4.20-0309-reasoning', 'a date in the middle is not a suffix');
 
 console.log('\nisChatLike — non-chat families are ignored');
-['text-embedding-3-large', 'gpt-realtime', 'whisper-1', 'gemini-3.8-flash-tts', 'imagen-4', 'dall-e-3', 'omni-moderation-latest', 'gemini-3.1-flash-live-preview', 'veo-3'].forEach(id => assert(!isChatLike(id), `${id} is not chat-like`));
+['text-embedding-3-large', 'gpt-realtime', 'whisper-1', 'gemini-3.8-flash-tts', 'imagen-4', 'dall-e-3', 'omni-moderation-latest', 'gemini-3.1-flash-live-preview', 'veo-3', 'gemini-omni-1.2-flash', 'gemini-omni-1.1-flash'].forEach(id => assert(!isChatLike(id), `${id} is not chat-like`));
 ['gpt-5.5', 'claude-opus-4-8', 'gemini-3.8-flash', 'grok-4.7', 'mistral-large-latest', 'deepseek-flash', 'command-a-03-2025'].forEach(id => assert(isChatLike(id), `${id} is chat-like`));
 
 // ── parsers ──────────────────────────────────────────────────────────

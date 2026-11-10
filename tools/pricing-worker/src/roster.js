@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker: model roster check
-//  Build: 20261102-001
+//  Build: 20261109-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -89,7 +89,7 @@ export function normalizeId(id) {
 // embeddings, image/video generation, moderation, realtime). Conservative
 // by design: a miss only costs one extra NEW line, an over-broad pattern
 // could hide a real new chat model.
-const NON_CHAT_RE = /(embed|tts|whisper|transcrib|speech|audio|realtime|imagen|image|veo|video|sora|dall-?e|moderation|rerank|guard|live|babbage|davinci|aqa|robotics|diffusion|flux|lyria|music|classif|safety|ocr|translate)/i;
+const NON_CHAT_RE = /(embed|tts|whisper|transcrib|speech|audio|realtime|imagen|image|veo|video|sora|dall-?e|moderation|rerank|guard|live|babbage|davinci|aqa|robotics|diffusion|flux|lyria|music|classif|safety|ocr|translate|gemini-omni)/i;
 export function isChatLike(id) {
   return !!id && !NON_CHAT_RE.test(id);
 }
