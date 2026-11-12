@@ -1,5 +1,45 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.600 — Gemini prices are read from Google's Markdown pricing page
+
+**Released:** 2026-11-12
+**Build:** 20261112-001
+
+### What changed
+
+**The pricing service reads Gemini prices again.** Google moved its Gemini API pricing page
+to `aistudio.google.com/docs/pricing`, a page whose HTML contains no price tables. Every
+Gemini row was reported as "not listed" while the models were still on the page. The service
+now reads the Markdown form of that page, `aistudio.google.com/docs/pricing.md`.
+
+- **Where it applies:** the pricing service (`tools/pricing-worker`), not the app. The change
+  takes effect once the service is deployed. Until then the Gemini rows keep their last
+  verified prices.
+- **Prices read:** `gemini-3.8-flash`, `gemini-3.6-flash`, `gemini-3.1-flash-lite`,
+  `gemini-3.1-pro-preview` and `gemini-4-argon` on the paid tier, and the free tier rows for the
+  three Flash models. All of them match the current pricing data, including the scheduled
+  increases on 2026-12-01 (`gemini-4-argon`) and 2027-01-01 (`gemini-3.8-flash`,
+  `gemini-3.6-flash`).
+- **No change in the app:** the Google (Gemini) model list, its default and the prices shown on
+  the API pricing page are unchanged.
+- **Test coverage:** a trimmed copy of the live page is added as a test fixture, with tests for
+  each of the Gemini models above. The previous HTML reading is kept.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+- `node tools/pricing-worker/check-price-parsers-live.mjs` read all eight Gemini rows from the
+  live page; none differs from the pricing data.
+
+### Files changed
+`tools/pricing-worker/src/prices.js`, `tools/pricing-worker/test-prices.mjs`,
+`tools/pricing-worker/fixtures/gemini-pricing-markdoc.md`, `tools/pricing-worker/README.md`,
+`docs/WaxFrame_Backlog_Master_v364.txt` (renamed from v363), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit and redeploy the pricing service. No stored data changes with this release.
+
+---
+
 ## v3.63.599 — The weekly model check no longer lists Gemini Omni as a new model
 
 **Released:** 2026-11-09

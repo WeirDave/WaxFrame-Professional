@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v363
-2026-11-09
+WaxFrame Backlog Master v364
+2026-11-12
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,18 @@ ships.
 
 
 
+
+v363 — GEMINI PRICES ARE READ FROM GOOGLE'S MARKDOWN PRICING PAGE (v3.63.600).
+
+ai.google.dev/gemini-api/docs/pricing now redirects to aistudio.google.com/docs/pricing, whose
+HTML has no price tables, so every Gemini row was reported "not listed" on the 2026-11-08 run.
+Both Gemini sources in tools/pricing-worker/src/prices.js now fetch
+aistudio.google.com/docs/pricing.md; parseGemini flattens the Markdoc to the same text the HTML
+page gave and reads it as before (the HTML path is kept). Fixture:
+tools/pricing-worker/fixtures/gemini-pricing-markdoc.md. check-price-parsers-live.mjs read all
+eight Gemini rows on 2026-11-12 and none differs from the seed. Open: the Worker must be deployed
+for this to take effect. The seed's sourceUrl fields still say ai.google.dev; they redirect
+and were left alone.
 
 v362 — GEMINI OMNI IS NOT A CHAT MODEL; THE ROSTER CHECK NOW SKIPS IT (v3.63.599).
 

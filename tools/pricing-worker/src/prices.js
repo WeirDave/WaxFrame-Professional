@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker: price parsers
-//  Build: 20261109-001
+//  Build: 20261112-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -329,8 +329,28 @@ function geminiCell(cell, now) {
   return first ? { value: first[1], later: null } : null;
 }
 
+// Since 2026-11 ai.google.dev/gemini-api/docs/pricing redirects to aistudio.google.com/docs/pricing,
+// whose ".md" form is the page as Markdoc source rather than HTML:
+//   ## Gemini 3.8 Flash  {% id="gemini-3.8-flash" %}
+//   {% left-column %} *[`gemini-3.8-flash`](/docs/models/gemini-3.8-flash)* {% /left-column %}
+//   {% button href="..." %} Try it in Google AI Studio {% /button %}
+//   {% tab title="Standard" %} {% table %} * Feature * Free Tier * Paid Tier ... * Input price * Free of charge * $0.75 ...
+// Flattened to the same plain text the HTML page gave: tags dropped (a tab title is kept as text,
+// since "Standard" and "Batch" mark the panels), links reduced to their text, list and rule marks removed.
+function markdocToText(md) {
+  return String(md || '')
+    .replace(/\{%\s*tab\s+title="([^"]*)"\s*%\}/g, ' $1 ')
+    .replace(/\{%[\s\S]*?%\}/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[`*]/g, ' ')
+    .replace(/\\\\/g, ' ')
+    .replace(/^\s*---\s*$/gm, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function parseGemini(html, modelId, tier, now) {
-  const t = htmlToText(html);
+  const t = /\{%\s*(?:button|table|tab)\b/.test(String(html || '')) ? markdocToText(html) : htmlToText(html);
   if (t.length < MIN_PAGE_TEXT) return shapeChanged('the Gemini pricing page');
   // A section can be headed by more than one id ("gemini-3.1-pro-preview and
   // gemini-3.1-pro-preview-customtools Try it in ..."). The id must be a whole
@@ -493,8 +513,9 @@ export const PRICE_SOURCES = {
   grok:          { url: 'https://docs.x.ai/developers/models',               parse: (h, id) => parseXai(h, id) },
   chatgpt:       { url: 'https://developers.openai.com/api/docs/pricing',    parse: (h, id) => parseOpenAI(h, id) },
   claude:        { url: 'https://platform.claude.com/docs/en/about-claude/pricing', parse: (h, id) => parseAnthropic(h, id) },
-  'gemini-paid': { url: 'https://ai.google.dev/gemini-api/docs/pricing',     parse: (h, id, now) => parseGemini(h, id, 'paid', now) },
-  'gemini-free': { url: 'https://ai.google.dev/gemini-api/docs/pricing',     parse: (h, id, now) => parseGemini(h, id, 'free', now) },
+  // ai.google.dev/gemini-api/docs/pricing now redirects to aistudio.google.com/docs/pricing, an app shell whose HTML holds no price tables; the ".md" form is the whole page.
+  'gemini-paid': { url: 'https://aistudio.google.com/docs/pricing.md',       parse: (h, id, now) => parseGemini(h, id, 'paid', now) },
+  'gemini-free': { url: 'https://aistudio.google.com/docs/pricing.md',       parse: (h, id, now) => parseGemini(h, id, 'free', now) },
   together:      { url: 'https://docs.together.ai/docs/serverless/models.md', parse: (h, id) => parseTogether(h, id) },
   mistral:       { url: 'https://docs.mistral.ai/inference/pricing.md',      parse: (h, id, now) => parseMistral(h, id, now) },
   // One page per model, so `url` is a function of the model id (null when the id cannot be a page name).

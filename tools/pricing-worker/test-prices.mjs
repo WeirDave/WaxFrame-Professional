@@ -42,7 +42,8 @@ const PAGES = {
   pplxPro: fx('perplexity-sonar-pro.md'),
   pplxDeep: fx('perplexity-sonar-deep-research.md'),
   anthropic: fx('anthropic-pricing.txt'),
-  gemini: fx('gemini-pricing.txt')
+  gemini: fx('gemini-pricing.txt'),
+  geminiMd: fx('gemini-pricing-markdoc.md')
 };
 const NOW = new Date('2026-10-11T12:00:00Z');
 
@@ -257,6 +258,19 @@ assertEqual(px(parseGemini(PAGES.gemini, 'gemini-3.8-flash', 'free', NOW)), [0, 
 }
 assert(!parseGemini(PAGES.gemini, 'gemini-3.1-pro', 'paid', NOW).ok, 'gemini-3.1-pro is not gemini-3.1-pro-preview');
 assert(!parseGemini(PAGES.gemini, 'gemini-3.1-pro-preview', 'free', NOW).ok, 'a model with no free tier is not read as free');
+{
+  // Since 2026-11 the page is read as Markdoc source from aistudio.google.com/docs/pricing.md.
+  const M = PAGES.geminiMd, T = new Date('2026-11-09T12:00:00Z');
+  assertEqual(px(parseGemini(M, 'gemini-3.8-flash', 'paid', T)), [0.75, 3.75], 'Markdoc page: gemini-3.8-flash paid reads $0.75 / $3.75');
+  assertEqual(px(parseGemini(M, 'gemini-3.6-flash', 'paid', T)), [0.75, 3.75], 'Markdoc page: gemini-3.6-flash paid');
+  assertEqual(px(parseGemini(M, 'gemini-3.1-flash-lite', 'paid', T)), [0.25, 1.5], 'Markdoc page: gemini-3.1-flash-lite paid');
+  assertEqual(px(parseGemini(M, 'gemini-3.1-pro-preview', 'paid', T)), [2, 12], 'Markdoc page: gemini-3.1-pro-preview (two ids in the heading) reads the <=200K rate');
+  assertEqual(px(parseGemini(M, 'gemini-3.8-flash', 'free', T)), [0, 0], 'Markdoc page: free tier reads 0 / 0');
+  assert(parseGemini(M, 'gemini-4-argon', 'paid', T).ok, 'Markdoc page: gemini-4-argon paid is read');
+  assert(!parseGemini(M, 'gemini-3.1-pro-preview', 'free', T).ok, 'Markdoc page: a model with no free tier is not read as free');
+  assert(!parseGemini(M, 'gemini-3.5-flash', 'paid', T).ok, 'Markdoc page: an id not on the page is not listed');
+  assert(PRICE_SOURCES['gemini-paid'].url === PRICE_SOURCES['gemini-free'].url && /pricing\.md$/.test(PRICE_SOURCES['gemini-paid'].url), 'Gemini rows read the Markdown form of the page');
+}
 assert(!parseGemini('<p>' + 'x'.repeat(700) + '</p>', 'gemini-3.8-flash', 'paid', NOW).ok, 'a page without the section is not listed');
 {
   // If the Standard panel lost its Output price cell, the parser must not go on to read the Batch panel
