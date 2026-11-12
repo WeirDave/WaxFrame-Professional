@@ -1,5 +1,43 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.601 — Mistral Large is priced as Mistral Large 4
+
+**Released:** 2026-11-12
+**Build:** 20261112-002
+
+### What changed
+
+**The price shown for `mistral-large-latest` is now Mistral Large 4's.** From 2026-11-12
+Mistral points that name at Mistral Large 4 instead of Mistral Large 3, and the pricing data
+now matches.
+
+- **Where it shows:** the **Mistral** table on the API pricing page, the Defaults table
+  (Mistral is listed at its default model, `mistral-large-latest`), and the estimated cost per
+  round in the session spend meter.
+- **New figures:** $0.70 per million input tokens and $2.10 per million output tokens
+  (previously $0.50 and $1.50), context window 1M (previously 256K), estimated cost per round
+  $0.008 (previously $0.006). The same figures were already listed for `mistral-large-4-0`.
+- **Default unchanged:** the Mistral default remains `mistral-large-latest`.
+- **Pricing service:** the live pricing data is updated together with this release, so the
+  pricing page shows the new figures without waiting for the next weekly price check.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+- `node tools/pricing-worker/check-price-parsers-live.mjs` read `mistral-large-latest` from
+  Mistral's pricing page at $0.70 / $2.10, equal to the new row.
+- Not run: any request to `mistral-large-latest` or `mistral-large-4-0`.
+
+### Files changed
+`tools/pricing-worker/data/pricing-seed.json`, `js/pricing-renderer.js` (regenerated price
+table), `docs/WaxFrame_Backlog_Master_v365.txt` (renamed from v364), plus the routine stamp
+sweep.
+
+### Rollback
+Revert this commit and push the previous pricing data to the pricing service. No stored data
+changes in the app with this release.
+
+---
+
 ## v3.63.600 — Gemini prices are read from Google's Markdown pricing page
 
 **Released:** 2026-11-12

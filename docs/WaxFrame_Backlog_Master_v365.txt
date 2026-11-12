@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v364
+WaxFrame Backlog Master v365
 2026-11-12
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,15 @@ ships.
 
 
 
+
+v364 — MISTRAL-LARGE-LATEST REPRICED TO MISTRAL LARGE 4 (v3.63.601).
+
+From 2026-11-12 Mistral points mistral-large-latest at Mistral Large 4. The seed row now reads
+$0.70 / $2.10 per M, 1M context, estPerRound 0.008, matching mistral-large-4-0 and what
+check-price-parsers-live.mjs reads from docs.mistral.ai/inference/pricing on that date. The
+live price data was compared with the seed first: no model row differed, so the whole seed was
+pushed. Item 9 now covers only the LIMITS_TABLE entry. Item 8 (default alias or pinned id) is
+unchanged.
 
 v363 — GEMINI PRICES ARE READ FROM GOOGLE'S MARKDOWN PRICING PAGE (v3.63.600).
 
@@ -2142,24 +2151,23 @@ Ordered by value. Item 1 is blocked on David.
            marker-format error; the default is either changed everywhere
            above or left, with the reason written in the catalog comment.
 
-9. Mistral Large alias switch on 2026-11-12
+9. Mistral Large alias: context table entry
    ─────────────────────────────────────────────────
-   WHAT:   Mistral points mistral-large-latest at Mistral Large 4 on
-           2026-11-12. The seed row still carries Large 3's $0.50 / $1.50,
-           256K context and estPerRound 0.006.
-   WHY:    From that date the pricing page, the Defaults table and the session
-           spend meter understate the alias by about 40% unless the row is
-           updated.
-   STATE:  OPEN, date-triggered. Do not start before 2026-11-12. The weekly
-           run may propose the change itself that week, held for review.
-   WHERE:  tools/pricing-worker/data/pricing-seed.json, the mistral
-           mistral-large-latest row (inputPerM 0.7, outputPerM 2.1,
-           contextWindow "1M", estPerRound 0.008, estNote cleared);
-           js/provider-catalog.js LIMITS_TABLE 'mistral-large-latest'
-           (its 128000 context already disagrees with the seed's 256K);
-           FALLBACK_DATA regen; KV push.
-   DONE:   The row reads $0.70 / $2.10 with the estNote removed; the live
-           endpoint confirms it; the alias still answers on a keyed account.
+   WHAT:   LIMITS_TABLE in js/provider-catalog.js still holds
+           'mistral-large-latest': { context: 128000, output: 8192 }. Mistral
+           Large 4, which the alias resolves to from 2026-11-12, has a 1M
+           context window (the pricing seed has said "1M" since v3.63.601).
+   WHY:    The table is the fallback for the model-limits display and the
+           document-size checks when Mistral's models endpoint gives no figure,
+           so a long document can be flagged as too large for a model that
+           holds it. The output figure (8192) is unpublished for Large 4 and
+           was left as it is.
+   STATE:  OPEN. Small. Not changed in v3.63.601, which repriced the seed only.
+   WHERE:  js/provider-catalog.js LIMITS_TABLE (mistral-large-latest);
+           LIMITS_TABLE_REVIEWED date.
+   DONE:   The entry carries Large 4's context figure from Mistral's own
+           model page, the reviewed date is updated, and the model list on
+           Hive setup shows it.
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

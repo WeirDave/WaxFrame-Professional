@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-29T12:00:00Z",
+  "lastUpdated": "2026-11-12T14:40:00Z",
   "schemaVersion": 3,
   "tokensPerRound": {
     "input": 5000,
@@ -300,14 +300,14 @@
       "models": [
         {
           "id": "mistral-large-latest",
-          "inputPerM": 0.5,
-          "outputPerM": 1.5,
-          "contextWindow": "256K",
+          "inputPerM": 0.7,
+          "outputPerM": 2.1,
+          "contextWindow": "1M",
           "maxOutput": null,
-          "estPerRound": 0.006,
-          "estNote": "Alias for Mistral Large 3 until Nov 12, 2026. From that date Mistral points it at Mistral Large 4 ($0.70/$2.10 per M, 1M context); see mistral-large-4-0",
-          "sourceUrl": "https://mistral.ai/pricing/api/",
-          "verifiedAt": "2026-08-02T23:00:00Z",
+          "estPerRound": 0.008,
+          "estNote": null,
+          "sourceUrl": "https://docs.mistral.ai/inference/pricing",
+          "verifiedAt": "2026-11-12T14:40:00Z",
           "status": "verified"
         },
         {
