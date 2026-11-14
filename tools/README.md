@@ -66,6 +66,7 @@ person to read the result, and `release-check.mjs` stays dependency-free.
 | `audit-dead-code.mjs` | Every few releases, and after removing anything | — |
 | `audit-html-sinks.mjs` | Alongside `check-html-injection.mjs`, to get the list of sites to read | — |
 | `capture.mjs` | Producing screenshots | Chrome |
+| `make-dev-password-hash.mjs` | Rotating the dev-mode password: prints a new `DEV_PW_KDF` block (random salt, PBKDF2-SHA256) for `js/app.js`, and a generated password unless `WF_DEV_PW` is set | — |
 
 > **All of these are green as of v3.63.540.** Three were written red on
 > purpose, as the acceptance tests for the bugs the 2026-09-21 security review

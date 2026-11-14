@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261114-001
+// Build: 20261114-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261114-001';         // build stamp — update each session
+const BUILD = '20261114-002';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -3233,11 +3233,46 @@ async function submitSettingsLicenseKey() {
 
 
 // ── DEV TOOLS ──
-const DEV_PW_HASH = 'c930f4bedafc8f8dc0fc0b00f85851668dd60cc56c39ae8e1b09f5b2ea1e1902';
+// The dev-mode password is stored as a SALTED, deliberately slow hash:
+// PBKDF2-HMAC-SHA256, 600,000 iterations, a random 16-byte salt (OWASP's
+// current minimum for PBKDF2-SHA256). The earlier value was a bare SHA-256, which
+// anyone holding this public file could test guesses against at billions per
+// second. This is still a client-side convenience gate (unlocking only sets a
+// localStorage flag, and the toolbar's server actions need their own tokens),
+// but the stored value no longer gives the password away to a guessing run.
+// Rotate it with: node tools/make-dev-password-hash.mjs
+const DEV_PW_KDF = {
+  salt:       '2393f2025c24047770f4f101e3054300',
+  iterations: 600000,
+  hash:       'b200b60d991c8f4e285cbfd430b0d03b843c3bd23b96cab3f4517fc0ee1197d2'
+};
 
-async function hashString(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+function _devHexToBytes(hex) {
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return out;
+}
+
+// Derive the PBKDF2-SHA256 value for a password; returns lowercase hex.
+async function _devDeriveHex(password, saltHex, iterations) {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt: _devHexToBytes(saltHex), iterations }, key, 256);
+  return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Compare without an early exit on the first differing character.
+function _devConstantTimeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function devPasswordMatches(password) {
+  const derived = await _devDeriveHex(String(password || ''), DEV_PW_KDF.salt, DEV_PW_KDF.iterations);
+  return _devConstantTimeEqual(derived, DEV_PW_KDF.hash);
 }
 
 function showDevModal() {
@@ -3257,8 +3292,7 @@ function hideDevModal() {
 async function submitDevPassword() {
   const input = document.getElementById('devPwInput');
   const val = input?.value || '';
-  const hash = await hashString(val);
-  if (hash === DEV_PW_HASH) {
+  if (await devPasswordMatches(val)) {
     localStorage.setItem('waxframe_dev', '1');
     hideDevModal();
     // Show toolbar immediately without page reload
@@ -13848,8 +13882,8 @@ async function extractPDF(file, options = {}) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.605'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.605';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.606'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.606';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 

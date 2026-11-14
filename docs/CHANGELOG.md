@@ -1,5 +1,45 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.606 — The dev-mode password is stored as a salted, slow hash
+
+**Released:** 2026-11-14
+**Build:** 20261114-002
+
+### What changed
+
+**The password that unlocks dev mode is now checked against a salted PBKDF2 hash.** The value
+stored in `js/app.js` was a single unsalted SHA-256, which anyone holding the public file could test
+guesses against at very high speed. It is now PBKDF2-HMAC-SHA256 with a random 16-byte salt and
+600,000 iterations (`DEV_PW_KDF`), compared in constant time.
+
+- **The dev password is new.** The previous one no longer unlocks dev mode. Unlocking is still the
+  same: open the dev dialog, enter the password, and the toolbar appears.
+- **Rotating it:** `node tools/make-dev-password-hash.mjs` prints a fresh `DEV_PW_KDF` block and a
+  random password (or hashes one passed in `WF_DEV_PW`). The password is printed once and is not
+  written to a file.
+- **Not changed:** dev mode is still a convenience gate. Unlocking sets a flag in the browser's
+  local storage, and the toolbar's server actions (such as the pricing refresh) keep their own
+  tokens.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+- `node tools/check-html-injection.mjs`: seven new checks compare the browser's derivation with
+  Node's PBKDF2 for a throwaway password and salt, confirm a wrong or empty password neither matches
+  nor unlocks, confirm the stored salt and hash lengths and the 600,000-iteration floor, and confirm
+  the old SHA-256 constant and helper are gone.
+- The new password was confirmed against the stored constants with Node's PBKDF2.
+- Not run: typing the new password into the dev dialog in a browser.
+
+### Files changed
+`js/app.js`, `tools/make-dev-password-hash.mjs` (new), `tools/check-html-injection.mjs`,
+`tools/README.md`, `docs/WaxFrame_Backlog_Master_v370.txt` (renamed from v369), plus the routine
+stamp sweep.
+
+### Rollback
+Revert this commit. The previous dev password then works again. No stored data changes.
+
+---
+
 ## v3.63.605 — Security hardening, stalled-response timeouts and updated libraries
 
 **Released:** 2026-11-14

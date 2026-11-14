@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261114-001
+// Build: 20261114-002
 // check-html-injection.mjs — does hostile text in saved state become markup?
 //
 // WaxFrame builds its UI by assigning template literals to .innerHTML. That is
@@ -35,6 +35,7 @@
 // Usage:  node tools/check-html-injection.mjs
 // Exit 0 = nothing injected.
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -503,6 +504,38 @@ try {
   })()`));
   check('the verify-panel image viewer exists (test is live)', hid.present === true, hid);
   check('it is hidden until a picture is loaded into it', hid.display === 'none', hid);
+
+  console.log('\n  ▶ The dev-mode password is a salted PBKDF2 check');
+  // The derivation is checked against Node's own PBKDF2 for a throwaway
+  // password/salt, so a wrong parameter order or encoding in the browser code
+  // cannot pass. The real password is never in this file.
+  const vecPw = 'correct horse battery staple';
+  const vecSalt = '00112233445566778899aabbccddeeff';
+  const vecIter = 1000;
+  const vecWant = crypto.pbkdf2Sync(vecPw, Buffer.from(vecSalt, 'hex'), vecIter, 32, 'sha256').toString('hex');
+  const dev = JSON.parse(await evaluate(`(async () => {
+    const got = await _devDeriveHex(${jsLiteral(vecPw)}, ${jsLiteral(vecSalt)}, ${vecIter});
+    const wrong = await devPasswordMatches('not the password');
+    const empty = await devPasswordMatches('');
+    localStorage.removeItem('waxframe_dev');
+    const input = document.getElementById('devPwInput');
+    if (input) input.value = 'not the password';
+    await submitDevPassword();
+    return JSON.stringify({
+      got, wrong, empty,
+      flagSet: localStorage.getItem('waxframe_dev') === '1',
+      sameLen: typeof DEV_PW_KDF === 'object' && DEV_PW_KDF.hash.length === 64 && DEV_PW_KDF.salt.length === 32,
+      iter: DEV_PW_KDF.iterations,
+      oldGone: typeof DEV_PW_HASH === 'undefined' && typeof hashString === 'undefined'
+    });
+  })()`));
+  check('the browser derivation matches Node PBKDF2-SHA256', dev.got === vecWant, { got: dev.got, want: vecWant });
+  check('a wrong password does not match', dev.wrong === false, dev);
+  check('an empty password does not match', dev.empty === false, dev);
+  check('a wrong password does not unlock dev mode', dev.flagSet === false, dev);
+  check('the stored value is a 16-byte salt and a 32-byte hash', dev.sameLen === true, dev);
+  check('it uses at least 600,000 iterations', dev.iter >= 600000, dev);
+  check('the old unsalted SHA-256 constant and helper are gone', dev.oldGone === true, dev);
 
   console.log('\n  ▶ The console error arrow works under the strict CSP (audit 2026-11)');
   const arrow = JSON.parse(await evaluate(`(() => {
