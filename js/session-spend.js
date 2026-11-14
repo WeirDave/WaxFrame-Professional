@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — session-spend.js
-// Build: 20261114-002
+// Build: 20261114-003
 //  Session spend meter (v3.63.562). Every provider response that
 //  reports token usage is priced against the embedded pricing
 //  snapshot (window.WFPricing, from pricing-renderer.js) and added
@@ -121,6 +121,57 @@
     return { inTok: num(pt), outTok: num(ct) };
   }
 
+  // ── Pre-flight estimate ─────────────────────────────────────
+  // The meter above measures what was already sent. These two helpers price
+  // what is ABOUT to be sent. They only do arithmetic on token counts the
+  // caller supplies; the caller (app.js computeRoundEstimate) knows the hive,
+  // the document and the reference material, this file does not.
+  //
+  // Token counts are an approximation (about four characters per token for
+  // English prose). A reasoning model's hidden thinking tokens are not
+  // predictable and are not included, so a reasoning Builder can cost more than
+  // its estimate. A model that is not in the pricing snapshot is reported as
+  // unpriced, never as $0.
+  var CHARS_PER_TOKEN = 4;
+
+  function tokensFromChars(n) { return Math.ceil(num(n) / CHARS_PER_TOKEN); }
+
+  // items: [{ ai: { id, name, provider }, model, role, inTok, outTok }]
+  // Returns { total, unpriced, rows: [{ name, model, role, inTok, outTok, usd|null }] }
+  function estimate(items) {
+    var rows = [], total = 0, unpriced = 0;
+    (Array.isArray(items) ? items : []).forEach(function (it) {
+      if (!it || !it.ai) return;
+      var inTok = num(it.inTok), outTok = num(it.outTok);
+      var price = priceFor(it.ai.provider, it.model);
+      var usd = price ? inTok / 1e6 * price.inPerM + outTok / 1e6 * price.outPerM : null;
+      if (usd === null) unpriced++; else total += usd;
+      rows.push({
+        name:  String(it.ai.name || it.ai.id || '').slice(0, 80),
+        model: String(it.model || '').slice(0, 120),
+        role:  String(it.role || ''),
+        inTok: inTok, outTok: outTok, usd: usd
+      });
+    });
+    return { total: total, unpriced: unpriced, rows: rows };
+  }
+
+  // Cost of the most recently recorded round (the highest round number that
+  // has a priced call), or 0 when nothing is recorded yet.
+  function latestRoundCost() {
+    var best = -1, cost = 0;
+    Object.keys(state.rounds).forEach(function (k) {
+      var n = parseInt(k, 10);
+      if (n > best) { best = n; cost = num(state.rounds[k]); }
+    });
+    return cost;
+  }
+
+  // app.js registers a function that returns the estimate for the next round,
+  // so the breakdown below can show it without this file knowing about the hive.
+  var estimateProvider = null;
+  function setEstimateProvider(fn) { estimateProvider = (typeof fn === 'function') ? fn : null; }
+
   // ── Public API ──────────────────────────────────────────────
   function record(ai, model, data, roundNo) {
     try {
@@ -225,6 +276,22 @@
                  '</td><td class="num">' + cost + '</td></tr>';
         }).join('') +
         '</tbody><tfoot><tr><td colspan="5">Session total (estimate)</td><td class="num">' + fmtPrecise(total()) + '</td></tr></tfoot></table>';
+    var est = null;
+    try { est = estimateProvider ? estimateProvider() : null; } catch (e) { est = null; }
+    var nextBlock = '';
+    if (est && est.rows && est.rows.length) {
+      nextBlock = '<p><strong>Next round (estimate before sending)</strong></p>' +
+        '<table class="spend-table"><thead><tr><th>AI</th><th>Role</th><th class="num">Input tokens</th><th class="num">Output tokens</th><th class="num">Est. cost</th></tr></thead><tbody>' +
+        est.rows.map(function (r) {
+          var cost = r.usd === null
+            ? '<span class="spend-dim" title="This model is not in the pricing snapshot — local and custom models usually cost nothing per token">not priced</span>'
+            : fmtPrecise(r.usd);
+          return '<tr><td>' + esc(r.name) + '</td><td>' + esc(r.role) + '</td><td class="num">~' + r.inTok.toLocaleString() +
+                 '</td><td class="num">~' + r.outTok.toLocaleString() + '</td><td class="num">' + cost + '</td></tr>';
+        }).join('') +
+        '</tbody><tfoot><tr><td colspan="4">Next round (estimate)</td><td class="num">' + fmtPrecise(est.total) + '</td></tr></tfoot></table>' +
+        '<p class="spend-dim">Sizes come from the prompts as they would be sent now. Hidden reasoning tokens are not predicted, so a reasoning model can cost more than shown.</p>';
+    }
     var notes = '<ul class="spend-notes">' +
       '<li>Token counts are what each provider reported back. Prices are list prices from the pricing snapshot bundled with this build (' + esc(snapshotDate()) + ').</li>' +
       '<li>Cached-input discounts, batch or priority tiers, reasoning surcharges and per-search fees are not modelled. Your provider\'s billing page is the authority.</li>' +
@@ -237,7 +304,7 @@
       '<div class="spend-modal-inner" role="dialog" aria-modal="true" aria-labelledby="spendModalTitle">' +
         '<div class="spend-modal-hdr"><span id="spendModalTitle">💲 Session spend</span>' +
         '<button class="btn btn-ghost btn-sm" data-action="remove-element" data-target="spendModal">✕ Close</button></div>' +
-        '<div class="spend-modal-body">' + body + notes +
+        '<div class="spend-modal-body">' + body + nextBlock + notes +
         '<p class="spend-modal-link"><a href="ai-api-pricing.html" target="_blank" rel="noopener">Compare per-model prices →</a></p></div>' +
       '</div>';
     modal.addEventListener('click', function (e) { if (e.target === modal) modal.remove(); });
@@ -260,7 +327,9 @@
   window.WFSpend = {
     record: record, reset: reset, total: total, roundCost: roundCost,
     render: render, openBreakdown: openBreakdown, summaryText: summaryText,
-    format: fmtPrecise, _priceFor: priceFor
+    format: fmtPrecise, _priceFor: priceFor,
+    estimate: estimate, tokensFromChars: tokensFromChars,
+    latestRoundCost: latestRoundCost, setEstimateProvider: setEstimateProvider
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', render);

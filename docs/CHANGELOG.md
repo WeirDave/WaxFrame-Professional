@@ -1,5 +1,64 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.607 — Round cost estimate and an optional spend limit for Auto
+
+**Released:** 2026-11-14
+**Build:** 20261114-003
+
+### What changed
+
+**Cost estimate before a round**
+
+- **Live Console.** When a round starts, the console shows a line such as "Estimated cost of this
+  round before sending: ~$0.18".
+- **Smoke the Hive button.** Hovering the button, or moving keyboard focus to it, adds the estimate
+  to its tooltip.
+- **Spend pill.** The breakdown opened from the "Spend" pill on the work screen has a new "Next
+  round (estimate before sending)" table with one row per AI: role, approximate input and output
+  tokens, and estimated cost.
+- **How it is calculated.** The estimate prices the prompts as they would be sent now (document,
+  reference material, notes, and the AIs switched on for the session) at the list prices in the
+  bundled pricing snapshot. Output sizes are assumptions: about 250 tokens per reviewer, about
+  1,200 per reviewer when there is no document yet, and the document length plus about 15 percent
+  and 300 tokens for the Builder. Hidden reasoning tokens are not predicted, so a reasoning model
+  can cost more than shown.
+- **Unpriced models.** A model that is not in the pricing snapshot, such as a local or custom
+  endpoint, is shown as "not priced" and adds nothing to the total. It is never shown as $0.
+
+**Spend limit for Auto**
+
+- **Where:** Settings, Auto Mode section, "Spend limit per Auto run ($)". The default is blank,
+  meaning no limit.
+- **What it does:** Auto pauses, with the usual Auto-paused dialog, before a round when spending in
+  the current Auto run has reached the limit or when the next round is estimated to pass it. The
+  next round is taken as the larger of the previous round's measured cost and the estimate above.
+- **What counts:** Spending is counted from the moment Auto is turned on or resumed. "Resume Auto"
+  and "Promote failover and resume" start a fresh allowance. Spend from before Auto was turned on
+  does not count.
+- **Between rounds only.** A round that is already running is not cancelled; the limit is checked
+  before the next round or Builder step is chained. Convergence still ends Auto as before.
+- "Reset to defaults" in the Auto section also clears the limit.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+- New `tools/test-round-estimate.mjs`, run by the release check: pricing arithmetic, unpriced
+  models, which AIs are included, the empty-document case, failure to build a prompt returning no
+  estimate instead of an error, the saved-limit clamping, the limit tripping on spend already
+  reached and on a projected next round, Resume re-arming the allowance, a meter reset, and the
+  halt happening before a round is chained (and not on convergence).
+- The settings row, the tooltip and a halt during a live Auto run were not exercised in a browser.
+
+### Files changed
+`js/session-spend.js`, `js/app.js`, `index.html`, `tools/test-round-estimate.mjs` (new),
+`tools/release-check.mjs`, `tools/README.md`, `docs/WaxFrame_Storage_Schema_v1.txt`,
+`docs/WaxFrame_Backlog_Master_v371.txt` (renamed from v370), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit. The saved limit (`waxframe_auto_spend_limit`) is then ignored. No other stored
+data changes.
+
+---
+
 ## v3.63.606 — The dev-mode password is stored as a salted, slow hash
 
 **Released:** 2026-11-14

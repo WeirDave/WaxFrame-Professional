@@ -1121,6 +1121,23 @@ try {
   fail('tools/test-update-check-interval.mjs', `the update notifier's cache rules changed — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
 }
 
+// ── Check 14c2: Round estimate and Auto spend limit (tools/test-round-estimate.mjs) ──
+
+section('Round estimate and Auto spend limit (tools/test-round-estimate.mjs)');
+
+// The pre-flight estimate prices the next round from the real prompts, and the
+// Auto spend limit halts the chain between rounds. The test loads the real
+// js/session-spend.js and slices the real estimate, limit and chain-decision code
+// out of js/app.js, so a change to any of them is exercised here.
+try {
+  execFileSync(process.execPath, [join(ROOT, 'tools/test-round-estimate.mjs')], { cwd: ROOT, stdio: 'pipe' });
+  ok('tools/test-round-estimate.mjs — pass');
+} catch (e) {
+  const out = ((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : '')).trim();
+  const tail = out.split('\n').filter(l => l.trim().startsWith('✗'));
+  fail('tools/test-round-estimate.mjs', `the round estimate or the Auto spend limit changed — run it locally for full output. Failures: ${tail.length ? tail.join(' | ') : (out.slice(-300) || 'non-zero exit, no output captured')}`);
+}
+
 // ── Check 14d: Retired-model migration (tools/test-retired-model-migration.mjs) ──
 
 section('Retired-model migration (tools/test-retired-model-migration.mjs)');

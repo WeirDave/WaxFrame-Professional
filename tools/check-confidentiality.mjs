@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ── Confidentiality gate ────────────────────────────────────────────────
-// Build: 20261114-002
+// Build: 20261114-003
 //
 // WHY THIS EXISTS
 // This repository is public, and on 2026-09-15 David escalated to an

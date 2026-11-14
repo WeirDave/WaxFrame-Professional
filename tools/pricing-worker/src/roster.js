@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker: model roster check
-//  Build: 20261114-002
+//  Build: 20261114-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //

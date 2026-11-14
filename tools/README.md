@@ -42,6 +42,7 @@ debugging one:
 | `test-server-ai-eligibility.mjs` | Which model-server entries may join a hive |
 | `test-update-check-interval.mjs` | The portable update notifier asks GitHub at most hourly, retries a failure after 30 minutes, and never runs on the hosted site |
 | `test-retired-model-migration.mjs` | A saved model the provider has withdrawn (Together's Llama 3.3 70B) is replaced on load: built-in row, custom AI, variant, and the caches that name it |
+| `test-round-estimate.mjs` | The pre-flight round estimate prices the hive's real prompts (unpriced models are never counted as $0), and the Auto spend limit halts between rounds, is re-armed by Resume, and never fires on convergence |
 | `claude-proxy/test-security.mjs` | The Claude relay's origin, path, method and key guards |
 | `check-confidentiality.mjs` | No real workplace data in tracked files |
 

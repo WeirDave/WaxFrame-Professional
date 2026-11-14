@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v370
+WaxFrame Backlog Master v371
 2026-11-14
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,23 @@ ships.
 
 
 
+
+v369 — ROUND COST ESTIMATE AND AUTO SPEND LIMIT (v3.63.607).
+
+Shipped: a pre-flight estimate of the next round (Live Console line at round start, Smoke the Hive
+tooltip, "Next round" table in the Spend breakdown) and an optional per-run spend limit for Auto
+(Settings, Auto Mode, "Spend limit per Auto run ($)", off by default). Code: computeRoundEstimate
+and _autoSpendHaltReason in js/app.js, estimate / latestRoundCost in js/session-spend.js; covered by
+tools/test-round-estimate.mjs. Open:
+  1. Not run end to end. The test loads the real code into a sandbox; the settings row, the tooltip
+     and a real Auto halt on a real provider have not been exercised in a browser. Needs a run at
+     home: set a limit of a few cents, run Auto on a small document, confirm the halt and Resume.
+  2. The estimate is not shown as visible text on the Smoke button or the Spend pill; only in the
+     tooltip, the console and the breakdown. A visible label needs CSS and a layout check.
+  3. Output sizes are assumptions (reviewer 250 tokens, first-draft reviewer 1,200, Builder
+     document x 1.15 + 300), and hidden reasoning tokens are not predicted. Compare estimates with
+     the "Round N est. cost" console line over a few real rounds and adjust.
+  4. Item 5 below applies here too: a model priced by prefix match can be under-estimated.
 
 v368 — SECURITY AND ROBUSTNESS AUDIT: WHAT IS STILL OPEN (v3.63.605, updated v3.63.606).
 

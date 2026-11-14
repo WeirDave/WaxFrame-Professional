@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261114-002
+// Build: 20261114-003
 // make-dev-password-hash.mjs — produce the DEV_PW_KDF block for js/app.js.
 //
 // The dev-mode password is checked against a salted PBKDF2-HMAC-SHA256 value

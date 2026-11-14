@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261114-002
+// Build: 20261114-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261114-002';         // build stamp — update each session
+const BUILD = '20261114-003';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -1578,6 +1578,9 @@ const AUTO_SETTINGS = {
   slowMult:           { key: 'waxframe_auto_slow_multiplier',       def: '3'  },
   slowRounds:         { key: 'waxframe_auto_slow_rounds',           def: '2'  },
   rerollAttempts:     { key: 'waxframe_auto_reroll_attempts',       def: '2'  },
+  // Dollars. 0 = no limit (the default). Counted from the moment Auto is
+  // turned on or resumed, using the session spend meter's estimate.
+  spendLimit:         { key: 'waxframe_auto_spend_limit',           def: '0'  },
 };
 
 // Public getters other code (the P1.3 wiring) will read. Defensive parsing so
@@ -1588,6 +1591,7 @@ function getAutoStreakLimit()        { const n = parseInt(localStorage.getItem(A
 function getAutoSlowMultiplier()     { const n = parseFloat(localStorage.getItem(AUTO_SETTINGS.slowMult.key));  return Number.isFinite(n) && n >= 2 ? n : 3; }
 function getAutoSlowRounds()         { const n = parseInt(localStorage.getItem(AUTO_SETTINGS.slowRounds.key), 10); return Number.isFinite(n) && n >= 1 ? n : 2; }
 function getAutoRerollAttempts()     { const n = parseInt(localStorage.getItem(AUTO_SETTINGS.rerollAttempts.key), 10); return Number.isFinite(n) && n >= 1 ? n : 2; }
+function getAutoSpendLimit()         { const n = parseFloat(localStorage.getItem(AUTO_SETTINGS.spendLimit.key)); return Number.isFinite(n) && n > 0 ? n : 0; }
 
 let _settingsReturnScreen = 'screen-welcome';
 
@@ -1701,6 +1705,8 @@ function renderSettings() {
   if (sRounds) sRounds.value = getAutoSlowRounds();
   const reroll = document.getElementById('setAutoRerollAttempts');
   if (reroll) reroll.value = getAutoRerollAttempts();
+  const spendLimit = document.getElementById('setAutoSpendLimit');
+  if (spendLimit) spendLimit.value = getAutoSpendLimit() || '';
   // v3.63.133 — Deep Dive toggle in the new Diagnostics section. Reads the
   // canonical state from WF_DEBUG (which loads from localStorage at init).
   // The dev-toolbar toggle and this Settings toggle stay in sync via
@@ -1990,13 +1996,23 @@ function saveAutoRerollAttempts(val) {
   const el = document.getElementById('setAutoRerollAttempts'); if (el) el.value = n;
   toast(`⚡ Length-guard reround attempts: ${n}`, 2500);
 }
+// Blank, zero or anything that is not a positive number means "no limit".
+function saveAutoSpendLimit(val) {
+  let n = parseFloat(val);
+  if (!Number.isFinite(n) || n <= 0) n = 0;
+  if (n > 10000) n = 10000;
+  n = Math.round(n * 100) / 100;
+  localStorage.setItem(AUTO_SETTINGS.spendLimit.key, String(n));
+  const el = document.getElementById('setAutoSpendLimit'); if (el) el.value = n > 0 ? n : '';
+  toast(n > 0 ? `⚡ Auto spend limit: $${n.toFixed(2)} per Auto run` : '⚡ Auto spend limit: off', 3000);
+}
 
 // Restore every Auto Mode setting to its built-in default, then re-sync the
 // controls so the UI reflects the reset immediately.
 async function resetAutoSettings() {
   const ok = await wfConfirm(
     'Reset Auto settings',
-    'Reset all Auto Mode settings to their defaults? This restores Failover Builder (none), Never disable Builder (off), Failure-streak limit (2), Slow threshold (3× / 2 rounds), and Reround attempts (2).',
+    'Reset all Auto Mode settings to their defaults? This restores Failover Builder (none), Never disable Builder (off), Failure-streak limit (2), Slow threshold (3× / 2 rounds), Reround attempts (2), and Spend limit (off).',
     { okText: 'Reset to defaults', cancelText: 'Cancel' }
   );
   if (!ok) return;
@@ -4313,9 +4329,12 @@ function toggleAutoMode() {
     window._autoLengthRerollCount  = 0;
     window._autoLengthRerollActive = false;
     window._autoLengthDirective    = '';
+    _autoSpendRearm();
     if (typeof consoleLog === 'function') {
       const left = Math.max(0, window._autoCeilingTarget - r);
-      consoleLog(`👤 You turned Auto ON — ceiling round ${window._autoCeilingTarget}, current round ${r} (${left} left)`, 'info');
+      const _lim = getAutoSpendLimit();
+      const _limNote = (_lim > 0 && window.WFSpend) ? `, spend limit ${window.WFSpend.format(_lim)}` : '';
+      consoleLog(`👤 You turned Auto ON — ceiling round ${window._autoCeilingTarget}, current round ${r} (${left} left)${_limNote}`, 'info');
     }
     if (typeof toast === 'function') toast('🚀 Auto mode ON');
 
@@ -4430,6 +4449,116 @@ function _autoResolveUserDecisions(userDecisions) {
   return choices;
 }
 
+// ── Round cost estimate and Auto spend limit ──────────────────────
+// computeRoundEstimate() prices the next round from the prompts exactly as they
+// would be sent now: the real document, reference material, notes and hive.
+// It reads state and builds strings; it sends nothing and changes nothing.
+// Any failure returns null, because an estimate must never break a round.
+//
+// Output sizes are assumptions, stated here so they are not mistaken for
+// measurements: a reviewer returns up to three one-sentence suggestions
+// (about 250 tokens); with no document yet every reviewer writes a draft
+// (assumed about 1,200 tokens); the Builder returns the whole document plus
+// the conflicts and applied-changes blocks (document tokens x 1.15 + 300).
+function computeRoundEstimate() {
+  const S = window.WFSpend;
+  if (!S || typeof S.estimate !== 'function') return null;
+  try {
+    if (!Array.isArray(activeAIs) || activeAIs.length === 0 || !builder) return null;
+    const builderAI = activeAIs.find(a => a.id === builder);
+    if (!builderAI) return null;
+    const sessionOn = (window.sessionAIs instanceof Set) ? window.sessionAIs : null;
+    // Same rule as runRound: the Builder always runs, the others only if on.
+    const participants = activeAIs.filter(ai => ai.id === builder || !sessionOn || sessionOn.has(ai.id));
+    const doc = (document.getElementById('workDocument')?.value || '').trim();
+    const docTok = S.tokensFromChars(doc.length);
+    const reviewerOut = doc ? 250 : 1200;
+    const modelOf = ai => getModelForAI(ai) || API_CONFIGS[ai.provider]?.model || '';
+
+    const items = participants.map(ai => ({
+      ai, model: modelOf(ai), role: ai.id === builder ? 'Reviewer + Builder' : 'Reviewer',
+      inTok: S.tokensFromChars(buildPromptForAI(ai, []).length),
+      outTok: reviewerOut
+    }));
+
+    // The Builder's second call carries every reviewer's answer. Stand-in
+    // answers of the assumed size give it the right length.
+    const standIn = participants.map(ai => ({ id: ai.id, name: ai.name, response: 'x'.repeat(reviewerOut * 4), noChanges: false }));
+    const builderPrompt = buildPromptForAI(builderAI, standIn);
+    items.push({
+      ai: builderAI, model: modelOf(builderAI), role: 'Builder',
+      inTok: S.tokensFromChars(builderPrompt.length),
+      outTok: Math.ceil(Math.max(docTok, reviewerOut) * 1.15) + 300
+    });
+    return S.estimate(items);
+  } catch (e) {
+    return null;
+  }
+}
+
+// One line in the Live Console before a round goes out.
+function _logRoundEstimate() {
+  const est = computeRoundEstimate();
+  if (!est || !est.rows.length || !window.WFSpend) return;
+  const note = est.unpriced > 0 ? ` (${est.unpriced} call${est.unpriced === 1 ? '' : 's'} not priced)` : '';
+  consoleLog(`💲 Estimated cost of this round before sending: ~${window.WFSpend.format(est.total)}${note}`, 'info');
+}
+
+// Hover or focus on Smoke the Hive shows the estimate in its tooltip.
+function _refreshSmokeEstimateTitle() {
+  const btn = document.getElementById('runRoundBtn');
+  if (!btn) return;
+  if (!btn.dataset.baseTitle) btn.dataset.baseTitle = btn.title || '';
+  const est = computeRoundEstimate();
+  if (!est || !est.rows.length || !window.WFSpend) { btn.title = btn.dataset.baseTitle; return; }
+  const note = est.unpriced > 0 ? ` (${est.unpriced} call${est.unpriced === 1 ? '' : 's'} not priced)` : '';
+  btn.title = `${btn.dataset.baseTitle}\nEstimated cost of this round: ~${window.WFSpend.format(est.total)}${note}. List prices, before sending.`;
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('runRoundBtn');
+  if (!btn) return;
+  btn.addEventListener('mouseenter', _refreshSmokeEstimateTitle);
+  btn.addEventListener('focus', _refreshSmokeEstimateTitle);
+  if (window.WFSpend && typeof window.WFSpend.setEstimateProvider === 'function') {
+    window.WFSpend.setEstimateProvider(computeRoundEstimate);
+  }
+});
+
+// Auto spend limit. The baseline is the session total at the moment Auto was
+// turned on or resumed, so the limit means "this much more, in this run", and
+// Resume starts a fresh allowance. It is checked between rounds only: a round
+// already in flight cannot be recalled.
+function _autoSpendRearm() {
+  window._autoSpendBase = window.WFSpend ? window.WFSpend.total() : 0;
+}
+function _autoSpendSinceArmed() {
+  if (!window.WFSpend) return 0;
+  const total = window.WFSpend.total();
+  if (typeof window._autoSpendBase !== 'number') window._autoSpendBase = total;
+  // The meter was reset (new project) after the baseline was taken.
+  if (total < window._autoSpendBase) window._autoSpendBase = 0;
+  return total - window._autoSpendBase;
+}
+// Returns the text for the halt dialog, or null when Auto may continue.
+function _autoSpendHaltReason() {
+  const limit = getAutoSpendLimit();
+  if (!(limit > 0) || !window.WFSpend) return null;
+  const F = window.WFSpend.format;
+  const spent = _autoSpendSinceArmed();
+  if (spent >= limit) {
+    return `Auto has spent about ${F(spent)} in this run, which reaches your ${F(limit)} spend limit (an estimate from list prices). Resume gives Auto a fresh ${F(limit)}.`;
+  }
+  // Project the next round as the larger of the last round's actual cost and
+  // the pre-flight estimate, so a cheap Builder-only step cannot hide it.
+  let next = window.WFSpend.latestRoundCost();
+  const est = computeRoundEstimate();
+  if (est && est.total > next) next = est.total;
+  if (spent + next > limit) {
+    return `Auto has spent about ${F(spent)} in this run. The next round is estimated at about ${F(next)}, which would pass your ${F(limit)} spend limit (an estimate from list prices). Resume gives Auto a fresh ${F(limit)}.`;
+  }
+  return null;
+}
+
 // ── The chain decision ────────────────────────────────────────────
 // Called at every natural round-end point with a context object:
 //   { outcome, satisfied, total, builderError, errorReason, conflicts }
@@ -4507,6 +4636,13 @@ function _autoMaybeChainNextRound(ctx) {
   // 3) Ceiling check — at-or-past the cap
   if (typeof round === 'number' && window._autoCeilingTarget !== null && round >= window._autoCeilingTarget) {
     _autoHalt('ceiling', `Reached the round ceiling (${window._autoCeilingTarget - 1} rounds completed since Auto engaged).`);
+    return;
+  }
+
+  // 3b) Spend limit — checked before any further round or Builder step is fired.
+  const _spendReason = _autoSpendHaltReason();
+  if (_spendReason) {
+    _autoHalt('spend', _spendReason);
     return;
   }
 
@@ -4711,6 +4847,7 @@ function autoHaltResume() {
   window._autoLengthDirective    = '';
   const r = (typeof round === 'number') ? round : 1;
   window._autoCeilingTarget = r + AUTO_MAX_ROUNDS_DEFAULT;
+  _autoSpendRearm();
   if (typeof consoleLog === 'function') {
     consoleLog(`👤 You resumed Auto — ceiling extended to round ${window._autoCeilingTarget}`, 'info');
   }
@@ -4765,6 +4902,7 @@ function autoHaltPromoteBackup() {
   window._autoFailureStreak = 0;
   const r = (typeof round === 'number') ? round : 1;
   window._autoCeilingTarget = r + AUTO_MAX_ROUNDS_DEFAULT;
+  _autoSpendRearm();
   if (typeof consoleLog === 'function') {
     consoleLog(`👤 You promoted the Failover Builder — Auto resumed, ceiling extended to round ${window._autoCeilingTarget}`, 'info');
   }
@@ -13882,8 +14020,8 @@ async function extractPDF(file, options = {}) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.606'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.606';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.607'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.607';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -20021,6 +20159,7 @@ async function _runRoundImpl(opts) {
     projectClockStart(); // start/resume project clock on every round
     setStatus(`⚡ Round ${round} in progress — WaxFrame is thinking…`);
     consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
+    _logRoundEstimate();
   } else {
     // Project clock is already running from the original round; do not start
     // a second timer. Status/console divider already set by the retry caller.

@@ -435,6 +435,11 @@ waxframe_slow_responder_enabled  user toggle for
 waxframe_auto_update_interval    minutes between heartbeats.
 waxframe_auto_update_last_run    timestamp.
 waxframe_auto_update_models      'true' / 'false'.
+waxframe_auto_spend_limit        dollars as a string, '0' = no
+                                 limit. Auto pauses before a round
+                                 that would take its spending in
+                                 the current run past this amount.
+                                 Setting; survives new projects.
 waxframe_import_server_defaults  remembered Import Server
                                  form defaults.
 waxframe_vision_provider         which provider runs vision
