@@ -1,5 +1,40 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.602 — Mistral reasoning models no longer fail the round
+
+**Released:** 2026-11-13
+**Build:** 20261113-001
+
+### What changed
+
+**A round that uses a Mistral reasoning model, such as Mistral Large 4, now completes.** Before
+this release the Mistral AI failed with the error "text.trim is not a function", both as a
+reviewer and as the Builder, and the round stopped.
+
+- **Cause:** with reasoning on (the default for Mistral Large 4), Mistral returns its reply as
+  a list of parts, a "thinking" part followed by the answer, instead of a single piece of
+  text. WaxFrame expected text only.
+- **What is used:** the answer part. The model's reasoning notes are not added to the
+  document or to the other AIs' prompts.
+- **Where it applies:** any Mistral model that returns a reply in parts, in both ordinary and
+  streamed replies. Replies that arrive as plain text are read exactly as before.
+- **Not changed:** the Mistral model list, its default and its prices.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+- `node tools/test-provider-extractors.mjs`: five new checks cover a reply in parts, several
+  text parts, a thinking-only reply and a streamed reply; all five fail on v3.63.601.
+- Not run: a request to a live Mistral model after this change.
+
+### Files changed
+`js/provider-catalog.js`, `tools/test-provider-extractors.mjs`,
+`docs/WaxFrame_Backlog_Master_v366.txt` (renamed from v365), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
+---
+
 ## v3.63.601 — Mistral Large is priced as Mistral Large 4
 
 **Released:** 2026-11-12

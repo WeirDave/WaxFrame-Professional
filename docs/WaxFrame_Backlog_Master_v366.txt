@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v365
-2026-11-12
+WaxFrame Backlog Master v366
+2026-11-13
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,17 @@ ships.
 
 
 
+
+v365 — MISTRAL REASONING REPLIES ARE READ (v3.63.602).
+
+The first real round on Mistral Large 4 failed with "text.trim is not a function": with reasoning
+on (its default, "high") Mistral returns message.content as an array of chunks, a thinking chunk
+then a text chunk, and streamed deltas switch between a list and a string. firstOpenAIText and the
+stream accumulator in js/provider-catalog.js now keep the text chunks and drop the thinking
+chunks (new helper openAIContentText); fixtures in tools/test-provider-extractors.mjs use the
+shape from Mistral's reasoning docs. Open: item 8 is still not passed. The same round must be
+re-run on v3.63.602 with Mistral as Builder (and as a reviewer, which also failed), on a paid
+key and on a free-tier key.
 
 v364 — MISTRAL-LARGE-LATEST REPRICED TO MISTRAL LARGE 4 (v3.63.601).
 

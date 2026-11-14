@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20261112-002
+// Build: 20261113-001
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -151,6 +151,40 @@ check(
   'empty choices array (genuinely empty)',
   WFProviderCatalog.extractOpenAIText({ choices: [] }),
   ''
+);
+
+// (j) v3.63.602 — Mistral reasoning models (Mistral Large 4 with reasoning on, its
+// default) return message.content as an ARRAY: a thinking chunk, then a text chunk.
+// Returning the array made the caller's text.trim throw "text.trim is not a function"
+// and failed the round. Only the answer text is wanted; the reasoning trace is not.
+check(
+  'Mistral reasoning content array: the answer, not the thinking',
+  WFProviderCatalog.extractOpenAIText({
+    choices: [{ message: { role: 'assistant', content: [
+      { type: 'thinking', thinking: [{ type: 'text', text: 'let me work this out' }] },
+      { type: 'text', text: 'the final answer' }
+    ] } }]
+  }),
+  'the final answer'
+);
+check(
+  'content array with several text chunks joins them in order',
+  WFProviderCatalog.extractOpenAIText({
+    choices: [{ message: { content: [{ type: 'text', text: 'one ' }, { type: 'text', text: 'two' }] } }]
+  }),
+  'one two'
+);
+check(
+  'content array holding only a thinking chunk reports empty, not an array',
+  WFProviderCatalog.extractOpenAIText({
+    choices: [{ message: { content: [{ type: 'thinking', thinking: [{ type: 'text', text: 'no answer' }] }] } }]
+  }),
+  ''
+);
+check(
+  'the extractor always returns a string',
+  typeof WFProviderCatalog.extractOpenAIText({ choices: [{ message: { content: [{ type: 'text', text: 'x' }] } }] }),
+  'string'
 );
 
 console.log('▶ Provider-specific model filters');
@@ -630,6 +664,19 @@ check('finish_reason survives streaming', splitOut.finishReason, 'stop');
 check('usage survives streaming (include_usage)', splitOut.usage.completion_tokens, 3);
 check('a keepalive comment line is ignored, not concatenated',
   splitOut.text.indexOf('keepalive'), -1);
+
+// v3.63.602 — Mistral reasoning models stream delta.content as a LIST while thinking and
+// at the switch to the answer, then as a plain string. The list's thinking chunks are
+// dropped and its text chunks kept, so the answer is whole and has no trace in it.
+const mistralStream = mkAcc();
+mistralStream.push('data: {"choices":[{"delta":{"content":[{"type":"thinking","thinking":[{"type":"text","text":"hmm"}]}]}}]}' + `${NL}${NL}`);
+mistralStream.push('data: {"choices":[{"delta":{"content":[{"type":"thinking","thinking":[{"type":"text","text":" ok"}]},{"type":"text","text":"The "}]}}]}' + `${NL}${NL}`);
+mistralStream.push('data: {"choices":[{"delta":{"content":"answer"},"finish_reason":"stop"}]}' + `${NL}${NL}` + 'data: [DONE]' + `${NL}${NL}`);
+const mistralStreamOut = mistralStream.finish();
+check('a streamed reasoning reply keeps the answer text across list and string deltas',
+  mistralStreamOut.text, 'The answer');
+check('streamed thinking chunks are not in the text',
+  mistralStreamOut.text.indexOf('hmm'), -1);
 
 // A truncated stream must still carry its evidence, or the error screen
 // silently loses the reason.

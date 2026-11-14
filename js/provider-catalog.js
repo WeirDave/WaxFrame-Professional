@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261112-002
+// Build: 20261113-001
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -567,9 +567,33 @@
     var choices = (d && d.choices) || [];
     for (var i = 0; i < choices.length; i++) {
       var msg = choices[i] && choices[i].message;
-      if (msg && msg.content) return msg.content;
+      var t = msg ? openAIContentText(msg.content) : '';
+      if (t) return t;
     }
     return '';
+  }
+
+  // v3.63.602 - message.content as text. Usually a string, but Mistral's reasoning
+  // models (Mistral Large 4 with reasoning on, which is its default) return an
+  // ARRAY of chunks: a {type:'thinking', thinking:[...]} chunk, then a
+  // {type:'text', text:'...'} chunk. Returning the array made the next line of the
+  // caller (text.trim) throw "text.trim is not a function" and failed the round.
+  // Only the answer is kept: thinking chunks are the model's reasoning trace and
+  // are not part of the document, the same way Anthropic thinking blocks are skipped.
+  // A chunk with a string `text` is taken whatever its type, so a provider that
+  // omits `type` still reads; one whose type names reasoning is dropped.
+  function openAIContentText(content) {
+    if (typeof content === 'string') return content;
+    if (!Array.isArray(content)) return '';
+    var s = '';
+    for (var i = 0; i < content.length; i++) {
+      var part = content[i];
+      if (typeof part === 'string') { s += part; continue; }
+      if (!part || typeof part !== 'object') continue;
+      if (part.type === 'thinking' || part.type === 'reasoning') continue;
+      if (typeof part.text === 'string') s += part.text;
+    }
+    return s;
   }
 
   // v3.63.589 - Perplexity Agent API response. The answer is in `output[]`, in
@@ -1091,10 +1115,14 @@
         else if (c.finishReason) finishReason = c.finishReason;   // off-spec servers
         var d = c.delta || {};
         if (typeof d.content === 'string') text += d.content;
+        // v3.63.602 - Mistral's reasoning models stream delta.content as a LIST of
+        // chunks while thinking and at the switch to the answer, then as a plain
+        // string. Read the list for its text chunks; thinking chunks are dropped.
+        else if (Array.isArray(d.content)) text += openAIContentText(d.content);
         // Some servers emit a whole message instead of deltas on the last
         // chunk; take it only if we have collected nothing, so a compliant
         // stream is never double-counted.
-        else if (!text && c.message && typeof c.message.content === 'string') text += c.message.content;
+        else if (!text && c.message) text += openAIContentText(c.message.content);
       }
     }
 
