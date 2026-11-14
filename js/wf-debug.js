@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20261113-002
+// Build: 20261113-003
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -1195,6 +1195,40 @@ window.WF_ERROR_CATALOG = [
       { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
       { label: 'Disable this AI for the session', kind: 'disable-ai' },
       { label: 'Retry round',    kind: 'retry' }
+    ]
+  },
+  {
+    // v3.63.604 — A reasoning model (Mistral Large 4, Gemini with thinking, Claude with
+    // extended thinking) can spend its WHOLE output allowance on reasoning and have none
+    // left to write an answer. The provider says so itself: a 200 OK, no answer text, and a
+    // stop reason of "length" (OpenAI shape, Mistral), "MAX_TOKENS" (Gemini) or "max_tokens"
+    // (Anthropic). Before this card that arrived as the generic EMPTY_RESPONSE below, which
+    // blames a content filter or "truncation" and tells the user to shorten the document.
+    // Placed AFTER CONTENT_FILTERED and PROVIDER_REFUSED so a blocked or refused reply, which
+    // carries its own specific reason, is never relabelled as running out of room.
+    code: 'REASONING_OUT_OF_OUTPUT',
+    matches: (err, ctx, msg) => {
+      if (!(msg === 'empty response' || (msg || '').includes('empty response'))) return false;
+      try {
+        const raw = ctx && ctx.raw;
+        if (typeof raw !== 'string' || !raw) return false;
+        const j = JSON.parse(raw);
+        const choice = j && j.choices && j.choices[0];
+        const cand   = j && j.candidates && j.candidates[0];
+        const stop = (choice && (choice.finish_reason || choice.finishReason))
+                  || (cand && cand.finishReason)
+                  || (j && j.stop_reason) || '';
+        return /^(length|max_tokens)$/i.test(String(stop));
+      } catch { return false; }
+    },
+    title: '{ai} — Ran out of output room while thinking',
+    meaning: "{ai} reported that it stopped at its output limit before it wrote any answer. It spends part of that limit on internal reasoning before it answers, and here the reasoning used all of it, so the reply came back empty. This is not a problem with your key, your connection or the content of your document. YOUR DOCUMENT WAS NOT CHANGED. Sending the same request again will usually end the same way. What helps: switch to a model that does not reason at length, or to a different Builder; shorten the document or split it across projects; or ask for less in one round. The technical details below show the token counts the provider reported.",
+    actions: [
+      { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Re-send {ai}\'s prompt only', kind: 'resend-ai' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' },
+      { label: 'Retry round', kind: 'retry' }
     ]
   },
   {

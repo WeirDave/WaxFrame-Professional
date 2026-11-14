@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v367
+WaxFrame Backlog Master v368
 2026-11-13
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,20 @@ ships.
 
 
 
+
+v367 — "RAN OUT OF OUTPUT ROOM WHILE THINKING" CARD; MISTRAL DEFAULT DECIDED (v3.63.604).
+
+A reasoning model that spends its whole output allowance thinking returns 200 OK, no answer text
+and a stop reason of length / MAX_TOKENS / max_tokens. That used to show the generic
+EMPTY_RESPONSE card; js/wf-debug.js now has REASONING_OUT_OF_OUTPUT ahead of it (after
+CONTENT_FILTERED and PROVIDER_REFUSED, which keep their own replies). Fixtures in
+tools/test-debug-redaction.mjs use the real Mistral response plus Gemini and Anthropic shapes.
+Items 8 and 9 of v366 are closed: real Builder rounds on mistral-large-4 and mistral-large-latest
+both completed on v3.63.602-603, and the Mistral default stays the floating alias (reason in the
+catalog comment). Not done and not tested: sending a lower reasoning effort to Mistral Large 4
+(Mistral's docs list low / medium / high; WaxFrame sends none, so it runs at the default, high),
+which would cut Builder time (130-270 s observed) and tokens; not tried from the app. Also not
+done: a request on a free-tier Mistral key (none available).
 
 v366 — MISTRAL-LARGE-LATEST NO LONGER CAPPED AT 8192 OUTPUT TOKENS (v3.63.603).
 
@@ -2152,45 +2166,6 @@ Ordered by value. Item 1 is blocked on David.
            FALLBACK_DATA regen; KV push.
    DONE:   The row reads $4.00 / $20.00 with estPerRound 0.06 and the
            estNote reworded; the live endpoint confirms it.
-
-8. Mistral default: mistral-large-latest -> mistral-large-4-0? (needs David, at home)
-   ─────────────────────────────────────────────────
-   WHAT:   Run one real Builder round on mistral-large-4-0. Decide whether the
-           Mistral default stays the floating alias or becomes the pinned id.
-   WHY:    From 2026-11-12 the alias already resolves to Large 4, so the choice
-           is between a floating name and a pinned one. Pinning keeps the price
-           and behaviour fixed; the alias follows Mistral's next switch. Large 4
-           has three reasoning modes (low, medium, high; high is the default),
-           and a reasoning model can break WaxFrame's marker format or exceed
-           the output budget even when it is listed. Mistral's free tier could
-           not invoke mistral-large-latest before, so check a free key too.
-   STATE:  OPEN, blocked on David and his own machine (never a work system
-           or network). Small. Not run: any request to mistral-large-4-0.
-   WHERE:  js/provider-catalog.js mistral entry (model, fallback, comment);
-           pricing seed defaultModel; api-details.html, user manual (html +
-           txt), README default table; FALLBACK_DATA regen; KV push.
-   DONE:   One round with mistral-large-4-0 selected completes without a
-           marker-format error; the default is either changed everywhere
-           above or left, with the reason written in the catalog comment.
-
-9. Reasoning model out of output budget shows the generic "empty response" card
-   ─────────────────────────────────────────────────
-   WHAT:   When a reasoning model spends its whole output budget thinking, the reply is
-           finish_reason "length" with a thinking chunk and no answer text. callAPI treats that
-           as an empty response and shows the EMPTY_RESPONSE card ("a content filter blocked the
-           output, or the model output was truncated"), and the truncation path that records an
-           observed limit and offers a continuation is never reached.
-   WHY:    The first real case was mistral-large-latest on 2026-11-13 (see v366). Even with the
-           32,768 default, a long Builder document on a model that reasons at "high" could run
-           out the same way, and the user is told to shorten the document or change Builder.
-   STATE:  OPEN. Small to medium.
-   WHERE:  js/app.js callAPI (the `if (!text)` branch near "Empty response"); js/wf-debug.js
-           (a card ahead of EMPTY_RESPONSE, matched on finish_reason length plus a thinking
-           chunk in ctx.raw); js/provider-catalog.js isTruncationSignal.
-   DONE:   A reply that ended on "length" with no answer text is reported as running out of
-           output while reasoning, names the budget that was sent, and offers a retry with a
-           larger budget or a different model; a fixture in tools/test-provider-extractors.mjs
-           covers the raw shape (Mistral: usage.completion_tokens_details.reasoning_tokens).
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

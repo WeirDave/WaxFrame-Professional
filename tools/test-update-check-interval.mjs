@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261113-002
+// Build: 20261113-003
 // test-update-check-interval.mjs — how long the portable install's update
 // notifier trusts its last answer before it asks GitHub again.
 //

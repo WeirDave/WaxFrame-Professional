@@ -1,5 +1,46 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.604 — A clear message when an AI runs out of output room while thinking
+
+**Released:** 2026-11-13
+**Build:** 20261113-003
+
+### What changed
+
+**When an AI uses its whole output allowance on reasoning and has nothing left to write an
+answer, the error card now says so.** Before this release it showed "Provider returned an empty
+response" and suggested a content filter or a shorter document.
+
+- **Where it shows:** the error card that appears when a round fails, for any AI that reports
+  it stopped at its output limit with no answer text. This applies to Mistral Large, Gemini and
+  Claude models that reason before answering, as reviewer or as Builder.
+- **What the card says:** the title reads "Ran out of output room while thinking". The text
+  explains that the document was not changed, that sending the same request again will usually
+  end the same way, and what helps: a model that does not reason at length, a different Builder,
+  or a shorter document.
+- **Buttons:** Change Builder, Pick a different model, Re-send the AI's prompt only, Disable
+  this AI for the session, and Retry round, the same set as the other empty-response cards.
+- **Not changed:** replies blocked by a safety filter or declined by the provider keep their own
+  cards, and an empty reply that ended normally keeps "Provider returned an empty response".
+- **Mistral default:** `mistral-large-latest` remains the default Mistral model. It is the same
+  model as `mistral-large-4-0`, and both completed Builder rounds in testing.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+- `node tools/test-debug-redaction.mjs`: nine new checks cover the Mistral, Gemini and Claude
+  response shapes, three replies that must keep their own cards, a non-JSON body and the card's
+  wording and buttons; the four that expect the new card fail on v3.63.603.
+- Not run: a round that actually runs out of output room, and the card in the browser.
+
+### Files changed
+`js/wf-debug.js`, `js/provider-catalog.js` (comment only), `tools/test-debug-redaction.mjs`,
+`docs/WaxFrame_Backlog_Master_v368.txt` (renamed from v367), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
+---
+
 ## v3.63.603 — Mistral Large (latest) is no longer limited to 8,192 output tokens
 
 **Released:** 2026-11-13

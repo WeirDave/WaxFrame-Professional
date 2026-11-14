@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-debug-redaction.mjs
-// Build: 20261113-002
+// Build: 20261113-003
 // ============================================================
 // Fixture-based regression test for WF_DEBUG.scrubFailureRecord, the
 // redaction pass applied to the failure record before it is written into a
@@ -409,6 +409,84 @@ check('a quota/billing message is not an auth failure', () => {
 });
 check('an ordinary server error is not an auth failure', () => {
   assert.notEqual(classifyCode('Internal server error', 500), 'AUTH_FAILED');
+});
+
+// ── A reasoning model that ran out of output room ─────────────────────
+// v3.63.604. A reasoning model can spend its whole output allowance thinking and have
+// none left for the answer: a 200 OK, no answer text, stop reason "length". That used to
+// reach the generic EMPTY_RESPONSE card ("content filter or truncated; shorten the
+// document"). The first real case was mistral-large-latest on 2026-11-13, whose raw
+// response is the first fixture below, trimmed.
+console.log('▶ WF_DEBUG.classify — an empty reply that ended on the output limit');
+
+const emptyCode = (rawObj) => WF_DEBUG.classify(new Error('Empty response'), {
+  status: 200, message: 'Empty response', raw: JSON.stringify(rawObj, null, 2)
+}).code;
+
+check('Mistral: thinking-only reply with finish_reason "length"', () => {
+  assert.equal(emptyCode({
+    model: 'mistral-large-latest',
+    usage: { prompt_tokens: 4276, completion_tokens: 8192, completion_tokens_details: { reasoning_tokens: 8191 } },
+    choices: [{ index: 0, finish_reason: 'length', message: { role: 'assistant', content: [
+      { type: 'thinking', thinking: [{ type: 'text', text: 'Let me analyze this carefully.' }] }
+    ] } }]
+  }), 'REASONING_OUT_OF_OUTPUT');
+});
+check('Gemini: thoughts only with finishReason MAX_TOKENS', () => {
+  assert.equal(emptyCode({
+    candidates: [{ content: { role: 'model' }, finishReason: 'MAX_TOKENS', index: 0 }],
+    usageMetadata: { promptTokenCount: 700, thoughtsTokenCount: 65000, totalTokenCount: 65700 }
+  }), 'REASONING_OUT_OF_OUTPUT');
+});
+check('Anthropic: thinking-only reply with stop_reason max_tokens', () => {
+  assert.equal(emptyCode({
+    type: 'message', role: 'assistant', stop_reason: 'max_tokens',
+    content: [{ type: 'thinking', thinking: 'reasoning with no final answer' }]
+  }), 'REASONING_OUT_OF_OUTPUT');
+});
+
+// Must NOT take over replies that have their own, more specific explanation.
+check('an empty reply that ended normally stays EMPTY_RESPONSE', () => {
+  assert.equal(emptyCode({
+    choices: [{ finish_reason: 'stop', message: { role: 'assistant', content: '' } }]
+  }), 'EMPTY_RESPONSE');
+});
+check('a Gemini safety block stays CONTENT_FILTERED, even beside MAX_TOKENS', () => {
+  assert.equal(emptyCode({
+    promptFeedback: { blockReason: 'SAFETY' },
+    candidates: [{ finishReason: 'MAX_TOKENS' }]
+  }), 'CONTENT_FILTERED');
+});
+check('an OpenAI refusal stays PROVIDER_REFUSED, even beside "length"', () => {
+  assert.equal(emptyCode({
+    choices: [{ finish_reason: 'length', message: { content: null, refusal: 'I cannot help with that.' } }]
+  }), 'PROVIDER_REFUSED');
+});
+check('a non-JSON raw body does not throw and stays EMPTY_RESPONSE', () => {
+  assert.equal(WF_DEBUG.classify(new Error('Empty response'), {
+    status: 200, message: 'Empty response', raw: 'not json at all'
+  }).code, 'EMPTY_RESPONSE');
+});
+check('a length stop with real answer text is not an empty-response card at all', () => {
+  assert.notEqual(WF_DEBUG.classify(new Error('Something else failed'), {
+    status: 200, message: 'Something else failed',
+    raw: JSON.stringify({ choices: [{ finish_reason: 'length', message: { content: 'partial answer' } }] })
+  }).code, 'REASONING_OUT_OF_OUTPUT');
+});
+
+check('the card names the AI, says the document was not changed, and offers a way out', () => {
+  const entry = WF_DEBUG.classify(new Error('Empty response'), {
+    status: 200, message: 'Empty response',
+    raw: JSON.stringify({ choices: [{ finish_reason: 'length', message: { content: [{ type: 'thinking', thinking: [] }] } }] })
+  });
+  const title = WF_DEBUG.substitute(entry.title, { aiName: 'Mistral' });
+  assert.match(title, /Mistral/);
+  assert.ok(!/[{}]/.test(title), `placeholder left in the title: ${title}`);
+  assert.match(entry.meaning, /DOCUMENT WAS NOT CHANGED/);
+  const kinds = entry.actions.map(a => a.kind);
+  for (const k of ['fix-bee', 'resend-ai', 'retry']) {
+    assert.ok(kinds.includes(k), `missing action ${k} in ${JSON.stringify(kinds)}`);
+  }
 });
 
 // ── Catalog placeholders ───────────────────────────────────────────────

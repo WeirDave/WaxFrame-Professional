@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261113-002
+// Build: 20261113-003
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -772,9 +772,15 @@
       format: 'openai',
       discovery: 'openai-models',
       // v3.63.596 — mistral-large-4-0 added to the picker. The DEFAULT stays
-      // mistral-large-latest: Mistral moves that alias from Large 3 to Large 4
-      // on 2026-11-12, and a default is only changed after a Builder smoke test,
-      // which has not been run on Large 4.
+      // mistral-large-latest: Mistral moved that alias from Large 3 to Large 4 on
+      // 2026-11-12, so it is the same model as the pinned id, and the pricing data
+      // follows the alias. Decided 2026-11-13 after real Builder rounds on both
+      // mistral-large-4 and mistral-large-latest (v3.63.602-603): both completed.
+      // The first alias round failed on an 8192 output cap in LIMITS_TABLE, fixed
+      // in v3.63.603. Revisit only if Mistral points the alias at a different model.
+      // Large 4 reasons at "high" by default and used 33-72% of the 32,768 output
+      // allowance on short documents (about 130-270 s as Builder); v3.63.604 adds a
+      // card that says so when a longer document uses all of it.
       fallback: ['mistral-large-latest', 'mistral-large-4-0', 'mistral-small-latest', 'ministral-8b-latest']
     },
     {
