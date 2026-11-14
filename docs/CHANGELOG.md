@@ -28,7 +28,8 @@ guesses against at very high speed. It is now PBKDF2-HMAC-SHA256 with a random 1
   nor unlocks, confirm the stored salt and hash lengths and the 600,000-iteration floor, and confirm
   the old SHA-256 constant and helper are gone.
 - The new password was confirmed against the stored constants with Node's PBKDF2.
-- Not run: typing the new password into the dev dialog in a browser.
+- Entering the new password in the Dev Tools dialog on a local copy of v3.63.606 unlocked dev mode:
+  the dialog closed, the toolbar appeared and the "Dev mode enabled" message showed.
 
 ### Files changed
 `js/app.js`, `tools/make-dev-password-hash.mjs` (new), `tools/check-html-injection.mjs`,
