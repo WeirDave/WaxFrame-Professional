@@ -1,4 +1,4 @@
-WaxFrame Backlog Master v366
+WaxFrame Backlog Master v367
 2026-11-13
 
 ABOUT THIS DOCUMENT
@@ -25,6 +25,17 @@ ships.
 
 
 
+
+v366 — MISTRAL-LARGE-LATEST NO LONGER CAPPED AT 8192 OUTPUT TOKENS (v3.63.603).
+
+The alias test on v3.63.602 failed as Builder with "Empty response": js/provider-catalog.js
+LIMITS_TABLE capped mistral-large-latest at output 8192, that became max_tokens, and Mistral Large
+4 (reasoning on by default) spent all 8,192 tokens on reasoning (reasoning_tokens 8191,
+finish_reason "length") and returned only a thinking chunk. The explicit id mistral-large-4 is not
+in the table, got the 32,768 default and completed (Builder: 12,686 completion tokens on a short
+document). The entry now carries context 1000000 and no output figure; LIMITS_TABLE_REVIEWED is
+2026-11-13. Item 9 of v365 (the stale table entry) is closed by this. Item 8 stays open: the alias
+still has to be re-run as Builder on v3.63.603, then the default is decided.
 
 v365 — MISTRAL REASONING REPLIES ARE READ (v3.63.602).
 
@@ -2162,23 +2173,24 @@ Ordered by value. Item 1 is blocked on David.
            marker-format error; the default is either changed everywhere
            above or left, with the reason written in the catalog comment.
 
-9. Mistral Large alias: context table entry
+9. Reasoning model out of output budget shows the generic "empty response" card
    ─────────────────────────────────────────────────
-   WHAT:   LIMITS_TABLE in js/provider-catalog.js still holds
-           'mistral-large-latest': { context: 128000, output: 8192 }. Mistral
-           Large 4, which the alias resolves to from 2026-11-12, has a 1M
-           context window (the pricing seed has said "1M" since v3.63.601).
-   WHY:    The table is the fallback for the model-limits display and the
-           document-size checks when Mistral's models endpoint gives no figure,
-           so a long document can be flagged as too large for a model that
-           holds it. The output figure (8192) is unpublished for Large 4 and
-           was left as it is.
-   STATE:  OPEN. Small. Not changed in v3.63.601, which repriced the seed only.
-   WHERE:  js/provider-catalog.js LIMITS_TABLE (mistral-large-latest);
-           LIMITS_TABLE_REVIEWED date.
-   DONE:   The entry carries Large 4's context figure from Mistral's own
-           model page, the reviewed date is updated, and the model list on
-           Hive setup shows it.
+   WHAT:   When a reasoning model spends its whole output budget thinking, the reply is
+           finish_reason "length" with a thinking chunk and no answer text. callAPI treats that
+           as an empty response and shows the EMPTY_RESPONSE card ("a content filter blocked the
+           output, or the model output was truncated"), and the truncation path that records an
+           observed limit and offers a continuation is never reached.
+   WHY:    The first real case was mistral-large-latest on 2026-11-13 (see v366). Even with the
+           32,768 default, a long Builder document on a model that reasons at "high" could run
+           out the same way, and the user is told to shorten the document or change Builder.
+   STATE:  OPEN. Small to medium.
+   WHERE:  js/app.js callAPI (the `if (!text)` branch near "Empty response"); js/wf-debug.js
+           (a card ahead of EMPTY_RESPONSE, matched on finish_reason length plus a thinking
+           chunk in ctx.raw); js/provider-catalog.js isTruncationSignal.
+   DONE:   A reply that ended on "length" with no answer text is reported as running out of
+           output while reasoning, names the budget that was sent, and offers a retry with a
+           larger budget or a different model; a fixture in tools/test-provider-extractors.mjs
+           covers the raw shape (Mistral: usage.completion_tokens_details.reasoning_tokens).
 
 Ordered by value. Everything here is real work with a real
 acceptance test. Items needing David rather than an assistant say so.

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — provider-catalog.js
-// Build: 20261113-001
+// Build: 20261113-002
 // ============================================================
 // One data record per AI provider, plus the small set of dispatchers that
 // turn that record into a working API_CONFIGS entry, model-list filter, and
@@ -1505,7 +1505,7 @@
   // models WaxFrame ships as defaults/fallbacks, where a wrong number would
   // mislead on the common path. Everything else shows "unknown" rather than
   // a guess. Review date is displayed in the UI verbatim.
-  var LIMITS_TABLE_REVIEWED = '2026-10-11';
+  var LIMITS_TABLE_REVIEWED = '2026-11-13';
   var LIMITS_TABLE = {
     // OpenAI publishes nothing via API (confirmed against the live spec).
     // 1,050,000 / 128,000 read from each model's page on developers.openai.com
@@ -1520,7 +1520,14 @@
     'deepseek-reasoner':  { context: 128000, output:  65536 },
     // Mistral's models endpoint carries context only, and its
     // finish_reason vocabulary is undocumented.
-    'mistral-large-latest': { context: 128000, output: 8192 },
+    // v3.63.603 - mistral-large-latest is Mistral Large 4 from 2026-11-12: 1M context, and
+    // NO published output limit, so none is recorded here. The old 8192 became the request's
+    // max_tokens, and Large 4 reasons by default: it spent all 8,192 tokens (8,191 of them
+    // reasoning) with finish_reason "length" and returned no answer, so the round failed with
+    // "Empty response". With no entry the default budget applies, which is what the explicit
+    // mistral-large-4 id (not in this table) already ran on, at 12,686 tokens for a Builder
+    // round on a short document. Do not put an output figure back without a published one.
+    'mistral-large-latest': { context: 1000000, output: null },
     // AI21 Jamba — the family already flagged Reviewer-only in the picker.
     // Hard 4096 output ceiling across 1.5 / 1.6 / 1.7, which is why it
     // cannot finish a Builder round at any setting.

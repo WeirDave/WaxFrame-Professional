@@ -1,5 +1,40 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.603 — Mistral Large (latest) is no longer limited to 8,192 output tokens
+
+**Released:** 2026-11-13
+**Build:** 20261113-002
+
+### What changed
+
+**A round that uses `mistral-large-latest`, the default Mistral model, no longer fails with
+"Provider returned an empty response".** `mistral-large-latest` has pointed at Mistral Large 4
+since 2026-11-12. WaxFrame asked it for at most 8,192 output tokens, a limit written for the
+earlier model. Mistral Large 4 reasons before it answers, and the reasoning used the whole
+allowance, so the reply held no answer text.
+
+- **Where it applies:** any Mistral AI set to `mistral-large-latest`, as reviewer or as Builder.
+  The model picker's note for that model no longer shows "declared 8K"; it shows the 1M context
+  window only.
+- **What is sent now:** the standard output allowance (32,768 tokens), the same as for
+  `mistral-large-4` and `mistral-large-4-0`, which were not affected.
+- **Not changed:** the Mistral model list, its default and its prices.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+- `node tools/test-provider-extractors.mjs`: three new checks cover the output allowance and
+  context window for `mistral-large-latest`; all three fail on v3.63.602.
+- Not run: a request to `mistral-large-latest` after this change.
+
+### Files changed
+`js/provider-catalog.js`, `tools/test-provider-extractors.mjs`,
+`docs/WaxFrame_Backlog_Master_v367.txt` (renamed from v366), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release.
+
+---
+
 ## v3.63.602 — Mistral reasoning models no longer fail the round
 
 **Released:** 2026-11-13

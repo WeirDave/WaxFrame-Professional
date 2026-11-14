@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-provider-extractors.mjs
-// Build: 20261113-001
+// Build: 20261113-002
 // ============================================================
 // Fixture-based regression test for provider response-shape drift.
 // Backlog item 4 (docs/WaxFrame_Backlog_Master_v267.txt) — v3.63.410 shipped
@@ -487,6 +487,23 @@ check('unknown model reports no source',        unknown.outputSource, null);
 check('dated model variant resolves via prefix match',
   WFProviderCatalog.limitsFromTable('gpt-5.6-sol-20260401').output,
   WFProviderCatalog.LIMITS_TABLE['gpt-5.6-sol'].output);
+
+// v3.63.603 - mistral-large-latest is Mistral Large 4, a reasoning model with no published
+// output limit. A table figure of 8192 became the request's max_tokens, the model spent all
+// of it on reasoning (finish_reason "length", no answer text) and the round failed with
+// "Empty response". The entry must carry the context window only, so the default budget
+// applies and a reasoning trace has room to finish.
+const mistralLarge = WFProviderCatalog.mergeModelLimits(null, null, 'mistral-large-latest');
+check('mistral-large-latest records no output cap (so none reaches max_tokens)',
+  mistralLarge.output, null);
+check('mistral-large-latest carries Large 4\'s 1M context from the table',
+  mistralLarge.context, 1000000);
+check('no table entry caps a Mistral Large model below the default output budget',
+  Object.keys(WFProviderCatalog.LIMITS_TABLE)
+    .filter(k => k.indexOf('mistral-large') === 0)
+    .every(k => WFProviderCatalog.LIMITS_TABLE[k].output == null
+             || WFProviderCatalog.LIMITS_TABLE[k].output >= 32768),
+  true);
 
 // Observed alone, with nothing published anywhere - the self-hosted case.
 const obsOnly = WFProviderCatalog.mergeModelLimits(null, { output: 2048, at: '2026-09-11T12:00:00Z' }, 'local-llama');
