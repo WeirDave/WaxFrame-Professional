@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20261113-003
+   Build: 20261114-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -15905,6 +15905,9 @@ button.template-gallery-intro--cta:active { transform: translateY(0); }
    pattern the snowflake seeds use, so the transform itself stays here in
    the stylesheet rather than becoming inline CSS. */
 .verify-img-wrap {
+  /* Hidden until a picture is loaded: the JS sets style.display = 'block'. A static
+     style="display:none" attribute is refused by the CSP (no style-src unsafe-inline). */
+  display: none;
   flex: 1 1 auto;
   position: relative;
   overflow: hidden;

@@ -10,6 +10,19 @@ namespace_id = "1002"
 limit = 120
 period = 60
 
+# Second limiter, keyed on CF-Connecting-IP (hashed). REQUEST_RATE_LIMITER is
+# keyed on the API key, which a caller can change on every request; this one
+# caps a single address regardless. Higher than the per-key limit so several
+# people behind one office/NAT address are not throttled together. Rate-limit
+# namespace ids are chosen by us, not provisioned: this needs no new resource.
+[[ratelimits]]
+name = "IP_RATE_LIMITER"
+namespace_id = "1003"
+
+[ratelimits.simple]
+limit = 300
+period = 60
+
 # No KV, secrets, or environment variables. REQUEST_RATE_LIMITER limits each
 # hashed caller key to 120 requests/minute per Cloudflare location. The raw
 # Anthropic API key is forwarded per request and is never stored server-side.

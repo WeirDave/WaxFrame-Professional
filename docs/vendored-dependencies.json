@@ -5,32 +5,31 @@
   "dependencies": [
     {
       "name": "docx",
-      "version": "9.7.1",
+      "version": "9.15.3",
       "license": "MIT",
       "files": {
-        "lib/docx.min.js": "d5ec4f5a8b99740845974f5f6f020d6e5b1b6c27026195befc67eb37035c84c7"
+        "lib/docx.min.js": "262bb22541dd3f9f1f0323ce4e28093d1a7080124cfbd79db9fb383b3be72a5e"
       },
-      "note": "Identified by matching, not by reading a version string: the bundle carries none of its own, and the 0.132.0 inside it belongs to @oxc-project/runtime, a build-toolchain dependency. Every docx release in the plausible window had its dist/index.umd.cjs hashed; 9.7.1 differed by 267 bytes and a full diff placed the entire difference in three lines at the top and one at the bottom. The published UMD wrapper has been replaced locally with a plain IIFE assigning 'var docx', so the file is not byte-identical to any published artifact and its hash above will not match upstream. All 33,170 body lines are. When upgrading, take dist/index.umd.cjs from the new release and re-apply the same wrapper swap.",
-      "localModification": "UMD wrapper replaced with an IIFE exposing the global 'docx'",
+      "note": "lib/docx.min.js is dist/index.iife.js of the docx 9.15.3 npm tarball, byte for byte, so its SHA-256 matches upstream. The bundle carries no version string of its own, and the 0.155.0 inside it belongs to @oxc-project/runtime, a build-toolchain dependency, so identify a docx file by hashing, never by reading it. Up to 9.7.1 the package published only a UMD build (dist/index.umd.cjs) and this file was that build with its UMD wrapper replaced locally by a plain IIFE assigning 'var docx'. The 9.15 package ships that same IIFE as dist/index.iife.js, and applying the old wrapper swap to 9.15.3's dist/index.umd.cjs was verified to reproduce it byte for byte, so there is no longer any local modification. When upgrading, take dist/index.iife.js from the new release and check the tarball against the registry's dist.integrity. The app uses only the main entry (Document, Paragraph, TextRun, Table, TableRow, TableCell, ImageRun, Packer, HeadingLevel, BorderStyle, WidthType, AlignmentType); the optional sub-entry bundles published since 9.11 (shapes, charts, math, layout, html, macros, watermarks, bibliography, embedded-files) are deliberately not vendored.",
       "cveFloor": "0.0.0"
     },
     {
       "name": "jszip",
-      "version": "3.10.1",
+      "version": "3.10.2",
       "license": "MIT OR GPL-3.0-only",
       "files": {
-        "lib/jszip.min.js": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e"
+        "lib/jszip.min.js": "7f839b2d4688b845c105ebf5d2f9803075f91ea0fe72bdaac176c3a04dd3d2c1"
       },
       "cveFloor": "3.8.0"
     },
     {
       "name": "mammoth",
-      "version": "1.12.3",
+      "version": "1.13.0",
       "license": "BSD-2-Clause",
       "files": {
-        "lib/mammoth.browser.min.js": "f9465c0e4b91c6ab5fe03db285aa3c5bd33a1d20da781b8dffc5676bc9689a95"
+        "lib/mammoth.browser.min.js": "92914a3708cfdf1e62cb553d1856a7fedab21da83d8ee82845de2f897b368cab"
       },
-      "note": "Version established by hashing, not by reading a version string, and the string in this bundle is a trap. lib/mammoth.browser.min.js contains var VERSION=\"1.13.1\", which belongs to the underscore.js it bundles - mammoth has never published a 1.13.x at all, its newest is 1.12.3. That string was recorded here as mammoth's version and declared in package.json, where it cannot resolve, so Dependabot silently watched nothing for this package. The bundle byte-matched mammoth 1.6.0, which is inside the affected range of CVE-2025-11849 (GHSA-rmjr-87wv-gf87, directory traversal via an image with an external r:link, patched in 1.11.0). Upgraded to 1.12.3 in v3.63.550, verified by hashing the published dist/mammoth.browser.min.js. Confirm the same way on any future bump: the version inside the file is not mammoth's.",
+      "note": "Version established by hashing, not by reading a version string, and the string in this bundle is a trap. lib/mammoth.browser.min.js contains var VERSION=\"1.13.1\", which belongs to the underscore.js it bundles - not to mammoth (mammoth 1.13.0 happens to share the leading digits, which makes the string more misleading, not less). That string was recorded here as mammoth's version and declared in package.json, where it cannot resolve, so Dependabot silently watched nothing for this package. The bundle byte-matched mammoth 1.6.0, which is inside the affected range of CVE-2025-11849 (GHSA-rmjr-87wv-gf87, directory traversal via an image with an external r:link, patched in 1.11.0). Upgraded to 1.12.3 in v3.63.550, then to 1.13.0 (which replaces bluebird with native promises, so the bundle shrank from about 637 KB to 405 KB), each verified by hashing the published mammoth.browser.min.js from the registry tarball. Confirm the same way on any future bump: the version inside the file is not mammoth's.",
       "cveFloor": "1.11.0"
     },
     {
@@ -46,11 +45,11 @@
     },
     {
       "name": "pdfjs-dist-esm",
-      "version": "6.3.289",
+      "version": "6.5.438",
       "license": "Apache-2.0",
       "files": {
-        "lib/pdf.min.mjs": "f80490490320511e5df18c580b9edd6b5db8058dceebaf6f161992e0a964b9e2",
-        "lib/pdf.worker.min.mjs": "8ab0e5e30031b4a06ecfddd5ae9562f0227f830ee7ec9ed1a968b134243d2386"
+        "lib/pdf.min.mjs": "3a88402882cfa3e7e72c2c9b5149f52f0f88baf1c5b62aa11a41abdbc2072440",
+        "lib/pdf.worker.min.mjs": "1e64c8240e54735ec5913b37acd5134747799cb8c6bb3777c70adbc01232d2aa"
       },
       "note": "The build served over http(s). pdfjs-dist ships ESM only from 4.x onward \u2014 there is no classic build in any 4.x, 5.x or 6.x release, which is why the file:// fallback below is pinned to the last major that had one.",
       "cveFloor": "6.2.108"

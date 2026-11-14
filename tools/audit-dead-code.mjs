@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261113-003
+// Build: 20261114-001
 // audit-dead-code.mjs — dead-code and dynamic-execution audit for js/ and the
 // HTML pages. Run it; it prints findings and exits non-zero only on a hard
 // failure, never on a finding, because several of its passes are judgement
@@ -145,10 +145,10 @@ console.log('  (not automatically a finding: a dev-console helper looks exactly 
 exportOnly.length ? exportOnly.forEach(o => console.log(`  ${o.file.padEnd(28)} ${o.name}`)) : none();
 
 // ── Pass 3: dynamic execution ──────────────────────────────────────────
-// 'unsafe-eval' is in script-src because the vendored SheetJS, mammoth and
-// pdf.js need it. That is the reason none of WaxFrame's own code may use it:
-// the CSP cannot tell the difference, so the only thing keeping the app's own
-// surface closed is that nothing here opens it.
+// 'unsafe-eval' was removed from script-src in v3.63.605 (the release gate now
+// fails if it returns), so any eval / new Function / string timer in shipped
+// code would simply be refused by the browser. This pass keeps the code from
+// depending on one.
 head('DYNAMIC CODE EXECUTION in shipped code');
 const PATTERNS = [
   ['direct eval',         /(?<![.\w])eval\s*\(/g],

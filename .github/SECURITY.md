@@ -36,7 +36,7 @@ One vendored dependency is pinned below a published fix and cannot be upgraded. 
 
 The mitigation is `isEvalSupported: false`, passed wherever a PDF is opened. The release check asserts it at every such call site and fails the build if one is missing, so it cannot be dropped silently during an unrelated edit.
 
-The copy served over the web is unaffected - it runs PDF.js **6.3.289**, which is past the fix for CVE-2024-4367 and past GHSA-hq66-cqwq-w95j.
+The copy served over the web is unaffected - it runs PDF.js **6.5.438**, which is past the fix for CVE-2024-4367 and past GHSA-hq66-cqwq-w95j.
 
 If you can demonstrate script execution through the portable PDF path despite that mitigation, that is a genuine finding and very much worth reporting.
 
@@ -45,12 +45,12 @@ If you can demonstrate script execution through the portable PDF path despite th
 WaxFrame self-hosts its front-end libraries as minified files in `lib/` (for air-gapped / offline use). To keep them watched for advisories:
 
 - [`docs/vendored-dependencies.json`](docs/vendored-dependencies.json) records every executable bundle, its identified upstream version, license, and SHA-256 hash. The release check fails on an unlisted or changed bundle.
-- `lib/docx.min.js` carries no version string of its own, so its version was established by matching: every docx release in the plausible window had its published browser bundle hashed against ours. It is **9.7.1**, and it is now declared for Dependabot like the others. The file is not byte-identical to the published artifact - the UMD wrapper was replaced locally with a plain IIFE - so its recorded hash will never match upstream. That is expected, and is recorded next to the version so it does not read as tampering. When upgrading, take the published bundle from the new release and re-apply the same wrapper change.
+- `lib/docx.min.js` carries no version string of its own, so its version is established by hashing: it is the published `dist/index.iife.js` of **docx 9.15.3**, byte for byte, and its recorded hash matches upstream. It is declared for Dependabot like the others. Before 9.15 the file was the UMD build with its wrapper replaced locally by a plain IIFE; the newer package publishes that IIFE itself, so there is no local modification any more. When upgrading, take `dist/index.iife.js` from the new release.
 
 - **PDF.js (`pdfjs-dist`), Mammoth (`mammoth`), JSZip (`jszip`) and docx (`docx`)** are declared in `package.json` purely so **Dependabot** can alert on known CVEs. That manifest is not a build system — WaxFrame has no build step.
 - **SheetJS (`xlsx`)** is *not* tracked via Dependabot. SheetJS no longer publishes to the npm registry (npm is permanently stuck at the old `0.18.5`), so npm-based scanners report stale and misleading results. WaxFrame ships SheetJS from the authoritative SheetJS CDN and its version is tracked manually against <https://cdn.sheetjs.com/>. The shipped version is kept ahead of known advisories.
 
 ## Known mitigations in place
 
-- **PDF parsing** runs with `isEvalSupported: false` as defense-in-depth on the eval code path that CVE-2024-4367 targeted. Hosted users (`http(s)://`) load pdf.js **6.3.289** (CVE fixed at library level); portable users (`file://`) load the classic-script pdf.js **3.11.174** build and rely on the runtime `isEvalSupported: false` mitigation. The runtime split is dispatched at page load by [`js/pdf-loader-bootstrap.js`](js/pdf-loader-bootstrap.js).
+- **PDF parsing** runs with `isEvalSupported: false` as defense-in-depth on the eval code path that CVE-2024-4367 targeted. Hosted users (`http(s)://`) load pdf.js **6.5.438** (CVE fixed at library level); portable users (`file://`) load the classic-script pdf.js **3.11.174** build and rely on the runtime `isEvalSupported: false` mitigation. The runtime split is dispatched at page load by [`js/pdf-loader-bootstrap.js`](js/pdf-loader-bootstrap.js).
 - **Imported data** (custom AIs, reference material, backups) passes through import-time validation before it reaches any render path.

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261113-003
+// Build: 20261114-001
 // check-import-bounds.mjs — is there a ceiling anywhere on an imported file?
 //
 // Two questions, both answered against the real app rather than by reading it.
@@ -123,6 +123,56 @@ function buildDocx({ bodyMB = 0, bodyChars = 0, mediaMB = 0 }) {
     .then(buf => ({ buf, decompressed: documentXml.length }));
 }
 
+// A worksheet declares its extent in <dimension ref>, and SheetJS walks every
+// declared cell whether or not it exists. One real cell, a huge declared range:
+// a couple of KB on disk, seconds-to-hours of CPU. (Audit 2026-11.)
+function buildXlsxDimensionBomb(ref) {
+  const JSZip = require(path.join(ROOT, 'lib', 'jszip.min.js'));
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+    '<Default Extension="xml" ContentType="application/xml"/>' +
+    '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+    '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+    '</Types>');
+  zip.folder('_rels').file('.rels',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+    '</Relationships>');
+  zip.folder('xl').file('workbook.xml',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+    '<sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets></workbook>');
+  zip.folder('xl').folder('_rels').file('workbook.xml.rels',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+    '</Relationships>');
+  zip.folder('xl').folder('worksheets').file('sheet1.xml',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+    '<dimension ref="' + ref + '"/><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>hello bomb</t></is></c></row></sheetData></worksheet>');
+  return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+}
+
+// A zip whose central directory UNDERSTATES one entry's size. A guard that
+// reads declared sizes is blind to it; only counting bytes while inflating
+// catches it. Patches the 4-byte uncompressed size (offset 24 of the central
+// directory record) of the named entry.
+function understateEntrySize(buf, entryName, claimed) {
+  const out = Buffer.from(buf);
+  const name = Buffer.from(entryName);
+  for (let i = 0; i + 46 < out.length; i++) {
+    if (out.readUInt32LE(i) !== 0x02014b50) continue;
+    const nlen = out.readUInt16LE(i + 28);
+    if (out.subarray(i + 46, i + 46 + nlen).equals(name)) { out.writeUInt32LE(claimed, i + 24); return out; }
+  }
+  throw new Error('entry not found: ' + entryName);
+}
+
 const BROWSER = findChrome();
 if (!BROWSER) { console.error('No Chrome or Chromium found. Set WF_CHROME to a browser binary.'); process.exit(2); }
 
@@ -133,7 +183,12 @@ console.log(`  bomb:   ${(BOMB.length / 1024).toFixed(1)} KB on disk -> ${(decom
 const { buf: NORMAL } = await buildDocx({ bodyChars: 20000 });
 console.log(`  normal: ${(NORMAL.length / 1024).toFixed(1)} KB, ~20,000 chars of body text`);
 const { buf: MEDIA } = await buildDocx({ bodyChars: 5000, mediaMB: 40 });
-console.log(`  media:  ${(MEDIA.length / 1048576).toFixed(1)} MB, 40 MB of embedded image, small body\n`);
+console.log(`  media:  ${(MEDIA.length / 1048576).toFixed(1)} MB, 40 MB of embedded image, small body`);
+const XLSX_BOMB = await buildXlsxDimensionBomb('A1:CZ300000');
+console.log(`  xlsx:   ${(XLSX_BOMB.length / 1024).toFixed(1)} KB, one real cell, declared range A1:CZ300000`);
+const { buf: LIE_RAW } = await buildDocx({ bodyMB: 64 });
+const LIE = understateEntrySize(LIE_RAW, 'word/document.xml', 1000);
+console.log(`  lie:    ${(LIE.length / 1024).toFixed(1)} KB docx, 64 MB body part, central directory claims 1,000 bytes\n`);
 
 let PORT = 8790 + (process.pid % 150);   // reassigned by listenOnFreePort
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',
@@ -142,7 +197,7 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
   '.wav': 'audio/wav', '.pdf': 'application/pdf' };
 const server = http.createServer((req, res) => {
   const rel = decodeURIComponent(req.url.split('?')[0]).replace(/^\/+/, '') || 'index.html';
-  const FIXTURES = { '__bomb.docx': BOMB, '__normal.docx': NORMAL, '__media.docx': MEDIA };
+  const FIXTURES = { '__bomb.docx': BOMB, '__normal.docx': NORMAL, '__media.docx': MEDIA, '__xlsxbomb.xlsx': XLSX_BOMB, '__lie.docx': LIE };
   if (FIXTURES[rel]) {
     res.writeHead(200, { 'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
     return res.end(FIXTURES[rel]);
@@ -173,8 +228,8 @@ async function importFixture(which) {
   const h0 = performance.memory.usedJSHeapSize;
   const r = await fetch('/' + which);
   const b = await r.blob();
-  const f = new File([b], 'quarterly-report.docx',
-    { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  const ext = which.split('.').pop();
+  const f = new File([b], 'quarterly-report.' + ext, { type: 'application/octet-stream' });
   let chars = 0, err = null;
   try {
     const docs = await extractFromFile(f, { xlsxMode: 'multi' });
@@ -304,6 +359,23 @@ try {
   check('a .docx with 40 MB of embedded media still imports',
     okMedia.refused === false && okMedia.extractedChars > 100,
     okMedia.err || `${okMedia.extractedChars} chars extracted`);
+
+  console.log('\n  > 1c. A worksheet that declares a huge range (audit 2026-11)');
+  const xb = JSON.parse(await callInPage(importFixture, '__xlsxbomb.xlsx'));
+  console.log(`      ${xb.ms} ms; ${xb.extractedChars.toLocaleString()} chars extracted${xb.err ? '; refused: ' + xb.err : ''}`);
+  check('the xlsx really was processed (liveness)', xb.extractedChars > 0 || xb.refused === true, xb);
+  check('it imported its one real cell, not the declared grid',
+    xb.refused === false && xb.extractedChars > 0 && xb.extractedChars < 10000, xb);
+  check('and did so quickly (the declared range is not walked)', xb.ms < 3000,
+    xb.ms + ' ms: the converter is walking the declared range, not the cells that exist');
+
+  console.log('\n  > 1d. A zip that understates an entry\'s size (audit 2026-11)');
+  const lie = JSON.parse(await callInPage(importFixture, '__lie.docx'));
+  console.log(`      ${lie.ms} ms; ${lie.extractedChars.toLocaleString()} chars extracted${lie.err ? '; refused: ' + lie.err.slice(0, 90) : ''}`);
+  check('a 64 MB part whose header claims 1,000 bytes is refused by the size guard',
+    lie.refused === true && /expands to/.test(lie.err || ''),
+    'refused only when the zip library noticed the mismatch AFTER inflating it (' + (lie.err || 'not refused') + '): ' +
+    'the guard trusted the central directory');
 
   console.log('\n  > 2. What happens when the save overflows the quota?');
   const q = JSON.parse(await callInPage(overflowTheProjectSave, 12 * 1024 * 1024));

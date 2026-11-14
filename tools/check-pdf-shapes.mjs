@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261113-003
+// Build: 20261114-001
 // check-pdf-shapes.mjs — the PDF shapes that break PDF engines, against BOTH
 // engines WaxFrame ships.
 //
@@ -15,7 +15,7 @@
 // is not going to add one for a test.
 //
 // BOTH ENGINES, which is the half most likely to be skipped. The hosted page
-// runs pdf.js 6.3.289 (ESM). The portable file:// copy is PERMANENTLY pinned
+// runs pdf.js 6.5.438 (ESM). The portable file:// copy is PERMANENTLY pinned
 // at 3.11.174, because pdfjs-dist has shipped ESM only since 4.x and browsers
 // refuse ESM imports across file:// origins. Those are three years apart and
 // the older one is the likelier to choke, so testing only the hosted path

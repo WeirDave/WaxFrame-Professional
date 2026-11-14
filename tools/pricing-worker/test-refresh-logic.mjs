@@ -371,6 +371,170 @@ console.log('\nisTrustedSource — a provider announcement post is not a current
   assertEqual(seedPaths.filter(hasDeniedSourcePath), [], 'no source path currently in the seed is rejected');
 }
 
+// ── 2026-11 hardening: refresh token, source rules, KV race, outbound limits ──
+import worker, { checkRefreshToken, mergeRunOntoLatest, hasSubstantiveChange, fetchSourcePageText, refreshPricing } from './src/index.js';
+
+console.log('\ncheckRefreshToken — constant-time compare, same answers as before');
+{
+  const req = auth => new Request('https://w.example/api/refresh', { method: 'POST', headers: auth === undefined ? {} : { Authorization: auth } });
+  const TOKEN = ['correct', 'horse', 'battery', 'staple'].join('-'); // invented; assembled so no bearer literal sits in the file
+  const env = { REFRESH_TOKEN: TOKEN };
+  assertEqual(await checkRefreshToken(req('Bearer ' + TOKEN), env), null, 'the right token passes');
+  assertEqual(await checkRefreshToken(req('bearer ' + TOKEN), env), null, 'the Bearer prefix is case-insensitive');
+  assertEqual((await checkRefreshToken(req('Bearer ' + TOKEN.slice(0, -1) + 'd'), env)).status, 403, 'a same-length near miss is refused');
+  assertEqual((await checkRefreshToken(req('Bearer ' + TOKEN.slice(0, 7)), env)).status, 403, 'a shorter prefix of the token is refused');
+  assertEqual((await checkRefreshToken(req('Bearer ' + TOKEN + '-and-more'), env)).status, 403, 'a longer string starting with the token is refused');
+  assertEqual((await checkRefreshToken(req(undefined), env)).status, 403, 'no Authorization header is refused');
+  assertEqual((await checkRefreshToken(req('Bearer '), env)).status, 403, 'an empty token is refused');
+  assertEqual((await checkRefreshToken(req('Bearer anything'), {})).status, 501, 'no secret configured is reported as 501');
+}
+
+console.log('\nisTrustedSource — https only, and Google user-content hosts do not pass');
+{
+  assertEqual(isTrustedSource('mistral', 'http://docs.mistral.ai/pricing'), false, 'a plain-http page on the right domain is rejected');
+  assertEqual(isTrustedSource('mistral', 'https://docs.mistral.ai/pricing'), true, 'the same page over https passes');
+  assertEqual(isTrustedSource('cohere', 'ftp://cohere.com/pricing'), false, 'a non-web scheme is rejected');
+  [
+    'https://ai.google.dev/gemini-api/docs/pricing', 'https://google.dev/pricing',
+    'https://aistudio.google.com/docs/pricing', 'https://cloud.google.com/vertex-ai/generative-ai/pricing'
+  ].forEach(u => assertEqual(isTrustedSource('gemini-paid', u), true, `Google's own host passes: ${u}`));
+  [
+    'https://sites.google.com/view/gemini-prices', 'https://docs.google.com/document/d/abc/edit',
+    'https://drive.google.com/file/d/abc/view', 'https://support.google.com/thread/1',
+    'https://google.com/pricing', 'https://google.com.attacker.example/pricing', 'https://evilgoogle.dev/pricing'
+  ].forEach(u => assertEqual(isTrustedSource('gemini-free', u), false, `user-content or look-alike host is rejected: ${u}`));
+}
+
+console.log('\nmergeRunOntoLatest / hasSubstantiveChange — a concurrent edit is not overwritten');
+{
+  const m = (id, i, extra) => ({ id, inputPerM: i, outputPerM: i * 3, contextWindow: null, verifiedAt: 'old', ...extra });
+  const original = { providers: [{ id: 'p', models: [m('a', 1), m('b', 2), m('c', 3)] }] };
+  const fresh = { providers: [{ id: 'p', models: [m('a', 1), m('b', 2.5), m('c', 3), m('d', 4)] }] }; // b edited, d added meanwhile
+  const overrides = { p: { a: m('a', 1, { verifiedAt: 'new', contextWindow: '1M' }), b: m('b', 2, { verifiedAt: 'new' }), c: m('c', 3) } };
+  const merged = mergeRunOntoLatest(original, fresh, overrides);
+  const by = id => merged.providers[0].models.find(x => x.id === id);
+  assertEqual(by('a').verifiedAt, 'new', 'an untouched row takes this run\'s result');
+  assertEqual(by('a').contextWindow, '1M', 'including a filled-in field');
+  assertEqual(by('b').inputPerM, 2.5, 'a row edited during the run keeps the edit');
+  assertEqual(by('b').verifiedAt, 'old', 'and is not stamped as verified by this run');
+  assertEqual(by('d').inputPerM, 4, 'a row added during the run is kept');
+  assertEqual(merged.kept, ['p/b'], 'the row whose newer value was kept is reported');
+  assert(hasSubstantiveChange(original, [{ id: 'p', models: [m('a', 1, { contextWindow: '1M' }), m('b', 2), m('c', 3)] }]), 'a filled-in field is a substantive change');
+  assert(!hasSubstantiveChange(original, [{ id: 'p', models: [m('a', 1, { verifiedAt: 'new' }), m('b', 2), m('c', 3)] }]), 'a verifiedAt stamp alone is not');
+  assert(hasSubstantiveChange(original, [{ id: 'p', models: [m('a', 9), m('b', 2), m('c', 3)] }]), 'a price change is');
+}
+
+console.log('\nrefreshPricing — re-reads KV before writing, and only moves `previous` for a real change');
+{
+  const row = (id, extra) => ({ id, inputPerM: 2, outputPerM: 6, contextWindow: '128K', maxOutput: '8K', estPerRound: 0.001, estNote: null, sourceUrl: 'x', verifiedAt: '2026-10-01T00:00:00Z', status: 'verified', ...extra });
+  const seedFor = rows => JSON.stringify({ lastUpdated: '2026-10-04T00:00:00Z', schemaVersion: 3, providers: [{ id: 'cohere', name: 'Cohere', defaultModel: 'command-a', models: rows }] });
+  const makeKV = initial => {
+    const mem = new Map(Object.entries(initial));
+    return { get: async k => (mem.has(k) ? mem.get(k) : null), put: async (k, v) => { mem.set(k, v); }, delete: async k => { mem.delete(k); }, mem };
+  };
+  // Sonar stub: every row comes back at its stored price, with `fills` supplying context windows. `onFirstCall`
+  // lets a test act while the run is "in the middle of its research".
+  const run = async ({ rows, fills = {}, onFirstCall, sonarOk = true }) => {
+    const kv = makeKV({ latest: seedFor(rows), previous: 'SENTINEL' });
+    const realFetch = globalThis.fetch;
+    let first = true; const signals = [];
+    globalThis.fetch = async (url, init) => {
+      signals.push(init && init.signal);
+      if (first && onFirstCall) { first = false; await onFirstCall(kv); }
+      const id = JSON.parse(init.body).messages[0].content.match(/model "([^"]+)"/)[1];
+      if (!sonarOk) return new Response('nope', { status: 400 });
+      return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ inputPerM: 2, outputPerM: 6, contextWindow: fills[id] || null, maxOutput: null, source: 'https://cohere.com/pricing', confirmedModel: id }) } }] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    };
+    try { await refreshPricing({ PRICING_DATA: kv, PERPLEXITY_API_KEY: 'test-key-not-real' }); }
+    finally { globalThis.fetch = realFetch; }
+    let latest = null; try { latest = JSON.parse(kv.mem.get('latest')); } catch (e) { /* a test leaves it damaged on purpose */ }
+    return { kv, latest, previous: kv.mem.get('previous'), log: JSON.parse(kv.mem.get('run-log') || '[]'), signals };
+  };
+  const model = (p, id) => p.latest.providers[0].models.find(x => x.id === id);
+
+  {
+    const r = await run({ rows: [row('command-a'), row('command-r')] });
+    assert(r.signals.length > 0 && r.signals.every(s => s instanceof AbortSignal), 'every Perplexity call carries a timeout signal');
+    assert(model(r, 'command-a').verifiedAt !== '2026-10-01T00:00:00Z', 'a quiet run still stamps verifiedAt');
+    assertEqual(r.previous, 'SENTINEL', 'a run that changed nothing but verifiedAt leaves `previous` alone');
+  }
+  {
+    const r = await run({ rows: [row('command-a', { contextWindow: null })], fills: { 'command-a': '128K' } });
+    assertEqual(model(r, 'command-a').contextWindow, '128K', 'a filled-in field is written');
+    assert(r.previous !== 'SENTINEL' && JSON.parse(r.previous).lastUpdated === '2026-10-04T00:00:00Z', 'and `previous` then holds the copy that was replaced');
+  }
+  {
+    const rows = [row('command-a', { contextWindow: null }), row('command-r')];
+    const r = await run({
+      rows, fills: { 'command-a': '128K' },
+      onFirstCall: async kv => {
+        const edited = JSON.parse(kv.mem.get('latest'));
+        edited.providers[0].models[1].inputPerM = 1.5; // a hand edit lands mid-run
+        edited.lastUpdated = '2026-11-01T00:00:00Z';
+        kv.mem.set('latest', JSON.stringify(edited));
+      }
+    });
+    assertEqual(model(r, 'command-r').inputPerM, 1.5, 'a hand edit made during the run survives it');
+    assertEqual(model(r, 'command-a').contextWindow, '128K', 'while this run\'s own change to another row is still applied');
+    assertEqual(JSON.parse(r.previous).providers[0].models[1].inputPerM, 1.5, '`previous` is the newer copy that was replaced, not the stale one');
+    assert(/edited during the run/.test(r.log[0].note || ''), 'the run log says the data changed under it');
+  }
+  {
+    const r = await run({
+      rows: [row('command-a', { contextWindow: null })], fills: { 'command-a': '128K' },
+      onFirstCall: async kv => { kv.mem.set('latest', '{ not json'); }
+    });
+    assertEqual(r.kv.mem.get('latest'), '{ not json', 'an unreadable newer copy is left exactly as found');
+    assertEqual(r.previous, 'SENTINEL', 'and `previous` is not touched either');
+    assert(/wrote nothing/.test(r.log[0].note || ''), 'the run log records why nothing was written');
+  }
+}
+
+console.log('\nfetchSourcePageText — https, same-domain redirects only, bounded');
+{
+  const realFetch = globalThis.fetch;
+  const page = '<html><body>' + 'Pricing '.repeat(60) + '$2 $6</body></html>';
+  const calls = [];
+  const stub = routes => { globalThis.fetch = async (url, init) => { calls.push({ url: String(url), init }); const r = routes[String(url)]; if (!r) throw new Error('unexpected fetch ' + url); return typeof r === 'function' ? r() : r; }; };
+  try {
+    stub({ 'https://cohere.com/pricing': new Response(page, { status: 200 }) });
+    const text = await fetchSourcePageText('https://cohere.com/pricing', 'cohere');
+    assert(typeof text === 'string' && text.includes('$2 $6'), 'a trusted page is read');
+    assert(calls[0].init.redirect === 'manual' && calls[0].init.signal instanceof AbortSignal, 'with manual redirects and a timeout');
+
+    calls.length = 0;
+    assertEqual(await fetchSourcePageText('http://cohere.com/pricing', 'cohere'), null, 'a plain-http source is refused');
+    assertEqual(calls.length, 0, 'without any request being made');
+
+    calls.length = 0;
+    stub({ 'https://cohere.com/pricing': new Response(null, { status: 302, headers: { Location: 'https://attacker.example/pricing' } }), 'https://attacker.example/pricing': new Response(page, { status: 200 }) });
+    assertEqual(await fetchSourcePageText('https://cohere.com/pricing', 'cohere'), null, 'a redirect off the provider domain is not followed');
+    assertEqual(calls.map(c => c.url), ['https://cohere.com/pricing'], 'the off-domain address is never requested');
+
+    stub({ 'https://cohere.com/pricing': new Response(null, { status: 301, headers: { Location: '/docs/pricing' } }), 'https://cohere.com/docs/pricing': new Response(page, { status: 200 }) });
+    assert((await fetchSourcePageText('https://cohere.com/pricing', 'cohere') || '').includes('$2 $6'), 'a same-domain redirect is followed');
+
+    stub({ 'https://cohere.com/pricing': new Response(null, { status: 302, headers: { Location: 'http://cohere.com/pricing' } }) });
+    assertEqual(await fetchSourcePageText('https://cohere.com/pricing', 'cohere'), null, 'a redirect down to plain http is not followed');
+
+    stub({ 'https://cohere.com/pricing': () => new Response(null, { status: 302, headers: { Location: 'https://cohere.com/pricing' } }) });
+    assertEqual(await fetchSourcePageText('https://cohere.com/pricing', 'cohere'), null, 'a redirect loop gives up');
+
+    stub({ 'https://cohere.com/pricing': new Response('x'.repeat(2 * 1024 * 1024 + 10), { status: 200 }) });
+    assertEqual(await fetchSourcePageText('https://cohere.com/pricing', 'cohere'), null, 'a body past the size cap is not used');
+  } finally { globalThis.fetch = realFetch; }
+}
+
+console.log('\n/api/prices — a damaged KV value is a JSON error, not a crash');
+{
+  const kv = { get: async () => '{ not json' };
+  const resp = await worker.fetch(new Request('https://w.example/api/prices', { method: 'POST', headers: { Authorization: 'Bearer tok' } }), { REFRESH_TOKEN: 'tok', PRICING_DATA: kv });
+  assertEqual(resp.status, 503, 'answers 503');
+  assert(/application\/json/.test(resp.headers.get('Content-Type')) && JSON.parse(await resp.text()).ok === false, 'with a JSON body saying so');
+  const denied = await worker.fetch(new Request('https://w.example/api/prices', { method: 'POST', headers: { Authorization: 'Bearer nope' } }), { REFRESH_TOKEN: 'tok', PRICING_DATA: kv });
+  assertEqual(denied.status, 403, 'and the token is still required first');
+}
+
 console.log('');
 if (failures === 0) {
   console.log('✅ All pricing Worker review-gate behavior tests passed.');

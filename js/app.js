@@ -54,7 +54,7 @@ if (typeof window !== 'undefined') {
 
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20261113-003
+// Build: 20261114-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1356,7 +1356,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD = '20261113-003';         // build stamp — update each session
+const BUILD = '20261114-001';         // build stamp — update each session
 
 // v3.63.61 / v3.63.320 — Central round-completion hook. Originally added
 // (v3.63.61) as forensic instrumentation for a round-counter bug where
@@ -2700,8 +2700,22 @@ function consoleLog(msg, type = 'info', rawData = null, link = null) {
     arrowBtn.title = 'Show raw response';
     arrowBtn.setAttribute('onclick', `openConsoleErrorDetail('${entryId}')`);
     entry.appendChild(arrowBtn);
+    entry.dataset.cleId = entryId;
   }
   el.prepend(entry);
+  // Audit 2026-11 — the live console only ever grew: every line stays in the
+  // DOM, every raw provider body stays in _consoleErrorData for the life of the
+  // tab, and every saveSession() serialises the whole console into IndexedDB
+  // and checkpoints. Cap it. The oldest lines (the bottom: new ones prepend)
+  // and their raw-body entries are dropped together.
+  const _CONSOLE_MAX_ENTRIES = 1000;
+  while (el.childElementCount > _CONSOLE_MAX_ENTRIES) {
+    const last = el.lastElementChild;
+    if (!last) break;
+    const _id = last.dataset && last.dataset.cleId;
+    if (_id && window._consoleErrorData) delete window._consoleErrorData[_id];
+    last.remove();
+  }
 }
 
 
@@ -3096,7 +3110,7 @@ function getLicenseKey() {
 }
 
 function maskLicenseKey(key) {
-  if (key && key.length >= 8) {
+  if (key && key.length > 8) {   // audit 2026-11: was >= 8, which showed an 8-character key in full
     return key.slice(0, -8).replace(/[A-Za-z0-9]/g, '•') + key.slice(-8);
   }
   return '••••••••-••••••••-••••••••-••••••••';
@@ -12500,7 +12514,7 @@ function renderImportServerChecklist() {
     if (existingForThisServer.has(modelId)) {
       // Mirror the icon from the AI that's already in the hive
       const existing = aiList.find(a => API_CONFIGS[a.provider]?.model === modelId);
-      if (existing?.icon) return existing.icon;
+      if (existing?.icon && _safeIconSrc(existing.icon) !== GENERIC_ICON_PATH) return existing.icon;
     }
     const matched = wfIconUpload.matchCatalog(`${modelName} ${modelId}`);
     return matched || GENERIC_ICON_PATH;
@@ -12525,7 +12539,7 @@ function renderImportServerChecklist() {
       <input type="checkbox" class="import-server-check" id="isc-${i}" value="${escapeHtml(modelId)}" data-change-action="call" data-fn="updateChecklistCount">
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
       <button type="button" class="import-server-icon-btn" id="isicon-${i}" data-action="call" data-fn="openIconPickerForImportRow" data-arg="${i}" title="Choose icon for ${escapeHtml(modelName)}">
-        <img src="${_importRowIcons[i] || GENERIC_ICON_PATH}" alt="" class="import-server-icon-thumb" data-dim-on-error>
+        <img src="${escapeHtml(_safeIconSrc(_importRowIcons[i]))}" alt="" class="import-server-icon-thumb" data-dim-on-error>
       </button>
       <div class="import-server-nickname-wrap">
         <label class="import-server-nickname-label" for="isn-${i}">Nickname:</label>
@@ -13587,6 +13601,7 @@ async function processRefFile(file, batchLabel = '', verifyCollector = null) {
 // splitting the file is an obvious next step.
 const MAX_IMPORT_FILE_BYTES    = 100 * 1024 * 1024;  // 100 MB on disk
 const MAX_ZIP_TEXT_PART_BYTES  = 32 * 1024 * 1024;   // 32 MB per XML part
+const MAX_ZIP_TOTAL_INFLATED_BYTES = 512 * 1024 * 1024; // 512 MB across every part actually inflated
 const MAX_EXTRACTED_CHARS      = 8000000;            // ~8 MB of text
 
 const _fmtMB = (b) => (b / 1048576).toFixed(1) + ' MB';
@@ -13610,14 +13625,52 @@ async function _zipTextPartBytes(file) {
   try { zip = await window.JSZip.loadAsync(await file.arrayBuffer()); }
   catch (e) { return null; }
   let largest = 0, largestName = '';
+  const toInflate = [];
   zip.forEach((p, entry) => {
     if (entry.dir) return;
-    if (/^(word|ppt|xl)\/media\//i.test(p)) return;          // images, video
-    if (!/\.(xml|rels|txt)$/i.test(p)) return;               // parsed parts only
-    const n = entry._data && entry._data.uncompressedSize;
-    if (typeof n === 'number' && n > largest) { largest = n; largestName = p; }
+    const isMedia = /^(word|ppt|xl)\/media\//i.test(p);
+    const isText  = /\.(xml|rels|txt)$/i.test(p);
+    if (isText) {
+      const n = entry._data && entry._data.uncompressedSize;
+      if (typeof n === 'number' && n > largest) { largest = n; largestName = p; }
+    }
+    // Audit 2026-11 — the size above is what the archive CLAIMS. A crafted
+    // file can claim 1 KB for an entry that inflates to hundreds of MB (JSZip
+    // only notices the mismatch AFTER inflating it), and media parts were
+    // never measured at all. So also inflate every part we or mammoth will
+    // read through a byte counter that stops at the cap.
+    if (isText || isMedia) toInflate.push([p, entry]);
   });
+  let inflated = 0;
+  for (const [p, entry] of toInflate) {
+    const room = MAX_ZIP_TOTAL_INFLATED_BYTES - inflated;
+    const got = await _inflateCounted(entry, room);
+    if (got < 0) return { largest: Infinity, largestName: p, inflatedOverCap: true };
+    inflated += got;
+    if (got > largest && /\.(xml|rels|txt)$/i.test(p)) { largest = got; largestName = p; }
+  }
   return { largest, largestName };
+}
+
+// Inflate one zip entry through a running byte counter. Resolves with the byte
+// count, or -1 as soon as the count passes `cap` (decompression is abandoned at
+// that point). A corrupt entry (CRC / size-mismatch error) resolves with what
+// was counted so far: the real extractor reports corruption with a better message.
+function _inflateCounted(entry, cap) {
+  return new Promise((resolve) => {
+    let n = 0, done = false;
+    let helper;
+    try { helper = entry.internalStream('uint8array'); }
+    catch (e) { resolve(0); return; }
+    const finish = (v) => { if (!done) { done = true; resolve(v); } };
+    helper.on('data', (chunk) => {
+      n += chunk.length;
+      if (n > cap) { try { helper.pause(); } catch (_) {} finish(-1); }
+    });
+    helper.on('error', () => finish(n));
+    helper.on('end', () => finish(n));
+    helper.resume();
+  });
 }
 
 async function extractFromFile(file, options = {}) {
@@ -13631,6 +13684,12 @@ async function extractFromFile(file, options = {}) {
 
   if (['docx', 'pptx', 'xlsx', 'xlsm'].includes(ext)) {
     const z = await _zipTextPartBytes(file);
+    if (z && z.inflatedOverCap) {
+      throw new Error(
+        `That file expands to more than ${_fmtMB(MAX_ZIP_TOTAL_INFLATED_BYTES)} when opened (stopped at ` +
+        `${z.largestName}) — ${_fmtMB(file.size)} on disk. A file that expands this far is usually corrupt ` +
+        `or machine-generated rather than a document.`);
+    }
     if (z && z.largest > MAX_ZIP_TEXT_PART_BYTES) {
       throw new Error(
         `That file expands to ${_fmtMB(z.largest)} of text in one part (${z.largestName}), over the ` +
@@ -13789,8 +13848,8 @@ async function extractPDF(file, options = {}) {
     // of extractPDF doesn't care which one is live.
     const isFile = (location.protocol === 'file:');
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = isFile
-      ? './lib/pdf.worker.min.js?v=3.63.604'    // 3.x UMD classic-script worker
-      : './lib/pdf.worker.min.mjs?v=3.63.604';  // 6.x ESM module worker
+      ? './lib/pdf.worker.min.js?v=3.63.605'    // 3.x UMD classic-script worker
+      : './lib/pdf.worker.min.mjs?v=3.63.605';  // 6.x ESM module worker
     window._pdfjsWorkerSet = true;
   }
 
@@ -15338,6 +15397,45 @@ async function extractPPTX(file) {
 //  Hidden sheets surfaced via warning. Cell comments and defined
 //  names captured in footer/header sections.
 // ============================================================
+// Audit 2026-11 — a worksheet declares its extent in <dimension ref="...">, and
+// SheetJS trusts it: sheet_to_json / sheet_to_csv walk EVERY declared cell,
+// stored or not. A 2 KB file declaring A1:CZ300000 held one cell and took ~7 s
+// to convert; a declaration of the full grid would run for hours and exhaust
+// memory. The merge-flattening loop in sheetToMarkdown has the same shape.
+// So after parsing, replace each sheet's declared range with the bounding box
+// of the cells that actually exist (usually identical for a real workbook),
+// and clamp merges to that box. Runs once, linear in the number of real cells.
+function _clampWorkbookRanges(wb) {
+  const U = window.XLSX.utils;
+  for (const name of (wb.SheetNames || [])) {
+    const sheet = wb.Sheets[name];
+    if (!sheet) continue;
+    let minR = Infinity, minC = Infinity, maxR = -1, maxC = -1;
+    for (const key of Object.keys(sheet)) {
+      if (key.charCodeAt(0) === 33) continue;               // '!ref', '!merges', ...
+      const a = U.decode_cell(key);
+      if (!(a.r >= 0 && a.c >= 0)) continue;                // not an A1 address
+      if (a.r < minR) minR = a.r;
+      if (a.r > maxR) maxR = a.r;
+      if (a.c < minC) minC = a.c;
+      if (a.c > maxC) maxC = a.c;
+    }
+    if (maxR < 0) { delete sheet['!ref']; delete sheet['!merges']; continue; }
+    const declared = sheet['!ref'] ? U.decode_range(sheet['!ref']) : null;
+    // Keep the declared start (leading blank rows/cols can be meaningful) but
+    // never extend past the last real cell.
+    const sr = declared ? Math.min(declared.s.r, minR) : minR;
+    const sc = declared ? Math.min(declared.s.c, minC) : minC;
+    const box = { s: { r: sr, c: sc }, e: { r: maxR, c: maxC } };
+    sheet['!ref'] = U.encode_range(box);
+    if (Array.isArray(sheet['!merges'])) {
+      sheet['!merges'] = sheet['!merges']
+        .filter(m => m && m.s && m.e && m.s.r <= maxR && m.s.c <= maxC)
+        .map(m => ({ s: m.s, e: { r: Math.min(m.e.r, maxR), c: Math.min(m.e.c, maxC) } }));
+    }
+  }
+}
+
 async function extractXLSX(file, options = {}) {
   if (!window.XLSX) throw new Error('SheetJS not loaded — refresh the page and try again');
 
@@ -15350,6 +15448,7 @@ async function extractXLSX(file, options = {}) {
     sheetStubs: true,
     cellDates: true,
   });
+  _clampWorkbookRanges(wb);
 
   const visibleSheets = [];
   const hiddenSheets = [];
@@ -17937,9 +18036,16 @@ async function callBuilderWithContentFilterFailover(primaryAI, reviews, notes) {
   const runAttempt = async (ai, modelOverride, isFailover) => {
     const cfg = API_CONFIGS[ai.provider];
     const originalModel = cfg?.model;
-    if (cfg && modelOverride && modelOverride !== cfg.model) cfg.model = modelOverride;
+    if (cfg && modelOverride && modelOverride !== cfg.model) {
+      // Audit 2026-11 — cfg.model is shared state that saveHive() persists, and
+      // this override lasts for the whole (up to 15-minute) call. Record the
+      // real pick where saveHive can see it so a save during the call does not
+      // write the temporary failover model as the user's saved choice.
+      (window._wfTransientModelRestore = window._wfTransientModelRestore || {})[ai.provider] = originalModel;
+      cfg.model = modelOverride;
+    }
     const prompt = buildPromptForAI(ai, reviews, { builderIdOverride: ai.id });
-    const keyHint = cfg?._key?.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
+    const keyHint = cfg?._key?.length >= 24 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
     const modelNote = modelOverride && modelOverride !== originalModel ? ` · model: ${modelOverride}` : '';
     consoleLog(`📤 ${ai.name} (Builder${isFailover ? ' failover' : ''}) — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint}${modelNote})`, 'send');
     try {
@@ -17956,6 +18062,7 @@ async function callBuilderWithContentFilterFailover(primaryAI, reviews, notes) {
       throw err;
     } finally {
       if (cfg && modelOverride && originalModel !== undefined) cfg.model = originalModel;
+      if (window._wfTransientModelRestore) delete window._wfTransientModelRestore[ai.provider];
     }
   };
 
@@ -18162,6 +18269,16 @@ function buildBulkSelectToolbarHTML() {
 
 // Resolve the best icon for an AI — local image if name matches a known provider,
 // colored initial avatar as fallback when the real icon would be a broken globe.
+// Audit 2026-11 — one scheme check for every place an icon URL that may have
+// arrived from a file or a model server is about to become an <img src>.
+// Same three accepted shapes as resolveAiIcon below; anything else (a
+// javascript: URL, a protocol-relative //host) falls back to the generic icon.
+// The caller still runs the result through escapeHtml for the attribute.
+function _safeIconSrc(src) {
+  const s = typeof src === 'string' ? src : '';
+  return /^(https?:\/\/|data:image\/|images\/)/.test(s) ? s : GENERIC_ICON_PATH;
+}
+
 function resolveAiIcon(ai, cssClass, size) {
   // v3.53.2 — XSS hardening. Codex security audit (2026-05-17) finding
   // #5 flagged this function and makeAiAvatarHTML below as the two
@@ -19354,7 +19471,7 @@ async function runBuilderOnly() {
       label:          'Builder Only',
       failed:         true,
       failReason:     _failedRoundReason || 'unknown',
-      failDetails:    _failedRoundDetails || '',
+      failDetails:    (window.WF_DEBUG && WF_DEBUG.scrubText) ? WF_DEBUG.scrubText(_failedRoundDetails || '') : (_failedRoundDetails || ''),  // audit 2026-11: provider error text can echo a credential
       referenceMaterialAtRound: snapshotReferenceDocs()
     });
     renderRoundHistory();
@@ -19513,7 +19630,7 @@ async function retrySingleAIInPartialRound(aiId) {
 
   try {
     const prompt = buildPromptForAI(ai, []);
-    const keyHint = cfg?._key?.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
+    const keyHint = cfg?._key?.length >= 24 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
     consoleLog(`📤 ${ai.name} (single-AI retry) — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint})`, 'send');
     const response = await callAPI(ai, prompt, '', 'worker');
     const noChanges = /^no changes needed/i.test(response.trim());
@@ -19675,7 +19792,31 @@ async function retryBuilderAgainstCachedReviews() {
 window.retryBuilderAgainstCachedReviews = retryBuilderAgainstCachedReviews;
 
 // ── RUN ROUND ──
+// Audit 2026-11 — safety net. The running state (button class, smoker overlay,
+// round timer, "running" UI state) is armed near the top of the round and was
+// only released on the paths that reach the end; the inner try blocks cover the
+// model calls but not everything around them. An exception outside them (a
+// prompt-building bug, a malformed restored value) left the Smoke button
+// blocked by its own double-fire guard with no way out except a reload.
+// This wrapper guarantees the UI is released and the person is told, whatever
+// the implementation throws. It does not alter the success path.
 async function runRound(opts) {
+  try {
+    return await _runRoundImpl(opts);
+  } catch (e) {
+    console.error('[runRound] uncaught error — releasing the round UI:', e);
+    try { consoleLog(`❌ The round stopped unexpectedly: ${(e && e.message) ? e.message : e}. Check your document before running it again.`, 'error'); } catch (_) {}
+    try { window._roundUiState = 'idle'; } catch (_) {}
+    try { hideSmokerOverlay(); } catch (_) {}
+    try { if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay(); } catch (_) {}
+    try { _setRunBtnLabel('Smoke the Hive'); } catch (_) {}
+    try { if (typeof projectClockPause === 'function') projectClockPause(); } catch (_) {}
+    try { updateRoundBadge(); } catch (_) {}
+    try { toast('⚠️ The round stopped unexpectedly. See the console for details.', 7000); } catch (_) {}
+  }
+}
+
+async function _runRoundImpl(opts) {
   opts = opts || {};
   // v3.63.276 — Halt if persistence is broken. Set by the LS-fallback path
   // in storage.js when both IDB and localStorage are full; without this the
@@ -19951,7 +20092,7 @@ async function runRound(opts) {
   const reviewerPromises = allReviewers.map(async ai => {
     const prompt = buildPromptForAI(ai, []); // everyone gets reviewer prompt
     const cfg = API_CONFIGS[ai.provider];
-    const keyHint = cfg?._key?.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
+    const keyHint = cfg?._key?.length >= 24 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
     consoleLog(`📤 ${ai.name} — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint})`, 'send');
     try {
       // v3.36.14 — Reviewer calls pass '' as 3rd arg. buildPromptForAI
@@ -20850,7 +20991,7 @@ async function runRound(opts) {
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       failed:         true,
       failReason:     _failedRoundReason || 'unknown',
-      failDetails:    _failedRoundDetails || '',
+      failDetails:    (window.WF_DEBUG && WF_DEBUG.scrubText) ? WF_DEBUG.scrubText(_failedRoundDetails || '') : (_failedRoundDetails || ''),  // audit 2026-11: provider error text can echo a credential
       referenceMaterialAtRound: snapshotReferenceDocs()
     };
     history.push(_failedEntry);
@@ -21193,7 +21334,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   const _slotRelease = await _acquireProviderSlot(ai.provider);
   try {
 
-  const keyHint = cfg._key?.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
+  const keyHint = cfg._key?.length >= 24 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
   const t0 = Date.now();
 
   let response;
@@ -21203,7 +21344,15 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   // v3.57.3 — bound the request with a role-aware timeout (see constants above).
   const _timeoutMs = (role === 'builder') ? BUILDER_TIMEOUT_MS : REVIEWER_TIMEOUT_MS;
   const _timeoutCtrl = new AbortController();
-  const _timeoutId = setTimeout(() => _timeoutCtrl.abort(), _timeoutMs);
+  let _timeoutId = setTimeout(() => _timeoutCtrl.abort(), _timeoutMs);
+  // Audit 2026-11 — this timer used to be cleared the moment fetch() resolved,
+  // which happens at the response HEADERS. A provider that sent headers and
+  // then stalled the body left the round hanging forever (and there is no
+  // cancel button, so only a reload recovered, losing the billed work). The
+  // timer now stays armed through body consumption. It is only cleared here
+  // when the fetch itself failed; after that, aborting an already-finished
+  // response is a no-op, and aborting a stalled one is exactly what is wanted.
+  let _fetchReturned = false;
   // v3.63.554 — declared out here so the finally can call it, and defaulted to
   // a no-op so a throw BEFORE the real one is installed does not turn a
   // provider failure into a TypeError inside the finally, which would replace
@@ -21269,6 +21418,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
       body: _sentBody,
       signal: _timeoutCtrl.signal
     });
+    _fetchReturned = true;
   } catch(fetchErr) {
     // v3.57.3 — a timeout aborts the fetch with an AbortError. Surface it as a
     // clear TIMEOUT rather than letting it fall through to the CORS/network
@@ -21309,7 +21459,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
     consoleLog(`❌ ${ai.name} — Network error: the request did not complete (${fetchErr.message}). Usually transient — retry, or check your connection or blocker extensions.`, 'error');
     throw new Error('NETWORK_FAILED: ' + fetchErr.message);
   } finally {
-    clearTimeout(_timeoutId);
+    if (!_fetchReturned) clearTimeout(_timeoutId);
     // Idempotent: the happy path already ran it, and running it twice restores
     // the same captured value. What matters is the path where cfg.bodyFn threw
     // before the happy-path call was ever reached.
@@ -21452,6 +21602,18 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   // deliberate: streaming should change how bytes arrive, not what the rest
   // of the app reasons about.
   let data;
+  // Audit 2026-11 — the timeout now covers the body too (see the note where the
+  // timer is armed). A stalled body surfaces here as an AbortError from
+  // read()/json()/text(); report it as the same TIMEOUT the headers phase uses
+  // rather than leaking a bare "The user aborted a request".
+  const _bodyTimedOut = (e) => {
+    if (e && e.name === 'AbortError') {
+      const _secs = Math.round(_timeoutMs / 1000);
+      consoleLog(`⏳ ${ai.name} — The response stopped arriving and did not finish within ${_secs}s. The provider may be down or overloaded; retry, or check its status page.`, 'error');
+      return new Error(`TIMEOUT: ${ai.name} did not finish its response within ${_secs}s.`);
+    }
+    return e;
+  };
   // A server that ignores the stream flag answers with one plain JSON document.
   // Reading that as SSE finds nothing, and the fallback below then sends the
   // whole request a second time (a second charge, and twice the wait). When the
@@ -21461,7 +21623,8 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
   if (_streaming) {
     const _ct = (response.headers && typeof response.headers.get === 'function' && response.headers.get('content-type')) || '';
     if (/json/i.test(_ct) && !/event-stream/i.test(_ct)) {
-      const _raw = await response.text();
+      let _raw;
+      try { _raw = await response.text(); } catch (e) { throw _bodyTimedOut(e); }
       try { data = JSON.parse(_raw); _plainJsonReply = true; } catch (e) { /* not JSON after all */ }
       if (!_plainJsonReply) {
         consoleLog(`↩️ ${ai.name} did not return a readable stream — retrying without streaming.`, 'warn');
@@ -21485,6 +21648,11 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
         const { done, value } = await reader.read();
         if (done) break;
         chunks++;
+        // A stream may legitimately run longer than the single-shot budget as
+        // long as data keeps arriving, so for streams the timer is an IDLE
+        // watchdog: every chunk re-arms the full window.
+        clearTimeout(_timeoutId);
+        _timeoutId = setTimeout(() => _timeoutCtrl.abort(), _timeoutMs);
         acc.push(dec.decode(value, { stream: true }));
         // Progress, throttled — the point of streaming is that the wait is
         // no longer silent, for the user as well as for the proxy.
@@ -21494,6 +21662,8 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
           setStatus(`⏳ ${ai.name} is writing… ${soFar.toLocaleString()} chars so far`);
         }
       }
+    } catch (e) {
+      throw _bodyTimedOut(e);
     } finally {
       try { reader.releaseLock(); } catch (e) { /* already released */ }
     }
@@ -21518,7 +21688,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown', metaOut 
                (_outTokens ? ` · ${_outTokens.toLocaleString()} output tokens` : ''), 'info');
     data = window.WFProviderCatalog.streamedResponseShape(cfg.format, streamed);
   } else {
-    data = await response.json();
+    try { data = await response.json(); } catch (e) { throw _bodyTimedOut(e); }
   }
   // v3.63.562 — Session spend meter. Recorded here, before the content-filter
   // and empty-response checks below, because a response the app then rejects
@@ -22299,7 +22469,12 @@ function stripLineRefs(text) {
 function buildAppliedChangesHTML(latest) {
   if (!latest || !Array.isArray(latest.appliedChanges) || latest.appliedChanges.length === 0) return '';
   const items = latest.appliedChanges;
-  const latestRound = latest.round || (history.length || 0);
+  // Audit 2026-11: `latest.round` can come from a restored checkpoint and is
+  // interpolated into data-round="..." below. Coerce it to a finite integer so
+  // a hostile file cannot break out of the attribute.
+  const latestRound = Number.isFinite(Number(latest.round)) && Number(latest.round) > 0
+    ? Math.floor(Number(latest.round))
+    : (history.length || 0);
 
   // v3.39.6 — Repeat-touch counter expanded from a 5-round trailing window
   // to the full project history. On a long-running session a line can sit

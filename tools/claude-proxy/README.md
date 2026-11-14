@@ -33,7 +33,9 @@ No account system, shared credential, request logging, analytics, or prompt tran
 
 ## Bindings
 
-One `REQUEST_RATE_LIMITER` binding. There is no KV namespace, Worker secret, or environment variable. The Anthropic API key travels through per-request and is never stored; a truncated SHA-256 digest is used only as the rate-limit identifier.
+Two rate-limit bindings: `REQUEST_RATE_LIMITER` (120 requests/minute per hashed API key) and `IP_RATE_LIMITER` (300 requests/minute per hashed `CF-Connecting-IP`, so rotating made-up keys does not get round the first one). Rate-limit namespace ids are chosen in `wrangler.toml`, so the second binding needs no new Cloudflare resource; `wrangler deploy` picks it up. Either limiter is skipped when its binding is absent. There is no KV namespace, Worker secret, or environment variable. The Anthropic API key travels through per-request and is never stored; a truncated SHA-256 digest is used only as the rate-limit identifier.
+
+A request from a disallowed origin gets a 403 with **no** `Access-Control-Allow-Origin` header, so the calling page cannot read the response.
 
 ---
 

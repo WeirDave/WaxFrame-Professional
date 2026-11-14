@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing-renderer.js
-// Build: 20261113-003
+// Build: 20261114-001
 //  Dynamic pricing renderer for ai-api-pricing.html. Fetches
 //  live data from the waxframe-pricing Cloudflare Worker;
 //  falls back to the embedded snapshot if the Worker is
@@ -395,7 +395,11 @@
     tbody.innerHTML = rows.map(function(r) {
       var hasPrice = typeof r.inputPerM === 'number' && typeof r.outputPerM === 'number';
       var statusLabel = STATUS_LABELS[r.status] || r.status;
-      var pillClass = 'status-pill status-pill-' + r.status;
+      // Audit 2026-11: r.status comes from fetched JSON and lands inside a
+      // class="" attribute below. Only a status the page knows may become
+      // part of a class name.
+      var knownStatus = Object.prototype.hasOwnProperty.call(STATUS_LABELS, r.status);
+      var pillClass = 'status-pill status-pill-' + (knownStatus ? r.status : 'unknown');
       var sourceCell = r.sourceUrl
         ? '<a href="' + escapeHtml(safeUrl(r.sourceUrl)) + '" target="_blank" rel="noopener noreferrer" class="link-accent external-link">source<svg class="external-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3z"></path><path d="M5 5h6v2H7v10h10v-4h2v6H5V5z"></path></svg><span class="sr-only">(opens in a new tab)</span></a>'
         : '—';

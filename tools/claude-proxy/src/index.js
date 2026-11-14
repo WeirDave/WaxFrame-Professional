@@ -20,8 +20,8 @@
 //  js/provider-catalog.js (Claude catalog entry's endpoint + the
 //  'anthropic-via-proxy' model-list discovery method), CLAUDE.md §3.
 //
-//  Bindings: one Cloudflare Rate Limiting binding. No KV, secrets, or env
-//  vars. The Anthropic API key travels through per-request from the browser's
+//  Bindings: two Cloudflare Rate Limiting bindings (per API key, per client
+//  IP). No KV, secrets, or env vars. The Anthropic API key travels through per-request from the browser's
 //  x-api-key header and is never stored server-side; only a truncated SHA-256
 //  digest is used as the ephemeral rate-limit key.
 //
@@ -71,7 +71,18 @@ export default {
   async fetch(request, env, ctx) {
     const origin = request.headers.get('Origin');
     if (!isAllowedOrigin(origin)) {
-      return respond(request, 'Origin not allowed', 403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      // Deliberately NOT built with respond()/corsHeaders(): those echo the caller's Origin back in
+      // Access-Control-Allow-Origin, which would let the rejected page read this very 403. With no
+      // CORS header the browser blocks the page from seeing the response at all.
+      return new Response('Origin not allowed', {
+        status: 403,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Vary': 'Origin',
+          'X-Content-Type-Options': 'nosniff',
+          'Referrer-Policy': 'no-referrer'
+        }
+      });
     }
 
     // CORS preflight — allow GET (for /v1/models) in addition to POST (for /v1/messages)
@@ -99,6 +110,18 @@ export default {
     }
     if (isModels && request.method !== 'GET') {
       return respond(request, 'Method not allowed for /v1/models', 405, { 'Allow': 'GET, OPTIONS', 'Content-Type': 'text/plain; charset=utf-8' });
+    }
+
+    // Second limiter, keyed on the caller's address. The per-key limiter below is trivially
+    // sidestepped by sending a different made-up key each time, so this one caps what a single
+    // address can ask of the relay however many keys it tries. Hashed like the key, and skipped
+    // when there is no CF-Connecting-IP (local testing) or the binding is not configured.
+    const clientIp = request.headers.get('CF-Connecting-IP');
+    if (env.IP_RATE_LIMITER && clientIp) {
+      const { success } = await env.IP_RATE_LIMITER.limit({ key: await rateLimitKey('ip:' + clientIp) });
+      if (!success) {
+        return respond(request, JSON.stringify({ error: { type: 'rate_limit_error', message: 'Relay rate limit exceeded' } }), 429, { 'Content-Type': 'application/json; charset=utf-8', 'Retry-After': '60' });
+      }
     }
 
     const apiKey = request.headers.get('x-api-key');

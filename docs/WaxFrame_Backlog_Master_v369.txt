@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v368
-2026-11-13
+WaxFrame Backlog Master v369
+2026-11-14
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,37 @@ ships.
 
 
 
+
+v368 — SECURITY AND ROBUSTNESS AUDIT: WHAT IS STILL OPEN (v3.63.605).
+
+A full read-only audit on 2026-11-13 produced the fixes in v3.63.605. These items from it were
+deliberately NOT done, each for a stated reason. None is a known exploit.
+  1. Two tabs overwrite each other. js/storage.js saveHive / saveProject and js/session-spend.js
+     write whole in-memory state with no storage-event listener, so a stale tab replaces a key
+     added in another tab and the spend totals of one tab are lost. The BroadcastChannel banner
+     only covers sessions. Needs a design (merge on write, or a "another tab changed this" prompt).
+  2. Every round stores a full copy of the reference documents (referenceMaterialAtRound, app.js).
+     Measured: 30 rounds with a 200 KB reference document = 9.6 MB against 3.6 MB without the
+     copies, in IndexedDB and again in every checkpoint. Fix is a content-hash pointer with one copy
+     per distinct reference set; restore and transcript code must dereference it. Schema change,
+     so it needs a migration and a checkpoint-format bump.
+  3. The dev-tools password check (js/app.js, DEV_PW_HASH) is an unsalted SHA-256 in public source
+     and unlocking only sets a localStorage flag, so it is a convenience gate, not a boundary.
+     Decide: keep as is, or drop the password and gate on a build-time flag.
+  4. An imported hive or checkpoint can add a custom endpoint that counts as ready with no key
+     (isAIReadyForUse accepts _modelsEndpoint). v3.63.605 shows the destination host next to each
+     custom AI in the restore preview. A confirm-on-first-use for imported hosts is still open.
+  5. detectDeprecatedModels('visible') sends one untimed /v1/models call per configured AI on
+     every tab focus (documented as intentional). A 60 s cooldown would cut the traffic.
+  6. js/session-spend.js falls back to a prefix match when a model is missing from the price
+     snapshot (gpt-5.4-pro priced as gpt-5.4). No collision exists in the current snapshot; it will
+     matter when new models appear. Consider pricing an unlisted model as unknown instead.
+  7. SheetJS (lib/xlsx.full.min.js, 0.20.3) is not declared in package.json, so Dependabot cannot
+     watch it. npm's xlsx package is stale at 0.18.5; the real releases are at cdn.sheetjs.com.
+  8. The Cloudflare Workers changed in v3.63.605 only take effect after `wrangler deploy` from the
+     desktop (claude-proxy and pricing-worker). Neither has been deployed.
+  9. The local CLAUDE.md (not in git) still says 'unsafe-eval' is required by the vendored
+     libraries. It was removed in v3.63.605; the gate fails if it returns.
 
 v367 — "RAN OUT OF OUTPUT ROOM WHILE THINKING" CARD; MISTRAL DEFAULT DECIDED (v3.63.604).
 

@@ -36,8 +36,9 @@ CORE CODE CONSTRAINTS
   lowered from 768 in v3.63.571 — see the note at the overlay rule in style.css).
   Modal max-widths stay inside 1366 - 48px overlay padding = 1318px usable.
 - STRICT CSP IS LIVE AND ENFORCED (since v3.63.366). script-src is 'self'
-  plus 'unsafe-eval' (required by the vendored SheetJS / mammoth / pdf.js
-  builds) plus one sha256-pinned head guard. Zero inline on*= handlers;
+  plus 'wasm-unsafe-eval' (pdf.js's optional WebAssembly decoders) plus one
+  sha256-pinned head guard. 'unsafe-eval' was removed in v3.63.605; the gate
+  fails if it returns. Zero inline on*= handlers;
   exactly ONE inline <script> per page, the head guard. release-check
   ratchets both counts, so any new inline JS fails the gate. A new HTML
   page needs an INLINE_HANDLER_BUDGET entry in tools/release-check.mjs.

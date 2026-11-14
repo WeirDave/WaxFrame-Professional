@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — helper-handlers.js
-// Build: 20261113-003
+// Build: 20261114-001
 //  Event-delegation dispatcher for helper-page actions, the first
 //  load-bearing step in the strict-CSP migration started in v3.63.347.
 //
@@ -362,16 +362,40 @@
 
   // Walk a dotted name ("WF_DEBUG.bundleForScout") through `window`
   // and return the resolved value, or undefined if any link is missing.
+  //
+  // Hardened after the 2026-11 audit: the name comes from a data-fn style
+  // attribute, and a CSP that blocks inline handlers does not stop markup
+  // that merely NAMES a function. Without a filter, any injected
+  // <button data-action="call" data-fn="eval" data-arg="..."> would run
+  // arbitrary script on click. So the walk refuses two things:
+  //   1. path segments that reach the prototype/constructor chain
+  //      (constructor, __proto__, prototype, caller, callee, arguments),
+  //      the way to Function('...') from any ordinary function;
+  //   2. any BROWSER-NATIVE function (eval, setTimeout, open, fetch,
+  //      document.write, localStorage.clear...). Every legitimate target
+  //      is a function this app defines, and a defined function never
+  //      stringifies as "[native code]". A native one is never a button.
+  var _BLOCKED_SEGMENTS = {
+    constructor: 1, __proto__: 1, prototype: 1,
+    caller: 1, callee: 1, arguments: 1
+  };
+  function _isNativeFn(f) {
+    try {
+      return Function.prototype.toString.call(f).indexOf('[native code]') !== -1;
+    } catch (_) { return true; }
+  }
   function resolveDotted(name) {
-    if (!name) return undefined;
+    if (!name || typeof name !== 'string') return undefined;
     var parts = name.split('.');
     var parent = null;
     var cur = window;
     for (var i = 0; i < parts.length; i++) {
       if (cur == null) return undefined;
+      if (Object.prototype.hasOwnProperty.call(_BLOCKED_SEGMENTS, parts[i])) return undefined;
       parent = cur;
       cur = cur[parts[i]];
     }
+    if (typeof cur === 'function' && _isNativeFn(cur)) return undefined;
     if (typeof cur === 'function' && parts.length > 1) return cur.bind(parent);
     return cur;
   }
@@ -655,6 +679,24 @@
       if (typeof fn === 'function') fn(t);
     }
   }, true);
+
+  // ── Console error arrow (audit 2026-11) ────────────────────
+  // The "→" button on a console error/warn line carries
+  // onclick="openConsoleErrorDetail('cle_…')" as an ATTRIBUTE (it is also the
+  // shape the restore sanitiser in storage.js recognises). Under the strict CSP
+  // an inline-handler attribute never runs, live or restored, so the arrow
+  // silently did nothing. Handle it here by delegation instead: read the id out
+  // of the attribute with the same strict pattern the sanitiser enforces, and
+  // call the function directly. The attribute text itself is never executed.
+  document.addEventListener('click', function(e) {
+    var b = e.target && e.target.closest ? e.target.closest('.console-err-arrow') : null;
+    if (!b) return;
+    var m = /^openConsoleErrorDetail\('(cle_\d+_[a-z0-9]+)'\)$/.exec(b.getAttribute('onclick') || '');
+    if (!m) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof window.openConsoleErrorDetail === 'function') window.openConsoleErrorDetail(m[1]);
+  });
 
   // ── Version-stamp init (v3.63.352) ─────────────────────────
   // Every page sprays the current app version into one or more

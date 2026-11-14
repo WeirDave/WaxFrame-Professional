@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — tools/test-debug-redaction.mjs
-// Build: 20261113-003
+// Build: 20261114-001
 // ============================================================
 // Fixture-based regression test for WF_DEBUG.scrubFailureRecord, the
 // redaction pass applied to the failure record before it is written into a
@@ -641,6 +641,53 @@ check('a regex metacharacter in a key does not break the pass', () => {
   const out = WF_DEBUG.scrubText('token ' + weird + ' end');
   assert.ok(!out.includes(weird), 'an unescaped key pattern failed to match');
   delete lsStore[HIVE_LS_KEY];
+});
+
+// Audit 2026-11. The shape rules missed the header the app itself sends to
+// Gemini, a bare "token" field, a ?token= query and user:pass@ in a URL, and
+// the ring-buffer walker returned anything deeper than 12 levels untouched.
+console.log('');
+console.log('▶ WF_DEBUG.scrubText / scrubRingBuffer — credentials with no distinctive prefix');
+check('the x-goog-api-key header is redacted in JSON and line form', () => {
+  delete lsStore[HIVE_LS_KEY];
+  const SECRET = 'q9Zk3mWv7LpR2tYx8NbC4dFgHj6S';
+  const json = WF_DEBUG.scrubText('{"x-goog-api-key": "' + SECRET + '", "Content-Type": "application/json"}');
+  assert.ok(!json.includes(SECRET), 'JSON-form x-goog-api-key survived');
+  assert.ok(json.includes('Content-Type'), 'neighbouring fields must survive');
+  const line = WF_DEBUG.scrubText('x-goog-api-key: ' + SECRET + '\nAccept: */*');
+  assert.ok(!line.includes(SECRET), 'line-form x-goog-api-key survived');
+  assert.ok(line.includes('Accept: */*'), 'the next header line must survive');
+});
+
+check('"key", "_key", "token" and "secret" JSON fields are redacted', () => {
+  const SECRET = 'plainValue123456789';
+  for (const field of ['key', '_key', 'token', 'access_token', 'secret']) {
+    const out = WF_DEBUG.scrubText('{"' + field + '":"' + SECRET + '","model":"m"}');
+    assert.ok(!out.includes(SECRET), '"' + field + '" survived');
+    assert.ok(out.includes('"model":"m"'), 'an unrelated field was altered next to "' + field + '"');
+  }
+});
+
+check('?token= queries and user:pass@ URL credentials are redacted', () => {
+  const SECRET = 'abcDEF123456xyz';
+  assert.ok(!WF_DEBUG.scrubText('GET https://h.invalid/v1/x?token=' + SECRET + '&a=1').includes(SECRET));
+  const url = WF_DEBUG.scrubText('proxy https://alice:' + SECRET + '@h.invalid/path ok');
+  assert.ok(!url.includes(SECRET), 'URL userinfo survived');
+  assert.ok(url.includes('h.invalid/path'), 'the host and path must survive');
+});
+
+check('ordinary text with colons and equals is not eaten', () => {
+  const SAMPLE = 'Round 3: key insight = reuse; status=ok https://example.invalid/a?b=c';
+  assert.equal(WF_DEBUG.scrubText(SAMPLE), SAMPLE);
+});
+
+check('scrubRingBuffer fails closed on a subtree deeper than it walks', () => {
+  const SECRET = 'sk-' + 'A1b2C3d4E5f6G7h8I9j0';
+  let deep = { leaf: SECRET };
+  for (let i = 0; i < 20; i++) deep = { next: deep };
+  const out = JSON.stringify(WF_DEBUG.scrubRingBuffer([deep]));
+  assert.ok(!out.includes(SECRET), 'a secret below the depth limit shipped unscrubbed');
+  assert.ok(out.includes('[TRUNCATED]'), 'the cut-off point should be marked');
 });
 
 console.log('');

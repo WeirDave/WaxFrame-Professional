@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker: price parsers
-//  Build: 20261113-003
+//  Build: 20261114-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -522,15 +522,54 @@ export const PRICE_SOURCES = {
   perplexity:    { url: id => /^[a-z0-9][a-z0-9.-]*$/i.test(id) ? `https://docs.perplexity.ai/docs/legacy/sonar/models/${id}.md` : null, parse: (h, id) => parsePerplexity(h, id) }
 };
 
+// A provider page (or a hijacked one) must not be able to hang a refresh or
+// feed it an unbounded body. Both limits are generous for a real pricing page.
+export const PAGE_TIMEOUT_MS = 15000;
+export const MAX_PAGE_BYTES = 4 * 1024 * 1024;
+
+// Reads a response body as text but gives up past `maxBytes`, without first
+// buffering the whole thing when the runtime can stream it. Fakes in tests may
+// have neither `body` nor `headers`, so both are optional.
+export async function readTextCapped(resp, maxBytes) {
+  const tooLarge = () => Object.assign(new Error(`response larger than ${maxBytes} bytes`), { name: 'ResponseTooLargeError' });
+  const declared = Number(resp.headers && typeof resp.headers.get === 'function' ? resp.headers.get('content-length') : 0);
+  if (declared > maxBytes) throw tooLarge();
+  if (resp.body && typeof resp.body.getReader === 'function') {
+    const reader = resp.body.getReader();
+    const chunks = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) { try { await reader.cancel(); } catch (e) { /* already closed */ } throw tooLarge(); }
+      chunks.push(value);
+    }
+    const all = new Uint8Array(total);
+    let at = 0;
+    chunks.forEach(c => { all.set(c, at); at += c.byteLength; });
+    return new TextDecoder().decode(all);
+  }
+  const text = await resp.text();
+  if (text.length > maxBytes) throw tooLarge();
+  return text;
+}
+
+// JSON body with the same cap. A fake with only .json() (older tests) is read directly.
+export async function readJsonCapped(resp, maxBytes) {
+  if (typeof resp.text !== 'function' && !resp.body) return resp.json();
+  return JSON.parse(await readTextCapped(resp, maxBytes));
+}
+
 async function loadPage(url, fetchImpl) {
   let last = 'request failed';
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const resp = await fetchImpl(url, { headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml' } });
-      if (resp.ok) return { ok: true, html: await resp.text() };
+      const resp = await fetchImpl(url, { headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml' }, signal: AbortSignal.timeout(PAGE_TIMEOUT_MS) });
+      if (resp.ok) return { ok: true, html: await readTextCapped(resp, MAX_PAGE_BYTES) };
       last = `HTTP ${resp.status}`;
     } catch (e) {
-      last = 'network error or timeout';
+      last = e && e.name === 'ResponseTooLargeError' ? 'page too large' : 'network error or timeout';
     }
     if (attempt === 0) await new Promise(r => setTimeout(r, 1500));
   }

@@ -529,9 +529,15 @@ const REQUIRED_CSP_DIRECTIVES = [
   // dedicated "must NOT contain 'unsafe-inline'" check below catches
   // any future regression.
   //
-  // 'unsafe-eval' stays. SheetJS / mammoth.browser / pdf.js use
-  // new Function() internals for their parsers; dropping eval would
-  // break every Word / Excel / PDF import.
+  // 'unsafe-eval' is GONE as of v3.63.605 (audit 2026-11). It was kept for
+  // years on the belief that SheetJS / mammoth / pdf.js needed new Function();
+  // measured against the current vendored builds, every Word / Excel / PowerPoint
+  // / PDF import and the docx export work without it (tools/check-pdf-shapes,
+  // check-import-bounds, check-file-protocol, flow-check). With it present, any
+  // HTML injection that could name a global function could run script; without
+  // it the browser refuses eval / Function / string timers. The check below
+  // fails the build if it returns. 'wasm-unsafe-eval' is permitted: it lets
+  // pdf.js use its optional WebAssembly decoders and does not enable eval().
   "'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='",  // <script> head guard (clickjacking + CSP-violation listener)
   //
   // v3.63.380 — style-src strict CLOSE-OUT. The v3.63.367 → v3.63.379
@@ -575,9 +581,16 @@ for (const file of htmlFiles) {
   // Adding 'unsafe-inline' back would silently re-break the dispatch
   // because CSP3 ignores hashes when 'unsafe-inline' is present —
   // any future regression on this directive must fail CI here.
-  // 'unsafe-eval' stays (SheetJS / mammoth / pdf.js use new Function()
-  // internally — dropping it would break document import).
   const scriptSrc = (policy.match(/script-src\s+([^;]+)/) || [])[1] || '';
+  if (/'unsafe-eval'/.test(scriptSrc)) {
+    fail(rel(file), `CSP script-src must NOT contain 'unsafe-eval' (removed in v3.63.605 after the audit showed no vendored library needs it). Got: script-src ${scriptSrc.trim()}`);
+    continue;
+  }
+  const styleSrcAll = (policy.match(/style-src\s+([^;]+)/) || [])[1] || '';
+  if (/(^|\s)https:(\s|$)/.test(styleSrcAll)) {
+    fail(rel(file), `CSP style-src must NOT allow https: (no page loads an external stylesheet; removed in v3.63.605). Got: style-src ${styleSrcAll.trim()}`);
+    continue;
+  }
   if (/'unsafe-inline'/.test(scriptSrc)) {
     fail(rel(file), `CSP script-src must NOT contain 'unsafe-inline' (strict-CSP re-tightened in v3.63.366 after Phase 8 inline-handler migration). Got: script-src ${scriptSrc.trim()}`);
     continue;
@@ -1529,6 +1542,34 @@ for (const scriptName of DOWNLOAD_SCRIPTS) {
     fail(scriptName, structural, findLine(content, '.sha256'));
   } else {
     ok(scriptName + ': an unverifiable download is refused');
+  }
+
+  // Added with the 2026-11 hardening pass: the checksum sits beside the ZIP in
+  // the same release, so the signed build-provenance attestation is checked as
+  // well (when gh is installed), and the archive's entries are vetted before
+  // anything is extracted.
+  if (!/gh attestation verify/.test(content) || !/Confirm-WfAttestation|confirm_attestation/.test(content)) {
+    fail(scriptName, 'does not verify the release build-provenance attestation with `gh attestation verify`');
+  } else if (!/Test-WfZipEntries|check_zip_entries/.test(content)) {
+    fail(scriptName, 'extracts the release ZIP without vetting its entries (path traversal / symlinks) first');
+  } else {
+    ok(scriptName + ': checks build provenance (gh) and vets archive entries before extracting');
+  }
+}
+
+// Install-WaxFrame.command is run as `curl | bash`, which executes while it
+// streams in. Its body must live in main(), called on the last line, so a
+// truncated download cannot run a partial script.
+{
+  let installSh = null;
+  try { installSh = read(join(ROOT, 'Install-WaxFrame.command')); } catch (e) { /* reported above */ }
+  if (installSh !== null) {
+    const lines = installSh.split('\n').map(l => l.trimEnd()).filter(l => l.length);
+    if (!/^main\s*\(\)\s*\{/m.test(installSh) || lines[lines.length - 1] !== 'main "$@"') {
+      fail('Install-WaxFrame.command', 'body must be wrapped in main() with `main "$@"` as the last line, so a truncated curl | bash download cannot execute partially');
+    } else {
+      ok('Install-WaxFrame.command: body wrapped in main(), invoked on the last line');
+    }
   }
 }
 

@@ -117,6 +117,43 @@ try {
     method: 'POST', headers: { Origin: 'https://waxframe.com', 'x-api-key': 'k' }, body: '{}'
   }), {}, {});
   assert(badPath.status === 404, 'a path outside the allowlist is still rejected');
+
+  // A rejected origin must not be told it may read the response: with an
+  // Access-Control-Allow-Origin header the attacking page could read the 403.
+  assert(!badOrigin.headers.has('Access-Control-Allow-Origin'),
+    'a rejected origin gets no Access-Control-Allow-Origin header');
+  assert(!badOrigin.headers.has('Access-Control-Allow-Methods') && !badOrigin.headers.has('Access-Control-Allow-Headers'),
+    'a rejected origin gets no other CORS headers either');
+  const badPreflight = await worker.fetch(new Request('https://relay.example/v1/messages', {
+    method: 'OPTIONS', headers: { Origin: 'https://attacker.example' }
+  }), {}, {});
+  assert(badPreflight.status === 403 && !badPreflight.headers.has('Access-Control-Allow-Origin'),
+    'a rejected origin preflight is refused with no CORS grant');
+
+  // Second rate limit, keyed on the caller's address.
+  const limiterCalls = [];
+  const ipLimiter = allow => ({ limit: async arg => { limiterCalls.push(arg.key); return { success: allow }; } });
+  const ipRequest = (ip, key = 'invented-test-key') => new Request('https://relay.example/v1/messages', {
+    method: 'POST',
+    headers: { Origin: 'https://waxframe.com', 'Content-Type': 'application/json', 'x-api-key': key, ...(ip ? { 'CF-Connecting-IP': ip } : {}) },
+    body: '{}'
+  });
+  const blocked = await worker.fetch(ipRequest('203.0.113.9'), { IP_RATE_LIMITER: ipLimiter(false) }, {});
+  assert(blocked.status === 429 && blocked.headers.get('Retry-After') === '60',
+    'an address over the IP limit gets 429 before any upstream call');
+  assert(limiterCalls.length === 1 && /^[a-f0-9]{32}$/.test(limiterCalls[0]) && !limiterCalls[0].includes('203.0.113.9'),
+    'the IP limiter is keyed on a hash, not the raw address');
+  const keyBlocked = await worker.fetch(ipRequest('203.0.113.9', 'key-a'), { IP_RATE_LIMITER: ipLimiter(false) }, {});
+  const keyBlockedB = await worker.fetch(ipRequest('203.0.113.9', 'key-b'), { IP_RATE_LIMITER: ipLimiter(false) }, {});
+  assert(keyBlocked.status === 429 && keyBlockedB.status === 429 && limiterCalls[1] === limiterCalls[2],
+    'changing the API key does not change the IP limiter key');
+  // With the IP limiter satisfied (or absent) the request carries on to the key checks.
+  const passIp = await worker.fetch(ipRequest('203.0.113.9', ''), { IP_RATE_LIMITER: ipLimiter(true) }, {});
+  assert(passIp.status === 401, 'an address within the limit proceeds to the normal checks');
+  const noIpHeader = await worker.fetch(ipRequest(null, ''), { IP_RATE_LIMITER: ipLimiter(false) }, {});
+  assert(noIpHeader.status === 401, 'with no CF-Connecting-IP the IP limiter is skipped (local testing)');
+  const noBinding = await worker.fetch(ipRequest('203.0.113.9', ''), {}, {});
+  assert(noBinding.status === 401, 'without the IP limiter binding the relay behaves as before');
 } finally {
   globalThis.fetch = realFetch;
 }

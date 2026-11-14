@@ -422,6 +422,38 @@ async function runRefresh({ stored, key, pageOverrides }) {
   assert(/could not read/.test(c.reason), 'and says the page could not be read');
 }
 
+// ── outbound limits: a slow or oversized page cannot hang or flood a refresh ──
+console.log('\nloadPage / readTextCapped — timeout signal and size cap');
+{
+  const { readTextCapped, readJsonCapped, MAX_PAGE_BYTES } = await import('./src/prices.js');
+  const seen = [];
+  const out = await readPrices({ providers: seedLike, fetchImpl: async (url, init) => { seen.push(init && init.signal); return pagesFetch()(url, init); }, now: NOW });
+  assert(seen.length > 0 && seen.every(s => s instanceof AbortSignal), 'every page fetch carries a timeout signal');
+  assert(out.get('deepseek::deepseek-flash').ok, 'and normal pages still parse');
+
+  const huge = { ok: true, status: 200, text: async () => 'x'.repeat(MAX_PAGE_BYTES + 1) };
+  const big = await readPrices({ providers: [seedLike[2]], fetchImpl: async () => huge, now: NOW });
+  const bo = big.get('deepseek::deepseek-flash');
+  assert(!bo.ok && /page too large/.test(bo.reason) && /keeping the last verified price/.test(bo.reason), 'a page over the cap is refused and the stored price is kept');
+
+  // Streaming path: stops reading as soon as the cap is crossed.
+  let cancelled = false, pulled = 0;
+  const stream = new ReadableStream({
+    pull(c) { pulled++; c.enqueue(new Uint8Array(1024)); },
+    cancel() { cancelled = true; }
+  });
+  let threw = null;
+  try { await readTextCapped(new Response(stream), 10 * 1024); } catch (e) { threw = e; }
+  assert(threw && threw.name === 'ResponseTooLargeError', 'a streamed body past the cap is rejected');
+  assert(cancelled && pulled < 40, 'and the stream is cancelled rather than read to the end');
+  assertEqual(await readTextCapped(new Response('hello'), 100), 'hello', 'a small body is returned whole');
+  let declaredThrew = false;
+  try { await readTextCapped({ headers: new Headers({ 'content-length': '999999' }), text: async () => 'x' }, 1000); } catch (e) { declaredThrew = true; }
+  assert(declaredThrew, 'a declared Content-Length over the cap is rejected before reading');
+  assertEqual(await readJsonCapped({ json: async () => ({ a: 1 }) }, 100), { a: 1 }, 'a fake with only .json() still works');
+  assertEqual(await readJsonCapped(new Response('{"b":2}'), 100), { b: 2 }, 'a real response is parsed through the capped read');
+}
+
 console.log('');
 if (failures) { console.log(`❌ ${failures} price parser test(s) failed.`); process.exit(1); }
 console.log('✅ All price parser tests passed.');

@@ -49,6 +49,7 @@ REPO="WeirDave/WaxFrame-Professional"
 
 log_step() { printf '\033[36m%s\033[0m\n' "$1"; }
 log_ok()   { printf '\033[32m%s\033[0m\n' "$1"; }
+log_warn() { printf '\033[33m%s\033[0m\n' "$1"; }
 log_err()  { printf '\033[31m%s\033[0m\n' "$1" >&2; }
 pause()    { read -r -p "Press Enter to close" _ || true; }
 
@@ -64,21 +65,21 @@ get_wf_version() {
   grep -o "APP_VERSION = 'v\?[0-9.]* Pro'" "$vfile" | head -1 | sed -E "s/.*'v?([0-9.]*) Pro'.*/\1/"
 }
 
-# Echoes 1 if $1 > $2, 0 if equal, -1 if $1 < $2.
+# Echoes 1 if $1 > $2, 0 if equal, -1 if $1 < $2. Compares every component
+# (the Windows script does too), so a fourth part can never be ignored.
 cmp_version() {
-  local a="${1#v}" b="${2#v}"
-  local a1 a2 a3 b1 b2 b3
-  IFS='.' read -r a1 a2 a3 <<< "$a"
-  IFS='.' read -r b1 b2 b3 <<< "$b"
-  a1=${a1:-0}; a2=${a2:-0}; a3=${a3:-0}
-  b1=${b1:-0}; b2=${b2:-0}; b3=${b3:-0}
-  if [ "$a1" -gt "$b1" ] || { [ "$a1" -eq "$b1" ] && [ "$a2" -gt "$b2" ]; } || { [ "$a1" -eq "$b1" ] && [ "$a2" -eq "$b2" ] && [ "$a3" -gt "$b3" ]; }; then
-    echo 1
-  elif [ "$a1" -eq "$b1" ] && [ "$a2" -eq "$b2" ] && [ "$a3" -eq "$b3" ]; then
-    echo 0
-  else
-    echo -1
-  fi
+  local a="${1#v}" b="${2#v}" i n x y
+  local -a pa pb
+  IFS='.' read -r -a pa <<< "$a"
+  IFS='.' read -r -a pb <<< "$b"
+  n="${#pa[@]}"
+  [ "${#pb[@]}" -gt "$n" ] && n="${#pb[@]}"
+  for ((i = 0; i < n; i++)); do
+    x=$((10#${pa[i]:-0})); y=$((10#${pb[i]:-0}))
+    if [ "$x" -gt "$y" ]; then echo 1; return; fi
+    if [ "$x" -lt "$y" ]; then echo -1; return; fi
+  done
+  echo 0
 }
 
 REQUIRED_FILES=(
@@ -103,6 +104,74 @@ validate_release_tree() {
     return 1
   fi
   printf '%s' "$ver"
+}
+
+# ---- Download safety helpers ------------------------------------------------
+# Kept identical in Install-WaxFrame.command (a curl | bash script cannot
+# source a shared file).
+
+# The SHA-256 sidecar is published in the same release as the ZIP, so on its
+# own it only proves the download was not corrupted. When the GitHub CLI is
+# installed, also check the build-provenance attestation the release workflow
+# signs. A failed check refuses the download. Without gh the checksum still
+# stands, and the exact command is printed so it can be run by hand.
+# $1 = zip, $2 = asset name, $3 = SHA-256. Returns 1 to refuse.
+confirm_attestation() {
+  local out
+  if ! command -v gh >/dev/null 2>&1; then
+    log_warn "GitHub CLI (gh) not found -- build provenance was not checked, only the SHA-256."
+    log_warn "  SHA-256 of $2 : $3"
+    log_warn "  To verify it independently: gh attestation verify $2 --repo $REPO"
+    return 0
+  fi
+  if out="$(gh attestation verify "$1" --repo "$REPO" 2>&1)"; then
+    log_ok "Build provenance verified (gh attestation)."
+    return 0
+  fi
+  # gh needs a login to fetch attestations. Not logged in is "could not
+  # check", not "checked and failed", so behave as if gh were absent.
+  if ! gh auth status >/dev/null 2>&1; then
+    log_warn "GitHub CLI is installed but not signed in, so build provenance was not checked."
+    log_warn "  SHA-256 of $2 : $3"
+    log_warn "  After 'gh auth login': gh attestation verify $2 --repo $REPO"
+    return 0
+  fi
+  log_err "Build provenance check failed (gh attestation verify) -- the download was not used."
+  printf '%s\n' "$out" >&2
+  return 1
+}
+
+# Refuse an archive before extracting any of it: no entry may climb out of the
+# destination ('..' segments), be absolute, carry a backslash or drive letter,
+# or be a symbolic link (mode column of `unzip -Z` starting with "l").
+# $1 = zip. Returns 1 to refuse.
+check_zip_entries() {
+  local names modes bad
+  if ! names="$(unzip -Z1 "$1" 2>/dev/null)" || ! modes="$(unzip -Z "$1" 2>/dev/null)"; then
+    log_err "Release ZIP could not be listed, so its contents cannot be checked."
+    return 1
+  fi
+  bad="$(printf '%s\n' "$names" | grep -E '(^|/)\.\.(/|$)|^/|\\|^[A-Za-z]:' | head -1 || true)"
+  if [ -n "$bad" ]; then log_err "Release archive contains an unsafe path: $bad"; return 1; fi
+  bad="$(printf '%s\n' "$modes" | grep -E '^l' | head -1 || true)"
+  if [ -n "$bad" ]; then log_err "Release archive contains a symbolic link: $bad"; return 1; fi
+  return 0
+}
+
+# After extraction: the root must still sit under the staging folder and the
+# tree must hold no symlinks. $1 = root, $2 = staging.
+check_extracted_safe() {
+  local root stage
+  root="$(cd "$1" && pwd -P)" || return 1
+  stage="$(cd "$2" && pwd -P)" || return 1
+  case "$root/" in
+    "$stage"/*) ;;
+    *) log_err "Extracted release root is outside the staging folder: $root"; return 1 ;;
+  esac
+  if [ -n "$(find "$root" -type l 2>/dev/null | head -1)" ]; then
+    log_err "Extracted release contains a symbolic link."
+    return 1
+  fi
 }
 
 # ---- 1. Resolve install root + current version ------------------------------
@@ -207,18 +276,28 @@ if [ -d "$SCRIPT_DIR/.git" ] && have_git; then
 fi
 
 # ---- 3. Download into staging --------------------------------------------------
-# Staged OUTSIDE $SCRIPT_DIR, in a temp directory. Staging inside the
-# install folder would break step 8's atomic swap: once $SCRIPT_DIR gets
-# renamed to the backup name, every path computed under it would silently
-# move along with it too.
+# Staged OUTSIDE $SCRIPT_DIR (the download in a temp directory, the extracted
+# tree next to the install folder). Staging inside the install folder would
+# break step 8's atomic swap: once $SCRIPT_DIR gets renamed to the backup
+# name, every path computed under it would silently move along with it too.
+#
+# The extracted tree is a SIBLING of the install folder so step 8 swaps it in
+# with a same-filesystem rename. Moving it in from the temp directory copied
+# file by file whenever that was another volume, and a copy that died halfway
+# left a partial folder under the install name.
+PARENT_DIR="$(dirname "$SCRIPT_DIR")"
+FOLDER_NAME="$(basename "$SCRIPT_DIR")"
 STAGING="$(mktemp -d "${TMPDIR:-/tmp}/WaxFrameUpdate.XXXXXX")"
-cleanup() { rm -rf "$STAGING"; }
+EXTRACT_PATH="$(mktemp -d "$PARENT_DIR/${FOLDER_NAME}.incoming.XXXXXX")" || {
+  rm -rf "$STAGING"
+  log_err "Could not create a staging folder next to the install folder -- aborting before any changes were made."
+  pause; exit 1
+}
+cleanup() { rm -rf "$STAGING" "$EXTRACT_PATH"; }
 trap cleanup EXIT
 
 ZIP_PATH="$STAGING/download.zip"
 CHECKSUM_PATH="$STAGING/download.sha256"
-EXTRACT_PATH="$STAGING/extracted"
-mkdir -p "$EXTRACT_PATH"
 
 log_step "Downloading v$LATEST_VERSION..."
 ASSET_NAME="WaxFrame-Professional-$LATEST_VERSION.zip"
@@ -245,9 +324,11 @@ if [ "$ACTUAL_HASH" != "$EXPECTED_HASH" ]; then
   pause; exit 1
 fi
 log_ok "SHA-256 verified: $ACTUAL_HASH"
+confirm_attestation "$ZIP_PATH" "$ASSET_NAME" "$ACTUAL_HASH" || { pause; exit 1; }
 
 # ---- 4/5. Extract + handle GitHub's wrapper folder --------------------------
 log_step "Extracting..."
+check_zip_entries "$ZIP_PATH" || { pause; exit 1; }
 if ! unzip -q "$ZIP_PATH" -d "$EXTRACT_PATH"; then
   log_err "Release ZIP could not be extracted."
   pause; exit 1
@@ -264,6 +345,7 @@ if [ "$CHILD_COUNT" -ne 1 ]; then
   log_err "Unexpected archive layout: expected exactly one top-level folder, found $CHILD_COUNT."
   pause; exit 1
 fi
+check_extracted_safe "$EXTRACTED_ROOT" "$EXTRACT_PATH" || { pause; exit 1; }
 
 # ---- 6/7. Validate the already checksum-verified tree structurally ----------
 log_step "Verifying..."
@@ -274,8 +356,6 @@ log_ok "Verified: v$VERIFIED_VERSION, all required files present."
 
 # ---- 8. Atomic swap with backup ----------------------------------------------
 log_step "Installing..."
-PARENT_DIR="$(dirname "$SCRIPT_DIR")"
-FOLDER_NAME="$(basename "$SCRIPT_DIR")"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_PATH="$PARENT_DIR/${FOLDER_NAME}.previous-${CURRENT_VERSION}-${TIMESTAMP}"
 
@@ -289,11 +369,20 @@ if mv "$EXTRACTED_ROOT" "$SCRIPT_DIR"; then
   log_ok "  $BACKUP_PATH"
 else
   # Roll back: put the original folder's name back so the user is never
-  # left without a working copy.
-  if [ -d "$BACKUP_PATH" ] && [ ! -d "$SCRIPT_DIR" ]; then
-    mv "$BACKUP_PATH" "$SCRIPT_DIR" || true
+  # left without a working copy. A failed move can leave a partial folder
+  # under the install name, so clear that out first -- rolling back only
+  # when the name was free let a half-copied folder block the restore.
+  if [ -d "$BACKUP_PATH" ]; then
+    [ -e "$SCRIPT_DIR" ] && rm -rf -- "$SCRIPT_DIR"
+    [ -e "$SCRIPT_DIR" ] || mv "$BACKUP_PATH" "$SCRIPT_DIR" || true
   fi
-  log_err "Update failed -- nothing was left half-installed, your previous copy is intact."
+  if [ -f "$SCRIPT_DIR/index.html" ] && [ ! -d "$BACKUP_PATH" ]; then
+    log_err "Update failed -- nothing was left half-installed, your previous copy is intact."
+  else
+    log_err "Update failed and the automatic rollback did not finish."
+    log_err "Your previous copy is at: $BACKUP_PATH"
+    log_err "Delete any partial '$FOLDER_NAME' folder, then rename that copy back to '$FOLDER_NAME'."
+  fi
   pause; exit 1
 fi
 

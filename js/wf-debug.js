@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20261113-003
+// Build: 20261114-001
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -239,8 +239,15 @@ window.WF_DEBUG = {
       .replace(/pplx-[A-Za-z0-9_\-]{12,}/g, 'pplx-[REDACTED]')
       .replace(/gh[pousr]_[A-Za-z0-9_]{12,}/g, 'gh_[REDACTED]')
       .replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._\-~+\/=]{12,}/gi, '$1 [REDACTED]')
-      .replace(/([?&](?:key|api[_-]?key|access[_-]?token)=)[^&\s"']+/gi, '$1[REDACTED]')
-      .replace(/("(?:x-api-key|authorization|api[_-]?key)"\s*:\s*")[^"]*(")/gi, '$1[REDACTED]$2');
+      // Audit 2026-11 — wider net for the places a credential rides that no
+      // prefix describes: a ?token= query, user:pass@ in a URL, and the header
+      // the app itself sends to Gemini (x-goog-api-key) in both JSON and
+      // "Header: value" line form. Configured keys are also removed by value in
+      // _scrubKnownKeys below; this covers keys that are no longer configured.
+      .replace(/([?&](?:key|api[_-]?key|access[_-]?token|token|auth)=)[^&\s"']+/gi, '$1[REDACTED]')
+      .replace(/(https?:\/\/)[^\s\/@:"'<>]+:[^\s\/@"'<>]+@/gi, '$1[REDACTED]@')
+      .replace(/\b(x-goog-api-key|x-api-key|api-key)(\s*[:=]\s*)[^\s,;"'}]+/gi, '$1$2[REDACTED]')
+      .replace(/("(?:x-goog-api-key|x-api-key|authorization|api[_-]?key|_key|key|token|access[_-]?token|secret)"\s*:\s*")[^"]*(")/gi, '$1[REDACTED]$2');
     // Shape first, then value: a key that matched a prefix rule is already
     // gone, and the value pass catches the six formats no prefix describes.
     return this._scrubKnownKeys(byShape);
@@ -322,7 +329,8 @@ window.WF_DEBUG = {
   // carries the secret next release is the one nobody listed.
   scrubRingBuffer(buf) {
     const walk = (v, depth) => {
-      if (depth > 12) return v;
+      // Fail closed: a subtree this deep is not walked, so it is not shipped.
+      if (depth > 12) return '[TRUNCATED]';
       if (typeof v === 'string') return this.scrubText(v);
       if (Array.isArray(v)) return v.map(x => walk(x, depth + 1));
       if (v && typeof v === 'object') {
@@ -672,7 +680,12 @@ window.WF_DEBUG = {
         } catch (e) { return null; }
       })(),
       tierClassifications:     tierCache,
-      tierClassificationErrors: tierErrors,
+      // Audit 2026-11 — these carry up to 200 chars of a raw provider error body.
+      // Scrub them; if scrubbing somehow breaks the JSON, ship nothing rather than raw.
+      tierClassificationErrors: (() => {
+        if (!tierErrors || typeof tierErrors !== 'object') return tierErrors;
+        try { return JSON.parse(this.scrubText(JSON.stringify(tierErrors))); } catch (e) { return null; }
+      })(),
       checkpoint:              checkpoint
     };
 

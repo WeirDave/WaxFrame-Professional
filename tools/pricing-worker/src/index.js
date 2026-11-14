@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20261113-003
+//  Build: 20261114-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -159,7 +159,7 @@
 // ============================================================
 
 import { runRoster, ROSTER_SOURCES } from './roster.js';
-import { readPrices } from './prices.js';
+import { readPrices, readTextCapped, readJsonCapped } from './prices.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -185,6 +185,13 @@ const RUN_LOG_KEY   = 'run-log';
 const PREVIOUS_KEY  = 'previous';
 const MAX_LOG_ENTRIES = 10;
 const PERPLEXITY_URL   = 'https://api.perplexity.ai/chat/completions';
+// Outbound calls are bounded in time and size so a slow or hostile endpoint cannot hang a refresh or
+// feed it an unbounded body. Sonar's web-grounded answers legitimately take longer than a page fetch.
+const PERPLEXITY_TIMEOUT_MS = 60000;
+const MAX_PERPLEXITY_BYTES = 1024 * 1024;
+const SOURCE_FETCH_TIMEOUT_MS = 15000;
+const MAX_SOURCE_PAGE_BYTES = 2 * 1024 * 1024;
+const MAX_SOURCE_REDIRECTS = 3;
 const PERPLEXITY_MODEL = 'sonar-pro'; // matches the model WaxFrame's own grounded-asker uses (js/app.js _PERPLEXITY_GROUNDED_PROVIDERS) — sonar-pro's format-following is noticeably tighter for strict-JSON asks than base sonar.
 
 // v3.63.437 — how many researchModel() calls run at once. 35-40 tracked
@@ -233,8 +240,11 @@ function escapeHtml(value) {
 // console/dashboard/app subdomains all count) but strict across
 // providers — the whole point is catching "right provider, wrong page".
 const SOURCE_DOMAINS = {
-  'gemini-free':  ['google.dev', 'google.com'],
-  'gemini-paid':  ['google.dev', 'google.com'],
+  // Not plain 'google.com': that also admits user-content hosts (sites.google.com, docs.google.com,
+  // drive.google.com, support.google.com threads, ...), which anyone can publish a "price list" on.
+  // Only Google's own product/docs hosts count; a subdomain of one of these is still accepted.
+  'gemini-free':  ['google.dev', 'aistudio.google.com', 'cloud.google.com', 'developers.google.com'],
+  'gemini-paid':  ['google.dev', 'aistudio.google.com', 'cloud.google.com', 'developers.google.com'],
   'grok':         ['x.ai'],
   'deepseek':     ['deepseek.com', 'deepseek.ai'],
   'together':     ['together.ai', 'together.xyz'],
@@ -272,7 +282,11 @@ function isTrustedSource(providerId, sourceUrl) {
     // Path check runs even with no per-provider allowlist configured —
     // an announcement post is the wrong KIND of page whoever published it.
     try {
-      if (hasDeniedSourcePath(new URL(sourceUrl).pathname)) return false;
+      const parsed = new URL(sourceUrl);
+      // https only: a plain-http page can be rewritten on the wire, and a price taken from one
+      // is no better than one from a third party.
+      if (parsed.protocol !== 'https:') return false;
+      if (hasDeniedSourcePath(parsed.pathname)) return false;
     } catch (e) { return false; }
   }
   if (!allowed || !allowed.length) return true; // no allowlist configured — don't block
@@ -447,7 +461,8 @@ async function researchModelOnce(provider, model, apiKey) {
       body: JSON.stringify({
         model: PERPLEXITY_MODEL,
         messages: [{ role: 'user', content: buildResearchPrompt(provider, model) }]
-      })
+      }),
+      signal: AbortSignal.timeout(PERPLEXITY_TIMEOUT_MS)
     });
   } catch (e) {
     return { ok: false, reason: `network error: ${e.message || e}`, transient: true };
@@ -455,7 +470,12 @@ async function researchModelOnce(provider, model, apiKey) {
   if (!resp.ok) return { ok: false, reason: `HTTP ${resp.status}`, transient: resp.status === 429 || resp.status >= 500 };
 
   let data;
-  try { data = await resp.json(); } catch (e) { return { ok: false, reason: 'non-JSON response' }; }
+  try { data = await readJsonCapped(resp, MAX_PERPLEXITY_BYTES); } catch (e) {
+    const name = e && e.name;
+    if (name === 'TimeoutError' || name === 'AbortError') return { ok: false, reason: 'network error: response timed out', transient: true };
+    if (name === 'ResponseTooLargeError') return { ok: false, reason: 'response too large' };
+    return { ok: false, reason: 'non-JSON response' };
+  }
   const text = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
   const parsed = extractJson(text);
   if (!parsed) return { ok: false, reason: 'unparseable response' };
@@ -525,20 +545,36 @@ function corroboratesSource(pageText, inputPerM, outputPerM) {
 // fall through the MIN_CORROBORATION_TEXT_LEN guard into "inconclusive"
 // rather than a false "unverified" — see the build-header note on why
 // that's the deliberate choice, not an oversight.
-async function fetchSourcePageText(sourceUrl) {
+async function fetchSourcePageText(sourceUrl, providerId) {
   try {
-    const resp = await fetch(sourceUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; WaxFramePricingBot/1.0; +https://waxframe.com)' }
-    });
-    if (!resp.ok) return null;
-    const html = await resp.text();
-    return html
-      .replace(/<script[\s\S]*?<\/script[^>]*>/gi, ' ')
-      .replace(/<style[\s\S]*?<\/style[^>]*>/gi, ' ')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;/gi, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    // Redirects are followed by hand so every hop is checked against the same
+    // https + provider-domain rule as the first URL: a trusted page that
+    // redirects off-domain is not read.
+    let target = sourceUrl;
+    for (let hop = 0; hop <= MAX_SOURCE_REDIRECTS; hop++) {
+      if (!isTrustedSource(providerId, target)) return null;
+      const resp = await fetch(target, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; WaxFramePricingBot/1.0; +https://waxframe.com)' },
+        redirect: 'manual',
+        signal: AbortSignal.timeout(SOURCE_FETCH_TIMEOUT_MS)
+      });
+      if (resp.status >= 300 && resp.status < 400) {
+        const location = resp.headers.get('location');
+        if (!location) return null;
+        target = new URL(location, target).toString();
+        continue;
+      }
+      if (!resp.ok) return null;
+      const html = await readTextCapped(resp, MAX_SOURCE_PAGE_BYTES);
+      return html
+        .replace(/<script[\s\S]*?<\/script[^>]*>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style[^>]*>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    return null; // too many redirects
   } catch (e) {
     return null;
   }
@@ -549,8 +585,8 @@ async function fetchSourcePageText(sourceUrl) {
 // corroboratesSource. Network-touching, so deliberately kept separate
 // from the pure decideModelUpdate() path; only called for needs-review
 // proposals in refreshPricing() below, never for confirmed/retained rows.
-async function corroborateProposal(sourceUrl, inputPerM, outputPerM, modelId, siblingIds) {
-  const text = await fetchSourcePageText(sourceUrl);
+async function corroborateProposal(sourceUrl, inputPerM, outputPerM, modelId, siblingIds, providerId) {
+  const text = await fetchSourcePageText(sourceUrl, providerId);
   return {
     corroborated: corroboratesSource(text, inputPerM, outputPerM),
     siblingColumn: siblingColumnAttribution(text, modelId, siblingIds, inputPerM, outputPerM)
@@ -828,6 +864,39 @@ async function checkCronLiveness(env) {
   }
 }
 
+// Pure. Applies this run's row outcomes (overridesByProvider: providerId ->
+// modelId -> nextModel) onto `fresh`, the copy of `latest` read just before the
+// write. A row is only replaced if it is still exactly what this run started
+// from (`original`); a row someone changed in the meantime keeps their value
+// and is reported in `kept`.
+function mergeRunOntoLatest(original, fresh, overridesByProvider) {
+  const kept = [];
+  const providers = fresh.providers.map(fp => {
+    const overrides = overridesByProvider[fp.id];
+    if (!overrides) return fp;
+    const op = (original.providers || []).find(p => p.id === fp.id);
+    const models = (fp.models || []).map(fm => {
+      const next = overrides[fm.id];
+      if (!next) return fm;
+      const om = op && (op.models || []).find(m => m.id === fm.id);
+      if (!om) return fm; // a row added meanwhile is not this run's to touch
+      if (JSON.stringify(om) === JSON.stringify(fm)) return next;
+      if (JSON.stringify(next) !== JSON.stringify(om)) kept.push(`${fp.id}/${fm.id}`);
+      return fm;
+    });
+    return { ...fp, models };
+  });
+  return { providers, kept };
+}
+
+// True when `nextProviders` differs from `base` in anything beyond verifiedAt.
+function hasSubstantiveChange(base, nextProviders) {
+  const strip = m => { const { verifiedAt, ...rest } = m || {}; return JSON.stringify(rest); };
+  const before = new Map();
+  (base.providers || []).forEach(p => (p.models || []).forEach(m => before.set(`${p.id}::${m.id}`, strip(m))));
+  return nextProviders.some(p => (p.models || []).some(m => before.get(`${p.id}::${m.id}`) !== strip(m)));
+}
+
 async function refreshPricing(env) {
   // Needed only for providers WITHOUT a page parser (src/prices.js). With no key those rows are
   // simply not refreshed - manual KV updates keep working unaffected - and the parsed ones still are.
@@ -941,7 +1010,7 @@ async function refreshPricing(env) {
       // reassurance about the one thing already known to be wrong.
       if (c.status !== 'needs-review' || !c.sourceUrl) return;
       const siblingIds = (d.task.provider.models || []).map(m => m.id).filter(id => id !== d.task.model.id);
-      const { corroborated, siblingColumn } = await corroborateProposal(c.sourceUrl, c.proposedInputPerM, c.proposedOutputPerM, d.task.model.id, siblingIds);
+      const { corroborated, siblingColumn } = await corroborateProposal(c.sourceUrl, c.proposedInputPerM, c.proposedOutputPerM, d.task.model.id, siblingIds, d.task.provider.id);
       if (siblingColumn) {
         // Checked first: a sibling-column read DOES corroborate — the
         // number is on the page — so it must not be reported as a pass.
@@ -969,12 +1038,46 @@ async function refreshPricing(env) {
       return { ...p, models: nextModels };
     });
 
-    await env.PRICING_DATA.put(PREVIOUS_KEY, currentRaw);
+    // `latest` was read at the top of this run, and the research above takes
+    // minutes. A manual `kv key put` in that window would be overwritten by a
+    // write built from the stale copy, so re-read it immediately before writing.
+    // Unchanged -> write as before. Changed -> apply only the rows this run
+    // changed onto the fresh copy (a row edited meanwhile keeps the edit), or,
+    // if the fresh copy cannot be used, write nothing and say why.
+    const freshRaw = await env.PRICING_DATA.get('latest');
+    let writeBase = current;
+    let replacedRaw = currentRaw;
+    let providersToWrite = nextProviders;
+    let skipLatest = false;
+    let runNote = null;
+    if (freshRaw !== currentRaw) {
+      let fresh = null;
+      try { fresh = JSON.parse(freshRaw); } catch (e) { fresh = null; }
+      if (!fresh || !Array.isArray(fresh.providers)) {
+        skipLatest = true;
+        runNote = 'pricing data in KV changed during the run and could not be read back, so this run wrote nothing';
+      } else {
+        const merged = mergeRunOntoLatest(current, fresh, overridesByProvider);
+        writeBase = fresh;
+        replacedRaw = freshRaw;
+        providersToWrite = merged.providers;
+        runNote = `pricing data in KV was edited during the run; merged this run's rows onto the newer copy` +
+          (merged.kept.length ? ` and kept the newer values for: ${merged.kept.join(', ')}` : '');
+      }
+    }
+    if (runNote) alertLines.push(`NOTE  ${runNote}`);
 
-    const next = { ...current, lastUpdated: nowIso, providers: nextProviders };
-    await env.PRICING_DATA.put('latest', JSON.stringify(next));
+    if (!skipLatest) {
+      // The rollback copy only moves when something other than a verifiedAt
+      // stamp changed. Otherwise every quiet weekly run would overwrite it with
+      // a near-identical copy and "previous" would stop meaning "before the
+      // last real change".
+      if (hasSubstantiveChange(writeBase, providersToWrite)) await env.PRICING_DATA.put(PREVIOUS_KEY, replacedRaw);
+      const next = { ...writeBase, lastUpdated: nowIso, providers: providersToWrite };
+      await env.PRICING_DATA.put('latest', JSON.stringify(next));
+    }
 
-    log.unshift({ ts: nowIso, changes });
+    log.unshift({ ts: nowIso, changes, ...(runNote ? { note: runNote } : {}) });
     await env.PRICING_DATA.put(RUN_LOG_KEY, JSON.stringify(log.slice(0, MAX_LOG_ENTRIES)));
 
     if (alertLines.length) {
@@ -1037,11 +1140,26 @@ async function refreshRoster(env) {
   }
 }
 
-function checkRefreshToken(request, env) {
+// Constant-time string equality. Both sides are hashed first so the loop always
+// runs over two 32-byte digests, whatever the lengths of the inputs. Plain
+// crypto.subtle only, so it behaves the same in a Worker and under Node.
+async function timingSafeEqualStrings(a, b) {
+  const enc = new TextEncoder();
+  const [da, db] = await Promise.all([
+    crypto.subtle.digest('SHA-256', enc.encode(String(a))),
+    crypto.subtle.digest('SHA-256', enc.encode(String(b)))
+  ]);
+  const x = new Uint8Array(da), y = new Uint8Array(db);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i] ^ y[i];
+  return diff === 0;
+}
+
+async function checkRefreshToken(request, env) {
   const token = env.REFRESH_TOKEN;
   if (!token) return { status: 501, error: 'REFRESH_TOKEN secret not configured' };
   const auth = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
-  if (!auth || auth !== token) return { status: 403, error: 'Invalid or missing token' };
+  if (!auth || !(await timingSafeEqualStrings(auth, token))) return { status: 403, error: 'Invalid or missing token' };
   return null;
 }
 
@@ -1065,7 +1183,7 @@ export default {
     }
 
     if (url.pathname === '/api/refresh' && request.method === 'POST') {
-      const denied = checkRefreshToken(request, env);
+      const denied = await checkRefreshToken(request, env);
       if (denied) return new Response(JSON.stringify({ error: denied.error }), { status: denied.status, headers: JSON_HEADERS });
       try {
         await refreshPricing(env);
@@ -1078,11 +1196,13 @@ export default {
     // Dry run of the page parsers (src/prices.js): reads every covered row off the live pages and
     // reports what it found next to what is stored. Writes nothing. Same token as /api/refresh.
     if (url.pathname === '/api/prices' && request.method === 'POST') {
-      const denied = checkRefreshToken(request, env);
+      const denied = await checkRefreshToken(request, env);
       if (denied) return new Response(JSON.stringify({ error: denied.error }), { status: denied.status, headers: JSON_HEADERS });
       const raw = await env.PRICING_DATA.get('latest');
       if (!raw) return new Response(JSON.stringify({ ok: false, error: 'no pricing data in KV' }), { status: 503, headers: JSON_HEADERS });
-      const seedNow = JSON.parse(raw);
+      let seedNow;
+      try { seedNow = JSON.parse(raw); } catch (e) { seedNow = null; }
+      if (!seedNow || !Array.isArray(seedNow.providers)) return new Response(JSON.stringify({ ok: false, error: 'pricing data in KV is not valid JSON' }), { status: 503, headers: JSON_HEADERS });
       const read = await readPrices({ providers: seedNow.providers, fetchImpl: fetch, now: new Date() });
       const rows = [];
       seedNow.providers.forEach(p => (p.models || []).forEach(m => {
@@ -1098,7 +1218,7 @@ export default {
     // On-demand roster check, same token as /api/refresh. Lets a newly added
     // ROSTER_KEY_* secret be proven out without waiting for Sunday.
     if (url.pathname === '/api/roster' && request.method === 'POST') {
-      const denied = checkRefreshToken(request, env);
+      const denied = await checkRefreshToken(request, env);
       if (denied) return new Response(JSON.stringify({ error: denied.error }), { status: denied.status, headers: JSON_HEADERS });
       const result = await refreshRoster(env);
       return new Response(JSON.stringify({ ts: new Date().toISOString(), ...result }), { status: result.ok ? 200 : 500, headers: JSON_HEADERS });
@@ -1148,4 +1268,4 @@ export default {
 // Named exports alongside the default Worker export — consumed only by
 // tools/pricing-worker/test-refresh-logic.mjs (pure-function unit tests,
 // no KV/network). Cloudflare's runtime ignores exports it doesn't call.
-export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, siblingColumnAttribution, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath, refreshRoster, refreshPricing };
+export { decideModelUpdate, mapWithConcurrency, isValidPrice, isValidSizeString, isTrustedSource, hostnameMatchesDomain, corroboratesSource, siblingColumnAttribution, escapeHtml, buildStatusHtml, isSafeEmailAddress, isTransientError, modelAttributionMismatch, hasDeniedSourcePath, refreshRoster, refreshPricing, checkRefreshToken, mergeRunOntoLatest, hasSubstantiveChange, fetchSourcePageText };

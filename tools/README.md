@@ -143,7 +143,7 @@ starting document — with nothing on screen.
 
 **`check-pdf-shapes.mjs`** — generates the PDF shapes that actually break PDF
 engines — no text layer, encrypted, 600 pages, truncated, broken xref — and
-runs every one against **both** vendored builds: pdf.js 6.3.289 on `http://`
+runs every one against **both** vendored builds: pdf.js 6.5.438 on `http://`
 and 3.11.174 on `file://`. A PDF is a text format, so the generator is inline
 and needs no library, which matters in a repo that vendors its dependencies.
 

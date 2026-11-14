@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20261113-003
+     Build: 20261114-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
@@ -22,8 +22,7 @@
        across all 16 HTML pages; release-check Check 5 enforces the strict
        directive, Check 8 enforces zero inline on*= attrs per file, Check 9
        enforces exactly one inline script tag per page (the head guard below).
-       'unsafe-eval' stays on script-src for vendored SheetJS / mammoth /
-       pdf.js (new Function internals). style-src 'unsafe-inline' stays
+       script-src carries NO 'unsafe-eval' as of v3.63.605 (audit 2026-11: no vendored library needs it; 'wasm-unsafe-eval' stays for pdf.js's optional WebAssembly decoders). style-src 'unsafe-inline' stays
        because we emit per-element style="..." attributes and the
        inline <style> on the next line. v3.63.408 --
        connect-src carries http://localhost:* and http://127.0.0.1:* so the
@@ -32,7 +31,7 @@
        only -- no blanket http: allowance. Remote server-mode endpoints
        (enterprise Open WebUI, etc.) already work via the https:
        source and need no exception. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='; style-src 'self' https: 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-7Y4L6Gvf5pUX/QazVPPy8L2NNVJXPiwOtKXXiGsW4Kg='; style-src 'self' 'sha256-bQY2E+lKIxmgh8LMogBp9rdv0Dv7ap3tp2TdMtYuYYo=' 'sha256-hdqL9dwb/eI2C+1dFzfMlqXVyj8sPJpj9zPJpvG5jzs='; font-src 'self' data: https:; img-src 'self' data: blob: https:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
   <!-- v3.63.345 — Clickjacking guard + CSP violation listener.
        Frame-busting: GitHub Pages cannot set the HTTP frame-ancestors
        directive, so this client-side check hides the page if we detect
@@ -71,7 +70,7 @@
     });
   })();
   </script>
-  <meta name="waxframe-build" content="20261113-003">
+  <meta name="waxframe-build" content="20261114-001">
   <title>Choose a Document Template — WaxFrame</title>
   <meta name="description" content="Choose a WaxFrame document template for cover letters, résumés, business proposals, RFP responses, product reviews, and more.">
   <meta name="keywords" content="AI document templates, cover letter template, resume template, business proposal template, RFP response template">
@@ -86,7 +85,7 @@
   <meta name="twitter:description" content="Choose a WaxFrame document template for cover letters, résumés, business proposals, RFP responses, product reviews, and more.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.604">
+  <link rel="stylesheet" href="style.css?v=3.63.605">
 </head>
 <body class="helper-body">
 
@@ -351,18 +350,18 @@
 <!-- ============================================================
      SCRIPT IMPORTS — same set as other helper pages
      ============================================================ -->
-<script src="js/theme.js?v=3.63.604"></script>
-<script src="js/nav-helper.js?v=3.63.604"></script>
-<script src="js/license-helper.js?v=3.63.604"></script>
-<script src="js/update-check.js?v=3.63.604"></script>
-<script src="js/helper-handlers.js?v=3.63.604"></script>
-<script src="js/version.js?v=3.63.604"></script>
-<script src="js/templates.js?v=3.63.604"></script>
-<script src="js/docs-scrollspy.js?v=3.63.604"></script>
+<script src="js/theme.js?v=3.63.605"></script>
+<script src="js/nav-helper.js?v=3.63.605"></script>
+<script src="js/license-helper.js?v=3.63.605"></script>
+<script src="js/update-check.js?v=3.63.605"></script>
+<script src="js/helper-handlers.js?v=3.63.605"></script>
+<script src="js/version.js?v=3.63.605"></script>
+<script src="js/templates.js?v=3.63.605"></script>
+<script src="js/docs-scrollspy.js?v=3.63.605"></script>
 <!-- v3.63.138 — JSZip powers the bulk Export All customs button -->
-<script src="lib/jszip.min.js?v=3.63.604"></script>
+<script src="lib/jszip.min.js?v=3.63.605"></script>
 
-<script src="js/templates-page.js?v=3.63.604"></script>
+<script src="js/templates-page.js?v=3.63.605"></script>
 
 </body>
 </html>

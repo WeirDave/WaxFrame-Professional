@@ -1,5 +1,162 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.605 — Security hardening, stalled-response timeouts and updated libraries
+
+**Released:** 2026-11-14
+**Build:** 20261114-001
+
+### What changed
+
+**Security**
+
+- **Buttons can only call WaxFrame's own functions.** The click handler that runs a button's
+  named function now refuses browser built-ins (`eval`, `setTimeout`, `Function`,
+  `document.write` and the like) and any name that reaches a constructor or prototype. Every
+  button in the app calls a function WaxFrame defines, so nothing changes for normal use.
+- **`'unsafe-eval'` is removed from the Content-Security-Policy on every page.** Word, Excel,
+  PowerPoint and PDF import, and Word export, work without it. The policy keeps
+  `'wasm-unsafe-eval'` for the PDF reader's optional WebAssembly decoders. `style-src` no
+  longer allows `https:` (no page loads an external stylesheet). The release check now fails
+  if either returns.
+- **Restored checkpoints and imported AIs are validated.** A restored session's round number and
+  history are coerced to the shapes the app expects, history entries that are not objects are
+  dropped, and an imported AI's icon is kept only if it is an `http(s)://`, `data:image/` or
+  `images/` URL. The same check now guards the icon in the "Import from Model Server" list and
+  the status label on the AI pricing page.
+- **The restore preview shows where each custom AI sends text.** In the checkpoint restore
+  dialog, every custom AI now carries a "sends to <host>" tag.
+- **The update notice only opens this repository's release pages.** "Open Release Page" and
+  "Copy Release Link" ignore any link that is not on `github.com/WeirDave/WaxFrame-Professional`.
+- **More credentials are redacted in diagnostics.** Debug bundles, checkpoints and transcripts
+  now remove the `x-goog-api-key` header in both JSON and line form, `"key"`, `"_key"`,
+  `"token"` and `"secret"` JSON fields, `?token=` queries and `user:password@` in URLs. A
+  ring-buffer entry nested deeper than twelve levels is replaced with `[TRUNCATED]` instead of
+  being exported untouched. The failure text stored with a failed round and the Scout bundle's
+  classification errors are scrubbed too. The key hint in the console shows the first and last
+  four characters only for keys of 24 characters or more, and the license-key mask no longer
+  shows an 8-character key in full.
+
+**Imports**
+
+- **A spreadsheet that declares a huge range no longer freezes the tab.** Each worksheet's range
+  is reduced to the cells that exist before it is converted. A 2 KB file declaring
+  `A1:CZ300000` imported in about 6 ms (it took about 7 seconds), and a file declaring the whole
+  grid no longer runs for hours. Merged cells are clamped the same way.
+- **A document archive that understates its size is caught.** `.docx`, `.pptx` and `.xlsx`
+  files are now measured by counting bytes as they expand, stopping at 512 MB in total and
+  32 MB for any one text part, instead of trusting the sizes written in the file. Embedded
+  images are counted too. Ordinary documents, including one with 40 MB of images, still import.
+
+**Rounds and saving**
+
+- **A response that stalls part-way no longer hangs the round.** The time limit (6 minutes for a
+  reviewer, 15 for the Builder) used to stop once the AI's reply began; it now covers the whole
+  reply. Streamed replies use an idle limit that restarts with every piece of text received.
+  A stalled reply ends with "did not finish its response within N s" and the usual Retry options.
+- **A round that fails unexpectedly releases the screen.** If anything inside a round throws, the
+  Smoke the Hive button, the smoker overlay and the round counter are reset and a message points
+  to the console, instead of leaving the button blocked until the page is reloaded.
+- **One failed save no longer stops later saves.** A rejected session save used to skip every
+  later save in the tab.
+- **Failing to save AI settings is reported.** A message appears when the browser refuses to
+  store the AI list, keys or model picks.
+- **A Builder content-filter failover no longer saves its temporary model** as the chosen model
+  if settings are saved while the failover call is running.
+- **Unchanged project data is not rewritten.** The project is written to browser storage only
+  when it differs from what is stored, which removes most of the writes made while typing in the
+  goal fields.
+- **The live console keeps its most recent 1,000 lines** (and the matching raw error details),
+  which keeps saved sessions and checkpoints from growing without limit.
+- **The "→" button on a console error line works again.** It opens the raw response; it had
+  been blocked by the Content-Security-Policy.
+- **The picture viewer in the document-verification panel is hidden until a picture is loaded.**
+  It was visible and empty when a PDF was shown.
+
+**Updater and installer scripts**
+
+- **Updating is a rename, not a copy.** `Update-WaxFrame.ps1` and `Update-WaxFrame.command`
+  unpack next to the install folder, so the swap is a same-drive rename. If it fails, any
+  partial folder is removed before the previous copy is restored, and the closing message says
+  whether the restore finished.
+- **Build provenance is checked when the GitHub CLI is installed.** All four scripts run
+  `gh attestation verify` after the SHA-256 check and refuse the download if it fails. Without
+  `gh`, or when `gh` is not signed in, the SHA-256 and the exact command are printed.
+- **Archive entries are vetted before extraction.** Paths that climb out of the folder, absolute
+  paths, drive letters, backslashes (Mac/Linux script) and symbolic links are refused, and the
+  extracted tree is checked afterwards.
+- **Installer fixes.** `Install-WaxFrame.command` checks the tag with the full version pattern,
+  verifies the unpacked `js/version.js` against the tag, and runs only after the whole script
+  has downloaded. `Install-WaxFrame.ps1` builds download addresses itself instead of trusting
+  the API's. A folder the install created is removed if it fails, a failed tag checkout is an
+  error instead of leaving `main` installed, and an existing non-empty folder without
+  `index.html` is refused. `Update-WaxFrame.command` compares every part of a version number.
+- **The release workflow validates in a read-only job.** `release-assets.yml` runs
+  `release-check` with `contents: read`; only the following build job holds the write and
+  attestation permissions, and it confirms the tag still points at the validated commit.
+
+**Cloudflare Workers** (take effect after `wrangler deploy`)
+
+- **Pricing Worker:** the refresh token is compared in constant time. The refresh re-reads the
+  stored prices before writing and merges only its own changes, so a price edited by hand during
+  a run survives. The rollback copy moves only when something other than a "verified on" date
+  changed. Page, search and source fetches have time and size limits, source links must be
+  https with every redirect re-checked, the Gemini domains allowed as sources are narrowed to
+  `google.dev`, `aistudio.google.com`, `cloud.google.com` and `developers.google.com`, and
+  `/api/prices` returns a JSON error when the stored value is damaged.
+- **Claude relay:** a request from a disallowed origin gets no `Access-Control-Allow-Origin`
+  header, and a second rate limit keyed on the caller's address (300 requests a minute) is added.
+
+**Libraries** (`lib/`)
+
+| Library | Before | After |
+|---|---|---|
+| pdf.js (served over http/https) | 6.3.289 | 6.5.438 |
+| mammoth | 1.12.3 | 1.13.0 |
+| JSZip | 3.10.1 | 3.10.2 |
+| docx | 9.7.1 | 9.15.3 |
+| SheetJS | 0.20.3 | 0.20.3 (already the newest release) |
+
+The `file://` pdf.js build stays at 3.11.174. `lib/docx.min.js` is now byte-identical to the
+published `dist/index.iife.js`, so the local wrapper edit is gone.
+
+### Verification
+- `node tools/release-check.mjs` (all stages, including the new CSP checks).
+- Browser checks: `check-html-injection` (new: dispatcher refuses `eval`, `setTimeout`,
+  `Function`, `constructor` chains and `document.write` while an ordinary button still works;
+  hostile round and history values stay inert; icon schemes; the console arrow; the hidden
+  picture viewer), `check-import-bounds` (new: the 2 KB spreadsheet and the archive that
+  understates its size), `check-pdf-shapes`, `check-file-protocol`, `check-ocr-handoff`,
+  `flow-check` (55 of 55).
+- The new dispatcher, console-arrow, picture-viewer and archive checks fail on v3.63.604.
+- `node tools/test-debug-redaction.mjs` (five new checks), the Claude relay and Pricing Worker
+  tests, and a script that exports and imports Word files, reads Excel, PowerPoint and PDF files
+  and renders a PDF page with the new libraries over http and `file://`.
+- The updater and installer scripts were run against stubbed network commands, including a
+  mid-swap failure and a truncated download. They were not run end to end on macOS or Linux, and
+  the Windows updater was not run through its `.cmd` launcher.
+- Not run: the Workers against Cloudflare (`check-price-parsers-live.mjs` should run before
+  `wrangler deploy` to confirm real page sizes fit the new 4 MB cap), Word files from real-world
+  sources against mammoth 1.13.0, and the new timeouts against a provider that really stalls.
+
+### Files changed
+`js/app.js`, `js/storage.js`, `js/helper-handlers.js`, `js/wf-debug.js`, `js/update-check.js`,
+`js/pricing-renderer.js`, `js/pdf-loader-bootstrap.js` (comment), all 17 HTML pages (CSP),
+`index.html`, `style.css`, `lib/` (pdf.min.mjs, pdf.worker.min.mjs, mammoth.browser.min.js,
+jszip.min.js, docx.min.js), `docs/vendored-dependencies.json`, `package.json`,
+`.github/SECURITY.md`, `.github/workflows/release-assets.yml`, `Install-WaxFrame.ps1`,
+`Install-WaxFrame.command`, `Update-WaxFrame.ps1`, `Update-WaxFrame.command`,
+`tools/claude-proxy/`, `tools/pricing-worker/`, `tools/release-check.mjs`,
+`tools/check-html-injection.mjs`, `tools/check-import-bounds.mjs`,
+`tools/test-debug-redaction.mjs`, `tools/audit-dead-code.mjs`, `tools/check-pdf-shapes.mjs`,
+`tools/README.md`, `docs/WaxFrame_Rules_Reference.txt`,
+`docs/WaxFrame_Backlog_Master_v369.txt` (renamed from v368), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit. No stored data changes with this release. The Workers keep running their
+previous code until redeployed, and `wrangler rollback` returns them to it.
+
+---
+
 ## v3.63.604 — A clear message when an AI runs out of output room while thinking
 
 **Released:** 2026-11-13

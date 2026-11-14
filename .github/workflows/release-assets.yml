@@ -10,15 +10,56 @@ on:
         required: true
         type: string
 
+# Least privilege by default. Only the `build` job below is granted the write
+# scopes, and it runs only after `validate` has passed, so repository code that
+# runs during validation (tools/release-check.mjs and everything it executes)
+# never holds a token that can write to the release or sign attestations.
 permissions:
-  contents: write
-  id-token: write
-  attestations: write
+  contents: read
 
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
+
+    steps:
+      - name: Validate release tag
+        shell: bash
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+(\.[0-9]+)+$ ]]; then
+            echo "Unexpected release tag: $RELEASE_TAG" >&2
+            exit 1
+          fi
+
+      - name: Checkout the released tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Record the validated commit
+        id: pin
+        shell: bash
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Run repository validation
+        run: node tools/release-check.mjs
+
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     env:
       RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
 
@@ -38,8 +79,18 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
 
-      - name: Run repository validation
-        run: node tools/release-check.mjs
+      # The tag is fetched again here, so confirm it still points at the commit
+      # that passed validation. A tag moved in between must not be packaged.
+      - name: Confirm the tag is the validated commit
+        shell: bash
+        env:
+          VALIDATED_SHA: ${{ needs.validate.outputs.sha }}
+        run: |
+          actual="$(git rev-parse HEAD)"
+          if [[ "$actual" != "$VALIDATED_SHA" ]]; then
+            echo "Tag $RELEASE_TAG moved after validation: validated $VALIDATED_SHA, now $actual" >&2
+            exit 1
+          fi
 
       - name: Build ZIP and SHA-256 manifest
         id: package
@@ -61,6 +112,12 @@ jobs:
         with:
           subject-path: ${{ steps.package.outputs.asset }}
 
+      # The trigger is `release: published`, so the release is already public
+      # while these assets are still being built and uploaded; the checksum and
+      # ZIP appear a minute or so later. The installers and updaters treat a
+      # missing .sha256 as a refusal, so that window fails safe rather than
+      # open. Creating the assets first would mean moving the trigger to a
+      # draft/prerelease flow, which is deliberately not done here.
       - name: Upload verified assets to the release
         env:
           GH_TOKEN: ${{ github.token }}

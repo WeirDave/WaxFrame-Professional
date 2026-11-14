@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261113-003
+// Build: 20261114-001
 // check-html-injection.mjs — does hostile text in saved state become markup?
 //
 // WaxFrame builds its UI by assigning template literals to .innerHTML. That is
@@ -400,6 +400,127 @@ try {
   check('no <svg onload> survived', c.svgs === 0, c);
   check('the sanitiser FILTERS rather than deletes everything', c.keptLegit === true,
     'the legitimate console entry did not survive — a sanitiser that drops all input passes every safety check while breaking the feature');
+
+  // Audit 2026-11 — the markup in this file never executes under the CSP, so
+  // these four probes ask the harder question: if markup DID get in, could it
+  // NAME a browser function and have the click dispatcher run it? And do the
+  // restored-session / imported-icon fields that reached an attribute unescaped
+  // now stay inert?
+  console.log('\n  ▶ The click dispatcher refuses browser built-ins (audit 2026-11)');
+  const d = JSON.parse(await evaluate(`(() => {
+    window.__wfPwned = undefined;
+    window.__wfLegitHit = 0;
+    window.__wfLegit = function () { window.__wfLegitHit++; };
+    const results = {};
+    const click = (fn, arg) => {
+      const b = document.createElement('button');
+      b.setAttribute('data-action', 'call');
+      b.setAttribute('data-fn', fn);
+      if (arg !== undefined) b.setAttribute('data-arg', arg);
+      document.body.appendChild(b);
+      try { b.click(); } catch (e) { results[fn + ':threw'] = String(e).slice(0, 80); }
+      b.remove();
+    };
+    // Each of these would run attacker-chosen text if the dispatcher invoked it.
+    click('eval', 'window.__wfPwned = 21');
+    click('setTimeout', 'window.__wfPwned = 22');
+    click('Function', 'window.__wfPwned = 23');
+    click('WF_DEBUG.constructor', 'window.__wfPwned = 24');
+    click('__wfLegit.constructor', 'window.__wfPwned = 25');
+    click('document.write', '<b id=wfx-docwrite></b>');
+    // And the one thing that must still work: an app-defined function.
+    click('__wfLegit');
+    return JSON.stringify({
+      pwned: window.__wfPwned === undefined ? null : window.__wfPwned,
+      legitHit: window.__wfLegitHit,
+      docWritten: document.getElementById('wfx-docwrite') !== null,
+      results
+    });
+  })()`));
+  await sleep(300);
+  const dLate = await evaluate('window.__wfPwned === undefined ? null : window.__wfPwned');
+  check('eval / setTimeout / Function / constructor chains did not run anything',
+    d.pwned === null && dLate === null, { immediate: d, late: dLate });
+  check('document.write did not run', d.docWritten === false, d);
+  check('an app-defined data-fn still dispatches (the guard is not deleting everything)',
+    d.legitHit === 1, d);
+
+  console.log('\n  ▶ A restored session cannot break out of an attribute (audit 2026-11)');
+  const sess = JSON.parse(await evaluate(`(() => {
+    try {
+      _applySessionToState({
+        round: '3"><wfinject id="wfx-sround"></wfinject>',
+        phase: 'refine', docText: 'x',
+        history: [{ round: '1"><wfinject id="wfx-hround"></wfinject>',
+                    appliedChanges: [{ lineRef: 'a', summary: 'b' }] }, 'not an object', null]
+      });
+      const host = document.createElement('div');
+      host.innerHTML = buildAppliedChangesHTML(history[history.length - 1]);
+      document.body.appendChild(host);
+      const out = JSON.stringify({
+        ranOk: true,
+        roundType: typeof round, roundValue: round,
+        historyLen: history.length,
+        sInjected: document.getElementById('wfx-sround') !== null,
+        hInjected: document.getElementById('wfx-hround') !== null
+      });
+      host.remove();
+      return out;
+    } catch (e) { return JSON.stringify({ ranOk: false, err: String(e).slice(0, 160) }); }
+  })()`));
+  check('the restore + render path ran (test is live)', sess.ranOk === true, sess);
+  check('round is coerced to a number', sess.roundType === 'number', sess);
+  check('non-object history entries were dropped', sess.historyLen === 1, sess);
+  check('no element was injected through round or history[].round',
+    sess.sInjected === false && sess.hInjected === false, sess);
+
+  console.log('\n  ▶ An imported icon cannot reach <img src> unvetted (audit 2026-11)');
+  const ic = JSON.parse(await evaluate(`(() => JSON.stringify({
+    js:       _safeIconSrc('javascript:window.__wfPwned=31'),
+    rel:      _safeIconSrc('//evil.invalid/x.png'),
+    nonStr:   _safeIconSrc({ toString() { return 'images/x.png'; } }),
+    okLocal:  _safeIconSrc('images/icon-generic.png'),
+    okHttps:  _safeIconSrc('https://example.invalid/i.png'),
+    imported: (() => { const a = _normalizeImportedAI({ id: 'ic1', name: 'n', icon: 'javascript:window.__wfPwned=32' }); return a ? ('icon' in a) : 'dropped'; })(),
+    importedOk: (() => { const a = _normalizeImportedAI({ id: 'ic2', name: 'n', icon: 'images/x.png' }); return a ? a.icon : 'dropped'; })(),
+    generic:  GENERIC_ICON_PATH
+  }))()`));
+  check('a javascript: icon falls back to the generic icon', ic.js === ic.generic, ic);
+  check('a protocol-relative icon falls back to the generic icon', ic.rel === ic.generic, ic);
+  check('a non-string icon falls back to the generic icon', ic.nonStr === ic.generic, ic);
+  check('local and https icons still pass', ic.okLocal === 'images/icon-generic.png' && ic.okHttps === 'https://example.invalid/i.png', ic);
+  check('an imported AI with a javascript: icon has the field dropped', ic.imported === false, ic);
+  check('an imported AI with a local icon keeps it', ic.importedOk === 'images/x.png', ic);
+
+  console.log('\n  ▶ Elements hidden by a static style="" attribute stay hidden under the CSP (audit 2026-11)');
+  // style-src has no 'unsafe-inline', so a style="display:none" ATTRIBUTE in the
+  // markup is refused by the browser and the element shows. Anything meant to be
+  // hidden at load has to be hidden by a class. #verifyImgWrap was the last one.
+  const hid = JSON.parse(await evaluate(`(() => {
+    const el = document.getElementById('verifyImgWrap');
+    return JSON.stringify({ present: !!el, display: el ? getComputedStyle(el).display : null,
+      inlineAttr: el ? el.hasAttribute('style') : null });
+  })()`));
+  check('the verify-panel image viewer exists (test is live)', hid.present === true, hid);
+  check('it is hidden until a picture is loaded into it', hid.display === 'none', hid);
+
+  console.log('\n  ▶ The console error arrow works under the strict CSP (audit 2026-11)');
+  const arrow = JSON.parse(await evaluate(`(() => {
+    let opened = 0;
+    const orig = window.openConsoleErrorDetail;
+    window.openConsoleErrorDetail = function () { opened++; };
+    const host = document.createElement('div');
+    const b = document.createElement('button');
+    b.className = 'console-err-arrow';
+    b.setAttribute('onclick', "openConsoleErrorDetail('cle_1700000000000_abcd')");
+    host.appendChild(b);
+    document.body.appendChild(host);
+    b.click();
+    host.remove();
+    window.openConsoleErrorDetail = orig;
+    return JSON.stringify({ opened });
+  })()`));
+  check('clicking the arrow opens the detail exactly once', arrow.opened === 1, arrow);
 
   // A useful secondary signal: if escaping worked, the raw characters appear
   // as visible text somewhere. Not a failure if absent — a screen may simply

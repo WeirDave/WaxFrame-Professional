@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20261113-003
+// Build: 20261114-001
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -507,7 +507,8 @@ function saveSession(opts = {}) {
   // that needed to read the persisted state immediately afterwards (e.g.
   // _writeCheckpoint's `await saveSession(); await idbGet()` pattern) read
   // the previous snapshot.
-  _saveSessionChain = _saveSessionChain.then(async () => {
+  // Audit 2026-11 — .catch first: a rejected link must not skip every later save.
+  _saveSessionChain = _saveSessionChain.catch(() => {}).then(async () => {
     // ── Primary: IndexedDB (no size limit) ──
     try {
       await idbSet(session);
@@ -537,6 +538,10 @@ function saveSession(opts = {}) {
         } catch(e) { /* ignore */ }
       }
     } catch(e) {
+      // Audit 2026-11 — some IDB failure paths reject with null/undefined
+      // (reject(e.target.error)); reading e.message below would then throw
+      // from inside this catch and poison every later save in the chain.
+      if (!e) e = new Error('Unknown IndexedDB error');
       // IDB failed — fall back to localStorage.
       // v3.63.280 — typeof guard (see checkStorageQuota for rationale).
       if (typeof consoleLog === 'function') consoleLog(`❌ Session save failed (IndexedDB error: ${e.message}). Trying localStorage fallback…`, 'error', {
@@ -777,10 +782,22 @@ function _sanitizeConsoleChild(node) {
 // empty and overwrite the saved notes — quiet data loss. One helper called by
 // both paths makes that drift impossible.
 function _applySessionToState(s) {
-  round   = s.round   || 1;
-  phase   = s.phase   || 'draft';
-  history = s.history || [];
-  docText = s.docText || '';
+  // Audit 2026-11 — a session can arrive from a shared checkpoint file, and
+  // round / history[].round are later interpolated into HTML attributes. Make
+  // them the shapes the rest of the app assumes rather than trusting the file.
+  const _roundNum = Number(s.round);
+  round   = (Number.isFinite(_roundNum) && _roundNum >= 1) ? Math.floor(_roundNum) : 1;
+  phase   = (typeof s.phase === 'string' && s.phase) ? s.phase : 'draft';
+  history = Array.isArray(s.history)
+    ? s.history.filter(h => h && typeof h === 'object' && !Array.isArray(h)).map(h => {
+        if ('round' in h) {
+          const n = Number(h.round);
+          h.round = (Number.isFinite(n) && n >= 0) ? Math.floor(n) : 0;
+        }
+        return h;
+      })
+    : [];
+  docText = typeof s.docText === 'string' ? s.docText : '';
   if (s.projClockSeconds) _projClockSeconds = s.projClockSeconds;
   // Length-guard override flag (default false for pre-v3.32.18 sessions).
   window._lengthGuardOverride = !!s.lengthGuardOverride;
@@ -889,9 +906,14 @@ function saveHive() {
   );
   Object.keys(API_CONFIGS).forEach(id => {
     if (API_CONFIGS[id]._key) keys[id] = API_CONFIGS[id]._key;
-    if (API_CONFIGS[id].model) models[id] = API_CONFIGS[id].model;
+    // A Builder content-filter failover swaps cfg.model for the duration of one
+    // call; persist the user's real pick, not the temporary one.
+    const _transient = window._wfTransientModelRestore;
+    const _model = (_transient && Object.prototype.hasOwnProperty.call(_transient, id)) ? _transient[id] : API_CONFIGS[id].model;
+    if (_model) models[id] = _model;
     if (customAIIds.has(id)) {
       const { _key, ...rest } = API_CONFIGS[id];
+      if (_transient && Object.prototype.hasOwnProperty.call(_transient, id)) rest.model = _transient[id];
       customAIConfigs[id] = rest;
     }
   });
@@ -905,7 +927,17 @@ function saveHive() {
     customAIs: aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)),
     customAIConfigs
   };
-  try { localStorage.setItem(LS_HIVE, JSON.stringify(hive)); } catch(e) { console.warn('[saveHive] write failed:', e); }
+  try { localStorage.setItem(LS_HIVE, JSON.stringify(hive)); } catch(e) {
+    console.warn('[saveHive] write failed:', e);
+    // Audit 2026-11 — this used to be console-only, so a newly entered API key
+    // or Builder pick could be lost on reload with nothing on screen. Say so
+    // (throttled: saveHive runs from many handlers).
+    const _now = Date.now();
+    if (typeof toast === 'function' && (!window._hiveSaveWarnedAt || _now - window._hiveSaveWarnedAt > 15000)) {
+      window._hiveSaveWarnedAt = _now;
+      toast('⚠️ Could not save your AI settings to browser storage. A key or model you just entered may be lost on reload.', 12000);
+    }
+  }
   updateSetupRequirements();
 }
 
@@ -929,7 +961,14 @@ function saveProject() {
     pastedDocument: document.getElementById('pasteText')?.value || '',
     referenceDocs: snapshotReferenceDocs(),
   };
-  _writeProjectWithFallback(proj);
+  // Audit 2026-11 — saveProject runs on every keystroke in the goal fields and
+  // from every saveSession; most calls re-write exactly what is already stored,
+  // which is a synchronous multi-hundred-KB localStorage write for nothing.
+  // Compare against the stored string itself (not a cached copy, which a
+  // checkpoint restore or another tab could leave stale) and skip a no-op write.
+  let _unchanged = false;
+  try { _unchanged = localStorage.getItem(LS_PROJECT) === JSON.stringify(proj); } catch (e) { _unchanged = false; }
+  if (!_unchanged) _writeProjectWithFallback(proj);
   updateLaunchRequirements();
   updateMaskPreview();
 }
@@ -1057,6 +1096,10 @@ function _normalizeImportedAI(ai) {
   ai.url       = _safeImportUrl(ai.url);
   ai.apiConsole = _safeImportUrl(ai.apiConsole);
   ai.apiDocs    = _safeImportUrl(ai.apiDocs);
+  // Audit 2026-11 — an icon is rendered as <img src>. Keep only the three
+  // shapes the renderer already accepts (http(s), data:image/, images/);
+  // anything else is dropped so the row falls back to its letter avatar.
+  if (ai.icon != null && !(typeof ai.icon === 'string' && /^(https?:\/\/|data:image\/|images\/)/.test(ai.icon))) delete ai.icon;
   // v3.63.307 — Variants of default AIs ride sibling rows in the hive
   // grid sharing one parent key (see addAIVariant() in app.js). Persist
   // parentId + model on the way through normalize so reload survives.
@@ -3043,13 +3086,21 @@ function _detailAIList(hive) {
   const builder = typeof hive.builder === 'string' ? hive.builder : '';
   const mode = hive.hiveMode || '';
   const customById = new Map(customs.map(c => [c.id, c]));
+  // Audit 2026-11 — a custom AI in a shared file carries the URL that every
+  // round will POST the document to. Show the host next to the name so the
+  // person restoring can see where their text would go before they accept.
+  const cfgs = (hive.customAIConfigs && typeof hive.customAIConfigs === 'object') ? hive.customAIConfigs : {};
+  const hostOf = (u) => { try { return new URL(String(u)).host; } catch (_) { return ''; } };
   // Display-name resolution: prefer custom AI label, fall back to id capitalized.
   const items = active.map(id => {
     const c = customById.get(id);
     const name = c ? (c.label || c.name || id) : id;
     const star = (id === builder) ? ' 🔨' : '';
     const isCustom = !!c;
-    return _rawHtml(`<strong>${_esc(name)}</strong>${isCustom ? ' <span class="checkpoint-detail-tag">custom</span>' : ''}${star}`);
+    const cfg = c ? cfgs[c.provider || c.id] : null;
+    const host = cfg ? hostOf(cfg.endpoint) : '';
+    const hostTag = host ? ` <span class="checkpoint-detail-tag">sends to ${_esc(host)}</span>` : '';
+    return _rawHtml(`<strong>${_esc(name)}</strong>${isCustom ? ' <span class="checkpoint-detail-tag">custom</span>' : ''}${hostTag}${star}`);
   });
   const head = `<p class="checkpoint-detail-meta">${active.length} active${mode ? ' · ' + _esc(mode) + ' mode' : ''}${customs.length ? ' · ' + customs.length + ' custom defined' : ''}</p>`;
   return head + _detailUL(items);

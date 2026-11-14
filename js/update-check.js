@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — update-check.js
-// Build: 20261113-003
+// Build: 20261114-001
 //  Portable-install ("file://") update notifier. Checks GitHub's
 //  Releases API for a newer tag than the running APP_VERSION and,
 //  if one exists, shows a footer pill + an About-modal row pointing
@@ -34,6 +34,17 @@
   // anonymous limit, and a day left a new release unannounced for most of a day.
   const TTL_MS = 60 * 60 * 1000;
   const ERROR_TTL_MS = 30 * 60 * 1000;
+
+  // Audit 2026-11 - the release link comes from GitHub's API response or from
+  // the localStorage cache of it, then goes to window.open() and the clipboard.
+  // Only this repository's release pages are acceptable; anything else (another
+  // host, a javascript: URL) is dropped so the buttons simply do nothing.
+  const RELEASE_URL_PREFIX = 'https://github.com/' + REPO + '/releases';
+  function safeReleaseUrl(u) {
+    if (typeof u !== 'string' || u.indexOf(RELEASE_URL_PREFIX) !== 0) return '';
+    const rest = u.slice(RELEASE_URL_PREFIX.length);
+    return (rest === '' || rest.charAt(0) === '/') ? u : '';
+  }
 
   function cmpVer(a, b) {
     const pa = String(a || '').replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
@@ -267,8 +278,8 @@
     copyBtn.className = 'license-modal-btn-secondary';
     copyBtn.textContent = 'Copy Release Link';
     copyBtn.addEventListener('click', () => {
-      if (navigator.clipboard && info.htmlUrl) {
-        navigator.clipboard.writeText(info.htmlUrl).catch(() => {});
+      if (navigator.clipboard && safeReleaseUrl(info.htmlUrl)) {
+        navigator.clipboard.writeText(safeReleaseUrl(info.htmlUrl)).catch(() => {});
         copyBtn.textContent = 'Copied!';
         setTimeout(() => { copyBtn.textContent = 'Copy Release Link'; }, 1500);
       }
@@ -278,7 +289,8 @@
     openBtn.className = 'license-modal-btn-secondary';
     openBtn.textContent = 'Open Release Page ↗';
     openBtn.addEventListener('click', () => {
-      if (info.htmlUrl) window.open(info.htmlUrl, '_blank', 'noopener,noreferrer');
+      const _releaseUrl = safeReleaseUrl(info.htmlUrl);
+      if (_releaseUrl) window.open(_releaseUrl, '_blank', 'noopener,noreferrer');
     });
 
     const gotItBtn = document.createElement('button');
