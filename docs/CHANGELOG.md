@@ -1,5 +1,51 @@
 # WaxFrame Professional — Changelog
 
+## v3.63.608 — Cohere prices are read from the docs pages, and deprecated OpenAI rows are read
+
+**Released:** 2026-11-15
+**Build:** 20261115-001
+
+### What changed
+
+**Pricing Worker (weekly price refresh)**
+
+- **Cohere.** Prices are now read by code from each model's page on docs.cohere.com instead of
+  being asked of Perplexity Sonar. The weekly run had reported `command-r-plus` as unreadable
+  because Sonar returned no price for a row whose price had not changed. Each Cohere row reads the
+  model block the page carries, and the page's model id must match the tracked model, so a
+  neighbouring model's page is never read for another row. Command A+ is read as free only from
+  the page's "is free until rate limits are reached" sentence for that model. Every provider the
+  Worker tracks now has a page parser.
+- **OpenAI deprecated models.** OpenAI's pricing table marks a model that is being retired by
+  changing its name cell. Rows in that form were skipped, so `gpt-5.4-nano` was reported as not
+  listed while still on the page at $0.20 / $1.25. Such rows are now read, and the run note says
+  the page lists the model as deprecated.
+- Prices are still held for review when they change; nothing here changes a live price. Both
+  fixes take effect in the weekly run once the Worker is deployed.
+
+### Verification
+- `node tools/release-check.mjs` (all stages).
+- `tools/pricing-worker/check-price-parsers-live.mjs` read all 45 parser-covered rows from the
+  live pages: 45 matching the stored prices, none missing, none unreadable.
+- `tools/pricing-worker/test-prices.mjs` gains Cohere cases (three trimmed captures of the real
+  pages in `fixtures/`, a sibling model's page refused, a free card without its sentence refused,
+  a paid model without a price entry not read as free) and deprecated-row cases for OpenAI.
+- Not checked from Cloudflare: the Worker's own fetch of the Cohere pages is confirmed with
+  `POST /api/prices` after deploy.
+
+### Files changed
+`tools/pricing-worker/src/prices.js`, `tools/pricing-worker/test-prices.mjs`,
+`tools/pricing-worker/test-refresh-logic.mjs`, `tools/pricing-worker/README.md`,
+`tools/pricing-worker/fixtures/cohere-command-r-plus.txt`,
+`tools/pricing-worker/fixtures/cohere-command-r7b.txt`,
+`tools/pricing-worker/fixtures/cohere-command-a-plus.txt` (all three new),
+`docs/WaxFrame_Backlog_Master_v372.txt` (renamed from v371), plus the routine stamp sweep.
+
+### Rollback
+Revert this commit and redeploy the Worker. Cohere rows then go back to the Perplexity lookup.
+
+---
+
 ## v3.63.607 — Round cost estimate and an optional spend limit for Auto
 
 **Released:** 2026-11-14

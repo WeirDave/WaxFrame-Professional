@@ -27,7 +27,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { parseDeepSeek, parseXai, parseOpenAI, parseAnthropic, parseGemini, parseTogether, parsePerplexity, parseMistral, claudeDisplayName, htmlToText, readPrices, PRICE_SOURCES } from './src/prices.js';
+import { parseDeepSeek, parseXai, parseOpenAI, parseAnthropic, parseGemini, parseTogether, parsePerplexity, parseMistral, parseCohere, cohereSlug, claudeDisplayName, htmlToText, readPrices, PRICE_SOURCES } from './src/prices.js';
 import { refreshPricing } from './src/index.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -43,7 +43,10 @@ const PAGES = {
   pplxDeep: fx('perplexity-sonar-deep-research.md'),
   anthropic: fx('anthropic-pricing.txt'),
   gemini: fx('gemini-pricing.txt'),
-  geminiMd: fx('gemini-pricing-markdoc.md')
+  geminiMd: fx('gemini-pricing-markdoc.md'),
+  cohereRPlus: fx('cohere-command-r-plus.txt'),
+  cohereR7b: fx('cohere-command-r7b.txt'),
+  cohereAPlus: fx('cohere-command-a-plus.txt')
 };
 const NOW = new Date('2026-10-11T12:00:00Z');
 
@@ -175,6 +178,22 @@ console.log('\nOpenAI (2026-10-25 layout) — rows read from the table data, not
   assert(!moved.ok && /not in the expected shape/.test(moved.reason), 'synthetic islands: a last cell below the input price (output moved to second) is a shape change, not a read');
 }
 
+{
+  // A model the page marks deprecated has an object in its name cell, not a string. It is still on the
+  // page with a price, so it is read (and the note says so); it must not be reported as not listed.
+  const island = (props) => '<astro-island uid="x" component-export="TextTokenPricingTables" props="' + JSON.stringify(props).replace(/"/g, '&quot;') + '"></astro-island>';
+  const A = v => [0, v], R = (id, ...cells) => [1, [A(id), ...cells.map(A)]];
+  const pad = '<p>' + 'Prices per 1M tokens. '.repeat(40) + '</p>';
+  const dep = (label, ...cells) => [1, [[0, { label: A(label), deprecated: A(true) }], ...cells.map(A)]];
+  const page = pad + island({ tier: A('standard'), rows: [1, [R('gpt-live', 2, 0.2, 10), dep('gpt-old-nano', 0.2, 0.02, 1.25), dep('gpt-old-nano (<272K context length)', 0.4, 0.04, 2.5)]] });
+  const old = parseOpenAI(page, 'gpt-old-nano');
+  assertEqual(px(old), [0.2, 1.25], 'incident replay: gpt-5.4-nano, labelled {label, deprecated}, is read (first matching row)');
+  assert(old.ok && /deprecated on the page/.test(old.note), 'and the note says the page lists it as deprecated');
+  assertEqual(px(parseOpenAI(page, 'gpt-live')), [2, 10], 'a plain-string row beside deprecated ones is unaffected');
+  assert(!parseOpenAI(page, 'gpt-old').ok, 'a deprecated row is still matched on the whole id, not a prefix');
+  assert(!parseOpenAI(pad + island({ tier: A('standard'), rows: [1, [[1, [[0, { deprecated: A(true) }], A(1), A(2), A(3)]]]] }), 'gpt-old-nano').ok, 'a name cell with no label is skipped, not read');
+}
+
 // ── Together AI ──────────────────────────────────────────────────────
 console.log('\nTogether AI — rows keyed by the API model string, columns by header name');
 assertEqual(px(parseTogether(PAGES.together, 'zai-org/GLM-5.3')), [1.4, 4.4], 'GLM-5.3 reads $1.40 / $4.40 (the cached-input column is skipped)');
@@ -284,6 +303,23 @@ assert(!parseGemini('<p>' + 'x'.repeat(700) + '</p>', 'gemini-3.8-flash', 'paid'
   assertEqual(px(parseGemini(fine, 'gemini-x', 'paid', NOW)), [1, 4], 'synthetic page: the same section with a Standard Output price reads Standard, not Batch');
 }
 
+// ── Cohere ───────────────────────────────────────────────────────────
+console.log('\nCohere — the model block the docs page ships with, matched on the model id');
+assertEqual(px(parseCohere(PAGES.cohereRPlus, 'command-r-plus')), [2.5, 10], 'command-r-plus reads $2.50 / $10 (the page id is command-r-plus-08-2024)');
+assertEqual(px(parseCohere(PAGES.cohereR7b, 'command-r7b-12-2024')), [0.0375, 0.15], 'command-r7b-12-2024 reads $0.0375 / $0.15');
+assertEqual(px(parseCohere(PAGES.cohereAPlus, 'command-a-plus-05-2026')), [0, 0], 'Command A+, which has no pricing entry and a "free until rate limits are reached" card, reads $0 / $0');
+assert(!parseCohere(PAGES.cohereRPlus, 'command-r').ok, 'a sibling page is refused: command-r is not command-r-plus-08-2024');
+assert(!parseCohere(PAGES.cohereRPlus, 'command-a-plus-05-2026').ok, 'another model page is refused');
+assert(!parseCohere(PAGES.cohereRPlus, 'command').ok, 'an id that is only a prefix of the page id is refused');
+assert(!parseCohere(PAGES.cohereRPlus.replace(/pricing: \{[^}]*\}/, ''), 'command-r-plus').ok, 'a paid model whose pricing entry is gone is not read as free');
+assert(!parseCohere(PAGES.cohereAPlus.replace(/is free until rate limits are reached/, 'is available'), 'command-a-plus-05-2026').ok, 'a free card that lost its sentence is not read as free');
+assert(!parseCohere(PAGES.cohereRPlus.replace('input: 2.50', 'input: x'), 'command-r-plus').ok, 'a malformed price is a shape change, not a read');
+assert(!parseCohere('<p>' + 'x'.repeat(700) + '</p>', 'command-r-plus').ok, 'a page with no model block is a shape change');
+assert(!parseCohere('<p>short</p>', 'command-r-plus').ok, 'an error shell is a shape change');
+assertEqual([cohereSlug('command-r-plus'), cohereSlug('command-r7b-12-2024'), cohereSlug('command-a-03-2025'), cohereSlug('command-a-plus-05-2026'), cohereSlug('command-r-08-2024')], ['command-r-plus', 'command-r7b', 'command-a', 'command-a-plus', 'command-r'], 'the page address is the id without its date suffix');
+assert(cohereSlug('bad id!') === null && PRICE_SOURCES.cohere.url('bad id!') === null, 'an id that cannot be a page name is reported, not fetched');
+assertEqual(PRICE_SOURCES.cohere.url('command-r-plus'), 'https://docs.cohere.com/v2/docs/command-r-plus', 'Cohere rows read the model own docs page');
+
 // ── readPrices ───────────────────────────────────────────────────────
 console.log('\nreadPrices — one fetch per page, unsupported rows skipped, failures explained');
 const URL_TO_PAGE = {
@@ -308,7 +344,7 @@ const seedLike = [
   { id: 'gemini-free', models: [{ id: 'gemini-3.8-flash', status: 'verified' }, { id: 'gemini-3.1-pro-preview', status: 'unsupported' }] },
   { id: 'gemini-paid', models: [{ id: 'gemini-3.8-flash', status: 'verified' }] },
   { id: 'deepseek', models: [{ id: 'deepseek-flash', status: 'verified' }, { id: 'deepseek-v4-pro', status: 'verified' }] },
-  { id: 'cohere', models: [{ id: 'command-a', status: 'verified' }] },
+  { id: 'acme', models: [{ id: 'acme-1', status: 'verified' }] },
   { id: 'copilot', models: [{ id: 'gpt-4o', status: 'unsupported' }] }
 ];
 {
@@ -317,7 +353,7 @@ const seedLike = [
   assertEqual(calls.length, 2, 'Gemini free+paid share one fetch; DeepSeek is the other (two fetches for five rows)');
   assert(out.has('gemini-free::gemini-3.8-flash') && out.has('gemini-paid::gemini-3.8-flash') && out.has('deepseek::deepseek-flash'), 'covered rows are read');
   assert(!out.has('gemini-free::gemini-3.1-pro-preview'), 'an unsupported row is skipped');
-  assert(!out.has('cohere::command-a') && !out.has('copilot::gpt-4o'), 'providers without a parser are absent, left to the old method');
+  assert(!out.has('acme::acme-1') && !out.has('copilot::gpt-4o'), 'providers without a parser are absent, left to the old method');
   assertEqual(out.get('deepseek::deepseek-v4-pro').source, PRICE_SOURCES.deepseek.url, 'each outcome names its source page');
 }
 {
@@ -358,7 +394,7 @@ const seed = stored => ({
   providers: [
     { id: 'deepseek', name: 'DeepSeek', defaultModel: 'deepseek-flash', models: [row('deepseek-flash', stored.flash[0], stored.flash[1]), row('deepseek-v4-pro', 0.66, 1.98), ...(stored.ghost ? [row('deepseek-ghost', 1, 2)] : [])] },
     { id: 'gemini-paid', name: 'Gemini (Google) — paid', defaultModel: 'gemini-3.5-flash', models: [row('gemini-3.5-flash', 1.5, 9)] },
-    { id: 'cohere', name: 'Cohere', defaultModel: 'command-a', models: [row('command-a', 2, 6)] }
+    { id: 'acme', name: 'Acme', defaultModel: 'acme-1', models: [row('acme-1', 2, 6)] }
   ]
 });
 async function runRefresh({ stored, key, pageOverrides }) {
@@ -370,7 +406,7 @@ async function runRefresh({ stored, key, pageOverrides }) {
     if (u.startsWith('https://api.perplexity.ai')) {
       const body = JSON.parse(init.body);
       perplexityCalls.push(body.messages[0].content.match(/model "([^"]+)"/)?.[1] || '?');
-      return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: JSON.stringify({ inputPerM: 2, outputPerM: 6, contextWindow: null, maxOutput: null, source: 'https://cohere.com/pricing', confirmedModel: 'command-a' }) } }] }) };
+      return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: JSON.stringify({ inputPerM: 2, outputPerM: 6, contextWindow: null, maxOutput: null, source: 'https://acme.example/pricing', confirmedModel: 'acme-1' }) } }] }) };
     }
     return pagesFetch(pageOverrides)(u, init);
   };
@@ -385,7 +421,7 @@ async function runRefresh({ stored, key, pageOverrides }) {
   const by = id => r.changes.find(c => c.modelId === id);
   assertEqual(by('deepseek-flash').status, 'confirmed', 'no Perplexity key: a parser row still refreshes (unchanged price -> confirmed)');
   assertEqual(by('deepseek-flash').via, 'page-parser', 'and records that it came from the page');
-  assert(!by('command-a'), 'no key: a Sonar-only row is left alone, as before');
+  assert(!by('acme-1'), 'no key: a Sonar-only row is left alone, as before');
   assertEqual(r.perplexityCalls.length, 0, 'no Perplexity calls');
   assert(r.latest.lastUpdated !== '2026-10-04T00:00:00Z', 'the refresh wrote its result');
 }
@@ -397,9 +433,9 @@ async function runRefresh({ stored, key, pageOverrides }) {
   assertEqual(c.via, 'page-parser', 'attributed to the page parser');
   const stored = r.latest.providers.find(p => p.id === 'deepseek').models.find(m => m.id === 'deepseek-flash');
   assertEqual([stored.inputPerM, stored.outputPerM], [0.22, 0.66], 'and the live price is NOT changed by the run');
-  assert(r.perplexityCalls.every(m => m === 'command-a'), 'Sonar was asked only about the row with no parser');
+  assert(r.perplexityCalls.every(m => m === 'acme-1'), 'Sonar was asked only about the row with no parser');
   assert(!r.perplexityCalls.includes('deepseek-flash') && !r.perplexityCalls.includes('gemini-3.5-flash'), 'never about a parser-covered row');
-  assertEqual(r.changes.find(x => x.modelId === 'command-a').via, 'sonar', 'the Sonar row is marked as such');
+  assertEqual(r.changes.find(x => x.modelId === 'acme-1').via, 'sonar', 'the Sonar row is marked as such');
 }
 {
   const r = await runRefresh({ stored: { flash: [0.15, 0.6] }, key: 'test-key-not-real' });

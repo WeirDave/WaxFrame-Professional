@@ -427,7 +427,7 @@ console.log('\nmergeRunOntoLatest / hasSubstantiveChange — a concurrent edit i
 console.log('\nrefreshPricing — re-reads KV before writing, and only moves `previous` for a real change');
 {
   const row = (id, extra) => ({ id, inputPerM: 2, outputPerM: 6, contextWindow: '128K', maxOutput: '8K', estPerRound: 0.001, estNote: null, sourceUrl: 'x', verifiedAt: '2026-10-01T00:00:00Z', status: 'verified', ...extra });
-  const seedFor = rows => JSON.stringify({ lastUpdated: '2026-10-04T00:00:00Z', schemaVersion: 3, providers: [{ id: 'cohere', name: 'Cohere', defaultModel: 'command-a', models: rows }] });
+  const seedFor = rows => JSON.stringify({ lastUpdated: '2026-10-04T00:00:00Z', schemaVersion: 3, providers: [{ id: 'acme', name: 'Acme', defaultModel: 'command-a', models: rows }] });
   const makeKV = initial => {
     const mem = new Map(Object.entries(initial));
     return { get: async k => (mem.has(k) ? mem.get(k) : null), put: async (k, v) => { mem.set(k, v); }, delete: async k => { mem.delete(k); }, mem };

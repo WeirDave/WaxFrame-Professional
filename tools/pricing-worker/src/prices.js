@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker: price parsers
-//  Build: 20261114-003
+//  Build: 20261115-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -30,8 +30,8 @@
 //     2026-12-31, then $1.50/$7.50).
 //
 //  Covered: DeepSeek, xAI, OpenAI, Anthropic, Google (free and paid rows),
-//  Together AI, Perplexity and Mistral (all read from the provider's Markdown docs).
-//  NOT covered, still read by Sonar and still held for review: Cohere.
+//  Together AI, Perplexity and Mistral (all read from the provider's Markdown docs),
+//  and Cohere (read from each model's docs page).
 //
 //  Pure and injectable: pages are passed in (or fetched through an injected
 //  fetch), so tools/pricing-worker/test-prices.mjs runs on saved pages.
@@ -39,6 +39,7 @@
 
 const UA = 'Mozilla/5.0 (compatible; WaxFramePricingBot/1.0; +https://waxframe.com)';
 const MIN_PAGE_TEXT = 500; // shorter than this is an error/redirect shell, not a pricing page
+const MIN_COHERE_PAGE = 300; // a Cohere model page is read from its raw source, not its text
 
 // ── helpers ──────────────────────────────────────────────────────────
 
@@ -218,21 +219,34 @@ export function astroIslands(html, componentExport) {
   return out;
 }
 
+// The name cell is a plain string, or, for a model the page marks as deprecated, an object:
+//   [0,{"label":[0,"gpt-5.4-nano"],"deprecated":[0,true]}]
+// Reading only the plain-string form dropped every deprecated model from the page.
+function openaiRowLabel(cell) {
+  if (typeof cell === 'string') return { label: cell, deprecated: false };
+  if (cell && typeof cell === 'object' && !Array.isArray(cell) && typeof cell.label === 'string') {
+    return { label: cell.label, deprecated: cell.deprecated === true };
+  }
+  return null;
+}
+
 function readOpenAIIslands(html, modelId) {
   const islands = astroIslands(html, 'TextTokenPricingTables')
     .filter(p => p.tier === 'standard' && !p.modelGroup && Array.isArray(p.rows));
   if (!islands.length) return null;
   for (const isl of islands) {
     for (const row of isl.rows) {
-      if (!Array.isArray(row) || typeof row[0] !== 'string') continue;
-      if (row[0].replace(/\s*\([^)]*\)\s*$/, '') !== modelId) continue;
+      if (!Array.isArray(row)) continue;
+      const name = openaiRowLabel(row[0]);
+      if (!name) continue;
+      if (name.label.replace(/\s*\([^)]*\)\s*$/, '') !== modelId) continue;
       const last = row[row.length - 1];
       // Both cells must be real numbers, and output is never below input for a text model: if it
       // is, the last cell is not the output price and the columns have moved.
       if (row.length < 3 || typeof row[1] !== 'number' || typeof last !== 'number' || last < row[1]) {
         return shapeChanged(`the OpenAI price row for ${modelId}`);
       }
-      return good(row[1], last, { pageLabel: row[0], note: 'standard rate, short context' });
+      return good(row[1], last, { pageLabel: name.label, note: name.deprecated ? 'standard rate, short context; listed as deprecated on the page' : 'standard rate, short context' });
     }
   }
   return notListed(modelId, 'OpenAI\'s pricing page');
@@ -505,6 +519,47 @@ export function parseMistral(md, modelId, now) {
   return sawTable ? notListed(apiName, 'Mistral\'s pricing page') : shapeChanged('the Mistral price tables');
 }
 
+// ── Cohere ───────────────────────────────────────────────────────────
+// One docs page per model (docs.cohere.com/v2/docs/<slug>). The pricing card is drawn in the
+// browser, but the page also ships its own source, HTML-escaped, and that source carries the
+// model block the card is built from:
+//   <ModelShowcase model={{ name: 'Command R+', id: 'command-r-plus-08-2024', ...,
+//     pricing: { input: 2.50, output: 10.0 }, specs: {...}, ... }} />
+// The model's id there must be the seed id (the seed drops a dated suffix on the older rows:
+// seed `command-r-plus` is `command-r-plus-08-2024` on the page), so a page address that ends
+// up on a sibling's page is refused instead of read. A free model has no `pricing` entry; the
+// card says "<name> is free until rate limits are reached", and that exact sentence for that
+// exact name is the only thing read as $0.
+const COHERE_GAP = '(?:\\s|\\\\n)*';
+
+export function cohereSlug(modelId) {
+  const slug = String(modelId).replace(/-\d{2}-\d{4}$/, '');
+  return /^[a-z0-9][a-z0-9-]*$/i.test(slug) ? slug : null;
+}
+
+export function parseCohere(html, modelId) {
+  const raw = String(html || '');
+  if (raw.length < MIN_COHERE_PAGE) return shapeChanged('the Cohere model page');
+  const src = decodeAttr(raw);
+  const head = src.match(new RegExp('ModelShowcase' + COHERE_GAP + 'model=\\{\\{' + COHERE_GAP + 'name:\\s*\'(.*?)\',' + COHERE_GAP + 'id:\\s*\'([^\']+)\''));
+  if (!head) return shapeChanged('the Cohere model block');
+  const [, pageName, pageId] = head;
+  if (pageId !== modelId && !new RegExp('^' + escapeRe(modelId) + '-\\d{2}-\\d{4}$').test(pageId)) {
+    return notListed(modelId, `the Cohere page it was read from (that page is ${pageId})`);
+  }
+  const rest = src.slice(head.index);
+  const end = rest.indexOf('/>');
+  const block = end >= 0 ? rest.slice(0, end) : rest;
+  const num = '([0-9]+(?:\\.[0-9]+)?)';
+  const priced = block.match(new RegExp('pricing:\\s*\\{\\s*input:\\s*' + num + '\\s*,\\s*output:\\s*' + num + '\\s*\\}'));
+  if (priced) return good(priced[1], priced[2], { pageLabel: pageName, note: 'standard rate' });
+  const text = htmlToText(raw);
+  if (text.includes(pageName + ' is free until rate limits are reached')) {
+    return good(0, 0, { pageLabel: pageName, note: 'free until rate limits are reached' });
+  }
+  return shapeChanged(`the Cohere price for ${modelId}`);
+}
+
 // ── Registry & reading ───────────────────────────────────────────────
 // Keyed by the seed's provider id. `name` appears in "not listed" reasons.
 export const PRICE_SOURCES = {
@@ -519,7 +574,9 @@ export const PRICE_SOURCES = {
   together:      { url: 'https://docs.together.ai/docs/serverless/models.md', parse: (h, id) => parseTogether(h, id) },
   mistral:       { url: 'https://docs.mistral.ai/inference/pricing.md',      parse: (h, id, now) => parseMistral(h, id, now) },
   // One page per model, so `url` is a function of the model id (null when the id cannot be a page name).
-  perplexity:    { url: id => /^[a-z0-9][a-z0-9.-]*$/i.test(id) ? `https://docs.perplexity.ai/docs/legacy/sonar/models/${id}.md` : null, parse: (h, id) => parsePerplexity(h, id) }
+  perplexity:    { url: id => /^[a-z0-9][a-z0-9.-]*$/i.test(id) ? `https://docs.perplexity.ai/docs/legacy/sonar/models/${id}.md` : null, parse: (h, id) => parsePerplexity(h, id) },
+  // One docs page per model; the slug is the id without its date suffix.
+  cohere:        { url: id => cohereSlug(id) ? `https://docs.cohere.com/v2/docs/${cohereSlug(id)}` : null, parse: (h, id) => parseCohere(h, id) }
 };
 
 // A provider page (or a hijacked one) must not be able to hang a refresh or

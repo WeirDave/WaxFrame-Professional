@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build: 20261114-003
+// Build: 20261115-001
 // test-round-estimate.mjs — the pre-flight round estimate and the Auto spend limit.
 //
 // Loads the REAL js/session-spend.js and slices the REAL estimate / limit code

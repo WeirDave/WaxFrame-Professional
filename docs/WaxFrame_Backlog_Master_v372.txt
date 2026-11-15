@@ -1,5 +1,5 @@
-WaxFrame Backlog Master v371
-2026-11-14
+WaxFrame Backlog Master v372
+2026-11-15
 
 ABOUT THIS DOCUMENT
 ────────────────────────────────────────────────────────────
@@ -25,6 +25,17 @@ ships.
 
 
 
+
+v372 — COHERE PRICE PARSER AND DEPRECATED OPENAI ROWS (v3.63.608).
+
+Shipped: Cohere prices are read off each model's docs page by code (parseCohere in
+tools/pricing-worker/src/prices.js), and OpenAI rows the page marks deprecated are read instead of
+reported as not listed. Every tracked provider now has a parser. Open:
+  1. The Worker must be deployed for the weekly run to use either change, and POST /api/prices from
+     the Worker should be run once to confirm Cloudflare receives the same Cohere page source as a
+     desktop does. Both were read correctly from a desktop only.
+  2. gpt-5.4-nano is listed as deprecated by OpenAI. Decide whether to keep it in the curated list
+     in js/provider-catalog.js; compare with the roster check first.
 
 v369 — ROUND COST ESTIMATE AND AUTO SPEND LIMIT (v3.63.607).
 
